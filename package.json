@@ -6,10 +6,10 @@
     "name": "Paul Razvan Berg",
     "url": "https://paulrberg.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.1.0"
+  },
   "devDependencies": {
-    "@commitlint/cli": "^9.1.2",
-    "@commitlint/config-conventional": "^9.1.2",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.1.1",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -23,7 +23,6 @@
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "chai": "^4.2.0",
-    "commitizen": "^4.2.1",
     "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^8.2.0",
     "eslint": "^7.24.0",
@@ -62,7 +61,6 @@
   },
   "scripts": {
     "clean": "hardhat clean",
-    "commit": "git-cz",
     "compile": "hardhat compile",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
     "deploy": "hardhat run scripts/deploy.ts",

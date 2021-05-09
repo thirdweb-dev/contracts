@@ -12,11 +12,12 @@ async function main(): Promise<void> {
   // await run("compile");
 
   // We get the contract to deploy
-  const Greeter: ContractFactory = await ethers.getContractFactory("Greeter");
-  const greeter: Contract = await Greeter.deploy("Hello, Buidler!");
-  await greeter.deployed();
-
-  console.log("Greeter deployed to: ", greeter.address);
+  //const Greeter: ContractFactory = await ethers.getContractFactory("Greeter");
+  //const greeter: Contract = await Greeter.deploy("Hello, Buidler!");
+  //await greeter.deployed();
+  const PackFactory: ContractFactory = await ethers.getContractFactory("Pack");
+  const packContract: Contract = await PackFactory.deploy();
+  console.log("Pack Contract deployed to: ", packContract.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
