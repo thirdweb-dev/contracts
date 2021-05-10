@@ -78,20 +78,24 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     _mintSupplyChecked(msg.sender, packId, amount);
   }
 
-  function addReward(uint256 packId, string memory tokenURI) external {
+  function addRewards(uint256 packId, string[] memory tokenUris) external {
     require(packs[packId].owner == msg.sender, "not the pack owner");
 
-    uint256 tokenId = _currentTokenId;
-    _currentTokenId += 1;
+    for (uint256 i = 0; i < tokenUris.length; i++) {
+      string memory tokenUri = tokenUris[i];
 
-    tokens[tokenId] = Token({
-      uri: tokenURI,
-      currentSupply: 0,
-      maxSupply: 100,
-      tokenType: TokenType.Reward
-    });
-    rewards[tokenId].rarityNumerator = 0;
-    packs[packId].rewardTokenIds.push(tokenId);
+      uint256 tokenId = _currentTokenId;
+      _currentTokenId += 1;
+
+      tokens[tokenId] = Token({
+        uri: tokenUri,
+        currentSupply: 0,
+        maxSupply: 100,
+        tokenType: TokenType.Reward
+      });
+      packs[packId].rewardTokenIds.push(tokenId);
+      rewards[tokenId].rarityNumerator = 0;
+    }
   }
 
   function uri(uint256 id) public view override returns (string memory) {
