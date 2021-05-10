@@ -16,6 +16,6 @@ rules:
       ignoreVoid: true
   "@typescript-eslint/no-inferrable-types": "off"
   "@typescript-eslint/no-unused-vars":
-    - error
+    - warning
     - argsIgnorePattern: _
       varsIgnorePattern: _

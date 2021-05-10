@@ -1,8 +1,8 @@
 pragma solidity >=0.8.0;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import "./interfaces/IPackEvent.sol";
 
 contract Pack is ERC1155, Ownable, IPackEvent {
@@ -44,13 +44,15 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   }
 
   function createPack(string memory tokenURI) external returns (uint256 tokenId) {
+    uint256 maxSupply = 100;
+
     tokenId = _currentTokenId;
     _currentTokenId += 1;
 
     tokens[tokenId] = Token({
       uri: tokenURI,
       currentSupply: 0,
-      maxSupply: 100,
+      maxSupply: maxSupply,
       tokenType: TokenType.Pack
     });
 
@@ -58,6 +60,8 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     pack.owner = msg.sender;
     pack.numRewardOnOpen = 1;
     pack.rarityDenominator = REWARD_RARITY_DENOMINATOR;
+
+    _mintSupplyChecked(msg.sender, tokenId, maxSupply);
   }
 
   function openPack(uint256 packId) external {
@@ -69,13 +73,8 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     uint256 prob = _random().mod(pack.rarityDenominator);
     uint256 index = prob.mod(pack.rewardTokenIds.length);
 
-    _burn(msg.sender, packId, 1);
+    _burn(msg.sender, packId, 1); // does not reduce the supply
     _mintSupplyChecked(msg.sender, pack.rewardTokenIds[index], 1);
-  }
-
-  function buyPack(uint256 packId, uint256 amount) external {
-    require(tokens[packId].currentSupply + amount <= tokens[packId].maxSupply, "not enough supply");
-    _mintSupplyChecked(msg.sender, packId, amount);
   }
 
   function addRewards(uint256 packId, string[] memory tokenUris) external {
@@ -102,11 +101,14 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     return tokens[id].uri;
   }
 
+  function owner(uint256 id) public view returns (address) {
+    return packs[id].owner;
+  }
+
   function _mintSupplyChecked(address account, uint256 id, uint256 amount) private {
     uint256 currentSupply = tokens[id].currentSupply;
     uint256 maxSupply = tokens[id].maxSupply;
-    require(currentSupply <= maxSupply);
-    require(currentSupply <= currentSupply + amount);
+    require(currentSupply + amount <= maxSupply, "not enough supply");
 
     tokens[id].currentSupply = currentSupply + amount;
     _mint(account, id, amount, "");

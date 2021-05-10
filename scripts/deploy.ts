@@ -4,6 +4,7 @@ import { Contract, ContractFactory } from "ethers";
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 async function main(): Promise<void> {
   // Hardhat always runs the compile task when running scripts through it.
@@ -18,6 +19,21 @@ async function main(): Promise<void> {
   const PackFactory: ContractFactory = await ethers.getContractFactory("Pack");
   const packContract: Contract = await PackFactory.deploy();
   console.log("Pack Contract deployed to: ", packContract.address);
+
+  const PackMarketFactory: ContractFactory = await ethers.getContractFactory("PackMarket");
+  const packMarketContract: Contract = await PackMarketFactory.deploy(packContract.address);
+  console.log("Pack Market Contract deployed to: ", packMarketContract.address);
+
+  const signers: SignerWithAddress[] = await ethers.getSigners();
+  const pc1 = packContract.connect(signers[1]);
+  const pc2 = packContract.connect(signers[2]);
+  const pmc1 = packMarketContract.connect(signers[1]);
+  const pmc2 = packMarketContract.connect(signers[2]);
+
+  await pc1.createPack("pack0");
+  await pc1.setApprovalForAll(packMarketContract.address, true);
+  await pmc1.sell(0, 5);
+  await pmc2.buy(0, 5);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
