@@ -10,6 +10,9 @@ import './Pack.sol';
 contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
+  event PackListed(address indexed seller, uint256 tokenId, address currency, uint256 amount);
+  event PackSold(address indexed seller, address indexed buyer, uint256 tokenId, uint256 quantity);
+
   Pack public immutable packToken;
 
   uint256 public constant MAX_BPS = 10000; // 100%
@@ -19,8 +22,9 @@ contract PackMarket is Ownable, ReentrancyGuard {
   struct Listing {
     address owner;
     uint256 tokenId;
-    address priceToken;
-    uint256 priceAmount;
+
+    address currency;
+    uint256 amount;
   }
 
   // owner => tokenId => Listing
@@ -30,31 +34,33 @@ contract PackMarket is Ownable, ReentrancyGuard {
     packToken = Pack(_packToken);
   }
 
-  function sell(uint256 tokenId, address priceToken, uint256 priceAmount) external {
+  function sell(uint256 tokenId, address currency, uint256 amount) external {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "require token approval");
     require(packToken.balanceOf(msg.sender, tokenId) > 0, "require at least 1 token");
 
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
       tokenId: tokenId,
-      priceToken: priceToken,
-      priceAmount: priceAmount
+      currency: currency,
+      amount: amount
     });
+
+    emit PackListed(msg.sender, tokenId, currency, amount);
   }
 
   function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {
     require(from != address(0), "invalid listing owner");
 
     Listing memory listing = listings[from][tokenId];
-    require(listing.priceToken != address(0), "invalid price token");
+    require(listing.currency != address(0), "invalid price token");
 
     address creator = packToken.owner(tokenId);
-    uint256 totalPrice = listing.priceAmount.mul(quantity);
+    uint256 totalPrice = listing.amount.mul(quantity);
     uint256 protocolCut = totalPrice.mul(protocolFeeBps).div(MAX_BPS);
     uint256 creatorCut = listing.owner == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);
     uint256 sellerCut = totalPrice - protocolCut - creatorCut;
 
-    IERC20 priceToken = IERC20(listing.priceToken);
+    IERC20 priceToken = IERC20(listing.currency);
     priceToken.transferFrom(msg.sender, address(this), totalPrice);
 
     priceToken.approve(address(this), sellerCut + creatorCut);
@@ -64,5 +70,10 @@ contract PackMarket is Ownable, ReentrancyGuard {
     }
 
     packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
+
+    emit PackSold(from, msg.sender, tokenId, quantity);
   }
+
+  fallback() external payable {}
+  receive() external payable {}
 }

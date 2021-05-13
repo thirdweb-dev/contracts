@@ -62,6 +62,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     pack.rarityDenominator = REWARD_RARITY_DENOMINATOR;
 
     _mintSupplyChecked(msg.sender, tokenId, maxSupply);
+    emit PackCreated(msg.sender, tokenId, maxSupply);
   }
 
   function openPack(uint256 packId) external {
@@ -72,13 +73,19 @@ contract Pack is ERC1155, Ownable, IPackEvent {
 
     uint256 prob = _random().mod(pack.rarityDenominator);
     uint256 index = prob.mod(pack.rewardTokenIds.length);
+    uint256 rewardedTokenId = pack.rewardTokenIds[index];
 
     _burn(msg.sender, packId, 1); // does not reduce the supply
-    _mintSupplyChecked(msg.sender, pack.rewardTokenIds[index], 1);
+    _mintSupplyChecked(msg.sender, rewardedTokenId, 1);
+
+    uint256[] memory rewardedTokenIds = new uint256[](1);
+    rewardedTokenIds[0] = rewardedTokenId;
+    emit PackOpened(msg.sender, packId, rewardedTokenIds);
   }
 
   function addRewards(uint256 packId, string[] memory tokenUris) external {
     require(packs[packId].owner == msg.sender, "not the pack owner");
+    uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
 
     for (uint256 i = 0; i < tokenUris.length; i++) {
       string memory tokenUri = tokenUris[i];
@@ -94,7 +101,10 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       });
       packs[packId].rewardTokenIds.push(tokenId);
       rewards[tokenId].rarityNumerator = 0;
+      newRewardTokenIds[i] = tokenId;
     }
+
+    emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds);
   }
 
   function uri(uint256 id) public view override returns (string memory) {
