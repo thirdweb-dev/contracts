@@ -67,12 +67,13 @@ contract PackMarket is Ownable, ReentrancyGuard {
     uint256 sellerCut = totalPrice - protocolCut - creatorCut;
 
     IERC20 priceToken = IERC20(listing.currency);
-    priceToken.transferFrom(msg.sender, address(this), totalPrice);
 
     priceToken.approve(address(this), sellerCut + creatorCut);
-    priceToken.transferFrom(address(this), listing.owner, sellerCut);
+
+    require(priceToken.transferFrom(msg.sender, address(this), totalPrice));
+    require(priceToken.transferFrom(address(this), listing.owner, sellerCut));
     if (creatorCut > 0) {
-      priceToken.transferFrom(address(this), creator, creatorCut);
+      require(priceToken.transferFrom(address(this), creator, creatorCut));
     }
 
     packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
