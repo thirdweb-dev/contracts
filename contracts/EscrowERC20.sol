@@ -28,7 +28,7 @@ contract EscrowERC20 is Ownable {
 
   function tokens(address payee) public view returns (address[] memory) {
     address[] memory tokensArr = new address[](_tokens[payee].length());
-    for (uint256 i = 0; i < tokens.length; i++) {
+    for (uint256 i = 0; i < tokensArr.length; i++) {
       tokensArr[i] = _tokens[payee].at(i);
     }
     return tokensArr;
