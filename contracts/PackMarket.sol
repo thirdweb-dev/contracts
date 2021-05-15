@@ -10,10 +10,11 @@ import './Pack.sol';
 contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
+  event PackTokenChanged(address newPackTokenAddress);
   event PackListed(address indexed seller, uint256 tokenId, address currency, uint256 amount);
   event PackSold(address indexed seller, address indexed buyer, uint256 tokenId, uint256 quantity);
 
-  Pack public immutable packToken;
+  Pack public packToken;
 
   uint256 public constant MAX_BPS = 10000; // 100%
   uint256 public protocolFeeBps = 500; // 5%
@@ -32,6 +33,11 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
   constructor(address _packToken) {
     packToken = Pack(_packToken);
+  }
+
+  function setPackToken(address _packToken) external onlyOwner {
+    packToken = Pack(_packToken);
+    emit PackTokenChanged(_packToken);
   }
 
   function sell(uint256 tokenId, address currency, uint256 amount) external {
