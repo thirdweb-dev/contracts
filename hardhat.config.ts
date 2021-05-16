@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "hardhat-abi-exporter";
 
 import "./tasks/accounts";
 import "./tasks/clean";
@@ -97,6 +98,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "typechain",
     target: "ethers-v5",
+  },
+  abiExporter: {
+    flat: true,
   },
 };
 
