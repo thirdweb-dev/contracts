@@ -4,7 +4,6 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import './interfaces/IPack.sol';
 import './Pack.sol';
 
 contract PackMarket is Ownable, ReentrancyGuard {
@@ -44,6 +43,8 @@ contract PackMarket is Ownable, ReentrancyGuard {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "require token approval");
     require(packToken.balanceOf(msg.sender, tokenId) > 0, "require at least 1 token");
 
+    packToken.lockReward(tokenId);
+
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
       tokenId: tokenId,
@@ -60,7 +61,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     Listing memory listing = listings[from][tokenId];
     require(listing.currency != address(0), "invalid price token");
 
-    address creator = packToken.owner(tokenId);
+    address creator = packToken.ownerOf(tokenId);
     uint256 totalPrice = listing.amount.mul(quantity);
     uint256 protocolCut = totalPrice.mul(protocolFeeBps).div(MAX_BPS);
     uint256 creatorCut = listing.owner == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);

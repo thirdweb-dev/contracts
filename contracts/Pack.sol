@@ -26,8 +26,9 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     uint256 rarityNumerator;
   }
 
-  struct Pack {
+  struct PackState {
     address owner;
+    bool isRewardLocked;
     uint256 numRewardOnOpen;
     uint256 rarityDenominator;
     uint256[] rewardTokenIds;
@@ -37,7 +38,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   uint256 private _seed;
 
   mapping(uint256 => Token) public tokens;
-  mapping(uint256 => Pack) public packs;
+  mapping(uint256 => PackState) public packs;
   mapping(uint256 => Reward) public rewards;
 
   constructor() ERC1155("") {
@@ -56,26 +57,29 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       tokenType: TokenType.Pack
     });
 
-    Pack storage pack = packs[tokenId];
+    PackState storage pack = packs[tokenId];
+    pack.isRewardLocked = false;
     pack.owner = msg.sender;
     pack.numRewardOnOpen = 1;
     pack.rarityDenominator = REWARD_RARITY_DENOMINATOR;
 
     _mintSupplyChecked(msg.sender, tokenId, maxSupply);
+
     emit PackCreated(msg.sender, tokenId, maxSupply);
   }
 
   function openPack(uint256 packId) external {
     require(balanceOf(msg.sender, packId) > 0, "insufficient pack");
 
-    Pack memory pack = packs[packId];
+    PackState memory pack = packs[packId];
     require(pack.rewardTokenIds.length > 0, "no rewards available");
+    require(pack.isRewardLocked, "rewards not locked yet");
 
     uint256 prob = _random().mod(pack.rarityDenominator);
     uint256 index = prob.mod(pack.rewardTokenIds.length);
     uint256 rewardedTokenId = pack.rewardTokenIds[index];
 
-    _burn(msg.sender, packId, 1); // does not reduce the supply
+    _burn(msg.sender, packId, 1); // note: does not reduce the supply
     _mintSupplyChecked(msg.sender, rewardedTokenId, 1);
 
     uint256[] memory rewardedTokenIds = new uint256[](1);
@@ -83,10 +87,11 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     emit PackOpened(msg.sender, packId, rewardedTokenIds);
   }
 
-  function addRewards(uint256 packId, string[] memory tokenUris) external {
+  function addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external {
     require(packs[packId].owner == msg.sender, "not the pack owner");
-    uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
+    require(!packs[packId].isRewardLocked, "reward is locked");
 
+    uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
     for (uint256 i = 0; i < tokenUris.length; i++) {
       string memory tokenUri = tokenUris[i];
 
@@ -96,7 +101,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       tokens[tokenId] = Token({
         uri: tokenUri,
         currentSupply: 0,
-        maxSupply: 100,
+        maxSupply: tokenMaxSupplies[i],
         tokenType: TokenType.Reward
       });
       packs[packId].rewardTokenIds.push(tokenId);
@@ -107,11 +112,19 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds);
   }
 
+  function lockReward(uint256 packId) public {
+    // NOTE: there's no way to unlock.
+    require(packs[packId].owner == msg.sender, "not the pack owner");
+    packs[packId].isRewardLocked = true;
+
+    emit PackRewardsLocked(msg.sender, packId);
+  }
+
   function uri(uint256 id) public view override returns (string memory) {
     return tokens[id].uri;
   }
 
-  function owner(uint256 id) public view returns (address) {
+  function ownerOf(uint256 id) public view returns (address) {
     return packs[id].owner;
   }
 
@@ -125,6 +138,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   }
 
   function _random() private returns (uint256) {
+    // TODO: NOT SAFE.
     uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
     _seed = randomNumber;
     return randomNumber;
