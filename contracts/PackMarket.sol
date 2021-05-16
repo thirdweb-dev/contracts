@@ -10,8 +10,8 @@ contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
   event PackTokenChanged(address newPackTokenAddress);
-  event PackListed(address indexed seller, uint256 tokenId, address currency, uint256 amount);
-  event PackSold(address indexed seller, address indexed buyer, uint256 tokenId, uint256 quantity);
+  event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 amount);
+  event PackSold(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
 
   Pack public packToken;
 
