@@ -32,15 +32,14 @@ if (!process.env.MNEMONIC) {
   mnemonic = process.env.MNEMONIC;
 }
 
-let infuraApiKey: string;
-if (!process.env.INFURA_API_KEY) {
-  throw new Error("Please set your INFURA_API_KEY in a .env file");
+let nodeUrl: string;
+if (!process.env.NODE_URL) {
+  throw new Error("Please set your NODE_URL in a .env file");
 } else {
-  infuraApiKey = process.env.INFURA_API_KEY;
+  nodeUrl = process.env.NODE_URL;
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
   return {
     accounts: {
       count: 10,
@@ -49,7 +48,7 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
       path: "m/44'/60'/0'/0",
     },
     chainId: chainIds[network],
-    url,
+    url: nodeUrl,
   };
 }
 
