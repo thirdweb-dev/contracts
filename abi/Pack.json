@@ -65,6 +65,12 @@
       },
       {
         "indexed": false,
+        "internalType": "string",
+        "name": "tokenUri",
+        "type": "string"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "maxSupply",
         "type": "uint256"
@@ -310,8 +316,13 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "tokenURI",
+        "name": "tokenUri",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSupply",
+        "type": "uint256"
       }
     ],
     "name": "createPack",

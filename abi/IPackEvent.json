@@ -16,6 +16,12 @@
       },
       {
         "indexed": false,
+        "internalType": "string",
+        "name": "tokenUri",
+        "type": "string"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "maxSupply",
         "type": "uint256"

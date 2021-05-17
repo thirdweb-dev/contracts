@@ -44,14 +44,12 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   constructor() ERC1155("") {
   }
 
-  function createPack(string memory tokenURI) external returns (uint256 tokenId) {
-    uint256 maxSupply = 100;
-
+  function createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId) {
     tokenId = _currentTokenId;
     _currentTokenId += 1;
 
     tokens[tokenId] = Token({
-      uri: tokenURI,
+      uri: tokenUri,
       currentSupply: 0,
       maxSupply: maxSupply,
       tokenType: TokenType.Pack
@@ -65,7 +63,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
 
     _mintSupplyChecked(msg.sender, tokenId, maxSupply);
 
-    emit PackCreated(msg.sender, tokenId, maxSupply);
+    emit PackCreated(msg.sender, tokenId, tokenUri, maxSupply);
   }
 
   function openPack(uint256 packId) external {
