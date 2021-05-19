@@ -68,8 +68,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     uint256 sellerCut = totalPrice - protocolCut - creatorCut;
 
     IERC20 priceToken = IERC20(listing.currency);
-
-    priceToken.approve(address(this), sellerCut + creatorCut);
+    require(priceToken.allowance(msg.sender, address(this)) >= sellerCut + creatorCut, "Not approved PackMarket to handle price amount.");
 
     require(priceToken.transferFrom(msg.sender, address(this), totalPrice));
     require(priceToken.transferFrom(address(this), listing.owner, sellerCut));
