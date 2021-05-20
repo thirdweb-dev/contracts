@@ -26,30 +26,25 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-let mnemonic: string;
-if (!process.env.MNEMONIC) {
-  throw new Error("Please set your MNEMONIC in a .env file");
+let testPrivateKey: string;
+if (!process.env.TEST_PRIVATE_KEY) {
+  throw new Error("Please set your Test private key in a .env file");
 } else {
-  mnemonic = process.env.MNEMONIC;
+  testPrivateKey = process.env.TEST_PRIVATE_KEY;
 }
 
-let nodeUrl: string;
-if (!process.env.NODE_URL) {
-  throw new Error("Please set your NODE_URL in a .env file");
+let alchemyKey: string;
+if (!process.env.ALCHEMY_KEY) {
+  throw new Error("Please set your Alchemy API Key in a .env file");
 } else {
-  nodeUrl = process.env.NODE_URL;
+  alchemyKey = process.env.ALCHEMY_KEY;
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  return {
-    accounts: {
-      count: 10,
-      initialIndex: 0,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
+  return {    
     chainId: chainIds[network],
-    url: nodeUrl,
+    url: `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`,
+    accounts: [`${testPrivateKey}`]
   };
 }
 
@@ -62,12 +57,6 @@ const config: HardhatUserConfig = {
     src: "./contracts",
   },
   networks: {
-    hardhat: {
-      accounts: {
-        mnemonic,
-      },
-      chainId: chainIds.hardhat,
-    },
     goerli: createTestnetConfig("goerli"),
     kovan: createTestnetConfig("kovan"),
     rinkeby: createTestnetConfig("rinkeby"),
