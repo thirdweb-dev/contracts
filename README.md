@@ -4,6 +4,13 @@
 Pack: `0x68c7ad48732913EAab1827bFD6FfDfE7f4eA399B`
 Pack Market: `0x4D50359838E0d8571C73E815d82b509f130e0A91`
 
+**Rinkeby**
+`Pack.sol` — [0x62d1A5A62f5B8F610B0C2526A765D1364B79dEd6](https://rinkeby.etherscan.io/address/0x62d1A5A62f5B8F610B0C2526A765D1364B79dEd6#code)
+
+`PackMarket.sol` — [0x47B40Dc357bdFF34f1D014Bb122bA233c8d05299](https://rinkeby.etherscan.io/address/0x47B40Dc357bdFF34f1D014Bb122bA233c8d05299#code)
+
+`PackCoin.sol` — [0x49e7f00ee5652523fAdE13674100c8518d7DA8b6](https://rinkeby.etherscan.io/address/0x49e7f00ee5652523fAdE13674100c8518d7DA8b6#code)
+
 # Solidity Template
 
 My favourite setup for writing Solidity smart contracts.
