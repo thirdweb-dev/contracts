@@ -24,6 +24,8 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
+  matic: 137,
+  mumbai: 80001
 };
 
 // Ensure that we have all the environment variables we need.
@@ -49,9 +51,20 @@ if (!process.env.ETHERSCAN_API_KEY) {
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
+  
+  let nodeUrl = `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`
+  
+  // Update Matic RPC endpoint later.
+  if(network == "matic") {
+    nodeUrl = "https://rpc-mainnet.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/"
+  }
+  if(network == "mumbai") {
+    nodeUrl = "https://rpc-mumbai.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/"
+  }
+  
   return {    
     chainId: chainIds[network],
-    url: `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`,
+    url: nodeUrl,
     accounts: [`${testPrivateKey}`]
   };
 }
@@ -69,6 +82,8 @@ const config: HardhatUserConfig = {
     kovan: createTestnetConfig("kovan"),
     rinkeby: createTestnetConfig("rinkeby"),
     ropsten: createTestnetConfig("ropsten"),
+    matic: createTestnetConfig("matic"),
+    mumbai: createTestnetConfig("mumbai"),
   },
   paths: {
     artifacts: "./artifacts",
