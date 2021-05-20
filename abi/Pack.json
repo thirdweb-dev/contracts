@@ -124,6 +124,12 @@
         "internalType": "uint256[]",
         "name": "rewardTokenIds",
         "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "rewardTokenUris",
+        "type": "string[]"
       }
     ],
     "name": "PackRewardsAdded",
@@ -428,6 +434,11 @@
     ],
     "name": "packs",
     "outputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "owner",

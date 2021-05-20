@@ -28,6 +28,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   }
 
   struct PackState {
+    address creator;
     address owner;
     bool isRewardLocked;
     uint256 numRewardOnOpen;
@@ -58,6 +59,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
 
     PackState storage pack = packs[tokenId];
     pack.isRewardLocked = false;
+    pack.creator = msg.sender;
     pack.owner = msg.sender;
     pack.numRewardOnOpen = 1;
     pack.rarityDenominator = REWARD_RARITY_DENOMINATOR;
@@ -108,7 +110,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       newRewardTokenIds[i] = tokenId;
     }
 
-    emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds);
+    emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds, tokenUris);
   }
 
   function lockReward(uint256 packId) public {
