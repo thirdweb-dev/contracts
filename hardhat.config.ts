@@ -3,6 +3,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "hardhat-abi-exporter";
+import "@nomiclabs/hardhat-etherscan";
 
 import "./tasks/accounts";
 import "./tasks/clean";
@@ -38,6 +39,13 @@ if (!process.env.ALCHEMY_KEY) {
   throw new Error("Please set your Alchemy API Key in a .env file");
 } else {
   alchemyKey = process.env.ALCHEMY_KEY;
+}
+
+let etherscanKey: string;
+if (!process.env.ETHERSCAN_API_KEY) {
+  throw new Error("Please set your Etherscan API Key in a .env file");
+} else {
+  etherscanKey = process.env.ETHERSCAN_API_KEY;
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
@@ -90,6 +98,9 @@ const config: HardhatUserConfig = {
   },
   abiExporter: {
     flat: true,
+  },
+  etherscan: {
+    apiKey: etherscanKey
   },
 };
 
