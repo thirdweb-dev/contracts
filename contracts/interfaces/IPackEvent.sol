@@ -9,6 +9,6 @@ interface IPackEvent {
 
   event TransferSinglePack(address indexed from, address indexed to, uint indexed tokenId, uint amount);
   event TransferSingleReward(address indexed from, address indexed to, uint indexed tokenId, uint amount);
-  event TransferBatchPacks(address indexed from, address indexed to, uint256[] ids, uint256[] values)
-  event TransferBatchRewards(address indexed from, address indexed to, uint256[] ids, uint256[] values) 
+  event TransferBatchPacks(address indexed from, address indexed to, uint256[] ids, uint256[] values);
+  event TransferBatchRewards(address indexed from, address indexed to, uint256[] ids, uint256[] values); 
 }

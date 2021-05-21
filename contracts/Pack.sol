@@ -207,9 +207,9 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     }
 
     if(isPack) {
-      emit TransferBatchPacks(from, to, ids, amounts, data);
+      emit TransferBatchPacks(from, to, ids, amounts);
     } else {
-      emit TransferBatchRewards(from, to, ids, amounts, data);
+      emit TransferBatchRewards(from, to, ids, amounts);
     }
     
     // Call OZ `safeBatchTransferFrom` implementation
