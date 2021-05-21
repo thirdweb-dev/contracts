@@ -1,20 +1,26 @@
-const chai = require("chai")
-const { ethers } = require("hardhat")
-const { solidity } = require("ethereum-waffle")
+const chai = require("chai");
+const { ethers } = require("hardhat");
+const { solidity } = require("ethereum-waffle");
 
 chai.use(solidity)
-const { expect } = chai
+const { expect } = chai;
 
 describe("Pack", () => {
-  let pack
+  let pack;
+  let sender;
 
   beforeEach(async () => {
-    const Pack = await ethers.getContractFactory("Pack")
-    pack = await Pack.deploy()
+    const [owner] = await ethers.getSigners();
+    sender = owner;
+
+    const Pack = await ethers.getContractFactory("Pack", sender);
+    pack = await Pack.deploy();
   })
 
-  it('Correct contract owner', async () => {
-    const [owner] = await ethers.getSigners()
-    expect(await pack.owner()).to.equal(owner.address)
+  it("createPack emits PackCreated", async () => {
+    expect(await pack.createPack("URI", 100))
+      .to
+      .emit(pack, "PackCreated")
+      .withArgs(sender.address, 0, "URI", 100);
   })
 })
