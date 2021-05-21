@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+import "./ERC1155.sol";
 import "./interfaces/IPackEvent.sol";
 
 contract Pack is ERC1155, Ownable, IPackEvent {
@@ -43,8 +44,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   mapping(uint256 => PackState) public packs;
   mapping(uint256 => Reward) public rewards;
 
-  constructor() ERC1155("") {
-  }
+  constructor() ERC1155("") {}
 
   function createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId) {
     tokenId = _currentTokenId;
