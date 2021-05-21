@@ -23,10 +23,13 @@ describe("Pack", () => {
   describe("createPack", async () => {
     it("createPack creates Token", async () => {
       const tokenId = await pack.createPack("URI", 100);
-      expect(tokenId.value).to.equal(0);
+      // expect(tokenId.value).to.equal(0);
 
       const token = await pack.tokens(tokenId);
       expect(token.uri).to.equal("URI");
+      expect(token.currentSupply).to.equal(0);
+      expect(token.maxSupply).to.equal(100);
+      // test tokenType
     })
 
     it("createPack emits PackCreated", async () => {
