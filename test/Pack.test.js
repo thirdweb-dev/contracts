@@ -5,8 +5,11 @@ const { solidity } = require("ethereum-waffle");
 chai.use(solidity);
 const { expect } = chai;
 
-describe('Pack', () => {
-  
+describe("Pack", () => {
+  let pack;
+
+  beforeEach(async () => {
+    const Pack = await ethers.getContractFactory("Pack");
+    pack = await Pack.deploy();
+  })
 })
-
-
