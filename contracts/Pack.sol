@@ -3,8 +3,7 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import "./ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "./interfaces/IPackEvent.sol";
 
 contract Pack is ERC1155, Ownable, IPackEvent {
@@ -148,8 +147,8 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   // ========== Transfer functions ==========
 
   /**
-  * @dev See {IERC1155-safeTransferFrom}.
-  */
+   * @dev See {IERC1155-safeTransferFrom}.
+   */
   function safeTransferFrom(
     address from,
     address to,
@@ -176,6 +175,9 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     super.safeTransferFrom(from, to, id, amount, data);
   }
 
+  /**
+   * @dev See {IERC1155-safeBatchTransferFrom}.
+   */
   function safeBatchTransferFrom(
     address from,
     address to,
