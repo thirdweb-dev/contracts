@@ -144,4 +144,37 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     _seed = randomNumber;
     return randomNumber;
   }
+
+  // ========== Transfer functions ==========
+
+  /**
+  * @dev See {IERC1155-safeTransferFrom}.
+  */
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint256 id,
+    uint256 amount,
+    bytes memory data
+  )
+    public
+    virtual
+    override
+  { 
+    // Emit custom transfer event to correctly update the contract's subgraph.
+    if(tokens[id].tokenType == TokenType.Pack) {
+      emit TransferSinglePack(from, to, id, amount);
+
+    } else if (tokens[id].tokenType == TokenType.Reward) {
+      emit TransferSingleReward(from, to, id, amount);
+
+    } else {
+      revert("Every token is either a Pack or a Reward.");
+    }
+
+    // Call OZ `safeTransferFrom` implementation
+    super.safeTransferFrom(from, to, id, amount, data);
+  }
+
+
 }
