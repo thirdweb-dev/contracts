@@ -176,5 +176,21 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     super.safeTransferFrom(from, to, id, amount, data);
   }
 
+  function safeBatchTransferFrom(
+    address from,
+    address to,
+    uint256[] memory ids,
+    uint256[] memory amounts,
+    bytes memory data
+  )
+    public
+    virtual
+    override
+  {
+    
+    // Call OZ `safeBatchTransferFrom` implementation
+    super.safeBatchTransferFrom(from, to, ids, amounts, data);
+  }
+
 
 }
