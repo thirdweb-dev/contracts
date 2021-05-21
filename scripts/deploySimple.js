@@ -22,4 +22,4 @@ main()
     process.exit(1);
   });
 
-// Pack ERC1155 token address (Rinkeby) -- 0x62d1A5A62f5B8F610B0C2526A765D1364B79dEd6
+// Pack ERC1155 token address (Rinkeby) -- 0x49b1e42C369f3e7e25374565E9422a5C5Ed80be7
