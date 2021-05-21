@@ -187,6 +187,28 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     virtual
     override
   {
+    bool isPack = true;
+    TokenType prev = TokenType.Pack;
+
+    for (uint i = 0; i < ids.length; i++) {
+
+      uint tokenId = ids[i];
+
+      if(tokens[tokenId].tokenType != TokenType.Pack) {
+        isPack = false;
+        prev = TokenType.Reward;
+      }
+
+      if(i != 0 && tokens[tokenId].tokenType != prev) {
+        revert("Can only transfer batch of the same type of token.");
+      }
+    }
+
+    if(isPack) {
+      emit TransferBatchPacks(from, to, ids, amounts, data);
+    } else {
+      emit TransferBatchRewards(from, to, ids, amounts, data);
+    }
     
     // Call OZ `safeBatchTransferFrom` implementation
     super.safeBatchTransferFrom(from, to, ids, amounts, data);
