@@ -206,6 +206,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       }
     }
 
+    // Emit custom transfer event to correctly update the contract's subgraph.
     if(isPack) {
       emit TransferBatchPacks(from, to, ids, amounts);
     } else {
