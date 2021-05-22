@@ -53,16 +53,36 @@ describe("Pack", () => {
     })
   })
 
+  // openPack(uint256 packId) external
   describe("openPack", async () => {
     it("openPack destroys Pack", async () => {
       
     })
 
     it("openPack assigns Token", async () => {
-      
+
     })
 
     it("openPack emits PackOpened", async () => {
+
+    })
+  })
+
+  // addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external
+  describe("addRewards", async () => {
+    it("addRewards only works for Pack owner", async () => {
+
+    })
+
+    it("addRewards only works for unlocked Packs", async () => {
+
+    })
+
+    it("addRewards tokenMaxSupplies must be same length as tokenUris", async () => {
+
+    })
+
+    it("addRewards emits PackRewardsAdded", async () => {
 
     })
   })
