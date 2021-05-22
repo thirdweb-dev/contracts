@@ -94,7 +94,10 @@ describe("Pack", () => {
     })
 
     it("addRewards emits PackRewardsAdded", async () => {
-
+      expect(await pack.addRewards(0, [uri], [100]))
+        .to
+        .emit(pack, "PackRewardsAdded")
+        .withArgs(owner.address, 0, [1], ['']);
     })
   })
 
