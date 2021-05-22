@@ -105,12 +105,18 @@ describe("Pack", () => {
   describe("openPack", async () => {
     beforeEach(async () => {
       await pack.createPack(uri, supply);
+      await pack.addRewards(0, [uri], [100])
     })
 
     it("openPack sender must own pack", async () => {
-      // expect(await pack.openPack(0, { from: owner.address }))
-      //   .to
-      //   .throw("VM Exception while processing transaction: revert no rewards available");
+      try {
+        await pack.connect(buyer).openPack(0);
+      } catch (err) {
+        expect(err.message).to.contain("insufficient pack");
+        return;
+      }
+
+      expect(false).to.equal(true);
     })
 
     it("openPack rewards must be locked", async () => {
