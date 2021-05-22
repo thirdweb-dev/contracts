@@ -105,11 +105,12 @@ describe("Pack", () => {
   describe("openPack", async () => {
     beforeEach(async () => {
       await pack.createPack(uri, supply);
-      await pack.addRewards(0, [uri], [100])
     })
 
     it("openPack sender must own pack", async () => {
       try {
+        await pack.addRewards(0, [uri], [100])
+        await pack.lockReward(0);
         await pack.connect(buyer).openPack(0);
       } catch (err) {
         expect(err.message).to.contain("insufficient pack");
@@ -120,11 +121,35 @@ describe("Pack", () => {
     })
 
     it("openPack rewards must be locked", async () => {
-      
+      try {
+        await pack.addRewards(0, [uri], [100])
+        await pack.openPack(0);
+      } catch (err) {
+        expect(err.message).to.contain("rewards not locked yet");
+        return;
+      }
+
+      expect(false).to.equal(true);
+    })
+
+    it("openPack must be at least one reward", async () => {
+      try {
+        await pack.lockReward(0);
+        await pack.openPack(0);
+      } catch (err) {
+        expect(err.message).to.contain("no rewards available");
+        return;
+      }
+
+      expect(false).to.equal(true);
     })
 
     it("openPack destroys Pack", async () => {
-      
+      expect(await pack.balanceOf(owner.address, 0)).to.equal(100);
+      await pack.addRewards(0, [uri], [100])
+      await pack.lockReward(0);
+      await pack.openPack(0);
+      expect(await pack.balanceOf(owner.address, 0)).to.equal(99);
     })
 
     it("openPack assigns Token", async () => {
