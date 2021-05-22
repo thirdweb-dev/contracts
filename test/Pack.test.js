@@ -55,6 +55,14 @@ describe("Pack", () => {
 
   // openPack(uint256 packId) external
   describe("openPack", async () => {
+    it("openPack sender must own pack", async () => {
+      
+    })
+
+    it("openPack rewards must be locked", async () => {
+      
+    })
+
     it("openPack destroys Pack", async () => {
       
     })
