@@ -90,6 +90,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   function addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external {
     require(packs[packId].owner == msg.sender, "not the pack owner");
     require(!packs[packId].isRewardLocked, "reward is locked");
+    require(tokenMaxSupplies.length == tokenUris.length, "arrays must be same length");
 
     uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
     for (uint256 i = 0; i < tokenUris.length; i++) {

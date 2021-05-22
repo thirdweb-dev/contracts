@@ -84,7 +84,6 @@ describe("Pack", () => {
 
     it("addRewards tokenMaxSupplies must be same length as tokenUris", async () => {
       try {
-        await pack.lockReward(0);
         await pack.addRewards(0, [uri, uri], [100]);
       } catch (err) {
         expect(err.message).to.contain("must be same length");
