@@ -22,21 +22,48 @@ describe("Pack", () => {
 
   // createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId)
   describe("createPack", async () => {
+    const uri = "URI";
+    const supply = 100;
+
     it("createPack creates Token", async () => {
-      const { value: tokenId } = await pack.createPack("URI", 100);
+      const { value: tokenId } = await pack.createPack(uri, supply);
       expect(tokenId).to.equal(0);
 
       const token = await pack.tokens(tokenId);
-      expect(token.uri).to.equal("URI");
-      expect(token.currentSupply).to.equal(0);
-      expect(token.maxSupply).to.equal(100);
+      expect(token.uri).to.equal(uri);
+      expect(token.currentSupply).to.equal(supply);
+      expect(token.maxSupply).to.equal(supply);
+    })
+
+    it("createPack gives Pack to sender", async () => {
+      const { value: tokenId } = await pack.createPack(uri, supply);
+
+      const pack = await pack.packs(tokenId);
+      expect(pack.isRewardLocked).to.equal(false);
+      expect(pack.creator).to.equal(sender);
+      expect(pack.owner).to.equal(owner);
+      expect(pack.numRewardOnOpen).to.equal(1);
     })
 
     it("createPack emits PackCreated", async () => {
-      expect(await pack.createPack("URI", 100))
+      expect(await pack.createPack(uri, supply))
         .to
         .emit(pack, "PackCreated")
-        .withArgs(sender.address, 0, "URI", 100);
+        .withArgs(sender.address, 0, uri, supply);
+    })
+  })
+
+  describe("openPack", async () => {
+    it("openPack destroys Pack", async () => {
+      
+    })
+
+    it("openPack assigns Token", async () => {
+      
+    })
+
+    it("openPack emits PackOpened", async () => {
+
     })
   })
 })
