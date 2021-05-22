@@ -8,23 +8,25 @@ const { expect } = chai;
 
 describe("Pack", () => {
   let pack;
-  let Pack;
   let sender;
+  let signers;
+
+  const uri = "URI";
+  const supply = 100;
+
+  before(async () => {
+    signers = await ethers.getSigners();
+    [sender] = signers;
+  })
 
   // Get message sender and pack interface before each test
   beforeEach(async () => {
-    const [owner] = await ethers.getSigners();
-    sender = owner;
-
     const Pack = await ethers.getContractFactory("Pack", sender);
     pack = await Pack.deploy();
   })
 
   // createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId)
   describe("createPack", async () => {
-    const uri = "URI";
-    const supply = 100;
-
     it("createPack creates Token", async () => {
       const { value: tokenId } = await pack.createPack(uri, supply);
       expect(tokenId).to.equal(0);
@@ -38,11 +40,11 @@ describe("Pack", () => {
     it("createPack gives Pack to sender", async () => {
       const { value: tokenId } = await pack.createPack(uri, supply);
 
-      const pack = await pack.packs(tokenId);
-      expect(pack.isRewardLocked).to.equal(false);
-      expect(pack.creator).to.equal(sender);
-      expect(pack.owner).to.equal(owner);
-      expect(pack.numRewardOnOpen).to.equal(1);
+      const createdPack = await pack.packs(tokenId);
+      expect(createdPack.isRewardLocked).to.equal(false);
+      expect(createdPack.creator).to.equal(sender.address);
+      expect(createdPack.owner).to.equal(sender.address);
+      expect(createdPack.numRewardOnOpen).to.equal(1);
     })
 
     it("createPack emits PackCreated", async () => {
@@ -55,6 +57,10 @@ describe("Pack", () => {
 
   // openPack(uint256 packId) external
   describe("openPack", async () => {
+    beforeEach(async () => {
+      await pack.createPack(uri, supply);
+    })
+
     it("openPack sender must own pack", async () => {
       
     })
