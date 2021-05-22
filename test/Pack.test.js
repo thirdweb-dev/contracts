@@ -8,26 +8,26 @@ const { expect } = chai;
 
 describe("Pack", () => {
   let pack;
-  let sender;
-  let signers;
+  let owner;
+  let buyer;
 
-  const uri = "URI";
+  const uri = "100";
   const supply = 100;
 
   before(async () => {
     signers = await ethers.getSigners();
-    [sender] = signers;
+    [owner, buyer] = signers;
   })
 
   // Get message sender and pack interface before each test
   beforeEach(async () => {
-    const Pack = await ethers.getContractFactory("Pack", sender);
+    const Pack = await ethers.getContractFactory("Pack", owner);
     pack = await Pack.deploy();
   })
 
   // createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId)
   describe("createPack", async () => {
-    it("createPack creates Token", async () => {
+    it("createPack creates pack Token", async () => {
       const { value: tokenId } = await pack.createPack(uri, supply);
       expect(tokenId).to.equal(0);
 
@@ -42,8 +42,8 @@ describe("Pack", () => {
 
       const createdPack = await pack.packs(tokenId);
       expect(createdPack.isRewardLocked).to.equal(false);
-      expect(createdPack.creator).to.equal(sender.address);
-      expect(createdPack.owner).to.equal(sender.address);
+      expect(createdPack.creator).to.equal(owner.address);
+      expect(createdPack.owner).to.equal(owner.address);
       expect(createdPack.numRewardOnOpen).to.equal(1);
     })
 
@@ -51,7 +51,35 @@ describe("Pack", () => {
       expect(await pack.createPack(uri, supply))
         .to
         .emit(pack, "PackCreated")
-        .withArgs(sender.address, 0, uri, supply);
+        .withArgs(owner.address, 0, uri, supply);
+    })
+  })
+
+  // addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external
+  describe("addRewards", async () => {
+    beforeEach(async () => {
+      await pack.createPack(uri, supply);
+    })
+
+    it("addRewards only works for Pack owner", async () => {
+      try {
+        await pack.connect(buyer).addRewards(0, [uri], [100]);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("revert not the pack owner")
+      }
+    })
+
+    it("addRewards only works for unlocked Packs", async () => {
+
+    })
+
+    it("addRewards tokenMaxSupplies must be same length as tokenUris", async () => {
+
+    })
+
+    it("addRewards emits PackRewardsAdded", async () => {
+
     })
   })
 
@@ -62,7 +90,9 @@ describe("Pack", () => {
     })
 
     it("openPack sender must own pack", async () => {
-      
+      // expect(await pack.openPack(0, { from: owner.address }))
+      //   .to
+      //   .throw("VM Exception while processing transaction: revert no rewards available");
     })
 
     it("openPack rewards must be locked", async () => {
@@ -78,25 +108,6 @@ describe("Pack", () => {
     })
 
     it("openPack emits PackOpened", async () => {
-
-    })
-  })
-
-  // addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external
-  describe("addRewards", async () => {
-    it("addRewards only works for Pack owner", async () => {
-
-    })
-
-    it("addRewards only works for unlocked Packs", async () => {
-
-    })
-
-    it("addRewards tokenMaxSupplies must be same length as tokenUris", async () => {
-
-    })
-
-    it("addRewards emits PackRewardsAdded", async () => {
 
     })
   })
