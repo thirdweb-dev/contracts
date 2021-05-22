@@ -153,11 +153,20 @@ describe("Pack", () => {
     })
 
     it("openPack assigns Token", async () => {
-
+      expect(await pack.balanceOf(owner.address, 1)).to.equal(0);
+      await pack.addRewards(0, [uri], [100])
+      await pack.lockReward(0);
+      await pack.openPack(0);
+      expect(await pack.balanceOf(owner.address, 1)).to.equal(1);
     })
 
     it("openPack emits PackOpened", async () => {
-
+      await pack.addRewards(0, [uri], [100])
+      await pack.lockReward(0);
+      expect(await pack.openPack(0))
+        .to
+        .emit(pack, "PackOpened")
+        .withArgs(owner.address, 0, [1]);
     })
   })
 })
