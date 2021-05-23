@@ -1,21 +1,28 @@
-const chai = require("chai")
-const { ethers } = require("hardhat")
-const { solidity } = require("ethereum-waffle")
+const chai = require("chai");
+const { ethers } = require("hardhat");
+const { solidity } = require("ethereum-waffle");
 
-chai.use(solidity)
-const { expect } = chai
+chai.use(solidity);
+const { expect } = chai;
 
 describe("PackMarket", async () => {
-  let packMarket
+  let packMarket;
+  let owner;
+  let buyer;
+
+  before(async () => {
+    signers = await ethers.getSigners();
+    [owner, buyer] = signers;
+  })
 
   beforeEach(async () => {
-    const PackMarket = await ethers.getContractFactory("PackMarket")
-    packMarket = await PackMarket.deploy()
+    const PackMarket = await ethers.getContractFactory("PackMarket", owner);
+    packMarket = await PackMarket.deploy();
   })
 
   describe("setPackToken", async () => {
     it("setPackToken only owner can change Pack", async () => {
-
+      
     })
 
     it("setPackToken emits PackTokenChange", async () => {
