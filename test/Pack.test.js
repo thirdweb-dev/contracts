@@ -74,23 +74,19 @@ describe("Pack", () => {
       try {
         await pack.lockReward(0);
         await pack.addRewards(0, [uri], [100]);
+        expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("reward is locked");
-        return;
       }
-
-      expect(false).to.equal(true)
     })
 
     it("addRewards tokenMaxSupplies must be same length as tokenUris", async () => {
       try {
         await pack.addRewards(0, [uri, uri], [100]);
+        expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("must be same length");
-        return;
       }
-
-      expect(false).to.equal(true);
     })
 
     it("addRewards emits PackRewardsAdded", async () => {
@@ -112,36 +108,30 @@ describe("Pack", () => {
         await pack.addRewards(0, [uri], [100])
         await pack.lockReward(0);
         await pack.connect(buyer).openPack(0);
+        expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("insufficient pack");
-        return;
       }
-
-      expect(false).to.equal(true);
     })
 
     it("openPack rewards must be locked", async () => {
       try {
         await pack.addRewards(0, [uri], [100])
         await pack.openPack(0);
+        expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("rewards not locked yet");
-        return;
       }
-
-      expect(false).to.equal(true);
     })
 
     it("openPack must be at least one reward", async () => {
       try {
         await pack.lockReward(0);
         await pack.openPack(0);
+        expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("no rewards available");
-        return;
       }
-
-      expect(false).to.equal(true);
     })
 
     it("openPack destroys Pack", async () => {
