@@ -88,14 +88,15 @@ describe("PackMarket", async () => {
       }
     })
 
-    it("sell locks Pack", async () => {
+    it("sell requires locked pack", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
-      
-      const packInstance = await pack.packs(tokenId);
-      expect(packInstance.isRewardLocked).to.equal(false);
 
-      await packMarket.sell(tokenId, USDC, amount);
-      expect(packInstance.isRewardLocked).to.equal(true);
+      try {
+        await packMarket.sell(tokenId, USDC, amount);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("attempting to sell unlocked pack");
+      }
     })
 
     it("sell creates listing", async () => {

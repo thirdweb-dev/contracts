@@ -43,6 +43,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
   function sell(uint256 tokenId, address currency, uint256 amount) external {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "require token approval");
     require(packToken.balanceOf(msg.sender, tokenId) > 0, "require at least 1 token");
+    require(packToken.isPackRewardLocked(tokenId), "attempting to sell unlocked pack");
 
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,

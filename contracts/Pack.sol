@@ -145,6 +145,17 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     return randomNumber;
   }
 
+  // ========== Getter functions ============
+
+  // Returns true if token isn't pack or if token is pack and is locked
+  function isPackRewardLocked(uint256 tokenId) public view returns (bool) {
+    if (tokens[tokenId].tokenType == TokenType.Pack) {
+      return packs[tokenId].isRewardLocked;
+    } else {
+      return true;
+    }
+  }
+
   // ========== Transfer functions ==========
 
   /**
