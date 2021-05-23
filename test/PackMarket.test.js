@@ -100,7 +100,15 @@ describe("PackMarket", async () => {
     })
 
     it("sell creates listing", async () => {
-
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, USDC, amount);
+      
+      const listing = await packMarket.listings(owner.address, tokenId);
+      expect(listing.owner).to.equal(owner.address);
+      expect(listing.tokenId).to.equal(tokenId);
+      expect(listing.currency).to.equal(USDC);
+      expect(listing.amount).to.equal(amount);
     })
 
     it("sell emits PackListed", async () => {
