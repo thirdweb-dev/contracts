@@ -8,12 +8,13 @@ const { expect } = chai;
 describe("PackMarket", async () => {
   let pack;
   let packMarket;
+  let packCoin;
   let owner;
   let buyer;
+  let currency;
 
   const uri = "100";
   const supply = 100;
-  const currency = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
   const amount = 10;
 
   before(async () => {
@@ -24,6 +25,10 @@ describe("PackMarket", async () => {
   beforeEach(async () => {
     const Pack = await ethers.getContractFactory("Pack", owner);
     pack = await Pack.deploy();
+
+    const PackCoin = await ethers.getContractFactory("PackCoin", owner);
+    packCoin = await PackCoin.deploy();
+    currency = packCoin.address;
 
     const PackMarket = await ethers.getContractFactory("PackMarket", owner);
     packMarket = await PackMarket.deploy(pack.address);
@@ -135,16 +140,22 @@ describe("PackMarket", async () => {
 
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
-      await packMarket.sell(tokenId, currency, amount)
+      await packMarket.sell(tokenId, currency, amount);
+
+      await packCoin.mint(buyer.address, amount);
+      await packCoin.connect(buyer).approve(packMarket.address, amount);
       await packMarket.connect(buyer).buy(owner.address, tokenId, 1);
 
-      expect(await pack.balanceOf(tokenId, buyer.address)).to.equal(1);
+      expect(await pack.balanceOf(buyer.address, tokenId)).to.equal(1);
     })
 
     it("buy emits PackSold", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, amount);
+
+      await packCoin.mint(buyer.address, amount);
+      await packCoin.connect(buyer).approve(packMarket.address, amount);
 
       expect(await packMarket.connect(buyer).buy(owner.address, tokenId, 1))
         .to
