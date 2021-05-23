@@ -44,8 +44,6 @@ contract PackMarket is Ownable, ReentrancyGuard {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "require token approval");
     require(packToken.balanceOf(msg.sender, tokenId) > 0, "require at least 1 token");
 
-    packToken.lockReward(tokenId);
-
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
       tokenId: tokenId,
