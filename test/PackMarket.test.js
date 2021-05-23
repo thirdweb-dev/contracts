@@ -28,16 +28,33 @@ describe("PackMarket", async () => {
   })
 
   describe("setPackToken", async () => {
-    it("setPackToken only owner can change Pack", async () => {
-      await pack.createPack(uri, supply);
+    let anotherPack;
 
+    beforeEach(async () => {
       const Pack = await ethers.getContractFactory("Pack", owner);
       anotherPack = await Pack.deploy();
-      await packMarket.connect(buyer).setPackToken(anotherPack.address);
+    })
+    
+    it("setPackToken only owner can change Pack", async () => {
+      expect(await packMarket.packToken()).to.equal(pack.address);
+
+      try {
+        await packMarket.connect(buyer).setPackToken(anotherPack.address);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("caller is not the owner");
+      }
+
+      await packMarket.setPackToken(anotherPack.address);
+      expect(await packMarket.packToken()).to.equal(anotherPack.address);
+
     })
 
     it("setPackToken emits PackTokenChange", async () => {
-
+      expect(await packMarket.setPackToken(anotherPack.address))
+        .to
+        .emit(packMarket, "PackTokenChanged")
+        .withArgs(anotherPack.address);
     })
   })
 
