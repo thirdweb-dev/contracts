@@ -13,7 +13,7 @@ describe("PackMarket", async () => {
 
   const uri = "100";
   const supply = 100;
-  const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+  const currency = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
   const amount = 10;
 
   before(async () => {
@@ -70,7 +70,7 @@ describe("PackMarket", async () => {
 
     it("sell requires token approval", async () => {
       try {
-        await packMarket.sell(tokenId, USDC, amount);
+        await packMarket.sell(tokenId, currency, amount);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("require token approval");
@@ -81,7 +81,7 @@ describe("PackMarket", async () => {
       try {
         await pack.setApprovalForAll(packMarket.address, true);
         await pack.safeTransferFrom(owner.address, buyer.address, tokenId, supply, "0x00");
-        await packMarket.sell(tokenId, USDC, amount);
+        await packMarket.sell(tokenId, currency, amount);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("require at least 1 token");
@@ -92,7 +92,7 @@ describe("PackMarket", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
 
       try {
-        await packMarket.sell(tokenId, USDC, amount);
+        await packMarket.sell(tokenId, currency, amount);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("attempting to sell unlocked pack");
@@ -102,27 +102,54 @@ describe("PackMarket", async () => {
     it("sell creates listing", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
-      await packMarket.sell(tokenId, USDC, amount);
+      await packMarket.sell(tokenId, currency, amount);
       
       const listing = await packMarket.listings(owner.address, tokenId);
       expect(listing.owner).to.equal(owner.address);
       expect(listing.tokenId).to.equal(tokenId);
-      expect(listing.currency).to.equal(USDC);
+      expect(listing.currency).to.equal(currency);
       expect(listing.amount).to.equal(amount);
     })
 
     it("sell emits PackListed", async () => {
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
 
+      expect(await packMarket.sell(tokenId, currency, amount))
+        .to
+        .emit(packMarket, "PackListed")
+        .withArgs(owner.address, tokenId, currency, amount);
     })
   })
 
   describe("buy", async () => {
+    let tokenId;
+
+    beforeEach(async () => {
+      const packToken = await pack.createPack(uri, supply);
+      tokenId = packToken.value;
+    })
+
     it("buy successfully transfers Pack", async () => {
-      
+      expect(await pack.balanceOf(buyer.address, tokenId)).to.equal(0);
+
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, currency, amount)
+      await packMarket.connect(buyer).buy(owner.address, tokenId, 1);
+
+      expect(await pack.balanceOf(tokenId, buyer.address)).to.equal(1);
     })
 
     it("buy emits PackSold", async () => {
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, currency, amount);
 
+      expect(await packMarket.connect(buyer).buy(owner.address, tokenId, 1))
+        .to
+        .emit(packMarket, "PackSold")
+        .withArgs(owner.address, buyer.address, tokenId, 1);
     })
   })
 })
