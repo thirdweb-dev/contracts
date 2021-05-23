@@ -25,47 +25,32 @@ const chainIds = {
   rinkeby: 4,
   ropsten: 3,
   matic: 137,
-  mumbai: 80001
+  mumbai: 80001,
 };
 
 // Ensure that we have all the environment variables we need.
-let testPrivateKey: string;
-if (!process.env.TEST_PRIVATE_KEY) {
-  throw new Error("Please set your Test private key in a .env file");
-} else {
-  testPrivateKey = process.env.TEST_PRIVATE_KEY;
-}
-
-let alchemyKey: string;
-if (!process.env.ALCHEMY_KEY) {
-  throw new Error("Please set your Alchemy API Key in a .env file");
-} else {
-  alchemyKey = process.env.ALCHEMY_KEY;
-}
-
-let etherscanKey: string;
-if (!process.env.ETHERSCAN_API_KEY) {
-  throw new Error("Please set your Etherscan API Key in a .env file");
-} else {
-  etherscanKey = process.env.ETHERSCAN_API_KEY;
-}
+let testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
+let alchemyKey: string = process.env.ALCHEMY_KEY || "";
+let etherscanKey: string = process.env.ETHERSCAN_API_KEY || "";
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  
-  let nodeUrl = `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`
-  
+  if (!alchemyKey) {
+    throw new Error("Missing ALCHEMY_KEY");
+  }
+  let nodeUrl = `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
+
   // Update Matic RPC endpoint later.
-  if(network == "matic") {
-    nodeUrl = "https://rpc-mainnet.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/"
+  if (network == "matic") {
+    nodeUrl = "https://rpc-mainnet.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/";
   }
-  if(network == "mumbai") {
-    nodeUrl = "https://rpc-mumbai.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/"
+  if (network == "mumbai") {
+    nodeUrl = "https://rpc-mumbai.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/";
   }
-  
-  return {    
+
+  return {
     chainId: chainIds[network],
     url: nodeUrl,
-    accounts: [`${testPrivateKey}`]
+    accounts: [`${testPrivateKey}`],
   };
 }
 
@@ -76,14 +61,6 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS ? true : false,
     excludeContracts: [],
     src: "./contracts",
-  },
-  networks: {
-    goerli: createTestnetConfig("goerli"),
-    kovan: createTestnetConfig("kovan"),
-    rinkeby: createTestnetConfig("rinkeby"),
-    ropsten: createTestnetConfig("ropsten"),
-    matic: createTestnetConfig("matic"),
-    mumbai: createTestnetConfig("mumbai"),
   },
   paths: {
     artifacts: "./artifacts",
@@ -115,8 +92,19 @@ const config: HardhatUserConfig = {
     flat: true,
   },
   etherscan: {
-    apiKey: etherscanKey
+    apiKey: etherscanKey,
   },
 };
+
+if (testPrivateKey) {
+  config.networks = {
+    goerli: createTestnetConfig("goerli"),
+    kovan: createTestnetConfig("kovan"),
+    rinkeby: createTestnetConfig("rinkeby"),
+    ropsten: createTestnetConfig("ropsten"),
+    matic: createTestnetConfig("matic"),
+    mumbai: createTestnetConfig("mumbai"),
+  };
+}
 
 export default config;
