@@ -165,20 +165,7 @@ describe("PackMarket", async () => {
       }
     })
 
-    it("unlist cannot unlist more tokens than sold", async () => {
-      try {
-        await packMarket.unlist(tokenId, 2);
-        expect(false).to.equal(true);
-      } catch (err) {
-        expect(err.message).to.contain("quantity must be less than quantity listed");
-      }
-    })
-
-    it("unlist decreases listed quantity", async () => {
-
-    })
-
-    it("unlist all removes listing", async () => {
+    it("unlist removes listing", async () => {
 
     })
 
