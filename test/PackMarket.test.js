@@ -76,7 +76,7 @@ describe("PackMarket", async () => {
 
     it("sell requires token approval", async () => {
       await pack.lockReward(tokenId);
-      
+
       try {
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
@@ -150,6 +150,22 @@ describe("PackMarket", async () => {
     beforeEach(async () => {
       const packToken = await pack.createPack(uri, supply);
       tokenId = packToken.value;
+    })
+
+    it("buy cannot buy more than listed quantity", async () => {
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, currency, price, quantity);
+
+      await packCoin.mint(buyer.address, price * 2);
+      await packCoin.connect(buyer).approve(packMarket.address, price * 2);
+
+      try {
+        await packMarket.connect(buyer).buy(owner.address, tokenId, quantity + 1);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("attempting to buy more tokens than listed");
+      }
     })
 
     it("buy successfully transfers Pack", async () => {
