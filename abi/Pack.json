@@ -722,6 +722,11 @@
     "name": "tokens",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "uri",
         "type": "string"
