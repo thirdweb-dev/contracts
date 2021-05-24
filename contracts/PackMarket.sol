@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import './Pack.sol';
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./Pack.sol";
 
 contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
   event PackTokenChanged(address newPackTokenAddress);
-  event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 price);
+  event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
   event PackUnlisted(address indexed seller, uint256 indexed tokenId);
+  event ListingUpdate(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
   event PackSold(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
 
   Pack public packToken;
@@ -56,7 +57,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
       quantity: quantity
     });
 
-    emit PackListed(msg.sender, tokenId, currency, price);
+    emit PackListed(msg.sender, tokenId, currency, price, quantity);
   }
 
   function unlist(uint256 tokenId) external {
@@ -65,6 +66,26 @@ contract PackMarket is Ownable, ReentrancyGuard {
     delete listings[msg.sender][tokenId];
 
     emit PackUnlisted(msg.sender, tokenId);
+  }
+
+  function setListingPrice(uint256 _tokenId, uint256 _newPrice) external  {
+    require(listings[msg.sender][_tokenId].owner == msg.sender, "listing must exist");
+
+    listings[msg.sender][_tokenId].price = _newPrice;
+    
+    emit ListingUpdate(
+      msg.sender, _tokenId, listings[msg.sender][_tokenId].currency, _newPrice, listings[msg.sender][_tokenId].quantity
+    );
+  }
+
+  function setListingCurrency(uint256 _tokenId, address _newCurrency) external {
+    require(listings[msg.sender][_tokenId].owner == msg.sender, "listing must exist");
+
+    listings[msg.sender][_tokenId].currency = _newCurrency;
+
+    emit ListingUpdate(
+      msg.sender, _tokenId, _newCurrency, listings[msg.sender][_tokenId].price, listings[msg.sender][_tokenId].quantity
+    );
   }
 
   function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {
@@ -83,12 +104,15 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
     IERC20 priceToken = IERC20(listing.currency);
     priceToken.approve(address(this), sellerCut + creatorCut);
-    require(priceToken.allowance(msg.sender, address(this)) >= totalPrice, "Not approved PackMarket to handle price amount.");
+    require(
+      priceToken.allowance(msg.sender, address(this)) >= totalPrice, 
+      "Not approved PackMarket to handle price amount."
+    );
 
-    require(priceToken.transferFrom(msg.sender, address(this), totalPrice));
-    require(priceToken.transferFrom(address(this), listing.owner, sellerCut));
+    require(priceToken.transferFrom(msg.sender, address(this), totalPrice), "ERC20 price transfer failed.");
+    require(priceToken.transferFrom(address(this), listing.owner, sellerCut), "ERC20 price transfer failed.");
     if (creatorCut > 0) {
-      require(priceToken.transferFrom(address(this), creator, creatorCut));
+      require(priceToken.transferFrom(address(this), creator, creatorCut), "ERC20 price transfer failed.");
     }
 
     packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
