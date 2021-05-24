@@ -144,6 +144,39 @@ describe("PackMarket", async () => {
     })
   })
 
+  describe("unlist", async () => {
+    let tokenId;
+
+    beforeEach(async () => {
+      const packToken = await pack.createPack(uri, supply);
+      tokenId = packToken.value;
+
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, currency, price, quantity);
+    })
+
+    it("unlist listing must exist", async () => {
+      
+    })
+
+    it("unlist cannot unlist more tokens than sold", async () => {
+
+    })
+
+    it("unlist decreases listed quantity", async () => {
+
+    })
+
+    it("unlist all removes listing", async () => {
+      
+    })
+
+    it("unlist emits PackUnlisted", async () => {
+
+    })
+  })
+
   describe("buy", async () => {
     let tokenId;
 
