@@ -167,6 +167,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     return tokens[id].uri;
   }
 
+  /// @notice Returns a (non-pseudo) random number.
   function _random() private returns (uint256) {
     // TODO: NOT SAFE.
     uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
