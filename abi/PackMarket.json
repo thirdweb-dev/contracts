@@ -118,12 +118,6 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
       }
     ],
     "name": "PackUnlisted",
@@ -331,11 +325,6 @@
       {
         "internalType": "uint256",
         "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quantity",
         "type": "uint256"
       }
     ],

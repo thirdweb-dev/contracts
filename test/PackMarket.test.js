@@ -158,7 +158,7 @@ describe("PackMarket", async () => {
 
     it("unlist listing must exist", async () => {
       try {
-        await packMarket.unlist(tokenId + 1, 0);
+        await packMarket.unlist(tokenId + 1);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("listing must exist");
@@ -166,11 +166,17 @@ describe("PackMarket", async () => {
     })
 
     it("unlist removes listing", async () => {
+      await packMarket.unlist(tokenId);
 
+      const listing = await packMarket.listings(owner.address, tokenId)
+      expect(listing.quantity).to.equal(0);
     })
 
     it("unlist emits PackUnlisted", async () => {
-
+      expect(await packMarket.unlist(tokenId))
+        .to
+        .emit(packMarket, "PackUnlisted")
+        .withArgs(owner.address, tokenId);
     })
   })
 
