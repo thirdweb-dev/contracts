@@ -140,7 +140,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     require(quantity <= listings[from][tokenId].quantity, "attempting to buy more tokens than listed");
 
     Listing memory listing = listings[from][tokenId];
-    (address creator,,,) = packToken.packs(tokenId);
+    (address creator,,,,) = packToken.tokens(tokenId);
     
     if(listing.currency == address(0)) {
       distributeEther(listing.owner, creator, listing.price, quantity);

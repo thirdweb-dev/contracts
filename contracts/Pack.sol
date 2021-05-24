@@ -17,6 +17,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   }
 
   struct Token {
+    address creator;
     string uri;
     uint256 currentSupply;
     uint256 maxSupply;
@@ -56,6 +57,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     _currentTokenId += 1;
 
     tokens[tokenId] = Token({
+      creator: msg.sender,
       uri: tokenUri,
       currentSupply: 0,
       maxSupply: maxSupply,
@@ -119,6 +121,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       _currentTokenId += 1;
 
       tokens[tokenId] = Token({
+        creator: msg.sender,
         uri: tokenUri,
         currentSupply: 0,
         maxSupply: tokenMaxSupplies[i],
