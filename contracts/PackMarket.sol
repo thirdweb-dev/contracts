@@ -34,6 +34,22 @@ contract PackMarket is Ownable, ReentrancyGuard {
   // owner => tokenId => Listing
   mapping(address => mapping(uint256 => Listing)) public listings;
 
+  modifier eligibleToList(uint _tokenId, uint _quantity, address _currency) {
+    require(packToken.isApprovedForAll(msg.sender, address(this)), "Must approve market contract to manage tokens.");
+    require(packToken.balanceOf(msg.sender, _quantity) >= _quantity, "Must own the amount of tokens being listed.");
+    require(packToken.isEligibleForSale(_tokenId), "Cannot sell a locked pack or a token that has not been minted.");
+    require(_quantity > 0, "Must list at least one token");
+    require(_currency != address(0), "invalid price token");
+
+    _;
+  }
+
+  modifier onlySeller(uint _tokenId) {
+    require(listings[msg.sender][_tokenId].owner == msg.sender, "Only the seller can modify the listing.");
+
+    _;
+  }
+
   constructor(address _packToken) {
     packToken = Pack(_packToken);
   }
@@ -43,11 +59,12 @@ contract PackMarket is Ownable, ReentrancyGuard {
     emit PackTokenChanged(_packToken);
   }
 
-  function sell(uint256 tokenId, address currency, uint256 price, uint256 quantity) external {
-    require(packToken.isApprovedForAll(msg.sender, address(this)), "require token approval");
-    require(packToken.balanceOf(msg.sender, tokenId) >= quantity, "seller must own enough tokens");
-    require(packToken.isEligibleForSale(tokenId), "attempting to sell unlocked pack");
-    require(quantity > 0, "must list at least one token");
+  function sell(
+    uint256 tokenId, 
+    address currency, 
+    uint256 price, 
+    uint256 quantity
+  ) external eligibleToList(tokenId, quantity, currency) {
 
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
@@ -60,17 +77,13 @@ contract PackMarket is Ownable, ReentrancyGuard {
     emit PackListed(msg.sender, tokenId, currency, price, quantity);
   }
 
-  function unlist(uint256 tokenId) external {
-    require(listings[msg.sender][tokenId].owner == msg.sender, "listing must exist");
-    
+  function unlist(uint256 tokenId) external onlySeller(tokenId) {
     delete listings[msg.sender][tokenId];
 
     emit PackUnlisted(msg.sender, tokenId);
   }
 
-  function setListingPrice(uint256 _tokenId, uint256 _newPrice) external  {
-    require(listings[msg.sender][_tokenId].owner == msg.sender, "listing must exist");
-
+  function setListingPrice(uint256 _tokenId, uint256 _newPrice) external onlySeller(_tokenId) {
     listings[msg.sender][_tokenId].price = _newPrice;
     
     emit ListingUpdate(
@@ -78,9 +91,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     );
   }
 
-  function setListingCurrency(uint256 _tokenId, address _newCurrency) external {
-    require(listings[msg.sender][_tokenId].owner == msg.sender, "listing must exist");
-
+  function setListingCurrency(uint256 _tokenId, address _newCurrency) external onlySeller(_tokenId) {
     listings[msg.sender][_tokenId].currency = _newCurrency;
 
     emit ListingUpdate(
@@ -89,14 +100,13 @@ contract PackMarket is Ownable, ReentrancyGuard {
   }
 
   function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {
-    require(from != address(0), "invalid listing owner");
+    require(listings[from][tokenId].owner == from, "The listing does not exist.");
     require(quantity > 0, "must buy at least one token");
     require(quantity <= listings[from][tokenId].quantity, "attempting to buy more tokens than listed");
 
     Listing memory listing = listings[from][tokenId];
-    require(listing.currency != address(0), "invalid price token");
 
-    address creator = packToken.ownerOf(tokenId);
+    (address creator,,,) = packToken.packs(tokenId);
     uint256 totalPrice = listing.price.mul(quantity);
     uint256 protocolCut = totalPrice.mul(protocolFeeBps).div(MAX_BPS);
     uint256 creatorCut = listing.owner == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);
