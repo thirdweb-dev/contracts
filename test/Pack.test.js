@@ -71,8 +71,9 @@ describe("Pack", () => {
     })
 
     it("addRewards only works for unlocked Packs", async () => {
+      await pack.lockReward(0);
+
       try {
-        await pack.lockReward(0);
         await pack.addRewards(0, [uri], [100]);
         expect(false).to.equal(true);
       } catch (err) {
@@ -104,9 +105,10 @@ describe("Pack", () => {
     })
 
     it("openPack sender must own pack", async () => {
+      await pack.addRewards(0, [uri], [100])
+      await pack.lockReward(0);
+
       try {
-        await pack.addRewards(0, [uri], [100])
-        await pack.lockReward(0);
         await pack.connect(buyer).openPack(0);
         expect(false).to.equal(true);
       } catch (err) {
@@ -115,8 +117,9 @@ describe("Pack", () => {
     })
 
     it("openPack rewards must be locked", async () => {
+      await pack.addRewards(0, [uri], [100])
+
       try {
-        await pack.addRewards(0, [uri], [100])
         await pack.openPack(0);
         expect(false).to.equal(true);
       } catch (err) {
@@ -125,8 +128,9 @@ describe("Pack", () => {
     })
 
     it("openPack must be at least one reward", async () => {
+      await pack.lockReward(0);
+
       try {
-        await pack.lockReward(0);
         await pack.openPack(0);
         expect(false).to.equal(true);
       } catch (err) {
