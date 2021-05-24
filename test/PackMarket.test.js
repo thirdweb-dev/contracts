@@ -152,6 +152,22 @@ describe("PackMarket", async () => {
       tokenId = packToken.value;
     })
 
+    it("buy must buy at least one token", async () => {
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, currency, price, quantity);
+
+      await packCoin.mint(buyer.address, price);
+      await packCoin.connect(buyer).approve(packMarket.address, price);
+
+      try {
+        await packMarket.connect(buyer).buy(owner.address, tokenId, 0);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("must buy at least one token");
+      }
+    })
+
     it("buy cannot buy more than listed quantity", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);

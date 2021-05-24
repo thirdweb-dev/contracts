@@ -74,6 +74,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
   function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {
     require(from != address(0), "invalid listing owner");
+    require(quantity > 0, "must buy at least one token");
     require(quantity <= listings[from][tokenId].quantity, "attempting to buy more tokens than listed");
 
     Listing memory listing = listings[from][tokenId];
