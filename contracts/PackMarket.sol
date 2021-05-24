@@ -12,6 +12,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
   event PackTokenChanged(address newPackTokenAddress);
   event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 amount);
+  event PackUnlisted(address indexed seller, uint256 indexed tokenId);
   event PackSold(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
 
   Pack public packToken;
@@ -53,6 +54,15 @@ contract PackMarket is Ownable, ReentrancyGuard {
     });
 
     emit PackListed(msg.sender, tokenId, currency, amount);
+  }
+
+  function unlist(uint256 tokenId) external {
+    require(listings[msg.sender][tokenId].owner == msg.sender, "require listing exists");
+    // require(number <= listings[msg.sender][tokenId].number, "require amount less than amount listed");
+    
+    delete listings[msg.sender][tokenId];
+
+    emit PackUnlisted(msg.sender, tokenId);
   }
 
   function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {

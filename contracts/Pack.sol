@@ -233,5 +233,4 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     super.safeBatchTransferFrom(from, to, ids, amounts, data);
   }
 
-
 }
