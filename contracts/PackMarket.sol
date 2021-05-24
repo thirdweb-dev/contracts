@@ -11,10 +11,10 @@ contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
   event PackTokenChanged(address newPackTokenAddress);
-  event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
-  event PackUnlisted(address indexed seller, uint256 indexed tokenId);
+  event NewListing(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
+  event Unlisted(address indexed seller, uint256 indexed tokenId);
   event ListingUpdate(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
-  event PackSold(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
+  event NewSale(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
 
   Pack public packToken;
 
@@ -54,11 +54,24 @@ contract PackMarket is Ownable, ReentrancyGuard {
     packToken = Pack(_packToken);
   }
 
+  /**
+   * @notice Sets the token address of the ERC1155 Pack token contract associated with the market.
+   *
+   * @param _packToken The address of an ERC1155 token contract.
+   */
   function setPackToken(address _packToken) external onlyOwner {
     packToken = Pack(_packToken);
     emit PackTokenChanged(_packToken);
   }
 
+  /**
+   * @notice Lets pack or reward token owner list a given amount of tokens for sale.
+   *
+   * @param tokenId The ERC1155 tokenId of the token being listed for sale.
+   * @param currency The smart contract address of the desired ERC20 token accepted for sale.
+   * @param price The price of each unit of token listed for sale.
+   * @param quantity The number of ERC1155 tokens of id `tokenId` being listed for sale.
+   */
   function sell(
     uint256 tokenId, 
     address currency, 
@@ -74,15 +87,26 @@ contract PackMarket is Ownable, ReentrancyGuard {
       quantity: quantity
     });
 
-    emit PackListed(msg.sender, tokenId, currency, price, quantity);
+    emit NewListing(msg.sender, tokenId, currency, price, quantity);
   }
 
+  /**
+   * @notice Lets a seller unlist an existing listing.
+   *
+   * @param tokenId The ERC1155 tokenId of the token being unlisted.
+   */
   function unlist(uint256 tokenId) external onlySeller(tokenId) {
     delete listings[msg.sender][tokenId];
 
-    emit PackUnlisted(msg.sender, tokenId);
+    emit Unlisted(msg.sender, tokenId);
   }
 
+  /**
+   * @notice Lets a seller change the price of a listing.
+   * 
+   * @param _tokenId The ERC1155 tokenId associated with the listing.
+   * @param _newPrice The new price for the listing.
+   */
   function setListingPrice(uint256 _tokenId, uint256 _newPrice) external onlySeller(_tokenId) {
     listings[msg.sender][_tokenId].price = _newPrice;
     
@@ -91,6 +115,12 @@ contract PackMarket is Ownable, ReentrancyGuard {
     );
   }
 
+  /**
+   * @notice Lets a seller change the currency they want to accept for the listing.
+   * 
+   * @param _tokenId The ERC1155 tokenId associated with the listing.
+   * @param _newCurrency The new currency for the listing. 
+   */
   function setListingCurrency(uint256 _tokenId, address _newCurrency) external onlySeller(_tokenId) {
     listings[msg.sender][_tokenId].currency = _newCurrency;
 
@@ -99,6 +129,13 @@ contract PackMarket is Ownable, ReentrancyGuard {
     );
   }
 
+  /**
+   * @notice Lets buyer buy a given amount of tokens listed for sale in the relevant listing.
+   *
+   * @param from The address of the listing's seller.
+   * @param tokenId The ERC1155 tokenId associated with the listing.
+   * @param quantity The quantity of tokens to buy from the relevant listing.
+   */
   function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {
     require(listings[from][tokenId].owner == from, "The listing does not exist.");
     require(quantity > 0, "must buy at least one token");
@@ -128,9 +165,6 @@ contract PackMarket is Ownable, ReentrancyGuard {
     packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
     listings[from][tokenId].quantity -= quantity;
 
-    emit PackSold(from, msg.sender, tokenId, quantity);
+    emit NewSale(from, msg.sender, tokenId, quantity);
   }
-
-  fallback() external payable {}
-  receive() external payable {}
 }
