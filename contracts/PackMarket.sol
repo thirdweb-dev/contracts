@@ -60,7 +60,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
   }
 
   function unlist(uint256 tokenId, uint256 quantity) public {
-    require(listings[msg.sender][tokenId].owner == msg.sender, "require listing exists");
+    require(listings[msg.sender][tokenId].owner == msg.sender, "listing must exist");
     require(quantity <= listings[msg.sender][tokenId].quantity, "quantity must be less than quantity listed");
     
     if (quantity == listings[msg.sender][tokenId].quantity) {
