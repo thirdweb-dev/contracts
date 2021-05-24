@@ -11,7 +11,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
   event PackTokenChanged(address newPackTokenAddress);
-  event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 amount);
+  event PackListed(address indexed seller, uint256 indexed tokenId, address currency, uint256 price);
   event PackUnlisted(address indexed seller, uint256 indexed tokenId);
   event PackSold(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
 
@@ -26,7 +26,8 @@ contract PackMarket is Ownable, ReentrancyGuard {
     uint256 tokenId;
 
     address currency;
-    uint256 amount;
+    uint256 price;
+    uint256 quantity;
   }
 
   // owner => tokenId => Listing
@@ -41,19 +42,21 @@ contract PackMarket is Ownable, ReentrancyGuard {
     emit PackTokenChanged(_packToken);
   }
 
-  function sell(uint256 tokenId, address currency, uint256 amount) external {
+  function sell(uint256 tokenId, address currency, uint256 price, uint256 quantity) external {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "require token approval");
     require(packToken.balanceOf(msg.sender, tokenId) > 0, "require at least 1 token");
     require(packToken.isEligibleForSale(tokenId), "attempting to sell unlocked pack");
+    require(quantity > 0, "must list at least one token");
 
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
       tokenId: tokenId,
       currency: currency,
-      amount: amount
+      price: price,
+      quantity: quantity
     });
 
-    emit PackListed(msg.sender, tokenId, currency, amount);
+    emit PackListed(msg.sender, tokenId, currency, price);
   }
 
   function unlist(uint256 tokenId) external {
@@ -72,7 +75,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     require(listing.currency != address(0), "invalid price token");
 
     address creator = packToken.ownerOf(tokenId);
-    uint256 totalPrice = listing.amount.mul(quantity);
+    uint256 totalPrice = listing.price.mul(quantity);
     uint256 protocolCut = totalPrice.mul(protocolFeeBps).div(MAX_BPS);
     uint256 creatorCut = listing.owner == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);
     uint256 sellerCut = totalPrice - protocolCut - creatorCut;
