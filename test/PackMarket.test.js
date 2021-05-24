@@ -15,7 +15,8 @@ describe("PackMarket", async () => {
 
   const uri = "100";
   const supply = 100;
-  const amount = 10;
+  const price = 10;
+  const quantity = 1;
 
   before(async () => {
     signers = await ethers.getSigners();
@@ -75,7 +76,7 @@ describe("PackMarket", async () => {
 
     it("sell requires token approval", async () => {
       try {
-        await packMarket.sell(tokenId, currency, amount);
+        await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("require token approval");
@@ -86,7 +87,7 @@ describe("PackMarket", async () => {
       try {
         await pack.setApprovalForAll(packMarket.address, true);
         await pack.safeTransferFrom(owner.address, buyer.address, tokenId, supply, "0x00");
-        await packMarket.sell(tokenId, currency, amount);
+        await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("require at least 1 token");
@@ -97,7 +98,7 @@ describe("PackMarket", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
 
       try {
-        await packMarket.sell(tokenId, currency, amount);
+        await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("attempting to sell unlocked pack");
@@ -107,23 +108,23 @@ describe("PackMarket", async () => {
     it("sell creates listing", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
-      await packMarket.sell(tokenId, currency, amount);
+      await packMarket.sell(tokenId, currency, price, quantity);
       
       const listing = await packMarket.listings(owner.address, tokenId);
       expect(listing.owner).to.equal(owner.address);
       expect(listing.tokenId).to.equal(tokenId);
       expect(listing.currency).to.equal(currency);
-      expect(listing.amount).to.equal(amount);
+      expect(listing.price).to.equal(price);
     })
 
     it("sell emits PackListed", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
 
-      expect(await packMarket.sell(tokenId, currency, amount))
+      expect(await packMarket.sell(tokenId, currency, price, quantity))
         .to
         .emit(packMarket, "PackListed")
-        .withArgs(owner.address, tokenId, currency, amount);
+        .withArgs(owner.address, tokenId, currency, price);
     })
   })
 
@@ -140,11 +141,11 @@ describe("PackMarket", async () => {
 
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
-      await packMarket.sell(tokenId, currency, amount);
+      await packMarket.sell(tokenId, currency, price, quantity);
 
-      await packCoin.mint(buyer.address, amount);
-      await packCoin.connect(buyer).approve(packMarket.address, amount);
-      await packMarket.connect(buyer).buy(owner.address, tokenId, 1);
+      await packCoin.mint(buyer.address, price);
+      await packCoin.connect(buyer).approve(packMarket.address, price);
+      await packMarket.connect(buyer).buy(owner.address, tokenId, quantity);
 
       expect(await pack.balanceOf(buyer.address, tokenId)).to.equal(1);
     })
@@ -152,12 +153,12 @@ describe("PackMarket", async () => {
     it("buy emits PackSold", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
-      await packMarket.sell(tokenId, currency, amount);
+      await packMarket.sell(tokenId, currency, price, quantity);
 
-      await packCoin.mint(buyer.address, amount);
-      await packCoin.connect(buyer).approve(packMarket.address, amount);
+      await packCoin.mint(buyer.address, price);
+      await packCoin.connect(buyer).approve(packMarket.address, price);
 
-      expect(await packMarket.connect(buyer).buy(owner.address, tokenId, 1))
+      expect(await packMarket.connect(buyer).buy(owner.address, tokenId, quantity))
         .to
         .emit(packMarket, "PackSold")
         .withArgs(owner.address, buyer.address, tokenId, 1);
