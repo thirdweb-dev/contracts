@@ -39,8 +39,6 @@ contract PackMarket is Ownable, ReentrancyGuard {
     require(packToken.balanceOf(msg.sender, _quantity) >= _quantity, "Must own the amount of tokens being listed.");
     require(packToken.isEligibleForSale(_tokenId), "Cannot sell a locked pack or a token that has not been minted.");
     require(_quantity > 0, "Must list at least one token");
-    require(_currency != address(0), "invalid price token");
-
     _;
   }
 
@@ -136,20 +134,42 @@ contract PackMarket is Ownable, ReentrancyGuard {
    * @param tokenId The ERC1155 tokenId associated with the listing.
    * @param quantity The quantity of tokens to buy from the relevant listing.
    */
-  function buy(address from, uint256 tokenId, uint256 quantity) external nonReentrant {
+  function buy(address from, uint256 tokenId, uint256 quantity) external payable nonReentrant {
     require(listings[from][tokenId].owner == from, "The listing does not exist.");
     require(quantity > 0, "must buy at least one token");
     require(quantity <= listings[from][tokenId].quantity, "attempting to buy more tokens than listed");
 
     Listing memory listing = listings[from][tokenId];
-
     (address creator,,,) = packToken.packs(tokenId);
-    uint256 totalPrice = listing.price.mul(quantity);
+    
+    if(listing.currency == address(0)) {
+      distributeEther(listing.owner, creator, listing.price, quantity);
+    } else {
+      distributeERC20(listing.owner, creator, listing.currency, listing.price, quantity);
+    }
+
+    packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
+    listings[from][tokenId].quantity -= quantity;
+
+    emit NewSale(from, msg.sender, tokenId, quantity);
+  }
+
+  /**
+   * @notice Distributes some share of the sale value (in ERC20 token) to the seller, creator and protocol.
+   *
+   * @param seller The seller associated with the listing.
+   * @param creator The creator of the ERC1155 token on sale.
+   * @param currency The ERC20 curreny accepted by the listing.
+   * @param price The price per ERC1155 token of the listing.
+   * @param quantity The quantity of ERC1155 tokens being purchased.  
+   */
+  function distributeERC20(address seller, address creator, address currency, uint price, uint quantity) internal {
+    uint256 totalPrice = price.mul(quantity);
     uint256 protocolCut = totalPrice.mul(protocolFeeBps).div(MAX_BPS);
-    uint256 creatorCut = listing.owner == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);
+    uint256 creatorCut = seller == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);
     uint256 sellerCut = totalPrice - protocolCut - creatorCut;
 
-    IERC20 priceToken = IERC20(listing.currency);
+    IERC20 priceToken = IERC20(currency);
     priceToken.approve(address(this), sellerCut + creatorCut);
     require(
       priceToken.allowance(msg.sender, address(this)) >= totalPrice, 
@@ -157,14 +177,33 @@ contract PackMarket is Ownable, ReentrancyGuard {
     );
 
     require(priceToken.transferFrom(msg.sender, address(this), totalPrice), "ERC20 price transfer failed.");
-    require(priceToken.transferFrom(address(this), listing.owner, sellerCut), "ERC20 price transfer failed.");
+    require(priceToken.transferFrom(address(this), seller, sellerCut), "ERC20 price transfer failed.");
     if (creatorCut > 0) {
       require(priceToken.transferFrom(address(this), creator, creatorCut), "ERC20 price transfer failed.");
     }
+  }
 
-    packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
-    listings[from][tokenId].quantity -= quantity;
+  /**
+   * @notice Distributes some share of the sale value (in Ether) to the seller, creator and protocol.
+   *
+   * @param seller The seller associated with the listing.
+   * @param creator The creator of the ERC1155 token on sale.
+   * @param price The price per ERC1155 token of the listing.
+   * @param quantity The quantity of ERC1155 tokens being purchased.
+   */
+  function distributeEther(address seller, address creator, uint price, uint quantity) internal {
+    uint256 totalPrice = price.mul(quantity);
+    uint256 protocolCut = totalPrice.mul(protocolFeeBps).div(MAX_BPS);
+    uint256 creatorCut = seller == creator ? 0 : totalPrice.mul(creatorFeeBps).div(MAX_BPS);
+    uint256 sellerCut = totalPrice - protocolCut - creatorCut;
 
-    emit NewSale(from, msg.sender, tokenId, quantity);
+    require(msg.value >= totalPrice, "Must sent enough eth to buy the given amount.");
+
+    (bool success,) = seller.call{value: sellerCut}("");
+    require(success, "ETH transfer of seller cut failed.");
+    if (creatorCut > 0) {
+        (success,) = creator.call{value: creatorCut}("");
+      require(success, "ETH transfer of creator cut failed.");
+    }
   }
 }
