@@ -9,13 +9,13 @@ async function main() {
   
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-//   const PackToken_Factory = await ethers.getContractFactory("Pack");
-//   const packToken = await PackToken_Factory.deploy();
+  const PackToken_Factory = await ethers.getContractFactory("Pack");
+  const packToken = await PackToken_Factory.deploy();
 
-//   console.log("Pack ERC1155 token address:", packToken.address);
+  console.log("Pack ERC1155 token address:", packToken.address);
 
   const PackMarket_Factory = await ethers.getContractFactory("PackMarket");
-  const packMarket = await PackMarket_Factory.deploy();
+  const packMarket = await PackMarket_Factory.deploy(packToken.address);
 
   console.log("Pack Market address:", packMarket.address);
 }
@@ -27,4 +27,5 @@ main()
     process.exit(1);
   });
 
-// Pack ERC1155 token address (Rinkeby) -- 0x49b1e42C369f3e7e25374565E9422a5C5Ed80be7
+// Pack ERC1155 token address (Rinkeby) -- 0xac063C80a70725e3c63FaaC04a10920596cd9255
+// Pack Market address -- 0xD669F0c9C6A2E42DF4D10C799e4afCb2C8609c79
