@@ -75,6 +75,8 @@ describe("PackMarket", async () => {
     })
 
     it("sell requires token approval", async () => {
+      await pack.lockReward(tokenId);
+      
       try {
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
@@ -83,14 +85,28 @@ describe("PackMarket", async () => {
       }
     })
 
-    it("sell requires at least one token", async () => {
+    it("sell must own enough tokens", async () => {
+      await pack.lockReward(tokenId);
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.safeTransferFrom(owner.address, buyer.address, tokenId, supply, "0x00");
+
       try {
-        await pack.setApprovalForAll(packMarket.address, true);
-        await pack.safeTransferFrom(owner.address, buyer.address, tokenId, supply, "0x00");
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("require at least 1 token");
+        expect(err.message).to.contain("seller must own enough");
+      }
+    })
+
+    it("sell must list at least one token", async () => {
+      await pack.lockReward(tokenId);
+      await pack.setApprovalForAll(packMarket.address, true);
+
+      try {
+        await packMarket.sell(tokenId, currency, price, 0);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("must list at least one");
       }
     })
 
