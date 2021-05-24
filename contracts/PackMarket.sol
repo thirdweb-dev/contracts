@@ -126,6 +126,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     }
 
     packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
+    listings[from][tokenId].quantity -= quantity;
 
     emit PackSold(from, msg.sender, tokenId, quantity);
   }
