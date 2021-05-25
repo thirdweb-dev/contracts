@@ -117,7 +117,7 @@ describe("PackMarket", async () => {
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("attempting to sell unlocked pack");
+        expect(err.message).to.contain("Cannot sell an unlocked pack or a token that has not been minted");
       }
     })
 
