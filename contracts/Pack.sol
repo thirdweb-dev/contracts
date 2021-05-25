@@ -94,7 +94,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       uint256 prob = _random().mod(pack.rarityDenominator);
       uint256 index = prob.mod(pack.rewardTokenIds.length);
       rewardedTokenId = pack.rewardTokenIds[index];
-    } while (tokens[rewardedTokenId].currentSupply + numRewarded <= tokens[rewardedTokenId].maxSupply);
+    } while (tokens[rewardedTokenId].currentSupply + numRewarded > tokens[rewardedTokenId].maxSupply);
 
     _burn(msg.sender, packId, 1); // note: does not reduce the supply
     _mintSupplyChecked(msg.sender, rewardedTokenId, numRewarded);
