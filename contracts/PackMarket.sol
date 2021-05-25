@@ -44,7 +44,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
   }
 
   modifier onlySeller(uint _tokenId) {
-    require(listings[msg.sender][_tokenId].owner == msg.sender, "Only the seller can modify the listing.");
+    require(listings[msg.sender][_tokenId].owner != address(0), "Only the seller can modify the listing.");
 
     _;
   }
