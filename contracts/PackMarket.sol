@@ -12,9 +12,22 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
   event PackTokenChanged(address newPackTokenAddress);
   event NewListing(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
-  event Unlisted(address indexed seller, uint256 indexed tokenId);
-  event ListingUpdate(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
-  event NewSale(address indexed seller, address indexed buyer, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
+  event NewSale(
+    address indexed seller, 
+    address indexed buyer, 
+    uint256 indexed tokenId, 
+    address currency, uint256 
+    price, 
+    uint256 quantity
+  );
+  event ListingUpdate(
+    address indexed seller, 
+    uint256 indexed tokenId, 
+    bool active, 
+    address currency, 
+    uint256 price, 
+    uint256 quantity
+  );
 
   Pack public packToken;
 
@@ -35,16 +48,16 @@ contract PackMarket is Ownable, ReentrancyGuard {
   // owner => tokenId => Listing
   mapping(address => mapping(uint256 => Listing)) public listings;
 
-  modifier eligibleToList(uint _tokenId, uint _quantity, address _currency) {
+  modifier eligibleToList(uint tokenId, uint _quantity, address _currency) {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "Must approve market contract to manage tokens.");
     require(packToken.balanceOf(msg.sender, _quantity) >= _quantity, "Must own the amount of tokens being listed.");
-    require(packToken.isEligibleForSale(_tokenId), "Cannot sell a locked pack or a token that has not been minted.");
+    require(packToken.isEligibleForSale(tokenId), "Cannot sell a locked pack or a token that has not been minted.");
     require(_quantity > 0, "Must list at least one token");
     _;
   }
 
-  modifier onlySeller(uint _tokenId) {
-    require(listings[msg.sender][_tokenId].owner != address(0), "Only the seller can modify the listing.");
+  modifier onlySeller(uint tokenId) {
+    require(listings[msg.sender][tokenId].owner != address(0), "Only the seller can modify the listing.");
 
     _;
   }
@@ -98,34 +111,51 @@ contract PackMarket is Ownable, ReentrancyGuard {
   function unlist(uint256 tokenId) external onlySeller(tokenId) {
     listings[msg.sender][tokenId].active = false;
 
-    emit Unlisted(msg.sender, tokenId);
+    emit ListingUpdate(
+      msg.sender,
+      tokenId,
+      listings[msg.sender][tokenId].active, 
+      listings[msg.sender][tokenId].currency, 
+      listings[msg.sender][tokenId].price, 
+      listings[msg.sender][tokenId].quantity
+    );
   }
 
   /**
    * @notice Lets a seller change the price of a listing.
    * 
-   * @param _tokenId The ERC1155 tokenId associated with the listing.
+   * @param tokenId The ERC1155 tokenId associated with the listing.
    * @param _newPrice The new price for the listing.
    */
-  function setListingPrice(uint256 _tokenId, uint256 _newPrice) external onlySeller(_tokenId) {
-    listings[msg.sender][_tokenId].price = _newPrice;
+  function setListingPrice(uint256 tokenId, uint256 _newPrice) external onlySeller(tokenId) {
+    listings[msg.sender][tokenId].price = _newPrice;
     
     emit ListingUpdate(
-      msg.sender, _tokenId, listings[msg.sender][_tokenId].currency, _newPrice, listings[msg.sender][_tokenId].quantity
+      msg.sender,
+      tokenId,
+      listings[msg.sender][tokenId].active, 
+      listings[msg.sender][tokenId].currency, 
+      listings[msg.sender][tokenId].price, 
+      listings[msg.sender][tokenId].quantity
     );
   }
 
   /**
    * @notice Lets a seller change the currency they want to accept for the listing.
    * 
-   * @param _tokenId The ERC1155 tokenId associated with the listing.
+   * @param tokenId The ERC1155 tokenId associated with the listing.
    * @param _newCurrency The new currency for the listing. 
    */
-  function setListingCurrency(uint256 _tokenId, address _newCurrency) external onlySeller(_tokenId) {
-    listings[msg.sender][_tokenId].currency = _newCurrency;
+  function setListingCurrency(uint256 tokenId, address _newCurrency) external onlySeller(tokenId) {
+    listings[msg.sender][tokenId].currency = _newCurrency;
 
     emit ListingUpdate(
-      msg.sender, _tokenId, _newCurrency, listings[msg.sender][_tokenId].price, listings[msg.sender][_tokenId].quantity
+      msg.sender,
+      tokenId,
+      listings[msg.sender][tokenId].active, 
+      listings[msg.sender][tokenId].currency, 
+      listings[msg.sender][tokenId].price, 
+      listings[msg.sender][tokenId].quantity
     );
   }
 
