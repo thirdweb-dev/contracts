@@ -23,8 +23,8 @@ contract PackMarket is Ownable, ReentrancyGuard {
     address indexed seller, 
     address indexed buyer, 
     uint256 indexed tokenId, 
-    address currency, uint256 
-    price, 
+    address currency, 
+    uint256 price, 
     uint256 quantity
   );
   event ListingUpdate(
