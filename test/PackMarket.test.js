@@ -133,7 +133,7 @@ describe("PackMarket", async () => {
       expect(listing.price).to.equal(price);
     })
 
-    it("sell emits PackListed", async () => {
+    it("sell emits NewListing", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
 
@@ -161,22 +161,31 @@ describe("PackMarket", async () => {
         await packMarket.unlist(tokenId + 1);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("listing must exist");
+        expect(err.message).to.contain("Only the seller can modify the listing.");
       }
     })
 
-    it("unlist removes listing", async () => {
+    it("unlist onlySeller can update", async () => {
+      try {
+        await packMarket.connect(buyer).unlist(tokenId);
+        expect(false).to.equal(true);
+      } catch (err) {
+        expect(err.message).to.contain("Only the seller can modify the listing.");
+      }
+    })
+
+    it("unlist inactivates listing", async () => {
       await packMarket.unlist(tokenId);
 
       const listing = await packMarket.listings(owner.address, tokenId)
-      expect(listing.quantity).to.equal(0);
+      expect(listing.active).to.equal(false);
     })
 
-    it("unlist emits PackUnlisted", async () => {
+    it("unlist emits ListingUpdate", async () => {
       expect(await packMarket.unlist(tokenId))
         .to
-        .emit(packMarket, "PackUnlisted")
-        .withArgs(owner.address, tokenId);
+        .emit(packMarket, "ListingUpdate")
+        .withArgs(owner.address, tokenId, false, currency, price, quantity);
     })
   })
 
