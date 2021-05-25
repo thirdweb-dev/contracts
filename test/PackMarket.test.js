@@ -288,11 +288,28 @@ describe("PackMarket", async () => {
     })
 
     it("setListingCurrency changes currency", async () => {
-      
+      const listing = await packMarket.listings(owner.address, tokenId)
+      expect(listing.currency).to.equal(currency);
+
+      const PackCoin = await ethers.getContractFactory("PackCoin", owner);
+      const newPackCoin = await PackCoin.deploy();
+      const newCurrency = newPackCoin.address;
+      await packMarket.setListingCurrency(tokenId, newCurrency);
+
+      const newListing = await packMarket.listings(owner.address, tokenId)
+      expect(newListing.currency).to.equal(newCurrency);
     })
 
     it("setListingCurrency emits ListingUpdate", async () => {
+      const PackCoin = await ethers.getContractFactory("PackCoin", owner);
+      const newPackCoin = await PackCoin.deploy();
+      const newCurrency = newPackCoin.address;
       
+      expect(await packMarket.setListingCurrency(tokenId, newCurrency))
+        .to
+        .emit(packMarket, "ListingUpdate")
+        .withArgs(owner.address, tokenId, true, newCurrency, price, quantity)
+
     })
 
   })
