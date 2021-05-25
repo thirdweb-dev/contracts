@@ -25,6 +25,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
   struct Listing {
     address owner;
     uint256 tokenId;
+    bool active;
 
     address currency;
     uint256 price;
@@ -80,6 +81,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
       tokenId: tokenId,
+      active: true,
       currency: currency,
       price: price,
       quantity: quantity
@@ -94,7 +96,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
    * @param tokenId The ERC1155 tokenId of the token being unlisted.
    */
   function unlist(uint256 tokenId) external onlySeller(tokenId) {
-    delete listings[msg.sender][tokenId];
+    listings[msg.sender][tokenId].active = false;
 
     emit Unlisted(msg.sender, tokenId);
   }
