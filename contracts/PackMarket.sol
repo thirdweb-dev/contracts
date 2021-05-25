@@ -14,7 +14,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
   event NewListing(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
   event Unlisted(address indexed seller, uint256 indexed tokenId);
   event ListingUpdate(address indexed seller, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
-  event NewSale(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 quantity);
+  event NewSale(address indexed seller, address indexed buyer, uint256 indexed tokenId, address currency, uint256 price, uint256 quantity);
 
   Pack public packToken;
 
@@ -153,7 +153,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
     packToken.safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
     listings[from][tokenId].quantity -= quantity;
 
-    emit NewSale(from, msg.sender, tokenId, quantity);
+    emit NewSale(from, msg.sender, tokenId, listing.currency, listing.price, quantity);
   }
 
   /**
