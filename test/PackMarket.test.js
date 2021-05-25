@@ -243,18 +243,18 @@ describe("PackMarket", async () => {
       expect(await pack.balanceOf(buyer.address, tokenId)).to.equal(1);
     })
 
-    it("buy emits PackSold", async () => {
+    it("buy emits NewSale", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
 
-      await packCoin.mint(buyer.address, price);
-      await packCoin.connect(buyer).approve(packMarket.address, price);
+      await packCoin.mint(buyer.address, price * quantity);
+      await packCoin.connect(buyer).approve(packMarket.address, price * quantity);
 
       expect(await packMarket.connect(buyer).buy(owner.address, tokenId, quantity))
         .to
-        .emit(packMarket, "PackSold")
-        .withArgs(owner.address, buyer.address, tokenId, 1);
+        .emit(packMarket, "NewSale")
+        .withArgs(owner.address, buyer.address, tokenId, currency, price, quantity);
     })
   })
 })
