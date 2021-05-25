@@ -257,4 +257,43 @@ describe("PackMarket", async () => {
         .withArgs(owner.address, buyer.address, tokenId, currency, price, quantity);
     })
   })
+
+  describe("edit listing", async () => {
+    let tokenId;
+
+    beforeEach(async () => {
+      const packToken = await pack.createPack(uri, supply);
+      tokenId = packToken.value;
+
+      await pack.setApprovalForAll(packMarket.address, true);
+      await pack.lockReward(tokenId);
+      await packMarket.sell(tokenId, currency, price, quantity);
+    })
+
+    it("setListingPrice changes price", async () => {
+      const listing = await packMarket.listings(owner.address, tokenId)
+      expect(listing.price).to.equal(price);
+
+      await packMarket.setListingPrice(tokenId, price + 1);
+
+      const newListing = await packMarket.listings(owner.address, tokenId)
+      expect(newListing.price).to.equal(price + 1);
+    })
+
+    it("setListingPrice emits ListingUpdate", async () => {
+      expect(await packMarket.setListingPrice(tokenId, price + 1))
+        .to
+        .emit(packMarket, "ListingUpdate")
+        .withArgs(owner.address, tokenId, true, currency, price + 1, quantity);
+    })
+
+    it("setListingCurrency changes currency", async () => {
+      
+    })
+
+    it("setListingCurrency emits ListingUpdate", async () => {
+      
+    })
+
+  })
 })
