@@ -88,12 +88,13 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     require(pack.rewardTokenIds.length > 0, "no rewards available");
     require(pack.isRewardLocked, "rewards not locked yet");
 
+    uint256 numRewarded = 1; // This is the number of the specific token rewarded
     uint256 prob = _random().mod(pack.rarityDenominator);
     uint256 index = prob.mod(pack.rewardTokenIds.length);
     uint256 rewardedTokenId = pack.rewardTokenIds[index];
 
     _burn(msg.sender, packId, 1); // note: does not reduce the supply
-    _mintSupplyChecked(msg.sender, rewardedTokenId, 1);
+    _mintSupplyChecked(msg.sender, rewardedTokenId, numRewarded);
 
     uint256[] memory rewardedTokenIds = new uint256[](1);
     rewardedTokenIds[0] = rewardedTokenId;
