@@ -57,7 +57,7 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
   modifier eligibleToList(uint tokenId, uint _quantity, address _currency) {
     require(packToken.isApprovedForAll(msg.sender, address(this)), "Must approve market contract to manage tokens.");
-    require(packToken.balanceOf(msg.sender, _quantity) >= _quantity, "Must own the amount of tokens being listed.");
+    require(packToken.balanceOf(msg.sender, tokenId) >= _quantity, "Must own the amount of tokens being listed.");
     require(packToken.isEligibleForSale(tokenId), "Cannot sell a locked pack or a token that has not been minted.");
     require(_quantity > 0, "Must list at least one token");
     _;
