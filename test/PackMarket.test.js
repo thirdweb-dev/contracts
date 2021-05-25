@@ -139,8 +139,8 @@ describe("PackMarket", async () => {
 
       expect(await packMarket.sell(tokenId, currency, price, quantity))
         .to
-        .emit(packMarket, "PackListed")
-        .withArgs(owner.address, tokenId, currency, price);
+        .emit(packMarket, "NewListing")
+        .withArgs(owner.address, tokenId, true, currency, price, quantity);
     })
   })
 
