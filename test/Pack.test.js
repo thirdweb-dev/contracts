@@ -43,7 +43,6 @@ describe("Pack", () => {
       const createdPack = await pack.packs(tokenId);
       expect(createdPack.isRewardLocked).to.equal(false);
       expect(createdPack.creator).to.equal(owner.address);
-      expect(createdPack.owner).to.equal(owner.address);
       expect(createdPack.numRewardOnOpen).to.equal(1);
     })
 

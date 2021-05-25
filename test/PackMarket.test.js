@@ -81,7 +81,7 @@ describe("PackMarket", async () => {
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("require token approval");
+        expect(err.message).to.contain("Must approve market contract to manage tokens");
       }
     })
 
@@ -94,7 +94,7 @@ describe("PackMarket", async () => {
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("seller must own enough");
+        expect(err.message).to.contain("Must own the amount of tokens being listed");
       }
     })
 
@@ -106,7 +106,7 @@ describe("PackMarket", async () => {
         await packMarket.sell(tokenId, currency, price, 0);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("must list at least one");
+        expect(err.message).to.contain("Must list at least one token");
       }
     })
 
