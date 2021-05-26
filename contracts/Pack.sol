@@ -9,8 +9,6 @@ import "./interfaces/IPackEvent.sol";
 contract Pack is ERC1155, Ownable, IPackEvent {
   using SafeMath for uint256;
 
-  uint256 private constant REWARD_RARITY_DENOMINATOR = 10000;
-
   enum TokenType {
     Pack,
     Reward
@@ -68,7 +66,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     pack.isRewardLocked = false;
     pack.creator = msg.sender;
     pack.numRewardOnOpen = 1;
-    pack.rarityDenominator = REWARD_RARITY_DENOMINATOR;
+    pack.rarityDenominator = 0;
 
     _mintSupplyChecked(msg.sender, tokenId, maxSupply);
 
@@ -101,6 +99,8 @@ contract Pack is ERC1155, Ownable, IPackEvent {
 
     uint256[] memory rewardedTokenIds = new uint256[](1);
     rewardedTokenIds[0] = rewardedTokenId;
+    packs[packId].rarityDenominator -= 1;
+
     emit PackOpened(msg.sender, packId, rewardedTokenIds);
   }
 
@@ -117,6 +117,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     require(!packs[packId].isRewardLocked, "reward is locked");
     require(tokenMaxSupplies.length == tokenUris.length, "arrays must be same length");
 
+    uint256 denominatorToAdd = 0;
     uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
     for (uint256 i = 0; i < tokenUris.length; i++) {
       string memory tokenUri = tokenUris[i];
@@ -134,7 +135,10 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       packs[packId].rewardTokenIds.push(tokenId);
       rewards[tokenId].rarityNumerator = 0;
       newRewardTokenIds[i] = tokenId;
+      denominatorToAdd += tokenMaxSupplies[i];
     }
+
+    packs[packId].rarityDenominator.add(denominatorToAdd);
 
     emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds, tokenUris);
   }
