@@ -93,12 +93,10 @@ describe("Pack", () => {
     });
 
     it("addRewards pack.rarityDenominator incremented with sum(tokenMaxSupplies)", async () => {
-      const preRewardPack = await pack.packs(tokenId);
-      console.log("preRewardPack.rarityDenominator", preRewardPack.rarityDenominator);
-      await pack.addRewards(0, [uri], [10]);
-      const postRewardPack = await pack.packs(tokenId);
-      console.log("postRewardPack.rarityDenominator", postRewardPack.rarityDenominator);
-      expect(preRewardPack.rarityDenominator.add(10)).to.equal(postRewardPack.rarityDenominator);
+      const { rarityDenominator: preRewardPackRarity } = await pack.packs(tokenId);
+      await pack.addRewards(tokenId, [uri], [supply]);
+      const { rarityDenominator: postRewardPackRarity } = await pack.packs(tokenId);
+      expect(preRewardPackRarity.toNumber() + supply).to.equal(postRewardPackRarity.toNumber());
     });
 
     it("addRewards emits PackRewardsAdded", async () => {
@@ -162,6 +160,15 @@ describe("Pack", () => {
       await pack.lockReward(0);
       await pack.openPack(0);
       expect(await pack.balanceOf(owner.address, 1)).to.equal(1);
+    });
+
+    it("openPack reduces rarityDenominator", async () => {
+      await pack.addRewards(tokenId, [uri], [supply]);
+      await pack.lockReward(tokenId);
+      const { rarityDenominator: prePackRarity } = await pack.packs(tokenId);
+      await pack.openPack(tokenId);
+      const { rarityDenominator: postPackRarity } = await pack.packs(tokenId);
+      expect(prePackRarity.toNumber() - 1).to.equals(postPackRarity.toNumber());
     });
 
     it("openPack emits PackOpened", async () => {

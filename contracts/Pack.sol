@@ -138,7 +138,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       denominatorToAdd += tokenMaxSupplies[i];
     }
 
-    packs[packId].rarityDenominator.add(denominatorToAdd);
+    packs[packId].rarityDenominator += denominatorToAdd;
 
     emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds, tokenUris);
   }
