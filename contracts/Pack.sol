@@ -22,8 +22,12 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     TokenType tokenType;
   }
 
-  struct Reward {
-    uint256 rarityNumerator;
+  struct RewardDistribution {
+    uint numOfRewards;
+
+    mapping(uint => uint) rarityNumerator;
+    mapping(uint => uint) indexToTokenId;
+    mapping(uint => uint) tokenIdToIndex;
   }
 
   struct PackState {
@@ -39,7 +43,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
 
   mapping(uint256 => Token) public tokens;
   mapping(uint256 => PackState) public packs;
-  mapping(uint256 => Reward) public rewards;
+  mapping(uint256 => RewardDistribution) public rewardDistribution;
 
   constructor() ERC1155("") {}
   
@@ -74,37 +78,6 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   }
 
   /**
-  * @notice Lets a pack token owner open a single pack
-  * @dev Mints an ERC1155 Reward token to `msg.sender`
-  *
-  * @param packId The ERC1155 tokenId of the pack token being opened.
-   */
-  function openPack(uint256 packId) external {
-    require(balanceOf(msg.sender, packId) > 0, "insufficient pack");
-
-    PackState memory pack = packs[packId];
-    require(pack.rewardTokenIds.length > 0, "no rewards available");
-    require(pack.isRewardLocked, "rewards not locked yet");
-
-    uint256 numRewarded = 1; // This is the number of the specific token rewarded
-    uint256 rewardedTokenId;
-    do {
-      uint256 prob = _random().mod(pack.rarityDenominator);
-      uint256 index = prob.mod(pack.rewardTokenIds.length);
-      rewardedTokenId = pack.rewardTokenIds[index];
-    } while (tokens[rewardedTokenId].currentSupply + numRewarded > tokens[rewardedTokenId].maxSupply);
-
-    _burn(msg.sender, packId, 1); // note: does not reduce the supply
-    _mintSupplyChecked(msg.sender, rewardedTokenId, numRewarded);
-
-    uint256[] memory rewardedTokenIds = new uint256[](1);
-    rewardedTokenIds[0] = rewardedTokenId;
-    packs[packId].rarityDenominator -= 1;
-
-    emit PackOpened(msg.sender, packId, rewardedTokenIds);
-  }
-
-  /**
    * @notice Lets a creator add rewards to their pack.
    * @dev Saves ERC1155 Reward token information in a struct, without minting the token.
    *
@@ -132,15 +105,144 @@ contract Pack is ERC1155, Ownable, IPackEvent {
         maxSupply: tokenMaxSupplies[i],
         tokenType: TokenType.Reward
       });
-      packs[packId].rewardTokenIds.push(tokenId);
-      rewards[tokenId].rarityNumerator = 0;
-      newRewardTokenIds[i] = tokenId;
+      
+      addRewardToDistribution(packId, tokenId, tokenMaxSupplies[i]);
+      packs[packId].rewardTokenIds.push(tokenId);      
       denominatorToAdd += tokenMaxSupplies[i];
+
+      newRewardTokenIds[i] = tokenId;
     }
 
     packs[packId].rarityDenominator += denominatorToAdd;
 
     emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds, tokenUris);
+  }
+
+  /// @dev Adds a reward token to the packs `RewardDistribution` based on the reward's rarityNumerator.
+  function addRewardToDistribution(uint packId, uint rewardTokenId, uint maxSupply) internal {
+    RewardDistribution storage distribution = rewardDistribution[packId];
+    uint nextIndex = distribution.numOfRewards;
+    uint targetIndex = 0;
+
+    if(nextIndex == 0) {
+      distribution.rarityNumerator[targetIndex] = maxSupply;
+      distribution.indexToTokenId[targetIndex] = rewardTokenId;
+      distribution.tokenIdToIndex[rewardTokenId] = targetIndex;
+
+      distribution.numOfRewards += 1;
+      return;
+    }
+
+    uint checkpoint = 0;
+
+    while(checkpoint <= nextIndex) {
+      if (distribution.rarityNumerator[checkpoint] >= maxSupply) {
+        targetIndex = checkpoint;
+      } else {
+        checkpoint++;
+      }
+    }
+
+    for(uint i = nextIndex; i > checkpoint; i--) {
+      distribution.rarityNumerator[i] = distribution.rarityNumerator[i-1];
+      distribution.indexToTokenId[i] = distribution.indexToTokenId[i-1];
+
+      uint tokenId = distribution.indexToTokenId[i];
+      distribution.tokenIdToIndex[tokenId] += 1;
+    }
+
+    distribution.numOfRewards += 1;
+    distribution.rarityNumerator[targetIndex] = maxSupply;
+    distribution.indexToTokenId[targetIndex] = rewardTokenId;
+    distribution.tokenIdToIndex[rewardTokenId] = targetIndex;
+  }
+
+  /**
+  * @notice Lets a pack token owner open a single pack
+  * @dev Mints an ERC1155 Reward token to `msg.sender`
+  *
+  * @param packId The ERC1155 tokenId of the pack token being opened.
+   */
+  function openPack(uint256 packId) external {
+    require(balanceOf(msg.sender, packId) > 0, "insufficient pack");
+
+    uint256 numRewarded = 1; // This is the number of the specific token rewarded
+    uint256 rewardedTokenId = getRandomReward(packId);
+
+    _burn(msg.sender, packId, 1); // note: does not reduce the supply
+    _mintSupplyChecked(msg.sender, rewardedTokenId, numRewarded);
+
+    uint256[] memory rewardedTokenIds = new uint256[](1);
+    rewardedTokenIds[0] = rewardedTokenId;
+
+    emit PackOpened(msg.sender, packId, rewardedTokenIds);
+  }
+
+  /// @dev returns a random reward tokenId, based on the pack's rarityDenominator and the rarityNumerator of each of the pack's rewards.
+  function getRandomReward(uint packId) internal returns (uint rewardTokenId) {
+    PackState memory pack = packs[packId];
+    require(pack.rewardTokenIds.length > 0, "no rewards available");
+    require(pack.isRewardLocked, "rewards not locked yet");
+
+    // Large number `_random()` % rarityDenominator
+    uint256 prob = _random().mod(pack.rarityDenominator);
+
+    uint start = 0;
+    uint end = rewardDistribution[packId].numOfRewards;
+
+    uint step = 0;
+
+    for(uint i = start; i < end; i++) {
+      uint rarityNumerator = rewardDistribution[packId].rarityNumerator[i];
+
+      if(prob < (rarityNumerator + step)) {
+        rewardTokenId = rewardDistribution[packId].indexToTokenId[i];
+        rewardDistribution[packId].rarityNumerator[rewardTokenId] -= 1;
+        break;
+      } else {
+        step += rarityNumerator;
+        start += 1;
+      }
+    }
+
+    pack.rarityDenominator -= 1;
+    adjustRewardDistribution(packId, rewardTokenId, rewardDistribution[packId].rarityNumerator[rewardTokenId]);
+  }
+
+  /// @notice Returns a (non-pseudo) random number.
+  function _random() private returns (uint256) {
+    // TODO: NOT SAFE.
+    uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
+    _seed = randomNumber;
+    return randomNumber;
+  }
+
+  /// @dev Adjusts the pack's `RewardDistribution` upon change in a reward token's rarityNumerator.
+  function adjustRewardDistribution(uint packId, uint rewardTokenId, uint rarityNumerator) internal {
+    RewardDistribution storage distribution = rewardDistribution[packId];
+
+    uint tokenIndex = distribution.tokenIdToIndex[rewardTokenId];
+    uint start = tokenIndex - 1;
+
+    while(distribution.rarityNumerator[start] > rarityNumerator) {
+      start -= 1;
+    }
+
+    if(start != (tokenIndex - 1)) {
+      uint newIndex = start + 1;
+
+      for(uint i = (newIndex + 1); i < tokenIndex; i ++) {
+        distribution.rarityNumerator[i+1] = distribution.rarityNumerator[i];
+        distribution.indexToTokenId[i+1] = distribution.indexToTokenId[i];
+
+        uint tokenId = distribution.indexToTokenId[i];
+        distribution.tokenIdToIndex[tokenId] += 1;
+      }
+
+      distribution.rarityNumerator[newIndex] = rarityNumerator;
+      distribution.tokenIdToIndex[rewardTokenId] = newIndex;
+      distribution.indexToTokenId[newIndex] = rewardTokenId;
+    }
   }
 
   /**
@@ -174,16 +276,6 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   function uri(uint256 id) public view override returns (string memory) {
     return tokens[id].uri;
   }
-
-  /// @notice Returns a (non-pseudo) random number.
-  function _random() private returns (uint256) {
-    // TODO: NOT SAFE.
-    uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
-    _seed = randomNumber;
-    return randomNumber;
-  }
-
-  // ========== Getter functions ============
 
   /**
    * @notice Called by `PackMarket.sol` to check if the token with id `tokenId` is eligible for sale.
