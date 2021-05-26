@@ -22,11 +22,15 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     TokenType tokenType;
   }
 
+  /// @dev Orders reward tokens from lowest rarityNumerator to highest rarityNumerator.
   struct RewardDistribution {
     uint numOfRewards;
 
+    // Index => rarity numerator
     mapping(uint => uint) rarityNumerator;
+    // Index => TokenId
     mapping(uint => uint) indexToTokenId;
+    // TokenId => Index
     mapping(uint => uint) tokenIdToIndex;
   }
 
