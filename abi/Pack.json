@@ -597,11 +597,11 @@
         "type": "uint256"
       }
     ],
-    "name": "rewards",
+    "name": "rewardDistribution",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "rarityNumerator",
+        "name": "numOfRewards",
         "type": "uint256"
       }
     ],
