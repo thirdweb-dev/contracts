@@ -110,7 +110,6 @@ contract Pack is ERC1155, Ownable, IPackEvent {
         tokenType: TokenType.Reward
       });
       
-      addRewardToDistribution(packId, tokenId, tokenMaxSupplies[i]);
       packs[packId].rewardTokenIds.push(tokenId);      
       denominatorToAdd += tokenMaxSupplies[i];
 
@@ -120,6 +119,29 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     packs[packId].rarityDenominator += denominatorToAdd;
 
     emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds, tokenUris);
+  }
+
+  /**
+   * @notice Lets a pack creator lock the rewards for the pack. The rewards in a pack cannot be changed once the 
+   *         rewards are locked
+   *
+   * @param packId The ERC1155 tokenId of the pack whose rewawrds are to be locked.
+   */
+  function lockReward(uint256 packId) public {
+    // NOTE: there's no way to unlock.
+    require(packs[packId].creator == msg.sender, "not the pack owner");
+    packs[packId].isRewardLocked = true;
+
+    uint[] memory rewardTokenIds = packs[packId].rewardTokenIds;
+
+    for(uint i = 0; i < rewardTokenIds.length; i++) {
+      uint tokenId = rewardTokenIds[i];
+      uint maxSupply = tokens[tokenId].maxSupply;
+
+      addRewardToDistribution(packId, tokenId, maxSupply);
+    }
+
+    emit PackRewardsLocked(msg.sender, packId);
   }
 
   /// @dev Adds a reward token to the packs `RewardDistribution` based on the reward's rarityNumerator.
@@ -247,20 +269,6 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       distribution.tokenIdToIndex[rewardTokenId] = newIndex;
       distribution.indexToTokenId[newIndex] = rewardTokenId;
     }
-  }
-
-  /**
-   * @notice Lets a pack creator lock the rewards for the pack. The rewards in a pack cannot be changed once the 
-   *         rewards are locked
-   *
-   * @param packId The ERC1155 tokenId of the pack whose rewawrds are to be locked.
-   */
-  function lockReward(uint256 packId) public {
-    // NOTE: there's no way to unlock.
-    require(packs[packId].creator == msg.sender, "not the pack owner");
-    packs[packId].isRewardLocked = true;
-
-    emit PackRewardsLocked(msg.sender, packId);
   }
 
   function _mintSupplyChecked(address account, uint256 id, uint256 amount) private {
