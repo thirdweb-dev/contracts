@@ -27,5 +27,5 @@ main()
     process.exit(1);
   });
 
-// Pack ERC1155 token address (Rinkeby) -- 0x0f78900904509e5A9f4C3428340BE2876d5a3Ea8
-// Pack Market address -- 0x46A59d588aD46Fd9e23039Ee9cA2B5fEDB45468E
+// Pack ERC1155 token address (Rinkeby) -- 0x932a80d12133daDa78d1eFeAa69C53f35b7717eB
+// Pack Market address -- 0xdF6D4D22918048bA57e849dBBc83d9Bb502bb150
