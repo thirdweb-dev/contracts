@@ -36,7 +36,7 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     uint256[] rewardTokenIds;
   }
 
-  uint256 private _currentTokenId = 0;
+  uint256 public _currentTokenId = 0;
   uint256 private _seed;
 
   mapping(uint256 => Token) public tokens;
