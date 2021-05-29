@@ -11,13 +11,13 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   using SafeMath for uint;
 
+  uint private _currentTokenId = 1;
+
   bytes32 internal keyHash;
+  uint private _seed;
   uint internal chainlinkFee = 0.1 ether;
 
-  enum TokenType {
-    Pack,
-    Reward
-  }
+  enum TokenType { Pack, Reward }
 
   struct Token {
     address creator;
@@ -34,14 +34,19 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     address packOpener;
   }
 
-  uint private _currentTokenId = 1;
-  uint private _seed;
-
+  // tokenId => Token state 
   mapping(uint => Token) public tokens;
+
+  // tokenId (for TokenType.Pack) => tokenIds of rewards in pack.
   mapping(uint => uint[]) public rewardsInPack;
+
+  // tokenId => amount of tokens minted.
   mapping(uint => uint) public circulatingSupply;
 
+  // tokenId (for TokenType.Pack) => number of pending Chainlink VRF requests
   mapping(uint => uint) public requestsInFlight;
+
+  // Chainlink VRF requestId => tokenId (for TokenType.Pack) and request-er address.
   mapping(bytes32 => RandomnessRequest) public randomnessRequests;
 
   constructor(
@@ -192,7 +197,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
 
     _burn(msg.sender, request.packId, 1); // note: does not reduce the supply
     _mint(msg.sender, rewardTokenId, numRewarded, "");
-    
+
     circulatingSupply[rewardTokenId] += 1;
 
     uint[] memory rewardedTokenIds = new uint[](1);
