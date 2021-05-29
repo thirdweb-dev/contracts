@@ -4,10 +4,15 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "./interfaces/IPackEvent.sol";
 
-contract Pack is ERC1155, Ownable, IPackEvent {
+import "./interfaces/IPackEvent.sol";
+import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
+
+contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   using SafeMath for uint256;
+
+  bytes32 internal keyHash;
+  uint internal chainlinkFee = 0.1 ether;
 
   enum TokenType {
     Pack,
@@ -22,16 +27,11 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     TokenType tokenType;
   }
 
-  /// @dev Orders reward tokens from lowest rarityNumerator to highest rarityNumerator.
   struct RewardDistribution {
     uint numOfRewards;
 
-    // Index => rarity numerator
+    // tokenId => rarity numerator
     mapping(uint => uint) rarityNumerator;
-    // Index => TokenId
-    mapping(uint => uint) indexToTokenId;
-    // TokenId => Index
-    mapping(uint => uint) tokenIdToIndex;
   }
 
   struct PackState {
@@ -49,7 +49,13 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   mapping(uint256 => PackState) public packs;
   mapping(uint256 => RewardDistribution) public rewardDistribution;
 
-  constructor() ERC1155("") {}
+  constructor(
+    address _vrfCoordinator,
+    address _linkToken,
+    bytes32 _keyHash
+  ) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC1155("") {
+    keyHash = _keyHash;
+  }
   
   /**
   * @notice Lets a creator create a Pack.
@@ -138,49 +144,12 @@ contract Pack is ERC1155, Ownable, IPackEvent {
       uint tokenId = rewardTokenIds[i];
       uint maxSupply = tokens[tokenId].maxSupply;
 
-      addRewardToDistribution(packId, tokenId, maxSupply);
+      //  Add to reward distribution
+      rewardDistribution[packId].numOfRewards += 1;
+      rewardDistribution[packId].rarityNumerator[tokenId] = maxSupply;
     }
 
     emit PackRewardsLocked(msg.sender, packId);
-  }
-
-  /// @dev Adds a reward token to the packs `RewardDistribution` based on the reward's rarityNumerator.
-  function addRewardToDistribution(uint packId, uint rewardTokenId, uint maxSupply) internal {
-    RewardDistribution storage distribution = rewardDistribution[packId];
-    uint nextIndex = distribution.numOfRewards;
-    uint targetIndex = 0;
-
-    if(nextIndex == 0) {
-      distribution.rarityNumerator[targetIndex] = maxSupply;
-      distribution.indexToTokenId[targetIndex] = rewardTokenId;
-      distribution.tokenIdToIndex[rewardTokenId] = targetIndex;
-
-      distribution.numOfRewards += 1;
-      return;
-    }
-
-    uint checkpoint = 0;
-
-    while(checkpoint <= nextIndex) {
-      if (distribution.rarityNumerator[checkpoint] >= maxSupply) {
-        targetIndex = checkpoint;
-      } else {
-        checkpoint++;
-      }
-    }
-
-    for(uint i = nextIndex; i > checkpoint; i--) {
-      distribution.rarityNumerator[i] = distribution.rarityNumerator[i-1];
-      distribution.indexToTokenId[i] = distribution.indexToTokenId[i-1];
-
-      uint tokenId = distribution.indexToTokenId[i];
-      distribution.tokenIdToIndex[tokenId] += 1;
-    }
-
-    distribution.numOfRewards += 1;
-    distribution.rarityNumerator[targetIndex] = maxSupply;
-    distribution.indexToTokenId[targetIndex] = rewardTokenId;
-    distribution.tokenIdToIndex[rewardTokenId] = targetIndex;
   }
 
   /**
@@ -213,26 +182,23 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     // Large number `_random()` % rarityDenominator
     uint256 prob = _random().mod(pack.rarityDenominator);
 
-    uint start = 0;
-    uint end = rewardDistribution[packId].numOfRewards;
-
     uint step = 0;
 
-    for(uint i = start; i < end; i++) {
-      uint rarityNumerator = rewardDistribution[packId].rarityNumerator[i];
+    for(uint i = 0; i < pack.rewardTokenIds.length; i++) {
+      uint tokenId = pack.rewardTokenIds[i];
+      uint rarityNumerator = rewardDistribution[packId].rarityNumerator[tokenId];
 
       if(prob < (rarityNumerator + step)) {
-        rewardTokenId = rewardDistribution[packId].indexToTokenId[i];
-        rewardDistribution[packId].rarityNumerator[rewardTokenId] -= 1;
+        rewardTokenId = tokenId;
+        rewardDistribution[packId].rarityNumerator[tokenId] -= 1;
         break;
       } else {
         step += rarityNumerator;
-        start += 1;
       }
     }
 
+    safeTransferFrom(packs[packID].creator, msg.sender, rewardTokenId, 1, "");
     pack.rarityDenominator -= 1;
-    adjustRewardDistribution(packId, rewardTokenId, rewardDistribution[packId].rarityNumerator[rewardTokenId]);
   }
 
   /// @notice Returns a (non-pseudo) random number.
@@ -241,34 +207,6 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
     _seed = randomNumber;
     return randomNumber;
-  }
-
-  /// @dev Adjusts the pack's `RewardDistribution` upon change in a reward token's rarityNumerator.
-  function adjustRewardDistribution(uint packId, uint rewardTokenId, uint rarityNumerator) internal {
-    RewardDistribution storage distribution = rewardDistribution[packId];
-
-    uint tokenIndex = distribution.tokenIdToIndex[rewardTokenId];
-    uint start = tokenIndex - 1;
-
-    while(distribution.rarityNumerator[start] > rarityNumerator) {
-      start -= 1;
-    }
-
-    if(start != (tokenIndex - 1)) {
-      uint newIndex = start + 1;
-
-      for(uint i = (newIndex + 1); i < tokenIndex; i ++) {
-        distribution.rarityNumerator[i+1] = distribution.rarityNumerator[i];
-        distribution.indexToTokenId[i+1] = distribution.indexToTokenId[i];
-
-        uint tokenId = distribution.indexToTokenId[i];
-        distribution.tokenIdToIndex[tokenId] += 1;
-      }
-
-      distribution.rarityNumerator[newIndex] = rarityNumerator;
-      distribution.tokenIdToIndex[rewardTokenId] = newIndex;
-      distribution.indexToTokenId[newIndex] = rewardTokenId;
-    }
   }
 
   function _mintSupplyChecked(address account, uint256 id, uint256 amount) private {
@@ -302,6 +240,16 @@ contract Pack is ERC1155, Ownable, IPackEvent {
     }
 
     return false;
+  }
+
+  // ========== Chainlink VRF functions ==========
+
+  function requestRandomNumber(bytes32 _keyHash, uint256 _fee, uint256 _seed) internal returns (bytes32 requestId) {
+    requestId = requestRandomness(_keyHash, _fee, _seed);
+  }
+
+  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal virtual override {
+
   }
 
   // ========== Transfer functions ==========
