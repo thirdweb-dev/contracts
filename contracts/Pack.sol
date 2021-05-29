@@ -84,6 +84,8 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
 
       rewardTokenIds[i] = rewardTokenId;
       packMaxSupply += rewardTokenMaxSupplies[i];
+
+      emit RewardAdded(msg.sender, tokenId, rewardTokenId, rewardTokenUris[i]);
     }
 
     // Store pack token state

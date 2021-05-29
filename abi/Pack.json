@@ -126,42 +126,23 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "packId",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint256[]",
-        "name": "rewardTokenIds",
-        "type": "uint256[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "string[]",
-        "name": "rewardTokenUris",
-        "type": "string[]"
-      }
-    ],
-    "name": "PackRewardsAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      },
-      {
-        "indexed": true,
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "rewardTokenId",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "rewardTokenUri",
+        "type": "string"
       }
     ],
-    "name": "PackRewardsLocked",
+    "name": "RewardAdded",
     "type": "event"
   },
   {
@@ -170,7 +151,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "owner",
+        "name": "receiver",
         "type": "address"
       },
       {
