@@ -96,9 +96,9 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
    * @param tokenUris The URIs for each reward token added to the pack.
    */
   function addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external {
-    require(packs[packId].creator == msg.sender, "not the pack owner");
-    require(!packs[packId].isRewardLocked, "reward is locked");
-    require(tokenMaxSupplies.length == tokenUris.length, "arrays must be same length");
+    require(packs[packId].creator == msg.sender, "Only the pack owner can add rewards.");
+    require(!packs[packId].isRewardLocked, "Cannot add rewards once the rewards for the pack are locked.");
+    require(tokenMaxSupplies.length == tokenUris.length, "Must provide the same amount of maxSupplies and URIs.");
 
     uint256 denominatorToAdd = 0;
     uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
@@ -135,7 +135,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
    */
   function lockReward(uint256 packId) public {
     // NOTE: there's no way to unlock.
-    require(packs[packId].creator == msg.sender, "not the pack owner");
+    require(packs[packId].creator == msg.sender, "Only the pack owner can lock rewards.");
     packs[packId].isRewardLocked = true;
 
     uint[] memory rewardTokenIds = packs[packId].rewardTokenIds;
@@ -159,7 +159,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   * @param packId The ERC1155 tokenId of the pack token being opened.
    */
   function openPack(uint256 packId) external {
-    require(balanceOf(msg.sender, packId) > 0, "insufficient pack");
+    require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
     uint256 numRewarded = 1; // This is the number of the specific token rewarded
     uint256 rewardedTokenId = getRandomReward(packId);
@@ -176,8 +176,8 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   /// @dev returns a random reward tokenId, based on the pack's rarityDenominator and the rarityNumerator of each of the pack's rewards.
   function getRandomReward(uint packId) internal returns (uint rewardTokenId) {
     PackState memory pack = packs[packId];
-    require(pack.rewardTokenIds.length > 0, "no rewards available");
-    require(pack.isRewardLocked, "rewards not locked yet");
+    require(pack.rewardTokenIds.length > 0, "The pack with the given packID contains no rewards yet.");
+    require(pack.isRewardLocked, "The pack with the given packID has not locked rewards yet.");
 
     // Large number `_random()` % rarityDenominator
     uint256 prob = _random().mod(pack.rarityDenominator);
@@ -211,7 +211,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   function _mintSupplyChecked(address account, uint256 id, uint256 amount) private {
     uint256 currentSupply = tokens[id].currentSupply;
     uint256 maxSupply = tokens[id].maxSupply;
-    require(currentSupply + amount <= maxSupply, "not enough supply");
+    require(currentSupply + amount <= maxSupply, "The amount exceeds the token max supply.");
 
     tokens[id].currentSupply = currentSupply + amount;
     _mint(account, id, amount, "");
