@@ -4,75 +4,123 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
 import "./interfaces/IPackEvent.sol";
+import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
-contract Pack is ERC1155, Ownable, IPackEvent {
-  using SafeMath for uint256;
+contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
+  using SafeMath for uint;
 
-  uint256 private constant REWARD_RARITY_DENOMINATOR = 10000;
+  uint private _currentTokenId = 0;
 
-  enum TokenType {
-    Pack,
-    Reward
-  }
+  bytes32 internal keyHash;
+  uint private _seed;
+  uint internal chainlinkFee = 0.1 ether;
+
+  enum TokenType { Pack, Reward }
 
   struct Token {
     address creator;
     string uri;
-    uint256 currentSupply;
-    uint256 maxSupply;
+    
+    uint rarityUnit;
+    uint maxSupply;
+
     TokenType tokenType;
   }
 
-  struct Reward {
-    uint256 rarityNumerator;
+  struct RandomnessRequest {
+    uint packId;
+    address packOpener;
   }
 
-  struct PackState {
-    address creator;
-    bool isRewardLocked;
-    uint256 numRewardOnOpen;
-    uint256 rarityDenominator;
-    uint256[] rewardTokenIds;
+  // tokenId => Token state 
+  mapping(uint => Token) public tokens;
+
+  // tokenId (for TokenType.Pack) => tokenIds of rewards in pack.
+  mapping(uint => uint[]) public rewardsInPack;
+
+  // tokenId => amount of tokens minted.
+  mapping(uint => uint) public circulatingSupply;
+
+  // Chainlink VRF requestId => tokenId (for TokenType.Pack) and request-er address.
+  mapping(bytes32 => RandomnessRequest) public randomnessRequests;
+
+  constructor(
+    address _vrfCoordinator,
+    address _linkToken,
+    bytes32 _keyHash
+  ) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC1155("") {
+    keyHash = _keyHash;
   }
-
-  uint256 public _currentTokenId = 0;
-  uint256 private _seed;
-
-  mapping(uint256 => Token) public tokens;
-  mapping(uint256 => PackState) public packs;
-  mapping(uint256 => Reward) public rewards;
-
-  constructor() ERC1155("") {}
   
   /**
   * @notice Lets a creator create a Pack.
   * @dev Mints an ERC1155 pack token with URI `tokenUri` and total supply `maxSupply`
   *
   * @param tokenUri The URI for the pack cover of the pack being created.
-  * @param maxSupply The total ERC1155 token supply of the pack being created.
+  * @param rewardTokenMaxSupplies The total ERC1155 token supply for each reward token added to the pack.
+  * @param rewardTokenUris The URIs for each reward token added to the pack.
    */
-  function createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId) {
+  function createPack(
+    string calldata tokenUri, 
+    uint[] memory rewardTokenMaxSupplies,
+    string[] calldata rewardTokenUris
+  ) external returns (uint tokenId) {
+
+    require(rewardTokenMaxSupplies.length == rewardTokenUris.length, "Must provide the same amount of maxSupplies and URIs.");
+    require(rewardTokenUris.length > 0, "Cannot create a pack with no rewards.");
+
+    // Get `tokenId`
     tokenId = _currentTokenId;
     _currentTokenId += 1;
 
+    // Get pack state.
+    uint packMaxSupply = 0;
+    uint[] memory rewardTokenIds = new uint[](rewardTokenUris.length);
+
+    for (uint i = 0; i < rewardTokenUris.length; i++) {
+      uint rewardTokenId = addReward(rewardTokenMaxSupplies[i], rewardTokenUris[i]);
+
+      rewardTokenIds[i] = rewardTokenId;
+      packMaxSupply += rewardTokenMaxSupplies[i];
+
+      emit RewardAdded(msg.sender, tokenId, rewardTokenId, rewardTokenUris[i]);
+    }
+
+    // Store pack token state
     tokens[tokenId] = Token({
       creator: msg.sender,
       uri: tokenUri,
-      currentSupply: 0,
-      maxSupply: maxSupply,
+      rarityUnit: packMaxSupply,
+      maxSupply: packMaxSupply,
       tokenType: TokenType.Pack
     });
 
-    PackState storage pack = packs[tokenId];
-    pack.isRewardLocked = false;
-    pack.creator = msg.sender;
-    pack.numRewardOnOpen = 1;
-    pack.rarityDenominator = REWARD_RARITY_DENOMINATOR;
+    rewardsInPack[tokenId] = rewardTokenIds;
+    circulatingSupply[tokenId] = packMaxSupply;
 
-    _mintSupplyChecked(msg.sender, tokenId, maxSupply);
+    // Mint `packMaxSupply` amount of pack token to the creator.
+    _mint(msg.sender, tokenId, packMaxSupply, "");
 
-    emit PackCreated(msg.sender, tokenId, tokenUri, maxSupply);
+    emit PackCreated(msg.sender, tokenId, tokenUri, packMaxSupply);
+  }
+
+  /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
+  function addReward(uint maxSupply, string calldata tokenUri) internal returns (uint tokenId) {
+    
+    // Get `tokenId`
+    tokenId = _currentTokenId;
+    _currentTokenId += 1;
+
+    // Store reward token state
+    tokens[tokenId] = Token({
+      creator: msg.sender,
+      uri: tokenUri,
+      rarityUnit: maxSupply,
+      maxSupply: maxSupply,
+      tokenType: TokenType.Reward
+    });
   }
 
   /**
@@ -81,85 +129,69 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   *
   * @param packId The ERC1155 tokenId of the pack token being opened.
    */
-  function openPack(uint256 packId) external {
-    require(balanceOf(msg.sender, packId) > 0, "insufficient pack");
+  function openPack(uint packId) external {
+    require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
-    PackState memory pack = packs[packId];
-    require(pack.rewardTokenIds.length > 0, "no rewards available");
-    require(pack.isRewardLocked, "rewards not locked yet");
+    // Generate `seed` from user address and previous contract seed. Set generated `seed` as `_seed`.
+    uint seed = uint(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
+    _seed = seed;
 
-    uint256 numRewarded = 1; // This is the number of the specific token rewarded
-    uint256 rewardedTokenId;
-    do {
-      uint256 prob = _random().mod(pack.rarityDenominator);
-      uint256 index = prob.mod(pack.rewardTokenIds.length);
-      rewardedTokenId = pack.rewardTokenIds[index];
-    } while (tokens[rewardedTokenId].currentSupply + numRewarded > tokens[rewardedTokenId].maxSupply);
+    // Request Chainlink VRF for a random number. Store the request ID.
+    bytes32 requestId = requestRandomNumber(keyHash, chainlinkFee, seed);
+    randomnessRequests[requestId] = RandomnessRequest({
+      packId: packId,
+      packOpener: msg.sender
+    });
 
-    _burn(msg.sender, packId, 1); // note: does not reduce the supply
-    _mintSupplyChecked(msg.sender, rewardedTokenId, numRewarded);
-
-    uint256[] memory rewardedTokenIds = new uint256[](1);
-    rewardedTokenIds[0] = rewardedTokenId;
-    emit PackOpened(msg.sender, packId, rewardedTokenIds);
+    emit PackOpened(msg.sender, packId);
   }
 
-  /**
-   * @notice Lets a creator add rewards to their pack.
-   * @dev Saves ERC1155 Reward token information in a struct, without minting the token.
-   *
-   * @param packId The ERC1155 tokenId of a pack token.
-   * @param tokenMaxSupplies The total ERC1155 token supply for each reward token added to the pack.
-   * @param tokenUris The URIs for each reward token added to the pack.
-   */
-  function addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external {
-    require(packs[packId].creator == msg.sender, "not the pack owner");
-    require(!packs[packId].isRewardLocked, "reward is locked");
-    require(tokenMaxSupplies.length == tokenUris.length, "arrays must be same length");
+  /// @dev returns a random reward tokenId using `randomness` provided by Chainlink VRF.
+  function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId) {
+    require(rewardsInPack[packId].length > 0, "The pack with the given packId contains no rewards.");
 
-    uint256[] memory newRewardTokenIds = new uint256[](tokenUris.length);
-    for (uint256 i = 0; i < tokenUris.length; i++) {
-      string memory tokenUri = tokenUris[i];
+    uint largeRandomNumber = block.number + uint(keccak256(abi.encodePacked(blockhash(block.number - 1), randomness)));
+    uint prob = largeRandomNumber.mod(tokens[packId].rarityUnit);
+    uint step = 0;
 
-      uint256 tokenId = _currentTokenId;
-      _currentTokenId += 1;
+    for(uint i = 0; i < rewardsInPack[packId].length; i++) {
+      uint tokenId = rewardsInPack[packId][i];
+      uint rarityNumerator = tokens[tokenId].rarityUnit;
 
-      tokens[tokenId] = Token({
-        creator: msg.sender,
-        uri: tokenUri,
-        currentSupply: 0,
-        maxSupply: tokenMaxSupplies[i],
-        tokenType: TokenType.Reward
-      });
-      packs[packId].rewardTokenIds.push(tokenId);
-      rewards[tokenId].rarityNumerator = 0;
-      newRewardTokenIds[i] = tokenId;
+      if(prob < (rarityNumerator + step)) {
+        rewardTokenId = tokenId;
+        tokens[tokenId].rarityUnit -= 1;
+        break;
+      } else {
+        step += rarityNumerator;
+      }
     }
 
-    emit PackRewardsAdded(msg.sender, packId, newRewardTokenIds, tokenUris);
+    tokens[packId].rarityUnit -= 1;
   }
 
-  /**
-   * @notice Lets a pack creator lock the rewards for the pack. The rewards in a pack cannot be changed once the 
-   *         rewards are locked
-   *
-   * @param packId The ERC1155 tokenId of the pack whose rewawrds are to be locked.
-   */
-  function lockReward(uint256 packId) public {
-    // NOTE: there's no way to unlock.
-    require(packs[packId].creator == msg.sender, "not the pack owner");
-    packs[packId].isRewardLocked = true;
-
-    emit PackRewardsLocked(msg.sender, packId);
+  /// @dev Sends a random number request to the Chainlink VRF system.
+  function requestRandomNumber(bytes32 _keyHash, uint _fee, uint _randomnessSeed) internal returns (bytes32 requestId) {
+    requestId = requestRandomness(_keyHash, _fee, _randomnessSeed);
   }
 
-  function _mintSupplyChecked(address account, uint256 id, uint256 amount) private {
-    uint256 currentSupply = tokens[id].currentSupply;
-    uint256 maxSupply = tokens[id].maxSupply;
-    require(currentSupply + amount <= maxSupply, "not enough supply");
+  /// @dev Called by Chainlink VRF random number provider.
+  function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
+    require(randomnessRequests[requestId].packOpener != address(0), "The requestId is invalid.");
 
-    tokens[id].currentSupply = currentSupply + amount;
-    _mint(account, id, amount, "");
+    RandomnessRequest memory request = randomnessRequests[requestId];
+
+    uint rewardTokenId = getRandomReward(request.packId, randomness);
+
+    _burn(msg.sender, request.packId, 1);
+    circulatingSupply[request.packId] -= 1;
+
+    _mint(msg.sender, rewardTokenId, 1, "");
+    circulatingSupply[rewardTokenId] += 1;
+
+    delete randomnessRequests[requestId];
+
+    emit RewardDistributed(request.packOpener, request.packId, rewardTokenId);
   }
 
   /**
@@ -167,36 +199,9 @@ contract Pack is ERC1155, Ownable, IPackEvent {
    *
    * @param id The ERC1155 tokenId of a pack or reward token. 
    */
-  function uri(uint256 id) public view override returns (string memory) {
+  function uri(uint id) public view override returns (string memory) {
     return tokens[id].uri;
   }
-
-  /// @notice Returns a (non-pseudo) random number.
-  function _random() private returns (uint256) {
-    // TODO: NOT SAFE.
-    uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
-    _seed = randomNumber;
-    return randomNumber;
-  }
-
-  // ========== Getter functions ============
-
-  /**
-   * @notice Called by `PackMarket.sol` to check if the token with id `tokenId` is eligible for sale.
-   * 
-   * @param tokenId The ERC1155 tokenId of a pack or reward token.
-   */
-  function isEligibleForSale(uint256 tokenId) public view returns (bool) {
-    if (tokens[tokenId].tokenType == TokenType.Pack) {
-      return packs[tokenId].isRewardLocked;
-    } else if (tokens[tokenId].tokenType == TokenType.Reward && _currentTokenId > tokenId) {
-      return true;
-    }
-
-    return false;
-  }
-
-  // ========== Transfer functions ==========
 
   /**
    * @dev See {IERC1155-safeTransferFrom}.
@@ -204,12 +209,11 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   function safeTransferFrom(
     address from,
     address to,
-    uint256 id,
-    uint256 amount,
+    uint id,
+    uint amount,
     bytes memory data
   )
     public
-    virtual
     override
   { 
     // Emit custom transfer event to correctly update the contract's subgraph.
@@ -233,12 +237,11 @@ contract Pack is ERC1155, Ownable, IPackEvent {
   function safeBatchTransferFrom(
     address from,
     address to,
-    uint256[] memory ids,
-    uint256[] memory amounts,
+    uint[] memory ids,
+    uint[] memory amounts,
     bytes memory data
   )
     public
-    virtual
     override
   {
     bool isPack = true;

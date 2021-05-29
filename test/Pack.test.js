@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const { solidity } = require("ethereum-waffle");
 
 // Use chai solidity plugin
-chai.use(solidity)
+chai.use(solidity);
 const { expect } = chai;
 
 describe("Pack", () => {
@@ -14,152 +14,87 @@ describe("Pack", () => {
   const uri = "100";
   const supply = 100;
 
+  const rewardUri = "200";
+  const rewardSupply = 200;
+
   before(async () => {
     signers = await ethers.getSigners();
     [owner, buyer] = signers;
-  })
+  });
 
   // Get message sender and pack interface before each test
   beforeEach(async () => {
-    const Pack = await ethers.getContractFactory("Pack", owner);
+    const Pack = await ethers.getContractFactory("Pack", vrfCoordinator, linkToken, keyHash);
     pack = await Pack.deploy();
-  })
+  });
 
   // createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId)
   describe("createPack", async () => {
     it("createPack creates pack Token", async () => {
-      const { value: tokenId } = await pack.createPack(uri, supply);
+      const { value: tokenId } = await pack.createPack(uri, supply, [rewardUri], [rewardSupply]);
       expect(tokenId).to.equal(0);
 
       const token = await pack.tokens(tokenId);
       expect(token.uri).to.equal(uri);
       expect(token.currentSupply).to.equal(supply);
       expect(token.maxSupply).to.equal(supply);
-    })
+      console.log("token", token);
+    });
 
     it("createPack gives Pack to sender", async () => {
-      const { value: tokenId } = await pack.createPack(uri, supply);
+      const { value: tokenId } = await pack.createPack(uri, supply, [rewardUri], [rewardSupply]);
 
       const createdPack = await pack.packs(tokenId);
-      expect(createdPack.isRewardLocked).to.equal(false);
       expect(createdPack.creator).to.equal(owner.address);
       expect(createdPack.numRewardOnOpen).to.equal(1);
-    })
+      expect(createdPack.rarityDenominator).to.equal(0);
+    });
 
     it("createPack emits PackCreated", async () => {
-      expect(await pack.createPack(uri, supply))
-        .to
-        .emit(pack, "PackCreated")
+      expect(await pack.createPack(uri, supply, [rewardUri], [rewardSupply]))
+        .to.emit(pack, "PackCreated")
         .withArgs(owner.address, 0, uri, supply);
-    })
-  })
-
-  // addRewards(uint256 packId, uint256[] memory tokenMaxSupplies, string[] memory tokenUris) external
-  describe("addRewards", async () => {
-    beforeEach(async () => {
-      await pack.createPack(uri, supply);
-    })
-
-    it("addRewards only works for Pack owner", async () => {
-      try {
-        await pack.connect(buyer).addRewards(0, [uri], [100]);
-        expect(false).to.equal(true);
-      } catch (err) {
-        expect(err.message).to.contain("revert not the pack owner")
-      }
-    })
-
-    it("addRewards only works for unlocked Packs", async () => {
-      await pack.lockReward(0);
-
-      try {
-        await pack.addRewards(0, [uri], [100]);
-        expect(false).to.equal(true);
-      } catch (err) {
-        expect(err.message).to.contain("reward is locked");
-      }
-    })
-
-    it("addRewards tokenMaxSupplies must be same length as tokenUris", async () => {
-      try {
-        await pack.addRewards(0, [uri, uri], [100]);
-        expect(false).to.equal(true);
-      } catch (err) {
-        expect(err.message).to.contain("must be same length");
-      }
-    })
-
-    it("addRewards emits PackRewardsAdded", async () => {
-      expect(await pack.addRewards(0, [uri], [100]))
-        .to
-        .emit(pack, "PackRewardsAdded")
-        .withArgs(owner.address, 0, [1], ['']);
-    })
-  })
+    });
+  });
 
   // openPack(uint256 packId) external
   describe("openPack", async () => {
     beforeEach(async () => {
-      await pack.createPack(uri, supply);
-    })
+      await pack.createPack(uri, supply, [rewardUri], [rewardSupply]);
+    });
 
     it("openPack sender must own pack", async () => {
-      await pack.addRewards(0, [uri], [100])
-      await pack.lockReward(0);
-
       try {
         await pack.connect(buyer).openPack(0);
         expect(false).to.equal(true);
       } catch (err) {
         expect(err.message).to.contain("insufficient pack");
       }
-    })
-
-    it("openPack rewards must be locked", async () => {
-      await pack.addRewards(0, [uri], [100])
-
-      try {
-        await pack.openPack(0);
-        expect(false).to.equal(true);
-      } catch (err) {
-        expect(err.message).to.contain("rewards not locked yet");
-      }
-    })
-
-    it("openPack must be at least one reward", async () => {
-      await pack.lockReward(0);
-
-      try {
-        await pack.openPack(0);
-        expect(false).to.equal(true);
-      } catch (err) {
-        expect(err.message).to.contain("no rewards available");
-      }
-    })
+    });
 
     it("openPack destroys Pack", async () => {
       expect(await pack.balanceOf(owner.address, 0)).to.equal(100);
-      await pack.addRewards(0, [uri], [100])
-      await pack.lockReward(0);
       await pack.openPack(0);
       expect(await pack.balanceOf(owner.address, 0)).to.equal(99);
-    })
+    });
 
     it("openPack assigns Token", async () => {
       expect(await pack.balanceOf(owner.address, 1)).to.equal(0);
-      await pack.addRewards(0, [uri], [100])
-      await pack.lockReward(0);
       await pack.openPack(0);
       expect(await pack.balanceOf(owner.address, 1)).to.equal(1);
-    })
+    });
+
+    it("openPack reduces rarityDenominator", async () => {
+      const { rarityDenominator: prePackRarity } = await pack.packs(tokenId);
+      await pack.openPack(tokenId);
+      const { rarityDenominator: postPackRarity } = await pack.packs(tokenId);
+      expect(prePackRarity.toNumber() - 1).to.equals(postPackRarity.toNumber());
+    });
 
     it("openPack emits PackOpened", async () => {
-      await pack.addRewards(0, [uri], [100])
-      await pack.lockReward(0);
       expect(await pack.openPack(0))
-        .to
-        .emit(pack, "PackOpened")
+        .to.emit(pack, "PackOpened")
         .withArgs(owner.address, 0, [1]);
-    })
-  })
-})
+    });
+  });
+});
