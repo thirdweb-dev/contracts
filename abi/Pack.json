@@ -409,29 +409,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "tokenMaxSupplies",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "tokenUris",
-        "type": "string[]"
-      }
-    ],
-    "name": "addRewards",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -480,14 +457,38 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "circulatingSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "tokenUri",
         "type": "string"
       },
       {
-        "internalType": "uint256",
-        "name": "maxSupply",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "rewardTokenMaxSupplies",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "rewardTokenUris",
+        "type": "string[]"
       }
     ],
     "name": "createPack",
@@ -529,38 +530,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "isEligibleForSale",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "lockReward",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "packId",
         "type": "uint256"
       }
@@ -578,40 +547,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "packs",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "isRewardLocked",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "numRewardOnOpen",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "rarityDenominator",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -674,11 +609,35 @@
         "type": "uint256"
       }
     ],
-    "name": "rewardDistribution",
+    "name": "requestsInFlight",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "numOfRewards",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "rewardsInPack",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -810,7 +769,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "currentSupply",
+        "name": "rarityUnit",
         "type": "uint256"
       },
       {
