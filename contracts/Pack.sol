@@ -192,6 +192,8 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
 
     _burn(msg.sender, request.packId, 1); // note: does not reduce the supply
     _mint(msg.sender, rewardTokenId, numRewarded, "");
+    
+    circulatingSupply[rewardTokenId] += 1;
 
     uint[] memory rewardedTokenIds = new uint[](1);
     rewardedTokenIds[0] = rewardTokenId;
