@@ -197,7 +197,6 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
       }
     }
 
-    safeTransferFrom(packs[packID].creator, msg.sender, rewardTokenId, 1, "");
     pack.rarityDenominator -= 1;
   }
 
