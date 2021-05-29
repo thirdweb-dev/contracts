@@ -1,3 +1,9 @@
+// Chainlink info for Rinkeby
+
+const vrfCoordinator = '0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B'
+const linkTokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709'
+const keyHash = '0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311'
+
 async function main() {
 
   const [deployer] = await ethers.getSigners();
@@ -10,7 +16,7 @@ async function main() {
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
   const PackToken_Factory = await ethers.getContractFactory("Pack");
-  const packToken = await PackToken_Factory.deploy();
+  const packToken = await PackToken_Factory.deploy(vrfCoordinator, linkTokenAddress, keyHash);
 
   console.log("Pack ERC1155 token address:", packToken.address);
 
@@ -27,5 +33,5 @@ main()
     process.exit(1);
   });
 
-// Pack ERC1155 token address (Rinkeby) -- 0x932a80d12133daDa78d1eFeAa69C53f35b7717eB
-// Pack Market address -- 0xdF6D4D22918048bA57e849dBBc83d9Bb502bb150
+// Pack ERC1155 token address (Rinkeby) -- 0x07ab3E15fCA0e4a02176f71Fe7fc60fb46A3E4A1
+// Pack Market address -- 0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4
