@@ -1,6 +1,22 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_vrfCoordinator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_linkToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_keyHash",
+        "type": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -93,12 +109,6 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "rewardTokenIds",
-        "type": "uint256[]"
       }
     ],
     "name": "PackOpened",
@@ -152,6 +162,31 @@
       }
     ],
     "name": "PackRewardsLocked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "packID",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "rewardTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "RewardDistributed",
     "type": "event"
   },
   {
@@ -580,6 +615,48 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "randomnessRequests",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "packId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "packOpener",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "randomness",
+        "type": "uint256"
+      }
+    ],
+    "name": "rawFulfillRandomness",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

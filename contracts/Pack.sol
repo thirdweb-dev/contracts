@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 import "./interfaces/IPackEvent.sol";
-import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
 contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   using SafeMath for uint256;
@@ -42,12 +42,18 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     uint256[] rewardTokenIds;
   }
 
+  struct RandomnessRequest {
+    uint packId;
+    address packOpener;
+  }
+
   uint256 private _currentTokenId = 0;
   uint256 private _seed;
 
   mapping(uint256 => Token) public tokens;
   mapping(uint256 => PackState) public packs;
   mapping(uint256 => RewardDistribution) public rewardDistribution;
+  mapping(bytes32 => RandomnessRequest) public randomnessRequests;
 
   constructor(
     address _vrfCoordinator,
@@ -161,26 +167,28 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   function openPack(uint256 packId) external {
     require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
-    uint256 numRewarded = 1; // This is the number of the specific token rewarded
-    uint256 rewardedTokenId = getRandomReward(packId);
+    // Generate `seed` from user address and previous contract seed.
+    uint seed = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
+    _seed = seed;
 
-    _burn(msg.sender, packId, 1); // note: does not reduce the supply
-    _mintSupplyChecked(msg.sender, rewardedTokenId, numRewarded);
+    // Request Chainlink VRF for a random number. Store the request ID.
+    bytes32 requestId = requestRandomNumber(keyHash, chainlinkFee, seed);
+    randomnessRequests[requestId] = RandomnessRequest({
+      packId: packId,
+      packOpener: msg.sender
+    });
 
-    uint256[] memory rewardedTokenIds = new uint256[](1);
-    rewardedTokenIds[0] = rewardedTokenId;
-
-    emit PackOpened(msg.sender, packId, rewardedTokenIds);
+    emit PackOpened(msg.sender, packId);
   }
 
   /// @dev returns a random reward tokenId, based on the pack's rarityDenominator and the rarityNumerator of each of the pack's rewards.
-  function getRandomReward(uint packId) internal returns (uint rewardTokenId) {
+  function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId) {
     PackState memory pack = packs[packId];
-    require(pack.rewardTokenIds.length > 0, "The pack with the given packID contains no rewards yet.");
-    require(pack.isRewardLocked, "The pack with the given packID has not locked rewards yet.");
+    require(pack.rewardTokenIds.length > 0, "The pack with the given packId contains no rewards yet.");
+    require(pack.isRewardLocked, "The pack with the given packId has not locked rewards yet.");
 
     // Large number `_random()` % rarityDenominator
-    uint256 prob = _random().mod(pack.rarityDenominator);
+    uint256 prob = _random(randomness).mod(pack.rarityDenominator);
 
     uint step = 0;
 
@@ -201,11 +209,32 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   }
 
   /// @notice Returns a (non-pseudo) random number.
-  function _random() private returns (uint256) {
-    // TODO: NOT SAFE.
-    uint256 randomNumber = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
-    _seed = randomNumber;
+  function _random(uint _randomness) private view returns (uint256) {
+    uint256 randomNumber = block.number + uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), _randomness)));
     return randomNumber;
+  }
+
+  // ========== Chainlink VRF functions ==========
+
+  function requestRandomNumber(bytes32 _keyHash, uint256 _fee, uint256 _randomnessSeed) internal returns (bytes32 requestId) {
+    requestId = requestRandomness(_keyHash, _fee, _randomnessSeed);
+  }
+
+  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal virtual override {
+    require(randomnessRequests[requestId].packId != 0, "The requestId is invalid.");
+
+    RandomnessRequest memory request = randomnessRequests[requestId];
+
+    uint256 numRewarded = 1; // This is the number of the specific token rewarded
+    uint rewardTokenId = getRandomReward(request.packId, randomness);
+
+    _burn(msg.sender, request.packId, 1); // note: does not reduce the supply
+    _mintSupplyChecked(msg.sender, rewardTokenId, numRewarded);
+
+    uint256[] memory rewardedTokenIds = new uint256[](1);
+    rewardedTokenIds[0] = rewardTokenId;
+
+    emit RewardDistributed(request.packOpener, request.packId, rewardTokenId);
   }
 
   function _mintSupplyChecked(address account, uint256 id, uint256 amount) private {
@@ -239,16 +268,6 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     }
 
     return false;
-  }
-
-  // ========== Chainlink VRF functions ==========
-
-  function requestRandomNumber(bytes32 _keyHash, uint256 _fee, uint256 _seed) internal returns (bytes32 requestId) {
-    requestId = requestRandomness(_keyHash, _fee, _seed);
-  }
-
-  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal virtual override {
-
   }
 
   // ========== Transfer functions ==========
