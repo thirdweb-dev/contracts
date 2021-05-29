@@ -234,6 +234,8 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     uint256[] memory rewardedTokenIds = new uint256[](1);
     rewardedTokenIds[0] = rewardTokenId;
 
+    delete randomnessRequests[requestId];
+
     emit RewardDistributed(request.packOpener, request.packId, rewardTokenId);
   }
 
