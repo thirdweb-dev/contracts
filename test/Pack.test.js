@@ -14,8 +14,9 @@ describe("Pack", () => {
   const uri = "100";
   const supply = 100;
 
-  const rewardUri = "200";
-  const rewardSupply = 200;
+  const rewardUris = ["200"];
+  const rewardSupplies = [200];
+  const rewardSupplyCount = 200;
 
   before(async () => {
     signers = await ethers.getSigners();
@@ -35,36 +36,38 @@ describe("Pack", () => {
   // createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId)
   describe("createPack", async () => {
     it("createPack creates pack Token", async () => {
-      const { value: tokenId } = await pack.createPack(uri, supply, [rewardUri], [rewardSupply]);
+      const { value: tokenId } = await pack.createPack(uri, rewardUris, rewardSupplies);
       expect(tokenId).to.equal(0);
 
       const token = await pack.tokens(tokenId);
       expect(token.uri).to.equal(uri);
-      expect(token.currentSupply).to.equal(supply);
-      expect(token.maxSupply).to.equal(supply);
-      console.log("token", token);
     });
 
     it("createPack gives Pack to sender", async () => {
-      const { value: tokenId } = await pack.createPack(uri, supply, [rewardUri], [rewardSupply]);
+      const { value: tokenId } = await pack.createPack(uri, rewardUris, rewardSupplies);
 
-      const createdPack = await pack.packs(tokenId);
+      const createdPack = await pack.tokens(tokenId);
       expect(createdPack.creator).to.equal(owner.address);
-      expect(createdPack.numRewardOnOpen).to.equal(1);
-      expect(createdPack.rarityDenominator).to.equal(0);
+    });
+
+    it("createPack rarityUnit == maxSupply", async () => {
+      const { value: tokenId } = await pack.createPack(uri, rewardUris, rewardSupplies);
+
+      const createdPack = await pack.tokens(tokenId);
+      expect(createdPack.rarityUnit).to.equal(rewardSupplyCount);
     });
 
     it("createPack emits PackCreated", async () => {
-      expect(await pack.createPack(uri, supply, [rewardUri], [rewardSupply]))
+      expect(await pack.createPack(uri, rewardUris, rewardSupplies))
         .to.emit(pack, "PackCreated")
-        .withArgs(owner.address, 0, uri, supply);
+        .withArgs(owner.address, 0, uri, rewardSupplyCount);
     });
   });
 
   // openPack(uint256 packId) external
   describe("openPack", async () => {
     beforeEach(async () => {
-      await pack.createPack(uri, supply, [rewardUri], [rewardSupply]);
+      await pack.createPack(uri, rewardUris, rewardSupplies);
     });
 
     it("openPack sender must own pack", async () => {
