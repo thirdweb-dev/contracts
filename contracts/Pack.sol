@@ -22,7 +22,6 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   struct Token {
     address creator;
     string uri;
-    
     uint rarityUnit;
     uint maxSupply;
 

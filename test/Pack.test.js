@@ -24,8 +24,12 @@ describe("Pack", () => {
 
   // Get message sender and pack interface before each test
   beforeEach(async () => {
-    const Pack = await ethers.getContractFactory("Pack", vrfCoordinator, linkToken, keyHash);
-    pack = await Pack.deploy();
+    const Pack = await ethers.getContractFactory("Pack", owner);
+    pack = await Pack.deploy(
+      process.env.CHAINLINK_VRF_COORDINATOR,
+      process.env.CHAINLINK_LINK_TOKEN,
+      process.env.CHAINLINK_KEY_HASH,
+    );
   });
 
   // createPack(string memory tokenUri, uint256 maxSupply) external returns (uint256 tokenId)
