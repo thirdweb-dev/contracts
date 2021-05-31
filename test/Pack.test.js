@@ -90,6 +90,7 @@ describe("Pack", () => {
       }
     });
 
+    /*
     it("openPack destroys Pack", async () => {
       const currentMaxSupply = createdPack.maxSupply;
       expect(await pack.balanceOf(owner.address, createdPackId)).to.equal(currentMaxSupply);
@@ -115,5 +116,6 @@ describe("Pack", () => {
         .to.emit(pack, "PackOpened")
         .withArgs(owner.address, 0, [1]);
     });
+  */
   });
 });

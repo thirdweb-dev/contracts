@@ -15,6 +15,11 @@ describe("PackMarket", async () => {
 
   const uri = "100";
   const supply = 100;
+
+  const rewardUris = ["200"];
+  const rewardSupplies = [200];
+  const rewardSupplyCount = 200;
+
   const price = 10;
   const quantity = 1;
 
@@ -25,7 +30,11 @@ describe("PackMarket", async () => {
 
   beforeEach(async () => {
     const Pack = await ethers.getContractFactory("Pack", owner);
-    pack = await Pack.deploy();
+    pack = await Pack.deploy(
+      process.env.CHAINLINK_VRF_COORDINATOR,
+      process.env.CHAINLINK_LINK_TOKEN,
+      process.env.CHAINLINK_KEY_HASH,
+    );
 
     const PackCoin = await ethers.getContractFactory("PackCoin", owner);
     packCoin = await PackCoin.deploy();
@@ -40,7 +49,11 @@ describe("PackMarket", async () => {
 
     beforeEach(async () => {
       const Pack = await ethers.getContractFactory("Pack", owner);
-      anotherPack = await Pack.deploy();
+      anotherPack = await Pack.deploy(
+        process.env.CHAINLINK_VRF_COORDINATOR,
+        process.env.CHAINLINK_LINK_TOKEN,
+        process.env.CHAINLINK_KEY_HASH,
+      );
     })
     
     it("setPackToken only owner can change Pack", async () => {
@@ -70,13 +83,11 @@ describe("PackMarket", async () => {
     let tokenId;
 
     beforeEach(async () => {
-      const packToken = await pack.createPack(uri, supply);
+      const packToken = await pack.createPack(uri, rewardUris, rewardSupplies);
       tokenId = packToken.value;
     })
 
     it("sell requires token approval", async () => {
-      await pack.lockReward(tokenId);
-
       try {
         await packMarket.sell(tokenId, currency, price, quantity);
         expect(false).to.equal(true);
@@ -86,7 +97,6 @@ describe("PackMarket", async () => {
     })
 
     it("sell must own enough tokens", async () => {
-      await pack.lockReward(tokenId);
       await pack.setApprovalForAll(packMarket.address, true);
       await pack.safeTransferFrom(owner.address, buyer.address, tokenId, supply, "0x00");
 
@@ -99,7 +109,6 @@ describe("PackMarket", async () => {
     })
 
     it("sell must list at least one token", async () => {
-      await pack.lockReward(tokenId);
       await pack.setApprovalForAll(packMarket.address, true);
 
       try {
@@ -123,7 +132,6 @@ describe("PackMarket", async () => {
 
     it("sell creates listing", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
       
       const listing = await packMarket.listings(owner.address, tokenId);
@@ -135,7 +143,6 @@ describe("PackMarket", async () => {
 
     it("sell emits NewListing", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
 
       expect(await packMarket.sell(tokenId, currency, price, quantity))
         .to
@@ -148,11 +155,10 @@ describe("PackMarket", async () => {
     let tokenId;
 
     beforeEach(async () => {
-      const packToken = await pack.createPack(uri, supply);
+      const packToken = await pack.createPack(uri, rewardUris, rewardSupplies);
       tokenId = packToken.value;
 
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
     })
 
@@ -193,13 +199,12 @@ describe("PackMarket", async () => {
     let tokenId;
 
     beforeEach(async () => {
-      const packToken = await pack.createPack(uri, supply);
+      const packToken = await pack.createPack(uri, rewardUris, rewardSupplies);
       tokenId = packToken.value;
     })
 
     it("buy must buy at least one token", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
 
       await packCoin.mint(buyer.address, price);
@@ -215,7 +220,6 @@ describe("PackMarket", async () => {
 
     it("buy cannot buy more than listed quantity", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
 
       await packCoin.mint(buyer.address, price * 2);
@@ -233,7 +237,6 @@ describe("PackMarket", async () => {
       expect(await pack.balanceOf(buyer.address, tokenId)).to.equal(0);
 
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
 
       await packCoin.mint(buyer.address, price);
@@ -245,7 +248,6 @@ describe("PackMarket", async () => {
 
     it("buy emits NewSale", async () => {
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
 
       await packCoin.mint(buyer.address, price * quantity);
@@ -262,11 +264,10 @@ describe("PackMarket", async () => {
     let tokenId;
 
     beforeEach(async () => {
-      const packToken = await pack.createPack(uri, supply);
+      const packToken = await pack.createPack(uri, rewardUris, rewardSupplies);
       tokenId = packToken.value;
 
       await pack.setApprovalForAll(packMarket.address, true);
-      await pack.lockReward(tokenId);
       await packMarket.sell(tokenId, currency, price, quantity);
     })
 
