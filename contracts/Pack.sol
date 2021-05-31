@@ -49,7 +49,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     address _vrfCoordinator,
     address _linkToken,
     bytes32 _keyHash
-  ) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC1155("") {
+  ) public VRFConsumerBase(_vrfCoordinator, _linkToken) ERC1155("") {
     keyHash = _keyHash;
   }
   
