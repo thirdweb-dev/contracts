@@ -63,8 +63,8 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
    */
   function createPack(
     string calldata tokenUri, 
-    uint[] memory rewardTokenMaxSupplies,
-    string[] calldata rewardTokenUris
+    string[] calldata rewardTokenUris,
+    uint[] memory rewardTokenMaxSupplies
   ) external returns (uint tokenId) {
 
     require(rewardTokenMaxSupplies.length == rewardTokenUris.length, "Must provide the same amount of maxSupplies and URIs.");
@@ -79,7 +79,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     uint[] memory rewardTokenIds = new uint[](rewardTokenUris.length);
 
     for (uint i = 0; i < rewardTokenUris.length; i++) {
-      uint rewardTokenId = addReward(rewardTokenMaxSupplies[i], rewardTokenUris[i]);
+      uint rewardTokenId = _addReward(rewardTokenUris[i], rewardTokenMaxSupplies[i]);
 
       rewardTokenIds[i] = rewardTokenId;
       packMaxSupply += rewardTokenMaxSupplies[i];
@@ -106,7 +106,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   }
 
   /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
-  function addReward(uint maxSupply, string calldata tokenUri) internal returns (uint tokenId) {
+  function _addReward(string calldata tokenUri, uint maxSupply) internal returns (uint tokenId) {
     
     // Get `tokenId`
     tokenId = _currentTokenId;

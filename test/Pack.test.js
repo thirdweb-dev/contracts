@@ -62,6 +62,13 @@ describe("Pack", () => {
         .to.emit(pack, "PackCreated")
         .withArgs(owner.address, 0, uri, rewardSupplyCount);
     });
+
+    it("createPack emits RewardAdded", async () => {
+      expect(await pack.createPack(uri, rewardUris, rewardSupplies))
+        .to.emit(pack, "RewardAdded")
+        .withArgs(owner.address, 0, 1, rewardUris[0]);
+    });
+
   });
 
   // openPack(uint256 packId) external

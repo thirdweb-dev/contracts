@@ -462,14 +462,14 @@
         "type": "string"
       },
       {
-        "internalType": "uint256[]",
-        "name": "rewardTokenMaxSupplies",
-        "type": "uint256[]"
-      },
-      {
         "internalType": "string[]",
         "name": "rewardTokenUris",
         "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "rewardTokenMaxSupplies",
+        "type": "uint256[]"
       }
     ],
     "name": "createPack",
