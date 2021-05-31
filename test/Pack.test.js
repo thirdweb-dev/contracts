@@ -71,25 +71,30 @@ describe("Pack", () => {
 
   });
 
+  let createdPack;
+  let createdPackId;
   // openPack(uint256 packId) external
   describe("openPack", async () => {
     beforeEach(async () => {
-      await pack.createPack(uri, rewardUris, rewardSupplies);
+      const {value: tokenId} = await pack.createPack(uri, rewardUris, rewardSupplies);
+      createdPack = await pack.tokens(tokenId);
+      createdPackId = tokenId;
     });
 
     it("openPack sender must own pack", async () => {
       try {
-        await pack.connect(buyer).openPack(0);
+        await pack.connect(buyer).openPack(createdPackId);
         expect(false).to.equal(true);
       } catch (err) {
-        expect(err.message).to.contain("insufficient pack");
+        expect(err.message).to.contain("Sender owns no packs of the given packId.");
       }
     });
 
     it("openPack destroys Pack", async () => {
-      expect(await pack.balanceOf(owner.address, 0)).to.equal(100);
-      await pack.openPack(0);
-      expect(await pack.balanceOf(owner.address, 0)).to.equal(99);
+      const currentMaxSupply = createdPack.maxSupply;
+      expect(await pack.balanceOf(owner.address, createdPackId)).to.equal(currentMaxSupply);
+      //await pack.connect(owner).openPack(createdPackId);
+      //expect(await pack.balanceOf(owner.address, createdPackId)).to.equal(currentMaxSupply - 1);
     });
 
     it("openPack assigns Token", async () => {
