@@ -1,29 +1,30 @@
 // Chainlink info for Rinkeby
 
-const vrfCoordinator = '0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B'
-const linkTokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709'
-const keyHash = '0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311'
+const vrfCoordinator = process.env.CHAINLINK_VRF_COORDINATOR;
+const linkTokenAddress = process.env.CHAINLINK_LINK_TOKEN;
+const keyHash = process.env.CHAINLINK_KEY_HASH;
 
 async function main() {
-
   const [deployer] = await ethers.getSigners();
 
-  console.log(
-    "Deploying contracts with the account:",
-    deployer.address
-  );
-  
+  console.log("Deploying contracts with the account:", deployer.address);
+
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
   const PackToken_Factory = await ethers.getContractFactory("Pack");
   const packToken = await PackToken_Factory.deploy(vrfCoordinator, linkTokenAddress, keyHash);
 
-  console.log("Pack ERC1155 token address:", packToken.address);
+  console.log("Pack token address:", packToken.address);
 
   const PackMarket_Factory = await ethers.getContractFactory("PackMarket");
   const packMarket = await PackMarket_Factory.deploy(packToken.address);
 
-  console.log("Pack Market address:", packMarket.address);
+  console.log("PackMarket token address:", packMarket.address);
+
+  //  const PackCoin_Factory = await ethers.getContractFactory("PackCoin");
+  //const packCoin = await PackCoin_Factory.deploy();
+
+  //console.log("PackCoin token address:", packCoin.address);
 }
 
 main()

@@ -5,9 +5,8 @@ Pack: `0x68c7ad48732913EAab1827bFD6FfDfE7f4eA399B`
 Pack Market: `0x4D50359838E0d8571C73E815d82b509f130e0A91`
 
 **Rinkeby**
-`Pack.sol` — [0x07ab3E15fCA0e4a02176f71Fe7fc60fb46A3E4A1](https://rinkeby.etherscan.io/address/0x07ab3E15fCA0e4a02176f71Fe7fc60fb46A3E4A1#code)
-
-`PackMarket.sol` — [0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4](https://rinkeby.etherscan.io/address/0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4#code)
+`Pack.sol` — [0x0287d5d1182FE03e9E4f117C2467009844b00b51](https://rinkeby.etherscan.io/address/0x0287d5d1182FE03e9E4f117C2467009844b00b51#code)
+`PackMarket.sol` — [0xb75b08E041CA61c6390B27AB790817cDC1cc1399](https://rinkeby.etherscan.io/address/0xb75b08E041CA61c6390B27AB790817cDC1cc1399#code)
 
 `PackCoin.sol` — [0x49e7f00ee5652523fAdE13674100c8518d7DA8b6](https://rinkeby.etherscan.io/address/0x49e7f00ee5652523fAdE13674100c8518d7DA8b6#code)
 
