@@ -15,10 +15,10 @@ const wallet = new ethers.Wallet(privateKey, provider)
 const linkTokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709'
 const linkContract = new ethers.Contract(linkTokenAddress, abi, wallet);
 
-const packTokenAddress = '0xac063C80a70725e3c63FaaC04a10920596cd9255';
+const packTokenAddress = '0x0c56B393043CDA7c726c27FdD64Bd9262428515F';
 
 const to = packTokenAddress;
-const value = ethers.utils.parseEther('10');
+const value = ethers.utils.parseEther('1');
 
 async function main() {
   const transferTx = await linkContract.transfer(to, value);
