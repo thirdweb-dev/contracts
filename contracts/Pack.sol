@@ -1,3 +1,11 @@
+
+// ██████╗░░█████╗░░█████╗░██╗░░██╗  ██████╗░██████╗░░█████╗░████████╗░█████╗░░█████╗░░█████╗░██╗░░░░░
+// ██╔══██╗██╔══██╗██╔══██╗██║░██╔╝  ██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██║░░░░░
+// ██████╔╝███████║██║░░╚═╝█████═╝░  ██████╔╝██████╔╝██║░░██║░░░██║░░░██║░░██║██║░░╚═╝██║░░██║██║░░░░░
+// ██╔═══╝░██╔══██║██║░░██╗██╔═██╗░  ██╔═══╝░██╔══██╗██║░░██║░░░██║░░░██║░░██║██║░░██╗██║░░██║██║░░░░░
+// ██║░░░░░██║░░██║╚█████╔╝██║░╚██╗  ██║░░░░░██║░░██║╚█████╔╝░░░██║░░░╚█████╔╝╚█████╔╝╚█████╔╝███████╗
+// ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═╝░░╚═╝  ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░░░░╚═╝░░░░╚════╝░░╚════╝░░╚════╝░╚══════╝
+
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
@@ -11,7 +19,7 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   using SafeMath for uint;
 
-  uint private _currentTokenId = 0;
+  uint public _currentTokenId = 0;
 
   bytes32 internal keyHash;
   uint private _seed;
@@ -149,8 +157,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId) {
     require(rewardsInPack[packId].length > 0, "The pack with the given packId contains no rewards.");
 
-    uint largeRandomNumber = block.number + uint(keccak256(abi.encodePacked(blockhash(block.number - 1), randomness)));
-    uint prob = largeRandomNumber.mod(tokens[packId].rarityUnit);
+    uint prob = randomness.mod(tokens[packId].rarityUnit);
     uint step = 0;
 
     for(uint i = 0; i < rewardsInPack[packId].length; i++) {
@@ -182,10 +189,10 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
 
     uint rewardTokenId = getRandomReward(request.packId, randomness);
 
-    _burn(msg.sender, request.packId, 1);
+    _burn(request.packOpener, request.packId, 1);
     circulatingSupply[request.packId] -= 1;
 
-    _mint(msg.sender, rewardTokenId, 1, "");
+    _mint(request.packOpener, rewardTokenId, 1, "");
     circulatingSupply[rewardTokenId] += 1;
 
     delete randomnessRequests[requestId];
