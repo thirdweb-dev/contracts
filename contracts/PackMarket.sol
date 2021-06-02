@@ -97,17 +97,12 @@ contract PackMarket is Ownable, ReentrancyGuard {
     uint256 quantity
   ) external eligibleToList(tokenId, quantity, currency) {
 
-    uint tokenPrice = price;
-    if(currency == address(0)) {
-      tokenPrice = price * 1 ether;
-    }
-
     listings[msg.sender][tokenId] = Listing({
       owner: msg.sender,
       tokenId: tokenId,
       active: true,
       currency: currency,
-      price: tokenPrice,
+      price: price,
       quantity: quantity
     });
 

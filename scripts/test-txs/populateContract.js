@@ -16,8 +16,8 @@ const provider = new ethers.providers.JsonRpcProvider(alchemyEndpoint, 'rinkeby'
 const wallet = new ethers.Wallet(privateKey, provider)
 
 // Set up contracts
-const packTokenAddress = '0x0c56B393043CDA7c726c27FdD64Bd9262428515F'
-const packMarketAddress = '0x24574D0C177ad9E5cD74d9dBF5a9A729924e72e2'
+const packTokenAddress = '0xcE41C2D82A91d3E7C63C26522eD30Ab50f3de7A1'
+const packMarketAddress = '0x27666861b25D830526283D0499c5A428696c58D2'
 
 const packToken = new ethers.Contract(packTokenAddress, packTokenABI, wallet);
 const packMarket = new ethers.Contract(packMarketAddress, packMarketABI, wallet);
@@ -44,16 +44,18 @@ async function main() {
       maxPackSupply += supply;
       rewardMaxSupplies.push(supply)
     }
-    const createTx = await packToken.createPack(packURI, rewardMaxSupplies, rewardURIs, { gasLimit: 2000000 });
+    const createTx = await packToken.createPack(packURI, rewardURIs, rewardMaxSupplies, { gasLimit: 2000000 });
     await createTx.wait();
     console.log(`Created pack with ID ${packID}. Hash - ${createTx.hash}`)
 
     // List on market
-    const price = parseFloat((`${Math.random()}`).slice(0,4));
+    const price = ethers.utils.parseEther((`${Math.random()}`).slice(0,4));
 
-    const currencyAddress = currencyAddresses[
-      Math.floor(Math.random() * currencyAddresses.length)
-    ]
+    const currencyAddress = currencyAddresses[0]
+
+    // const currencyAddress = currencyAddresses[
+    //   Math.floor(Math.random() * currencyAddresses.length)
+    // ]
 
     const listingTx = await packMarket.sell(packID, currencyAddress, price, maxPackSupply, { gasLimit: 2000000 });
     await listingTx.wait()

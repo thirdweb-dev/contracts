@@ -22,7 +22,7 @@ const rewardURIs = [
 ]
 
 const currencyAddresses = [
-  '0x49e7f00ee5652523fAdE13674100c8518d7DA8b6', // ERC 20 token (`PackCoin`)
+//   '0x49e7f00ee5652523fAdE13674100c8518d7DA8b6', // ERC 20 token (`PackCoin`)
   '0x0000000000000000000000000000000000000000' // Zero address == ETH (on the subgraph)
 ]
 
