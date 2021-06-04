@@ -70,7 +70,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   * @param rewardTokenUris The URIs for each reward token added to the pack.
    */
   function createPack(
-    string calldata tokenUri, 
+    string calldata tokenUri,   
     string[] calldata rewardTokenUris,
     uint[] memory rewardTokenMaxSupplies
   ) external returns (uint tokenId) {
@@ -87,12 +87,10 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     uint[] memory rewardTokenIds = new uint[](rewardTokenUris.length);
 
     for (uint i = 0; i < rewardTokenUris.length; i++) {
-      uint rewardTokenId = _addReward(rewardTokenUris[i], rewardTokenMaxSupplies[i]);
+      uint rewardTokenId = addReward(rewardTokenUris[i], rewardTokenMaxSupplies[i]);
 
       rewardTokenIds[i] = rewardTokenId;
       packMaxSupply += rewardTokenMaxSupplies[i];
-
-      emit RewardAdded(msg.sender, tokenId, rewardTokenId, rewardTokenUris[i]);
     }
 
     // Store pack token state
@@ -111,10 +109,11 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     _mint(msg.sender, tokenId, packMaxSupply, "");
 
     emit PackCreated(msg.sender, tokenId, tokenUri, packMaxSupply);
+    emit RewardsAdded(msg.sender, tokenId, rewardTokenIds, rewardTokenUris, rewardTokenMaxSupplies);
   }
 
   /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
-  function _addReward(string calldata tokenUri, uint maxSupply) internal returns (uint tokenId) {
+  function addReward(string calldata tokenUri, uint maxSupply) internal returns (uint tokenId) {
     
     // Get `tokenId`
     tokenId = _currentTokenId;

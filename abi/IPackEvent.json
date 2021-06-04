@@ -55,37 +55,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "rewardTokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "rewardTokenUri",
-        "type": "string"
-      }
-    ],
-    "name": "RewardAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "receiver",
         "type": "address"
       },
@@ -103,6 +72,43 @@
       }
     ],
     "name": "RewardDistributed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "packId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "rewardTokenIds",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "rewardTokenUris",
+        "type": "string[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "rewardTokenMaxSupplies",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "RewardsAdded",
     "type": "event"
   },
   {

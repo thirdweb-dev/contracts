@@ -16,8 +16,8 @@ const provider = new ethers.providers.JsonRpcProvider(alchemyEndpoint, 'rinkeby'
 const wallet = new ethers.Wallet(privateKey, provider)
 
 // Set up contracts
-const packTokenAddress = '0xcE41C2D82A91d3E7C63C26522eD30Ab50f3de7A1'
-const packMarketAddress = '0x27666861b25D830526283D0499c5A428696c58D2'
+const packTokenAddress = '0x6416795AF11336ef33EF7BAd1354F370141f8728'
+const packMarketAddress = '0x5c0Ad93A3580260820fDcD1E5F5fDD714DA800B7'
 
 const packToken = new ethers.Contract(packTokenAddress, packTokenABI, wallet);
 const packMarket = new ethers.Contract(packMarketAddress, packMarketABI, wallet);
@@ -29,7 +29,7 @@ async function main() {
   
   let counter = 1;
 
-  for(let packURI of packURIs.slice(1,2)) {
+  for(let packURI of packURIs) {
     let packID = parseInt((await packToken._currentTokenId()).toString());
 
     console.log(`Populating contracts - loop ${counter}`)
@@ -61,7 +61,7 @@ async function main() {
     await listingTx.wait()
     console.log(`Listed pack ${packID} on the market. Hash - ${listingTx.hash}`)
 
-    // END -- increment `packID`
+    // END -- increment counter
     counter++;
   }
 
