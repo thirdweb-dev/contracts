@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "_packToken",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_treasuryAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -172,6 +177,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newTreasuryAddress",
+        "type": "address"
+      }
+    ],
+    "name": "TreasuryAddressChanged",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "MAX_BPS",
     "outputs": [
@@ -310,6 +328,19 @@
   },
   {
     "inputs": [],
+    "name": "protocolTreasury",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -382,12 +413,61 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_newQuantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "setListingQuantity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_active",
+        "type": "bool"
+      }
+    ],
+    "name": "setListingStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_packToken",
         "type": "address"
       }
     ],
     "name": "setPackToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_treasuryAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setProtocolTreasury",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -408,12 +488,22 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_currency",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "_amount",
         "type": "uint256"
       }
     ],
-    "name": "unlist",
+    "name": "transferProtocolFees",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
