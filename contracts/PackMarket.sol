@@ -110,12 +110,13 @@ contract PackMarket is Ownable, ReentrancyGuard {
   }
 
   /**
-   * @notice Lets a seller unlist an existing listing.
+   * @notice Lets a seller set an existing listing as active or inactive.
    *
    * @param tokenId The ERC1155 tokenId of the token being unlisted.
+   * @param _active The new status of the listing -- either active or inactive.
    */
-  function unlist(uint256 tokenId) external onlySeller(tokenId) {
-    listings[msg.sender][tokenId].active = false;
+  function setListingStatus(uint256 tokenId, bool _active) external onlySeller(tokenId) {
+    listings[msg.sender][tokenId].active = _active;
 
     emit ListingUpdate(
       msg.sender,
@@ -154,6 +155,27 @@ contract PackMarket is Ownable, ReentrancyGuard {
    */
   function setListingCurrency(uint256 tokenId, address _newCurrency) external onlySeller(tokenId) {
     listings[msg.sender][tokenId].currency = _newCurrency;
+
+    emit ListingUpdate(
+      msg.sender,
+      tokenId,
+      listings[msg.sender][tokenId].active, 
+      listings[msg.sender][tokenId].currency, 
+      listings[msg.sender][tokenId].price, 
+      listings[msg.sender][tokenId].quantity
+    );
+  }
+
+  /**
+   * @notice Lets a seller change the quantity of token to be listed for sale.
+   * 
+   * @param tokenId The ERC1155 tokenId associated with the listing.
+   * @param _newQuantity The new quantity of token to be listed. 
+   */
+  function setListingQuantity(uint256 tokenId, uint _newQuantity) external onlySeller(tokenId) {
+    require(packToken.balanceOf(msg.sender, tokenId) >= _newQuantity, "Must own the amount of tokens being listed.");
+
+    listings[msg.sender][tokenId].quantity = _newQuantity;
 
     emit ListingUpdate(
       msg.sender,
