@@ -135,7 +135,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   *
   * @param packId The ERC1155 tokenId of the pack token being opened.
    */
-  function openPack(uint packId) external {
+  function openPack(uint packId) external returns (bytes32 requestId) {
     require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
     // Generate `seed` from user address and previous contract seed. Set generated `seed` as `_seed`.
@@ -143,7 +143,7 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     _seed = seed;
 
     // Request Chainlink VRF for a random number. Store the request ID.
-    bytes32 requestId = requestRandomNumber(keyHash, chainlinkFee, seed);
+    requestId = requestRandomNumber(keyHash, chainlinkFee, seed);
     randomnessRequests[requestId] = RandomnessRequest({
       packId: packId,
       packOpener: msg.sender
