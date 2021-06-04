@@ -281,8 +281,8 @@ contract PackMarket is Ownable, ReentrancyGuard {
     }
   }
 
-  function withdrawProtocolFees(address _currency, uint _amount) public {
-    require(msg.sender == protocolTreasury, "Only the treasury contract can withdraw protocol fees.");
+  function transferProtocolFees(address _to, address _currency, uint _amount) public {
+    require(msg.sender == protocolTreasury, "Only the treasury contract can transfer protocol fees.");
 
     if(_currency == address(0)) {
       IERC20 feeToken = IERC20(_currency);
@@ -290,13 +290,13 @@ contract PackMarket is Ownable, ReentrancyGuard {
 
       feeToken.approve(address(this), _amount);
       require(
-        feeToken.transfer(msg.sender, _amount),
+        feeToken.transfer(_to, _amount),
         "ERC20 withdrawal of protocol fees failed."
       );
     } else {
       require(address(this).balance >= _amount, "Not enough fees generated to withdraw the specified amount.");
 
-      (bool success,) = (msg.sender).call{value: _amount}("");
+      (bool success,) = (_to).call{value: _amount}("");
       require(success, "ETH withdrawal of protocol fees failed.");
     }
   }
