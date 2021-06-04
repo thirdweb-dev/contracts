@@ -10,7 +10,12 @@ import "./Pack.sol";
 contract PackMarket is Ownable, ReentrancyGuard {
   using SafeMath for uint256;
 
+  Pack public packToken;
+  address public protocolTreasury;
+
   event PackTokenChanged(address newPackTokenAddress);
+  event TreasuryAddressChanged(address newTreasuryAddress);
+
   event NewListing(
     address indexed seller, 
     uint256 indexed tokenId, 
@@ -35,8 +40,6 @@ contract PackMarket is Ownable, ReentrancyGuard {
     uint256 price, 
     uint256 quantity
   );
-
-  Pack public packToken;
 
   uint256 public constant MAX_BPS = 10000; // 100%
   uint256 public protocolFeeBps = 500; // 5%
@@ -80,6 +83,16 @@ contract PackMarket is Ownable, ReentrancyGuard {
   function setPackToken(address _packToken) external onlyOwner {
     packToken = Pack(_packToken);
     emit PackTokenChanged(_packToken);
+  }
+
+  /**
+   * @notice Sets the protocol treasury address, in control of `protcolFees`
+   *
+   * @param _treasuryAddress The address of an ERC1155 token contract.
+   */
+  function setProtocolTreasury(address _treasuryAddress) external onlyOwner {
+    protocolTreasury = _treasuryAddress;
+    emit PackTokenChanged(_treasuryAddress);
   }
 
   /**
@@ -264,6 +277,26 @@ contract PackMarket is Ownable, ReentrancyGuard {
     if (creatorCut > 0) {
         (success,) = creator.call{value: creatorCut}("");
       require(success, "ETH transfer of creator cut failed.");
+    }
+  }
+
+  function withdrawProtocolFees(address _currency, uint _amount) public {
+    require(msg.sender == protocolTreasury, "Only the treasury contract can withdraw protocol fees.");
+
+    if(_currency == address(0)) {
+      IERC20 feeToken = IERC20(_currency);
+      require(feeToken.balanceOf(address(this)) >= _amount, "Not enough fees generated to withdraw the specified amount.");
+
+      feeToken.approve(address(this), _amount);
+      require(
+        feeToken.transfer(msg.sender, _amount),
+        "ERC20 withdrawal of protocol fees failed."
+      );
+    } else {
+      require(address(this).balance >= _amount, "Not enough fees generated to withdraw the specified amount.");
+
+      (bool success,) = (msg.sender).call{value: _amount}("");
+      require(success, "ETH withdrawal of protocol fees failed.");
     }
   }
 }
