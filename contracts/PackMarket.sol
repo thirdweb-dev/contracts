@@ -71,8 +71,9 @@ contract PackMarket is Ownable, ReentrancyGuard {
     _;
   }
 
-  constructor(address _packToken) {
+  constructor(address _packToken, address _treasuryAddress) {
     packToken = Pack(_packToken);
+    protocolTreasury = _treasuryAddress;
   }
 
   /**
