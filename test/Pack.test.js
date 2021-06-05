@@ -63,12 +63,12 @@ describe("Pack", () => {
         .withArgs(owner.address, 0, uri, rewardSupplyCount);
     });
 
-    it("createPack emits RewardAdded", async () => {
+    it("createPack emits RewardsAdded", async () => {
       expect(await pack.createPack(uri, rewardUris, rewardSupplies))
-        .to.emit(pack, "RewardAdded")
-        .withArgs(owner.address, 0, 1, rewardUris[0]);
+        .to.emit(pack, "RewardsAdded")
+        .withArgs(owner.address, 0, [1], rewardUris, rewardSupplies);
+      //msg.sender, tokenId, rewardTokenIds, rewardTokenUris, rewardTokenMaxSupplies
     });
-
   });
 
   let createdPack;
@@ -76,7 +76,7 @@ describe("Pack", () => {
   // openPack(uint256 packId) external
   describe("openPack", async () => {
     beforeEach(async () => {
-      const {value: tokenId} = await pack.createPack(uri, rewardUris, rewardSupplies);
+      const { value: tokenId } = await pack.createPack(uri, rewardUris, rewardSupplies);
       createdPack = await pack.tokens(tokenId);
       createdPackId = tokenId;
     });
