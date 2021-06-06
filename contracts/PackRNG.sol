@@ -51,6 +51,13 @@ contract PackRNG is RNGInterface, VRFConsumerBase, Ownable {
     return address(LINK);
   }
 
+  /// @notice Allows governance to set the random number receiver.
+  /// @param _randomNumReceiver The address of the new random number receiver.
+  function setRNGReceiver(address _randomNumReceiver) external onlyOwner {
+    randomNumReceiver = RNGReceiver(_randomNumReceiver);
+    emit RNGReceiverSet(_randomNumReceiver);
+  }
+
   /// @notice Allows governance to set the VRF keyhash
   /// @param _keyhash The keyhash to be used by the VRF
   function setKeyhash(bytes32 _keyhash) external onlyOwner {
