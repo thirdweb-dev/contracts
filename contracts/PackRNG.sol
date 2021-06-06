@@ -5,13 +5,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
 import "./interfaces/RNGInterface.sol";
+import "./interfaces/RNGReceiver.sol";
 
 contract PackRNG is RNGInterface, VRFConsumerBase, Ownable {
+
+  RNGReceiver internal randomNumReceiver;
 
   event KeyHashSet(bytes32 keyHash);
   event FeeSet(uint fee);
   event VrfCoordinatorSet(address indexed vrfCoordinator);
   event VRFRequested(uint indexed requestId, bytes32 indexed chainlinkRequestId);
+  event RNGReceiverSet(address randomNumReceiver);
 
   /// @dev The keyhash used by the Chainlink VRF
   bytes32 public keyHash;
@@ -32,7 +36,14 @@ contract PackRNG is RNGInterface, VRFConsumerBase, Ownable {
   mapping(bytes32 => uint) internal chainlinkRequestIds;
 
   /// @dev Public constructor
-  constructor(address _vrfCoordinator, address _link) VRFConsumerBase(_vrfCoordinator, _link) {
+  constructor(
+    address _vrfCoordinator,
+    address _link,
+    address _randomNumReceiver
+  ) VRFConsumerBase(_vrfCoordinator, _link) {
+    randomNumReceiver = RNGReceiver(_randomNumReceiver);
+
+    emit RNGReceiverSet(_randomNumReceiver);
     emit VrfCoordinatorSet(_vrfCoordinator);
   }
 
@@ -86,7 +97,7 @@ contract PackRNG is RNGInterface, VRFConsumerBase, Ownable {
     requestId = _requestRandomness(seed);
 
     requestLockBlock[requestId] = lockBlock;
-
+ 
     emit RandomNumberRequested(requestId, msg.sender);
   }
 
@@ -127,6 +138,9 @@ contract PackRNG is RNGInterface, VRFConsumerBase, Ownable {
 
     // Store random value
     randomNumbers[internalRequestId] = randomness;
+
+    // Call RNGReceiver with random number and internal requestId
+    randomNumReceiver.fulfillRandomness(internalRequestId, randomness);
 
     emit RandomNumberCompleted(internalRequestId, randomness);
   }
