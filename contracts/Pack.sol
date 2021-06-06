@@ -10,7 +10,6 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -18,7 +17,6 @@ import "./interfaces/RNGInterface.sol";
 import "./interfaces/RNGReceiver.sol";
 
 contract Pack is ERC1155, Ownable, RNGReceiver {
-  using SafeMath for uint;
 
   uint public _currentTokenId = 0;
 
@@ -173,7 +171,7 @@ contract Pack is ERC1155, Ownable, RNGReceiver {
   function getRandomReward(uint packId, uint randomness, uint lockBlock) internal returns (uint rewardTokenId) {
     require(rewardsInPack[packId].length > 0, "The pack with the given packId contains no rewards.");
 
-    uint prob = (randomness.add(lockBlock)).mod(tokens[packId].rarityUnit);
+    uint prob = ((randomness + lockBlock) % (tokens[packId].rarityUnit));
     uint step = 0;
 
     for(uint i = 0; i < rewardsInPack[packId].length; i++) {
