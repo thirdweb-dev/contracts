@@ -44,9 +44,28 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "randomnessRequestId",
+        "type": "uint256"
       }
     ],
     "name": "PackOpened",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "RNG",
+        "type": "address"
+      }
+    ],
+    "name": "RNGSet",
     "type": "event"
   },
   {
