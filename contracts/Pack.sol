@@ -14,11 +14,10 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./interfaces/IPackEvent.sol";
 import "./interfaces/RNGInterface.sol";
 import "./interfaces/RNGReceiver.sol";
 
-contract Pack is ERC1155, Ownable, RNGReceiver, IPackEvent {
+contract Pack is ERC1155, Ownable, RNGReceiver {
   using SafeMath for uint;
 
   uint public _currentTokenId = 0;
@@ -41,6 +40,18 @@ contract Pack is ERC1155, Ownable, RNGReceiver, IPackEvent {
     uint packId;
     uint lockBlock;
   }
+
+  event RNGSet(address RNG);
+
+  event PackCreated(address indexed creator, uint indexed tokenId, string tokenUri, uint maxSupply);
+  event RewardsAdded(uint indexed packId, uint[] rewardTokenIds, string[] rewardTokenUris, uint[] rewardTokenMaxSupplies);
+  event PackOpened(address indexed owner, uint indexed tokenId, uint randomnessRequestId);
+  event RewardDistributed(address indexed receiver, uint indexed packID, uint indexed rewardTokenId);
+
+  event TransferSinglePack(address indexed from, address indexed to, uint indexed tokenId, uint amount);
+  event TransferSingleReward(address indexed from, address indexed to, uint indexed tokenId, uint amount);
+  event TransferBatchPacks(address indexed from, address indexed to, uint[] ids, uint[] values);
+  event TransferBatchRewards(address indexed from, address indexed to, uint[] ids, uint[] values); 
 
   // tokenId => Token state 
   mapping(uint => Token) public tokens;
@@ -110,7 +121,7 @@ contract Pack is ERC1155, Ownable, RNGReceiver, IPackEvent {
     _mint(msg.sender, tokenId, packMaxSupply, "");
 
     emit PackCreated(msg.sender, tokenId, tokenUri, packMaxSupply);
-    emit RewardsAdded(msg.sender, tokenId, rewardTokenIds, rewardTokenUris, rewardTokenMaxSupplies);
+    emit RewardsAdded(tokenId, rewardTokenIds, rewardTokenUris, rewardTokenMaxSupplies);
   }
 
   /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
