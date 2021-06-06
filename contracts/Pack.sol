@@ -18,7 +18,7 @@ import "./interfaces/RNGReceiver.sol";
 
 contract Pack is ERC1155, Ownable, RNGReceiver {
 
-  uint public _currentTokenId = 0;
+  uint public _currentTokenId;
 
   RNGInterface internal RNG;
 
@@ -63,7 +63,9 @@ contract Pack is ERC1155, Ownable, RNGReceiver {
   // Chainlink VRF requestId => tokenId (for TokenType.Pack) and request-er address.
   mapping(uint => RandomnessRequest) public randomnessRequests;
 
-  constructor() ERC1155("") {}
+  constructor() ERC1155("") {
+    _currentTokenId = 0;
+  }
 
   /// @notice Points RNG to a contract that implements `RNGInterface`
   function setRNG(address _RNG) external onlyOwner {
