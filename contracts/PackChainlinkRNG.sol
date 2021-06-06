@@ -7,7 +7,7 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 import "./interfaces/RNGInterface.sol";
 import "./interfaces/RNGReceiver.sol";
 
-contract PackRNG is RNGInterface, VRFConsumerBase, Ownable {
+contract PackChainlinkRNG is RNGInterface, VRFConsumerBase, Ownable {
 
   RNGReceiver internal randomNumReceiver;
 
