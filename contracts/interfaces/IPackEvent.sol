@@ -7,7 +7,7 @@ interface IPackEvent {
 
   event PackCreated(address indexed creator, uint indexed tokenId, string tokenUri, uint maxSupply);
   event RewardsAdded(address indexed creator, uint indexed packId, uint[] rewardTokenIds, string[] rewardTokenUris, uint[] rewardTokenMaxSupplies);
-  event PackOpened(address indexed owner, uint indexed tokenId);
+  event PackOpened(address indexed owner, uint indexed tokenId, uint randomnessRequestId);
   event RewardDistributed(address indexed receiver, uint indexed packID, uint indexed rewardTokenId);
 
   event TransferSinglePack(address indexed from, address indexed to, uint indexed tokenId, uint amount);

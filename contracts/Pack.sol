@@ -12,18 +12,18 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./interfaces/IPackEvent.sol";
-import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
+import "./interfaces/RNGInterface.sol";
+import "./interfaces/RNGReceiver.sol";
 
-contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
+contract Pack is ERC1155, Ownable, RNGReceiver, IPackEvent {
   using SafeMath for uint;
 
   uint public _currentTokenId = 0;
 
-  bytes32 internal keyHash;
-  uint private _seed;
-  uint internal chainlinkFee = 0.1 ether;
+  RNGInterface internal RNG;
 
   enum TokenType { Pack, Reward }
 
@@ -37,8 +37,9 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   }
 
   struct RandomnessRequest {
-    uint packId;
     address packOpener;
+    uint packId;
+    uint lockBlock;
   }
 
   // tokenId => Token state 
@@ -51,16 +52,16 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   mapping(uint => uint) public circulatingSupply;
 
   // Chainlink VRF requestId => tokenId (for TokenType.Pack) and request-er address.
-  mapping(bytes32 => RandomnessRequest) public randomnessRequests;
+  mapping(uint => RandomnessRequest) public randomnessRequests;
 
-  constructor(
-    address _vrfCoordinator,
-    address _linkToken,
-    bytes32 _keyHash
-  ) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC1155("") {
-    keyHash = _keyHash;
+  constructor() ERC1155("") {}
+
+  /// @notice Points RNG to a contract that implements `RNGInterface`
+  function setRNG(address _RNG) external onlyOwner {
+    RNG = RNGInterface(_RNG);
+    emit RNGSet(_RNG);
   }
-  
+
   /**
   * @notice Lets a creator create a Pack.
   * @dev Mints an ERC1155 pack token with URI `tokenUri` and total supply `maxSupply`
@@ -135,28 +136,33 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
   *
   * @param packId The ERC1155 tokenId of the pack token being opened.
    */
-  function openPack(uint packId) external returns (bytes32 requestId) {
+  function openPack(uint packId) external returns (uint requestId, uint lockBlock) {
     require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
-    // Generate `seed` from user address and previous contract seed. Set generated `seed` as `_seed`.
-    uint seed = uint(keccak256(abi.encodePacked(blockhash(block.number - 1), msg.sender, _seed)));
-    _seed = seed;
+    // Approve RNG to handle fee amount of fee token.
+    (address feeToken, uint feeAmount) = RNG.getRequestFee();
+    require(
+      IERC20(feeToken).approve(address(RNG), feeAmount),
+      "Failed to Approve RNG to handle fee amount of fee token."
+    );
 
-    // Request Chainlink VRF for a random number. Store the request ID.
-    requestId = requestRandomNumber(keyHash, chainlinkFee, seed);
+    // Request Chainlink VRF for a random number. Store the request ID and lockBlock.
+    (requestId, lockBlock) = RNG.requestRandomNumber();
+
     randomnessRequests[requestId] = RandomnessRequest({
+      packOpener: msg.sender,
       packId: packId,
-      packOpener: msg.sender
+      lockBlock: lockBlock
     });
 
-    emit PackOpened(msg.sender, packId);
+    emit PackOpened(msg.sender, packId, requestId);
   }
 
   /// @dev returns a random reward tokenId using `randomness` provided by Chainlink VRF.
-  function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId) {
+  function getRandomReward(uint packId, uint randomness, uint lockBlock) internal returns (uint rewardTokenId) {
     require(rewardsInPack[packId].length > 0, "The pack with the given packId contains no rewards.");
 
-    uint prob = randomness.mod(tokens[packId].rarityUnit);
+    uint prob = (randomness.add(lockBlock)).mod(tokens[packId].rarityUnit);
     uint step = 0;
 
     for(uint i = 0; i < rewardsInPack[packId].length; i++) {
@@ -175,18 +181,13 @@ contract Pack is ERC1155, Ownable, IPackEvent, VRFConsumerBase {
     tokens[packId].rarityUnit -= 1;
   }
 
-  /// @dev Sends a random number request to the Chainlink VRF system.
-  function requestRandomNumber(bytes32 _keyHash, uint _fee, uint _randomnessSeed) internal returns (bytes32 requestId) {
-    requestId = requestRandomness(_keyHash, _fee, _randomnessSeed);
-  }
-
   /// @dev Called by Chainlink VRF random number provider.
-  function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
-    require(randomnessRequests[requestId].packOpener != address(0), "The requestId is invalid.");
+  function fulfillRandomness(uint requestId, uint randomness) external override {
+    require(msg.sender == address(RNG), "Only the appointed RNG can fulfill random number requests.");
 
     RandomnessRequest memory request = randomnessRequests[requestId];
 
-    uint rewardTokenId = getRandomReward(request.packId, randomness);
+    uint rewardTokenId = getRandomReward(request.packId, randomness, request.lockBlock);
 
     _burn(request.packOpener, request.packId, 1);
     circulatingSupply[request.packId] -= 1;
