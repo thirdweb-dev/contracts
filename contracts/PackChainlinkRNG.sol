@@ -91,8 +91,8 @@ contract PackChainlinkRNG is RNGInterface, VRFConsumerBase, Ownable {
   /// @dev Some services will complete the request immediately, others may have a time-delay
   /// @dev Some services require payment in the form of a token, such as $LINK for Chainlink VRF
   /// @return requestId The ID of the request used to get the results of the RNG service
-  /// @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.  The calling contract
-  /// should "lock" all activity until the result is available via the `requestId`
+  /// @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.
+  /// The calling contract should "lock" all activity until the result is available via the `requestId`
   function requestRandomNumber() external override returns (uint requestId, uint lockBlock) {
     uint seed = _getSeed();
     lockBlock = uint(block.number);
