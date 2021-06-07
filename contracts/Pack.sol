@@ -152,10 +152,12 @@ contract Pack is ERC1155, Ownable, RNGReceiver {
 
     // Approve RNG to handle fee amount of fee token.
     (address feeToken, uint feeAmount) = RNG.getRequestFee();
-    require(
+    if(feeToken != address(0)) {
+      require(
       IERC20(feeToken).approve(address(RNG), feeAmount),
       "Failed to Approve RNG to handle fee amount of fee token."
     );
+    }
 
     // Request Chainlink VRF for a random number. Store the request ID and lockBlock.
     (requestId, lockBlock) = RNG.requestRandomNumber();
