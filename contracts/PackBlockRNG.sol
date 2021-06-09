@@ -18,6 +18,9 @@ contract PackBlockRNG is RNGInterface, Ownable {
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint => uint) internal randomNumbers;
 
+  ///@dev Random number request Id => lock block
+  mapping(uint => uint) lockBlocks;
+
   /// @dev Public constructor
   constructor(address _randomNumReceiver) {
     randomNumReceiver = RNGReceiver(_randomNumReceiver);
@@ -51,14 +54,20 @@ contract PackBlockRNG is RNGInterface, Ownable {
   /// @return lockBlock The block number at which the RNG service will start generating time-delayed randomness. 
   /// The calling contract should "lock" all activity until the result is available via the `requestId`
   function requestRandomNumber() external override returns (uint requestId, uint lockBlock) {
-    uint seed = _getSeed();
-    lockBlock = uint(block.number);
-
     // send request (costs fee)
     requestId = _getNextRequestId();
-    emit RandomNumberRequested(requestId, msg.sender);
+    lockBlock = uint(block.number);
+    lockBlocks[requestId] = lockBlock;
 
-    uint randomness = uint(keccak256(abi.encodePacked(msg.sender, seed, lockBlock)));
+    emit RandomNumberRequested(requestId, msg.sender);
+  }
+
+  /// @dev Externally called to fulfill a random number request.
+  function fulfillRandomness(uint requestId) external {
+    uint seed = _getSeed();
+    uint lockBlock = lockBlocks[requestId];
+
+    uint randomness = uint(keccak256(abi.encodePacked(seed, lockBlock, block.number, block.timestamp)));
     // Store random value
     randomNumbers[requestId] = randomness;
 
