@@ -104,7 +104,26 @@ describe("createPack", () => {
       expect(createdPack.uri).to.equal(packURI);
       expect(createdPack.rarityUnit).to.equal(sumOfMaxSupplies);
       expect(createdPack.maxSupply).to.equal(sumOfMaxSupplies);
-      expect(createdPack.tokenType).to.equal(0); // uint(TokenType.Pack) = 0
+      expect(createdPack.tokenType).to.equal(0); // uint(TokenType.Pack) == 0
+    })
+
+    it("Should update the `tokens` mapping with the created rewards", async () => {
+      const { value: tokenId } = await packToken.connect(creator).createPack(packURI, rewardURIs, rewardMaxSupplies);
+      const parsedTokenId = parseInt((tokenId).toString());
+
+      let expectedRewardId = parsedTokenId + 1
+      for(let i = 0; i < rewardURIs.length; i++) {
+        
+        const reward = await packToken.tokens(expectedRewardId)
+
+        expect(reward.creator).to.equal(creator.address);
+        expect(reward.uri).to.equal(rewardURIs[i]);
+        expect(reward.rarityUnit).to.equal(rewardMaxSupplies[i]);
+        expect(reward.maxSupply).to.equal(rewardMaxSupplies[i]);
+        expect(reward.tokenType).to.equal(1); // uint(TokenType.Reward) == 1
+
+        expectedRewardId++
+      }
     })
 
     it("Should update the 'rewardsInPack' mapping with the created reward token IDs", async () => {
