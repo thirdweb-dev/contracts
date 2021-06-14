@@ -16,6 +16,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/RNGInterface.sol";
 import "./interfaces/RNGReceiver.sol";
 
+import "hardhat/console.sol";
+
 contract Pack is ERC1155, Ownable, RNGReceiver {
 
   uint public _currentTokenId;
@@ -147,9 +149,9 @@ contract Pack is ERC1155, Ownable, RNGReceiver {
   *
   * @param packId The ERC1155 tokenId of the pack token being opened.
    */
-  function openPack(uint packId) external returns (uint requestId, uint lockBlock) {
+  function openPack(uint packId) external returns (uint requestId) {
     require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
-
+    // console.log("Fan address: ", msg.sender);
     // Approve RNG to handle fee amount of fee token.
     (address feeToken, uint feeAmount) = RNG.getRequestFee();
     if(feeToken != address(0)) {
@@ -159,14 +161,15 @@ contract Pack is ERC1155, Ownable, RNGReceiver {
       );
     }
 
+    uint lockBlock;
+    // Request Chainlink VRF for a random number. Store the request ID and lockBlock.
+    (requestId, lockBlock) = RNG.requestRandomNumber();
+
     randomnessRequests[requestId] = RandomnessRequest({
       packOpener: msg.sender,
       packId: packId,
       lockBlock: lockBlock
     });
-
-    // Request Chainlink VRF for a random number. Store the request ID and lockBlock.
-    (requestId, lockBlock) = RNG.requestRandomNumber();
 
     emit PackOpened(msg.sender, packId, requestId);
   }
@@ -197,11 +200,11 @@ contract Pack is ERC1155, Ownable, RNGReceiver {
   /// @dev Called by Chainlink VRF random number provider.
   function fulfillRandomness(uint requestId, uint randomness) external override {
     require(msg.sender == address(RNG), "Only the appointed RNG can fulfill random number requests.");
-
+    // console.log("Request ID fr:", requestId);
     RandomnessRequest memory request = randomnessRequests[requestId];
 
     uint rewardTokenId = getRandomReward(request.packId, randomness, request.lockBlock);
-
+    // console.log("PackOpener: ", request.packOpener);
     _burn(request.packOpener, request.packId, 1);
     circulatingSupply[request.packId] -= 1;
 
