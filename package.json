@@ -9,7 +9,8 @@
   "dependencies": {
     "@chainlink/contracts": "^0.1.7",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
-    "@openzeppelin/contracts": "^4.1.0"
+    "@openzeppelin/contracts": "^4.1.0",
+    "@uniswap/v2-core": "^1.0.1"
   },
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
