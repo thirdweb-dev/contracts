@@ -6,6 +6,9 @@ pragma solidity >=0.8.0;
 /// @notice Provides an interface for requesting random numbers from 3rd-party RNG services (Chainlink VRF, Starkware VDF, etc..)
 interface RNGInterface {
 
+  /// @notice Returns whether the RNG is using an external service for randomness.
+  function usingExternalService() external returns (bool);
+
   /// @notice Emitted when a new request for a random number has been submitted
   /// @param requestId The indexed ID of the request used to get the results of the RNG service
   /// @param sender The indexed address of the sender of the request
