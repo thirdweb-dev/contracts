@@ -8,7 +8,6 @@ import "./interfaces/RNGInterface.sol";
 contract PackERC1155 is ERC1155PresetMinterPauser {
 
   address public controlCenter;
-  RNGInterface internal rng;
 
   uint public currentTokenId;
 
@@ -33,17 +32,6 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
   constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
     controlCenter = _controlCenter;
-  }
-
-  modifier onlyControlCenter {
-    require(msg.sender == controlCenter, "Only the Pack protocol control center can access this function.");
-    _;
-  }
-
-  /// @notice Lets control center set the RNG used by the Pack ERC1155 contract.
-  function setRNG(address _rng) external onlyControlCenter {
-    rng = RNGInterface(_rng);
-    emit RNG(_rng);
   }
 
   /// @dev Returns and then increments `currentTokenId`
