@@ -3,11 +3,13 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
+
+import "./PackControl.sol";
 import "./interfaces/RNGInterface.sol";
 
 contract PackERC1155 is ERC1155PresetMinterPauser {
 
-  address public controlCenter;
+  PackControl internal controlCenter;
 
   uint public currentTokenId;
 
@@ -31,13 +33,17 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   mapping(uint => Token) public tokens;
 
   constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
-    controlCenter = _controlCenter;
+    controlCenter = PackControl(_controlCenter);
   }
 
   /// @dev Returns and then increments `currentTokenId`
   function _tokenId() internal returns (uint tokenId) {
     tokenId = currentTokenId;
     currentTokenId++;
+  }
+
+  function _rng() internal view returns (RNGInterface) {
+    return RNGInterface(controlCenter.packRNG());
   }
 
   /**

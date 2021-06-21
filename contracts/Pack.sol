@@ -87,26 +87,26 @@ contract Pack is PackERC1155 {
   function openPack(uint packId) external {
     require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
     
-    bool isExternalService = rng.usingExternalService();
+    bool isExternalService = _rng().usingExternalService();
 
     if(isExternalService) {
       // Approve RNG to handle fee amount of fee token.
-      (address feeToken, uint feeAmount) = rng.getRequestFee();
+      (address feeToken, uint feeAmount) = _rng().getRequestFee();
       if(feeToken != address(0)) {
         require(
-          IERC20(feeToken).approve(address(rng), feeAmount),
+          IERC20(feeToken).approve(address(_rng()), feeAmount),
           "Failed to approve rng to handle fee amount of fee token."
         );
       }
       // Request external service for a random number. Store the request ID and lockBlock.
-      (uint requestId,) = rng.requestRandomNumber();
+      (uint requestId,) = _rng().requestRandomNumber();
 
       randomnessRequests[requestId] = RandomnessRequest({
         packOpener: msg.sender,
         packId: packId
       });
     } else {
-      (uint randomness,) = rng.getRandomNumber();
+      (uint randomness,) = _rng().getRandomNumber();
       uint rewardTokenId = getRandomReward(packId, randomness);
       
       distributeReward(msg.sender, packId, rewardTokenId);
@@ -149,7 +149,7 @@ contract Pack is PackERC1155 {
 
   /// @dev Called by Chainlink VRF random number provider.
   function fulfillRandomness(uint requestId, uint randomness) external {
-    require(msg.sender == address(rng), "Only the appointed RNG can fulfill random number requests.");
+    require(msg.sender == address(_rng()), "Only the appointed RNG can fulfill random number requests.");
     
     RandomnessRequest memory request = randomnessRequests[requestId];
 
