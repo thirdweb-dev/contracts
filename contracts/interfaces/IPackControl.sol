@@ -8,9 +8,9 @@ interface IPackControl {
   /// @notice Sets the ERC1155 part of the pack protocol.
   function setPackERC1155(address _packERC1155) external;
 
-  /// @notice Sets the RNG for pack protocol.
-  function setPackRNG(address _rng) external;
-
   /// @notice Sets the address for the Market part of the pack protocol.
   function setPackMarket(address _market) external;
+
+  /// @notice Sets the RNG for pack protocol.
+  function setPackRNG(address _rng) external;
 }
