@@ -1,10 +1,29 @@
 // SPDX-License-Identifier: UNLICENSED
+
 pragma solidity >=0.8.0;
 
-import "./PackERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Pack is PackERC1155 {
+import "./PackControl.sol";
+import "./interfaces/RNGInterface.sol";
+
+contract Pack is ERC1155PresetMinterPauser {
+
+  PackControl internal controlCenter;
+
+  uint public currentTokenId;
+
+  enum TokenType { Pack, Reward }
+
+  struct Token {
+    address creator;
+    string uri;
+    uint rarityUnit;
+    uint maxSupply;
+
+    TokenType tokenType;
+  }
 
   struct RandomnessRequest {
     address packOpener;
@@ -15,7 +34,14 @@ contract Pack is PackERC1155 {
   event PackOpened(address indexed owner, uint indexed tokenId);
 
   event RewardsAdded(uint indexed packId, uint[] rewardTokenIds, string[] rewardTokenUris, uint[] rewardTokenMaxSupplies);
-  event RewardDistributed(address indexed receiver, uint indexed packID, uint indexed rewardTokenId); 
+  event RewardDistributed(address indexed receiver, uint indexed packID, uint indexed rewardTokenId);
+
+  event TokenTransferSingle(address indexed from, address indexed to, uint tokenId, uint amount, TokenType tokenType);
+  event TokenTransferBatch(address indexed from, address indexed to, uint[] tokenIds, uint[] amounts, TokenType tokenType);
+  event TokenBurned(address indexed burner, uint indexed tokenId, uint amount);
+
+  /// @notice Maps a `tokenId` to its Token state
+  mapping(uint => Token) public tokens;
 
   /// @dev tokenId (for TokenType.Pack) => tokenIds of rewards in pack.
   mapping(uint => uint[]) public rewardsInPack;
@@ -26,7 +52,10 @@ contract Pack is PackERC1155 {
   /// @dev RNG request Id => request state `RandomnessRequest`. 
   mapping(uint => RandomnessRequest) public randomnessRequests;
 
-  constructor(address _controlCenter) PackERC1155(_controlCenter) {}
+  constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
+    controlCenter = PackControl(_controlCenter);
+    grantRole(PAUSER_ROLE, _controlCenter);
+  }
 
   /// @notice Lets a creator create a pack with rewards.
   function createPack(
@@ -65,24 +94,6 @@ contract Pack is PackERC1155 {
     emit RewardsAdded(tokenId, rewardsInPack[tokenId], rewardTokenUris, rewardTokenMaxSupplies);
   }
 
-  /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
-  function addReward(uint packId, string calldata tokenUri, uint maxSupply) internal {
-    
-    // Get `tokenId`
-    uint tokenId = _tokenId();
-
-    // Store reward token state
-    tokens[tokenId] = Token({
-      creator: msg.sender,
-      uri: tokenUri,
-      rarityUnit: maxSupply,
-      maxSupply: maxSupply,
-      tokenType: TokenType.Reward
-    });
-
-    rewardsInPack[packId].push(tokenId);
-  }
-
   /// @notice Lets a pack token owner open a single pack
   function openPack(uint packId) external {
     require(balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
@@ -108,12 +119,41 @@ contract Pack is PackERC1155 {
     } else {
       (uint randomness,) = _rng().getRandomNumber();
       uint rewardTokenId = getRandomReward(packId, randomness);
-      
       distributeReward(msg.sender, packId, rewardTokenId);
       emit RewardDistributed(msg.sender, packId, rewardTokenId);
     }
 
     emit PackOpened(msg.sender, packId);
+  }
+
+  /// @dev Called by protocol RNG when using an external random number provider.
+  function fulfillRandomness(uint requestId, uint randomness) external {
+    require(msg.sender == address(_rng()), "Only the appointed RNG can fulfill random number requests.");
+    
+    RandomnessRequest memory request = randomnessRequests[requestId];
+
+    uint rewardTokenId = getRandomReward(request.packId, randomness);
+    distributeReward(request.packOpener, request.packId, rewardTokenId);
+
+    emit RewardDistributed(request.packOpener, request.packId, rewardTokenId);
+  }
+
+  /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
+  function addReward(uint packId, string calldata tokenUri, uint maxSupply) internal {
+    
+    // Get `tokenId`
+    uint tokenId = _tokenId();
+
+    // Store reward token state
+    tokens[tokenId] = Token({
+      creator: msg.sender,
+      uri: tokenUri,
+      rarityUnit: maxSupply,
+      maxSupply: maxSupply,
+      tokenType: TokenType.Reward
+    });
+
+    rewardsInPack[packId].push(tokenId);
   }
 
   /// @dev returns a random reward tokenId using `randomness` provided by Chainlink VRF.
@@ -147,17 +187,73 @@ contract Pack is PackERC1155 {
     circulatingSupply[_rewardId] += 1;
   }
 
-  /// @dev Called by Chainlink VRF random number provider.
-  function fulfillRandomness(uint requestId, uint randomness) external {
-    require(msg.sender == address(_rng()), "Only the appointed RNG can fulfill random number requests.");
+  /// @dev Returns and then increments `currentTokenId`
+  function _tokenId() internal returns (uint tokenId) {
+    tokenId = currentTokenId;
+    currentTokenId++;
+  }
+
+  function _rng() internal view returns (RNGInterface) {
+    return RNGInterface(controlCenter.packRNG());
+  }
+
+  /**
+   * @notice See the ERC1155 API. Returns the token URI of the token with id `tokenId`
+   *
+   * @param id The ERC1155 tokenId of a pack or reward token. 
+   */
+  function uri(uint id) public view override returns (string memory) {
+    return tokens[id].uri;
+  }
+
+  /**
+   * @dev See {IERC1155-safeTransferFrom}.
+   */
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint id,
+    uint amount,
+    bytes memory data
+  )
+    public
+    override
+  { 
+    emit TokenTransferSingle(from, to, id, amount, tokens[id].tokenType);
+
+    // Call OZ `safeTransferFrom` implementation
+    super.safeTransferFrom(from, to, id, amount, data);
+  }
+
+  /**
+   * @dev See {IERC1155-safeBatchTransferFrom}.
+   */
+  function safeBatchTransferFrom(
+    address from,
+    address to,
+    uint[] memory ids,
+    uint[] memory amounts,
+    bytes memory data
+  )
+    public
+    override
+  {
+    TokenType tokenType;
+
+    for (uint i = 0; i < ids.length; i++) {
+      uint tokenId = ids[i];
+
+      if(i == 0) {
+        tokenType = tokens[tokenId].tokenType;
+        continue;
+      } else if(tokens[tokenId].tokenType != tokenType) {
+        revert("Can only transfer a batch of the same type of token.");
+      }
+    }
+
+    emit TokenTransferBatch(from, to, ids, amounts, tokenType);
     
-    RandomnessRequest memory request = randomnessRequests[requestId];
-
-    uint rewardTokenId = getRandomReward(request.packId, randomness);
-    distributeReward(request.packOpener, request.packId, rewardTokenId);
-
-    delete randomnessRequests[requestId];
-
-    emit RewardDistributed(request.packOpener, request.packId, rewardTokenId);
+    // Call OZ `safeBatchTransferFrom` implementation
+    super.safeBatchTransferFrom(from, to, ids, amounts, data);
   }
 }
