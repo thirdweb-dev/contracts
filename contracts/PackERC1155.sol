@@ -26,6 +26,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   event RNG(address _newRNG);
   event TokenTransferSingle(address indexed from, address indexed to, uint tokenId, uint amount, TokenType tokenType);
   event TokenTransferBatch(address indexed from, address indexed to, uint[] tokenIds, uint[] amounts, TokenType tokenType);
+  event TokenBurned(address indexed burner, uint indexed tokenId, uint amount);
 
   /// @notice Maps a `tokenId` to its Token state
   mapping(uint => Token) public tokens;
