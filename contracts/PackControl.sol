@@ -9,7 +9,9 @@
 pragma solidity >=0.8.0;
 
 import "./interfaces/IPackControl.sol";
+
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 
 contract PackControl is AccessControl, IPackControl {
 
@@ -41,6 +43,11 @@ contract PackControl is AccessControl, IPackControl {
   /// @notice Sets the RNG for pack protocol.
   function setPackRNG(address _rng) external override onlyProtocolAdmin {
     packRNG = _rng;
+  }
+
+  /// @notice Pauses all activity in the ERC1155 part of the protocol.
+  function pausePackToken() external onlyProtocolAdmin {
+    ERC1155PresetMinterPauser(packERC1155).pause();
   }
 
   /// @notice Grants the `PROTOCOL_ADMIN` role to `_newAdmin`.
