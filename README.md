@@ -1,6 +1,8 @@
 
 # Pack Protocol
 
+**Repository redesign ongoing**
+
 This repository contains the core smart contracts for the Pack 
 Protocol.
 
