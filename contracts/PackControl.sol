@@ -64,7 +64,7 @@ contract PackControl is AccessControl {
   }
 
   /// @dev Returns a module of the pack protocol.
-  function getModule(string calldata _moduleName) public returns (address) {
+  function getModule(string calldata _moduleName) public view returns (address) {
     return modules[moduleId[_moduleName]];
   }
 
