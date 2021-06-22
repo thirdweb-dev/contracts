@@ -22,17 +22,18 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
   uint public currentTokenId;
 
+  struct Token {
+    address creator;
+    string uri;
+    uint tokenType;
+    uint circulatingSupply;
+  }
+
   event TokenTransfer(address indexed from, address indexed to, uint[] tokenIds, uint[] amounts, uint tokenType);
   event TokensBurned(address indexed burner, uint[] tokenIds, uint[] amounts);
 
-  /// @dev tokenId => total supply of token.
-  mapping(uint => uint) public circulatingSupply;
-
-  /// @dev tokenId => URI.
-  mapping(uint => string) public tokenUri;
-
-  /// @dev tokenId => token type.
-  mapping(uint => uint) public tokenType;
+  /// @dev tokenId => Token state.
+  mapping(uint => Token) public tokens;
 
   modifier onlyControlCenter() {
     require(msg.sender == address(controlCenter), "Only the protocol control center can call this function.");
@@ -70,9 +71,12 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   ) external onlyPackHandler {
 
     // Update token state in mapping.
-    circulatingSupply[_id] = _amount;
-    tokenUri[_id] = _uri;
-    tokenType[_id] = _tokenType;
+    tokens[_id] = Token({
+      creator: _to,
+      uri: _uri,
+      tokenType: _tokenType,
+      circulatingSupply: _amount
+    });
 
     // Mint tokens to pack creator.
     mint(_to, _id, _amount, "");
@@ -86,6 +90,11 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   /// @dev Overriding `burnBatch`
   function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public override onlyPackHandler {
     super.burnBatch(account, ids, values);
+    
+    for(uint i = 0; i < ids.length; i++) {
+      tokens[ids[i]].circulatingSupply -= values[i];
+    }
+
     emit TokensBurned(account, ids, values);
   }
 
@@ -96,6 +105,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
     currentTokenId++;
   }
 
+  /// @dev Returns the pack protocol RNG interface
   function _rng() public view onlyPackHandler returns (RNGInterface) {
     return RNGInterface(controlCenter.packRNG());
   }
@@ -106,7 +116,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
    * @param id The ERC1155 tokenId of a pack or reward token. 
    */
   function uri(uint id) public view override returns (string memory) {
-    return tokenUri[id];
+    return tokens[id].uri;
   }
 
   /**
@@ -122,7 +132,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   ) internal override {
 
     if(ids.length == 1) { 
-      emit TokenTransfer(from, to, ids, amounts, tokenType[ids[0]]);
+      emit TokenTransfer(from, to, ids, amounts, tokens[ids[0]].tokenType);
     } else {
 
       uint typeOfToken;
@@ -131,9 +141,9 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
         uint tokenId = ids[i];
 
         if(i == 0) {
-          typeOfToken = tokenType[tokenId];
+          typeOfToken = tokens[tokenId].tokenType;
           continue;
-        } else if(tokenType[tokenId] != typeOfToken) {
+        } else if(tokens[tokenId].tokenType != typeOfToken) {
           revert("Can only transfer a batch of the same type of token.");
         }
       }
