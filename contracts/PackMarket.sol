@@ -13,6 +13,7 @@ import "./PackControl.sol";
 contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
 
   PackControl internal controlCenter;
+  string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
 
   event NewListing(
     address indexed seller, 
@@ -61,11 +62,15 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
 
   modifier eligibleToList(uint tokenId, uint _quantity) {
     require(
-      PackERC1155(controlCenter.packERC1155()).isApprovedForAll(msg.sender, address(this)),
+      PackERC1155(
+        controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+      ).isApprovedForAll(msg.sender, address(this)),
       "Must approve market contract to manage tokens."
     );
     require(
-      PackERC1155(controlCenter.packERC1155()).balanceOf(msg.sender, tokenId) >= _quantity,
+      PackERC1155(
+        controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+      ).balanceOf(msg.sender, tokenId) >= _quantity,
       "Must own the amount of tokens being listed."
     );
     require(_quantity > 0, "Must list at least one token");
@@ -96,7 +101,9 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
     uint quantity
   ) external eligibleToList(tokenId, quantity) {
 
-    PackERC1155(controlCenter.packERC1155()).safeTransferFrom(
+    PackERC1155(
+      controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+    ).safeTransferFrom(
       msg.sender,
       address(this),
       tokenId,
@@ -124,7 +131,9 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
   function unlist(uint tokenId, uint quantity) external onlySeller(tokenId) {
     require(listings[msg.sender][tokenId].quantity >= quantity, "Cannot unlist more tokens than are listed.");
 
-    PackERC1155(controlCenter.packERC1155()).safeTransferFrom(
+    PackERC1155(
+      controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+    ).safeTransferFrom(
       address(this),
       msg.sender,
       tokenId,
@@ -167,7 +176,9 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
     require(quantity <= listings[from][tokenId].quantity, "attempting to buy more tokens than listed");
 
     Listing memory listing = listings[from][tokenId];
-    (address creator,,,) = PackERC1155(controlCenter.packERC1155()).tokens(tokenId);
+    (address creator,,,) = PackERC1155(
+      controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+    ).tokens(tokenId);
     
     if(listing.currency == address(0)) {
       distributeEther(listing.owner, creator, listing.price, quantity);
@@ -175,7 +186,9 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
       distributeERC20(listing.owner, creator, listing.currency, listing.price, quantity);
     }
 
-    PackERC1155(controlCenter.packERC1155()).safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
+    PackERC1155(
+      controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+    ).safeTransferFrom(listing.owner, msg.sender, tokenId, quantity, "");
     listings[from][tokenId].quantity -= quantity;
 
     emit NewSale(from, msg.sender, tokenId, listing.currency, listing.price, quantity);
