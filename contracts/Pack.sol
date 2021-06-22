@@ -2,12 +2,11 @@
 
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./PackERC1155.sol";
 
-contract Pack is IERC1155Receiver {
+contract Pack {
 
   PackERC1155 internal packERC1155;
 
@@ -178,32 +177,5 @@ contract Pack is IERC1155Receiver {
 
     // Mint the appropriate reward token.
     packERC1155.mintTokens(_receiver, _rewardId, 1, tokens[_rewardId].uri, uint(tokens[_rewardId].tokenType));
-  }
-
-  /// @dev See `IERC1155Receiver.sol` and `IERC165.sol`
-  function supportsInterface(bytes4 interfaceID) external view override returns (bool) {
-      return  interfaceID == 0x01ffc9a7 || interfaceID == 0x4e2312e0;
-  }
-
-  /// @dev See `IERC1155Receiver.sol`
-  function onERC1155Received(
-    address operator,
-    address from,
-    uint256 id,
-    uint256 value,
-    bytes calldata data
-  ) external override returns (bytes4) {
-    return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
-  }
-
-  /// @dev See `IERC1155Receiver.sol`
-  function onERC1155BatchReceived(
-    address operator,
-    address from,
-    uint256[] calldata ids,
-    uint256[] calldata values,
-    bytes calldata data
-  ) external override returns (bytes4) {
-    return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
   }
 }
