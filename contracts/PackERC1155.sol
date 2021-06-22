@@ -7,17 +7,10 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 import "./PackControl.sol";
 import "./interfaces/RNGInterface.sol";
 
-/**
- * Implement burn function - emit TokenBurned
- *
- * Implement mint function - mint to pack handler.
- *
- * User has to set approve pack handler for all `setApprovalForAll(packHandler, true)`
- */
-
 contract PackERC1155 is ERC1155PresetMinterPauser {
 
   PackControl internal controlCenter;
+  string public constant RNG_MODULE_NAME = "PACK_RNG";
   address public packHandler;
 
   uint public currentTokenId;
@@ -107,7 +100,9 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
   /// @dev Returns the pack protocol RNG interface
   function _rng() public view onlyPackHandler returns (RNGInterface) {
-    return RNGInterface(controlCenter.packRNG());
+    return RNGInterface(
+        controlCenter.getModule(RNG_MODULE_NAME)
+    );
   }
 
   /**
