@@ -168,7 +168,13 @@ contract Pack is IERC1155Receiver {
   /// @dev Distributes a reward token to the pack opener.
   function distributeReward(address _receiver, uint _packId, uint _rewardId) internal {
     // Burn the opened pack.
-    packERC1155.burn(_receiver, _packId, 1);
+    uint[] memory ids = new uint[](1);
+    ids[0] = _packId;
+
+    uint[] memory amounts = new uint[](1);
+    amounts[0] = 1;
+
+    packERC1155.burnBatch(_receiver, ids, amounts);
 
     // Mint the appropriate reward token.
     packERC1155.mintTokens(_receiver, _rewardId, 1, tokens[_rewardId].uri, uint(tokens[_rewardId].tokenType));

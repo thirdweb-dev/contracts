@@ -23,7 +23,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   uint public currentTokenId;
 
   event TokenTransfer(address indexed from, address indexed to, uint[] tokenIds, uint[] amounts, uint tokenType);
-  event TokenBurned(address indexed burner, uint indexed tokenId, uint amount);
+  event TokensBurned(address indexed burner, uint[] tokenIds, uint[] amounts);
 
   /// @dev tokenId => total supply of token.
   mapping(uint => uint) public circulatingSupply;
@@ -34,12 +34,6 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   /// @dev tokenId => token type.
   mapping(uint => uint) public tokenType;
 
-  constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
-    controlCenter = PackControl(_controlCenter);
-    grantRole(PAUSER_ROLE, _controlCenter);
-    grantRole(MINTER_ROLE, _controlCenter);
-  }
-
   modifier onlyControlCenter() {
     require(msg.sender == address(controlCenter), "Only the protocol control center can call this function.");
     _;
@@ -48,6 +42,12 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   modifier onlyPackHandler() {
     require(msg.sender == packHandler, "Only the protocol pack token handler can call this function.");
     _;
+  }
+
+  constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
+    controlCenter = PackControl(_controlCenter);
+    grantRole(PAUSER_ROLE, _controlCenter);
+    grantRole(MINTER_ROLE, _controlCenter);
   }
 
   /// @dev Sets the pack handler for the protocol ERC1155 tokens.
@@ -80,8 +80,15 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
   /// @dev Overriding `burn`
   function burn(address account, uint256 id, uint256 value) public override onlyPackHandler {
-    super.burn(account, id, value);
+    revert("Use `burnBatch` to burn tokens.");
   }
+
+  /// @dev Overriding `burnBatch`
+  function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public override onlyPackHandler {
+    super.burnBatch(account, ids, values);
+    emit TokensBurned(account, ids, values);
+  }
+
 
   /// @dev Returns and then increments `currentTokenId`
   function _tokenId() public onlyPackHandler returns (uint tokenId) {
