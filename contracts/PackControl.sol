@@ -14,6 +14,7 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 contract PackControl is AccessControl {
 
   bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
+  string public constant PACK_ERC1155 = "PACK_ERC1155";
 
   mapping(bytes32 => address) public modules;
   mapping(string => bytes32) public moduleId;
@@ -30,8 +31,20 @@ contract PackControl is AccessControl {
     grantRole(PROTOCOL_ADMIN, msg.sender);
   }
 
+  /// @dev Iniializes the ERC 1155 module of the pack protocol.
+  function initPackER1155(address _packERC1155) external onlyProtocolAdmin {
+    require(modules[moduleId[PACK_ERC1155]] == address(0), "The ERC1155 module has already been initialized.");
+
+    bytes32 id = keccak256(bytes(PACK_ERC1155));
+
+    moduleId[PACK_ERC1155] = id;
+    modules[id] = _packERC1155;
+
+    emit ModuleAdded(PACK_ERC1155, id, _packERC1155);
+  }
+
   /// @dev Lets protocol admin add a module to the pack protocol.
-  function addModule(string calldata _moduleName, address _moduleAddress) external onlyProtocolAdmin {
+  function addModule(string calldata _moduleName, address _moduleAddress) public onlyProtocolAdmin {
     bytes32 id = keccak256(bytes(_moduleName));
 
     moduleId[_moduleName] = id;
