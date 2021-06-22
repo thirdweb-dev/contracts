@@ -1,39 +1,24 @@
+# $Pack Protocol
 
-# Pack Protocol
+The $PACK Protocol wraps arbitrary assets (ERC20, ERC721, ERC1155 tokens) into packs (or ERC 1155 'pack tokens'). 
+These packs can be airdropped or sold. 
 
-**Repository redesign ongoing**
+Combinations of the wrapped assets in the pack are assigned rarity. Opening 
+a pack distributes one of those combinations of the wrapped assets to the pack opener. 
+The combination distributed is chosen *randomly*.
 
-This repository contains the core smart contracts for the Pack 
-Protocol.
+## Architecture
+`PackControl.sol` is the master contract / control center of the protocol. It allows the protocol admin
+to perform CRUD operations on different modules of the contract. Updgrading the control
+center requires an overhaul of the protocol.
 
-Pack Protocol lets anyone create and sell packs filled with
-rewards. A pack can be opened only once. Upon opening a pack, a
-reward from the pack is randomly selected and distributed to 
-the pack opener.
+`PackERC1155.sol` is a core module of the protocol, and is explicitly
+defined in control center.
 
-## Rinkeby Deployments
+Secondary modules like `Pack.sol` and `PackMarket.sol` perform for the distribution
+and sale of ERC1155 pack tokens.
 
-- `Pack.sol` — [0x6416795AF11336ef33EF7BAd1354F370141f8728](https://rinkeby.etherscan.io/address/0x6416795AF11336ef33EF7BAd1354F370141f8728#code)
 
-- `PackMarket.sol` — [0x5c0Ad93A3580260820fDcD1E5F5fDD714DA800B7](https://rinkeby.etherscan.io/address/0x5c0Ad93A3580260820fDcD1E5F5fDD714DA800B7#code)
-
-- `PackCoin.sol` — [0x49e7f00ee5652523fAdE13674100c8518d7DA8b6](https://rinkeby.etherscan.io/address/0x49e7f00ee5652523fAdE13674100c8518d7DA8b6#code)
-
-## Deployment
-
-To deploy this project on a given network (e.g. rinkeby)
-
-```bash
-  npx hardhat run scripts/deploySimple.js --network rinkeby
-```
-
-To verify the deployment on Etherscan
-
-```bash
-  npx hardhat verify --network rinkeby $contract-address $constructor-args
-```
-
-  
 ## Run Locally
 
 Clone the project
@@ -42,36 +27,61 @@ Clone the project
   git clone https://github.com/nftlabs/pack-protocol.git
 ```
 
-Go to the project directory
-
-```bash
-  cd pack-protocol
-```
-
 Install dependencies
 
 ```bash
   yarn install
 ```
 
-Compile contracts
-
-```bash
-  npx hardhat compile
-```
-
-Run hardhat tests
+Run tests by running
 
 ```bash
   npx hardhat test
 ```
 
   
+## Deployment
+
+To deploy this project on a given network (e.g. mainnet) update your hardhat config file
+with the following
+
+```javascript
+module.exports = {
+  solidity: "0.8.0",
+  networks: {
+    mainnet: {
+      url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
+      accounts: [`${TEST_PRIVATE_KEY}`]
+    }
+  }
+};
+```
+
+Finally, run 
+
+```bash
+  npx hardhat run scripts/deploySimple.js --network mainnet
+```
+
+To verify the deployment on Etherscan
+
+```bash
+  npx hardhat verify --network rinkeby $contract-address $constructor-args
+```
+
+
+
+  
 ## Feedback
 
-If you have any feedback, please reach out to us at krishang@nftlabs.co
+If you have any feedback, please reach out to us at support@nftlabs.co
 
   
 ## Authors
 
-- [NFT Labs](https://nftlabs.co/)
+- [NFT Labs](https://github.com/nftlabs)
+
+  
+## License
+
+[GPL v3.0](https://choosealicense.com/licenses/gpl-3.0/)
