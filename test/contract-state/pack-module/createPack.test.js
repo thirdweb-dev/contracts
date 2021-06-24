@@ -7,7 +7,9 @@ const [pairs, forkFrom] = require('../../../utils/utils.js');
 chai.use(solidity);
 const { expect } = chai;
 
-describe("Deploying the pack protocol system.", () => {
+describe("Deploying the pack protocol system.", function() {
+  // Let the test run for 3 minutes max
+  this.timeout(180000);
 
   // Pack Protocol contracts.
   let packControl
@@ -87,6 +89,12 @@ describe("Deploying the pack protocol system.", () => {
       // Register `Pack` as a module in `PackControl`
       packHandlerModuleName = "PACK_HANDLER";
       await packControl.connect(protocolAdmin).addModule(packHandlerModuleName, packHandler.address);
+
+      // Grant MINTER_ROLE to `PackHandler`
+      const MINTER_ROLE = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("MINTER_ROLE")
+      )
+      await packControl.connect(protocolAdmin).grantRoleERC1155(MINTER_ROLE, packHandler.address);
     })
   })
 
@@ -94,13 +102,13 @@ describe("Deploying the pack protocol system.", () => {
 
     describe("Revert", async () => {
       it("Should revert if number of rewards and max supplies provided aren't equal", async () => {
-        await expect(packHandler.connect(creator).createPack(packURIs[0], rewardURIs, rewardMaxSupplies))
+        await expect(packHandler.connect(creator).createPack(packURIs[0], rewardURIs, rewardMaxSupplies.slice(-1)))
           .to.be.revertedWith("Must provide the same amount of maxSupplies and URIs.");
       })
     
       it("Should revert if no rewards are provided", async () => {
         await expect(packHandler.connect(creator).createPack(packURIs[0], [], []))
-          .to.be.revertedWith("Must provide the same amount of maxSupplies and URIs.");
+          .to.be.revertedWith("Cannot create a pack with no rewards.");
       })
     })
 
@@ -200,5 +208,4 @@ describe("Deploying the pack protocol system.", () => {
       })
     })
   })
-  
 })
