@@ -29,6 +29,7 @@ contract PackControl is AccessControl {
 
   constructor() {
     _setupRole(PROTOCOL_ADMIN, msg.sender);
+    _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
   }
 
   /// @dev Iniializes the ERC 1155 module of the pack protocol.
