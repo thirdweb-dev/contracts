@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./PackERC1155.sol";
 
-contract Pack {
+contract PackHandler {
 
   PackERC1155 internal packERC1155;
 

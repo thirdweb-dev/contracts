@@ -44,7 +44,7 @@ describe("Deploying the pack protocol system.", () => {
     await packControl.connect(protocolAdmin).initPackERC1155(packERC1155.address);
     
     // 3.A. Deploy module `Pack.sol`
-    const PackHandler_Factory = await ethers.getContractFactory("Pack");
+    const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
     packHandler = await PackHandler_Factory.deploy(packERC1155.address);
 
     // 3.B. Register `Pack` as a module in `PackControl`
