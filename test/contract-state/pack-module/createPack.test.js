@@ -7,7 +7,7 @@ const [pairs, forkFrom] = require('../../../utils/utils.js');
 chai.use(solidity);
 const { expect } = chai;
 
-describe("Deploying the pack protocol system.", function() {
+describe("Testing the 'createPack' flow.", function() {
   // Let the test run for 3 minutes max
   this.timeout(180000);
 
@@ -80,9 +80,7 @@ describe("Deploying the pack protocol system.", function() {
 
       packURIs.push(`This is a dummy pack URI ${Math.floor(Math.random() * 100)}`)
     }
-  })
 
-  beforeEach(async () => {
     // Deploy module `Pack.sol`
     const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
     packHandler = await PackHandler_Factory.deploy(packERC1155.address);
