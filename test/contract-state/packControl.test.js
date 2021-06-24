@@ -109,7 +109,7 @@ describe("Deploying the pack protocol system.", () => {
     
     before(async () => {
       // Deploy module `Pack.sol`
-      const PackHandler_Factory = await ethers.getContractFactory("Pack");
+      const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
       packHandler = await PackHandler_Factory.deploy(packERC1155.address);
 
       packHandlerModuleName = "PACK_HANDLER";
