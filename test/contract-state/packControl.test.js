@@ -12,14 +12,10 @@ describe("Deploying the pack protocol system.", () => {
   let packControl
   let packERC1155
   let packHandler;
-  let packMarket
-  let rng
 
   // Module names
   let packERC1155ModuleName
   let packHandlerModuleName
-  let packMarketModuleName
-  let rngModuleName
 
   // Signers
   let protocolAdmin;
