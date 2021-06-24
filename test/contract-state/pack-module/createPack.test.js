@@ -1,7 +1,7 @@
 const chai = require("chai");
 const { ethers } = require("hardhat");
 const { solidity } = require("ethereum-waffle");
-const [pairs, forkFrom] = require('../utils/utils.js');
+const [pairs, forkFrom] = require('../../../utils/utils.js');
 
 // Use chai solidity plugin
 chai.use(solidity);
