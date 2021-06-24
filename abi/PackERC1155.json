@@ -319,6 +319,19 @@
   },
   {
     "inputs": [],
+    "name": "PACK_HANDLER_MODULE_NAME",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "PAUSER_ROLE",
     "outputs": [
       {
@@ -695,19 +708,6 @@
   },
   {
     "inputs": [],
-    "name": "packHandler",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "pause",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -842,19 +842,6 @@
       }
     ],
     "name": "setApprovalForAll",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_newHandler",
-        "type": "address"
-      }
-    ],
-    "name": "setPackHandler",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

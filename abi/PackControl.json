@@ -277,6 +277,24 @@
     "inputs": [
       {
         "internalType": "bytes32",
+        "name": "_role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      }
+    ],
+    "name": "grantRoleERC1155",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
       },
@@ -362,13 +380,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_moduleName",
-        "type": "string"
-      }
-    ],
+    "inputs": [],
     "name": "pausePackERC1155",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -406,6 +418,24 @@
       }
     ],
     "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_subject",
+        "type": "address"
+      }
+    ],
+    "name": "revokeRoleERC1155",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

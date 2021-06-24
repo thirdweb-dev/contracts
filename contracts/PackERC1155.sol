@@ -11,7 +11,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
   PackControl internal controlCenter;
   string public constant RNG_MODULE_NAME = "PACK_RNG";
-  address public packHandler;
+  string public constant PACK_HANDLER_MODULE_NAME = "PACK_HANDLER";
 
   uint public currentTokenId;
 
@@ -34,24 +34,14 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   }
 
   modifier onlyPackHandler() {
-    require(msg.sender == packHandler, "Only the protocol pack token handler can call this function.");
+    require(msg.sender == controlCenter.getModule(PACK_HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
     _;
   }
 
   constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
     controlCenter = PackControl(_controlCenter);
+    grantRole(DEFAULT_ADMIN_ROLE, _controlCenter);
     grantRole(PAUSER_ROLE, _controlCenter);
-    grantRole(MINTER_ROLE, _controlCenter);
-  }
-
-  /// @dev Sets the pack handler for the protocol ERC1155 tokens.
-  function setPackHandler(address _newHandler) external onlyControlCenter {
-    if(packHandler != address(0)) {
-      revokeRole(MINTER_ROLE, packHandler);
-    }
-
-    packHandler = _newHandler;
-    grantRole(MINTER_ROLE, _newHandler);
   }
 
   /// @dev Called by the pack handler to mint new tokens.

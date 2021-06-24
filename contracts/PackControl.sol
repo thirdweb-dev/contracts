@@ -78,15 +78,29 @@ contract PackControl is AccessControl {
   }
 
   /// @dev Returns a module of the pack protocol.
-  function getModule(string calldata _moduleName) public view returns (address) {
+  function getModule(string memory _moduleName) public view returns (address) {
     return modules[moduleId[_moduleName]];
   }
 
   /// @notice Pauses all activity in the ERC1155 part of the protocol.
-  function pausePackERC1155(string calldata _moduleName) external onlyProtocolAdmin {
+  function pausePackERC1155() external onlyProtocolAdmin {
     ERC1155PresetMinterPauser(
-      getModule(_moduleName)
+      getModule(PACK_ERC1155)
     ).pause();
+  }
+
+  /// @notice Grants a role in the protocol's ERC1155 module.
+  function grantRoleERC1155(bytes32 _role, address _receiver) external onlyProtocolAdmin {
+    ERC1155PresetMinterPauser(
+      getModule(PACK_ERC1155)
+    ).grantRole(_role, _receiver);
+  }
+
+  /// @notice Revokes a role in the protocol's ERC1155 module.
+  function revokeRoleERC1155(bytes32 _role, address _subject) external onlyProtocolAdmin {
+    ERC1155PresetMinterPauser(
+      getModule(PACK_ERC1155)
+    ).revokeRole(_role, _subject);
   }
 
   /// @notice Grants the `PROTOCOL_ADMIN` role to `_newAdmin`.
