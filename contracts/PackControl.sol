@@ -28,11 +28,11 @@ contract PackControl is AccessControl {
   }
 
   constructor() {
-    grantRole(PROTOCOL_ADMIN, msg.sender);
+    _setupRole(PROTOCOL_ADMIN, msg.sender);
   }
 
   /// @dev Iniializes the ERC 1155 module of the pack protocol.
-  function initPackER1155(address _packERC1155) external onlyProtocolAdmin {
+  function initPackERC1155(address _packERC1155) external onlyProtocolAdmin {
     require(modules[moduleId[PACK_ERC1155]] == address(0), "The ERC1155 module has already been initialized.");
 
     bytes32 id = keccak256(bytes(PACK_ERC1155));

@@ -305,7 +305,7 @@
         "type": "address"
       }
     ],
-    "name": "initPackER1155",
+    "name": "initPackERC1155",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
