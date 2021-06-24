@@ -208,4 +208,39 @@ describe("Deploying the pack protocol system.", function() {
       })
     })
   })
+
+  describe("State changes in PackERC1155.sol", () => {
+    it("Should update the currentTokenId and tokens mapping with relevant token data", async () => {
+      for(let packURI of packURIs) {
+
+        const expectedPackId = parseInt((await packERC1155.currentTokenId()).toString());
+        const expectedNextPackId = expectedPackId + rewardURIs.length + 1;
+        const packMaxSupply = rewardMaxSupplies.reduce((a,b) => a+b);
+
+        await packHandler.connect(creator).createPack(packURI, rewardURIs, rewardMaxSupplies);  
+        
+        expect(parseInt((await packERC1155.currentTokenId()).toString())).to.equal(expectedNextPackId);
+
+        const token = await packERC1155.tokens(expectedPackId);
+
+        expect(token.creator).to.equal(creator.address);
+        expect(token.uri).to.equal(packURI)
+        expect(token.circulatingSupply).to.equal(packMaxSupply)
+        expect(token.tokenType).to.equal(0) // TokenType.Pack == 1
+      }
+    })
+
+    it("Should update the ERC1155 pack token balance of the creator", async () => {
+      for(let packURI of packURIs) {
+
+        const expectedPackId = parseInt((await packERC1155.currentTokenId()).toString());
+        const packMaxSupply = rewardMaxSupplies.reduce((a,b) => a+b);
+
+        await packHandler.connect(creator).createPack(packURI, rewardURIs, rewardMaxSupplies);  
+
+        const packBalanceOfCreator = parseInt((await packERC1155.balanceOf(creator.address, expectedPackId)).toString());
+        expect(packBalanceOfCreator).to.equal(packMaxSupply)
+      }
+    })
+  })
 })
