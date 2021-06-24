@@ -80,22 +80,22 @@ describe("Deploying the pack protocol system.", function() {
 
       packURIs.push(`This is a dummy pack URI ${Math.floor(Math.random() * 100)}`)
     }
+  })
 
-    beforeEach(async () => {
-      // Deploy module `Pack.sol`
-      const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
-      packHandler = await PackHandler_Factory.deploy(packERC1155.address);
+  beforeEach(async () => {
+    // Deploy module `Pack.sol`
+    const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
+    packHandler = await PackHandler_Factory.deploy(packERC1155.address);
 
-      // Register `Pack` as a module in `PackControl`
-      packHandlerModuleName = "PACK_HANDLER";
-      await packControl.connect(protocolAdmin).addModule(packHandlerModuleName, packHandler.address);
+    // Register `Pack` as a module in `PackControl`
+    packHandlerModuleName = "PACK_HANDLER";
+    await packControl.connect(protocolAdmin).addModule(packHandlerModuleName, packHandler.address);
 
-      // Grant MINTER_ROLE to `PackHandler`
-      const MINTER_ROLE = ethers.utils.keccak256(
-        ethers.utils.toUtf8Bytes("MINTER_ROLE")
-      )
-      await packControl.connect(protocolAdmin).grantRoleERC1155(MINTER_ROLE, packHandler.address);
-    })
+    // Grant MINTER_ROLE to `PackHandler`
+    const MINTER_ROLE = ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes("MINTER_ROLE")
+    )
+    await packControl.connect(protocolAdmin).grantRoleERC1155(MINTER_ROLE, packHandler.address);
   })
 
   describe("State changes in PackHandler.sol", () => {
