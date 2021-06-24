@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./PackERC1155.sol";
 
+import "hardhat/console.sol";
+
 contract PackHandler {
 
   PackERC1155 internal packERC1155;
@@ -103,7 +105,7 @@ contract PackHandler {
         packId: packId
       });
     } else {
-      (uint randomness,) = packERC1155._rng().getRandomNumber();
+      (uint randomness,) = packERC1155._rng().getRandomNumber(block.number);
       uint rewardTokenId = getRandomReward(packId, randomness);
       distributeReward(msg.sender, packId, rewardTokenId);
       emit RewardDistributed(msg.sender, packId, rewardTokenId);

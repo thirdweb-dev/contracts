@@ -9,6 +9,8 @@ contract DexRNG is Ownable {
   uint public currentPairIndex;
   uint internal seed;
 
+  bool public isExternalService;
+
   struct PairAddresses {
     address tokenA;
     address tokenB;
@@ -114,6 +116,11 @@ contract DexRNG is Ownable {
     }
 
     randomNumber = blockSignature % range;
+  }
+
+  /// @dev Returns whether the RNG is using an external service for random number generation.
+  function usingExternalService() external view returns (bool) {
+    return isExternalService;
   }
   
   /// @notice See `UniswapV2Library.sol`

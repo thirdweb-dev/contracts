@@ -37,7 +37,7 @@ interface RNGInterface {
   function requestRandomNumber() external returns (uint requestId, uint lockBlock);
 
   /// @notice Generates a random number using Uniswap/Sushiswap pair reserve values as entropy.
-  function getRandomNumber() external returns (uint randomNumber, bool acceptableEntropy);
+  function getRandomNumber(uint range) external returns (uint randomNumber, bool acceptableEntropy);
 
   /// @notice Checks if the request for randomness from the 3rd-party service has completed
   /// @dev For time-delayed requests, this function is used to check/confirm completion
