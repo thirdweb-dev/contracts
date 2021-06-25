@@ -11,7 +11,8 @@ describe("Deploying the pack protocol system.", () => {
   // Pack Protocol contracts.
   let packControl
   let packERC1155
-  let packHandler;
+  let rng 
+  let packHandler
 
   // Module names
   let packERC1155ModuleName
@@ -35,8 +36,13 @@ describe("Deploying the pack protocol system.", () => {
     const PackERC1155_Factory = await ethers.getContractFactory("PackERC1155");
     packERC1155 = await PackERC1155_Factory.deploy(packControl.address);
 
+    // 3. Deploy RNG contract
+    const RNG_Factory = await ethers.getContractFactory("DexRNG");
+    rng = await RNG_Factory.deploy();
+
     // Get `PackERC1155` module name
     packERC1155ModuleName = await packControl.PACK_ERC1155();
+    rngModuleName = await packControl.PACK_RNG();
   })
 
   describe("Access control.", () => {
@@ -87,14 +93,9 @@ describe("Deploying the pack protocol system.", () => {
 
   describe("Initializing PackERC1155.", () => {
     it("Should emit 'ModuleAdded' upon initializing PackERC1155.", async () => {
-
-      const packERC1155ModuleId = ethers.utils.keccak256(
-        ethers.utils.toUtf8Bytes(packERC1155ModuleName)
-      );
   
-      await expect(packControl.connect(protocolAdmin).initPackERC1155(packERC1155.address))
-        .to.emit(packControl, "ModuleAdded")
-        .withArgs(packERC1155ModuleName, packERC1155ModuleId, packERC1155.address);
+      await expect(packControl.connect(protocolAdmin).initPackProtocol(packERC1155.address, rng.address))
+        .to.emit(packControl, "ModuleAdded");
     })
   
     it("Should update module mappings correctly upon initializing PackERC1155.", async () => {
@@ -102,6 +103,9 @@ describe("Deploying the pack protocol system.", () => {
   
       const packERC1155ModuleAddress = await packControl.getModule(packERC1155ModuleName);
       expect(packERC1155ModuleAddress).to.equal(packERC1155.address);
+
+      const rngModuleAddress = await packControl.getModule(rngModuleName);
+      expect(rngModuleAddress).to.equal(rng.address);
     })
   })
 

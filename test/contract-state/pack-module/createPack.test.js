@@ -54,17 +54,15 @@ describe("Testing the 'createPack' flow.", function() {
     const PackERC1155_Factory = await ethers.getContractFactory("PackERC1155");
     packERC1155 = await PackERC1155_Factory.deploy(packControl.address);
 
-    // Register `PackERC1155` as a module in `PackControl`
-    packERC1155ModuleName = await packControl.PACK_ERC1155();
-    await packControl.connect(protocolAdmin).initPackERC1155(packERC1155.address);
-    
     // Deploy RNG contract
     const RNG_Factory = await ethers.getContractFactory("DexRNG");
     rng = await RNG_Factory.deploy();
 
-    // Register RNG as a module in `PackControl`
-    rngModuleName = await packERC1155.RNG_MODULE_NAME();
-    await packControl.connect(protocolAdmin).addModule(rngModuleName, rng.address);
+    // Init pack protocol
+    packERC1155ModuleName = await packControl.PACK_ERC1155();
+    rngModuleName = await packControl.PACK_RNG();
+
+    await packControl.connect(protocolAdmin).initPackProtocol(packERC1155.address, rng.address);
 
     // Set up RNG
     for(let pairInfo of pairs) {

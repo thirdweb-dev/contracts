@@ -345,19 +345,6 @@
   },
   {
     "inputs": [],
-    "name": "RNG_MODULE_NAME",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "_rng",
     "outputs": [
       {

@@ -157,6 +157,19 @@
   },
   {
     "inputs": [],
+    "name": "PACK_RNG",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "PROTOCOL_ADMIN",
     "outputs": [
       {
@@ -321,9 +334,14 @@
         "internalType": "address",
         "name": "_packERC1155",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_packRNG",
+        "type": "address"
       }
     ],
-    "name": "initPackERC1155",
+    "name": "initPackProtocol",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

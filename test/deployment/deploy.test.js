@@ -35,37 +35,34 @@ describe("Deploying the pack protocol system.", () => {
     const PackControl_Factory = await ethers.getContractFactory("PackControl");
     packControl = await PackControl_Factory.deploy();
     
-    // 2.A. Deploy core module `PackERC1155.sol`
+    // 2. Deploy core module `PackERC1155.sol`
     const PackERC1155_Factory = await ethers.getContractFactory("PackERC1155");
     packERC1155 = await PackERC1155_Factory.deploy(packControl.address);
 
-    // 2.B. Register `PackERC1155` as a module in `PackControl`
-    packERC1155ModuleName = await packControl.PACK_ERC1155();
-    await packControl.connect(protocolAdmin).initPackERC1155(packERC1155.address);
-    
-    // 3.A. Deploy module `Pack.sol`
-    const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
-    packHandler = await PackHandler_Factory.deploy(packERC1155.address);
-
-    // 3.B. Register `Pack` as a module in `PackControl`
-    packHandlerModuleName = "PACK_HANDLER";
-    await packControl.connect(protocolAdmin).addModule(packHandlerModuleName, packHandler.address);
-    
-    // 4.A. Deploy module `PackMarket.sol`
-    const PackMarket_Factory = await ethers.getContractFactory("PackMarket");
-    packMarket = await PackMarket_Factory.deploy(packControl.address);
-
-    // 4.B. Register `PackMarket` as a module in `PackControl`
-    packMarketModuleName = "PACK_MARKET";
-    await packControl.connect(protocolAdmin).addModule(packMarketModuleName, packMarket.address);
-    
-    // 5.A. Deploy RNG contract
+    // 3. Deploy RNG contract
     const RNG_Factory = await ethers.getContractFactory("DexRNG");
     rng = await RNG_Factory.deploy();
 
-    // 5.B. Register RNG as a module in `PackControl`
-    rngModuleName = await packERC1155.RNG_MODULE_NAME();
-    await packControl.connect(protocolAdmin).addModule(rngModuleName, rng.address);
+    // 4. Initialize pack protocol with PackERC1155 and RNG
+    packERC1155ModuleName = await packControl.PACK_ERC1155();
+    rngModuleName = await packControl.PACK_RNG();
+    await packControl.connect(protocolAdmin).initPackProtocol(packERC1155.address, rng.address);
+
+    // 4.A. Deploy module `Pack.sol`
+    const PackHandler_Factory = await ethers.getContractFactory("PackHandler");
+    packHandler = await PackHandler_Factory.deploy(packERC1155.address);
+
+    // 4.B. Register `Pack` as a module in `PackControl`
+    packHandlerModuleName = "PACK_HANDLER";
+    await packControl.connect(protocolAdmin).addModule(packHandlerModuleName, packHandler.address);
+    
+    // 5.A. Deploy module `PackMarket.sol`
+    const PackMarket_Factory = await ethers.getContractFactory("PackMarket");
+    packMarket = await PackMarket_Factory.deploy(packControl.address);
+
+    // 5.B. Register `PackMarket` as a module in `PackControl`
+    packMarketModuleName = "PACK_MARKET";
+    await packControl.connect(protocolAdmin).addModule(packMarketModuleName, packMarket.address);
   })
 
   it("Should return the correct addresses of the pack protocol modules.", async () => {

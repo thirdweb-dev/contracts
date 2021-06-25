@@ -10,7 +10,7 @@ import "./interfaces/RNGInterface.sol";
 contract PackERC1155 is ERC1155PresetMinterPauser {
 
   PackControl internal controlCenter;
-  string public constant RNG_MODULE_NAME = "PACK_RNG";
+
   string public constant PACK_HANDLER_MODULE_NAME = "PACK_HANDLER";
 
   uint public currentTokenId;
@@ -92,7 +92,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   /// @dev Returns the pack protocol RNG interface
   function _rng() public view onlyPackHandler returns (RNGInterface) {
     return RNGInterface(
-        controlCenter.getModule(RNG_MODULE_NAME)
+        controlCenter.getModule(controlCenter.PACK_RNG())
     );
   }
 

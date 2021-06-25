@@ -14,7 +14,9 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 contract PackControl is AccessControl {
 
   bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
+  
   string public constant PACK_ERC1155 = "PACK_ERC1155";
+  string public constant PACK_RNG = "PACK_RNG";
 
   mapping(bytes32 => address) public modules;
   mapping(string => bytes32) public moduleId;
@@ -33,15 +35,23 @@ contract PackControl is AccessControl {
   }
 
   /// @dev Iniializes the ERC 1155 module of the pack protocol.
-  function initPackERC1155(address _packERC1155) external onlyProtocolAdmin {
-    require(modules[moduleId[PACK_ERC1155]] == address(0), "The ERC1155 module has already been initialized.");
+  function initPackProtocol(address _packERC1155, address _packRNG) external onlyProtocolAdmin {
+    require(
+        modules[moduleId[PACK_ERC1155]] == address(0) && modules[moduleId[PACK_RNG]] == address(0),
+        "The protocol has already been initialized."
+    );
 
-    bytes32 id = keccak256(bytes(PACK_ERC1155));
+    bytes32 idERC1155 = keccak256(bytes(PACK_ERC1155));
+    bytes32 idRNG = keccak256(bytes(PACK_RNG));
 
-    moduleId[PACK_ERC1155] = id;
-    modules[id] = _packERC1155;
+    moduleId[PACK_ERC1155] = idERC1155;
+    moduleId[PACK_RNG] = idRNG;
 
-    emit ModuleAdded(PACK_ERC1155, id, _packERC1155);
+    modules[idERC1155] = _packERC1155;
+    modules[idRNG] = _packRNG;
+
+    emit ModuleAdded(PACK_ERC1155, idERC1155, _packERC1155);
+    emit ModuleAdded(PACK_RNG, idRNG, _packRNG);
   }
 
   /// @dev Lets protocol admin add a module to the pack protocol.
