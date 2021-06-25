@@ -45,17 +45,16 @@ Run tests by running
 ```bash
   npx hardhat test
 ```
-
   
 ## Deployment
 
-To deploy this project on a given network (e.g. mainnet) update the `hardhat.config.ts` file with the following
+To deploy this project on a given network (e.g. rinkeby) update the `hardhat.config.ts` file with the following
 
 ```javascript
 // ...
 if (testPrivateKey) {
   config.networks = {
-    mainnet: createTestnetConfig("mainnet"),
+    mainnet: createTestnetConfig("rinkeby"),
   };
 }
 ```
@@ -63,7 +62,7 @@ if (testPrivateKey) {
 Finally, run 
 
 ```bash
-  npx hardhat run scripts/deploySimple.js --network mainnet
+  npx hardhat run scripts/deploySimple.js --network rinkeby
 ```
 
 To verify the deployment on Etherscan
@@ -71,15 +70,11 @@ To verify the deployment on Etherscan
 ```bash
   npx hardhat verify --network rinkeby $contract-address $constructor-args
 ```
-
-
-
   
 ## Feedback
 
 If you have any feedback, please reach out to us at support@nftlabs.co
 
-  
 ## Authors
 
 - [NFT Labs](https://github.com/nftlabs)
