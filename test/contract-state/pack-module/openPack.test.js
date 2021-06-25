@@ -77,7 +77,7 @@ describe("Testing the 'openPack' flow.", function() {
     for(let i = 0; i < numOfPacks; i++) {
       if(i < numOfrewardsPerPack) {
         rewardURIs.push(`This is a dummy reward URI ${Math.floor(Math.random() * 100)}`)
-        rewardMaxSupplies.push(Math.floor(Math.random() * 100));
+        rewardMaxSupplies.push(10 + Math.floor(Math.random() * 100));
       }
 
       packURIs.push(`This is a dummy pack URI ${Math.floor(Math.random() * 100)}`)
@@ -188,5 +188,157 @@ describe("Testing the 'openPack' flow.", function() {
         }
       })
     })
+  })
+
+  describe("State changes in PackERC1155.sol", () => {
+
+    describe("Events", () => {
+      beforeEach(async () => {
+        
+        // End user approves PackHandler to move all pack and reward tokens.
+        await packERC1155.connect(endUser).setApprovalForAll(packHandler.address, true);
+  
+        // Airdrop pack tokens to endUser.
+        for (let id of packIds) {          
+          await packERC1155.connect(creator).safeTransferFrom(
+            creator.address,
+            endUser.address,
+            id,
+            1,
+            ethers.utils.toUtf8Bytes("")
+          );
+        }        
+      })
+
+      it("Should emit 'TokensBurned'", async () => {
+        for(let id of packIds) {
+
+          
+          await expect(packHandler.connect(endUser).openPack(id))
+            .to.emit(packERC1155, "TokensBurned")
+            .withArgs(endUser.address, [id], [1]);
+        }
+      })
+    })
+
+    describe("Storage", () => {
+      beforeEach(async () => {
+        
+        // End user approves PackHandler to move all pack and reward tokens.
+        await packERC1155.connect(endUser).setApprovalForAll(packHandler.address, true);
+  
+        // Airdrop pack tokens to endUser.
+        for (let id of packIds) {          
+          await packERC1155.connect(creator).safeTransferFrom(
+            creator.address,
+            endUser.address,
+            id,
+            1,
+            ethers.utils.toUtf8Bytes("")
+          );
+        }        
+      })
+
+      it("Should update the circulating supply of the pack token burned", async () => {
+        for(let id of packIds) {
+          const tokenBeforeBurn = await packERC1155.tokens(id);
+          const supplyBeforeBurn = parseInt((tokenBeforeBurn.circulatingSupply).toString());
+
+          await packHandler.connect(endUser).openPack(id)
+
+          const tokenAfterBurn = await packERC1155.tokens(id);
+          const supplyAfterBurn = parseInt((tokenAfterBurn.circulatingSupply).toString());
+
+          expect(supplyBeforeBurn - supplyAfterBurn).to.equal(1);
+        }
+      })
+
+      it("Should update the tokens mapping with the created reward token", async () => {
+        for (let i = 1; i < packIds.length; i++) {
+          const id = packIds[i-1]
+          const nextPackId = packIds[i];   
+          
+          const supplyBefore = {};
+
+          for(let j = id + 1; j < nextPackId; j++) {            
+            const reward = await packERC1155.tokens(j)
+
+            supplyBefore[j] = reward.circulatingSupply;
+          }
+
+          await packHandler.connect(endUser).openPack(id)
+
+          for(let j = id + 1; j < nextPackId; j++) {
+            const reward = await packERC1155.tokens(j)
+            expect(reward.circulatingSupply).to.be.gte(supplyBefore[j])
+
+            if(reward.circulatingSupply > supplyBefore[j]) {
+              expect(reward.circulatingSupply - supplyBefore[j]).to.equal(1)
+            }
+
+            if(reward.tokenType == 1) {
+              expect(reward.creator).to.equal(creator.address);
+            }
+          }            
+        }
+      })
+    })
+
+    describe("ERC1155 balances", () => {
+      beforeEach(async () => {
+        
+        // End user approves PackHandler to move all pack and reward tokens.
+        await packERC1155.connect(endUser).setApprovalForAll(packHandler.address, true);
+  
+        // Airdrop pack tokens to endUser.
+        for (let id of packIds) {          
+          await packERC1155.connect(creator).safeTransferFrom(
+            creator.address,
+            endUser.address,
+            id,
+            1,
+            ethers.utils.toUtf8Bytes("")
+          );
+        }        
+      })
+
+      it("Should decrement the pack token balance of the end user by 1", async () => {
+        for(let id of packIds) {
+          const endUserBalBeforeOpen = parseInt((await packERC1155.balanceOf(endUser.address, id)).toString());
+          await packHandler.connect(endUser).openPack(id);
+          const endUserBalAfterOpen = parseInt((await packERC1155.balanceOf(endUser.address, id)).toString());
+
+          expect(endUserBalBeforeOpen - endUserBalAfterOpen).to.equal(1);
+        }      
+      })
+
+      it("Should increment the end user balance of the created reward token by 1", async () => {
+        for (let i = 1; i < packIds.length; i++) {
+          const id = packIds[i-1]
+          const nextPackId = packIds[i];
+
+          const balBeforeOpen = {};
+
+          for(let j = id + 1; j < nextPackId; j++) {            
+            const bal = parseInt((await packERC1155.balanceOf(endUser.address, j)).toString());
+
+            balBeforeOpen[j] = bal;
+          }
+
+          await packHandler.connect(endUser).openPack(id)
+
+          for(let j = id + 1; j < nextPackId; j++) {            
+            const bal = parseInt((await packERC1155.balanceOf(endUser.address, j)).toString());
+
+            expect(bal).to.be.gte(balBeforeOpen[j]);
+
+            if(bal > balBeforeOpen[j]) {
+              expect(bal - balBeforeOpen[j]).to.equal(1);
+            }            
+          }
+        }
+      })
+    })
+    
   })
 })
