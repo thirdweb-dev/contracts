@@ -39,14 +39,6 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
   }
   let nodeUrl = `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
 
-  // Update Matic RPC endpoint later.
-  if (network == "matic") {
-    nodeUrl = "https://rpc-mainnet.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/";
-  }
-  if (network == "mumbai") {
-    nodeUrl = "https://rpc-mumbai.maticvigil.com/v1/084e575b9401d628d1507747de3e0f72ef07261c/";
-  }
-
   return {
     chainId: chainIds[network],
     url: nodeUrl,
@@ -98,12 +90,8 @@ const config: HardhatUserConfig = {
 
 if (testPrivateKey) {
   config.networks = {
-    goerli: createTestnetConfig("goerli"),
-    kovan: createTestnetConfig("kovan"),
+    mainnet: createTestnetConfig("mainnet"),
     rinkeby: createTestnetConfig("rinkeby"),
-    ropsten: createTestnetConfig("ropsten"),
-    matic: createTestnetConfig("matic"),
-    mumbai: createTestnetConfig("mumbai"),
   };
 }
 
