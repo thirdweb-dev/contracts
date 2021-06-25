@@ -1,23 +1,30 @@
 # $Pack Protocol
 
-The $PACK Protocol wraps arbitrary assets (ERC20, ERC721, ERC1155 tokens) into packs (or ERC 1155 'pack tokens'). 
-These packs can be airdropped or sold. 
-
-Combinations of the wrapped assets in the pack are assigned rarity. Opening 
-a pack distributes one of those combinations of the wrapped assets to the pack opener. 
-The combination distributed is chosen *randomly*.
+The $PACK Protocol wraps arbitrary assets (ERC20, ERC721, ERC1155 tokens) into ERC 1155 reward tokens. Combinations of these reward
+tokens are bundled into ERC 1155 pack tokens. Opening a pack distributes a reward randomly selected from the pack to the opener. Both
+pack and reward tokens can be airdropped or sold.
 
 ## Architecture
-`PackControl.sol` is the master contract / control center of the protocol. It allows the protocol admin
-to perform CRUD operations on different modules of the contract. Updgrading the control
-center requires an overhaul of the protocol.
+`PackControl.sol` is the master contract / control center of the protocol. It allows the protocol admin to perform CRUD operations on 
+different modules of the contract. Updgrading the control center requires an overhaul of the protocol.
 
-`PackERC1155.sol` is a core module of the protocol, and is explicitly
-defined in control center.
+`PackERC1155.sol` is a core module of the protocol, and is explicitly defined in control center.
 
-Secondary modules like `Pack.sol` and `PackMarket.sol` perform for the distribution
-and sale of ERC1155 pack tokens.
+Secondary modules like `Pack.sol` and `PackMarket.sol` perform for the distribution and sale of ERC1155 pack and reward tokens.
 
+## Deployments
+The contracts in the `/contracts` directory are deployed on the following networks.
+
+### Rinkeby
+- `PackControl.sol`: [0x481A7Fe771F671fE8a1A4ff4362D28Fd72c042B7](https://rinkeby.etherscan.io/address/0x481A7Fe771F671fE8a1A4ff4362D28Fd72c042B7#code)
+
+- `PackERC1155.sol`: [0xe280e8BcCF8dD8070B079b6b62d6d4ea3CD992A7](https://rinkeby.etherscan.io/address/0xe280e8BcCF8dD8070B079b6b62d6d4ea3CD992A7#code)
+
+- `DexRNG.sol`: [0x1F648fFdDC74b9f1c273B92F2d0D9F8a3F1c844E](https://rinkeby.etherscan.io/address/0x1F648fFdDC74b9f1c273B92F2d0D9F8a3F1c844E#code)
+
+- `PackHandler.sol`: [0xF0FC15174DB513CE2AbD3F949Cd5F6621D094082](https://rinkeby.etherscan.io/address/0xF0FC15174DB513CE2AbD3F949Cd5F6621D094082#code)
+
+- `PackMarket.sol`: [0x99C91C3E968367610a1Afe0DeA58048094031f92](https://rinkeby.etherscan.io/address/0x99C91C3E968367610a1Afe0DeA58048094031f92#code)
 
 ## Run Locally
 
