@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./PackERC1155.sol";
 
-import "hardhat/console.sol";
-
 contract PackHandler {
 
   PackERC1155 internal packERC1155;
@@ -76,7 +74,7 @@ contract PackHandler {
     });
 
     // Mint max supply of pack token to the creator.
-    packERC1155.mintTokens(msg.sender, tokenId, packsMinted, tokenUri, uint(TokenType.Pack));
+    packERC1155.mintTokens(msg.sender, msg.sender, tokenId, packsMinted, tokenUri, uint(TokenType.Pack));
 
     emit PackCreated(msg.sender, tokenId, tokenUri, packsMinted);
     emit RewardsAdded(tokenId, rewardsInPack[tokenId], rewardTokenUris, rewardTokenMaxSupplies);
@@ -178,6 +176,6 @@ contract PackHandler {
     packERC1155.burnBatch(_receiver, ids, amounts);
 
     // Mint the appropriate reward token.
-    packERC1155.mintTokens(_receiver, _rewardId, 1, tokens[_rewardId].uri, uint(tokens[_rewardId].tokenType));
+    packERC1155.mintTokens(tokens[_rewardId].creator, _receiver, _rewardId, 1, tokens[_rewardId].uri, uint(tokens[_rewardId].tokenType));
   }
 }

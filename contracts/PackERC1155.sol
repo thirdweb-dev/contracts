@@ -46,6 +46,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
   /// @dev Called by the pack handler to mint new tokens.
   function mintTokens(
+    address _creator,
     address _to,
     uint _id,
     uint _amount,
@@ -55,7 +56,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
     // Update token state in mapping.
     tokens[_id] = Token({
-      creator: _to,
+      creator: _creator,
       uri: _uri,
       tokenType: _tokenType,
       circulatingSupply: _amount
