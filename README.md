@@ -49,19 +49,15 @@ Run tests by running
   
 ## Deployment
 
-To deploy this project on a given network (e.g. mainnet) update your hardhat config file
-with the following
+To deploy this project on a given network (e.g. mainnet) update the `hardhat.config.ts` file with the following
 
 ```javascript
-module.exports = {
-  solidity: "0.8.0",
-  networks: {
-    mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
-      accounts: [`${TEST_PRIVATE_KEY}`]
-    }
-  }
-};
+// ...
+if (testPrivateKey) {
+  config.networks = {
+    mainnet: createTestnetConfig("mainnet"),
+  };
+}
 ```
 
 Finally, run 
