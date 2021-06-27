@@ -1,12 +1,6 @@
 // UniswapV2 WETH-DAI Pair address on Rinkeby
 const weth_dai_pair = "0x8B22F85d0c844Cf793690F6D9DFE9F11Ddb35449";
 
-const packControlAddress = "0x481A7Fe771F671fE8a1A4ff4362D28Fd72c042B7";
-const packERC1155Address = "0xe280e8BcCF8dD8070B079b6b62d6d4ea3CD992A7";
-const rngAddress = "0x1F648fFdDC74b9f1c273B92F2d0D9F8a3F1c844E";
-const packHandlerAddress = "0xF0FC15174DB513CE2AbD3F949Cd5F6621D094082";
-const packMarketAddress = "0x99C91C3E968367610a1Afe0DeA58048094031f92";
-
 async function main() {
   const [deployer] = await ethers.getSigners();
 
