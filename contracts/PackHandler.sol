@@ -6,19 +6,19 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./PackERC1155.sol";
 
+/**
+ * Calculate / use pack `maxSupply` implicitly
+ */
+
 contract PackHandler {
 
   PackERC1155 internal packERC1155;
 
   enum TokenType { Pack, Reward }
 
-  struct Token {
-    address creator;
-    string uri;
-    uint rarityUnit;
-    uint maxSupply;
-
-    TokenType tokenType;
+  struct RewardsInPack {
+    uint[] rarityNumerators;
+    string[] rewardURIs;
   }
 
   struct RandomnessRequest {
@@ -26,17 +26,11 @@ contract PackHandler {
     uint packId;
   }
 
-  event PackCreated(address indexed creator, uint indexed tokenId, string tokenUri, uint maxSupply);
-  event PackOpened(address indexed owner, uint indexed tokenId);
-
-  event RewardsAdded(uint indexed packId, uint[] rewardTokenIds, string[] rewardTokenUris, uint[] rewardTokenMaxSupplies);
-  event RewardDistributed(address indexed receiver, uint indexed packID, uint indexed rewardTokenId);
-
-  /// @notice Maps a `tokenId` to its Token state.
-  mapping(uint => Token) public tokens;
+  event PackCreated(address indexed creator, uint indexed tokenId, string tokenUri, string[] rewardTokenUris, uint[] rewardTokenMaxSupplies);
+  event PackOpened(address indexed opener, uint indexed packId, uint indexed rewardTokenId);
 
   /// @dev tokenId (for TokenType.Pack) => tokenIds of rewards in pack.
-  mapping(uint => uint[]) public rewardsInPack;
+  mapping(uint => RewardsInPack) rewardsInPack;
 
   /// @dev RNG request Id => request state `RandomnessRequest`. 
   mapping(uint => RandomnessRequest) public randomnessRequests;
@@ -50,43 +44,31 @@ contract PackHandler {
     string calldata tokenUri,   
     string[] calldata rewardTokenUris,
     uint[] memory rewardTokenMaxSupplies
-  ) external returns (uint tokenId, uint packsMinted) {
+  ) external returns (uint tokenId) {
 
     require(rewardTokenMaxSupplies.length == rewardTokenUris.length, "Must provide the same amount of maxSupplies and URIs.");
     require(rewardTokenUris.length > 0, "Cannot create a pack with no rewards.");
 
     // Get pack's `tokenId`
-    tokenId = packERC1155._tokenId();
+    tokenId = packERC1155._tokenId(rewardTokenUris.length);
 
-    // Add rewards and get max supply of pack.
-    for (uint i = 0; i < rewardTokenUris.length; i++) {
-      addReward(tokenId, rewardTokenUris[i], rewardTokenMaxSupplies[i]);
-      packsMinted += rewardTokenMaxSupplies[i];
-    }
-
-    // Store pack state
-    tokens[tokenId] = Token({
-      creator: msg.sender,
-      uri: tokenUri,
-      rarityUnit: packsMinted,
-      maxSupply: packsMinted,
-      tokenType: TokenType.Pack
+    // packsMinted = sumArr(rewardTokenMaxSupplies);
+    rewardsInPack[tokenId] = RewardsInPack({
+      rarityNumerators: rewardTokenMaxSupplies,
+      rewardURIs: rewardTokenUris
     });
 
     // Mint max supply of pack token to the creator.
-    packERC1155.mintTokens(msg.sender, msg.sender, tokenId, packsMinted, tokenUri, uint(TokenType.Pack));
+    packERC1155.mintPack(msg.sender, msg.sender, tokenId, sumArr(rewardTokenMaxSupplies), tokenUri, uint(TokenType.Pack));
 
-    emit PackCreated(msg.sender, tokenId, tokenUri, packsMinted);
-    emit RewardsAdded(tokenId, rewardsInPack[tokenId], rewardTokenUris, rewardTokenMaxSupplies);
+    emit PackCreated(msg.sender, tokenId, tokenUri, rewardTokenUris, rewardTokenMaxSupplies);
   }
 
   /// @notice Lets a pack token owner open a single pack
   function openPack(uint packId) external {
     require(packERC1155.balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
-    
-    bool isExternalService = packERC1155._rng().usingExternalService();
 
-    if(isExternalService) {
+    if(packERC1155._rng().usingExternalService()) {
       // Approve RNG to handle fee amount of fee token.
       (address feeToken, uint feeAmount) = packERC1155._rng().getRequestFee();
       if(feeToken != address(0)) {
@@ -104,12 +86,11 @@ contract PackHandler {
       });
     } else {
       (uint randomness,) = packERC1155._rng().getRandomNumber(block.number);
-      uint rewardTokenId = getRandomReward(packId, randomness);
-      distributeReward(msg.sender, packId, rewardTokenId);
-      emit RewardDistributed(msg.sender, packId, rewardTokenId);
+      (uint rewardTokenId, string memory rewardURI) = getRandomReward(packId, randomness);
+      distributeReward(msg.sender, packId, rewardTokenId, rewardURI);
+      
+      emit PackOpened(msg.sender, packId, rewardTokenId);
     }
-
-    emit PackOpened(msg.sender, packId);
   }
 
   /// @dev Called by protocol RNG when using an external random number provider.
@@ -118,64 +99,43 @@ contract PackHandler {
     
     RandomnessRequest memory request = randomnessRequests[requestId];
 
-    uint rewardTokenId = getRandomReward(request.packId, randomness);
-    distributeReward(request.packOpener, request.packId, rewardTokenId);
+    (uint rewardTokenId, string memory rewardURI) = getRandomReward(request.packId, randomness);
+    distributeReward(request.packOpener, request.packId, rewardTokenId, rewardURI);
 
-    emit RewardDistributed(request.packOpener, request.packId, rewardTokenId);
-  }
-
-  /// @dev Stores reward token state and returns the reward's ERC1155 tokenId.
-  function addReward(uint packId, string calldata tokenUri, uint maxSupply) internal {
-    
-    // Get `tokenId`
-    uint tokenId = packERC1155._tokenId();
-
-    // Store reward token state
-    tokens[tokenId] = Token({
-      creator: msg.sender,
-      uri: tokenUri,
-      rarityUnit: maxSupply,
-      maxSupply: maxSupply,
-      tokenType: TokenType.Reward
-    });
-
-    rewardsInPack[packId].push(tokenId);
+    emit PackOpened(request.packOpener, request.packId, rewardTokenId);
   }
 
   /// @dev returns a random reward tokenId using `randomness` provided by Chainlink VRF.
-  function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId) {
+  function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId, string memory rewardURI) {
 
-    uint prob = randomness % tokens[packId].rarityUnit;
+    uint prob = randomness % sumArr(rewardsInPack[packId].rarityNumerators);
     uint step = 0;
 
-    for(uint i = 0; i < rewardsInPack[packId].length; i++) {
-      uint tokenId = rewardsInPack[packId][i];
-      uint rarityNumerator = tokens[tokenId].rarityUnit;
-
-      if(prob < (rarityNumerator + step)) {
-        rewardTokenId = tokenId;
-        tokens[tokenId].rarityUnit -= 1;
+    for(uint i = 1; i <= rewardsInPack[packId].rewardURIs.length; i++) {
+      if(prob < (rewardsInPack[packId].rarityNumerators[i-1] + step)) {
+        rewardTokenId = packId + i;
+        rewardURI = rewardsInPack[packId].rewardURIs[i-1];
+        rewardsInPack[packId].rarityNumerators[i-1] -= 1;
         break;
       } else {
-        step += rarityNumerator;
+        step += rewardsInPack[packId].rarityNumerators[i-1];
       }
     }
-
-    tokens[packId].rarityUnit -= 1;
   }
 
   /// @dev Distributes a reward token to the pack opener.
-  function distributeReward(address _receiver, uint _packId, uint _rewardId) internal {
+  function distributeReward(address _receiver, uint _packId, uint _rewardId, string memory rewardURI) internal {
     // Burn the opened pack.
-    uint[] memory ids = new uint[](1);
-    ids[0] = _packId;
-
-    uint[] memory amounts = new uint[](1);
-    amounts[0] = 1;
-
-    packERC1155.burnBatch(_receiver, ids, amounts);
+    packERC1155.burn(_receiver, _packId, 1);
 
     // Mint the appropriate reward token.
-    packERC1155.mintTokens(tokens[_rewardId].creator, _receiver, _rewardId, 1, tokens[_rewardId].uri, uint(tokens[_rewardId].tokenType));
+    packERC1155.mintReward(_packId, _receiver, _rewardId, 1, rewardURI, uint(TokenType.Reward));
+  }
+
+  /// @dev Returns the sum of all elements in the array
+  function sumArr(uint[] memory arr) internal pure returns (uint sum) {
+    for(uint i = 0; i < arr.length; i++) {
+      sum += arr[i];
+    }
   }
 }

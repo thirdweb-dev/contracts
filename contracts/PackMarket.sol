@@ -14,6 +14,7 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
 
   PackControl internal controlCenter;
   string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
+  string public constant PACK_HANDLER_MODULE_NAME = "PACK_HANDLER";
 
   event NewListing(
     address indexed seller, 
@@ -84,6 +85,21 @@ contract PackMarket is Ownable, ReentrancyGuard, IERC1155Receiver {
 
   constructor(address _controlCenter) {
     controlCenter = PackControl(_controlCenter);
+  }
+
+  function initPackListing(
+    uint tokenId, 
+    address currency, 
+    uint price
+  ) external {
+
+    (address creator,,,uint circulatingSupply) = PackERC1155(controlCenter.getModule(PACK_ERC1155_MODULE_NAME)).tokens(tokenId);
+
+    require(circulatingSupply == 0, "This function can only be called once, right after pack creation.");
+    require(
+      msg.sender == creator || msg.sender == controlCenter.getModule(PACK_HANDLER_MODULE_NAME),
+      "Only the creator or pack handler can call this function."
+    );
   }
 
   /**

@@ -23,7 +23,8 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   }
 
   event TokenTransfer(address indexed from, address indexed to, uint[] tokenIds, uint[] amounts, uint tokenType);
-  event TokensBurned(address indexed burner, uint[] tokenIds, uint[] amounts);
+  event TokenBurnSingle(address indexed burner, uint tokenId, uint amount);
+  event TokenBurnBatch(address indexed burner, uint[] tokenIds, uint[] amounts);
 
   /// @dev tokenId => Token state.
   mapping(uint => Token) public tokens;
@@ -45,7 +46,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   }
 
   /// @dev Called by the pack handler to mint new tokens.
-  function mintTokens(
+  function mintPack(
     address _creator,
     address _to,
     uint _id,
@@ -66,9 +67,37 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
     mint(_to, _id, _amount, "");
   }
 
+  function mintReward(
+    uint _packId,
+    address _to,
+    uint _id,
+    uint _amount,
+    string calldata _uri,
+    uint _tokenType
+  ) external onlyPackHandler {
+
+    // Update token state in mapping.
+    if(tokens[_id].creator != address(0)) {
+      tokens[_id].circulatingSupply += _amount;
+    } else {
+      tokens[_id] = Token({
+        creator: tokens[_packId].creator,
+        uri: _uri,
+        tokenType: _tokenType,
+        circulatingSupply: _amount
+      });
+    }
+
+    // Mint tokens to pack creator.
+    mint(_to, _id, _amount, "");
+  }
+
   /// @dev Overriding `burn`
   function burn(address account, uint256 id, uint256 value) public override onlyPackHandler {
-    revert("Use `burnBatch` to burn tokens.");
+    super.burn(account, id, value);
+    
+    tokens[id].circulatingSupply -= value;
+    emit TokenBurnSingle(account, id, value);
   }
 
   /// @dev Overriding `burnBatch`
@@ -79,14 +108,14 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
       tokens[ids[i]].circulatingSupply -= values[i];
     }
 
-    emit TokensBurned(account, ids, values);
+    emit TokenBurnBatch(account, ids, values);
   }
 
 
   /// @dev Returns and then increments `currentTokenId`
-  function _tokenId() public onlyPackHandler returns (uint tokenId) {
+  function _tokenId(uint step) public onlyPackHandler returns (uint tokenId) {
     tokenId = currentTokenId;
-    currentTokenId++;
+    currentTokenId += (step + 1);
   }
 
   /// @dev Returns the pack protocol RNG interface
