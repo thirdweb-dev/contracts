@@ -4,15 +4,13 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "./PackControl.sol";
 import "./PackERC1155.sol";
-
-/**
- * Calculate / use pack `maxSupply` implicitly
- */
 
 contract PackHandler {
 
-  PackERC1155 internal packERC1155;
+  PackControl internal controlCenter;
+  string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
 
   enum TokenType { Pack, Reward }
 
@@ -35,8 +33,8 @@ contract PackHandler {
   /// @dev RNG request Id => request state `RandomnessRequest`. 
   mapping(uint => RandomnessRequest) public randomnessRequests;
 
-  constructor(address _packERC1155) {
-    packERC1155 = PackERC1155(_packERC1155);
+  constructor(address _controlCenter) {
+    controlCenter = PackControl(_controlCenter);
   }
 
   /// @notice Lets a creator create a pack with rewards.
@@ -50,42 +48,42 @@ contract PackHandler {
     require(rewardTokenUris.length > 0, "Cannot create a pack with no rewards.");
 
     // Get pack's `tokenId`
-    tokenId = packERC1155._tokenId(rewardTokenUris.length);
+    tokenId = packERC1155()._tokenId(rewardTokenUris.length);
 
-    // packsMinted = sumArr(rewardTokenMaxSupplies);
+    // Store reward state.
     rewardsInPack[tokenId] = RewardsInPack({
       rarityNumerators: rewardTokenMaxSupplies,
       rewardURIs: rewardTokenUris
     });
 
     // Mint max supply of pack token to the creator.
-    packERC1155.mintPack(msg.sender, msg.sender, tokenId, sumArr(rewardTokenMaxSupplies), tokenUri, uint(TokenType.Pack));
+    packERC1155().mintToken(msg.sender, msg.sender, tokenId, sumArr(rewardTokenMaxSupplies), tokenUri, uint(TokenType.Pack));
 
     emit PackCreated(msg.sender, tokenId, tokenUri, rewardTokenUris, rewardTokenMaxSupplies);
   }
 
   /// @notice Lets a pack token owner open a single pack
   function openPack(uint packId) external {
-    require(packERC1155.balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
+    require(packERC1155().balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
-    if(packERC1155._rng().usingExternalService()) {
+    if(packERC1155()._rng().usingExternalService()) {
       // Approve RNG to handle fee amount of fee token.
-      (address feeToken, uint feeAmount) = packERC1155._rng().getRequestFee();
+      (address feeToken, uint feeAmount) = packERC1155()._rng().getRequestFee();
       if(feeToken != address(0)) {
         require(
-          IERC20(feeToken).approve(address(packERC1155._rng()), feeAmount),
+          IERC20(feeToken).approve(address(packERC1155()._rng()), feeAmount),
           "Failed to approve rng to handle fee amount of fee token."
         );
       }
       // Request external service for a random number. Store the request ID and lockBlock.
-      (uint requestId,) = packERC1155._rng().requestRandomNumber();
+      (uint requestId,) = packERC1155()._rng().requestRandomNumber();
 
       randomnessRequests[requestId] = RandomnessRequest({
         packOpener: msg.sender,
         packId: packId
       });
     } else {
-      (uint randomness,) = packERC1155._rng().getRandomNumber(block.number);
+      (uint randomness,) = packERC1155()._rng().getRandomNumber(block.number);
       (uint rewardTokenId, string memory rewardURI) = getRandomReward(packId, randomness);
       distributeReward(msg.sender, packId, rewardTokenId, rewardURI);
       
@@ -95,7 +93,7 @@ contract PackHandler {
 
   /// @dev Called by protocol RNG when using an external random number provider.
   function fulfillRandomness(uint requestId, uint randomness) external {
-    require(msg.sender == address(packERC1155._rng()), "Only the appointed RNG can fulfill random number requests.");
+    require(msg.sender == address(packERC1155()._rng()), "Only the appointed RNG can fulfill random number requests.");
     
     RandomnessRequest memory request = randomnessRequests[requestId];
 
@@ -126,10 +124,20 @@ contract PackHandler {
   /// @dev Distributes a reward token to the pack opener.
   function distributeReward(address _receiver, uint _packId, uint _rewardId, string memory rewardURI) internal {
     // Burn the opened pack.
-    packERC1155.burn(_receiver, _packId, 1);
+    packERC1155().burn(_receiver, _packId, 1);
+
+    // Get pack creator
+    (address creator,,,) = packERC1155().tokens(_packId);
 
     // Mint the appropriate reward token.
-    packERC1155.mintReward(_packId, _receiver, _rewardId, 1, rewardURI, uint(TokenType.Reward));
+    packERC1155().mintToken(creator, _receiver, _rewardId, 1, rewardURI, uint(TokenType.Reward));
+  }
+
+  /// @dev Returns the PackERC1155 contract.
+  function packERC1155() internal view returns (PackERC1155) {
+    return PackERC1155(
+      controlCenter.getModule(PACK_ERC1155_MODULE_NAME)
+    );
   }
 
   /// @dev Returns the sum of all elements in the array

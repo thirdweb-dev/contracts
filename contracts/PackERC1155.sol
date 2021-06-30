@@ -10,7 +10,6 @@ import "./interfaces/RNGInterface.sol";
 contract PackERC1155 is ERC1155PresetMinterPauser {
 
   PackControl internal controlCenter;
-
   string public constant PACK_HANDLER_MODULE_NAME = "PACK_HANDLER";
 
   uint public currentTokenId;
@@ -18,7 +17,6 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   struct Token {
     address creator;
     string uri;
-    uint tokenType;
     uint circulatingSupply;
   }
 
@@ -46,50 +44,27 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   }
 
   /// @dev Called by the pack handler to mint new tokens.
-  function mintPack(
+  function mintToken(
     address _creator,
-    address _to,
     uint _id,
     uint _amount,
-    string calldata _uri,
-    uint _tokenType
+    string calldata _uri
   ) external onlyPackHandler {
 
     // Update token state in mapping.
-    tokens[_id] = Token({
-      creator: _creator,
-      uri: _uri,
-      tokenType: _tokenType,
-      circulatingSupply: _amount
-    });
 
-    // Mint tokens to pack creator.
-    mint(_to, _id, _amount, "");
-  }
-
-  function mintReward(
-    uint _packId,
-    address _to,
-    uint _id,
-    uint _amount,
-    string calldata _uri,
-    uint _tokenType
-  ) external onlyPackHandler {
-
-    // Update token state in mapping.
     if(tokens[_id].creator != address(0)) {
       tokens[_id].circulatingSupply += _amount;
     } else {
       tokens[_id] = Token({
-        creator: tokens[_packId].creator,
+        creator: _creator,
         uri: _uri,
-        tokenType: _tokenType,
         circulatingSupply: _amount
       });
     }
 
     // Mint tokens to pack creator.
-    mint(_to, _id, _amount, "");
+    mint(_creator, _id, _amount, "");
   }
 
   /// @dev Overriding `burn`
