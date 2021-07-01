@@ -20,22 +20,13 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
     address creator;
     string uri;
     uint circulatingSupply;
-    uint tokenType;
+    uint rewardType;
   }
-
-  event TokenTransfer(address indexed from, address indexed to, uint[] tokenIds, uint[] amounts, uint tokenType);
-  event TokenBurnSingle(address indexed burner, uint tokenId, uint amount);
-  event TokenBurnBatch(address indexed burner, uint[] tokenIds, uint[] amounts);
 
   /// @dev tokenId => Token state.
   mapping(uint => Token) public tokens;
 
-  modifier onlyControlCenter() {
-    require(msg.sender == address(controlCenter), "Only the protocol control center can call this function.");
-    _;
-  }
-
-  modifier onlyPackHandler() {
+  modifier onlyHandler() {
     require(msg.sender == controlCenter.getModule(HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
     _;
   }
@@ -44,6 +35,7 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
     controlCenter = PackControl(_controlCenter);
     grantRole(DEFAULT_ADMIN_ROLE, _controlCenter);
     grantRole(PAUSER_ROLE, _controlCenter);
+    revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
   /// @dev Called by the pack handler to mint new tokens.
@@ -53,7 +45,7 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
     uint _amount,
     string calldata _uri,
     uint _rewardType
-  ) external onlyPackHandler {
+  ) external onlyHandler {
 
     // Update token state in mapping.
 
@@ -63,7 +55,7 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
       tokens[_id] = Token({
         creator: _creator,
         uri: _uri,
-        tokenType: _rewardType,
+        rewardType: _rewardType,
         circulatingSupply: _amount
       });
     }
@@ -73,27 +65,24 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
   }
 
   /// @dev Overriding `burn`
-  function burn(address account, uint256 id, uint256 value) public override onlyPackHandler {
+  function burn(address account, uint256 id, uint256 value) public override onlyHandler {
     super.burn(account, id, value);
-    
+
     tokens[id].circulatingSupply -= value;
-    emit TokenBurnSingle(account, id, value);
   }
 
   /// @dev Overriding `burnBatch`
-  function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public override onlyPackHandler {
+  function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public override onlyHandler {
     super.burnBatch(account, ids, values);
     
     for(uint i = 0; i < ids.length; i++) {
       tokens[ids[i]].circulatingSupply -= values[i];
     }
-
-    emit TokenBurnBatch(account, ids, values);
   }
 
 
   /// @dev Returns and then increments `currentTokenId`
-  function _tokenId() public onlyPackHandler returns (uint tokenId) {
+  function _tokenId() public onlyHandler returns (uint tokenId) {
     tokenId = currentTokenId;
     currentTokenId += 1;
   }
@@ -105,38 +94,5 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
    */
   function uri(uint id) public view override returns (string memory) {
     return tokens[id].uri;
-  }
-
-  /**
-   * @dev See OpenZeppelin ERC1155PresetMinterPauser signature of `_beforeTokenTransfer`
-   */
-  function _beforeTokenTransfer(
-    address operator,
-    address from,
-    address to,
-    uint256[] memory ids,
-    uint256[] memory amounts,
-    bytes memory data
-  ) internal override {
-
-    if(ids.length == 1) { 
-      emit TokenTransfer(from, to, ids, amounts, tokens[ids[0]].tokenType);
-    } else {
-
-      uint typeOfToken;
-
-      for (uint i = 0; i < ids.length; i++) {
-        uint tokenId = ids[i];
-
-        if(i == 0) {
-          typeOfToken = tokens[tokenId].tokenType;
-          continue;
-        } else if(tokens[tokenId].tokenType != typeOfToken) {
-          revert("Can only transfer a batch of the same type of token.");
-        }
-      }
-
-      emit TokenTransfer(from, to, ids, amounts, typeOfToken);
-    }
   }
 }
