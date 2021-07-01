@@ -10,7 +10,7 @@ import "./interfaces/RNGInterface.sol";
 contract PackERC1155 is ERC1155PresetMinterPauser {
 
   PackControl internal controlCenter;
-  string public constant PACK_HANDLER_MODULE_NAME = "PACK_HANDLER";
+  string public constant HANDLER_MODULE_NAME = "HANDLER";
 
   uint public currentTokenId;
 
@@ -24,7 +24,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   mapping(uint => Token) public tokens;
 
   modifier onlyHandler() {
-    require(msg.sender == controlCenter.getModule(PACK_HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
+    require(msg.sender == controlCenter.getModule(HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
     _;
   }
 
