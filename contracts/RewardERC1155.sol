@@ -87,11 +87,7 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
     currentTokenId += 1;
   }
 
-  /**
-   * @notice See the ERC1155 API. Returns the token URI of the token with id `tokenId`
-   *
-   * @param id The ERC1155 tokenId of a pack or reward token. 
-   */
+  /// @notice See the ERC1155 API. Returns the token URI of the token with id `tokenId`
   function uri(uint id) public view override returns (string memory) {
     return tokens[id].uri;
   }

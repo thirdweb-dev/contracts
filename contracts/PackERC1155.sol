@@ -32,6 +32,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
     controlCenter = PackControl(_controlCenter);
     grantRole(DEFAULT_ADMIN_ROLE, _controlCenter);
     grantRole(PAUSER_ROLE, _controlCenter);
+    revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
   /// @dev Called by `HANDLER` to mint new tokens.
