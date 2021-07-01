@@ -34,7 +34,7 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
     grantRole(PAUSER_ROLE, _controlCenter);
   }
 
-  /// @dev Called by the pack handler to mint new tokens.
+  /// @dev Called by `HANDLER` to mint new tokens.
   function mintToken(
     address _creator,
     uint _id,
@@ -76,16 +76,12 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
 
 
   /// @dev Returns and then increments `currentTokenId`
-  function _tokenId(uint step) public onlyHandler returns (uint tokenId) {
+  function _tokenId() public onlyHandler returns (uint tokenId) {
     tokenId = currentTokenId;
-    currentTokenId += (step + 1);
+    currentTokenId += 1;
   }
 
-  /**
-   * @notice See the ERC1155 API. Returns the token URI of the token with id `tokenId`
-   *
-   * @param id The ERC1155 tokenId of a pack or reward token. 
-   */
+  /// @notice See the ERC1155 API. Returns the token URI of the token with id `tokenId`
   function uri(uint id) public view override returns (string memory) {
     return tokens[id].uri;
   }
