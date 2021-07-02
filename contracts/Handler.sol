@@ -85,16 +85,20 @@ contract Handler {
   /// @notice Lets a pack token owner open a single pack
   function openPack(uint packId) external {
     require(packERC1155().balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
+    require(packERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn the pack.");
 
     if(rng().usingExternalService()) {
+
       // Approve RNG to handle fee amount of fee token.
       (address feeToken, uint feeAmount) = rng().getRequestFee();
+
       if(feeToken != address(0)) {
         require(
           IERC20(feeToken).approve(address(rng()), feeAmount),
           "Failed to approve rng to handle fee amount of fee token."
         );
       }
+
       // Request external service for a random number. Store the request ID and lockBlock.
       (uint requestId,) = rng().requestRandomNumber();
 
@@ -102,6 +106,7 @@ contract Handler {
         packOpener: msg.sender,
         packId: packId
       });
+      
     } else {
       
       (uint randomness,) = rng().getRandomNumber(block.number);
@@ -248,7 +253,7 @@ contract Handler {
     packERC1155().burn(_receiver, _packId, 1);
 
     // Mint the appropriate reward token.
-    rewardERC1155().safeTransferFrom(address(this), _receiver, _rewardId, 1, "");
+    rewardERC1155().safeTransferFrom(assetManager(), _receiver, _rewardId, 1, "");
   }
 
   /// @dev Returns pack protocol's reward ERC1155 contract.
