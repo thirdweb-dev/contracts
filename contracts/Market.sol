@@ -2,23 +2,24 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./PackControl.sol";
 import "./PackERC1155.sol";
 import "./RewardERC1155.sol";
 
-contract Market is ReentrancyGuard, IERC1155Receiver {
+contract Market is ReentrancyGuard {
 
   PackControl internal packControl;
+
   string public constant REWARD_ERC1155_MODULE_NAME = "REWARD_ERC1155";
   string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
+  string public constant PACK_ASSET_MANAGER = "PACK_ASSET_MANAGER";
 
   enum ListingType { Pack, Reward }
 
-  event NewListing(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
+  event NewListing(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity, ListingType listingType);
   event NewSale(address indexed seller, address indexed buyer, uint indexed tokenId, address currency, uint price, uint quantity);
   event ListingUpdate(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
   event Unlisted(address indexed seller, uint indexed tokenId, uint quantity);
@@ -51,26 +52,27 @@ contract Market is ReentrancyGuard, IERC1155Receiver {
 
   /// @notice Lets `msg.sender` list a given amount of pack tokens for sale.
   function listPacks(
+    address _onBehalfOf,
     uint _tokenId, 
     address _currency, 
     uint _price, 
     uint _quantity
   ) external {
-    require(packERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer pack tokens.");
+    require(packERC1155().isApprovedForAll(_onBehalfOf, address(this)), "Must approve the market to transfer pack tokens.");
     require(_quantity > 0, "Must list at least one token");
 
-    // Transfer tokens being listed to this contract.
+    // Transfer tokens being listed to Pack Protocol's asset manager.
     packERC1155().safeTransferFrom(
-      msg.sender,
-      address(this),
+      _onBehalfOf,
+      assetManager(),
       _tokenId,
       _quantity,
       ""
     );
 
     // Store listing state.
-    listings[msg.sender][_tokenId] = Listing({
-      owner: msg.sender,
+    listings[_onBehalfOf][_tokenId] = Listing({
+      owner: _onBehalfOf,
       tokenId: _tokenId,
       currency: _currency,
       price: _price,
@@ -78,31 +80,32 @@ contract Market is ReentrancyGuard, IERC1155Receiver {
       listingType: ListingType.Pack
     });
 
-    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity);
+    emit NewListing(_onBehalfOf, _tokenId, _currency, _price, _quantity, ListingType.Pack);
   }
 
   /// @notice Lets `msg.sender` list a given amount of reward tokens for sale.
   function listRewards(
+    address _onBehalfOf,
     uint _tokenId, 
     address _currency, 
     uint _price, 
     uint _quantity
   ) external {
-    require(rewardERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer reward tokens.");
+    require(rewardERC1155().isApprovedForAll(_onBehalfOf, address(this)), "Must approve the market to transfer reward tokens.");
     require(_quantity > 0, "Must list at least one token");
 
     // Transfer tokens being listed to this contract.
     rewardERC1155().safeTransferFrom(
-      msg.sender,
-      address(this),
+      _onBehalfOf,
+      assetManager(),
       _tokenId,
       _quantity,
       ""
     );
 
     // Store listing state.
-    listings[msg.sender][_tokenId] = Listing({
-      owner: msg.sender,
+    listings[_onBehalfOf][_tokenId] = Listing({
+      owner: _onBehalfOf,
       tokenId: _tokenId,
       currency: _currency,
       price: _price,
@@ -110,7 +113,7 @@ contract Market is ReentrancyGuard, IERC1155Receiver {
       listingType: ListingType.Reward
     });
 
-    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity);
+    emit NewListing(_onBehalfOf, _tokenId, _currency, _price, _quantity, ListingType.Reward);
   }
 
   /// @notice Lets a seller unlist `quantity` amount of tokens.
@@ -254,30 +257,8 @@ contract Market is ReentrancyGuard, IERC1155Receiver {
     return RewardERC1155(packControl.getModule(REWARD_ERC1155_MODULE_NAME));
   }
 
-  /// @dev See `IERC1155Receiver.sol` and `IERC165.sol`
-  function supportsInterface(bytes4 interfaceID) external view override returns (bool) {
-      return  interfaceID == 0x01ffc9a7 || interfaceID == 0x4e2312e0;
-  }
-
-  /// @dev See `IERC1155Receiver.sol`
-  function onERC1155Received(
-    address operator,
-    address from,
-    uint256 id,
-    uint256 value,
-    bytes calldata data
-  ) external override returns (bytes4) {
-    return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
-  }
-
-  /// @dev See `IERC1155Receiver.sol`
-  function onERC1155BatchReceived(
-    address operator,
-    address from,
-    uint256[] calldata ids,
-    uint256[] calldata values,
-    bytes calldata data
-  ) external override returns (bytes4) {
-    return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
+  /// @dev Returns pack protocol's asset manager address.
+  function assetManager() internal view returns (address) {
+    return packControl.getModule(PACK_ASSET_MANAGER);
   }
 }
