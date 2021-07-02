@@ -125,23 +125,21 @@ contract Handler {
     uint _numOfRewardTokens
   ) external returns (uint rewardTokenId) {
 
-    require(IERC20(_asset).balanceOf(_onBehalfOf) >= _amount, "Must own the amount of tokens to be wrapped.");
+    require(IERC20(_asset).balanceOf(msg.sender) >= _amount, "Must own the amount of tokens to be wrapped.");
     require(IERC20(_asset).allowance(msg.sender, address(this)) >= _amount, "Must approve handler to transfer the given amount of tokens.");
 
-    // Transfer the ERC 20 tokens to this contract.
+    // Transfer the ERC 20 tokens to Pack Protocol's asset manager.
     require(
-      IERC20(_asset).transferFrom(msg.sender, address(this), _amount),
+      IERC20(_asset).transferFrom(msg.sender, assetManager(), _amount),
       "Failed to transfer the given amount of tokens."
     );
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
 
-    // TODO : STORE STATE
-
     // Mint reward token to `msg.sender`
     rewardERC1155().mintToken(
-      msg.sender, 
+      _onBehalfOf, 
       rewardTokenId, 
       _numOfRewardTokens, 
       "", 
