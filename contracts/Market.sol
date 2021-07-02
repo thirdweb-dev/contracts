@@ -52,18 +52,17 @@ contract Market is ReentrancyGuard {
 
   /// @notice Lets `msg.sender` list a given amount of pack tokens for sale.
   function listPacks(
-    address _onBehalfOf,
     uint _tokenId, 
     address _currency, 
     uint _price, 
     uint _quantity
   ) external {
-    require(packERC1155().isApprovedForAll(_onBehalfOf, address(this)), "Must approve the market to transfer pack tokens.");
+    require(packERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer pack tokens.");
     require(_quantity > 0, "Must list at least one token");
 
     // Transfer tokens being listed to Pack Protocol's asset manager.
     packERC1155().safeTransferFrom(
-      _onBehalfOf,
+      msg.sender,
       assetManager(),
       _tokenId,
       _quantity,
@@ -71,8 +70,8 @@ contract Market is ReentrancyGuard {
     );
 
     // Store listing state.
-    listings[_onBehalfOf][_tokenId] = Listing({
-      owner: _onBehalfOf,
+    listings[msg.sender][_tokenId] = Listing({
+      owner: msg.sender,
       tokenId: _tokenId,
       currency: _currency,
       price: _price,
@@ -80,23 +79,22 @@ contract Market is ReentrancyGuard {
       listingType: ListingType.Pack
     });
 
-    emit NewListing(_onBehalfOf, _tokenId, _currency, _price, _quantity, ListingType.Pack);
+    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity, ListingType.Pack);
   }
 
   /// @notice Lets `msg.sender` list a given amount of reward tokens for sale.
   function listRewards(
-    address _onBehalfOf,
     uint _tokenId, 
     address _currency, 
     uint _price, 
     uint _quantity
   ) external {
-    require(rewardERC1155().isApprovedForAll(_onBehalfOf, address(this)), "Must approve the market to transfer reward tokens.");
+    require(rewardERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer reward tokens.");
     require(_quantity > 0, "Must list at least one token");
 
     // Transfer tokens being listed to this contract.
     rewardERC1155().safeTransferFrom(
-      _onBehalfOf,
+      msg.sender,
       assetManager(),
       _tokenId,
       _quantity,
@@ -104,8 +102,8 @@ contract Market is ReentrancyGuard {
     );
 
     // Store listing state.
-    listings[_onBehalfOf][_tokenId] = Listing({
-      owner: _onBehalfOf,
+    listings[msg.sender][_tokenId] = Listing({
+      owner: msg.sender,
       tokenId: _tokenId,
       currency: _currency,
       price: _price,
@@ -113,12 +111,12 @@ contract Market is ReentrancyGuard {
       listingType: ListingType.Reward
     });
 
-    emit NewListing(_onBehalfOf, _tokenId, _currency, _price, _quantity, ListingType.Reward);
+    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity, ListingType.Reward);
   }
 
   /// @notice Lets a seller unlist `quantity` amount of tokens.
-  function unlist(uint tokenId, uint quantity) external onlySeller(tokenId) {
-    require(listings[msg.sender][tokenId].quantity >= quantity, "Cannot unlist more tokens than are listed.");
+  function unlist(uint _tokenId, uint _quantity) external onlySeller(_tokenId) {
+    require(listings[msg.sender][_tokenId].quantity >= _quantity, "Cannot unlist more tokens than are listed.");
 
     // Transfer way tokens being unlisted.
     PackERC1155(
@@ -126,12 +124,12 @@ contract Market is ReentrancyGuard {
     ).safeTransferFrom(
       address(this),
       msg.sender,
-      tokenId,
-      quantity,
+      _tokenId,
+      _quantity,
       ""
     );
 
-    emit Unlisted(msg.sender, tokenId, quantity);
+    emit Unlisted(msg.sender, _tokenId, _quantity);
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
