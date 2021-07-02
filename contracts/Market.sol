@@ -173,9 +173,9 @@ contract Market is ReentrancyGuard {
 
     // Transfer tokens to buyer.
     if(listing.listingType == ListingType.Pack) {
-      packERC1155().safeTransferFrom(listing.owner, msg.sender, _tokenId, _quantity, "");
+      packERC1155().safeTransferFrom(assetManager(), msg.sender, _tokenId, _quantity, "");
     } else if(listing.listingType == ListingType.Reward) {
-      rewardERC1155().safeTransferFrom(listing.owner, msg.sender, _tokenId, _quantity, "");
+      rewardERC1155().safeTransferFrom(assetManager(), msg.sender, _tokenId, _quantity, "");
     }
     
     // Update quantity of tokens in the listing.
