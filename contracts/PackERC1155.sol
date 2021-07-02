@@ -44,7 +44,6 @@ contract PackERC1155 is ERC1155PresetMinterPauser {
   ) external onlyHandler {
 
     // Update token state in mapping.
-
     if(tokens[_id].creator != address(0)) {
       tokens[_id].circulatingSupply += _amount;
     } else {
