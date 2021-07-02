@@ -125,19 +125,19 @@ contract Handler {
     uint _numOfRewardTokens
   ) external returns (uint rewardTokenId) {
 
-    require(IERC20(_asset).balanceOf(msg.sender) >= _amount, "Must own the amount of tokens to be wrapped.");
-    require(IERC20(_asset).allowance(msg.sender, address(this)) >= _amount, "Must approve handler to transfer the given amount of tokens.");
+    require(IERC20(_asset).balanceOf(_onBehalfOf) >= _amount, "Must own the amount of tokens to be wrapped.");
+    require(IERC20(_asset).allowance(_onBehalfOf, address(this)) >= _amount, "Must approve handler to transfer the given amount of tokens.");
 
     // Transfer the ERC 20 tokens to Pack Protocol's asset manager.
     require(
-      IERC20(_asset).transferFrom(msg.sender, assetManager(), _amount),
+      IERC20(_asset).transferFrom(_onBehalfOf, assetManager(), _amount),
       "Failed to transfer the given amount of tokens."
     );
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
 
-    // Mint reward token to `msg.sender`
+    // Mint reward token to `_onBehalfOf`
     rewardERC1155().mintToken(
       _onBehalfOf, 
       rewardTokenId, 
@@ -148,24 +148,26 @@ contract Handler {
   }
 
   /// @dev Wraps an ERC 721 token as a ERC 1155 reward token.
-  function wrapERC721(address _tokenContract, uint _tokenId) external returns (uint rewardTokenId) {
+  function wrapERC721(
+    address _onBehalfOf,
+    address _tokenContract, 
+    uint _tokenId
+  ) external returns (uint rewardTokenId) {
     require(IERC721Metadata(_tokenContract).getApproved(_tokenId) == address(this), "Must approve handler to transfer the NFT.");
 
-    // Transfer the NFT to this contract.
+    // Transfer the ERC 721 token to Pack Protocol's asset manager.
     IERC721Metadata(_tokenContract).safeTransferFrom(
       IERC721Metadata(_tokenContract).ownerOf(_tokenId), 
-      address(this), 
+      assetManager(), 
       _tokenId
     );
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
 
-    // TODO : STORE STATE
-
-    // Mint reward token to `msg.sender`
+    // Mint reward token to `_onBehalfOf`
     rewardERC1155().mintToken(
-      msg.sender, 
+      _onBehalfOf, 
       rewardTokenId, 
       1, 
       IERC721Metadata(_tokenContract).tokenURI(_tokenId), 
@@ -174,23 +176,27 @@ contract Handler {
   }
 
   /// @dev Wraps ERC 1155 tokens as ERC 1155 reward tokens.
-  function wrapERC1155(address _tokenContract, uint _tokenId, uint _amount, uint _numOfRewardTokens) external returns (uint rewardTokenId) {
+  function wrapERC1155(
+    address _onBehalfOf,
+    address _tokenContract, 
+    uint _tokenId, 
+    uint _amount, 
+    uint _numOfRewardTokens
+  ) external returns (uint rewardTokenId) {
     require(
-      IERC1155MetadataURI(_tokenContract).isApprovedForAll(msg.sender, address(this)), 
+      IERC1155MetadataURI(_tokenContract).isApprovedForAll(_onBehalfOf, address(this)), 
       "Must approve handler to transer the required tokens."
     );
 
-    // Transfer the ERC 1155 tokens to this contract.
-    IERC1155MetadataURI(_tokenContract).safeTransferFrom(msg.sender, address(this), _tokenId , _amount, "");
+    // Transfer the ERC 1155 tokens to Pack Protocol's asset manager.
+    IERC1155MetadataURI(_tokenContract).safeTransferFrom(_onBehalfOf, assetManager(), _tokenId , _amount, "");
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
 
-    // TODO : STORE STATE
-
-    // Mint reward token to `msg.sender`
+    // Mint reward token to `_onBehalfOf`
     rewardERC1155().mintToken(
-      msg.sender, 
+      _onBehalfOf, 
       rewardTokenId, 
       _numOfRewardTokens, 
       IERC1155MetadataURI(_tokenContract).uri(_tokenId), 
