@@ -78,12 +78,12 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
         });
       } else if (_rewardType == Reward.RewardType.ERC721) {
         erc721Rewards[_id] = Reward.ERC721Reward({
-          contractAddress: _underlyingAsset,
+          asset: _underlyingAsset,
           tokenId: _underlyingAssetId
         });
       } else if (_rewardType == Reward.RewardType.ERC1155) {
         erc1155Rewards[_id] = Reward.ERC1155Reward({
-          contractAddress: _underlyingAsset,
+          asset: _underlyingAsset,
           tokenId: _underlyingAssetId,
           totalTokenAmount: _underlyingAssetAmount,
           rewardTokenAmount: _amount
