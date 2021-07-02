@@ -5,12 +5,13 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 import "./PackControl.sol";
 import "./PackERC1155.sol";
 import "./RewardERC1155.sol";
+
+import "./libraries/Reward.sol";
+import "./interfaces/RNGInterface.sol";
 
 /**
  * The $PACK Protocol wraps arbitrary assets (ERC20, ERC721, ERC1155 tokens) into ERC 1155 reward tokens. These reward tokens are
@@ -21,10 +22,11 @@ import "./RewardERC1155.sol";
 contract Handler {
 
   PackControl internal packControl;
+
   string public constant REWARD_ERC1155_MODULE_NAME = "REWARD_ERC1155";
   string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
-
-  enum RewardType { ERC20, ERC721, ERC1155 }
+  string public constant PACK_RNG = "PACK_RNG";
+  string public constant PACK_ASSET_MANAGER = "PACK_ASSET_MANAGER";
 
   struct Pack {
     uint[] rewardTokenIds;
@@ -36,32 +38,18 @@ contract Handler {
     uint packId;
   }
 
-  struct ERC721Reward {
-    address nftContract;
-    uint rewardTokenId;
-  }
-
-  struct ERC20Reward {
-    address _asset;
-    uint totalTokenAmount;
-    uint rewardTokenAmount;
-  }
-
-
-  event RewardCreated(address creator, RewardType rewardType);
-
   constructor(address _packControl) {
     packControl = PackControl(_packControl);
   }
 
   /// @dev Pack tokenId => Pack state.
-  mapping(uint => Pack) packs;
+  mapping(uint => Pack) internal packs;
 
   /// @dev RNG request Id => request state `RandomnessRequest`. 
   mapping(uint => RandomnessRequest) public randomnessRequests;
 
   /// @dev Creates a pack with rewards.
-  function createPack(string calldata _packURI, uint[] calldata _rewardIds, uint[] calldata _amounts) public returns (uint packTokenId) {
+  function createPack(string calldata _packURI, uint[] calldata _rewardIds, uint[] calldata _amounts) external returns (uint packTokenId) {
     require(
       rewardERC1155().isApprovedForAll(msg.sender, address(this)), 
       "Must approve handler to transer the required reward tokens."
@@ -70,7 +58,7 @@ contract Handler {
     for(uint i = 0; i < _rewardIds.length; i++) {
       require(
         rewardERC1155().balanceOf(msg.sender, _rewardIds[i]) > _amounts[i],
-        "Must have enough reward token balance to add rewards to the pack."
+        "Insufficient reward token balance to add rewards to the pack."
       );
     }
 
@@ -94,17 +82,17 @@ contract Handler {
   function openPack(uint packId) external {
     require(packERC1155().balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
 
-    if(packERC1155()._rng().usingExternalService()) {
+    if(rng().usingExternalService()) {
       // Approve RNG to handle fee amount of fee token.
-      (address feeToken, uint feeAmount) = packERC1155()._rng().getRequestFee();
+      (address feeToken, uint feeAmount) = rng().getRequestFee();
       if(feeToken != address(0)) {
         require(
-          IERC20(feeToken).approve(address(packERC1155()._rng()), feeAmount),
+          IERC20(feeToken).approve(address(rng()), feeAmount),
           "Failed to approve rng to handle fee amount of fee token."
         );
       }
       // Request external service for a random number. Store the request ID and lockBlock.
-      (uint requestId,) = packERC1155()._rng().requestRandomNumber();
+      (uint requestId,) = rng().requestRandomNumber();
 
       randomnessRequests[requestId] = RandomnessRequest({
         packOpener: msg.sender,
@@ -112,15 +100,32 @@ contract Handler {
       });
     } else {
       
-      (uint randomness,) = packERC1155()._rng().getRandomNumber(block.number);
+      (uint randomness,) = rng().getRandomNumber(block.number);
       uint rewardTokenId = getRandomReward(packId, randomness);
       
       distributeReward(msg.sender, packId, rewardTokenId);
     }
   }
 
+  /// @dev Called by protocol RNG when using an external random number provider.
+  function fulfillRandomness(uint requestId, uint randomness) external {
+    require(msg.sender == address(rng()), "Only the appointed RNG can fulfill random number requests.");
+    
+    RandomnessRequest memory request = randomnessRequests[requestId];
+
+    uint rewardTokenId = getRandomReward(request.packId, randomness);
+    distributeReward(request.packOpener, request.packId, rewardTokenId);
+  }
+
   /// @dev Wraps ERC 20 tokens as ERC 1155 reward tokens
-  function wrapERC20(address _asset, uint _amount, uint _numOfRewardTokens) external returns (uint rewardTokenId) {
+  function wrapERC20(
+    address _onBehalfOf,
+    address _asset,
+    uint _amount,
+    uint _numOfRewardTokens
+  ) external returns (uint rewardTokenId) {
+
+    require(IERC20(_asset).balanceOf(_onBehalfOf) >= _amount, "Must own the amount of tokens to be wrapped.");
     require(IERC20(_asset).allowance(msg.sender, address(this)) >= _amount, "Must approve handler to transfer the given amount of tokens.");
 
     // Transfer the ERC 20 tokens to this contract.
@@ -140,10 +145,8 @@ contract Handler {
       rewardTokenId, 
       _numOfRewardTokens, 
       "", 
-      uint(RewardType.ERC20)
+      Reward.RewardType.ERC20
     );
-
-    emit RewardCreated(msg.sender, RewardType.ERC20);
   }
 
   /// @dev Wraps an ERC 721 token as a ERC 1155 reward token.
@@ -168,10 +171,8 @@ contract Handler {
       rewardTokenId, 
       1, 
       IERC721Metadata(_tokenContract).tokenURI(_tokenId), 
-      uint(RewardType.ERC721)
+      Reward.RewardType.ERC721
     );
-
-    emit RewardCreated(msg.sender, RewardType.ERC721);
   }
 
   /// @dev Wraps ERC 1155 tokens as ERC 1155 reward tokens.
@@ -195,10 +196,8 @@ contract Handler {
       rewardTokenId, 
       _numOfRewardTokens, 
       IERC1155MetadataURI(_tokenContract).uri(_tokenId), 
-      uint(RewardType.ERC1155)
+      Reward.RewardType.ERC1155
     );
-
-    emit RewardCreated(msg.sender, RewardType.ERC1155);
   }
 
   /// @dev returns a random reward tokenId using `randomness` provided by Chainlink VRF.
@@ -207,10 +206,10 @@ contract Handler {
     uint prob = randomness % sumArr(packs[packId].rarityNumerators);
     uint step = 0;
 
-    for(uint i = 0; i < packs[packId].rewardIds.length; i++) {
+    for(uint i = 0; i < packs[packId].rewardTokenIds.length; i++) {
       if(prob < (packs[packId].rarityNumerators[i] + step)) {
         
-        rewardTokenId = packs[packId].rewardIds[i];
+        rewardTokenId = packs[packId].rewardTokenIds[i];
         packs[packId].rarityNumerators[i] -= 1;
 
         break;
@@ -237,6 +236,16 @@ contract Handler {
   /// @dev Returns pack protocol's reward ERC1155 contract.
   function packERC1155() internal view returns (PackERC1155) {
     return PackERC1155(packControl.getModule(PACK_ERC1155_MODULE_NAME));
+  }
+
+  /// @dev Returns pack protocol's RNG.
+  function rng() internal view returns (RNGInterface) {
+    return RNGInterface(packControl.getModule(PACK_RNG));
+  }
+
+  /// @dev Returns pack protocol's asset manager address.
+  function assetManager() internal view returns (address) {
+    return packControl.getModule(PACK_ASSET_MANAGER);
   }
 
   /// @dev Returns the sum of all elements in the array

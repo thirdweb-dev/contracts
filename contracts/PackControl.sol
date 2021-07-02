@@ -22,6 +22,7 @@ contract PackControl is AccessControl {
   string public constant PACK_RNG = "PACK_RNG";
   string public constant PACK_HANDLER = "PACK_HANDLER";
   string public constant PACK_MARKET = "PACK_MARKET";
+  string public constant PACK_ASSET_MANAGER = "PACK_ASSET_MANAGER";
 
   mapping(bytes32 => address) public modules;
   mapping(string => bytes32) public moduleId;
@@ -46,7 +47,8 @@ contract PackControl is AccessControl {
     address _rewardERC1155,
     address _packHandler,
     address _packMarket,
-    address _packRNG
+    address _packRNG,
+    address _packAssetManager
   ) external onlyProtocolAdmin {
     require(!protocolInitialized, "The protocol has already been initialized.");
 
@@ -55,6 +57,7 @@ contract PackControl is AccessControl {
     addModule(PACK_HANDLER, _packHandler);
     addModule(PACK_MARKET, _packMarket);
     addModule(PACK_RNG, _packRNG);
+    addModule(PACK_ASSET_MANAGER, _packAssetManager);
   }
 
   /// @dev Lets protocol admin add a module to the pack protocol.
