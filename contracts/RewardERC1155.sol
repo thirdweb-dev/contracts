@@ -30,6 +30,8 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
   mapping(uint => Reward.ERC721Reward) public erc721Rewards;
   mapping(uint => Reward.ERC1155Reward) public erc1155Rewards;
 
+  event RewardMinted(address indexed _to, uint indexed rewardId, uint amount, Reward.RewardType rewardType);
+
   modifier onlyHandler() {
     require(msg.sender == controlCenter.getModule(PACK_HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
     _;
@@ -92,6 +94,8 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
 
     // Mint tokens to pack creator.
     mint(_creator, _id, _amount, "");
+
+    emit RewardMinted(_creator, _id, _amount, _rewardType);
   }
 
   /// @dev Overriding `burn`
