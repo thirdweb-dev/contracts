@@ -122,7 +122,7 @@ contract Market is ReentrancyGuard {
     PackERC1155(
       packControl.getModule(PACK_ERC1155_MODULE_NAME)
     ).safeTransferFrom(
-      address(this),
+      assetManager(),
       msg.sender,
       _tokenId,
       _quantity,
