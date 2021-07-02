@@ -139,6 +139,10 @@ contract Handler {
 
     // Mint reward token to `_onBehalfOf`
     rewardERC1155().mintToken(
+      _asset,
+      _amount,
+      0,
+
       _onBehalfOf, 
       rewardTokenId, 
       _numOfRewardTokens, 
@@ -150,14 +154,14 @@ contract Handler {
   /// @dev Wraps an ERC 721 token as a ERC 1155 reward token.
   function wrapERC721(
     address _onBehalfOf,
-    address _tokenContract, 
+    address _asset, 
     uint _tokenId
   ) external returns (uint rewardTokenId) {
-    require(IERC721Metadata(_tokenContract).getApproved(_tokenId) == address(this), "Must approve handler to transfer the NFT.");
+    require(IERC721Metadata(_asset).getApproved(_tokenId) == address(this), "Must approve handler to transfer the NFT.");
 
     // Transfer the ERC 721 token to Pack Protocol's asset manager.
-    IERC721Metadata(_tokenContract).safeTransferFrom(
-      IERC721Metadata(_tokenContract).ownerOf(_tokenId), 
+    IERC721Metadata(_asset).safeTransferFrom(
+      IERC721Metadata(_asset).ownerOf(_tokenId), 
       assetManager(), 
       _tokenId
     );
@@ -167,10 +171,14 @@ contract Handler {
 
     // Mint reward token to `_onBehalfOf`
     rewardERC1155().mintToken(
+      _asset,
+      1,
+      _tokenId,
+
       _onBehalfOf, 
       rewardTokenId, 
       1, 
-      IERC721Metadata(_tokenContract).tokenURI(_tokenId), 
+      IERC721Metadata(_asset).tokenURI(_tokenId), 
       Reward.RewardType.ERC721
     );
   }
@@ -178,28 +186,32 @@ contract Handler {
   /// @dev Wraps ERC 1155 tokens as ERC 1155 reward tokens.
   function wrapERC1155(
     address _onBehalfOf,
-    address _tokenContract, 
+    address _asset, 
     uint _tokenId, 
     uint _amount, 
     uint _numOfRewardTokens
   ) external returns (uint rewardTokenId) {
     require(
-      IERC1155MetadataURI(_tokenContract).isApprovedForAll(_onBehalfOf, address(this)), 
+      IERC1155MetadataURI(_asset).isApprovedForAll(_onBehalfOf, address(this)), 
       "Must approve handler to transer the required tokens."
     );
 
     // Transfer the ERC 1155 tokens to Pack Protocol's asset manager.
-    IERC1155MetadataURI(_tokenContract).safeTransferFrom(_onBehalfOf, assetManager(), _tokenId , _amount, "");
+    IERC1155MetadataURI(_asset).safeTransferFrom(_onBehalfOf, assetManager(), _tokenId , _amount, "");
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
 
     // Mint reward token to `_onBehalfOf`
     rewardERC1155().mintToken(
+      _asset,
+      _amount,
+      _tokenId,
+      
       _onBehalfOf, 
       rewardTokenId, 
       _numOfRewardTokens, 
-      IERC1155MetadataURI(_tokenContract).uri(_tokenId), 
+      IERC1155MetadataURI(_asset).uri(_tokenId), 
       Reward.RewardType.ERC1155
     );
   }
