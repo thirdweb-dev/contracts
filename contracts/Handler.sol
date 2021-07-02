@@ -110,20 +110,24 @@ contract Handler {
     } else {
       
       (uint randomness,) = rng().getRandomNumber(block.number);
-      uint rewardTokenId = getRandomReward(packId, randomness);
       
-      distributeReward(msg.sender, packId, rewardTokenId);
+      distributeReward(
+        msg.sender,
+        packId, 
+        getRandomReward(packId, randomness)
+      );
     }
   }
 
   /// @dev Called by protocol RNG when using an external random number provider.
   function fulfillRandomness(uint requestId, uint randomness) external {
     require(msg.sender == address(rng()), "Only the appointed RNG can fulfill random number requests.");
-    
-    RandomnessRequest memory request = randomnessRequests[requestId];
 
-    uint rewardTokenId = getRandomReward(request.packId, randomness);
-    distributeReward(request.packOpener, request.packId, rewardTokenId);
+    distributeReward(
+      randomnessRequests[requestId].packOpener,
+      randomnessRequests[requestId].packId,
+      getRandomReward(randomnessRequests[requestId].packId, randomness)
+    );
   }
 
   /// @dev Wraps ERC 20 tokens as ERC 1155 reward tokens
