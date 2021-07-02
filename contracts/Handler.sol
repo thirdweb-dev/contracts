@@ -3,8 +3,8 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "./PackControl.sol";
 import "./PackERC1155.sol";
@@ -122,7 +122,8 @@ contract Handler {
     address _onBehalfOf,
     address _asset,
     uint _amount,
-    uint _numOfRewardTokens
+    uint _numOfRewardTokens,
+    string calldata _rewardURI
   ) external returns (uint rewardTokenId) {
 
     require(IERC20(_asset).balanceOf(_onBehalfOf) >= _amount, "Must own the amount of tokens to be wrapped.");
@@ -146,7 +147,7 @@ contract Handler {
       _onBehalfOf, 
       rewardTokenId, 
       _numOfRewardTokens, 
-      "", 
+      _rewardURI, 
       Reward.RewardType.ERC20
     );
   }
@@ -155,13 +156,14 @@ contract Handler {
   function wrapERC721(
     address _onBehalfOf,
     address _asset, 
-    uint _tokenId
+    uint _tokenId,
+    string calldata _rewardURI
   ) external returns (uint rewardTokenId) {
-    require(IERC721Metadata(_asset).getApproved(_tokenId) == address(this), "Must approve handler to transfer the NFT.");
+    require(IERC721(_asset).getApproved(_tokenId) == address(this), "Must approve handler to transfer the NFT.");
 
     // Transfer the ERC 721 token to Pack Protocol's asset manager.
-    IERC721Metadata(_asset).safeTransferFrom(
-      IERC721Metadata(_asset).ownerOf(_tokenId), 
+    IERC721(_asset).safeTransferFrom(
+      IERC721(_asset).ownerOf(_tokenId), 
       assetManager(), 
       _tokenId
     );
@@ -178,7 +180,7 @@ contract Handler {
       _onBehalfOf, 
       rewardTokenId, 
       1, 
-      IERC721Metadata(_asset).tokenURI(_tokenId), 
+      _rewardURI, 
       Reward.RewardType.ERC721
     );
   }
@@ -189,15 +191,16 @@ contract Handler {
     address _asset, 
     uint _tokenId, 
     uint _amount, 
-    uint _numOfRewardTokens
+    uint _numOfRewardTokens,
+    string calldata _rewardURI
   ) external returns (uint rewardTokenId) {
     require(
-      IERC1155MetadataURI(_asset).isApprovedForAll(_onBehalfOf, address(this)), 
+      IERC1155(_asset).isApprovedForAll(_onBehalfOf, address(this)), 
       "Must approve handler to transer the required tokens."
     );
 
     // Transfer the ERC 1155 tokens to Pack Protocol's asset manager.
-    IERC1155MetadataURI(_asset).safeTransferFrom(_onBehalfOf, assetManager(), _tokenId , _amount, "");
+    IERC1155(_asset).safeTransferFrom(_onBehalfOf, assetManager(), _tokenId , _amount, "");
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
@@ -211,7 +214,7 @@ contract Handler {
       _onBehalfOf, 
       rewardTokenId, 
       _numOfRewardTokens, 
-      IERC1155MetadataURI(_asset).uri(_tokenId), 
+      _rewardURI, 
       Reward.RewardType.ERC1155
     );
   }
