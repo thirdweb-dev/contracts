@@ -50,25 +50,24 @@ contract Handler {
 
   /// @dev Creates a pack with rewards.
   function createPack(
-    address _onBehalfOf,
     string calldata _packURI, 
     uint[] calldata _rewardIds, 
     uint[] calldata _amounts
   ) external returns (uint packTokenId) {
     require(
-      rewardERC1155().isApprovedForAll(_onBehalfOf, address(this)), 
+      rewardERC1155().isApprovedForAll(msg.sender, address(this)), 
       "Must approve handler to transer the required reward tokens."
     );
 
     for(uint i = 0; i < _rewardIds.length; i++) {
       require(
-        rewardERC1155().balanceOf(_onBehalfOf, _rewardIds[i]) > _amounts[i],
+        rewardERC1155().balanceOf(msg.sender, _rewardIds[i]) > _amounts[i],
         "Insufficient reward token balance to add rewards to the pack."
       );
     }
 
     // Transfer ERC 1155 reward tokens Pack Protocol's asset manager.
-    rewardERC1155().safeBatchTransferFrom(_onBehalfOf, assetManager(), _rewardIds, _amounts, "");
+    rewardERC1155().safeBatchTransferFrom(msg.sender, assetManager(), _rewardIds, _amounts, "");
 
     // Get pack tokenId
     packTokenId = packERC1155()._tokenId();
@@ -80,7 +79,7 @@ contract Handler {
     });
 
     // Mint pack tokens to `_onBehalfOf`
-    packERC1155().mintToken(_onBehalfOf, packTokenId, sumArr(_amounts), _packURI);
+    packERC1155().mintToken(msg.sender, packTokenId, sumArr(_amounts), _packURI);
   }
 
   /// @notice Lets a pack token owner open a single pack
