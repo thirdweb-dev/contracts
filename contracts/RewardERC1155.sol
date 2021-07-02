@@ -6,13 +6,12 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 
 import "./PackControl.sol";
 import "./interfaces/RNGInterface.sol";
+import "./libraries/Reward.sol";
 
 contract RewardERC1155 is ERC1155PresetMinterPauser {
 
   PackControl internal controlCenter;
-  string public constant HANDLER_MODULE_NAME = "HANDLER";
-
-  enum RewardType { ERC20, ERC721, ERC1155 }
+  string public constant PACK_HANDLER_MODULE_NAME = "PACK_HANDLER";
 
   uint public currentTokenId;
 
@@ -20,14 +19,19 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
     address creator;
     string uri;
     uint circulatingSupply;
-    uint rewardType;
+    Reward.RewardType rewardType;
   }
 
   /// @dev tokenId => Token state.
   mapping(uint => Token) public tokens;
+  
+  /// @dev tokenId => Reward state.
+  mapping(uint => Reward.ERC20Reward) public erc20Rewards;
+  mapping(uint => Reward.ERC721Reward) public erc721Rewards;
+  mapping(uint => Reward.ERC1155Reward) public erc1155Rewards;
 
   modifier onlyHandler() {
-    require(msg.sender == controlCenter.getModule(HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
+    require(msg.sender == controlCenter.getModule(PACK_HANDLER_MODULE_NAME), "Only the protocol pack token handler can call this function.");
     _;
   }
 
@@ -40,11 +44,15 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
 
   /// @dev Called by the pack handler to mint new tokens.
   function mintToken(
+    address _underlyingAsset,
+    uint _underlyingAssetAmount,
+    uint _underlyingAssetId,
+
     address _creator,
     uint _id,
     uint _amount,
     string calldata _uri,
-    uint _rewardType
+    Reward.RewardType _rewardType
   ) external onlyHandler {
 
     // Update token state in mapping.
@@ -52,12 +60,34 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
     if(tokens[_id].creator != address(0)) {
       tokens[_id].circulatingSupply += _amount;
     } else {
+
       tokens[_id] = Token({
         creator: _creator,
         uri: _uri,
         rewardType: _rewardType,
         circulatingSupply: _amount
       });
+
+      if(_rewardType == Reward.RewardType.ERC20) {
+        erc20Rewards[_id] = Reward.ERC20Reward({
+          asset: _underlyingAsset,
+          totalTokenAmount: _underlyingAssetAmount,
+          rewardTokenAmount: _amount
+        });
+      } else if (_rewardType == Reward.RewardType.ERC721) {
+        erc721Rewards[_id] = Reward.ERC721Reward({
+          contractAddress: _underlyingAsset,
+          tokenId: _underlyingAssetId
+        });
+      } else if (_rewardType == Reward.RewardType.ERC1155) {
+        erc1155Rewards[_id] = Reward.ERC1155Reward({
+          contractAddress: _underlyingAsset,
+          tokenId: _underlyingAssetId,
+          totalTokenAmount: _underlyingAssetAmount,
+          rewardTokenAmount: _amount
+        });
+      }
+      
     }
 
     // Mint tokens to pack creator.
@@ -79,7 +109,6 @@ contract RewardERC1155 is ERC1155PresetMinterPauser {
       tokens[ids[i]].circulatingSupply -= values[i];
     }
   }
-
 
   /// @dev Returns and then increments `currentTokenId`
   function _tokenId() public onlyHandler returns (uint tokenId) {
