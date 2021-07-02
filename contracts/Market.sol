@@ -172,7 +172,11 @@ contract Market is ReentrancyGuard {
     }
 
     // Transfer tokens to buyer.
-    packERC1155().safeTransferFrom(listing.owner, msg.sender, _tokenId, _quantity, "");
+    if(listing.listingType == ListingType.Pack) {
+      packERC1155().safeTransferFrom(listing.owner, msg.sender, _tokenId, _quantity, "");
+    } else if(listing.listingType == ListingType.Reward) {
+      rewardERC1155().safeTransferFrom(listing.owner, msg.sender, _tokenId, _quantity, "");
+    }
     
     // Update quantity of tokens in the listing.
     listings[_from][_tokenId].quantity -= _quantity;
@@ -188,19 +192,18 @@ contract Market is ReentrancyGuard {
     uint protocolCut = (totalPrice * protocolFeeBps) / MAX_BPS;
     uint creatorCut = seller == creator ? 0 : (totalPrice * creatorFeeBps) / MAX_BPS;
     uint sellerCut = totalPrice - protocolCut - creatorCut;
-
-    IERC20 priceToken = IERC20(currency);
-    priceToken.approve(address(this), sellerCut + creatorCut);
+    
     require(
-      priceToken.allowance(msg.sender, address(this)) >= totalPrice, 
+      IERC20(currency).allowance(msg.sender, address(this)) >= totalPrice, 
       "Not approved PackMarket to handle price amount."
     );
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    require(priceToken.transferFrom(msg.sender, address(this), totalPrice), "ERC20 price transfer failed.");
-    require(priceToken.transferFrom(address(this), seller, sellerCut), "ERC20 price transfer failed.");
+    require(IERC20(currency).transferFrom(msg.sender, assetManager(), protocolCut), "Failed to transfer protocol cut.");
+    require(IERC20(currency).transferFrom(msg.sender, seller, sellerCut), "Failed to transfer seller cut.");
+
     if (creatorCut > 0) {
-      require(priceToken.transferFrom(address(this), creator, creatorCut), "ERC20 price transfer failed.");
+      require(IERC20(currency).transferFrom(msg.sender, creator, creatorCut), "Failed to transfer creator cut.");
     }
   }
 
@@ -216,32 +219,15 @@ contract Market is ReentrancyGuard {
     require(msg.value >= totalPrice, "Must sent enough eth to buy the given amount.");
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    (bool success,) = seller.call{value: sellerCut}("");
-    require(success, "ETH transfer of seller cut failed.");
+    (bool success,) = assetManager().call{value: protocolCut}("");
+    require(success, "Failed to transfer protocol cut.");
+
+    (success,) = seller.call{value: sellerCut}("");
+    require(success, "Failed to transfer seller cut.");
+
     if (creatorCut > 0) {
         (success,) = creator.call{value: creatorCut}("");
-      require(success, "ETH transfer of creator cut failed.");
-    }
-  }
-
-  /// @notice Lets `packControl` transfer the protocol fees accumulated in this contract.
-  function transferProtocolFees(address _to, address _currency, uint _amount) public {
-    require(msg.sender == address(packControl), "Only the protocol control contract can transfer protocol fees.");
-
-    if(_currency == address(0)) {
-      IERC20 feeToken = IERC20(_currency);
-      require(feeToken.balanceOf(address(this)) >= _amount, "Not enough fees generated to withdraw the specified amount.");
-
-      feeToken.approve(address(this), _amount);
-      require(
-        feeToken.transfer(_to, _amount),
-        "ERC20 withdrawal of protocol fees failed."
-      );
-    } else {
-      require(address(this).balance >= _amount, "Not enough fees generated to withdraw the specified amount.");
-
-      (bool success,) = (_to).call{value: _amount}("");
-      require(success, "ETH withdrawal of protocol fees failed.");
+      require(success, "Failed to transfer creator cut.");
     }
   }
 
