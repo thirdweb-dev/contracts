@@ -15,6 +15,7 @@ contract PackControl is AccessControl {
 
   bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
 
+  address public treasury;
   bool public protocolInitialized;
   
   string public constant PACK_ERC1155 = "PACK_ERC1155";
@@ -36,7 +37,9 @@ contract PackControl is AccessControl {
     _;
   }
 
-  constructor() {
+  constructor(address _treasury) {
+    treasury = _treasury;
+    
     _setupRole(PROTOCOL_ADMIN, msg.sender);
     _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
   }
