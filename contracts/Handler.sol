@@ -130,6 +130,31 @@ contract Handler {
     );
   }
 
+  /// @dev Lets a reward token owner redeem the reward's underlying asset.
+  function redeemUnderlying(uint _rewardId, uint _amount) external {
+    require(rewardERC1155().balanceOf(msg.sender, _rewardId) >= _amount, "Must own the amount of rewards being redeemed.");
+    require(rewardERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn reward token.");
+
+    (,,, Reward.RewardType rewardType) = rewardERC1155().tokens(_rewardId);
+
+    if(rewardType == Reward.RewardType.ERC20) {
+
+      (address asset, uint totalTokenAmount, uint rewardTokenAmount) = rewardERC1155().erc20Rewards(_rewardId);
+      IERC20(asset).transferFrom(assetManager(), msg.sender, ((totalTokenAmount * _amount) / rewardTokenAmount));
+
+    } else if (rewardType == Reward.RewardType.ERC721) {
+
+      require(_amount == 1, "Can only redeem one reward token for one ERC721 NFT.");
+      (address asset, uint tokenId) = rewardERC1155().erc721Rewards(_rewardId);
+      IERC721(asset).safeTransferFrom(assetManager(), msg.sender, tokenId);
+
+    } else if (rewardType == Reward.RewardType.ERC1155) {
+
+      (address asset, uint tokenId, uint totalTokenAmount, uint rewardTokenAmount) = rewardERC1155().erc1155Rewards(_rewardId);
+      IERC1155(asset).safeTransferFrom(assetManager(), msg.sender, tokenId, ((totalTokenAmount * _amount) / rewardTokenAmount), "");
+    }
+  }
+
   /// @dev Wraps ERC 20 tokens as ERC 1155 reward tokens
   function wrapERC20(
     address _onBehalfOf,
