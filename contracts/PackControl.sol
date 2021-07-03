@@ -39,7 +39,7 @@ contract PackControl is AccessControl {
 
   constructor(address _treasury) {
     treasury = _treasury;
-    
+
     _setupRole(PROTOCOL_ADMIN, msg.sender);
     _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
   }
@@ -130,5 +130,10 @@ contract PackControl is AccessControl {
   /// @notice Revokes the `PROTOCOL_ADMIN` role from `_revokeFrom`
   function removeProtocolAdmin(address _revokeFrom) external onlyProtocolAdmin {
     revokeRole(PROTOCOL_ADMIN, _revokeFrom);
+  }
+
+  /// @notice Lets protocol admin change the treaury address.
+  function changeTreasury(address _newTreasury) external onlyProtocolAdmin {
+    treasury = _newTreasury;
   }
 }
