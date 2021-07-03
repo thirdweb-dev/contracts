@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "./PackControl.sol";
 import "./PackERC1155.sol";
 import "./RewardERC1155.sol";
+import "./Asset.sol";
 
 import "./libraries/Reward.sol";
 import "./interfaces/RNGInterface.sol";
@@ -67,7 +68,7 @@ contract Handler {
     }
 
     // Transfer ERC 1155 reward tokens Pack Protocol's asset manager.
-    rewardERC1155().safeBatchTransferFrom(msg.sender, assetManager(), _rewardIds, _amounts, "");
+    rewardERC1155().safeBatchTransferFrom(msg.sender, address(assetManager()), _rewardIds, _amounts, "");
 
     // Get pack tokenId
     packTokenId = packERC1155()._tokenId();
@@ -140,18 +141,18 @@ contract Handler {
     if(rewardType == Reward.RewardType.ERC20) {
 
       (address asset, uint totalTokenAmount, uint rewardTokenAmount) = rewardERC1155().erc20Rewards(_rewardId);
-      IERC20(asset).transferFrom(assetManager(), msg.sender, ((totalTokenAmount * _amount) / rewardTokenAmount));
+      assetManager().transferERC20(asset, msg.sender,  ((totalTokenAmount * _amount) / rewardTokenAmount));
 
     } else if (rewardType == Reward.RewardType.ERC721) {
 
       require(_amount == 1, "Can only redeem one reward token for one ERC721 NFT.");
       (address asset, uint tokenId) = rewardERC1155().erc721Rewards(_rewardId);
-      IERC721(asset).safeTransferFrom(assetManager(), msg.sender, tokenId);
+      assetManager().transferERC721(asset, msg.sender, tokenId);
 
     } else if (rewardType == Reward.RewardType.ERC1155) {
 
       (address asset, uint tokenId, uint totalTokenAmount, uint rewardTokenAmount) = rewardERC1155().erc1155Rewards(_rewardId);
-      IERC1155(asset).safeTransferFrom(assetManager(), msg.sender, tokenId, ((totalTokenAmount * _amount) / rewardTokenAmount), "");
+      assetManager().transferERC1155(asset, msg.sender, tokenId, ((totalTokenAmount * _amount) / rewardTokenAmount));
     }
   }
 
@@ -169,7 +170,7 @@ contract Handler {
 
     // Transfer the ERC 20 tokens to Pack Protocol's asset manager.
     require(
-      IERC20(_asset).transferFrom(_onBehalfOf, assetManager(), _amount),
+      IERC20(_asset).transferFrom(_onBehalfOf, address(assetManager()), _amount),
       "Failed to transfer the given amount of tokens."
     );
 
@@ -201,8 +202,8 @@ contract Handler {
 
     // Transfer the ERC 721 token to Pack Protocol's asset manager.
     IERC721(_asset).safeTransferFrom(
-      IERC721(_asset).ownerOf(_tokenId), 
-      assetManager(), 
+      _onBehalfOf, 
+      address(assetManager()), 
       _tokenId
     );
 
@@ -238,7 +239,7 @@ contract Handler {
     );
 
     // Transfer the ERC 1155 tokens to Pack Protocol's asset manager.
-    IERC1155(_asset).safeTransferFrom(_onBehalfOf, assetManager(), _tokenId , _amount, "");
+    IERC1155(_asset).safeTransferFrom(_onBehalfOf, address(assetManager()), _tokenId , _amount, "");
 
     // Get reward tokenId
     rewardTokenId = rewardERC1155()._tokenId();
@@ -282,7 +283,7 @@ contract Handler {
     packERC1155().burn(_receiver, _packId, 1);
 
     // Mint the appropriate reward token.
-    rewardERC1155().safeTransferFrom(assetManager(), _receiver, _rewardId, 1, "");
+    assetManager().transferERC1155(address(rewardERC1155()), _receiver, _rewardId, 1);
   }
 
   /// @dev Returns pack protocol's reward ERC1155 contract.
@@ -301,8 +302,8 @@ contract Handler {
   }
 
   /// @dev Returns pack protocol's asset manager address.
-  function assetManager() internal view returns (address) {
-    return packControl.getModule(PACK_ASSET_MANAGER);
+  function assetManager() internal view returns (Asset) {
+    return Asset(packControl.getModule(PACK_ASSET_MANAGER));
   }
 
   /// @dev Returns the sum of all elements in the array
