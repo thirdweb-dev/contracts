@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./PackControl.sol";
 import "./PackERC1155.sol";
 import "./RewardERC1155.sol";
+import "./Asset.sol";
 
 contract Market is ReentrancyGuard {
 
@@ -63,7 +64,7 @@ contract Market is ReentrancyGuard {
     // Transfer tokens being listed to Pack Protocol's asset manager.
     packERC1155().safeTransferFrom(
       msg.sender,
-      assetManager(),
+      address(assetManager()),
       _tokenId,
       _quantity,
       ""
@@ -95,7 +96,7 @@ contract Market is ReentrancyGuard {
     // Transfer tokens being listed to this contract.
     rewardERC1155().safeTransferFrom(
       msg.sender,
-      assetManager(),
+      address(assetManager()),
       _tokenId,
       _quantity,
       ""
@@ -119,15 +120,7 @@ contract Market is ReentrancyGuard {
     require(listings[msg.sender][_tokenId].quantity >= _quantity, "Cannot unlist more tokens than are listed.");
 
     // Transfer way tokens being unlisted.
-    PackERC1155(
-      packControl.getModule(PACK_ERC1155_MODULE_NAME)
-    ).safeTransferFrom(
-      assetManager(),
-      msg.sender,
-      _tokenId,
-      _quantity,
-      ""
-    );
+    assetManager().transferERC1155(address(packERC1155()), msg.sender, _tokenId, _quantity);
 
     emit Unlisted(msg.sender, _tokenId, _quantity);
   }
@@ -173,9 +166,9 @@ contract Market is ReentrancyGuard {
 
     // Transfer tokens to buyer.
     if(listing.listingType == ListingType.Pack) {
-      packERC1155().safeTransferFrom(assetManager(), msg.sender, _tokenId, _quantity, "");
+      assetManager().transferERC1155(address(packERC1155()),  msg.sender, _tokenId, _quantity);
     } else if(listing.listingType == ListingType.Reward) {
-      rewardERC1155().safeTransferFrom(assetManager(), msg.sender, _tokenId, _quantity, "");
+      assetManager().transferERC1155(address(rewardERC1155()),  msg.sender, _tokenId, _quantity);
     }
     
     // Update quantity of tokens in the listing.
@@ -242,7 +235,7 @@ contract Market is ReentrancyGuard {
   }
 
   /// @dev Returns pack protocol's asset manager address.
-  function assetManager() internal view returns (address) {
-    return packControl.getModule(PACK_ASSET_MANAGER);
+  function assetManager() internal view returns (Asset) {
+    return Asset(packControl.getModule(PACK_ASSET_MANAGER));
   }
 }
