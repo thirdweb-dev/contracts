@@ -199,7 +199,7 @@ contract Market is ReentrancyGuard {
     );
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    require(IERC20(currency).transferFrom(msg.sender, assetManager(), protocolCut), "Failed to transfer protocol cut.");
+    require(IERC20(currency).transferFrom(msg.sender, packControl.treasury(), protocolCut), "Failed to transfer protocol cut.");
     require(IERC20(currency).transferFrom(msg.sender, seller, sellerCut), "Failed to transfer seller cut.");
 
     if (creatorCut > 0) {
@@ -219,7 +219,7 @@ contract Market is ReentrancyGuard {
     require(msg.value >= totalPrice, "Must sent enough eth to buy the given amount.");
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    (bool success,) = assetManager().call{value: protocolCut}("");
+    (bool success,) = packControl.treasury().call{value: protocolCut}("");
     require(success, "Failed to transfer protocol cut.");
 
     (success,) = seller.call{value: sellerCut}("");
