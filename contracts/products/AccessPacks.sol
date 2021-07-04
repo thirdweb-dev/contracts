@@ -51,11 +51,17 @@ contract AccessPacks is ERC1155PresetMinterPauser {
 
     require(_rewardURIs.length == _rewardSupplies.length, "Must specify equal number of URIs and supplies.");
 
-    // Get tokenIds
+    // Get tokenIds and store reward state.
     uint[] memory rewardIds = new uint[](_rewardURIs.length);
     
     for(uint i = 0; i < _rewardURIs.length; i++) {
       rewardIds[i] = currentTokenId;
+
+      accessRewards[currentTokenId] = AccessRewards({
+        uri: _rewardURIs[i],
+        supply: _rewardSupplies[i]
+      });
+
       currentTokenId++;
     }
 
