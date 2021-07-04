@@ -78,6 +78,11 @@
         "internalType": "uint256",
         "name": "packTokenId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalSupply",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
