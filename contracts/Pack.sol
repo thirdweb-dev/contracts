@@ -32,7 +32,10 @@ contract Pack is ERC1155PresetMinterPauser {
     controlCenter = ControlCenter(_controlCenter);
     grantRole(DEFAULT_ADMIN_ROLE, _controlCenter);
     grantRole(PAUSER_ROLE, _controlCenter);
+
     revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    revokeRole(MINTER_ROLE, msg.sender);
+    revokeRole(PAUSER_ROLE, msg.sender);
   }
 
   /// @dev Called by `HANDLER` to mint new tokens.
