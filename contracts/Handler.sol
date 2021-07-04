@@ -26,7 +26,7 @@ contract Handler {
   string public constant RNG = "RNG";
   string public constant ASSET_SAFE = "ASSET_SAFE";
 
-  struct Pack {
+  struct PackState {
     address rewardContract;
     uint[] rewardTokenIds;
     uint[] rarityNumerators;
@@ -42,7 +42,7 @@ contract Handler {
   }
 
   /// @dev Pack tokenId => Pack state.
-  mapping(uint => Pack) internal packs;
+  mapping(uint => PackState) internal packs;
 
   /// @dev RNG request Id => request state `RandomnessRequest`. 
   mapping(uint => RandomnessRequest) public randomnessRequests;
@@ -70,7 +70,7 @@ contract Handler {
     packTokenId = packToken()._tokenId();
 
     // Store pack state
-    packs[packTokenId] = Pack({
+    packs[packTokenId] = PackState({
       rewardContract: _rewardContract,
       rewardTokenIds: _rewardIds,
       rarityNumerators: _amounts

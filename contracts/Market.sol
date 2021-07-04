@@ -32,7 +32,6 @@ contract Market is ReentrancyGuard {
     uint quantity;
     address currency;
     uint price;
-    ListingType listingType;
   }
 
   /// @dev Owner => tokenId => Listing
@@ -72,8 +71,7 @@ contract Market is ReentrancyGuard {
       tokenId: _tokenId,
       currency: _currency,
       price: _price,
-      quantity: _quantity,
-      listingType: ListingType.Pack
+      quantity: _quantity
     });
 
     emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity);
