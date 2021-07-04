@@ -1,5 +1,6 @@
 // from: https://github.com/ethereumvex/SushiMaker-bridge-exploit/blob/master/utils/utils.js
-const hre = require("hardhat");
+import hre from "hardhat";
+const ethers = hre.ethers;
 require('dotenv').config();
 
 const WETH_USDC_UNI = {
@@ -44,7 +45,7 @@ const WETH_DAI_SUSHI = {
     pair: "0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f"
 }
 
-const pairs = [
+export const pairs = [
     WETH_USDC_UNI,
     WETH_USDT_UNI,
     WETH_DAI_UNI,
@@ -53,7 +54,13 @@ const pairs = [
     WETH_DAI_SUSHI
 ]
 
-const forkFrom = async (blockNumber) => {  
+export const chainlinkVars = {
+    vrfCoordinator: '0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B',
+    linkTokenAddress: '0x01be23585060835e02b77ef475b0cc51aa1e0709',
+    keyHash: '0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311'
+}
+
+export const forkFrom = async (blockNumber: any) => {  
     await hre.network.provider.request({
       method: "hardhat_reset",
       params: [
@@ -67,12 +74,10 @@ const forkFrom = async (blockNumber) => {
     });
 };
 
-const impersonate = async function getImpersonatedSigner(address) {
+export const impersonate = async function getImpersonatedSigner(address: any) {
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [address]
     });
     return ethers.provider.getSigner(address);
 }
-
-module.exports = [pairs, forkFrom, impersonate];
