@@ -50,6 +50,11 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
     uint price;
   }
 
+  /// @notice Pack and reward events.
+  event PackCreated(uint indexed packId, string packURI, uint packSupplies);
+  event RewardsCreated(uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
+
+  /// @notice Market events
   event NewListing(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
   event NewSale(address indexed seller, address indexed buyer, uint indexed tokenId, address currency, uint price, uint quantity);
   event ListingUpdate(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
@@ -109,6 +114,9 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
 
     // Call Handler to create packs with rewards.
     (uint packTokenId, uint packSupply) = handler().createPack(_packURI, address(this), rewardIds, _rewardSupplies);
+
+    emit PackCreated(packTokenId, _packURI, packSupply);
+    emit RewardsCreated(rewardIds, _rewardURIs, _rewardSupplies);
 
     // Set on sale in Market.
     market().listPacks(packTokenId, _saleCurrency, _salePrice, packSupply);
