@@ -25,7 +25,7 @@ contract AssetSafe is AccessControl, IERC1155Receiver {
 
   modifier onlyProtocolModules() {
     require(
-      msg.sender == handler() || msg.sender == market() || msg.sender == address(controlCenter),
+      msg.sender == handler() || msg.sender == market(),
       "Only certain protocol modules may call this function."
     );
     _;
