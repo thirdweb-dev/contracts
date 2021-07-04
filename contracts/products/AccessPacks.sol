@@ -74,11 +74,11 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
   constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
     controlCenter = ControlCenter(_controlCenter);
 
-    _setupRole(DEFAULT_ADMIN_ROLE, address(this));
+    // _setRoleAdmin(MINTER_ROLE, MINTER_ROLE);
 
-    revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
     revokeRole(MINTER_ROLE, msg.sender);
     revokeRole(PAUSER_ROLE, msg.sender);
+    revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
   /// @notice Lets `msg.sender` create a pack with rewards and list it for sale.
@@ -108,7 +108,7 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
     }
 
     // Mint reward tokens to `msg.sender`
-    grantRole(MINTER_ROLE, msg.sender);
+    _setupRole(MINTER_ROLE, msg.sender);
     mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
     revokeRole(MINTER_ROLE, msg.sender);
 
