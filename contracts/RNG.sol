@@ -7,7 +7,11 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./ControlCenter.sol";
-import "./interfaces/IRNGReceiver.sol";
+
+/// @dev Basic interface for a random number receiver.
+interface IRNGReceiver {
+  function fulfillRandomness(uint requestId, uint randomness) external;
+}
 
 contract RNG is Ownable, VRFConsumerBase {
 
