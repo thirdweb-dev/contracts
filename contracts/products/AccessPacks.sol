@@ -68,8 +68,15 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
 
   constructor(address _controlCenter) ERC1155PresetMinterPauser("") {
     controlCenter = ControlCenter(_controlCenter);
+
+    _setupRole(DEFAULT_ADMIN_ROLE, address(this));
+
+    revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    revokeRole(MINTER_ROLE, msg.sender);
+    revokeRole(PAUSER_ROLE, msg.sender);
   }
 
+  /// @notice Lets `msg.sender` create a pack with rewards and list it for sale.
   function createPackAndList(
     string calldata _packURI,
     string[] calldata _rewardURIs,
@@ -96,7 +103,9 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
     }
 
     // Mint reward tokens to `msg.sender`
+    grantRole(MINTER_ROLE, msg.sender);
     mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
+    revokeRole(MINTER_ROLE, msg.sender);
 
     // Call Handler to create packs with rewards.
     (uint packTokenId, uint packSupply) = handler().createPack(_packURI, address(this), rewardIds, _rewardSupplies);
@@ -105,6 +114,7 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver, ReentrancyG
     market().listPacks(packTokenId, _saleCurrency, _salePrice, packSupply);
   }
 
+  /// @notice Lets `msg.sender` list a given amount of reward tokens for sale.
   function listRewards(
     uint _tokenId, 
     address _currency, 
