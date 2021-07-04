@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
@@ -14,12 +14,19 @@ contract RNG is Ownable, VRFConsumerBase {
   ControlCenter internal controlCenter;
   string public constant PACK = "PACK";
   
-  uint public currentPairIndex;
-  uint internal seed;
-
+  /// @dev Chainlink / external RNG service variables.
+  bool public isExternalService;
   bytes32 internal keyHash;
   uint public currentRequestId;
-  bool public isExternalService;
+
+  mapping(bytes32 => uint) public requestIds;
+
+  event ExternalServiceRequest(address indexed requestor, uint requestId);
+  event RandomNumberExternal(uint randomNumber);
+
+  /// @dev DEX RNG variables.
+  uint public currentPairIndex;
+  uint internal seed;
 
   struct PairAddresses {
     address tokenA;
@@ -33,12 +40,8 @@ contract RNG is Ownable, VRFConsumerBase {
   mapping(address => uint) public pairIndex;
   mapping(address => bool) public active;
   mapping(uint => bool) public blockEntropy;
-  mapping(bytes32 => uint) public requestIds;
-
-  event ExternalServiceRequest(address indexed requestor, uint requestId);
-  event RandomNumberExternal(uint randomNumber);
+  
   event RandomNumber(address indexed requester, uint randomNumber);
-
   event PairAdded(address pair, address tokenA, address tokenB);
   event PairStatusUpdated(address pair, bool active);
 
@@ -51,6 +54,30 @@ contract RNG is Ownable, VRFConsumerBase {
     controlCenter = ControlCenter(_controlCenter);
     keyHash = _keyHash;
   }
+
+  // ===== Chainlink VRF functions =====
+  
+  /// @dev Sends a random number request to the Chainlink VRF system.
+  function requestRandomNumber() external returns (uint requestId) {
+    require(msg.sender == address(handler()), "Only handler can call this function.");
+    requestRandomness(keyHash, 0.1 ether, block.number);
+    
+    requestId = currentRequestId;
+    currentRequestId++;
+
+    emit ExternalServiceRequest(msg.sender, requestId);
+  }
+
+  /// @dev Called by Chainlink VRF random number provider.
+  function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
+
+    // Call handler with the retrieved random number.
+    handler().fulfillRandomness(requestIds[requestId], randomness);
+
+    emit RandomNumberExternal(randomness);
+  }
+
+  // ===== DEX RNG functions =====
 
   /// @dev Add a UniswapV2 pair to draw randomness from.
   function addPair(address pair) external onlyOwner {
@@ -115,26 +142,6 @@ contract RNG is Ownable, VRFConsumerBase {
     seed = uint(keccak256(abi.encodePacked(msg.sender, randomNumber)));
     
     emit RandomNumber(msg.sender, randomNumber);
-  }
-
-  /// @dev Sends a random number request to the Chainlink VRF system.
-  function requestRandomNumber() external returns (uint requestId) {
-    require(msg.sender == address(handler()), "Only handler can call this function.");
-    requestRandomness(keyHash, 0.1 ether, block.number);
-    
-    requestId = currentRequestId;
-    currentRequestId++;
-
-    emit ExternalServiceRequest(msg.sender, requestId);
-  }
-
-  /// @dev Called by Chainlink VRF random number provider.
-  function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
-
-    // Call handler with the retrieved random number.
-    handler().fulfillRandomness(requestIds[requestId], randomness);
-
-    emit RandomNumberExternal(randomness);
   }
 
   /// @dev Returns whether the RNG is using an external service for random number generation.
