@@ -11,7 +11,7 @@ import "./ControlCenter.sol";
 
 pragma solidity ^0.8.0;
 
-contract AssetSafe is AccessControl, IERC1155Receiver, IERC721Receiver {
+contract AssetSafe is AccessControl, IERC1155Receiver {
 
   ControlCenter internal controlCenter;
 
@@ -29,14 +29,6 @@ contract AssetSafe is AccessControl, IERC1155Receiver, IERC721Receiver {
       "Only certain protocol modules may call this function."
     );
     _;
-  }
-
-  function transferERC20(address _asset, address _to, uint _amount) external onlyProtocolModules {
-    IERC20(_asset).transfer(_to, _amount);
-  }
-
-  function transferERC721(address _asset, address _to, uint _tokenId) external onlyProtocolModules {
-    IERC721(_asset).safeTransferFrom(address(this), _to, _tokenId);
   }
 
   function transferERC1155(address _asset, address _to, uint _tokenId, uint _amount) external onlyProtocolModules {
@@ -71,10 +63,5 @@ contract AssetSafe is AccessControl, IERC1155Receiver, IERC721Receiver {
     bytes calldata data
   ) external override returns (bytes4) {
     return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
-  }
-
-  /// @dev See `IERC721Receiver.sol` 
-  function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) external override returns (bytes4) {
-    return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
   }
 }
