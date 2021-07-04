@@ -53,10 +53,10 @@ contract Handler {
     address _rewardContract,
     uint[] calldata _rewardIds, 
     uint[] calldata _amounts
-  ) external returns (uint packTokenId) {
+  ) external returns (uint packTokenId, uint totalSupply) {
 
     // TODO : Check whether `_rewardContract` is IERC1155.
-
+    require(_rewardIds.length == _amounts.length, "Must specify equal number of IDs and amounts.");
     require(
       IERC1155(_rewardContract).isApprovedForAll(msg.sender, address(this)), 
       "Must approve handler to transer the required reward tokens."
@@ -68,6 +68,7 @@ contract Handler {
 
     // Get pack tokenId
     packTokenId = packToken()._tokenId();
+    totalSupply = sumArr(_amounts);
 
     // Store pack state
     packs[packTokenId] = PackState({
@@ -77,7 +78,7 @@ contract Handler {
     });
 
     // Mint pack tokens to `_onBehalfOf`
-    packToken().mintToken(msg.sender, packTokenId, sumArr(_amounts), _packURI);
+    packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
   }
 
   /// @notice Lets a pack token owner open a single pack
