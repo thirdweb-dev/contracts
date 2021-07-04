@@ -11,19 +11,18 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 
-contract PackControl is AccessControl {
+contract ControlCenter is AccessControl {
 
   bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
 
   address public treasury;
   bool public protocolInitialized;
   
-  string public constant PACK_ERC1155 = "PACK_ERC1155";
-  string public constant REWARD_ERC1155 = "REWARD_ERC1155";
-  string public constant PACK_RNG = "PACK_RNG";
-  string public constant PACK_HANDLER = "PACK_HANDLER";
-  string public constant PACK_MARKET = "PACK_MARKET";
-  string public constant PACK_ASSET_MANAGER = "PACK_ASSET_MANAGER";
+  string public constant PACK = "PACK";
+  string public constant RNG = "RNG";
+  string public constant HANDLER = "HANDLER";
+  string public constant MARKET = "MARKET";
+  string public constant ASSET_SAFE = "ASSET_SAFE";
 
   mapping(bytes32 => address) public modules;
   mapping(string => bytes32) public moduleId;
@@ -46,21 +45,19 @@ contract PackControl is AccessControl {
 
   /// @dev Iniializes the ERC 1155 module of the pack protocol.
   function initPackProtocol(
-    address _packERC1155,
-    address _rewardERC1155,
-    address _packHandler,
-    address _packMarket,
-    address _packRNG,
-    address _packAssetManager
+    address _pack,
+    address _handler,
+    address _market,
+    address _rng,
+    address _assetSafe
   ) external onlyProtocolAdmin {
     require(!protocolInitialized, "The protocol has already been initialized.");
 
-    addModule(PACK_ERC1155, _packERC1155);
-    addModule(REWARD_ERC1155, _rewardERC1155);
-    addModule(PACK_HANDLER, _packHandler);
-    addModule(PACK_MARKET, _packMarket);
-    addModule(PACK_RNG, _packRNG);
-    addModule(PACK_ASSET_MANAGER, _packAssetManager);
+    addModule(PACK, _pack);
+    addModule(HANDLER, _handler);
+    addModule(MARKET, _market);
+    addModule(RNG, _rng);
+    addModule(ASSET_SAFE, _assetSafe);
   }
 
   /// @dev Lets protocol admin add a module to the pack protocol.
@@ -104,21 +101,21 @@ contract PackControl is AccessControl {
   /// @notice Pauses all activity in the ERC1155 part of the protocol.
   function pausePackERC1155() external onlyProtocolAdmin {
     ERC1155PresetMinterPauser(
-      getModule(PACK_ERC1155)
+      getModule(PACK)
     ).pause();
   }
 
   /// @notice Grants a role in the protocol's ERC1155 module.
   function grantRoleERC1155(bytes32 _role, address _receiver) external onlyProtocolAdmin {
     ERC1155PresetMinterPauser(
-      getModule(PACK_ERC1155)
+      getModule(PACK)
     ).grantRole(_role, _receiver);
   }
 
   /// @notice Revokes a role in the protocol's ERC1155 module.
   function revokeRoleERC1155(bytes32 _role, address _subject) external onlyProtocolAdmin {
     ERC1155PresetMinterPauser(
-      getModule(PACK_ERC1155)
+      getModule(PACK)
     ).revokeRole(_role, _subject);
   }
 

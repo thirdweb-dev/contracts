@@ -6,12 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-import "./PackControl.sol";
-import "./PackERC1155.sol";
-import "./RewardERC1155.sol";
-import "./Asset.sol";
+import "./ControlCenter.sol";
+import "./Pack.sol";
+import "./AssetSafe.sol";
 
-import "./libraries/Reward.sol";
 import "./interfaces/RNGInterface.sol";
 
 /**
@@ -22,14 +20,14 @@ import "./interfaces/RNGInterface.sol";
 
 contract Handler {
 
-  PackControl internal packControl;
+  ControlCenter internal controlCenter;
 
-  string public constant REWARD_ERC1155_MODULE_NAME = "REWARD_ERC1155";
-  string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
-  string public constant PACK_RNG = "PACK_RNG";
-  string public constant PACK_ASSET_MANAGER = "PACK_ASSET_MANAGER";
+  string public constant PACK = "PACK";
+  string public constant RNG = "RNG";
+  string public constant ASSET_SAFE = "ASSET_SAFE";
 
   struct Pack {
+    address rewardContract;
     uint[] rewardTokenIds;
     uint[] rarityNumerators;
   }
@@ -39,8 +37,8 @@ contract Handler {
     uint packId;
   }
 
-  constructor(address _packControl) {
-    packControl = PackControl(_packControl);
+  constructor(address _controlCenter) {
+    controlCenter = ControlCenter(_controlCenter);
   }
 
   /// @dev Pack tokenId => Pack state.
@@ -52,41 +50,40 @@ contract Handler {
   /// @dev Creates a pack with rewards.
   function createPack(
     string calldata _packURI, 
+    address _rewardContract,
     uint[] calldata _rewardIds, 
     uint[] calldata _amounts
   ) external returns (uint packTokenId) {
+
+    // TODO : Check whether `_rewardContract` is IERC1155.
+
     require(
-      rewardERC1155().isApprovedForAll(msg.sender, address(this)), 
+      IERC1155(_rewardContract).isApprovedForAll(msg.sender, address(this)), 
       "Must approve handler to transer the required reward tokens."
     );
 
-    for(uint i = 0; i < _rewardIds.length; i++) {
-      require(
-        rewardERC1155().balanceOf(msg.sender, _rewardIds[i]) > _amounts[i],
-        "Insufficient reward token balance to add rewards to the pack."
-      );
-    }
-
     // Transfer ERC 1155 reward tokens Pack Protocol's asset manager.
-    rewardERC1155().safeBatchTransferFrom(msg.sender, address(assetManager()), _rewardIds, _amounts, "");
+    // Will revert if `msg.sender` does not own the given `_amounts` of reward tokens.
+    IERC1155(_rewardContract).safeBatchTransferFrom(msg.sender, address(assetSafe()), _rewardIds, _amounts, "");
 
     // Get pack tokenId
-    packTokenId = packERC1155()._tokenId();
+    packTokenId = packToken()._tokenId();
 
     // Store pack state
     packs[packTokenId] = Pack({
+      rewardContract: _rewardContract,
       rewardTokenIds: _rewardIds,
       rarityNumerators: _amounts
     });
 
     // Mint pack tokens to `_onBehalfOf`
-    packERC1155().mintToken(msg.sender, packTokenId, sumArr(_amounts), _packURI);
+    packToken().mintToken(msg.sender, packTokenId, sumArr(_amounts), _packURI);
   }
 
   /// @notice Lets a pack token owner open a single pack
   function openPack(uint packId) external {
-    require(packERC1155().balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
-    require(packERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn the pack.");
+    require(packToken().balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
+    require(packToken().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn the pack.");
 
     if(rng().usingExternalService()) {
 
@@ -131,133 +128,6 @@ contract Handler {
     );
   }
 
-  /// @dev Lets a reward token owner redeem the reward's underlying asset.
-  function redeemUnderlying(uint _rewardId, uint _amount) external {
-    require(rewardERC1155().balanceOf(msg.sender, _rewardId) >= _amount, "Must own the amount of rewards being redeemed.");
-    require(rewardERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn reward token.");
-
-    (,,, Reward.RewardType rewardType) = rewardERC1155().tokens(_rewardId);
-
-    if(rewardType == Reward.RewardType.ERC20) {
-
-      (address asset, uint totalTokenAmount, uint rewardTokenAmount) = rewardERC1155().erc20Rewards(_rewardId);
-      assetManager().transferERC20(asset, msg.sender,  ((totalTokenAmount * _amount) / rewardTokenAmount));
-
-    } else if (rewardType == Reward.RewardType.ERC721) {
-
-      require(_amount == 1, "Can only redeem one reward token for one ERC721 NFT.");
-      (address asset, uint tokenId) = rewardERC1155().erc721Rewards(_rewardId);
-      assetManager().transferERC721(asset, msg.sender, tokenId);
-
-    } else if (rewardType == Reward.RewardType.ERC1155) {
-
-      (address asset, uint tokenId, uint totalTokenAmount, uint rewardTokenAmount) = rewardERC1155().erc1155Rewards(_rewardId);
-      assetManager().transferERC1155(asset, msg.sender, tokenId, ((totalTokenAmount * _amount) / rewardTokenAmount));
-    }
-  }
-
-  /// @dev Wraps ERC 20 tokens as ERC 1155 reward tokens
-  function wrapERC20(
-    address _onBehalfOf,
-    address _asset,
-    uint _amount,
-    uint _numOfRewardTokens,
-    string calldata _rewardURI
-  ) external returns (uint rewardTokenId) {
-
-    require(IERC20(_asset).balanceOf(_onBehalfOf) >= _amount, "Must own the amount of tokens to be wrapped.");
-    require(IERC20(_asset).allowance(_onBehalfOf, address(this)) >= _amount, "Must approve handler to transfer the given amount of tokens.");
-
-    // Transfer the ERC 20 tokens to Pack Protocol's asset manager.
-    require(
-      IERC20(_asset).transferFrom(_onBehalfOf, address(assetManager()), _amount),
-      "Failed to transfer the given amount of tokens."
-    );
-
-    // Get reward tokenId
-    rewardTokenId = rewardERC1155()._tokenId();
-
-    // Mint reward token to `_onBehalfOf`
-    rewardERC1155().mintToken(
-      _asset,
-      _amount,
-      0,
-
-      _onBehalfOf, 
-      rewardTokenId, 
-      _numOfRewardTokens, 
-      _rewardURI, 
-      Reward.RewardType.ERC20
-    );
-  }
-
-  /// @dev Wraps an ERC 721 token as a ERC 1155 reward token.
-  function wrapERC721(
-    address _onBehalfOf,
-    address _asset, 
-    uint _tokenId,
-    string calldata _rewardURI
-  ) external returns (uint rewardTokenId) {
-    require(IERC721(_asset).getApproved(_tokenId) == address(this), "Must approve handler to transfer the NFT.");
-
-    // Transfer the ERC 721 token to Pack Protocol's asset manager.
-    IERC721(_asset).safeTransferFrom(
-      _onBehalfOf, 
-      address(assetManager()), 
-      _tokenId
-    );
-
-    // Get reward tokenId
-    rewardTokenId = rewardERC1155()._tokenId();
-
-    // Mint reward token to `_onBehalfOf`
-    rewardERC1155().mintToken(
-      _asset,
-      1,
-      _tokenId,
-
-      _onBehalfOf, 
-      rewardTokenId, 
-      1, 
-      _rewardURI, 
-      Reward.RewardType.ERC721
-    );
-  }
-
-  /// @dev Wraps ERC 1155 tokens as ERC 1155 reward tokens.
-  function wrapERC1155(
-    address _onBehalfOf,
-    address _asset, 
-    uint _tokenId, 
-    uint _amount, 
-    uint _numOfRewardTokens,
-    string calldata _rewardURI
-  ) external returns (uint rewardTokenId) {
-    require(
-      IERC1155(_asset).isApprovedForAll(_onBehalfOf, address(this)), 
-      "Must approve handler to transer the required tokens."
-    );
-
-    // Transfer the ERC 1155 tokens to Pack Protocol's asset manager.
-    IERC1155(_asset).safeTransferFrom(_onBehalfOf, address(assetManager()), _tokenId , _amount, "");
-
-    // Get reward tokenId
-    rewardTokenId = rewardERC1155()._tokenId();
-
-    // Mint reward token to `_onBehalfOf`
-    rewardERC1155().mintToken(
-      _asset,
-      _amount,
-      _tokenId,
-      
-      _onBehalfOf, 
-      rewardTokenId, 
-      _numOfRewardTokens, 
-      _rewardURI, 
-      Reward.RewardType.ERC1155
-    );
-  }
-
   /// @dev returns a random reward tokenId using `randomness` provided by Chainlink VRF.
   function getRandomReward(uint packId, uint randomness) internal returns (uint rewardTokenId) {
 
@@ -280,30 +150,25 @@ contract Handler {
   /// @dev Distributes a reward token to the pack opener.
   function distributeReward(address _receiver, uint _packId, uint _rewardId) internal {
     // Burn the opened pack.
-    packERC1155().burn(_receiver, _packId, 1);
+    packToken().burn(_receiver, _packId, 1);
 
     // Mint the appropriate reward token.
-    assetManager().transferERC1155(address(rewardERC1155()), _receiver, _rewardId, 1);
+    assetSafe().transferERC1155(packs[_packId].rewardContract, _receiver, _rewardId, 1);
   }
 
   /// @dev Returns pack protocol's reward ERC1155 contract.
-  function rewardERC1155() internal view returns (RewardERC1155) {
-    return RewardERC1155(packControl.getModule(REWARD_ERC1155_MODULE_NAME));
-  }
-
-  /// @dev Returns pack protocol's reward ERC1155 contract.
-  function packERC1155() internal view returns (PackERC1155) {
-    return PackERC1155(packControl.getModule(PACK_ERC1155_MODULE_NAME));
+  function packToken() internal view returns (Pack) {
+    return Pack(controlCenter.getModule(PACK));
   }
 
   /// @dev Returns pack protocol's RNG.
   function rng() internal view returns (RNGInterface) {
-    return RNGInterface(packControl.getModule(PACK_RNG));
+    return RNGInterface(controlCenter.getModule(RNG));
   }
 
   /// @dev Returns pack protocol's asset manager address.
-  function assetManager() internal view returns (Asset) {
-    return Asset(packControl.getModule(PACK_ASSET_MANAGER));
+  function assetSafe() internal view returns (AssetSafe) {
+    return AssetSafe(controlCenter.getModule(ASSET_SAFE));
   }
 
   /// @dev Returns the sum of all elements in the array

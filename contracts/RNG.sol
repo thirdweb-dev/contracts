@@ -6,13 +6,13 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./PackControl.sol";
+import "./ControlCenter.sol";
 import "./interfaces/IRNGReceiver.sol";
 
 contract RNG is Ownable, VRFConsumerBase {
 
-  PackControl internal packcontrol;
-  string public constant PACK_HANDLER = "PACK_HANDLER";
+  ControlCenter internal controlCenter;
+  string public constant PACK = "PACK";
   
   uint public currentPairIndex;
   uint internal seed;
@@ -43,12 +43,12 @@ contract RNG is Ownable, VRFConsumerBase {
   event PairStatusUpdated(address pair, bool active);
 
   constructor(
-    address _packControl,
+    address _controlCenter,
     address _vrfCoordinator,
     address _linkToken,
     bytes32 _keyHash
   ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
-    packcontrol = PackControl(_packControl);
+    controlCenter = ControlCenter(_controlCenter);
     keyHash = _keyHash;
   }
 
@@ -144,7 +144,7 @@ contract RNG is Ownable, VRFConsumerBase {
 
   /// @dev Returns pack protocol's `Handler`
   function handler() internal view returns (IRNGReceiver) {
-    return IRNGReceiver(packcontrol.getModule(PACK_HANDLER));
+    return IRNGReceiver(controlCenter.getModule(PACK));
   }
   
   /// @notice See `UniswapV2Library.sol`

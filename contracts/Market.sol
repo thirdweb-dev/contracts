@@ -5,22 +5,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import "./PackControl.sol";
-import "./PackERC1155.sol";
-import "./RewardERC1155.sol";
-import "./Asset.sol";
+import "./ControlCenter.sol";
+import "./Pack.sol";
+import "./AssetSafe.sol";
 
 contract Market is ReentrancyGuard {
 
-  PackControl internal packControl;
+  ControlCenter internal controlCenter;
 
-  string public constant REWARD_ERC1155_MODULE_NAME = "REWARD_ERC1155";
-  string public constant PACK_ERC1155_MODULE_NAME = "PACK_ERC1155";
-  string public constant PACK_ASSET_MANAGER = "PACK_ASSET_MANAGER";
+  string public constant PACK = "PACK";
+  string public constant ASSET_SAFE = "ASSET_SAFE";
 
-  enum ListingType { Pack, Reward }
-
-  event NewListing(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity, ListingType listingType);
+  event NewListing(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
   event NewSale(address indexed seller, address indexed buyer, uint indexed tokenId, address currency, uint price, uint quantity);
   event ListingUpdate(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
   event Unlisted(address indexed seller, uint indexed tokenId, uint quantity);
@@ -47,8 +43,8 @@ contract Market is ReentrancyGuard {
     _;
   }
 
-  constructor(address _packControl) {
-    packControl = PackControl(_packControl);
+  constructor(address _controlCenter) {
+    controlCenter = ControlCenter(_controlCenter);
   }
 
   /// @notice Lets `msg.sender` list a given amount of pack tokens for sale.
@@ -58,13 +54,13 @@ contract Market is ReentrancyGuard {
     uint _price, 
     uint _quantity
   ) external {
-    require(packERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer pack tokens.");
+    require(packToken().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer pack tokens.");
     require(_quantity > 0, "Must list at least one token");
 
     // Transfer tokens being listed to Pack Protocol's asset manager.
-    packERC1155().safeTransferFrom(
+    packToken().safeTransferFrom(
       msg.sender,
-      address(assetManager()),
+      address(assetSafe()),
       _tokenId,
       _quantity,
       ""
@@ -80,39 +76,7 @@ contract Market is ReentrancyGuard {
       listingType: ListingType.Pack
     });
 
-    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity, ListingType.Pack);
-  }
-
-  /// @notice Lets `msg.sender` list a given amount of reward tokens for sale.
-  function listRewards(
-    uint _tokenId, 
-    address _currency, 
-    uint _price, 
-    uint _quantity
-  ) external {
-    require(rewardERC1155().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer reward tokens.");
-    require(_quantity > 0, "Must list at least one token");
-
-    // Transfer tokens being listed to this contract.
-    rewardERC1155().safeTransferFrom(
-      msg.sender,
-      address(assetManager()),
-      _tokenId,
-      _quantity,
-      ""
-    );
-
-    // Store listing state.
-    listings[msg.sender][_tokenId] = Listing({
-      owner: msg.sender,
-      tokenId: _tokenId,
-      currency: _currency,
-      price: _price,
-      quantity: _quantity,
-      listingType: ListingType.Reward
-    });
-
-    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity, ListingType.Reward);
+    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity);
   }
 
   /// @notice Lets a seller unlist `quantity` amount of tokens.
@@ -120,7 +84,7 @@ contract Market is ReentrancyGuard {
     require(listings[msg.sender][_tokenId].quantity >= _quantity, "Cannot unlist more tokens than are listed.");
 
     // Transfer way tokens being unlisted.
-    assetManager().transferERC1155(address(packERC1155()), msg.sender, _tokenId, _quantity);
+    assetSafe().transferERC1155(address(packToken()), msg.sender, _tokenId, _quantity);
 
     emit Unlisted(msg.sender, _tokenId, _quantity);
   }
@@ -143,19 +107,14 @@ contract Market is ReentrancyGuard {
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
   function buy(address _from, uint _tokenId, uint _quantity) external payable nonReentrant {
+
     require(listings[_from][_tokenId].owner != address(0), "The listing does not exist.");
-    require(_quantity <= listings[_from][_tokenId].quantity, "attempting to buy more tokens than listed");
+    require(_quantity <= listings[_from][_tokenId].quantity, "Attempting to buy more tokens than are listed.");
 
     Listing memory listing = listings[_from][_tokenId];
 
     // Get token creator.
-    address creator;
-
-    if(listing.listingType == ListingType.Pack) {
-      (creator,,) = packERC1155().tokens(_tokenId);
-    } else if(listing.listingType == ListingType.Reward) {
-      (creator,,,) = rewardERC1155().tokens(_tokenId);
-    }
+    (address creator,,) = packToken().tokens(_tokenId);
     
     // Distribute sale value to seller, creator and protocol.
     if(listing.currency == address(0)) {
@@ -165,11 +124,7 @@ contract Market is ReentrancyGuard {
     }
 
     // Transfer tokens to buyer.
-    if(listing.listingType == ListingType.Pack) {
-      assetManager().transferERC1155(address(packERC1155()),  msg.sender, _tokenId, _quantity);
-    } else if(listing.listingType == ListingType.Reward) {
-      assetManager().transferERC1155(address(rewardERC1155()),  msg.sender, _tokenId, _quantity);
-    }
+    assetSafe().transferERC1155(address(packToken()),  msg.sender, _tokenId, _quantity);
     
     // Update quantity of tokens in the listing.
     listings[_from][_tokenId].quantity -= _quantity;
@@ -192,7 +147,7 @@ contract Market is ReentrancyGuard {
     );
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    require(IERC20(currency).transferFrom(msg.sender, packControl.treasury(), protocolCut), "Failed to transfer protocol cut.");
+    require(IERC20(currency).transferFrom(msg.sender, controlCenter.treasury(), protocolCut), "Failed to transfer protocol cut.");
     require(IERC20(currency).transferFrom(msg.sender, seller, sellerCut), "Failed to transfer seller cut.");
 
     if (creatorCut > 0) {
@@ -212,7 +167,7 @@ contract Market is ReentrancyGuard {
     require(msg.value >= totalPrice, "Must sent enough eth to buy the given amount.");
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    (bool success,) = packControl.treasury().call{value: protocolCut}("");
+    (bool success,) = controlCenter.treasury().call{value: protocolCut}("");
     require(success, "Failed to transfer protocol cut.");
 
     (success,) = seller.call{value: sellerCut}("");
@@ -225,17 +180,12 @@ contract Market is ReentrancyGuard {
   }
 
   /// @dev Returns pack protocol's reward ERC1155 contract.
-  function packERC1155() internal view returns (PackERC1155) {
-    return PackERC1155(packControl.getModule(PACK_ERC1155_MODULE_NAME));
-  }
-
-  /// @dev Returns pack protocol's reward ERC1155 contract.
-  function rewardERC1155() internal view returns (RewardERC1155) {
-    return RewardERC1155(packControl.getModule(REWARD_ERC1155_MODULE_NAME));
+  function packToken() internal view returns (Pack) {
+    return Pack(controlCenter.getModule(PACK));
   }
 
   /// @dev Returns pack protocol's asset manager address.
-  function assetManager() internal view returns (Asset) {
-    return Asset(packControl.getModule(PACK_ASSET_MANAGER));
+  function assetSafe() internal view returns (AssetSafe) {
+    return AssetSafe(controlCenter.getModule(ASSET_SAFE));
   }
 }

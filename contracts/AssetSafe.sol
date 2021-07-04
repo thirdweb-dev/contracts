@@ -7,48 +7,48 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-import "./PackControl.sol";
+import "./ControlCenter.sol";
 
 pragma solidity ^0.8.0;
 
-contract Asset is AccessControl, IERC1155Receiver, IERC721Receiver {
+contract AssetSafe is AccessControl, IERC1155Receiver, IERC721Receiver {
 
-  PackControl internal packControl;
+  ControlCenter internal controlCenter;
 
-  string public constant PACK_HANDLER = "PACK_HANDLER";
-  string public constant PACK_MARKET = "PACK_MARKET";
+  string public constant HANDLER = "HANDLER";
+  string public constant MARKET = "MARKET";
 
-  constructor(address _packControl) {
-    packControl = PackControl(_packControl);
-    _setupRole(DEFAULT_ADMIN_ROLE, _packControl);
+  constructor(address _controlCenter) {
+    controlCenter = ControlCenter(_controlCenter);
+    _setupRole(DEFAULT_ADMIN_ROLE, _controlCenter);
   }
 
   modifier onlyProtocolModules() {
     require(
-      msg.sender == handler() || msg.sender == market() || msg.sender == address(packControl),
+      msg.sender == handler() || msg.sender == market() || msg.sender == address(controlCenter),
       "Only certain protocol modules may call this function."
     );
     _;
   }
 
-  function approveERC20(address _asset, address _operator, uint _amount) external onlyProtocolModules {
-    IERC20(_asset).approve(_operator, _amount);
+  function transferERC20(address _asset, address _to, uint _amount) external onlyProtocolModules {
+    IERC20(_asset).transfer(_to, _amount);
   }
 
-  function approveERC721(address _asset, address _operator, uint _tokenId) external onlyProtocolModules {
-    IERC721(_asset).approve(_operator, _tokenId);
+  function transferERC721(address _asset, address _to, uint _tokenId) external onlyProtocolModules {
+    IERC721(_asset).safeTransferFrom(address(this), _to, _tokenId);
   }
 
-  function approveERC1155(address _asset, address _operator) external onlyProtocolModules {
-    IERC1155(_asset).setApprovalForAll(_operator, true);
+  function transferERC1155(address _asset, address _to, uint _tokenId, uint _amount) external onlyProtocolModules {
+    IERC1155(_asset).safeTransferFrom(address(this), _to, _tokenId, _amount, "");
   }
 
   function handler() internal view returns (address) {
-    return packControl.getModule(PACK_HANDLER);
+    return controlCenter.getModule(HANDLER);
   }
 
   function market() internal view returns (address) {
-    return packControl.getModule(PACK_MARKET);
+    return controlCenter.getModule(MARKET);
   }
 
   /// @dev See `IERC1155Receiver.sol`
