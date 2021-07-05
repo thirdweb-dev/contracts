@@ -58,6 +58,11 @@ contract ControlCenter is AccessControl {
     addModule(MARKET, _market);
     addModule(RNG, _rng);
     addModule(ASSET_SAFE, _assetSafe);
+
+    ERC1155PresetMinterPauser(getModule(PACK)).grantRole(
+      ERC1155PresetMinterPauser(getModule(PACK)).MINTER_ROLE(),
+      _handler
+    );
   }
 
   /// @dev Lets protocol admin add a module to the pack protocol.
