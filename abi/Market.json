@@ -173,6 +173,19 @@
   },
   {
     "inputs": [],
+    "name": "HANDLER",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_BPS",
     "outputs": [
       {
@@ -263,6 +276,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_onBehalfOf",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "_tokenId",

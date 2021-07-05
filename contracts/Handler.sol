@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "./ControlCenter.sol";
 import "./Pack.sol";
+import "./Market.sol";
 import "./AssetSafe.sol";
 
 import "./interfaces/RNGInterface.sol";
@@ -23,6 +24,7 @@ contract Handler {
   ControlCenter internal controlCenter;
 
   string public constant PACK = "PACK";
+  string public constant MARKET = "MARKET";
   string public constant RNG = "RNG";
   string public constant ASSET_SAFE = "ASSET_SAFE";
 
@@ -53,7 +55,7 @@ contract Handler {
     string calldata _packURI, 
     uint[] calldata _rewardIds, 
     uint[] calldata _amounts
-  ) external returns (uint packTokenId) {
+  ) public returns (uint packTokenId, uint totalSupply) {
 
     // TODO : Check whether `_rewardContract` is IERC1155.
     require(_rewardIds.length == _amounts.length, "Must specify equal number of IDs and amounts.");
@@ -68,6 +70,7 @@ contract Handler {
 
     // Get pack tokenId
     packTokenId = packToken()._tokenId();
+    totalSupply = sumArr(_amounts);
 
     // Store pack state
     packs[packTokenId] = PackState({
@@ -77,7 +80,30 @@ contract Handler {
     });
 
     // Mint pack tokens to `msg.sender`
-    packToken().mintToken(msg.sender, packTokenId, sumArr(_amounts), _packURI);
+    packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
+  }
+
+  /// @dev Lets a pack token owner list pack tokens for sale.
+  function listPacks(uint _packId, address _currency, uint _price, uint _quantity) public {
+    require(packToken().balanceOf(msg.sender, _packId) >= _quantity, "Cannot sell more packs than you own.");
+
+    market().listPacks(msg.sender, _packId, _currency, _price, _quantity);
+  }
+
+  /// @dev Creates pack tokens with the relevant rewards and lists them for sale.
+  function createPackAndList(
+    address _rewardContract,
+    string calldata _packURI, 
+    uint[] calldata _rewardIds, 
+    uint[] calldata _amounts,
+
+    address _currency,
+    uint _price
+  ) external {
+    // Create pack with the relevant rewards.
+    (uint packTokenId, uint totalSupply) = createPack(_rewardContract, _packURI, _rewardIds, _amounts);
+    // List packs on sale.
+    listPacks(packTokenId, _currency, _price, totalSupply);
   }
 
   /// @notice Lets a pack token owner open a single pack
@@ -159,6 +185,11 @@ contract Handler {
   /// @dev Returns pack protocol's reward ERC1155 contract.
   function packToken() internal view returns (Pack) {
     return Pack(controlCenter.getModule(PACK));
+  }
+
+  /// @dev Returns pack protocol's Market.
+  function market() internal view returns (Market) {
+    return Market(controlCenter.getModule((MARKET)));
   }
 
   /// @dev Returns pack protocol's RNG.

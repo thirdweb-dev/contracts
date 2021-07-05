@@ -19,6 +19,7 @@ contract Market is ReentrancyGuard {
   ControlCenter internal controlCenter;
 
   string public constant PACK = "PACK";
+  string public constant HANDLER = "HANDLER";
   string public constant ASSET_SAFE = "ASSET_SAFE";
 
   enum ListingType { Pack, Reward }
@@ -52,18 +53,23 @@ contract Market is ReentrancyGuard {
     _;
   }
 
+  modifier onlyHandler() {
+    require(msg.sender == controlCenter.getModule(HANDLER), "Only the handler can call this function.");
+    _;
+  }
+
   constructor(address _controlCenter) {
     controlCenter = ControlCenter(_controlCenter);
   }
 
   /// @notice Lets `msg.sender` list a given amount of pack tokens for sale.
-  function listPacks(uint _tokenId, address _currency, uint _price, uint _quantity) external {
-    require(packToken().isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer pack tokens.");
+  function listPacks(address _onBehalfOf, uint _tokenId, address _currency, uint _price, uint _quantity) external onlyHandler {
+    require(packToken().isApprovedForAll(_onBehalfOf, address(this)), "Must approve the market to transfer pack tokens.");
     require(_quantity > 0, "Must list at least one token");
 
     // Transfer tokens being listed to Pack Protocol's asset manager.
     packToken().safeTransferFrom(
-      msg.sender,
+      _onBehalfOf,
       address(assetSafe()),
       _tokenId,
       _quantity,
@@ -71,15 +77,15 @@ contract Market is ReentrancyGuard {
     );
 
     // Store listing state.
-    listings[msg.sender][_tokenId] = Listing({
-      owner: msg.sender,
+    listings[_onBehalfOf][_tokenId] = Listing({
+      owner: _onBehalfOf,
       tokenId: _tokenId,
       currency: _currency,
       price: _price,
       quantity: _quantity
     });
 
-    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity, ListingType.Pack);
+    emit NewListing(_onBehalfOf, _tokenId, _currency, _price, _quantity, ListingType.Pack);
   }
 
   /// @notice Lets `msg.sender` list a given amount of pack tokens for sale.

@@ -25,6 +25,19 @@
   },
   {
     "inputs": [],
+    "name": "MARKET",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "PACK",
     "outputs": [
       {
@@ -78,8 +91,51 @@
         "internalType": "uint256",
         "name": "packTokenId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalSupply",
+        "type": "uint256"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_rewardContract",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_packURI",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_rewardIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address",
+        "name": "_currency",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
+      }
+    ],
+    "name": "createPackAndList",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -97,6 +153,34 @@
       }
     ],
     "name": "fulfillRandomness",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_packId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_currency",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_quantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "listPacks",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

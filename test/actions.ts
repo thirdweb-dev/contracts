@@ -98,16 +98,13 @@ describe("Testing main actions", function() {
     // Call the Access Packs contract to create rewards.
     await accessPacks.connect(creator).createRewards(rewardURIs, rewardSupplies);
 
-    // Call Handler to create pack with rewards.
-    const rewardIds: number[] = [0,1,2];
-    await handler.connect(creator).createPack(accessPacks.address, packURI, rewardIds, rewardSupplies);
-
-    // Call Market to list packs on sale.
+    // Call Handler to create pack with rewards and list on sale.
     const packId: BigNumber = BigNumber.from(0);
     const packQuantityToSell: BigNumber = BigNumber.from(
       rewardSupplies.reduce((a,b) => a+b)
     );
-    await market.connect(creator).listPacks(packId, saleCurrency, salePrice, packQuantityToSell);
+    const rewardIds: number[] = [0,1,2];
+    await handler.connect(creator).createPackAndList(accessPacks.address, packURI, rewardIds, rewardSupplies, saleCurrency, salePrice);
 
     // All reward tokens must be locked in the protocol's asset safe.
     for(let i = 0; i < rewardURIs.length; i++) {
