@@ -33,6 +33,8 @@ contract Pack is ERC1155PresetMinterPauser {
     _setupRole(DEFAULT_ADMIN_ROLE, _controlCenter);
     _setupRole(PAUSER_ROLE, _controlCenter);
 
+    _setupRole(MINTER_ROLE, controlCenter.getModule(HANDLER));
+
     revokeRole(MINTER_ROLE, msg.sender);
     revokeRole(PAUSER_ROLE, msg.sender);
     revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -87,5 +89,10 @@ contract Pack is ERC1155PresetMinterPauser {
   /// @notice See the ERC1155 API. Returns the token URI of the token with id `tokenId`
   function uri(uint id) public view override returns (string memory) {
     return tokens[id].uri;
+  }
+
+  /// @notice Returns creator of tokens.
+  function creator(uint _packId) external view returns (address) {
+    return tokens[_packId].creator;
   }
 }

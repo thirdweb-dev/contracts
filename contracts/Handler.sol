@@ -49,11 +49,11 @@ contract Handler {
 
   /// @dev Creates a pack with rewards.
   function createPack(
-    string calldata _packURI, 
     address _rewardContract,
+    string calldata _packURI, 
     uint[] calldata _rewardIds, 
     uint[] calldata _amounts
-  ) external returns (uint packTokenId, uint totalSupply) {
+  ) external returns (uint packTokenId) {
 
     // TODO : Check whether `_rewardContract` is IERC1155.
     require(_rewardIds.length == _amounts.length, "Must specify equal number of IDs and amounts.");
@@ -68,7 +68,6 @@ contract Handler {
 
     // Get pack tokenId
     packTokenId = packToken()._tokenId();
-    totalSupply = sumArr(_amounts);
 
     // Store pack state
     packs[packTokenId] = PackState({
@@ -77,8 +76,8 @@ contract Handler {
       rarityNumerators: _amounts
     });
 
-    // Mint pack tokens to `_onBehalfOf`
-    packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
+    // Mint pack tokens to `msg.sender`
+    packToken().mintToken(msg.sender, packTokenId, sumArr(_amounts), _packURI);
   }
 
   /// @notice Lets a pack token owner open a single pack

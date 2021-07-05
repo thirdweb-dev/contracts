@@ -19,6 +19,7 @@
     "scripts/**/*",
     "tasks/**/*",
     "test/**/*",
+    "test/*",
     "typechain/**/*",
     "types/**/*",
     "hardhat.config.ts"

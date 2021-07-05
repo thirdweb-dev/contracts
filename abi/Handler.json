@@ -52,14 +52,14 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_packURI",
-        "type": "string"
-      },
-      {
         "internalType": "address",
         "name": "_rewardContract",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_packURI",
+        "type": "string"
       },
       {
         "internalType": "uint256[]",
@@ -77,11 +77,6 @@
       {
         "internalType": "uint256",
         "name": "packTokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalSupply",
         "type": "uint256"
       }
     ],

@@ -82,9 +82,7 @@ describe("Deploying $PACK Protocol and Access Packs contracts", function() {
     expect(
       await controlCenter.getModule(await controlCenter.ASSET_SAFE())
     ).to.equal(assetSafe.address)
-
-    // Grant MINTER_ROLE in `Pack` to `Handler`
-    await controlCenter.grantRoleERC1155(MINTER_ROLE, handler.address);
+    
 
     const DEFAULT_ADMIN_ROLE: BytesLike = await controlCenter.DEFAULT_ADMIN_ROLE();
 
@@ -111,7 +109,7 @@ describe("Deploying $PACK Protocol and Access Packs contracts", function() {
     // ... Initialize pack protocol. Then:
 
     const AccessPacks_Factory: ContractFactory = await ethers.getContractFactory("AccessPacks");
-    const accessPacks: Contract = await AccessPacks_Factory.deploy(controlCenter.address);
+    const accessPacks: Contract = await AccessPacks_Factory.deploy();
 
     // Check AccessControl rights
     const DEFAULT_ADMIN_ROLE: BytesLike = await controlCenter.DEFAULT_ADMIN_ROLE();

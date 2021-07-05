@@ -11,7 +11,7 @@ import "./ControlCenter.sol";
 
 pragma solidity ^0.8.0;
 
-contract AssetSafe is AccessControl, IERC1155Receiver {
+contract AssetSafe is IERC1155Receiver {
 
   ControlCenter internal controlCenter;
 
@@ -20,7 +20,6 @@ contract AssetSafe is AccessControl, IERC1155Receiver {
 
   constructor(address _controlCenter) {
     controlCenter = ControlCenter(_controlCenter);
-    _setupRole(DEFAULT_ADMIN_ROLE, _controlCenter);
   }
 
   modifier onlyProtocolModules() {
@@ -41,6 +40,11 @@ contract AssetSafe is AccessControl, IERC1155Receiver {
 
   function market() internal view returns (address) {
     return controlCenter.getModule(MARKET);
+  }
+
+  /// @dev See EIP 165
+  function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+    return interfaceId == 0xd9b67a26;
   }
 
   /// @dev See `IERC1155Receiver.sol`
