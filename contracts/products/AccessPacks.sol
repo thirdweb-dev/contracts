@@ -30,7 +30,6 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
   }
 
   /// @notice Pack and reward events.
-  event PackCreated(uint indexed packId, string packURI, uint packSupplies);
   event RewardsCreated(uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
 
   /// @dev Reward tokenId => Reward state.
