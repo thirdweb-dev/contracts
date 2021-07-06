@@ -39,6 +39,10 @@ contract Handler {
     uint packId;
   }
 
+  event PackCreated(address indexed _rewardContract, uint packId, string packURI, uint[] rewardIds, uint[] rewardAmounts);
+  event PackOpened(uint indexed packId, address indexed opener);
+  event RewardDistributed(uint indexed packId, uint indexed rewardId, address indexed receiver);
+
   constructor(address _controlCenter) {
     controlCenter = ControlCenter(_controlCenter);
   }
@@ -81,6 +85,8 @@ contract Handler {
 
     // Mint pack tokens to `msg.sender`
     packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
+
+    emit PackCreated(_rewardContract, packTokenId, _packURI, _rewardIds, _amounts);
   }
 
   /// @dev Lets a pack token owner list pack tokens for sale.
@@ -107,8 +113,8 @@ contract Handler {
   }
 
   /// @notice Lets a pack token owner open a single pack
-  function openPack(uint packId) external {
-    require(packToken().balanceOf(msg.sender, packId) > 0, "Sender owns no packs of the given packId.");
+  function openPack(uint _packId) external {
+    require(packToken().balanceOf(msg.sender, _packId) > 0, "Sender owns no packs of the given packId.");
     require(packToken().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn the pack.");
 
     if(rng().usingExternalService()) {
@@ -128,7 +134,7 @@ contract Handler {
 
       randomnessRequests[requestId] = RandomnessRequest({
         packOpener: msg.sender,
-        packId: packId
+        packId: _packId
       });
       
     } else {
@@ -137,10 +143,12 @@ contract Handler {
       
       distributeReward(
         msg.sender,
-        packId, 
-        getRandomReward(packId, randomness)
+        _packId, 
+        getRandomReward(_packId, randomness)
       );
     }
+
+    emit PackOpened(_packId, msg.sender);
   }
 
   /// @dev Called by protocol RNG when using an external random number provider.
@@ -180,6 +188,8 @@ contract Handler {
 
     // Mint the appropriate reward token.
     assetSafe().transferERC1155(packs[_packId].rewardContract, _receiver, _rewardId, 1);
+
+    emit RewardDistributed(_packId, _rewardId, _receiver);
   }
 
   /// @dev Returns pack protocol's reward ERC1155 contract.
