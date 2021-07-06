@@ -192,6 +192,21 @@ contract Handler {
     emit RewardDistributed(_packId, _rewardId, _receiver);
   }
 
+  /// @dev Returns the reward token Ids in a given pack.
+  function getRewardIds(uint _packId) external view returns(uint[] memory) {
+    return packs[_packId].rewardTokenIds;
+  }
+
+  /// @dev Returns the rarity numerators for the rewards in a given pack.
+  function getRarityNumerators(uint _packId) external view returns(uint[] memory) {
+    return packs[_packId].rarityNumerators;
+  }
+
+  /// @dev Returns the token contract of the rewards in a pack.
+  function getRewardContract(uint _packId) external view returns (address) {
+    return packs[_packId].rewardContract;
+  } 
+
   /// @dev Returns pack protocol's reward ERC1155 contract.
   function packToken() internal view returns (Pack) {
     return Pack(controlCenter.getModule(PACK));
