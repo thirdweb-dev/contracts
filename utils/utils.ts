@@ -45,6 +45,25 @@ const WETH_DAI_SUSHI = {
     pair: "0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f"
 }
 
+const rWETH_DAI_UNI = {
+    name: "rWETH_DAI_UNI",
+    tokenA: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+    tokenB: "0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735",
+    pair: "0x8B22F85d0c844Cf793690F6D9DFE9F11Ddb35449"
+}
+
+const rWETH_DAI_PAIR_TWO = {
+    name: "rWETH_DAI_PAIR_TWO",
+    tokenA: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+    tokenB: "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa",
+    pair: "0x03E6c12eF405AC3F642B9184eDed8E1322de1a9e"
+}
+
+export const rinkebyPairs = [
+    rWETH_DAI_UNI,
+    rWETH_DAI_PAIR_TWO
+]
+
 export const pairs = [
     WETH_USDC_UNI,
     WETH_USDT_UNI,
