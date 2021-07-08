@@ -11,18 +11,18 @@ const accessPacksObj = {
   abi: accessPacksABI
 }
 
-async function main() {
+const rewardURIs: string[] = [
+  "ipfs://QmUEfhF9FpucMVfjySnDmFvq3nKwGNtNk83qDwMEt3JDCL",
+  "ipfs://QmXmp3FWWELBwb7wxRD98ps96iYRUXUycPvd1LQ23WhRhW",
+  "ipfs://QmUxgEgxvFeiJHAMLK9oWpS6yZmR8EzyJpzQmCc2Gv99U6"
+]
+
+const rewardSupplies: number[] = [5, 10, 20];
+
+async function createRewards(rewardURIs: string[], rewardSupplies: number[]) {
   const [deployer]: Signer[] = await ethers.getSigners();
 
   const accessPacks: Contract = new ethers.Contract(accessPacksObj.address, accessPacksObj.abi, deployer);
-
-  const rewardURIs: string[] = [
-    "ipfs://QmUEfhF9FpucMVfjySnDmFvq3nKwGNtNk83qDwMEt3JDCL",
-    "ipfs://QmXmp3FWWELBwb7wxRD98ps96iYRUXUycPvd1LQ23WhRhW",
-    "QmUxgEgxvFeiJHAMLK9oWpS6yZmR8EzyJpzQmCc2Gv99U6"
-  ]
-
-  const rewardSupplies = [5, 10, 20];
 
   const createRewardsTx = await accessPacks.createNativeRewards(rewardURIs, rewardSupplies);
   console.log("Creating rewards: ", createRewardsTx.hash);
@@ -30,7 +30,7 @@ async function main() {
   await createRewardsTx.wait();
 }
 
-main()
+createRewards(rewardURIs, rewardSupplies)
     .then(() => process.exit(0))
     .catch(err => {
       console.error(err)
