@@ -113,7 +113,7 @@ describe("Testing main actions", function() {
   it("Create a pack with rewards and list for sale", async () => {
 
     // Call the Access Packs contract to create rewards.
-    await accessPacks.connect(creator).createRewards(rewardURIs, rewardSupplies);
+    await accessPacks.connect(creator).createNativeRewards(rewardURIs, rewardSupplies);
 
     // Check whether `rewards` mapping in AccessPacks.sol has updated correctly.
     for(let i = 0; i < rewardURIs.length; i++) {
