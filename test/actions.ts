@@ -2,7 +2,9 @@ import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BigNumber } from "ethers";
 import { expect } from "chai";
 
-import { chainlinkVars, forkFrom, pairs } from "../utils/utils";
+import { forkFrom } from "../utils/mainnetFork";
+import { chainlinkVarsRinkeby } from "../utils/chainlink";
+import { pairs } from "../utils/ammPairs";
 
 describe("Testing main actions", function() {
 
@@ -56,7 +58,7 @@ describe("Testing main actions", function() {
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
     market = await Market_Factory.deploy(controlCenter.address);
 
-    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVars;
+    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
     
     const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
     rng = await RNG_Factory.deploy(

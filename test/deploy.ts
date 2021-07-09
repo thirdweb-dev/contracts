@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BytesLike } from "ethers";
 import { expect } from "chai";
 
-import { chainlinkVars } from "../utils/utils";
+import { chainlinkVarsRinkeby } from "../utils/chainlink";
 
 describe("Deploying $PACK Protocol and Access Packs contracts", function() {
 
@@ -40,7 +40,7 @@ describe("Deploying $PACK Protocol and Access Packs contracts", function() {
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
     const market: Contract = await Market_Factory.deploy(controlCenter.address);
 
-    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVars;
+    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
     
     const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
     const rng: Contract = await RNG_Factory.deploy(

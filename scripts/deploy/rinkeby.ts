@@ -1,6 +1,7 @@
 import { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from 'ethers';
-import { chainlinkVars, rinkebyPairs } from "../../utils/utils";
+import { chainlinkVarsRinkeby } from "../../utils/chainlink";
+import { rinkebyPairs } from "../../utils/ammPairs";
 
 async function main() {
   await run("compile");
@@ -33,7 +34,7 @@ async function main() {
 
   console.log(`Market.sol address: ${market.address}`);
 
-  const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVars;
+  const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
   
   const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
   const rng: Contract = await RNG_Factory.deploy(
