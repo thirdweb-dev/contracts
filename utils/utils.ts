@@ -85,7 +85,7 @@ export const forkFrom = async (blockNumber: any) => {
       params: [
         {
           forking: {
-            jsonRpcUrl: process.env.ALCHEMY_ENDPOINT_MAINNET,
+            jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
             blockNumber: blockNumber,
           },
         },
