@@ -1,34 +1,12 @@
-import { ethers } from 'hardhat';
-import { Signer, Contract, BigNumber } from 'ethers';
 import * as dotenv from 'dotenv';
-
-import packABI from '../../abi/Pack.json';
-import handlerABI from '../../abi/Handler.json';
-import marketAbi  from '../../abi/Market.json';
-import accessPacksABI from '../../abi/AccessPacks.json';
-
 dotenv.config();
 
-const packObj = {
-  address: "0x982Fe0d70Da1BEaa396778830ACcF19062c83a6E",
-  abi: packABI
-}
+import { ethers } from 'hardhat';
+import { Wallet, Contract, BigNumber } from 'ethers';
 
-const handlerObj = {
-  address: "0xE0c4F0058f339Ac5881ad1FDcfdF3a16190E94Eb",
-  abi: handlerABI
-}
+import  { marketObj, accessPacksObj } from '../../utils/contracts';
 
-const marketObj = {
-  address: "0x4e894D3664648385f18D6497bdEaC0574F91B48B",
-  abi: marketAbi
-}
-
-const accessPacksObj = {
-  address: "0xB98C0E788fb82297a73E32296e246653390eCE68",
-  abi: accessPacksABI
-}
-
+// Transaction parameters.
 const rewardContract = accessPacksObj.address;
 const rewardId: BigNumber = BigNumber.from(2);
 const saleCurrency: string = "0x0000000000000000000000000000000000000000";
@@ -42,18 +20,25 @@ async function listRewards(
   pricePerToken: BigNumber,
   quantityToSell: BigNumber
 ) {
-
-  const [rewardOwner]: Signer[] = await ethers.getSigners();
   
+  // Setting manual gas limit.
   const manualGasLimit: number = 1000000; // 1 mil
 
-  const market: Contract = new ethers.Contract(marketObj.address, marketObj.abi, rewardOwner);
-  const accessPacks: Contract = new ethers.Contract(accessPacksObj.address, accessPacksObj.abi, rewardOwner);
+  // Get Wallet instance.
+  const rinkebyProvider = new ethers.providers.JsonRpcProvider(`https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`, "rinkeby");
+  const privateKey = process.env.TEST_PRIVATE_KEY || "";
+  const rinkebyWallet: Wallet = new ethers.Wallet(privateKey, rinkebyProvider);
 
+  // Get contract instances conencted with wallet.
+  const market: Contract = new ethers.Contract(marketObj.address, marketObj.abi, rinkebyWallet);
+  const accessPacks: Contract = new ethers.Contract(accessPacksObj.address, accessPacksObj.abi, rinkebyWallet);
+
+  // Approve Market to transfer reward tokens.
   const approveMarketTx = await accessPacks.setApprovalForAll(market.address, true);
   console.log("Approving Market for pack tokens: ", approveMarketTx.hash);
   await approveMarketTx.wait()
 
+  // List reward tokens on sale.
   const listRewardsTx = await market.listRewards(rewardContract, tokenId, currency, pricePerToken, quantityToSell, {
     gasLimit: manualGasLimit
   });

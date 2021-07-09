@@ -1,38 +1,38 @@
-import { ethers } from 'hardhat';
-import { Signer, Contract } from 'ethers';
 import * as dotenv from 'dotenv';
-
 dotenv.config();
 
-import accessPacksABI from '../../abi/AccessPacks.json';
+import { ethers } from 'hardhat';
+import { Contract, Wallet } from 'ethers';
 
-const accessPacksObj = {
-  address: "0xB98C0E788fb82297a73E32296e246653390eCE68",
-  abi: accessPacksABI
-}
+import { accessPacksObj } from '../../utils/contracts';
 
+// Transaction parameters.
 const rewardURIs: string[] = [
   "ipfs://QmUEfhF9FpucMVfjySnDmFvq3nKwGNtNk83qDwMEt3JDCL",
   "ipfs://QmXmp3FWWELBwb7wxRD98ps96iYRUXUycPvd1LQ23WhRhW",
   "ipfs://QmUxgEgxvFeiJHAMLK9oWpS6yZmR8EzyJpzQmCc2Gv99U6"
 ]
-
 const rewardSupplies: number[] = [5, 10, 20];
 
 async function createRewards(rewardURIs: string[], rewardSupplies: number[]) {
-  const [deployer]: Signer[] = await ethers.getSigners();
+  
+  // Get Wallet instance.
+  const rinkebyProvider = new ethers.providers.JsonRpcProvider(`https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`, "rinkeby");
+  const privateKey = process.env.TEST_PRIVATE_KEY || "";
+  const rinkebyWallet: Wallet = new ethers.Wallet(privateKey, rinkebyProvider);
 
-  const accessPacks: Contract = new ethers.Contract(accessPacksObj.address, accessPacksObj.abi, deployer);
+  // Get contract instance connected to wallet.
+  const accessPacks: Contract = new ethers.Contract(accessPacksObj.address, accessPacksObj.abi, rinkebyWallet);
 
+  // Create rewards.
   const createRewardsTx = await accessPacks.createNativeRewards(rewardURIs, rewardSupplies);
   console.log("Creating rewards: ", createRewardsTx.hash);
-
   await createRewardsTx.wait();
 }
 
 createRewards(rewardURIs, rewardSupplies)
-    .then(() => process.exit(0))
-    .catch(err => {
-      console.error(err)
-      process.exit(1)
-    })
+  .then(() => process.exit(0))
+  .catch(err => {
+    console.error(err)
+    process.exit(1)
+  })
