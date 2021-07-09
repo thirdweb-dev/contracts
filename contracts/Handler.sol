@@ -80,13 +80,14 @@ contract Handler {
       rarityNumerators: _amounts
     });
 
+    emit PackCreated(msg.sender, _rewardContract, packTokenId, _packURI, totalSupply);
+    
     // Mint pack tokens to `msg.sender`
     packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
 
     // Transfer ERC 1155 reward tokens Pack Protocol's asset manager. Will revert if `msg.sender` does not own the given `_amounts` of tokens.
     IERC1155(_rewardContract).safeBatchTransferFrom(msg.sender, address(assetSafe()), _rewardIds, _amounts, "");
 
-    emit PackCreated(msg.sender, _rewardContract, packTokenId, _packURI, totalSupply);
     emit PackRewards(packTokenId, _rewardContract, _rewardIds, _amounts);
   }
 
