@@ -35,13 +35,23 @@ Install dependencies
   yarn install
 ```
 
-Run tests by running
+## Run tests and scripts
+
+Add a `.env` file to the project's root directory. Update the `.env` file with the values mentioned in the provided `.env.example` file.
+
+Run tests
 
 ```bash
   npx hardhat test
 ```
+
+To use scripts, update the transaction parameters in the particular script and run
+
+```bash
+  npx hardhat run scripts/txs/${testFileName}.ts --network rinkeby
+```
   
-## Deployment
+## Deploying contracts
 
 To deploy this project on a given network (e.g. rinkeby) update the `hardhat.config.ts` file with the following
 
@@ -63,7 +73,7 @@ Finally, run
 To verify the deployment on Etherscan
 
 ```bash
-  npx hardhat verify --network rinkeby $contract-address $constructor-args
+  npx hardhat verify --network rinkeby ${contract-address} ${constructor-args}
 ```
   
 ## Feedback
