@@ -4,6 +4,7 @@ import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "hardhat-abi-exporter";
 import "@nomiclabs/hardhat-etherscan";
+import "solidity-coverage";
 
 import "./tasks/accounts";
 import "./tasks/clean";
