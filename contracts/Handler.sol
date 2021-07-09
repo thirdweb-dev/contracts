@@ -39,7 +39,8 @@ contract Handler {
     uint packId;
   }
 
-  event PackCreated(address indexed _rewardContract, uint packId, string packURI, uint[] rewardIds, uint[] rewardAmounts);
+  event PackCreated(address indexed creator, address indexed _rewardContract, uint indexed packId, string packURI, uint totalSupply);
+  event PackRewards(uint indexed packId, address indexed _rewardContract, uint[] rewardIds, uint[] rewardAmounts);
   event PackOpened(uint indexed packId, address indexed opener);
   event RewardDistributed(uint indexed packId, uint indexed rewardId, address indexed receiver);
 
@@ -68,10 +69,6 @@ contract Handler {
       "Must approve handler to transer the required reward tokens."
     );
 
-    // Transfer ERC 1155 reward tokens Pack Protocol's asset manager.
-    // Will revert if `msg.sender` does not own the given `_amounts` of reward tokens.
-    IERC1155(_rewardContract).safeBatchTransferFrom(msg.sender, address(assetSafe()), _rewardIds, _amounts, "");
-
     // Get pack tokenId
     packTokenId = packToken()._tokenId();
     totalSupply = sumArr(_amounts);
@@ -86,7 +83,11 @@ contract Handler {
     // Mint pack tokens to `msg.sender`
     packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
 
-    emit PackCreated(_rewardContract, packTokenId, _packURI, _rewardIds, _amounts);
+    // Transfer ERC 1155 reward tokens Pack Protocol's asset manager. Will revert if `msg.sender` does not own the given `_amounts` of tokens.
+    IERC1155(_rewardContract).safeBatchTransferFrom(msg.sender, address(assetSafe()), _rewardIds, _amounts, "");
+
+    emit PackCreated(msg.sender, _rewardContract, packTokenId, _packURI, totalSupply);
+    emit PackRewards(packTokenId, _rewardContract, _rewardIds, _amounts);
   }
 
   /// @dev Lets a pack token owner list pack tokens for sale.

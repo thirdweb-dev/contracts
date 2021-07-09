@@ -22,12 +22,15 @@ contract Market is ReentrancyGuard {
   string public constant HANDLER = "HANDLER";
   string public constant ASSET_SAFE = "ASSET_SAFE";
 
-  enum ListingType { Pack, Reward }
+  event NewPackListing(address indexed seller, uint indexed packId, address currency, uint price, uint quantity);
+  event NewPackSale(address indexed seller, address indexed buyer, uint indexed packId, address currency, uint price, uint quantity);
+  event PackListingUpdate(address indexed seller, uint indexed packId, address currency, uint price, uint quantity);
+  event PackUnlisted(address indexed seller, uint indexed packId, uint quantity);
 
-  event NewListing(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity, ListingType listingType);
-  event NewSale(address indexed seller, address indexed buyer, uint indexed tokenId, address currency, uint price, uint quantity);
-  event ListingUpdate(address indexed seller, uint indexed tokenId, address currency, uint price, uint quantity);
-  event Unlisted(address indexed seller, uint indexed tokenId, uint quantity);
+  event NewRewardListing(address indexed rewardContract, address indexed seller, uint indexed rewardId, address currency, uint price, uint quantity);
+  event NewRewardSale(address indexed rewardContract, address indexed seller, address indexed buyer, uint rewardId, address currency, uint price, uint quantity);
+  event RewardListingUpdate(address indexed rewardContract, address indexed seller, uint indexed packId, address currency, uint price, uint quantity);
+  event RewardUnlisted(address indexed rewardContract, address indexed seller, uint indexed packId, uint quantity);
 
   uint public constant MAX_BPS = 10000; // 100%
   uint public protocolFeeBps = 500; // 5%
@@ -85,7 +88,7 @@ contract Market is ReentrancyGuard {
       quantity: _quantity
     });
 
-    emit NewListing(_onBehalfOf, _tokenId, _currency, _price, _quantity, ListingType.Pack);
+    emit NewPackListing(_onBehalfOf, _tokenId, _currency, _price, _quantity);
   }
 
   /// @notice Lets `msg.sender` list a given amount of pack tokens for sale.
@@ -112,7 +115,7 @@ contract Market is ReentrancyGuard {
       quantity: _quantity
     });
 
-    emit NewListing(msg.sender, _tokenId, _currency, _price, _quantity, ListingType.Reward);
+    emit NewRewardListing(_rewardContract, msg.sender, _tokenId, _currency, _price, _quantity);
   }
 
   /// @notice Lets a seller unlist `quantity` amount of tokens.
@@ -122,7 +125,7 @@ contract Market is ReentrancyGuard {
     // Transfer way tokens being unlisted.
     assetSafe().transferERC1155(address(packToken()), msg.sender, _tokenId, _quantity);
 
-    emit Unlisted(msg.sender, _tokenId, _quantity);
+    emit PackUnlisted(msg.sender, _tokenId, _quantity);
   }
 
   /// @notice Lets a seller unlist `quantity` amount of tokens.
@@ -132,7 +135,7 @@ contract Market is ReentrancyGuard {
     // Transfer way tokens being unlisted.
     assetSafe().transferERC1155(_rewardContract, msg.sender, _tokenId, _quantity);
 
-    emit Unlisted(msg.sender, _tokenId, _quantity);
+    emit RewardUnlisted(_rewardContract, msg.sender, _tokenId, _quantity);
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
@@ -142,7 +145,7 @@ contract Market is ReentrancyGuard {
     listings[msg.sender][tokenId].price = _newPrice;
     listings[msg.sender][tokenId].currency = _newCurrency;
 
-    emit ListingUpdate(
+    emit PackListingUpdate(
       msg.sender,
       tokenId,
       listings[msg.sender][tokenId].currency, 
@@ -158,7 +161,8 @@ contract Market is ReentrancyGuard {
     rewardListings[_rewardContract][msg.sender][tokenId].price = _newPrice;
     rewardListings[_rewardContract][msg.sender][tokenId].currency = _newCurrency;
 
-    emit ListingUpdate(
+    emit RewardListingUpdate(
+      _rewardContract,
       msg.sender,
       tokenId,
       listings[msg.sender][tokenId].currency, 
@@ -188,7 +192,7 @@ contract Market is ReentrancyGuard {
     // Update quantity of tokens in the listing.
     listings[_from][_tokenId].quantity -= _quantity;
 
-    emit NewSale(_from, msg.sender, _tokenId, listing.currency, listing.price, _quantity);
+    emit NewPackSale(_from, msg.sender, _tokenId, listing.currency, listing.price, _quantity);
   }
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
@@ -221,7 +225,7 @@ contract Market is ReentrancyGuard {
     // Update quantity of tokens in the listing.
     rewardListings[_rewardContract][_from][_tokenId].quantity -= _quantity;
 
-    emit NewSale(_from, msg.sender, _tokenId, listing.currency, listing.price, _quantity);
+    emit NewRewardSale(_rewardContract, _from, msg.sender, _tokenId, listing.currency, listing.price, _quantity);
   }
 
   /// @notice Distributes relevant shares of the sale value (in ERC20 token) to the seller, creator and protocol.
