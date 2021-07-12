@@ -7,19 +7,19 @@ from the pack is distributed to the pack opener.
 The contracts in the `/contracts` directory are deployed on the following networks.
 
 ### Rinkeby
-- `ControlCenter.sol`: [0xafB82b9036345De038771B8B01E6A76eBc01E1FC](https://rinkeby.etherscan.io/address/0xafB82b9036345De038771B8B01E6A76eBc01E1FC#code)
+- `ControlCenter.sol`: [0xBF0f4Dc9B3E59a3bF69685D3cE8a04D78675c255](https://rinkeby.etherscan.io/address/0xBF0f4Dc9B3E59a3bF69685D3cE8a04D78675c255#code)
 
-- `Pack.sol`: [0x982Fe0d70Da1BEaa396778830ACcF19062c83a6E](https://rinkeby.etherscan.io/address/0x982Fe0d70Da1BEaa396778830ACcF19062c83a6E#code)
+- `Pack.sol`: [0x3A6701A5D1cb6Cd2A8886aFFeE3012E2396bA755](https://rinkeby.etherscan.io/address/0x3A6701A5D1cb6Cd2A8886aFFeE3012E2396bA755#code)
 
-- `Handler.sol`: [0xE0c4F0058f339Ac5881ad1FDcfdF3a16190E94Eb](https://rinkeby.etherscan.io/address/0xE0c4F0058f339Ac5881ad1FDcfdF3a16190E94Eb#code)
+- `Handler.sol`: [0x87a041FFdf941a305d8d0A581080972ff8e1Fd42](https://rinkeby.etherscan.io/address/0x87a041FFdf941a305d8d0A581080972ff8e1Fd42#code)
 
-- `Market.sol`: [0x4e894D3664648385f18D6497bdEaC0574F91B48B](https://rinkeby.etherscan.io/address/0x4e894D3664648385f18D6497bdEaC0574F91B48B#code)
+- `Market.sol`: [0xDd8C26Bb12dc8cC31E572Cc8e83919c4d02fad5e](https://rinkeby.etherscan.io/address/0xDd8C26Bb12dc8cC31E572Cc8e83919c4d02fad5e#code)
 
-- `RNG.sol`: [0x302506376b143D368f84863652E1508D38931696](https://rinkeby.etherscan.io/address/0x302506376b143D368f84863652E1508D38931696#code)
+- `RNG.sol`: [0x38FCAa08CC0ADcFEcfc8488EeB49f67Ab58E4A9A](https://rinkeby.etherscan.io/address/0x38FCAa08CC0ADcFEcfc8488EeB49f67Ab58E4A9A#code)
 
-- `AssetSafe.sol`: [0xFd257547e15F9101D33173F4D062a237C2Db1B07](https://rinkeby.etherscan.io/address/0xFd257547e15F9101D33173F4D062a237C2Db1B07#code)
+- `AssetSafe.sol`: [0x9b6962a5a1Bc2E1Fa0508fe933310B51FC6063e1](https://rinkeby.etherscan.io/address/0x9b6962a5a1Bc2E1Fa0508fe933310B51FC6063e1#code)
 
-- `AccessPacks.sol`: [0xB98C0E788fb82297a73E32296e246653390eCE68](https://rinkeby.etherscan.io/address/0xB98C0E788fb82297a73E32296e246653390eCE68#code)
+- `AccessPacks.sol`: [0x16611A37a86B7C35b2d5C316402Ecc24f18B36e2](https://rinkeby.etherscan.io/address/0x16611A37a86B7C35b2d5C316402Ecc24f18B36e2#code)
 
 ## Run Locally
 
