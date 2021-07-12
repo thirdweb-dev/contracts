@@ -262,7 +262,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "packId",
+        "name": "rewardId",
         "type": "uint256"
       },
       {
@@ -305,7 +305,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "packId",
+        "name": "rewardId",
         "type": "uint256"
       },
       {

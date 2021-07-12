@@ -29,8 +29,8 @@ contract Market is ReentrancyGuard {
 
   event NewRewardListing(address indexed rewardContract, address indexed seller, uint indexed rewardId, address currency, uint price, uint quantity);
   event NewRewardSale(address indexed rewardContract, address indexed seller, address indexed buyer, uint rewardId, address currency, uint price, uint quantity);
-  event RewardListingUpdate(address indexed rewardContract, address indexed seller, uint indexed packId, address currency, uint price, uint quantity);
-  event RewardUnlisted(address indexed rewardContract, address indexed seller, uint indexed packId, uint quantity);
+  event RewardListingUpdate(address indexed rewardContract, address indexed seller, uint indexed rewardId, address currency, uint price, uint quantity);
+  event RewardUnlisted(address indexed rewardContract, address indexed seller, uint indexed rewardId, uint quantity);
 
   uint public constant MAX_BPS = 10000; // 100%
   uint public protocolFeeBps = 500; // 5%

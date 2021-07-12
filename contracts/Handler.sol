@@ -13,12 +13,6 @@ import "./AssetSafe.sol";
 
 import "./interfaces/RNGInterface.sol";
 
-/**
- * The $PACK Protocol wraps arbitrary assets (ERC20, ERC721, ERC1155 tokens) into ERC 1155 reward tokens. These reward tokens are
- * bundled into ERC 1155 pack tokens. Opening a pack distributes a reward randomly selected from the pack to the opener. Both pack
- * and reward tokens can be airdropped or sold.
- */
-
 contract Handler {
 
   ControlCenter internal controlCenter;
@@ -39,8 +33,8 @@ contract Handler {
     uint packId;
   }
 
-  event PackCreated(address indexed creator, address indexed _rewardContract, uint indexed packId, string packURI, uint totalSupply);
-  event PackRewards(uint indexed packId, address indexed _rewardContract, uint[] rewardIds, uint[] rewardAmounts);
+  event PackCreated(address indexed creator, address indexed rewardContract, uint indexed packId, string packURI, uint totalSupply);
+  event PackRewards(uint indexed packId, address indexed rewardContract, uint[] rewardIds, uint[] rewardAmounts);
   event PackOpened(uint indexed packId, address indexed opener);
   event RewardDistributed(uint indexed packId, uint indexed rewardId, address indexed receiver);
 

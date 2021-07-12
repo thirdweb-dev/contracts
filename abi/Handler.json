@@ -22,7 +22,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_rewardContract",
+        "name": "rewardContract",
         "type": "address"
       },
       {
@@ -78,7 +78,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_rewardContract",
+        "name": "rewardContract",
         "type": "address"
       },
       {
