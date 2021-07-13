@@ -12,7 +12,7 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()}`)
 
-  // // 1. Deploy ControlCenter
+  // 1. Deploy ControlCenter
   const ControlCenter_Factory: ContractFactory = await ethers.getContractFactory("ControlCenter");
   const controlCenter: Contract = await ControlCenter_Factory.deploy(await deployer.getAddress(), { gasLimit: manualGasLimit });
 

@@ -19,7 +19,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `AssetSafe.sol`: [0x9b6962a5a1Bc2E1Fa0508fe933310B51FC6063e1](https://rinkeby.etherscan.io/address/0x9b6962a5a1Bc2E1Fa0508fe933310B51FC6063e1#code)
 
-- `AccessPacks.sol`: [0x16611A37a86B7C35b2d5C316402Ecc24f18B36e2](https://rinkeby.etherscan.io/address/0x16611A37a86B7C35b2d5C316402Ecc24f18B36e2#code)
+- `AccessPacks.sol`: [0xfA0e84d3A30665A51081b661bEDB3b1d0e8D87ba](https://rinkeby.etherscan.io/address/0xfA0e84d3A30665A51081b661bEDB3b1d0e8D87ba#code)
 
 ## Run Locally
 

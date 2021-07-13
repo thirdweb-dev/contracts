@@ -43,7 +43,7 @@ export const assetSafeObj = {
 }
 
 export const accessPacksObj = {
-  address: "0x16611A37a86B7C35b2d5C316402Ecc24f18B36e2",
+  address: "0xfA0e84d3A30665A51081b661bEDB3b1d0e8D87ba",
   abi: accessPacksABI
 }
 
