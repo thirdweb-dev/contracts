@@ -47,7 +47,7 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
   }
 
   /// @notice Pack and reward events.
-  event RewardsCreated(uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
+  event RewardsCreated(address creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
 
   /// @dev Reward tokenId => Reward state.
   mapping(uint => AccessRewards) public rewards;
@@ -91,7 +91,7 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
     mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
     revokeRole(MINTER_ROLE, msg.sender);
 
-    emit RewardsCreated(rewardIds, _rewardURIs, _rewardSupplies);
+    emit RewardsCreated(msg.sender, rewardIds, _rewardURIs, _rewardSupplies);
   }
 
   /// @dev Wraps an ERC721 NFT as ERC1155 reward tokens. 
