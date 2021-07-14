@@ -47,7 +47,7 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
   }
 
   /// @notice Pack and reward events.
-  event RewardsCreated(address creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
+  event RewardsCreated(address indexed creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
 
   /// @dev Reward tokenId => Reward state.
   mapping(uint => AccessRewards) public rewards;
