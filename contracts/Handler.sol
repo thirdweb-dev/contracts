@@ -34,7 +34,7 @@ contract Handler {
     uint packId;
   }
 
-  event PackCreated(address indexed creator, address indexed rewardContract, uint indexed packId, string packURI, uint totalSupply);
+  event PackCreated(address indexed creator, address indexed rewardContract, uint indexed packId, string packURI, uint openLimit,uint totalSupply);
   event PackRewards(uint indexed packId, address indexed rewardContract, uint[] rewardIds, uint[] rewardAmounts);
   event PackOpened(uint indexed packId, address indexed opener);
   event RewardDistributed(uint indexed packId, uint indexed rewardId, address indexed receiver);
@@ -77,7 +77,13 @@ contract Handler {
       openTimeLimit: block.timestamp + (_secondsUntilLimit == 0 ? type(uint256).max : _secondsUntilLimit)
     });
 
-    emit PackCreated(msg.sender, _rewardContract, packTokenId, _packURI, totalSupply);
+    emit PackCreated(
+      msg.sender, 
+      _rewardContract, 
+      packTokenId, 
+      _packURI,block.timestamp + (_secondsUntilLimit == 0 ? type(uint256).max : _secondsUntilLimit),
+      totalSupply
+    );
     
     // Mint pack tokens to `msg.sender`
     packToken().mintToken(msg.sender, packTokenId, totalSupply, _packURI);
