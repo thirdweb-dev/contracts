@@ -26,6 +26,7 @@ contract Handler {
     address rewardContract;
     uint[] rewardTokenIds;
     uint[] rarityNumerators;
+    uint openTimeLimit;
   }
 
   struct RandomnessRequest {
@@ -53,7 +54,8 @@ contract Handler {
     address _rewardContract,
     string calldata _packURI, 
     uint[] calldata _rewardIds, 
-    uint[] calldata _amounts
+    uint[] calldata _amounts,
+    uint _secondsUntilLimit
   ) public returns (uint packTokenId, uint totalSupply) {
 
     // TODO : Check whether `_rewardContract` is IERC1155.
@@ -71,7 +73,8 @@ contract Handler {
     packs[packTokenId] = PackState({
       rewardContract: _rewardContract,
       rewardTokenIds: _rewardIds,
-      rarityNumerators: _amounts
+      rarityNumerators: _amounts,
+      openTimeLimit: block.timestamp + (_secondsUntilLimit == 0 ? type(uint256).max : _secondsUntilLimit)
     });
 
     emit PackCreated(msg.sender, _rewardContract, packTokenId, _packURI, totalSupply);
@@ -98,18 +101,20 @@ contract Handler {
     string calldata _packURI, 
     uint[] calldata _rewardIds, 
     uint[] calldata _amounts,
+    uint _secondsUntilLimit,
 
     address _currency,
     uint _price
   ) external {
     // Create pack with the relevant rewards.
-    (uint packTokenId, uint totalSupply) = createPack(_rewardContract, _packURI, _rewardIds, _amounts);
+    (uint packTokenId, uint totalSupply) = createPack(_rewardContract, _packURI, _rewardIds, _amounts, _secondsUntilLimit);
     // List packs on sale.
     listPacks(packTokenId, _currency, _price, totalSupply);
   }
 
   /// @notice Lets a pack token owner open a single pack
   function openPack(uint _packId) external {
+    require(block.timestamp <= packs[_packId].openTimeLimit, "The window to open packs has closed.");
     require(packToken().balanceOf(msg.sender, _packId) > 0, "Sender owns no packs of the given packId.");
     require(packToken().isApprovedForAll(msg.sender, address(this)), "Must approve handler to burn the pack.");
 
