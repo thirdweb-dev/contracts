@@ -11,17 +11,25 @@ interface ListingAsset {
 }
 
 interface ProtocolControl {
+  /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
+  
+  /// @dev Returns the address of the pack protocol treasury.
   function treasury() external view returns(address treasuryAddress);
+
+  /// @dev Returns the address of pack protocol's module.
   function getModule(string memory _moduleName) external view returns (address);
 }
 
 contract Market is IERC1155Receiver, ReentrancyGuard {
 
+  /// @dev The pack protocol admin contract.
   ProtocolControl internal controlCenter;
 
+  /// @dev Pack protocol module names.
   string public constant PACK = "PACK";
 
+  /// @dev Pack protocol fee constants.
   uint public constant MAX_BPS = 10000; // 100%
   uint public protocolFeeBps = 500; // 5%
   uint public creatorFeeBps = 500; // 5%
@@ -42,27 +50,30 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     uint end;
   }
 
-  struct Seller {
-    // Total number of listings by seller. Also operates as Listing ID.
-    uint totalListings;
+  /// @dev seller address => total number of listings.
+  mapping(address => uint) public totalListings;
 
-    // Listing ID => Listing
-    mapping(uint => Listing) listings;
-    // Listing ID => Order limit per buyer.
-    mapping(uint => SaleWindow) saleWindow;
-  }
+  /// @dev seller address + listingId => listing info.
+  mapping(address => mapping(uint => Listing)) public listings;
 
-  /// @dev seller address => Seller state.
-  mapping(address => Seller) public sellerListings;
+  /// @dev seller address + listingId => sale windo for listing.
+  mapping(address => mapping(uint => SaleWindow)) public saleWindow;
 
+  /// @dev Events
   event NewListing(address indexed assetContract, address indexed seller, uint listingId, uint tokenId, address currency, uint price, uint quantity);
   event NewSale(address indexed assetContract, address indexed buyer, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
   event ListingUpdate(address indexed seller, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
   event SaleWindowUpdate(address indexed seller, uint indexed listingId, uint start, uint end);
 
-  /// @dev Checks whether Pack protocol is operational.
+  /// @dev Checks whether Pack protocol is paused.
   modifier onlyUnpausedProtocol() {
-    require(controlCenter.systemPaused(), "Pack: The pack protocol is paused.");
+    require(controlCenter.systemPaused(), "Market: The pack protocol is paused.");
+    _;
+  }
+
+  /// @dev Check whether the listing exists.
+  modifier onlyExistingListing(uint _listingId) {
+    require(listings[msg.sender][_listingId].seller != address(0), "Market: The listing doe not exist.");
     _;
   }
 
@@ -71,7 +82,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /**
-  *   ERC 1155 functions.
+  *   ERC 1155 Receiver functions.
   **/
 
   function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
@@ -106,8 +117,8 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     // Only an EOA seller can initiate a listing.
     address seller = tx.origin;
 
-    require(IERC1155(_assetContract).isApprovedForAll(seller, address(this)), "Must approve the market to transfer tokens being listed.");
-    require(_quantity > 0, "Must list at least one token.");
+    require(IERC1155(_assetContract).isApprovedForAll(seller, address(this)), "Market: must approve the market to transfer tokens being listed.");
+    require(_quantity > 0, "Market: must list at least one token.");
 
     // Transfer tokens being listed to Pack Protocol's asset safe.
     IERC1155(_assetContract).safeTransferFrom(
@@ -119,11 +130,11 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     );
 
     // Get listing ID.
-    uint listingId = sellerListings[seller].totalListings;
-    sellerListings[seller].totalListings += 1;
+    uint listingId = totalListings[seller];
+    totalListings[seller] += 1;
 
     // Create listing.
-    sellerListings[seller].listings[listingId] = Listing({
+    listings[seller][listingId] = Listing({
       seller: seller,
       assetContract: _assetContract,
       tokenId: _tokenId,
@@ -135,136 +146,126 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     emit NewListing(_assetContract, seller, listingId, _tokenId, _currency, _pricePerToken, _quantity);
     
     // Set sale window for listing.
-    sellerListings[seller].saleWindow[listingId].start =  _secondsUntilStart;
-    sellerListings[seller].saleWindow[listingId].end = _secondsUntilEnd;
+    saleWindow[seller][listingId].start =  _secondsUntilStart;
+    saleWindow[seller][listingId].end = _secondsUntilEnd;
 
     emit SaleWindowUpdate(seller, listingId, _secondsUntilStart, _secondsUntilEnd);
   }
 
-  /// @notice Unlist `quantity` amount of tokens.
-  function unlist(uint _listingId, uint _quantity) external {
-
-    // Get the asset.
-    address assetContract = sellerListings[msg.sender].listings[_listingId].assetContract;
-    
-    require(sellerListings[msg.sender].listings[_listingId].quantity >= _quantity, "Cannot unlist more tokens than are listed.");
+  /// @notice Unlist `_quantity` amount of tokens.
+  function unlist(uint _listingId, uint _quantity) external onlyExistingListing(_listingId) {
+    require(listings[msg.sender][_listingId].quantity >= _quantity, "Market: cannot unlist more tokens than are listed.");
 
     // Transfer way tokens being unlisted.
-    IERC1155(sellerListings[msg.sender].listings[_listingId].assetContract).safeTransferFrom(
-      address(this), msg.sender, sellerListings[msg.sender].listings[_listingId].tokenId, _quantity, ""
-    );
+    IERC1155(listings[msg.sender][_listingId].assetContract).safeTransferFrom(address(this), msg.sender, listings[msg.sender][_listingId].tokenId, _quantity, "");
 
     // Update listing info.
-    sellerListings[msg.sender].listings[_listingId].quantity -= _quantity;
+    listings[msg.sender][_listingId].quantity -= _quantity;
 
     emit ListingUpdate(
       msg.sender,
       _listingId,
-      sellerListings[msg.sender].listings[_listingId].tokenId,
-      sellerListings[msg.sender].listings[_listingId].currency,
-      sellerListings[msg.sender].listings[_listingId].pricePerToken,
-      sellerListings[msg.sender].listings[_listingId].quantity
+      listings[msg.sender][_listingId].tokenId,
+      listings[msg.sender][_listingId].currency,
+      listings[msg.sender][_listingId].pricePerToken,
+      listings[msg.sender][_listingId].quantity
     );
   }
 
   /// @notice Lets a seller add tokens to an existing listing.
-  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol {
-
-    // Get the asset.
-    address assetContract = sellerListings[msg.sender].listings[_listingId].assetContract;
-
-    require(IERC1155(assetContract).isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer tokens being added.");
-    require(_quantity > 0, "Must add at least one token.");
+  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol onlyExistingListing(_listingId) {
+    require(
+      IERC1155(listings[msg.sender][_listingId].assetContract).isApprovedForAll(msg.sender, address(this)),
+      "Market: must approve the market to transfer tokens being added."
+    );
+    require(_quantity > 0, "Market: must add at least one token.");
 
     // Transfer tokens being listed to Pack Protocol's asset manager.
-    IERC1155(assetContract).safeTransferFrom(
+    IERC1155(listings[msg.sender][_listingId].assetContract).safeTransferFrom(
       msg.sender,
       address(this),
-      sellerListings[msg.sender].listings[_listingId].tokenId,
+      listings[msg.sender][_listingId].tokenId,
       _quantity,
       ""
     );
 
     // Update listing info.
-    sellerListings[msg.sender].listings[_listingId].quantity += _quantity;
+    listings[msg.sender][_listingId].quantity += _quantity;
 
     emit ListingUpdate(
       msg.sender,
       _listingId,
-      sellerListings[msg.sender].listings[_listingId].tokenId,
-      sellerListings[msg.sender].listings[_listingId].currency,
-      sellerListings[msg.sender].listings[_listingId].pricePerToken,
-      sellerListings[msg.sender].listings[_listingId].quantity
+      listings[msg.sender][_listingId].tokenId,
+      listings[msg.sender][_listingId].currency,
+      listings[msg.sender][_listingId].pricePerToken,
+      listings[msg.sender][_listingId].quantity
     );
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
-  function updateListingPrice(uint _listingId, uint _newPricePerToken) external {
+  function updateListingPrice(uint _listingId, uint _newPricePerToken) external onlyExistingListing(_listingId) {
 
     // Update listing info.
-    sellerListings[msg.sender].listings[_listingId].pricePerToken = _newPricePerToken;
+    listings[msg.sender][_listingId].pricePerToken = _newPricePerToken;
 
     emit ListingUpdate(
       msg.sender,
       _listingId,
-      sellerListings[msg.sender].listings[_listingId].tokenId,
-      sellerListings[msg.sender].listings[_listingId].currency, 
-      sellerListings[msg.sender].listings[_listingId].pricePerToken, 
-      sellerListings[msg.sender].listings[_listingId].quantity
+      listings[msg.sender][_listingId].tokenId,
+      listings[msg.sender][_listingId].currency, 
+      listings[msg.sender][_listingId].pricePerToken, 
+      listings[msg.sender][_listingId].quantity
     );
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
-  function updateListingCurrency(uint _listingId, address _newCurrency) external {
-    
-    // Only an EOA seller can update a listing.
-    address seller = tx.origin;
+  function updateListingCurrency(uint _listingId, address _newCurrency) external onlyExistingListing(_listingId) {
 
     // Update listing info.
-    sellerListings[seller].listings[_listingId].currency = _newCurrency;
+    listings[msg.sender][_listingId].currency = _newCurrency;
 
     emit ListingUpdate(
-      seller,
+      msg.sender,
       _listingId,
-      sellerListings[seller].listings[_listingId].tokenId,
-      sellerListings[seller].listings[_listingId].currency, 
-      sellerListings[seller].listings[_listingId].pricePerToken, 
-      sellerListings[seller].listings[_listingId].quantity
+      listings[msg.sender][_listingId].tokenId,
+      listings[msg.sender][_listingId].currency, 
+      listings[msg.sender][_listingId].pricePerToken, 
+      listings[msg.sender][_listingId].quantity
     );
   }
 
   /// @notice Lets a seller change the order limit for a listing.
-  function updateSaleWindow(uint _listingId, uint _secondsUntilStart, uint _secondsUntilEnd) external {
+  function updateSaleWindow(uint _listingId, uint _secondsUntilStart, uint _secondsUntilEnd) external onlyExistingListing(_listingId) {
 
     // Set sale window for listing.
-    sellerListings[msg.sender].saleWindow[_listingId].start =  block.timestamp + _secondsUntilStart;
-    sellerListings[msg.sender].saleWindow[_listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
+    saleWindow[msg.sender][_listingId].start =  block.timestamp + _secondsUntilStart;
+    saleWindow[msg.sender][_listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
     emit SaleWindowUpdate(msg.sender, _listingId, _secondsUntilStart, _secondsUntilEnd);
   }
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
-  function buy(address _seller, uint _listingId, uint _quantity) external payable nonReentrant {
+  function buy(address _seller, uint _listingId, uint _quantity) external payable nonReentrant onlyExistingListing(_listingId) {
 
     require(
-      block.timestamp <= sellerListings[_seller].saleWindow[_listingId].end && block.timestamp >= sellerListings[_seller].saleWindow[_listingId].start,
-      "Pack: the sale has either not started or closed."
+      block.timestamp <= saleWindow[_seller][_listingId].end && block.timestamp >= saleWindow[_seller][_listingId].start,
+      "Market: the sale has either not started or closed."
     );
 
     // Determine whether the asset listed is a pack or reward.
-    address assetContract = sellerListings[_seller].listings[_listingId].assetContract;
+    address assetContract = listings[_seller][_listingId].assetContract;
     
     // Get listing
-    Listing memory listing = sellerListings[_seller].listings[_listingId];
+    Listing memory listing = listings[_seller][_listingId];
     
-    require(listing.seller != address(0), "The listing does not exist.");
-    require(_quantity <= listing.quantity, "Trying to buy more tokens than are listed.");
+    require(listing.seller != address(0), "Market: the listing does not exist.");
+    require(_quantity <= listing.quantity, "Market: trying to buy more tokens than are listed.");
 
     // Transfer tokens to buyer.
     IERC1155(assetContract).safeTransferFrom(address(this), msg.sender, listing.tokenId, _quantity, "");
 
     // Update listing info.
-    sellerListings[_seller].listings[_listingId].quantity -= _quantity;
+    listings[_seller][_listingId].quantity -= _quantity;
 
     // Get token creator.
     address creator = ListingAsset(assetContract).creator(listing.tokenId);
@@ -290,13 +291,13 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     
     require(
       IERC20(currency).allowance(buyer, address(this)) >= totalPrice, 
-      "Must approve Market to transfer price to pay."
+      "Market: must approve Market to transfer price to pay."
     );
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
-    require(IERC20(currency).transferFrom(buyer, controlCenter.treasury(), protocolCut), "Failed to transfer protocol cut.");
-    require(IERC20(currency).transferFrom(buyer, seller, sellerCut), "Failed to transfer seller cut.");
-    require(IERC20(currency).transferFrom(buyer, creator, creatorCut), "Failed to transfer creator cut.");
+    require(IERC20(currency).transferFrom(buyer, controlCenter.treasury(), protocolCut), "Market: failed to transfer protocol cut.");
+    require(IERC20(currency).transferFrom(buyer, seller, sellerCut), "Market: failed to transfer seller cut.");
+    require(IERC20(currency).transferFrom(buyer, creator, creatorCut), "Market: failed to transfer creator cut.");
   }
 
   /// @notice Distributes relevant shares of the sale value (in Ether) to the seller, creator and protocol.
@@ -308,17 +309,17 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     uint creatorCut = seller == creator ? 0 : (totalPrice * creatorFeeBps) / MAX_BPS;
     uint sellerCut = totalPrice - protocolCut - creatorCut;
 
-    require(msg.value >= totalPrice, "Must send enough ether to pay the price.");
+    require(msg.value >= totalPrice, "Market: must send enough ether to pay the price.");
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
     (bool success,) = controlCenter.treasury().call{value: protocolCut}("");
-    require(success, "Failed to transfer protocol cut.");
+    require(success, "Market: failed to transfer protocol cut.");
 
     (success,) = seller.call{value: sellerCut}("");
-    require(success, "Failed to transfer seller cut.");
+    require(success, "Market: failed to transfer seller cut.");
 
     (success,) = creator.call{value: creatorCut}("");
-    require(success, "Failed to transfer creator cut.");
+    require(success, "Market: failed to transfer creator cut.");
   }
 
   /// @dev Returns pack protocol's pack ERC1155 contract address.
@@ -328,16 +329,16 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
   /// @notice Returns the total number of listings created by seller.
   function getTotalNumOfListings(address _seller) external view returns (uint numOfListings) {
-    numOfListings = sellerListings[_seller].totalListings;
+    numOfListings = totalListings[_seller];
   }
 
   /// @notice Returns the listing for the given seller and Listing ID.
   function getListing(address _seller, uint _listingId) external view returns (Listing memory listing) {
-    listing = sellerListings[_seller].listings[_listingId];
+    listing = listings[_seller][_listingId];
   }
 
   /// @notice Returns the timestamp when buyer last bought from the listing for the given seller and Listing ID.
   function getSaleWindow(address _seller, uint _listingId) external view returns (uint, uint) {
-    return (sellerListings[_seller].saleWindow[_listingId].start, sellerListings[_seller].saleWindow[_listingId].end);
+    return (saleWindow[_seller][_listingId].start, saleWindow[_seller][_listingId].end);
   }
 }
