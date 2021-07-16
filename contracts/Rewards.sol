@@ -7,13 +7,14 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
+contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
 
-  uint public currentTokenId;
+  /// @dev The token Id of the reward to mint.
+  uint public nextTokenId;
 
   enum UnderlyingType { None, ERC20, ERC721, ERC1155 }
 
-  struct AccessRewards {
+  struct Reward {
     address creator;
     string uri;
     uint supply;
@@ -35,7 +36,7 @@ contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
   event RewardsCreated(address indexed creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
 
   /// @dev Reward tokenId => Reward state.
-  mapping(uint => AccessRewards) public rewards;
+  mapping(uint => Reward) public rewards;
 
   /// @dev Reward tokenId => Underlying ERC721 reward state.
   mapping(uint => ERC721Reward) public erc721Rewards;
@@ -45,31 +46,27 @@ contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
 
   constructor() ERC1155PresetMinterPauser("") {
     _setRoleAdmin(MINTER_ROLE, MINTER_ROLE);
-    
-    revokeRole(MINTER_ROLE, msg.sender);
-    revokeRole(PAUSER_ROLE, msg.sender);
-    revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
-  /// @notice Lets `msg.sender` create a pack with rewards and list it for sale.
+  /// @notice Create native ERC 1155 rewards.
   function createNativeRewards(string[] calldata _rewardURIs, uint[] calldata _rewardSupplies) external returns (uint[] memory rewardIds) {
+    require(_rewardURIs.length == _rewardSupplies.length, "Rewards: Must specify equal number of URIs and supplies.");
 
-    require(_rewardURIs.length == _rewardSupplies.length, "Must specify equal number of URIs and supplies.");
-
-    // Get tokenIds and store reward state.
+    // Get tokenIds.
     rewardIds = new uint[](_rewardURIs.length);
     
+    // Store reward state for each reward.
     for(uint i = 0; i < _rewardURIs.length; i++) {
-      rewardIds[i] = currentTokenId;
+      rewardIds[i] = nextTokenId;
 
-      rewards[currentTokenId] = AccessRewards({
+      rewards[nextTokenId] = Reward({
         creator: msg.sender,
         uri: _rewardURIs[i],
         supply: _rewardSupplies[i],
         underlyingType: UnderlyingType.None
       });
 
-      currentTokenId++;
+      nextTokenId++;
     }
 
     // Mint reward tokens to `msg.sender`
@@ -84,11 +81,11 @@ contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
   function wrapERC721(address _nftContract, uint _tokenId, string calldata _rewardURI) external {
     require(
       IERC721(_nftContract).ownerOf(_tokenId) == msg.sender,
-      "Only the owner of the NFT can wrap it."
+      "Rewards: Only the owner of the NFT can wrap it."
     );
     require(
       IERC721(_nftContract).getApproved(_tokenId) == address(this),
-      "Must approve the contract to transfer the NFT."
+      "Rewards: Must approve the contract to transfer the NFT."
     );
         
     // Transfer the NFT to this contract.
@@ -100,11 +97,11 @@ contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
 
     // Mint reward tokens to `msg.sender`
     _setupRole(MINTER_ROLE, msg.sender);
-    mint(msg.sender, currentTokenId, 1, "");
+    mint(msg.sender, nextTokenId, 1, "");
     revokeRole(MINTER_ROLE, msg.sender); 
 
     // Store reward state.
-    rewards[currentTokenId] = AccessRewards({
+    rewards[nextTokenId] = Reward({
       creator: msg.sender,
       uri: _rewardURI,
       supply: 1,
@@ -112,17 +109,17 @@ contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
     });       
         
     // Map the reward tokenId to the underlying NFT
-    erc721Rewards[currentTokenId] = ERC721Reward({
+    erc721Rewards[nextTokenId] = ERC721Reward({
       nftContract: _nftContract,
       nftTokenId: _tokenId
     });
 
-    currentTokenId++;
+    nextTokenId++;
   }
   
   /// @dev Lets the reward owner redeem their ERC721 NFT.
   function redeemERC721(uint _rewardId) external {
-    require(balanceOf(msg.sender, _rewardId) > 0, "Cannot redeem a reward you do not own.");
+    require(balanceOf(msg.sender, _rewardId) > 0, "Rewards: Cannot redeem a reward you do not own.");
         
     // Burn the reward token
     burn(msg.sender, _rewardId, 1);
@@ -140,35 +137,35 @@ contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
 
     require(
       IERC20(_tokenContract).allowance(msg.sender, address(this)) >= _tokenAmount,
-      "Must approve this contract to transfer ERC20 tokens."
+      "Rewards: Must approve this contract to transfer ERC20 tokens."
     );
 
     IERC20(_tokenContract).transferFrom(msg.sender, address(this), _tokenAmount);
 
     // Mint reward tokens to `msg.sender`
     _setupRole(MINTER_ROLE, msg.sender);
-    mint(msg.sender, currentTokenId, _numOfRewardsToMint, "");
+    mint(msg.sender, nextTokenId, _numOfRewardsToMint, "");
     revokeRole(MINTER_ROLE, msg.sender); 
 
-    rewards[currentTokenId] = AccessRewards({
+    rewards[nextTokenId] = Reward({
       creator: msg.sender,
       uri: _rewardURI,
       supply: _numOfRewardsToMint,
       underlyingType: UnderlyingType.ERC721
     });
 
-    erc20Rewards[currentTokenId] = ERC20Reward({
+    erc20Rewards[nextTokenId] = ERC20Reward({
       tokenContract: _tokenContract,
       numOfRewards: _numOfRewardsToMint,
       underlyingTokenAmount: _tokenAmount
     });
     
-    currentTokenId++;    
+    nextTokenId++;    
   }
 
   /// @dev Lets the reward owner redeem their ERC20 tokens.
   function redeemERC20(uint _rewardId, uint _amount) external {
-    require(balanceOf(msg.sender, _rewardId) > _amount, "Cannot redeem a reward you do not own.");
+    require(balanceOf(msg.sender, _rewardId) > _amount, "Rewards: Cannot redeem a reward you do not own.");
         
     // Burn the reward token
     burn(msg.sender, _rewardId, _amount);
