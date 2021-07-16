@@ -10,9 +10,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 interface ProtocolControl {
   /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
-  
-  /// @dev Returns the address of the pack protocol treasury.
-  function treasury() external view returns(address treasuryAddress);
 
   /// @dev Returns the address of pack protocol's module.
   function getModule(string memory _moduleName) external view returns (address);
