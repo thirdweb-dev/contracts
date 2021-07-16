@@ -15,14 +15,23 @@ interface IRNGReceiver {
 
 contract RNG is Ownable, VRFConsumerBase {
 
+  /// @dev The pack protocol admin contract.
   ProtocolControl internal controlCenter;
+
+  /// @dev Pack protocol module names.
   string public constant PACK = "PACK";
   
-  /// @dev Chainlink / external RNG service variables.
+  /// @dev Wether the RNG uses and external service like Chainlink.
   bool public isExternalService;
+
+  /// @dev Chainlink VRF requirements.
   bytes32 internal keyHash;
+  uint internal fees;
+
+  /// @dev Increments by one. Acts as a request ID for each external RNG request.
   uint public currentRequestId;
 
+  /// @dev 
   mapping(bytes32 => uint) public requestIds;
 
   event ExternalServiceRequest(address indexed requestor, uint requestId);
@@ -51,22 +60,33 @@ contract RNG is Ownable, VRFConsumerBase {
 
   constructor(
     address _controlCenter,
+
     address _vrfCoordinator,
     address _linkToken,
-    bytes32 _keyHash
+    bytes32 _keyHash,
+    uint _fees
   ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
     controlCenter = ProtocolControl(_controlCenter);
+
     keyHash = _keyHash;
+    fees = _fees;
   }
 
-  // ===== Chainlink VRF functions =====
+  /**
+   *  Chainlink VRF functions
+  **/
   
   /// @dev Sends a random number request to the Chainlink VRF system.
   function requestRandomNumber() external returns (uint requestId) {
-    require(msg.sender == address(pack()), "Only handler can call this function.");
-    requestRandomness(keyHash, 0.1 ether, block.number);
+    require(msg.sender == address(pack()), "RNG: Only the pack token contract can call this function.");
     
+    // Send random number request.
+    bytes32 bytesId = requestRandomness(keyHash, fees, block.number);
+    
+    // Return an integer Id instead of a bytes Id for convenience.
     requestId = currentRequestId;
+    requestIds[bytesId] = requestId;
+
     currentRequestId++;
 
     emit ExternalServiceRequest(msg.sender, requestId);
@@ -75,21 +95,25 @@ contract RNG is Ownable, VRFConsumerBase {
   /// @dev Called by Chainlink VRF random number provider.
   function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
 
-    // Call handler with the retrieved random number.
+    // Call the pack token contract with the retrieved random number.
     pack().fulfillRandomness(requestIds[requestId], randomness);
 
     emit RandomNumberExternal(randomness);
   }
 
-  // ===== DEX RNG functions =====
+  /**
+   *  DEX RNG functions
+  **/
 
-  /// @dev Add a UniswapV2 pair to draw randomness from.
+  /// @dev Add a UniswapV2/Sushiswap pair to draw randomness from.
   function addPair(address pair) external onlyOwner {
     require(IUniswapV2Pair(pair).MINIMUM_LIQUIDITY() == 1000, "Invalid pair address provided.");
     require(pairIndex[pair] == 0, "This pair already exists as a randomness source.");
     
+    // Update pair index.
     currentPairIndex += 1;
 
+    // Store pair.
     pairs[currentPairIndex] = PairAddresses({
       tokenA: IUniswapV2Pair(pair).token0(),
       tokenB: IUniswapV2Pair(pair).token1(),
