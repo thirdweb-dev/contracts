@@ -6,7 +6,7 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./ControlCenter.sol";
+import "./ProtocolControl.sol";
 
 /// @dev Basic interface for a random number receiver.
 interface IRNGReceiver {
@@ -15,7 +15,7 @@ interface IRNGReceiver {
 
 contract RNG is Ownable, VRFConsumerBase {
 
-  ControlCenter internal controlCenter;
+  ProtocolControl internal controlCenter;
   string public constant PACK = "PACK";
   
   /// @dev Chainlink / external RNG service variables.
@@ -55,7 +55,7 @@ contract RNG is Ownable, VRFConsumerBase {
     address _linkToken,
     bytes32 _keyHash
   ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
-    controlCenter = ControlCenter(_controlCenter);
+    controlCenter = ProtocolControl(_controlCenter);
     keyHash = _keyHash;
   }
 
@@ -63,7 +63,7 @@ contract RNG is Ownable, VRFConsumerBase {
   
   /// @dev Sends a random number request to the Chainlink VRF system.
   function requestRandomNumber() external returns (uint requestId) {
-    require(msg.sender == address(handler()), "Only handler can call this function.");
+    require(msg.sender == address(pack()), "Only handler can call this function.");
     requestRandomness(keyHash, 0.1 ether, block.number);
     
     requestId = currentRequestId;
@@ -76,7 +76,7 @@ contract RNG is Ownable, VRFConsumerBase {
   function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
 
     // Call handler with the retrieved random number.
-    handler().fulfillRandomness(requestIds[requestId], randomness);
+    pack().fulfillRandomness(requestIds[requestId], randomness);
 
     emit RandomNumberExternal(randomness);
   }
@@ -153,8 +153,8 @@ contract RNG is Ownable, VRFConsumerBase {
     return isExternalService;
   }
 
-  /// @dev Returns pack protocol's `Handler`
-  function handler() internal view returns (IRNGReceiver) {
+  /// @dev Returns pack protocol's `Pack`
+  function pack() internal view returns (IRNGReceiver) {
     return IRNGReceiver(controlCenter.getModule(PACK));
   }
   

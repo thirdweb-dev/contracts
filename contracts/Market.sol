@@ -10,22 +10,17 @@ interface ListingAsset {
   function creator(uint _tokenId) external view returns (address creator);
 }
 
-interface AssetSafe {
-  function transferERC1155(address _asset, address _to, uint _tokenId, uint _amount) external;
-}
-
-interface ControlCenter {
+interface ProtocolControl {
+  function systemPaused() external view returns (bool);
   function treasury() external view returns(address treasuryAddress);
   function getModule(string memory _moduleName) external view returns (address);
 }
 
-contract Market is ReentrancyGuard {
+contract Market is IERC1155Receiver, ReentrancyGuard {
 
-  ControlCenter internal controlCenter;
+  ProtocolControl internal controlCenter;
 
   string public constant PACK = "PACK";
-  string public constant HANDLER = "HANDLER";
-  string public constant ASSET_SAFE = "ASSET_SAFE";
 
   uint public constant MAX_BPS = 10000; // 100%
   uint public protocolFeeBps = 500; // 5%
@@ -33,6 +28,7 @@ contract Market is ReentrancyGuard {
 
   struct Listing {
     address seller;
+
     address assetContract;
     uint tokenId;
 
@@ -41,12 +37,9 @@ contract Market is ReentrancyGuard {
     uint pricePerToken;
   }
 
-  struct OrderLimit {
-    uint quantityLimit;
-    uint timeLimitInSeconds;
-
-    // Buyer => timestamp of last buy.
-    mapping(address => uint) lastBuy;
+  struct SaleWindow {
+    uint start;
+    uint end;
   }
 
   struct Seller {
@@ -56,20 +49,46 @@ contract Market is ReentrancyGuard {
     // Listing ID => Listing
     mapping(uint => Listing) listings;
     // Listing ID => Order limit per buyer.
-    mapping(uint => OrderLimit) orderLimits;
+    mapping(uint => SaleWindow) saleWindow;
   }
 
   /// @dev seller address => Seller state.
   mapping(address => Seller) public sellerListings;
 
   event NewListing(address indexed assetContract, address indexed seller, uint listingId, uint tokenId, address currency, uint price, uint quantity);
-  event NewSale(address indexed seller, address indexed buyer, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
+  event NewSale(address indexed assetContract, address indexed buyer, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
   event ListingUpdate(address indexed seller, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
-  event OrderLimitUpdate(address indexed seller, uint indexed listingId, uint quantityLimit, uint timeLimitInSeconds);
+  event SaleWindowUpdate(address indexed seller, uint indexed listingId, uint start, uint end);
+
+  /// @dev Checks whether Pack protocol is operational.
+  modifier onlyUnpausedProtocol() {
+    require(controlCenter.systemPaused(), "Pack: The pack protocol is paused.");
+    _;
+  }
 
   constructor(address _controlCenter) {
-    controlCenter = ControlCenter(_controlCenter);
+    controlCenter = ProtocolControl(_controlCenter);
   }
+
+  /**
+  *   ERC 1155 functions.
+  **/
+
+  function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
+    return this.onERC1155Received.selector;
+  }
+
+  function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
+    return this.onERC1155BatchReceived.selector;
+  }
+
+  function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+    return interfaceId == type(IERC1155Receiver).interfaceId;
+  }
+
+  /**
+  *   External functions.
+  **/
 
   /// @notice List a given amount of pack or reward tokens for sale.
   function list(
@@ -80,22 +99,20 @@ contract Market is ReentrancyGuard {
     uint _pricePerToken,
     uint _quantity,
 
-    uint _quantityLimit, 
-    uint _timeLimitInSeconds
-  ) external {
+    uint _secondsUntilStart,
+    uint _secondsUntilEnd
+  ) external onlyUnpausedProtocol {
 
     // Only an EOA seller can initiate a listing.
     address seller = tx.origin;
-    // Determine whether the asset being listed is a pack or reward.
-    address assetContract = _assetContract == address(0) ? packToken() : _assetContract;
 
-    require(IERC1155(assetContract).isApprovedForAll(seller, address(this)), "Must approve the market to transfer tokens being listed.");
+    require(IERC1155(_assetContract).isApprovedForAll(seller, address(this)), "Must approve the market to transfer tokens being listed.");
     require(_quantity > 0, "Must list at least one token.");
 
     // Transfer tokens being listed to Pack Protocol's asset safe.
-    IERC1155(assetContract).safeTransferFrom(
+    IERC1155(_assetContract).safeTransferFrom(
       seller,
-      assetSafe(),
+      address(this),
       _tokenId,
       _quantity,
       ""
@@ -117,88 +134,83 @@ contract Market is ReentrancyGuard {
 
     emit NewListing(_assetContract, seller, listingId, _tokenId, _currency, _pricePerToken, _quantity);
     
-    // Set order limit for listing.
-    sellerListings[seller].orderLimits[listingId].quantityLimit =  _quantityLimit;
-    sellerListings[seller].orderLimits[listingId].timeLimitInSeconds = _timeLimitInSeconds;
+    // Set sale window for listing.
+    sellerListings[seller].saleWindow[listingId].start =  _secondsUntilStart;
+    sellerListings[seller].saleWindow[listingId].end = _secondsUntilEnd;
 
-    emit OrderLimitUpdate(seller, listingId, _quantityLimit, _timeLimitInSeconds);
+    emit SaleWindowUpdate(seller, listingId, _secondsUntilStart, _secondsUntilEnd);
   }
 
   /// @notice Unlist `quantity` amount of tokens.
   function unlist(uint _listingId, uint _quantity) external {
 
-    // Only an EOA seller can update a listing.
-    address seller = tx.origin;
-    // Determine whether the asset listed is a pack or reward.
-    address assetContract = sellerListings[seller].listings[_listingId].assetContract == address(0) ? packToken() : sellerListings[seller].listings[_listingId].assetContract;
+    // Get the asset.
+    address assetContract = sellerListings[msg.sender].listings[_listingId].assetContract;
     
-    require(sellerListings[seller].listings[_listingId].quantity >= _quantity, "Cannot unlist more tokens than are listed.");
+    require(sellerListings[msg.sender].listings[_listingId].quantity >= _quantity, "Cannot unlist more tokens than are listed.");
 
     // Transfer way tokens being unlisted.
-    AssetSafe(assetSafe()).transferERC1155(assetContract, seller, sellerListings[seller].listings[_listingId].tokenId, _quantity);
+    IERC1155(sellerListings[msg.sender].listings[_listingId].assetContract).safeTransferFrom(
+      address(this), msg.sender, sellerListings[msg.sender].listings[_listingId].tokenId, _quantity, ""
+    );
 
     // Update listing info.
-    sellerListings[seller].listings[_listingId].quantity -= _quantity;
+    sellerListings[msg.sender].listings[_listingId].quantity -= _quantity;
 
     emit ListingUpdate(
-      seller,
+      msg.sender,
       _listingId,
-      sellerListings[seller].listings[_listingId].tokenId,
-      sellerListings[seller].listings[_listingId].currency,
-      sellerListings[seller].listings[_listingId].pricePerToken,
-      sellerListings[seller].listings[_listingId].quantity
+      sellerListings[msg.sender].listings[_listingId].tokenId,
+      sellerListings[msg.sender].listings[_listingId].currency,
+      sellerListings[msg.sender].listings[_listingId].pricePerToken,
+      sellerListings[msg.sender].listings[_listingId].quantity
     );
   }
 
   /// @notice Lets a seller add tokens to an existing listing.
-  function addToListing(uint _listingId, uint _quantity) external {
+  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol {
 
-    // Only an EOA seller can update a listing.
-    address seller = tx.origin;
-    // Determine whether the asset listed is a pack or reward.
-    address assetContract = sellerListings[seller].listings[_listingId].assetContract == address(0) ? packToken() : sellerListings[seller].listings[_listingId].assetContract;
+    // Get the asset.
+    address assetContract = sellerListings[msg.sender].listings[_listingId].assetContract;
 
-    require(IERC1155(assetContract).isApprovedForAll(seller, address(this)), "Must approve the market to transfer tokens being added.");
+    require(IERC1155(assetContract).isApprovedForAll(msg.sender, address(this)), "Must approve the market to transfer tokens being added.");
     require(_quantity > 0, "Must add at least one token.");
 
     // Transfer tokens being listed to Pack Protocol's asset manager.
     IERC1155(assetContract).safeTransferFrom(
-      seller,
-      assetSafe(),
-      sellerListings[seller].listings[_listingId].tokenId,
+      msg.sender,
+      address(this),
+      sellerListings[msg.sender].listings[_listingId].tokenId,
       _quantity,
       ""
     );
 
     // Update listing info.
-    sellerListings[seller].listings[_listingId].quantity += _quantity;
+    sellerListings[msg.sender].listings[_listingId].quantity += _quantity;
 
     emit ListingUpdate(
-      seller,
+      msg.sender,
       _listingId,
-      sellerListings[seller].listings[_listingId].tokenId,
-      sellerListings[seller].listings[_listingId].currency,
-      sellerListings[seller].listings[_listingId].pricePerToken,
-      sellerListings[seller].listings[_listingId].quantity
+      sellerListings[msg.sender].listings[_listingId].tokenId,
+      sellerListings[msg.sender].listings[_listingId].currency,
+      sellerListings[msg.sender].listings[_listingId].pricePerToken,
+      sellerListings[msg.sender].listings[_listingId].quantity
     );
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
   function updateListingPrice(uint _listingId, uint _newPricePerToken) external {
-    
-    // Only an EOA seller can update a listing.
-    address seller = tx.origin;
 
     // Update listing info.
-    sellerListings[seller].listings[_listingId].pricePerToken = _newPricePerToken;
+    sellerListings[msg.sender].listings[_listingId].pricePerToken = _newPricePerToken;
 
     emit ListingUpdate(
-      seller,
+      msg.sender,
       _listingId,
-      sellerListings[seller].listings[_listingId].tokenId,
-      sellerListings[seller].listings[_listingId].currency, 
-      sellerListings[seller].listings[_listingId].pricePerToken, 
-      sellerListings[seller].listings[_listingId].quantity
+      sellerListings[msg.sender].listings[_listingId].tokenId,
+      sellerListings[msg.sender].listings[_listingId].currency, 
+      sellerListings[msg.sender].listings[_listingId].pricePerToken, 
+      sellerListings[msg.sender].listings[_listingId].quantity
     );
   }
 
@@ -222,42 +234,34 @@ contract Market is ReentrancyGuard {
   }
 
   /// @notice Lets a seller change the order limit for a listing.
-  function updateOrderLimit(uint _listingId, uint _newQuantityLimit, uint _newTimeLimit) external {
+  function updateSaleWindow(uint _listingId, uint _secondsUntilStart, uint _secondsUntilEnd) external {
 
-    // Only an EOA seller can update a listing.
-    address seller = tx.origin;
+    // Set sale window for listing.
+    sellerListings[msg.sender].saleWindow[_listingId].start =  block.timestamp + _secondsUntilStart;
+    sellerListings[msg.sender].saleWindow[_listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
-    // Update listing order limit.
-    sellerListings[seller].orderLimits[_listingId].quantityLimit = _newQuantityLimit;
-    sellerListings[seller].orderLimits[_listingId].timeLimitInSeconds = _newTimeLimit;
-
-    emit OrderLimitUpdate(seller, _listingId, _newQuantityLimit, _newTimeLimit);
+    emit SaleWindowUpdate(msg.sender, _listingId, _secondsUntilStart, _secondsUntilEnd);
   }
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
   function buy(address _seller, uint _listingId, uint _quantity) external payable nonReentrant {
 
-    // Only an EOA buyer can buy the listing tokens.
-    address buyer = tx.origin;
+    require(
+      block.timestamp <= sellerListings[_seller].saleWindow[_listingId].end && block.timestamp >= sellerListings[_seller].saleWindow[_listingId].start,
+      "Pack: the sale has either not started or closed."
+    );
+
     // Determine whether the asset listed is a pack or reward.
-    address assetContract = sellerListings[_seller].listings[_listingId].assetContract == address(0) ? packToken() : sellerListings[_seller].listings[_listingId].assetContract;
+    address assetContract = sellerListings[_seller].listings[_listingId].assetContract;
     
     // Get listing
     Listing memory listing = sellerListings[_seller].listings[_listingId];
     
     require(listing.seller != address(0), "The listing does not exist.");
     require(_quantity <= listing.quantity, "Trying to buy more tokens than are listed.");
-    require(_quantity <= sellerListings[_seller].orderLimits[_listingId].quantityLimit, "Cannot buy more tokens than the specified limit.");
-    require(
-      sellerListings[_seller].orderLimits[_listingId].lastBuy[buyer] + sellerListings[_seller].orderLimits[_listingId].timeLimitInSeconds <= block.timestamp, 
-      "Must wait before you can buy more tokens."
-    );
-
-    // Update last buy from buyer.
-    sellerListings[_seller].orderLimits[_listingId].lastBuy[buyer] = block.timestamp;
 
     // Transfer tokens to buyer.
-    AssetSafe(assetSafe()).transferERC1155(assetContract, buyer, listing.tokenId, _quantity);
+    IERC1155(assetContract).safeTransferFrom(address(this), msg.sender, listing.tokenId, _quantity, "");
 
     // Update listing info.
     sellerListings[_seller].listings[_listingId].quantity -= _quantity;
@@ -269,10 +273,10 @@ contract Market is ReentrancyGuard {
     if(listing.currency == address(0)) {
       distributeEther(listing.seller, creator, listing.pricePerToken, _quantity);
     } else {
-      distributeERC20(listing.seller, buyer, creator, listing.currency, listing.pricePerToken, _quantity);
+      distributeERC20(listing.seller, msg.sender, creator, listing.currency, listing.pricePerToken, _quantity);
     }
 
-    emit NewSale(_seller, buyer, _listingId, listing.tokenId, listing.currency, listing.pricePerToken, _quantity);
+    emit NewSale(assetContract, msg.sender , _listingId, listing.tokenId, listing.currency, listing.pricePerToken, _quantity);
   }
 
   /// @notice Distributes relevant shares of the sale value (in ERC20 token) to the seller, creator and protocol.
@@ -322,11 +326,6 @@ contract Market is ReentrancyGuard {
     return controlCenter.getModule(PACK);
   }
 
-  /// @dev Returns pack protocol's asset manager address.
-  function assetSafe() internal view returns (address) {
-    return controlCenter.getModule(ASSET_SAFE);
-  }
-
   /// @notice Returns the total number of listings created by seller.
   function getTotalNumOfListings(address _seller) external view returns (uint numOfListings) {
     numOfListings = sellerListings[_seller].totalListings;
@@ -337,14 +336,8 @@ contract Market is ReentrancyGuard {
     listing = sellerListings[_seller].listings[_listingId];
   }
 
-  /// @notice Returns the order limit for the given seller and Listing ID.
-  function getOrderLimit(address _seller, uint _listingId) external view returns (uint quantityLimit, uint timeLimitInSeconds) {
-    quantityLimit = sellerListings[_seller].orderLimits[_listingId].quantityLimit;
-    timeLimitInSeconds = sellerListings[_seller].orderLimits[_listingId].timeLimitInSeconds;
-  }
-
   /// @notice Returns the timestamp when buyer last bought from the listing for the given seller and Listing ID.
-  function getLastBuy(address _seller, address _buyer, uint _listingId) external view returns (uint lastBuy) {
-    lastBuy = sellerListings[_seller].orderLimits[_listingId].lastBuy[_buyer];
+  function getSaleWindow(address _seller, uint _listingId) external view returns (uint, uint) {
+    return (sellerListings[_seller].saleWindow[_listingId].start, sellerListings[_seller].saleWindow[_listingId].end);
   }
 }

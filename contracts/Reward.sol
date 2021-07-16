@@ -1,18 +1,3 @@
-// ░█████╗░  ░█████╗░  ░█████╗░  ███████╗  ░██████╗  ░██████╗
-// ██╔══██╗  ██╔══██╗  ██╔══██╗  ██╔════╝  ██╔════╝  ██╔════╝
-// ███████║  ██║░░╚═╝  ██║░░╚═╝  █████╗░░  ╚█████╗░  ╚█████╗░
-// ██╔══██║  ██║░░██╗  ██║░░██╗  ██╔══╝░░  ░╚═══██╗  ░╚═══██╗
-// ██║░░██║  ╚█████╔╝  ╚█████╔╝  ███████╗  ██████╔╝  ██████╔╝
-// ╚═╝░░╚═╝  ░╚════╝░  ░╚════╝░  ╚══════╝  ╚═════╝░  ╚═════╝░
-
-
-// ██████╗░  ░█████╗░  ░█████╗░  ██╗░░██╗  ░██████╗
-// ██╔══██╗  ██╔══██╗  ██╔══██╗  ██║░██╔╝  ██╔════╝
-// ██████╔╝  ███████║  ██║░░╚═╝  █████═╝░  ╚█████╗░
-// ██╔═══╝░  ██╔══██║  ██║░░██╗  ██╔═██╗░  ░╚═══██╗
-// ██║░░░░░  ██║░░██║  ╚█████╔╝  ██║░╚██╗  ██████╔╝
-// ╚═╝░░░░░  ╚═╝░░╚═╝  ░╚════╝░  ╚═╝░░╚═╝  ╚═════╝░
-
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
@@ -22,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
+contract PackRewards is ERC1155PresetMinterPauser, IERC1155Receiver {
 
   uint public currentTokenId;
 
@@ -60,6 +45,7 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
 
   constructor() ERC1155PresetMinterPauser("") {
     _setRoleAdmin(MINTER_ROLE, MINTER_ROLE);
+    
     revokeRole(MINTER_ROLE, msg.sender);
     revokeRole(PAUSER_ROLE, msg.sender);
     revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -206,24 +192,11 @@ contract AccessPacks is ERC1155PresetMinterPauser, IERC1155Receiver {
   }
 
   /// @dev See `IERC1155Receiver.sol`
-  function onERC1155Received(
-    address operator,
-    address from,
-    uint256 id,
-    uint256 value,
-    bytes calldata data
-  ) external override returns (bytes4) {
-    return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
+  function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
+    return this.onERC1155Received.selector;
   }
 
-  /// @dev See `IERC1155Receiver.sol`
-  function onERC1155BatchReceived(
-    address operator,
-    address from,
-    uint256[] calldata ids,
-    uint256[] calldata values,
-    bytes calldata data
-  ) external override returns (bytes4) {
-    return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
+  function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
+    return this.onERC1155BatchReceived.selector;
   }
 }

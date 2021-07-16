@@ -9,20 +9,19 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 
-contract ControlCenter is AccessControl {
+contract ProtocolControl is AccessControl {
 
   bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
 
   address public treasury;
   bool public protocolInitialized;
+  bool public systemPaused;
   
   string public constant PACK = "PACK";
-  string public constant RNG = "RNG";
-  string public constant HANDLER = "HANDLER";
   string public constant MARKET = "MARKET";
-  string public constant ASSET_SAFE = "ASSET_SAFE";
+  string public constant RNG = "RNG";
+  
 
   mapping(bytes32 => address) public modules;
   mapping(string => bytes32) public moduleId;
@@ -46,23 +45,19 @@ contract ControlCenter is AccessControl {
   /// @dev Iniializes the ERC 1155 module of the pack protocol.
   function initPackProtocol(
     address _pack,
-    address _handler,
     address _market,
-    address _rng,
-    address _assetSafe
+    address _rng
   ) external onlyProtocolAdmin {
     require(!protocolInitialized, "The protocol has already been initialized.");
 
     addModule(PACK, _pack);
-    addModule(HANDLER, _handler);
     addModule(MARKET, _market);
     addModule(RNG, _rng);
-    addModule(ASSET_SAFE, _assetSafe);
+  }
 
-    ERC1155PresetMinterPauser(getModule(PACK)).grantRole(
-      ERC1155PresetMinterPauser(getModule(PACK)).MINTER_ROLE(),
-      _handler
-    );
+  /// @dev Lets protocol admin pause the entire pack protocol system.
+  function pausePackProtocol(bool _pause) onlyProtocolAdmin external {
+    systemPaused = _pause;
   }
 
   /// @dev Lets protocol admin add a module to the pack protocol.
@@ -101,27 +96,6 @@ contract ControlCenter is AccessControl {
   /// @dev Returns a module of the pack protocol.
   function getModule(string memory _moduleName) public view returns (address) {
     return modules[moduleId[_moduleName]];
-  }
-
-  /// @notice Pauses all activity in the ERC1155 part of the protocol.
-  function pausePackERC1155() external onlyProtocolAdmin {
-    ERC1155PresetMinterPauser(
-      getModule(PACK)
-    ).pause();
-  }
-
-  /// @notice Grants a role in the protocol's ERC1155 module.
-  function grantRoleERC1155(bytes32 _role, address _receiver) external onlyProtocolAdmin {
-    ERC1155PresetMinterPauser(
-      getModule(PACK)
-    ).grantRole(_role, _receiver);
-  }
-
-  /// @notice Revokes a role in the protocol's ERC1155 module.
-  function revokeRoleERC1155(bytes32 _role, address _subject) external onlyProtocolAdmin {
-    ERC1155PresetMinterPauser(
-      getModule(PACK)
-    ).revokeRole(_role, _subject);
   }
 
   /// @notice Grants the `PROTOCOL_ADMIN` role to `_newAdmin`.
