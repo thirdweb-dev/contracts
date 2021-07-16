@@ -8,12 +8,19 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface ProtocolControl {
+  /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
+  
+  /// @dev Returns the address of the pack protocol treasury.
   function treasury() external view returns(address treasuryAddress);
+
+  /// @dev Returns the address of pack protocol's module.
   function getModule(string memory _moduleName) external view returns (address);
 }
 
 interface Market {
+
+  /// @dev Lists packs or rewards for sale on the pack protocol market.
   function list(
     address _assetContract, 
     uint _tokenId,
@@ -28,11 +35,13 @@ interface Market {
 }
 
 interface RNGInterface {
-  /// @notice Returns whether the RNG is using an external service for randomness.
+  /// @dev Returns whether the RNG is using an external service for randomness.
   function usingExternalService() external returns (bool);
 
-  /// @notice Sends a request for a random number to the 3rd-party service
-  /// @dev Returns the unique request Id of the request, and the block number of the request.
+  /**
+   * @dev Sends a request for random number to an external.
+   *      Returns the unique request Id of the request, and the block number of the request.
+  **/ 
   function requestRandomNumber() external returns (uint requestId, uint lockBlock);
 
   /// @notice Gets the Fee for making a Request against an RNG service
@@ -44,10 +53,14 @@ interface RNGInterface {
 
 contract Pack is ERC1155, IERC1155Receiver {
 
+  /// @dev The pack protocol admin contract.
   ProtocolControl internal controlCenter;
+
+  /// @dev Pack protocol module names.
   string public constant RNG = "RNG";
   string public constant MARKET = "MARKET";
 
+  /// @dev The tokenId for packs to be minted.
   uint public nextTokenId;
 
   struct Rewards {
@@ -88,8 +101,12 @@ contract Pack is ERC1155, IERC1155Receiver {
   /// @dev packId => any pending randomness requests.
   mapping(uint => mapping(address => bool)) public pendingRandomnessRequests;
 
+  /// @dev Events.
+  event PackCreated(address indexed rewardContract, address indexed creator, uint packId, string packURI, uint packTotalSupply);
+  event PackOpened(uint indexed packId, address indexed opener);
+  event RewardDistributed(address indexed rewardContract, address indexed receiver, uint packId, uint rewardId);
 
-  /// @dev Checks whether Pack protocol is operational.
+  /// @dev Checks whether Pack protocol is paused.
   modifier onlyUnpausedProtocol() {
     require(controlCenter.systemPaused(), "Pack: The pack protocol is paused.");
     _;
@@ -100,7 +117,7 @@ contract Pack is ERC1155, IERC1155Receiver {
   }
 
   /**
-  *   ERC 1155 functions.
+  *   ERC 1155 and ERC 1155 Receiver functions.
   **/
 
   function uri(uint id) public view override returns (string memory) {
@@ -116,10 +133,10 @@ contract Pack is ERC1155, IERC1155Receiver {
   }
 
   /**
-  *   External functions.   
+  *   Public functions.   
   **/
 
-  /// @dev Creates a pack with rewards.
+  /// @dev Creates packs with rewards.
   function createPack(
     string calldata _packURI,
 
@@ -160,9 +177,15 @@ contract Pack is ERC1155, IERC1155Receiver {
 
     // Mint packs to creator.
     _mint(msg.sender, packId, packTotalSupply, "");
+
+    emit PackCreated(_rewardContract, msg.sender, packId, _packURI, packTotalSupply);
   }
 
-  /// @dev Creates a pack with rewards.
+  /**
+  *   External functions.   
+  **/
+
+  /// @dev Creates packs with rewards and lists packs for sale on the pack protocol marketplace.
   function createPackAndList(
     string calldata _packURI,
 
@@ -182,15 +205,15 @@ contract Pack is ERC1155, IERC1155Receiver {
     // Create packs.
     (uint packId, uint packTotalSupply) = createPack(_packURI, _rewardContract, _rewardIds, _rewardAmounts, _secondsUntilOpenStart, _secondsUntilOpenEnd);
 
-    // List packs.
+    // Lists packs for sale on the pack protocol marketplace.
     market().list(_rewardContract, packId, _currency, _pricePerToken, packTotalSupply, _secondsUntilSaleStart, _secondsUntilSaleEnd);
   }
 
-  /// @notice Lets a pack token owner open a single pack
+  /// @notice Lets a pack owner open a single pack.
   function openPack(uint _packId) external {
 
     require(block.timestamp >= openLimit[_packId].start && block.timestamp <= openLimit[_packId].end, "Pack: the window to open packs has not started or closed.");
-    require(balanceOf(msg.sender, _packId) > 0, "Sender owns no packs of the given packId.");
+    require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
     require(pendingRandomnessRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
 
     if(rng().usingExternalService()) {
@@ -200,13 +223,11 @@ contract Pack is ERC1155, IERC1155Receiver {
       // Else, open the pack right away. 
       syncOpenPack(msg.sender, _packId);
     }
-
-    // emit PackOpened(_packId, msg.sender);
   }
 
-  /// @dev Called by protocol RNG when using an external random number provider.
+  /// @dev Called by protocol RNG when using an external random number provider. Completes a pack opening.
   function fulfillRandomness(uint requestId, uint randomness) external {
-    require(msg.sender == address(rng()), "Only the appointed RNG can fulfill random number requests.");
+    require(msg.sender == address(rng()), "Pack: only the appointed RNG can fulfill random number requests.");
 
     // Pending request completed
     pendingRandomnessRequests[randomnessRequests[requestId].packId][randomnessRequests[requestId].opener] = false;
@@ -214,32 +235,44 @@ contract Pack is ERC1155, IERC1155Receiver {
     // Burn the pack being opened.
     _burn(msg.sender, randomnessRequests[requestId].packId, 1);
 
+    emit PackOpened(randomnessRequests[requestId].packId, msg.sender);
+
     // Get tokenId of the reward to distribute.
     uint rewardId = getReward(randomnessRequests[requestId].packId, randomness);
+    address rewardContract = rewards[randomnessRequests[requestId].packId].source;
 
     // Distribute the reward to the pack opener.
-    safeTransferFrom(address(this), randomnessRequests[requestId].opener, rewardId, 1, "");
+    IERC1155(rewardContract).safeTransferFrom(address(this), randomnessRequests[requestId].opener, rewardId, 1, "");
+
+    emit RewardDistributed(rewardContract, randomnessRequests[requestId].opener, randomnessRequests[requestId].packId, rewardId);
   }
 
   /**
   *   Internal functions.
   **/
 
+  /// @dev Opens a pack i.e. burns a pack and distributes a reward to the pack opener.
   function syncOpenPack(address _opener, uint _packId) internal {
 
     // Burn the pack being opened.
-    _burn(msg.sender, _packId, 1);
+    _burn(_opener, _packId, 1);
+
+    emit PackOpened(_packId, _opener);
 
     // Get random number.
     (uint randomness,) = rng().getRandomNumber(block.number);
     
     // Get tokenId of the reward to distribute.
     uint rewardId = getReward(_packId, randomness);
+    address rewardContract = rewards[_packId].source;
 
     // Distribute the reward to the pack opener.
-    safeTransferFrom(address(this), _opener, rewardId, 1, "");
+    IERC1155(rewardContract).safeTransferFrom(address(this), _opener, rewardId, 1, "");
+
+    emit RewardDistributed(rewardContract, _opener, _packId, rewardId);
   }
 
+  /// @dev Initiates a pack opening; sends a random number request to an external RNG service.
   function asyncOpenPack(address _opener, uint _packId) internal {
     // Approve RNG to handle fee amount of fee token.
     (address feeToken, uint feeAmount) = rng().getRequestFee();
@@ -247,7 +280,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     if(feeToken != address(0)) {
       require(
         IERC20(feeToken).approve(address(rng()), feeAmount),
-        "Failed to approve rng to handle fee amount of fee token."
+        "Pack: failed to approve rng to handle fee amount of fee token."
       );
     }
 
@@ -262,7 +295,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     pendingRandomnessRequests[_packId][_opener] = true;
   }
 
-  /// @dev returns a reward tokenId using `randomness` provided by RNG.
+  /// @dev Returns a reward tokenId using `_randomness` provided by RNG.
   function getReward(uint _packId, uint _randomness) internal returns (uint rewardTokenId) {
 
     uint prob = _randomness % _sumArr(rewards[_packId].amountsPacked);
@@ -282,6 +315,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     }
   }
 
+  /// @dev Updates a token's total supply.
   function _beforeTokenTransfer(
     address,
     address from,
