@@ -67,13 +67,13 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
   /// @dev Checks whether Pack protocol is paused.
   modifier onlyUnpausedProtocol() {
-    require(controlCenter.systemPaused(), "Market: The pack protocol is paused.");
+    require(!controlCenter.systemPaused(), "Market: The pack protocol is paused.");
     _;
   }
 
   /// @dev Check whether the listing exists.
-  modifier onlyExistingListing(uint _listingId) {
-    require(listings[msg.sender][_listingId].seller != address(0), "Market: The listing doe not exist.");
+  modifier onlyExistingListing(address _seller, uint _listingId) {
+    require(listings[_seller][_listingId].seller != address(0), "Market: The listing does not exist.");
     _;
   }
 
@@ -146,14 +146,14 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     emit NewListing(_assetContract, seller, listingId, _tokenId, _currency, _pricePerToken, _quantity);
     
     // Set sale window for listing.
-    saleWindow[seller][listingId].start =  _secondsUntilStart;
-    saleWindow[seller][listingId].end = _secondsUntilEnd;
+    saleWindow[seller][listingId].start =  block.timestamp + _secondsUntilStart;
+    saleWindow[seller][listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
     emit SaleWindowUpdate(seller, listingId, _secondsUntilStart, _secondsUntilEnd);
   }
 
   /// @notice Unlist `_quantity` amount of tokens.
-  function unlist(uint _listingId, uint _quantity) external onlyExistingListing(_listingId) {
+  function unlist(uint _listingId, uint _quantity) external onlyExistingListing(msg.sender, _listingId) {
     require(listings[msg.sender][_listingId].quantity >= _quantity, "Market: cannot unlist more tokens than are listed.");
 
     // Transfer way tokens being unlisted.
@@ -173,7 +173,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @notice Lets a seller add tokens to an existing listing.
-  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol onlyExistingListing(_listingId) {
+  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol onlyExistingListing(msg.sender, _listingId) {
     require(
       IERC1155(listings[msg.sender][_listingId].assetContract).isApprovedForAll(msg.sender, address(this)),
       "Market: must approve the market to transfer tokens being added."
@@ -203,7 +203,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
-  function updateListingPrice(uint _listingId, uint _newPricePerToken) external onlyExistingListing(_listingId) {
+  function updateListingPrice(uint _listingId, uint _newPricePerToken) external onlyExistingListing(msg.sender, _listingId) {
 
     // Update listing info.
     listings[msg.sender][_listingId].pricePerToken = _newPricePerToken;
@@ -219,7 +219,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @notice Lets a seller change the currency or price of a listing.
-  function updateListingCurrency(uint _listingId, address _newCurrency) external onlyExistingListing(_listingId) {
+  function updateListingCurrency(uint _listingId, address _newCurrency) external onlyExistingListing(msg.sender, _listingId) {
 
     // Update listing info.
     listings[msg.sender][_listingId].currency = _newCurrency;
@@ -235,7 +235,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @notice Lets a seller change the order limit for a listing.
-  function updateSaleWindow(uint _listingId, uint _secondsUntilStart, uint _secondsUntilEnd) external onlyExistingListing(_listingId) {
+  function updateSaleWindow(uint _listingId, uint _secondsUntilStart, uint _secondsUntilEnd) external onlyExistingListing(msg.sender, _listingId) {
 
     // Set sale window for listing.
     saleWindow[msg.sender][_listingId].start =  block.timestamp + _secondsUntilStart;
@@ -245,7 +245,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
-  function buy(address _seller, uint _listingId, uint _quantity) external payable nonReentrant onlyExistingListing(_listingId) {
+  function buy(address _seller, uint _listingId, uint _quantity) external payable nonReentrant onlyExistingListing(_seller, _listingId) {
 
     require(
       block.timestamp <= saleWindow[_seller][_listingId].end && block.timestamp >= saleWindow[_seller][_listingId].start,

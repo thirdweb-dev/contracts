@@ -15,22 +15,6 @@ interface IProtocolControl {
   function getModule(string memory _moduleName) external view returns (address);
 }
 
-interface IMarket {
-
-  /// @dev Lists packs or rewards for sale on the pack protocol market.
-  function list(
-    address _assetContract, 
-    uint _tokenId,
-
-    address _currency,
-    uint _pricePerToken,
-    uint _quantity,
-
-    uint _secondsUntilStart,
-    uint _secondsUntilEnd
-  ) external;
-}
-
 interface RNGInterface {
   /// @dev Returns whether the RNG is using an external service for randomness.
   function usingExternalService() external returns (bool);
@@ -187,7 +171,7 @@ contract Pack is ERC1155, IERC1155Receiver {
 
     require(block.timestamp >= openLimit[_packId].start && block.timestamp <= openLimit[_packId].end, "Pack: the window to open packs has not started or closed.");
     require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
-    require(pendingRandomnessRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
+    require(!pendingRandomnessRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
 
     if(rng().usingExternalService()) {
       // If RNG is using an external service, open the pack upon retrieving the random number.
@@ -325,11 +309,6 @@ contract Pack is ERC1155, IERC1155Receiver {
   /// @dev Returns pack protocol's RNG.
   function rng() internal view returns (RNGInterface) {
     return RNGInterface(controlCenter.getModule(RNG));
-  }
-
-  /// @dev Returns pack protocol's Market.
-  function market() internal view returns (IMarket) {
-    return IMarket(controlCenter.getModule((MARKET)));
   }
 
   /// @dev Returns the sum of all elements in the array
