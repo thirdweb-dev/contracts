@@ -84,6 +84,7 @@ contract Pack is ERC1155, IERC1155Receiver {
 
   /// @dev Events.
   event PackCreated(address indexed rewardContract, address indexed creator, uint packId, string packURI, uint packTotalSupply);
+  event PackRewards(uint indexed packId, address indexed rewardContract, uint[] rewardIds, uint[] rewardAmounts);
   event PackOpened(uint indexed packId, address indexed opener);
   event RewardDistributed(address indexed rewardContract, address indexed receiver, uint packId, uint rewardId);
 
@@ -160,6 +161,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     _mint(msg.sender, packId, packTotalSupply, "");
 
     emit PackCreated(_rewardContract, msg.sender, packId, _packURI, packTotalSupply);
+    emit PackRewards(packId, _rewardContract, _rewardIds, _rewardAmounts);
   }
 
   /**
