@@ -6,7 +6,10 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./ProtocolControl.sol";
+interface IProtocolControl {
+  /// @dev Returns the address of pack protocol's module.
+  function getModule(string memory _moduleName) external view returns (address);
+}
 
 /// @dev Basic interface for a random number receiver.
 interface IRNGReceiver {
@@ -16,7 +19,7 @@ interface IRNGReceiver {
 contract RNG is Ownable, VRFConsumerBase {
 
   /// @dev The pack protocol admin contract.
-  ProtocolControl internal controlCenter;
+  IProtocolControl internal controlCenter;
 
   /// @dev Pack protocol module names.
   string public constant PACK = "PACK";
@@ -66,7 +69,7 @@ contract RNG is Ownable, VRFConsumerBase {
     bytes32 _keyHash,
     uint _fees
   ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
-    controlCenter = ProtocolControl(_controlCenter);
+    controlCenter = IProtocolControl(_controlCenter);
 
     keyHash = _keyHash;
     fees = _fees;

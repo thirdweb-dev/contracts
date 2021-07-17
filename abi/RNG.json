@@ -20,6 +20,11 @@
         "internalType": "bytes32",
         "name": "_keyHash",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_fees",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",

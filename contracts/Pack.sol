@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface ProtocolControl {
+interface IProtocolControl {
   /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
 
@@ -15,7 +15,7 @@ interface ProtocolControl {
   function getModule(string memory _moduleName) external view returns (address);
 }
 
-interface Market {
+interface IMarket {
 
   /// @dev Lists packs or rewards for sale on the pack protocol market.
   function list(
@@ -51,7 +51,7 @@ interface RNGInterface {
 contract Pack is ERC1155, IERC1155Receiver {
 
   /// @dev The pack protocol admin contract.
-  ProtocolControl internal controlCenter;
+  IProtocolControl internal controlCenter;
 
   /// @dev Pack protocol module names.
   string public constant RNG = "RNG";
@@ -105,12 +105,12 @@ contract Pack is ERC1155, IERC1155Receiver {
 
   /// @dev Checks whether Pack protocol is paused.
   modifier onlyUnpausedProtocol() {
-    require(controlCenter.systemPaused(), "Pack: The pack protocol is paused.");
+    require(!controlCenter.systemPaused(), "Pack: The pack protocol is paused.");
     _;
   }
 
   constructor(address _controlCenter, string memory _uri) ERC1155(_uri) {
-    controlCenter = ProtocolControl(_controlCenter);
+    controlCenter = IProtocolControl(_controlCenter);
   }
 
   /**
@@ -181,30 +181,6 @@ contract Pack is ERC1155, IERC1155Receiver {
   /**
   *   External functions.   
   **/
-
-  /// @dev Creates packs with rewards and lists packs for sale on the pack protocol marketplace.
-  function createPackAndList(
-    string calldata _packURI,
-
-    address _rewardContract, 
-    uint[] calldata _rewardIds, 
-    uint[] calldata _rewardAmounts,
-
-    uint _secondsUntilOpenStart,
-    uint _secondsUntilOpenEnd,
-
-    uint _pricePerToken,
-    address _currency,
-    uint _secondsUntilSaleStart,
-    uint _secondsUntilSaleEnd
-
-  ) external onlyUnpausedProtocol {
-    // Create packs.
-    (uint packId, uint packTotalSupply) = createPack(_packURI, _rewardContract, _rewardIds, _rewardAmounts, _secondsUntilOpenStart, _secondsUntilOpenEnd);
-
-    // Lists packs for sale on the pack protocol marketplace.
-    market().list(_rewardContract, packId, _currency, _pricePerToken, packTotalSupply, _secondsUntilSaleStart, _secondsUntilSaleEnd);
-  }
 
   /// @notice Lets a pack owner open a single pack.
   function openPack(uint _packId) external {
@@ -352,8 +328,8 @@ contract Pack is ERC1155, IERC1155Receiver {
   }
 
   /// @dev Returns pack protocol's Market.
-  function market() internal view returns (Market) {
-    return Market(controlCenter.getModule((MARKET)));
+  function market() internal view returns (IMarket) {
+    return IMarket(controlCenter.getModule((MARKET)));
   }
 
   /// @dev Returns the sum of all elements in the array

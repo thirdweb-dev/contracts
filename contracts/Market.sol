@@ -10,7 +10,7 @@ interface ListingAsset {
   function creator(uint _tokenId) external view returns (address creator);
 }
 
-interface ProtocolControl {
+interface IProtocolControl {
   /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
   
@@ -24,7 +24,7 @@ interface ProtocolControl {
 contract Market is IERC1155Receiver, ReentrancyGuard {
 
   /// @dev The pack protocol admin contract.
-  ProtocolControl internal controlCenter;
+  IProtocolControl internal controlCenter;
 
   /// @dev Pack protocol module names.
   string public constant PACK = "PACK";
@@ -78,7 +78,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   constructor(address _controlCenter) {
-    controlCenter = ProtocolControl(_controlCenter);
+    controlCenter = IProtocolControl(_controlCenter);
   }
 
   /**

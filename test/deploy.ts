@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
-import { Signer, Contract, ContractFactory, BytesLike } from "ethers";
+import { Signer, Contract, ContractFactory, BytesLike, BigNumber } from "ethers";
 import { expect } from "chai";
 
 import { chainlinkVarsRinkeby } from "../utils/chainlink";
 
-describe("Deploying $PACK Protocol and Access Packs contracts", function() {
+describe("Deploying $PACK Protocol contracts", function() {
 
   let deployer: Signer;
   let deployerAddress: string;
@@ -27,49 +27,40 @@ describe("Deploying $PACK Protocol and Access Packs contracts", function() {
 
   it("Should deploy the $PACK Protocol contracts", async () => {
     // 1. Deploy ControlCenter
-    const ControlCenter_Factory: ContractFactory = await ethers.getContractFactory("ControlCenter");
-    const controlCenter: Contract = await ControlCenter_Factory.deploy(deployerAddress);
+    const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
+    const controlCenter: Contract = await ProtocolControl_Factory.deploy(deployerAddress);
 
     // 2. Deploy rest of the protocol modules.
+    const packTokenURI: string = "$PACK Protocol"
     const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-    const pack: Contract = await Pack_Factory.deploy(controlCenter.address);
-
-    const Handler_Factory: ContractFactory = await ethers.getContractFactory("Handler");
-    const handler: Contract = await Handler_Factory.deploy(controlCenter.address);
+    const pack: Contract = await Pack_Factory.deploy(controlCenter.address, packTokenURI);
 
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
     const market: Contract = await Market_Factory.deploy(controlCenter.address);
 
     const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
+    const fees: BigNumber = ethers.utils.parseEther("0.1");
     
     const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
     const rng: Contract = await RNG_Factory.deploy(
       controlCenter.address,
       vrfCoordinator,
       linkTokenAddress,
-      keyHash
+      keyHash,
+      fees
     );
-
-    const AssetSafe_Factory: ContractFactory = await ethers.getContractFactory("AssetSafe");
-    const assetSafe: Contract = await AssetSafe_Factory.deploy(controlCenter.address);
 
     // Initialize $PACK Protocol in ControlCenter
     await controlCenter.initPackProtocol(
       pack.address,
-      handler.address,
       market.address,
       rng.address,
-      assetSafe.address
     );
     
     // Check whether the protocol has been initialized correctly.
     expect(
       await controlCenter.getModule(await controlCenter.PACK())
     ).to.equal(pack.address)
-
-    expect(
-      await controlCenter.getModule(await controlCenter.HANDLER())
-    ).to.equal(handler.address)
 
     expect(
       await controlCenter.getModule(await controlCenter.MARKET())
@@ -79,45 +70,15 @@ describe("Deploying $PACK Protocol and Access Packs contracts", function() {
       await controlCenter.getModule(await controlCenter.RNG())
     ).to.equal(rng.address)
 
-    expect(
-      await controlCenter.getModule(await controlCenter.ASSET_SAFE())
-    ).to.equal(assetSafe.address)
-    
-
-    const DEFAULT_ADMIN_ROLE: BytesLike = await controlCenter.DEFAULT_ADMIN_ROLE();
-
-    // Check AccessControl rights
-    expect(await pack.hasRole(MINTER_ROLE, deployerAddress)).to.equal(false);
-    expect(await pack.hasRole(PAUSER_ROLE, deployerAddress)).to.equal(false);
-    expect(await pack.hasRole(DEFAULT_ADMIN_ROLE, deployerAddress)).to.equal(false);
-
-    expect(await pack.hasRole(MINTER_ROLE, handler.address)).to.equal(true);
-    expect(await pack.hasRole(PAUSER_ROLE, handler.address)).to.equal(false);
-    expect(await pack.hasRole(DEFAULT_ADMIN_ROLE, handler.address)).to.equal(false);
-
-    expect(await pack.hasRole(MINTER_ROLE, controlCenter.address)).to.equal(false);
-    expect(await pack.hasRole(PAUSER_ROLE, controlCenter.address)).to.equal(true);
-    expect(await pack.hasRole(DEFAULT_ADMIN_ROLE, controlCenter.address)).to.equal(true);
-
     expect(await controlCenter.hasRole(PROTOCOL_ADMIN_ROLE, deployerAddress)).to.equal(true);
   })
 
   it("Should deploy the Access Packs contracts", async () => {
-    // 1. Deploy ControlCenter
-    const ControlCenter_Factory: ContractFactory = await ethers.getContractFactory("ControlCenter");
-    const controlCenter: Contract = await ControlCenter_Factory.deploy(deployerAddress);
-    // ... Initialize pack protocol. Then:
 
-    const AccessPacks_Factory: ContractFactory = await ethers.getContractFactory("AccessPacks");
-    const accessPacks: Contract = await AccessPacks_Factory.deploy();
+    const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
+    const rewards: Contract = await Rewards_Factory.deploy();
 
-    // Check AccessControl rights
-    const DEFAULT_ADMIN_ROLE: BytesLike = await controlCenter.DEFAULT_ADMIN_ROLE();
-
-    expect(await accessPacks.hasRole(MINTER_ROLE, deployerAddress)).to.equal(false);
-    expect(await accessPacks.hasRole(PAUSER_ROLE, deployerAddress)).to.equal(false);
-    expect(await accessPacks.hasRole(DEFAULT_ADMIN_ROLE, deployerAddress)).to.equal(false);
-
-    expect(await accessPacks.hasRole(DEFAULT_ADMIN_ROLE, controlCenter.address)).to.equal(false);
+    expect(await rewards.hasRole(MINTER_ROLE, deployerAddress)).to.equal(true);
+    expect(await rewards.hasRole(PAUSER_ROLE, deployerAddress)).to.equal(true);
   })
 })
