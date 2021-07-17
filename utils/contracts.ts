@@ -2,49 +2,37 @@ import { ethers } from 'ethers';
 import * as dotenv from 'dotenv'
 dotenv.config();
 
-import controlCenterAbi from '../abi/ControlCenter.json';
+import controlCenterAbi from '../abi/ProtocolControl.json';
 import packABI from '../abi/Pack.json';
-import handlerABI from '../abi/Handler.json';
 import marketAbi  from '../abi/Market.json';
 import rngAbi from '../abi/RNG.json';
-import assetSafeAbi from '../abi/AssetSafe.json';
-import accessPacksABI from '../abi/AccessPacks.json';
+import rewardsABI from '../abi/Rewards.json';
 
 dotenv.config();
 
 export const controlCenterObj = {
-  address: "0xBF0f4Dc9B3E59a3bF69685D3cE8a04D78675c255",
+  address: "0xb08E08f4B0A88eaFc1446e703390Ad49dB7507e8",
   abi: controlCenterAbi
 }
 
 export const packObj = {
-  address: "0x3A6701A5D1cb6Cd2A8886aFFeE3012E2396bA755",
+  address: "0x5ECC47810De05F49728Abe629f59FF020D4b5d92",
   abi: packABI
 }
 
-export const handlerObj = {
-  address: "0x87a041FFdf941a305d8d0A581080972ff8e1Fd42",
-  abi: handlerABI
-}
-
 export const marketObj = {
-  address: "0xDd8C26Bb12dc8cC31E572Cc8e83919c4d02fad5e",
+  address: "0x9e3880045597a3eaAfB1E1589Ea2711efc5B252d",
   abi: marketAbi
 }
 
 export const rngObj = {
-  address: "0x38FCAa08CC0ADcFEcfc8488EeB49f67Ab58E4A9A",
+  address: "0xc0afa9B5F59830EA4921D5789A403b3724a2334C",
   abi: rngAbi
 }
 
-export const assetSafeObj = {
-  address: "0x9b6962a5a1Bc2E1Fa0508fe933310B51FC6063e1",
-  abi: assetSafeAbi
-}
-
-export const accessPacksObj = {
-  address: "0xfA0e84d3A30665A51081b661bEDB3b1d0e8D87ba",
-  abi: accessPacksABI
+export const rewardsObj = {
+  address: "0xD3207F46a7C1ABf8bF22E43056521B9d22758E65",
+  abi: rewardsABI
 }
 
 export const rinkebyProvider = new ethers.providers.JsonRpcProvider(
