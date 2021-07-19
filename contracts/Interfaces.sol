@@ -10,6 +10,12 @@ interface IProtocolControl {
 
   /// @dev Returns the address of pack protocol's module.
   function getModule(string memory _moduleName) external view returns (address);
+
+  /// @dev Returns true if account has been granted role.
+  function hasRole(bytes32 role, address account) external returns (bool);
+
+  /// @dev Returns true if account has been granted role.
+  function PROTOCOL_ADMIN() external view returns (bytes32);
 }
 
 interface IListingAsset {
