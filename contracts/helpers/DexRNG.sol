@@ -42,8 +42,8 @@ contract DexRNG {
 
   /// @dev Add a UniswapV2/Sushiswap pair to draw randomness from.
   function addPair(address _pair) external {
-    require(IUniswapV2Pair(_pair).MINIMUM_LIQUIDITY() == 1000, "Invalid pair address provided.");
-    require(pairIndex[_pair] == 0, "This pair already exists as a randomness source.");
+    require(IUniswapV2Pair(_pair).MINIMUM_LIQUIDITY() == 1000, "DEX RNG:Invalid pair address provided.");
+    require(pairIndex[_pair] == 0, "DEX RNG: This pair already exists as a randomness source.");
     
     // Update pair index.
     currentPairIndex += 1;
@@ -64,7 +64,7 @@ contract DexRNG {
 
   /// @dev Sets whether a UniswapV2 pair is actively used as a source of randomness.
   function changePairStatus(address _pair, bool _activeStatus) external {
-    require(pairIndex[_pair] != 0, "Cannot change the status of a pair that does not exist.");
+    require(pairIndex[_pair] != 0, "DEX RNG: Cannot change the status of a pair that does not exist.");
 
     active[_pair] = _activeStatus;
     
@@ -73,7 +73,7 @@ contract DexRNG {
 
   /// @dev Returns a random number within the given range.s
   function getRandomNumber(uint range) external returns (uint randomNumber, bool acceptableEntropy) {
-    require(currentPairIndex > 0, "No Uniswap pairs available to draw randomness from.");
+    require(currentPairIndex > 0, "DEX RNG: No Uniswap pairs available to draw randomness from.");
 
     // Check whether pairs have already updated in this block.
     acceptableEntropy = blockEntropy[block.number];
@@ -125,8 +125,8 @@ contract DexRNG {
 
   /// @notice See `UniswapV2Library.sol`
   function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
-    require(tokenA != tokenB, "UniswapV2Library: IDENTICAL_ADDRESSES");
+    require(tokenA != tokenB, "DEX RNG: UniswapV2Library: IDENTICAL_ADDRESSES");
     (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-    require(token0 != address(0), "UniswapV2Library: ZERO_ADDRESS");
+    require(token0 != address(0), "DEX RNG: UniswapV2Library: ZERO_ADDRESS");
   }
 }
