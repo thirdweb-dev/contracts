@@ -55,7 +55,7 @@ To deploy this project on a given network (e.g. rinkeby) update the `hardhat.con
 // ...
 if (testPrivateKey) {
   config.networks = {
-    mainnet: createTestnetConfig("rinkeby"),
+    rinkeby: createTestnetConfig("rinkeby"),
   };
 }
 ```
