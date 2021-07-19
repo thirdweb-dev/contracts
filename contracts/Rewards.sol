@@ -196,15 +196,8 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
     internal
     override
   {
-    // Increase total supply if tokens are being minted.
-    if(from == address(0)) {
-      
-      for(uint i = 0; i < ids.length; i++) {
-        rewards[ids[i]].supply += amounts[i];
-      }
-
-      // Decrease total supply if tokens are being burned.
-    } else if (to == address(0)) {
+    // Decrease total supply if tokens are being burned.
+    if (to == address(0)) {
 
       for(uint i = 0; i < ids.length; i++) {
         rewards[ids[i]].supply -= amounts[i];
