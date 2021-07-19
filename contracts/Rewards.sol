@@ -52,6 +52,7 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
   /// @notice Create native ERC 1155 rewards.
   function createNativeRewards(string[] calldata _rewardURIs, uint[] calldata _rewardSupplies) external returns (uint[] memory rewardIds) {
     require(_rewardURIs.length == _rewardSupplies.length, "Rewards: Must specify equal number of URIs and supplies.");
+    require(_rewardURIs.length > 0, "Rewards: Must create at least one reward.");
 
     // Get tokenIds.
     rewardIds = new uint[](_rewardURIs.length);
@@ -181,6 +182,34 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
       msg.sender,
       (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].numOfRewards
     );
+  }
+
+  /// @dev Updates a token's total supply.
+  function _beforeTokenTransfer(
+    address,
+    address from,
+    address to,
+    uint256[] memory ids,
+    uint256[] memory amounts,
+    bytes memory
+  )
+    internal
+    override
+  {
+    // Increase total supply if tokens are being minted.
+    if(from == address(0)) {
+      
+      for(uint i = 0; i < ids.length; i++) {
+        rewards[ids[i]].supply += amounts[i];
+      }
+
+      // Decrease total supply if tokens are being burned.
+    } else if (to == address(0)) {
+
+      for(uint i = 0; i < ids.length; i++) {
+        rewards[ids[i]].supply -= amounts[i];
+      }
+    }
   }
 
   /// @dev See EIP 1155
