@@ -6,20 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-interface ListingAsset {
-  function creator(uint _tokenId) external view returns (address creator);
-}
-
-interface IProtocolControl {
-  /// @dev Returns whether the pack protocol is paused.
-  function systemPaused() external view returns (bool);
-  
-  /// @dev Returns the address of the pack protocol treasury.
-  function treasury() external view returns(address treasuryAddress);
-
-  /// @dev Returns the address of pack protocol's module.
-  function getModule(string memory _moduleName) external view returns (address);
-}
+import { IProtocolControl, IListingAsset } from "./Interfaces.sol";
 
 contract Market is IERC1155Receiver, ReentrancyGuard {
 
@@ -268,7 +255,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     listings[_seller][_listingId].quantity -= _quantity;
 
     // Get token creator.
-    address creator = ListingAsset(assetContract).creator(listing.tokenId);
+    address creator = IListingAsset(assetContract).creator(listing.tokenId);
     
     // Distribute sale value to seller, creator and protocol.
     if(listing.currency == address(0)) {

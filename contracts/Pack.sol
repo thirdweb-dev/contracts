@@ -4,33 +4,9 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IProtocolControl {
-  /// @dev Returns whether the pack protocol is paused.
-  function systemPaused() external view returns (bool);
-
-  /// @dev Returns the address of pack protocol's module.
-  function getModule(string memory _moduleName) external view returns (address);
-}
-
-interface RNGInterface {
-  /// @dev Returns whether the RNG is using an external service for randomness.
-  function usingExternalService() external returns (bool);
-
-  /**
-   * @dev Sends a request for random number to an external.
-   *      Returns the unique request Id of the request, and the block number of the request.
-  **/ 
-  function requestRandomNumber() external returns (uint requestId, uint lockBlock);
-
-  /// @notice Gets the Fee for making a Request against an RNG service
-  function getRequestFee() external view returns (address feeToken, uint requestFee);
-
-  /// @notice Returns a random number and whether the random number was generated with enough entropy.
-  function getRandomNumber(uint range) external returns (uint randomNumber, bool acceptableEntropy);
-}
+import { IProtocolControl, IRNG } from "./Interfaces.sol";
 
 contract Pack is ERC1155, IERC1155Receiver {
 
@@ -309,8 +285,8 @@ contract Pack is ERC1155, IERC1155Receiver {
   }
 
   /// @dev Returns pack protocol's RNG.
-  function rng() internal view returns (RNGInterface) {
-    return RNGInterface(controlCenter.getModule(RNG));
+  function rng() internal view returns (IRNG) {
+    return IRNG(controlCenter.getModule(RNG));
   }
 
   /// @dev Returns the sum of all elements in the array
