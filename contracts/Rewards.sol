@@ -3,7 +3,6 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -12,7 +11,7 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
   /// @dev The token Id of the reward to mint.
   uint public nextTokenId;
 
-  enum UnderlyingType { None, ERC20, ERC721, ERC1155 }
+  enum UnderlyingType { None, ERC20, ERC721 }
 
   struct Reward {
     address creator;
@@ -32,8 +31,10 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
     uint underlyingTokenAmount;
   }
 
-  /// @notice Pack and reward events.
-  event RewardsCreated(address indexed creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
+  /// @notice Events.
+  event NativeRewards(address indexed creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
+  event ERC721Rewards(address indexed creator, address indexed nftContract, uint nftTokenId, uint rewardTokenId, string rewardURI);
+  event ERC20Rewards(address indexed creator, address indexed tokenContract, uint tokenAmount, uint rewardsMinted, string rewardURI);
 
   /// @dev Reward tokenId => Reward state.
   mapping(uint => Reward) public rewards;
@@ -74,7 +75,7 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
     mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
     revokeRole(MINTER_ROLE, msg.sender);
 
-    emit RewardsCreated(msg.sender, rewardIds, _rewardURIs, _rewardSupplies);
+    emit NativeRewards(msg.sender, rewardIds, _rewardURIs, _rewardSupplies);
   }
 
   /// @dev Wraps an ERC721 NFT as ERC1155 reward tokens. 
@@ -113,6 +114,8 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
       nftContract: _nftContract,
       nftTokenId: _tokenId
     });
+
+    emit ERC721Rewards(msg.sender, _nftContract, _tokenId, nextTokenId, _rewardURI);
 
     nextTokenId++;
   }
@@ -159,6 +162,8 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
       numOfRewards: _numOfRewardsToMint,
       underlyingTokenAmount: _tokenAmount
     });
+
+    emit ERC20Rewards(msg.sender, _tokenContract, _tokenAmount, _numOfRewardsToMint, _rewardURI);
     
     nextTokenId++;    
   }
