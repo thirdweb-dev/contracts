@@ -90,7 +90,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
       "Rewards: Only the owner of the NFT can wrap it."
     );
     require(
-      IERC721(_nftContract).getApproved(_tokenId) == address(this),
+      IERC721(_nftContract).getApproved(_tokenId) == address(this) || IERC721(_nftContract).isApprovedForAll(msg.sender, address(this)),
       "Rewards: Must approve the contract to transfer the NFT."
     );
         
@@ -146,11 +146,16 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
   function wrapERC20(address _tokenContract, uint _tokenAmount, uint _numOfRewardsToMint, string calldata _rewardURI) external {
 
     require(
+      IERC20(_tokenContract).balanceOf(msg.sender) >= _tokenAmount,
+      "Rewards: Must own the amount of tokens that are being wrapped."
+    );
+
+    require(
       IERC20(_tokenContract).allowance(msg.sender, address(this)) >= _tokenAmount,
       "Rewards: Must approve this contract to transfer ERC20 tokens."
     );
 
-    IERC20(_tokenContract).transferFrom(msg.sender, address(this), _tokenAmount);
+    require(IERC20(_tokenContract).transferFrom(msg.sender, address(this), _tokenAmount), "Failed to transfer ERC20 tokens.");
 
     // Mint reward tokens to `msg.sender`
     _setupRole(MINTER_ROLE, msg.sender);
@@ -161,7 +166,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
       creator: msg.sender,
       uri: _rewardURI,
       supply: _numOfRewardsToMint,
-      underlyingType: UnderlyingType.ERC721
+      underlyingType: UnderlyingType.ERC20
     });
 
     erc20Rewards[nextTokenId] = ERC20Reward({
@@ -177,7 +182,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
 
   /// @dev Lets the reward owner redeem their ERC20 tokens.
   function redeemERC20(uint _rewardId, uint _amount) external {
-    require(balanceOf(msg.sender, _rewardId) > _amount, "Rewards: Cannot redeem a reward you do not own.");
+    require(balanceOf(msg.sender, _rewardId) >= _amount, "Rewards: Cannot redeem a reward you do not own.");
         
     // Burn the reward token
     burn(msg.sender, _rewardId, _amount);
@@ -186,7 +191,10 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     uint amountToDistribute = (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].numOfRewards;
 
     // Transfer the ERC20 tokens to `msg.sender` 
-    IERC20(erc20Rewards[_rewardId].tokenContract).transferFrom(address(this), msg.sender, amountToDistribute);
+    require(
+      IERC20(erc20Rewards[_rewardId].tokenContract).transfer(msg.sender, amountToDistribute),
+      "Rewards: Failed to transfer ERC20 tokens."
+    );
 
     emit ERC20Redeemed(msg.sender, erc20Rewards[_rewardId].tokenContract, amountToDistribute, _amount);
   }
