@@ -140,7 +140,7 @@ describe("Create ERC721 rewards using the cannon Rewards.sol contract", function
         .withArgs(await fan.getAddress(), nftContract.address, expectedNftTokenId, expectedRewardId)
     })
 
-    it("Should burn the reward token used to redeem the NFT", async () => {
+    it("Should burn the reward token used to redeem the NFT, and transfer the NFT to the redeemer", async () => {
       
       expect(await rewardsContract.balanceOf(await fan.getAddress(), expectedRewardId)).to.equal(BigNumber.from(1));
       await rewardsContract.connect(fan).redeemERC721(expectedRewardId)
@@ -148,6 +148,8 @@ describe("Create ERC721 rewards using the cannon Rewards.sol contract", function
 
       const reward = await rewardsContract.rewards(expectedRewardId);
       expect(reward.supply).to.equal(BigNumber.from(0));
+
+      expect(await nftContract.ownerOf(expectedNftTokenId)).to.equal(await fan.getAddress());
     })
   })
 })
