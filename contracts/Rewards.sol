@@ -2,11 +2,12 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
+contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
 
   /// @dev The token Id of the reward to mint.
   uint public nextTokenId;
@@ -213,14 +214,5 @@ contract Rewards is ERC1155PresetMinterPauser, IERC1155Receiver {
   /// @dev Returns the creator of reward token
   function creator(uint _rewardId) external view returns (address) {
     return rewards[_rewardId].creator;
-  }
-
-  /// @dev See `IERC1155Receiver.sol`
-  function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
-    return this.onERC1155Received.selector;
-  }
-
-  function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
-    return this.onERC1155BatchReceived.selector;
   }
 }
