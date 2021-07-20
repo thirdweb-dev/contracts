@@ -35,7 +35,10 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
   /// @notice Events.
   event NativeRewards(address indexed creator, uint[] rewardIds, string[] rewardURIs, uint[] rewardSupplies);
   event ERC721Rewards(address indexed creator, address indexed nftContract, uint nftTokenId, uint rewardTokenId, string rewardURI);
+  event ERC721Redeemed(address indexed redeemer, address indexed nftContract, uint nftTokenId, uint rewardTokenId);
   event ERC20Rewards(address indexed creator, address indexed tokenContract, uint tokenAmount, uint rewardsMinted, string rewardURI);
+  event ERC20Redeemed(address indexed redeemer, address indexed tokenContract, uint tokenAmountReceived, uint rewardAmountRedeemed);
+
 
   /// @dev Reward tokenId => Reward state.
   mapping(uint => Reward) public rewards;
@@ -135,6 +138,8 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
       msg.sender,
       erc721Rewards[_rewardId].nftTokenId
     );
+
+    emit ERC721Redeemed(msg.sender, erc721Rewards[_rewardId].nftContract, erc721Rewards[_rewardId].nftTokenId, _rewardId);
   }
 
   /// @dev Wraps ERC20 tokens as ERC1155 reward tokens.
@@ -177,12 +182,13 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     // Burn the reward token
     burn(msg.sender, _rewardId, _amount);
 
+    // Get the ERC20 token amount to distribute
+    uint amountToDistribute = (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].numOfRewards;
+
     // Transfer the ERC20 tokens to `msg.sender` 
-    IERC20(erc20Rewards[_rewardId].tokenContract).transferFrom(
-      address(this), 
-      msg.sender,
-      (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].numOfRewards
-    );
+    IERC20(erc20Rewards[_rewardId].tokenContract).transferFrom(address(this), msg.sender, amountToDistribute);
+
+    emit ERC20Redeemed(msg.sender, erc20Rewards[_rewardId].tokenContract, amountToDistribute, _amount);
   }
 
   /// @dev Updates a token's total supply.

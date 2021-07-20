@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { Signer, Contract, ContractFactory, BigNumber } from "ethers";
+import { Signer, Contract, ContractFactory, BigNumber, BytesLike } from "ethers";
 import { expect } from "chai";
 
 describe("Create ERC721 rewards using the cannon Rewards.sol contract", function() {
@@ -108,6 +108,46 @@ describe("Create ERC721 rewards using the cannon Rewards.sol contract", function
 
       expect(underlyingNFT.nftContract).to.equal(nftContract.address)
       expect(underlyingNFT.nftTokenId).to.equal(expectedNftTokenId)
+    })
+  })
+
+  describe("Redeeming ERC721 NFT", function() {
+    beforeEach(async () => {
+      // Creator approves reward contract to transfer NFT.
+      await nftContract.connect(creator).approve(rewardsContract.address, expectedNftTokenId);
+
+      // Wrap the NFT.
+      await rewardsContract.connect(creator).wrapERC721(nftContract.address, expectedNftTokenId, rewardURI)
+
+      // Airdrop reward to fan.
+      const from: string = await creator.getAddress()
+      const to: string = await fan.getAddress()
+      const id: BigNumber = expectedRewardId
+      const amount: BigNumber = BigNumber.from(1);
+      const data: BytesLike = ethers.utils.toUtf8Bytes("");
+
+      await rewardsContract.connect(creator).safeTransferFrom(from, to, id, amount, data)
+    })
+
+    it("Should revert if someone other than the owner tries to redeem the reward", async () => {
+      await expect(rewardsContract.connect(creator).redeemERC721(expectedRewardId))
+        .to.be.revertedWith("Rewards: Cannot redeem a reward you do not own.");
+    })
+
+    it("Should emit ERC721Redeemed when the NFT is redeemed", async () => {
+      expect(await rewardsContract.connect(fan).redeemERC721(expectedRewardId))
+        .to.emit(rewardsContract, "ERC721Redeemed")
+        .withArgs(await fan.getAddress(), nftContract.address, expectedNftTokenId, expectedRewardId)
+    })
+
+    it("Should burn the reward token used to redeem the NFT", async () => {
+      
+      expect(await rewardsContract.balanceOf(await fan.getAddress(), expectedRewardId)).to.equal(BigNumber.from(1));
+      await rewardsContract.connect(fan).redeemERC721(expectedRewardId)
+      expect(await rewardsContract.balanceOf(await fan.getAddress(), expectedRewardId)).to.equal(BigNumber.from(0));
+
+      const reward = await rewardsContract.rewards(expectedRewardId);
+      expect(reward.supply).to.equal(BigNumber.from(0));
     })
   })
 })
