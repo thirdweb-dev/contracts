@@ -114,7 +114,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "buyer",
+        "name": "seller",
         "type": "address"
       },
       {
@@ -122,6 +122,12 @@
         "internalType": "uint256",
         "name": "listingId",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
       },
       {
         "indexed": false,

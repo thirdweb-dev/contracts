@@ -21,7 +21,7 @@ export const packObj = {
 }
 
 export const marketObj = {
-  address: "0x676B37d3761Da2bBaB5B36d06791BB304C54A1Da",
+  address: "0x3C5dDEd0160d4cef316138F21b7Cb0B0A77bBf50",
   abi: marketAbi
 }
 

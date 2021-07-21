@@ -11,7 +11,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Pack.sol`: [0xe3c195AeCFefE42c4f5B2332dcd635930cBB494e](https://rinkeby.etherscan.io/address/0xe3c195AeCFefE42c4f5B2332dcd635930cBB494e#code)
 
-- `Market.sol`: [0x676B37d3761Da2bBaB5B36d06791BB304C54A1Da](https://rinkeby.etherscan.io/address/0x676B37d3761Da2bBaB5B36d06791BB304C54A1Da#code)
+- `Market.sol`: [0x3C5dDEd0160d4cef316138F21b7Cb0B0A77bBf50](https://rinkeby.etherscan.io/address/0x3C5dDEd0160d4cef316138F21b7Cb0B0A77bBf50#code)
 
 - `RNG.sol`: [0x6782e28dC7009DeFea4B7506A8c9ecA9Fd927e47](https://rinkeby.etherscan.io/address/0x6782e28dC7009DeFea4B7506A8c9ecA9Fd927e47#code)
 

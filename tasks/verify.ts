@@ -22,7 +22,7 @@ async function Pack() {
 
 async function Market() {
   await hre.run("verify:verify", {
-    address: "0x676B37d3761Da2bBaB5B36d06791BB304C54A1Da", 
+    address: "0x3C5dDEd0160d4cef316138F21b7Cb0B0A77bBf50", 
     constructorArguments: [
       "0x278f941f4d167E6f75f7607c6ff12d86a2757568", // Control center adddress
     ],
@@ -52,11 +52,11 @@ async function Rewards() {
 }
 
 async function verify() {
-  await ProtocolControl()
-  await Pack()
+//   await ProtocolControl()
+//   await Pack()
   await Market()
-  await RNG()
-  await Rewards()
+//   await RNG()
+//   await Rewards()
 }
 
 verify()

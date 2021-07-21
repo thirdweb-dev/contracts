@@ -136,7 +136,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     saleWindow[seller][listingId].start =  block.timestamp + _secondsUntilStart;
     saleWindow[seller][listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
-    emit SaleWindowUpdate(seller, listingId, _secondsUntilStart, _secondsUntilEnd);
+    emit SaleWindowUpdate(seller, listingId, saleWindow[seller][listingId].start, saleWindow[seller][listingId].end);
   }
 
   /// @notice Unlist `_quantity` amount of tokens.
@@ -228,7 +228,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     saleWindow[msg.sender][_listingId].start =  block.timestamp + _secondsUntilStart;
     saleWindow[msg.sender][_listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
-    emit SaleWindowUpdate(msg.sender, _listingId, _secondsUntilStart, _secondsUntilEnd);
+    emit SaleWindowUpdate(msg.sender, _listingId, saleWindow[msg.sender][_listingId].start, saleWindow[msg.sender][_listingId].end);
   }
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
