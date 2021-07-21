@@ -73,7 +73,7 @@ describe("Deploying $PACK Protocol contracts", function() {
     expect(await controlCenter.hasRole(PROTOCOL_ADMIN_ROLE, deployerAddress)).to.equal(true);
   })
 
-  it("Should deploy the Access Packs contracts", async () => {
+  it("Should deploy the Rewards contracts", async () => {
 
     const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
     const rewards: Contract = await Rewards_Factory.deploy();
