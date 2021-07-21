@@ -43,12 +43,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   /// @dev seller address + listingId => listing info.
   mapping(address => mapping(uint => Listing)) public listings;
 
-  /// @dev seller address + listingId => sale windo for listing.
+  /// @dev seller address + listingId => sale window for listing.
   mapping(address => mapping(uint => SaleWindow)) public saleWindow;
 
   /// @dev Events
   event NewListing(address indexed assetContract, address indexed seller, uint listingId, uint tokenId, address currency, uint price, uint quantity);
-  event NewSale(address indexed assetContract, address indexed buyer, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
+  event NewSale(address indexed assetContract, address indexed seller, uint indexed listingId, address buyer, uint tokenId, address currency, uint price, uint quantity);
   event ListingUpdate(address indexed seller, uint indexed listingId, uint tokenId, address currency, uint price, uint quantity);
   event SaleWindowUpdate(address indexed seller, uint indexed listingId, uint start, uint end);
 
@@ -264,7 +264,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
       distributeERC20(listing.seller, msg.sender, creator, listing.currency, listing.pricePerToken, _quantity);
     }
 
-    emit NewSale(assetContract, msg.sender , _listingId, listing.tokenId, listing.currency, listing.pricePerToken, _quantity);
+    emit NewSale(assetContract, _seller, _listingId,  msg.sender, listing.tokenId, listing.currency, listing.pricePerToken, _quantity);
   }
 
   /// @notice Distributes relevant shares of the sale value (in ERC20 token) to the seller, creator and protocol.
