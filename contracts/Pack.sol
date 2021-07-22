@@ -20,6 +20,16 @@ contract Pack is ERC1155, IERC1155Receiver {
   /// @dev The tokenId for packs to be minted.
   uint public nextTokenId;
 
+  struct PackInfo {
+    uint packId;
+    address creator;
+    string uri;
+    uint currentSupply;
+
+    uint openStart;
+    uint openEnd;
+  }
+
   struct Rewards {
     address source;
 
@@ -294,5 +304,21 @@ contract Pack is ERC1155, IERC1155Receiver {
     for(uint i = 0; i < arr.length; i++) {
       sum += arr[i];
     }
+  }
+
+  /**
+  *   Getter functions.
+  **/
+
+  /// @dev Returns a pack for the given pack tokenId
+  function getPackById(uint _packId) external view returns (PackInfo memory pack) {
+    pack = PackInfo({
+      packId: _packId,
+      creator: creator[_packId],
+      uri: tokenURI[_packId],
+      currentSupply: totalSupply[_packId],
+      openStart: openLimit[_packId].start,
+      openEnd: openLimit[_packId].end
+    });
   }
 }
