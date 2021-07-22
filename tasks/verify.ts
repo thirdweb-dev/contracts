@@ -1,9 +1,10 @@
 import hre from 'hardhat'
 import { chainlinkVarsRinkeby } from "..//utils/chainlink";
+import { controlCenterObj, packObj, marketObj, rngObj, rewardsObj } from "../utils/contracts";
 
 async function ProtocolControl() {
   await hre.run("verify:verify", {
-    address: "0x278f941f4d167E6f75f7607c6ff12d86a2757568",
+    address: controlCenterObj.address,
     constructorArguments: [
       "0x2Ee4c2e9666Ff48DE2779EB6f33cDC342d761372" // Deployer address
     ]
@@ -12,9 +13,9 @@ async function ProtocolControl() {
 
 async function Pack() {
   await hre.run("verify:verify", {
-    address: "0xe3c195AeCFefE42c4f5B2332dcd635930cBB494e",
+    address: packObj.address,
     constructorArguments: [
-      "0x278f941f4d167E6f75f7607c6ff12d86a2757568", // Control center adddress
+        controlCenterObj.address, // Control center adddress
       "$PACK Protocol", // global URI
     ],
   });
@@ -22,9 +23,9 @@ async function Pack() {
 
 async function Market() {
   await hre.run("verify:verify", {
-    address: "0x3C5dDEd0160d4cef316138F21b7Cb0B0A77bBf50", 
+    address: marketObj.address, 
     constructorArguments: [
-      "0x278f941f4d167E6f75f7607c6ff12d86a2757568", // Control center adddress
+        controlCenterObj.address, // Control center adddress
     ],
   });
 }
@@ -33,9 +34,9 @@ async function RNG() {
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsRinkeby;
 
   await hre.run("verify:verify", {
-    address: "0x6782e28dC7009DeFea4B7506A8c9ecA9Fd927e47",
+    address: rngObj.address,
     constructorArguments: [
-      "0x278f941f4d167E6f75f7607c6ff12d86a2757568", // Control center adddress
+      controlCenterObj.address, // Control center adddress
       vrfCoordinator,
       linkTokenAddress,
       keyHash,
@@ -46,17 +47,17 @@ async function RNG() {
 
 async function Rewards() {
   await hre.run("verify:verify", {
-    address: "0xc36BEd3Ae0ff500F2D2E918Df90B4d59DFAE9942",
+    address: rewardsObj.address,
     constructorArguments: [],
   });
 }
 
 async function verify() {
-//   await ProtocolControl()
-//   await Pack()
+  // await ProtocolControl()
+  await Pack()
   await Market()
-//   await RNG()
-//   await Rewards()
+  await RNG()
+  await Rewards()
 }
 
 verify()
