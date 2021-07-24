@@ -101,7 +101,7 @@ contract Pack is ERC1155, IERC1155Receiver {
   }
 
   /**
-  *   Public functions.   
+  *   External functions.   
   **/
 
   /// @dev Creates packs with rewards.
@@ -115,7 +115,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     uint _secondsUntilOpenStart,
     uint _secondsUntilOpenEnd
 
-  ) public onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
+  ) external onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
 
     require(IERC1155(_rewardContract).supportsInterface(0xd9b67a26), "Pack: reward contract does not implement ERC 1155.");
     require(_rewardIds.length == _rewardAmounts.length, "Pack: unequal number of reward IDs and reward amounts provided.");
@@ -150,10 +150,6 @@ contract Pack is ERC1155, IERC1155Receiver {
     emit PackRewards(packId, _rewardContract, _rewardIds, _rewardAmounts);
   }
 
-  /**
-  *   External functions.   
-  **/
-
   /// @notice Lets a pack owner open a single pack.
   function openPack(uint _packId) external {
 
@@ -161,7 +157,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
     require(!pendingRandomnessRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
 
-    if(rng().usingExternalService()) {
+    if(rng().usingExternalService(_packId)) {
       // If RNG is using an external service, open the pack upon retrieving the random number.
       asyncOpenPack(msg.sender, _packId);
     } else {
@@ -219,16 +215,6 @@ contract Pack is ERC1155, IERC1155Receiver {
 
   /// @dev Initiates a pack opening; sends a random number request to an external RNG service.
   function asyncOpenPack(address _opener, uint _packId) internal {
-    // Approve RNG to handle fee amount of fee token.
-    (address feeToken, uint feeAmount) = rng().getRequestFee();
-
-    if(feeToken != address(0)) {
-      require(
-        IERC20(feeToken).approve(address(rng()), feeAmount),
-        "Pack: failed to approve rng to handle fee amount of fee token."
-      );
-    }
-
     // Request external service for a random number. Store the request ID.
     (uint requestId,) = rng().requestRandomNumber();
 

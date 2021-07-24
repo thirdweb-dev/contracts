@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
-
 import "./helpers/DexRNG.sol";
 
 import { IProtocolControl, IRNGReceiver } from "./Interfaces.sol";
@@ -15,8 +14,8 @@ contract RNG is DexRNG, VRFConsumerBase {
   /// @dev Pack protocol module names.
   string public constant PACK = "PACK";
   
-  /// @dev Wether the RNG uses and external service like Chainlink.
-  bool public isExternalService;
+  /// @dev tokenId => whether and external RNG service is used for opening the pack.
+  mapping(uint => bool) public usingExternalService;
 
   /// @dev Chainlink VRF requirements.
   uint internal fees;
@@ -53,10 +52,11 @@ contract RNG is DexRNG, VRFConsumerBase {
   
   /// @dev Sends a random number request to the Chainlink VRF system.
   function requestRandomNumber() external returns (uint requestId) {
+    require(LINK.balanceOf(address(this)) >= fees, "Not enough LINK to fulfill randomness request.");
     require(msg.sender == address(pack()), "RNG: Only the pack token contract can call this function.");
     
     // Send random number request.
-    bytes32 bytesId = requestRandomness(keyHash, fees, block.number);
+    bytes32 bytesId = requestRandomness(keyHash, fees, seed);
     
     // Return an integer Id instead of a bytes Id for convenience.
     requestId = currentRequestId;
@@ -90,14 +90,29 @@ contract RNG is DexRNG, VRFConsumerBase {
     fees = _fees;
   }
 
+  /// @notice Lets a pack owner decide whether to use Chainlink VRF to open packs.
+  function useExternalService(uint _packId, bool _use) external {
+    require(pack().creator(_packId) == msg.sender, "RNG: Only the pack creator can change the use of the RNG.");
+
+    uint totalSupply = pack().totalSupply(_packId);
+
+    if(_use) {
+      require(
+        LINK.allowance(msg.sender, address(this)) >= fees * totalSupply,
+        "RNG: not allowed to transfer the expected fee amount."
+      );
+      require(
+        LINK.transferFrom(msg.sender, address(this), fees * totalSupply),
+        "RNG: Failed to transfer the fee amount to RNG."
+      );
+    }
+
+    usingExternalService[_packId] = _use;
+  }
+
   /**
    *  View functions
   **/
-
-  /// @dev Returns whether the RNG is using an external service for random number generation.
-  function usingExternalService() external view returns (bool) {
-    return isExternalService;
-  }
 
   /// @dev Returns pack protocol's `Pack`
   function pack() internal view returns (IRNGReceiver) {

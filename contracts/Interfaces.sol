@@ -24,7 +24,7 @@ interface IListingAsset {
 
 interface IRNG {
   /// @dev Returns whether the RNG is using an external service for randomness.
-  function usingExternalService() external returns (bool);
+  function usingExternalService(uint _packId) external view returns (bool);
 
   /**
    * @dev Sends a request for random number to an external.
@@ -39,7 +39,11 @@ interface IRNG {
   function getRandomNumber(uint range) external returns (uint randomNumber, bool acceptableEntropy);
 }
 
-/// @dev Basic interface for a random number receiver.
+/// @dev Interface for pack protocol's `Pack.sol` as a random number receiver.
 interface IRNGReceiver {
   function fulfillRandomness(uint requestId, uint randomness) external;
+  
+  function creator(uint _packId) external view returns (address creator);
+  
+  function totalSupply(uint _packId) external view returns (uint totalSupplyOfToken);
 }
