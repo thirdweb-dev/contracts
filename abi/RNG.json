@@ -276,19 +276,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "isExternalService",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -405,7 +392,31 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_packId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_use",
+        "type": "bool"
+      }
+    ],
+    "name": "useExternalService",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "usingExternalService",
     "outputs": [
       {

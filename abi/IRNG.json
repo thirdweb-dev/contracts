@@ -60,7 +60,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_packId",
+        "type": "uint256"
+      }
+    ],
     "name": "usingExternalService",
     "outputs": [
       {
@@ -69,7 +75,7 @@
         "type": "bool"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }
 ]
