@@ -78,7 +78,7 @@ contract DexRNG {
     // Check whether pairs have already updated in this block.
     acceptableEntropy = blockEntropy[block.number];
     
-    uint blockSignature = uint(keccak256(abi.encodePacked(msg.sender, seed, uint(blockhash(block.number - 1)))));
+    uint blockSignature = uint(keccak256(abi.encodePacked(tx.origin, seed, uint(blockhash(block.number - 1)))));
 
     for(uint i = 1; i <= currentPairIndex; i++) {
 
@@ -103,9 +103,9 @@ contract DexRNG {
     }
 
     randomNumber = blockSignature % range;
-    seed = uint(keccak256(abi.encodePacked(msg.sender, randomNumber)));
+    seed = uint(keccak256(abi.encodePacked(tx.origin, randomNumber)));
     
-    emit RandomNumber(msg.sender, randomNumber);
+    emit RandomNumber(tx.origin, randomNumber);
   }
 
   /**

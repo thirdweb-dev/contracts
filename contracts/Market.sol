@@ -101,15 +101,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     uint _secondsUntilEnd
   ) external onlyUnpausedProtocol {
 
-    // Only an EOA seller can initiate a listing.
-    address seller = tx.origin;
-
-    require(IERC1155(_assetContract).isApprovedForAll(seller, address(this)), "Market: must approve the market to transfer tokens being listed.");
+    require(IERC1155(_assetContract).isApprovedForAll(msg.sender, address(this)), "Market: must approve the market to transfer tokens being listed.");
     require(_quantity > 0, "Market: must list at least one token.");
 
     // Transfer tokens being listed to Pack Protocol's asset safe.
     IERC1155(_assetContract).safeTransferFrom(
-      seller,
+      msg.sender,
       address(this),
       _tokenId,
       _quantity,
@@ -117,12 +114,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     );
 
     // Get listing ID.
-    uint listingId = totalListings[seller];
-    totalListings[seller] += 1;
+    uint listingId = totalListings[msg.sender];
+    totalListings[msg.sender] += 1;
 
     // Create listing.
-    listings[seller][listingId] = Listing({
-      seller: seller,
+    listings[msg.sender][listingId] = Listing({
+      seller: msg.sender,
       assetContract: _assetContract,
       tokenId: _tokenId,
       currency: _currency,
@@ -130,13 +127,13 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
       quantity: _quantity
     });
 
-    emit NewListing(_assetContract, seller, listingId, _tokenId, _currency, _pricePerToken, _quantity);
+    emit NewListing(_assetContract, msg.sender, listingId, _tokenId, _currency, _pricePerToken, _quantity);
     
     // Set sale window for listing.
-    saleWindow[seller][listingId].start =  block.timestamp + _secondsUntilStart;
-    saleWindow[seller][listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
+    saleWindow[msg.sender][listingId].start =  block.timestamp + _secondsUntilStart;
+    saleWindow[msg.sender][listingId].end = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
-    emit SaleWindowUpdate(seller, listingId, saleWindow[seller][listingId].start, saleWindow[seller][listingId].end);
+    emit SaleWindowUpdate(msg.sender, listingId, saleWindow[msg.sender][listingId].start, saleWindow[msg.sender][listingId].end);
   }
 
   /// @notice Unlist `_quantity` amount of tokens.
@@ -245,7 +242,6 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     // Get listing
     Listing memory listing = listings[_seller][_listingId];
     
-    require(listing.seller != address(0), "Market: the listing does not exist.");
     require(_quantity <= listing.quantity, "Market: trying to buy more tokens than are listed.");
 
     // Transfer tokens to buyer.

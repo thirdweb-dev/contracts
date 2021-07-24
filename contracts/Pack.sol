@@ -69,10 +69,10 @@ contract Pack is ERC1155, IERC1155Receiver {
   mapping(uint => mapping(address => bool)) public pendingRandomnessRequests;
 
   /// @dev Events.
-  event PackCreated(address indexed rewardContract, address indexed creator, uint packId, string packURI, uint packTotalSupply);
+  event PackCreated(address indexed rewardContract, address indexed creator, uint packId, string packURI, uint packTotalSupply, uint openStart, uint openEnd);
   event PackRewards(uint indexed packId, address indexed rewardContract, uint[] rewardIds, uint[] rewardAmounts);
   event PackOpened(uint indexed packId, address indexed opener);
-  event RewardDistributed(address indexed rewardContract, address indexed receiver, uint packId, uint rewardId);
+  event RewardDistributed(address indexed rewardContract, address indexed receiver, uint indexed packId, uint rewardId);
 
   /// @dev Checks whether Pack protocol is paused.
   modifier onlyUnpausedProtocol() {
@@ -146,7 +146,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     // Mint packs to creator.
     _mint(msg.sender, packId, packTotalSupply, "");
 
-    emit PackCreated(_rewardContract, msg.sender, packId, _packURI, packTotalSupply);
+    emit PackCreated(_rewardContract, msg.sender, packId, _packURI, packTotalSupply, openLimit[packId].start, openLimit[packId].end);
     emit PackRewards(packId, _rewardContract, _rewardIds, _rewardAmounts);
   }
 
@@ -320,5 +320,12 @@ contract Pack is ERC1155, IERC1155Receiver {
       openStart: openLimit[_packId].start,
       openEnd: openLimit[_packId].end
     });
+  }
+
+  /// @dev Returns the the underlying rewards of a pack
+  function getRewards(uint _packId) external view returns (address source, uint[] memory tokenIds, uint[] memory amountsPacked) {
+    source = rewards[_packId].source; 
+    tokenIds = rewards[_packId].tokenIds;
+    amountsPacked = rewards[_packId].amountsPacked;
   }
 }
