@@ -167,25 +167,25 @@ contract Pack is ERC1155, IERC1155Receiver {
   }
 
   /// @dev Called by protocol RNG when using an external random number provider. Completes a pack opening.
-  function fulfillRandomness(uint requestId, uint randomness) external {
+  function fulfillRandomness(uint _requestId, uint _randomness) external {
     require(msg.sender == address(rng()), "Pack: only the appointed RNG can fulfill random number requests.");
 
     // Pending request completed
-    pendingRandomnessRequests[randomnessRequests[requestId].packId][randomnessRequests[requestId].opener] = false;
+    pendingRandomnessRequests[randomnessRequests[_requestId].packId][randomnessRequests[_requestId].opener] = false;
 
     // Burn the pack being opened.
-    _burn(msg.sender, randomnessRequests[requestId].packId, 1);
+    _burn(msg.sender, randomnessRequests[_requestId].packId, 1);
 
-    emit PackOpened(randomnessRequests[requestId].packId, msg.sender);
+    emit PackOpened(randomnessRequests[_requestId].packId, msg.sender);
 
     // Get tokenId of the reward to distribute.
-    uint rewardId = getReward(randomnessRequests[requestId].packId, randomness);
-    address rewardContract = rewards[randomnessRequests[requestId].packId].source;
+    uint rewardId = getReward(randomnessRequests[_requestId].packId, _randomness);
+    address rewardContract = rewards[randomnessRequests[_requestId].packId].source;
 
     // Distribute the reward to the pack opener.
-    IERC1155(rewardContract).safeTransferFrom(address(this), randomnessRequests[requestId].opener, rewardId, 1, "");
+    IERC1155(rewardContract).safeTransferFrom(address(this), randomnessRequests[_requestId].opener, rewardId, 1, "");
 
-    emit RewardDistributed(rewardContract, randomnessRequests[requestId].opener, randomnessRequests[requestId].packId, rewardId);
+    emit RewardDistributed(rewardContract, randomnessRequests[_requestId].opener, randomnessRequests[_requestId].packId, rewardId);
   }
 
   /**
