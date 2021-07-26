@@ -1,7 +1,6 @@
 import { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from 'ethers';
 import { chainlinkVarsRinkeby } from "../../utils/chainlink";
-import { rinkebyPairs } from "../../utils/ammPairs";
 
 async function main() {
   await run("compile");
@@ -13,8 +12,8 @@ async function main() {
   console.log(`Deploying contracts with account: ${await deployer.getAddress()}`)
 
   // // 1. Deploy ControlCenter
-  const ControlCenter_Factory: ContractFactory = await ethers.getContractFactory("ControlCenter");
-  const controlCenter: Contract = await ControlCenter_Factory.deploy(await deployer.getAddress());
+  const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
+  const controlCenter: Contract = await ProtocolControl_Factory.deploy(await deployer.getAddress());
 
   console.log(
     "Estimated gas to deploy ControlCenter.sol: ",
@@ -22,20 +21,13 @@ async function main() {
   );
 
   // 2. Deploy rest of the protocol modules.
+  const packContractURI: string = "$PACK Protocol"; // Ideally - replace this with an IPFS URI 'ipfs://...' to the pack protocol logo.
   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-  const pack: Contract = await Pack_Factory.deploy(controlCenter.address);
+  const pack: Contract = await Pack_Factory.deploy(controlCenter.address, packContractURI);
 
   console.log(
     "Estimated gas to deploy Pack.sol: ",
     parseInt(pack.deployTransaction.gasLimit.toString())
-  );
-
-  const Handler_Factory: ContractFactory = await ethers.getContractFactory("Handler");
-  const handler: Contract = await Handler_Factory.deploy(controlCenter.address);
-
-  console.log(
-    "Estimated gas to deploy Handler.sol: ",
-    parseInt(handler.deployTransaction.gasLimit.toString())
   );
 
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
@@ -46,36 +38,29 @@ async function main() {
     parseInt(market.deployTransaction.gasLimit.toString())
   );
 
-  const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsRinkeby;
   
   const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
   const rng: Contract = await RNG_Factory.deploy(
     controlCenter.address,
     vrfCoordinator,
     linkTokenAddress,
-    keyHash
+    keyHash,
+    fees
   );
 
   console.log(
     "Estimated gas to deploy RNG.sol: ",
     parseInt(rng.deployTransaction.gasLimit.toString())
   );
-
-  const AssetSafe_Factory: ContractFactory = await ethers.getContractFactory("AssetSafe");
-  const assetSafe: Contract = await AssetSafe_Factory.deploy(controlCenter.address);
-
-  console.log(
-    "Estimated gas to deploy AssetSafe.sol: ",
-    parseInt(assetSafe.deployTransaction.gasLimit.toString())
-  );
   
-  // Deploy Access Packs.
-  const AccessPacks_Factory: ContractFactory = await ethers.getContractFactory("AccessPacks");
-  const accessPacks: Contract = await AccessPacks_Factory.deploy();
+  // Deploy Rewards contract.
+  const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
+  const rewards: Contract = await Rewards_Factory.deploy();
 
   console.log(
-    "Estimated gas to deploy AccessPacks.sol: ",
-    parseInt(accessPacks.deployTransaction.gasLimit.toString())
+    "Estimated gas to deploy Rewards.sol: ",
+    parseInt(rewards.deployTransaction.gasLimit.toString())
   );
 
   console.log("\n");

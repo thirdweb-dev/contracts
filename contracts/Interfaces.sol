@@ -19,7 +19,7 @@ interface IProtocolControl {
 }
 
 interface IListingAsset {
-  function creator(uint _tokenId) external view returns (address creator);
+  function creator(uint _tokenId) external view returns (address _creator);
 }
 
 interface IRNG {

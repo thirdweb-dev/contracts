@@ -1,7 +1,7 @@
 import { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from 'ethers';
-import { chainlinkVarsRinkeby } from "../../utils/chainlink";
-import { rinkebyPairs } from "../../utils/ammPairs";
+import { chainlinkVarsMainnet } from "../../utils/chainlink";
+import { pairs } from "../../utils/ammPairs";
 
 async function main() {
   await run("compile");
@@ -29,7 +29,7 @@ async function main() {
 
   console.log(`Market.sol address: ${market.address}`);
 
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsRinkeby;
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMainnet;
   
   const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
   const rng: Contract = await RNG_Factory.deploy(
@@ -61,7 +61,7 @@ async function main() {
   console.log("Initialized $PACK Protocol.")
 
 //   Setup RNG
-  for(let pair of rinkebyPairs) {
+  for(let pair of pairs) {
     await rng.connect(deployer).addPair(pair.pair, { gasLimit: manualGasLimit });
   }
   console.log("Initialized DEX RNG.")
