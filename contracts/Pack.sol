@@ -88,8 +88,8 @@ contract Pack is ERC1155, IERC1155Receiver {
   *   ERC 1155 and ERC 1155 Receiver functions.
   **/
 
-  function uri(uint id) public view override returns (string memory) {
-    return tokenURI[id];
+  function uri(uint _id) public view override returns (string memory) {
+    return tokenURI[_id];
   }
 
   function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {

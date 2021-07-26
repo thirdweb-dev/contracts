@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-interface IPack {
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+
+interface IPack is IERC1155MetadataURI, IERC1155Receiver {
   
   /// @dev The state of a set of packs with the same tokenId;
   struct PackInfo {
@@ -76,4 +79,13 @@ interface IPack {
    * @return amountsPacked : The amounts of reach rewards still packed.
    */
   function getRewards(uint _packId) external view returns (address source, uint[] memory tokenIds, uint[] memory amountsPacked);
+
+  /// @notice Returns the address of the creator of a pack.
+  function creator(uint _packId) external view returns (address _creator);
+
+  /// @notice Returns the media URI of a pack.
+  function tokenURI(uint _packId) external view returns (string memory);
+
+  /// @notice Returns the current total supply of a pack.
+  function totalSupply(uint _packId) external view returns (uint _supply);
 }
