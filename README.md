@@ -7,15 +7,15 @@ from the pack is distributed to the pack opener.
 The contracts in the `/contracts` directory are deployed on the following networks.
 
 ### Rinkeby
-- `ProtocolControl.sol`: [0x653CB7AA740f17116Ab709e0f2bD6Db4941f5855](https://rinkeby.etherscan.io/address/0x653CB7AA740f17116Ab709e0f2bD6Db4941f5855#code)
+- `ProtocolControl.sol`: [0xA0dd9C617a941de9B044C43f330aA0B9F2111CAf](https://rinkeby.etherscan.io/address/0xA0dd9C617a941de9B044C43f330aA0B9F2111CAf#code)
 
-- `Pack.sol`: [0x22B9fdC2fCeE92675Ab9398F42251A6A2cd8f7A1](https://rinkeby.etherscan.io/address/0x22B9fdC2fCeE92675Ab9398F42251A6A2cd8f7A1#code)
+- `Pack.sol`: [0x69b014f52059127f0119e9e1Ab5E3c60f4A5FF58](https://rinkeby.etherscan.io/address/0x69b014f52059127f0119e9e1Ab5E3c60f4A5FF58#code)
 
-- `Market.sol`: [0x908dF092CDa0a3c6D7326F483113fcFc0BF892f8](https://rinkeby.etherscan.io/address/0x908dF092CDa0a3c6D7326F483113fcFc0BF892f8#code)
+- `Market.sol`: [0x49ae606B0AC72D744C6A84C3Cf0e8c29aB8a3db5](https://rinkeby.etherscan.io/address/0x49ae606B0AC72D744C6A84C3Cf0e8c29aB8a3db5#code)
 
-- `RNG.sol`: [0x65D5D86562A478F1EbdB9b45b8E27179Bfd1A9df](https://rinkeby.etherscan.io/address/0x65D5D86562A478F1EbdB9b45b8E27179Bfd1A9df#code)
+- `RNG.sol`: [0xF53dFc5B65c5C8712235A1ee81e18fb021ebCC0f](https://rinkeby.etherscan.io/address/0xF53dFc5B65c5C8712235A1ee81e18fb021ebCC0f#code)
 
-- `Rewards.sol`: [0x87e54ac75a7f29dfB763Db4D752749E01E308c10](https://rinkeby.etherscan.io/address/0x87e54ac75a7f29dfB763Db4D752749E01E308c10#code)
+- `Rewards.sol`: [0x32E94dfd93D9a409572561B1D54cda229d61B051](https://rinkeby.etherscan.io/address/0x32E94dfd93D9a409572561B1D54cda229d61B051#code)
 
 ## Run Locally
 
