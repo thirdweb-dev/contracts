@@ -31,6 +31,19 @@ contract RNG is DexRNG, VRFConsumerBase {
   event ExternalServiceRequest(address indexed requestor, uint requestId);
   event RandomNumberExternal(uint randomNumber);
 
+  modifier onlyPack() {
+    require(msg.sender == address(pack()), "RNG: Only the pack token contract can call this function.");
+    _;
+  }
+
+  modifier onlyProtocolAdmin() {
+    require(
+      controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), 
+      "RNG: Only a pack protocol admin can call this function."
+    );
+    _;
+  }
+
   constructor(
     address _controlCenter,
 
@@ -51,9 +64,8 @@ contract RNG is DexRNG, VRFConsumerBase {
   **/
   
   /// @dev Sends a random number request to the Chainlink VRF system.
-  function requestRandomNumber() external returns (uint requestId) {
+  function requestRandomNumber() external onlyPack returns (uint requestId) {
     require(LINK.balanceOf(address(this)) >= fees, "Not enough LINK to fulfill randomness request.");
-    require(msg.sender == address(pack()), "RNG: Only the pack token contract can call this function.");
     
     // Send random number request.
     bytes32 bytesId = requestRandomness(keyHash, fees, seed);
@@ -82,11 +94,7 @@ contract RNG is DexRNG, VRFConsumerBase {
   }
 
   /// @dev Changes the `fees` required by Chainlink VRF.
-  function setFees(uint _fees) external {
-    require(
-      controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), 
-      "RNG: Only a pack protocol admin can call this function."
-    );
+  function setFees(uint _fees) external onlyProtocolAdmin {    
     fees = _fees;
   }
 
@@ -108,6 +116,25 @@ contract RNG is DexRNG, VRFConsumerBase {
     }
 
     usingExternalService[_packId] = _use;
+  }
+
+  /**
+   *  DEX RNG functions.
+  **/
+
+  /// @dev Returns a random number within the given range.s
+  function getRandomNumber(uint range) public override onlyPack returns (uint randomNumber, bool acceptableEntropy) {
+    super.getRandomNumber(range);
+  }
+
+  /// @dev Add a UniswapV2/Sushiswap pair to draw randomness from.
+  function addPair(address _pair) public override onlyProtocolAdmin {
+    super.addPair(_pair);
+  }
+
+  /// @dev Sets whether a UniswapV2 pair is actively used as a source of randomness.
+  function changePairStatus(address _pair, bool _activeStatus) public override onlyProtocolAdmin {
+    super.changePairStatus(_pair, _activeStatus);
   }
 
   /**

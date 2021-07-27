@@ -41,7 +41,7 @@ contract DexRNG {
   **/
 
   /// @dev Add a UniswapV2/Sushiswap pair to draw randomness from.
-  function addPair(address _pair) external {
+  function addPair(address _pair) public {
     require(IUniswapV2Pair(_pair).MINIMUM_LIQUIDITY() == 1000, "DEX RNG:Invalid pair address provided.");
     require(pairIndex[_pair] == 0, "DEX RNG: This pair already exists as a randomness source.");
     
@@ -63,7 +63,7 @@ contract DexRNG {
   }
 
   /// @dev Sets whether a UniswapV2 pair is actively used as a source of randomness.
-  function changePairStatus(address _pair, bool _activeStatus) external {
+  function changePairStatus(address _pair, bool _activeStatus) public {
     require(pairIndex[_pair] != 0, "DEX RNG: Cannot change the status of a pair that does not exist.");
 
     active[_pair] = _activeStatus;
@@ -72,7 +72,7 @@ contract DexRNG {
   }
 
   /// @dev Returns a random number within the given range.s
-  function getRandomNumber(uint range) external returns (uint randomNumber, bool acceptableEntropy) {
+  function getRandomNumber(uint range) public returns (uint randomNumber, bool acceptableEntropy) {
     require(currentPairIndex > 0, "DEX RNG: No Uniswap pairs available to draw randomness from.");
 
     // Check whether pairs have already updated in this block.
