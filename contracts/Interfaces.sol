@@ -43,7 +43,7 @@ interface IRNG {
 interface IRNGReceiver {
   function fulfillRandomness(uint requestId, uint randomness) external;
   
-  function creator(uint _packId) external view returns (address creator);
+  function creator(uint _packId) external view returns (address _creator);
   
   function totalSupply(uint _packId) external view returns (uint totalSupplyOfToken);
 }

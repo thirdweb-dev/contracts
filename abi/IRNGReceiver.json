@@ -11,7 +11,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "creator",
+        "name": "_creator",
         "type": "address"
       }
     ],
