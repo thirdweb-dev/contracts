@@ -18,13 +18,6 @@ import { NetworkUserConfig } from "hardhat/types";
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 const chainIds = {
-  ganache: 1337,
-  goerli: 5,
-  hardhat: 31337,
-  kovan: 42,
-  mainnet: 1,
-  rinkeby: 4,
-  ropsten: 3,
   matic: 137,
   mumbai: 80001,
 };
@@ -38,7 +31,7 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
   if (!alchemyKey) {
     throw new Error("Missing ALCHEMY_KEY");
   }
-  let nodeUrl = `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
+  let nodeUrl = `https://polygon-${network}.g.alchemy.com/v2/${alchemyKey}`;
 
   return {
     chainId: chainIds[network],
@@ -91,8 +84,8 @@ const config: HardhatUserConfig = {
 
 if (testPrivateKey) {
   config.networks = {
-    mainnet: createTestnetConfig("mainnet"),
-    rinkeby: createTestnetConfig("rinkeby"),
+    matic: createTestnetConfig("matic"),
+    mumbai: createTestnetConfig("mumbai"),
   };
 }
 
