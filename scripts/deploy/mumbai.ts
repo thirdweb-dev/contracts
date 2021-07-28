@@ -1,12 +1,11 @@
 import { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from 'ethers';
-import { chainlinkVarsMainnet } from "../../utils/chainlink";
-import { pairs } from "../../utils/ammPairs";
+import { chainlinkVarsMatic } from "../../utils/chainlink";
 
 async function main() {
   await run("compile");
 
-  const manualGasLimit: number = 5000000; // 5 million.
+  console.log("Deploying to MUMBAI");
 
   const [deployer] = await ethers.getSigners();
 
@@ -14,22 +13,22 @@ async function main() {
 
   // 1. Deploy ControlCenter
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  const controlCenter: Contract = await ProtocolControl_Factory.deploy(await deployer.getAddress(), { gasLimit: manualGasLimit });
+  const controlCenter: Contract = await ProtocolControl_Factory.deploy(await deployer.getAddress());
 
   console.log(`ControlCenter.sol address: ${controlCenter.address}`);
 
-//   2. Deploy rest of the protocol modules.
+  // 2. Deploy rest of the protocol modules.
   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-  const pack: Contract = await Pack_Factory.deploy(controlCenter.address, "$PACK Protocol", { gasLimit: manualGasLimit });
+  const pack: Contract = await Pack_Factory.deploy(controlCenter.address, "$PACK Protocol");
 
   console.log(`Pack.sol address: ${pack.address}`);
 
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  const market: Contract = await Market_Factory.deploy(controlCenter.address, { gasLimit: manualGasLimit });
+  const market: Contract = await Market_Factory.deploy(controlCenter.address);
 
   console.log(`Market.sol address: ${market.address}`);
 
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMainnet;
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMatic;
   
   const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
   const rng: Contract = await RNG_Factory.deploy(
@@ -37,34 +36,26 @@ async function main() {
     vrfCoordinator,
     linkTokenAddress,
     keyHash,
-    fees, 
-    { gasLimit: manualGasLimit }
+    fees
   );
 
   console.log(`RNG.sol address: ${rng.address}`);
   
   // Deploy Rewards contract.
   const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
-  const rewards: Contract = await Rewards_Factory.deploy({ gasLimit: manualGasLimit });
+  const rewards: Contract = await Rewards_Factory.deploy();
 
   console.log(`Rewards.sol address: ${rewards.address}`);
 
   console.log("\n");
 
-//   Initialize $PACK Protocol in ControlCenter
+  // Initialize $PACK Protocol in ControlCenter
   await controlCenter.connect(deployer).initPackProtocol(
     pack.address,
     market.address,
-    rng.address,
-    { gasLimit: manualGasLimit }
+    rng.address
   );
   console.log("Initialized $PACK Protocol.")
-
-//   Setup RNG
-  for(let pair of pairs) {
-    await rng.connect(deployer).addPair(pair.pair, { gasLimit: manualGasLimit });
-  }
-  console.log("Initialized DEX RNG.")
 }
 
 main()
