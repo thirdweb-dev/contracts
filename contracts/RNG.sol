@@ -2,20 +2,16 @@
 pragma solidity >=0.8.0;
 
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
-import "./helpers/DexRNG.sol";
 
 import { IProtocolControl, IRNGReceiver } from "./Interfaces.sol";
 
-contract RNG is DexRNG, VRFConsumerBase {
+contract RNG is VRFConsumerBase {
 
   /// @dev The pack protocol admin contract.
   IProtocolControl internal controlCenter;
 
   /// @dev Pack protocol module names.
   string public constant PACK = "PACK";
-  
-  /// @dev tokenId => whether and external RNG service is used for opening the pack.
-  mapping(uint => bool) public usingExternalService;
 
   /// @dev Chainlink VRF requirements.
   uint internal fees;
@@ -68,7 +64,7 @@ contract RNG is DexRNG, VRFConsumerBase {
     require(LINK.balanceOf(address(this)) >= fees, "Not enough LINK to fulfill randomness request.");
     
     // Send random number request.
-    bytes32 bytesId = requestRandomness(keyHash, fees, seed);
+    bytes32 bytesId = requestRandomness(keyHash, fees, block.number);
     
     // Return an integer Id instead of a bytes Id for convenience.
     requestId = currentRequestId;
@@ -97,46 +93,7 @@ contract RNG is DexRNG, VRFConsumerBase {
   function setFees(uint _fees) external onlyProtocolAdmin {    
     fees = _fees;
   }
-
-  /// @notice Lets a pack owner decide whether to use Chainlink VRF to open packs.
-  function useExternalService(uint _packId, bool _use) external {
-    require(pack().creator(_packId) == msg.sender, "RNG: Only the pack creator can change the use of the RNG.");
-
-    uint totalSupply = pack().totalSupply(_packId);
-
-    if(_use) {
-      require(
-        LINK.allowance(msg.sender, address(this)) >= fees * totalSupply,
-        "RNG: not allowed to transfer the expected fee amount."
-      );
-      require(
-        LINK.transferFrom(msg.sender, address(this), fees * totalSupply),
-        "RNG: Failed to transfer the fee amount to RNG."
-      );
-    }
-
-    usingExternalService[_packId] = _use;
-  }
-
-  /**
-   *  DEX RNG functions.
-  **/
-
-  /// @dev Returns a random number within the given range.s
-  function getRandomNumber(uint range) public override onlyPack returns (uint randomNumber, bool acceptableEntropy) {
-    super.getRandomNumber(range);
-  }
-
-  /// @dev Add a UniswapV2/Sushiswap pair to draw randomness from.
-  function addPair(address _pair) public override onlyProtocolAdmin {
-    super.addPair(_pair);
-  }
-
-  /// @dev Sets whether a UniswapV2 pair is actively used as a source of randomness.
-  function changePairStatus(address _pair, bool _activeStatus) public override onlyProtocolAdmin {
-    super.changePairStatus(_pair, _activeStatus);
-  }
-
+  
   /**
    *  View functions
   **/

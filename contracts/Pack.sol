@@ -157,13 +157,7 @@ contract Pack is ERC1155, IERC1155Receiver {
     require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
     require(!pendingRandomnessRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
 
-    if(rng().usingExternalService(_packId)) {
-      // If RNG is using an external service, open the pack upon retrieving the random number.
-      asyncOpenPack(msg.sender, _packId);
-    } else {
-      // Else, open the pack right away. 
-      syncOpenPack(msg.sender, _packId);
-    }
+    asyncOpenPack(msg.sender, _packId);
   }
 
   /// @dev Called by protocol RNG when using an external random number provider. Completes a pack opening.
@@ -191,27 +185,6 @@ contract Pack is ERC1155, IERC1155Receiver {
   /**
   *   Internal functions.
   **/
-
-  /// @dev Opens a pack i.e. burns a pack and distributes a reward to the pack opener.
-  function syncOpenPack(address _opener, uint _packId) internal {
-
-    // Burn the pack being opened.
-    _burn(_opener, _packId, 1);
-
-    emit PackOpened(_packId, _opener);
-
-    // Get random number.
-    (uint randomness,) = rng().getRandomNumber(block.number);
-    
-    // Get tokenId of the reward to distribute.
-    uint rewardId = getReward(_packId, randomness);
-    address rewardContract = rewards[_packId].source;
-
-    // Distribute the reward to the pack opener.
-    IERC1155(rewardContract).safeTransferFrom(address(this), _opener, rewardId, 1, "");
-
-    emit RewardDistributed(rewardContract, _opener, _packId, rewardId);
-  }
 
   /// @dev Initiates a pack opening; sends a random number request to an external RNG service.
   function asyncOpenPack(address _opener, uint _packId) internal {
