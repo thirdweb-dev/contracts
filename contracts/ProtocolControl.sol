@@ -9,6 +9,7 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract ProtocolControl is AccessControl {
 
