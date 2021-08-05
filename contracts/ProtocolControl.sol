@@ -30,12 +30,7 @@ contract ProtocolControl is AccessControl {
   /// @dev Module ID => Module address.
   mapping(bytes32 => address) public modules;
 
-  /// @dev address => approved to accept protocol admin status.
-  mapping(address => bool) public approvedForAdminRole;
-
   /// @dev Events.
-  event NewAdmin(address _newAdmin);
-  event AdminRemoved(address _removedAdmin);
   event ModuleInitialized(bytes32 moduleId, address module);
   event ModuleUpdated(bytes32 moduleId, address module);
 
@@ -45,9 +40,19 @@ contract ProtocolControl is AccessControl {
     _;
   }
 
-  constructor() {
+  constructor(
+    string memory _packGlobalURI,
+
+    address _vrfCoordinator,
+    address _linkToken,
+    bytes32 _keyHash,
+    uint _fees
+  ) {
     _setupRole(PROTOCOL_ADMIN, msg.sender);
     _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
+
+    initializePack(_packGlobalURI, _vrfCoordinator, _linkToken, _keyHash, _fees);
+    initializeMarket();
   }
 
   /// @dev Iniializes the ERC 1155 pack token of the protocol.
@@ -58,8 +63,8 @@ contract ProtocolControl is AccessControl {
     address _linkToken,
     bytes32 _keyHash,
     uint _fees
-  ) external onlyProtocolAdmin {
-    require(modules[PACK] == address(0), "Protocol Control: Pack already been initialized.");
+  ) internal onlyProtocolAdmin {
+    require(modules[PACK] == address(0), "Protocol Control: already initialized.");
 
     // Deploy `Pack` ERC 1155 token.
     bytes memory packBytecode = abi.encodePacked(type(Pack).creationCode, abi.encode(
@@ -74,8 +79,8 @@ contract ProtocolControl is AccessControl {
   }
 
   /// @dev Iniializes the market for packs and rewards.
-  function initializeMarket() external onlyProtocolAdmin {
-    require(modules[MARKET] == address(0), "Protocol Control: Pack already been initialized.");
+  function initializeMarket() internal onlyProtocolAdmin {
+    require(modules[MARKET] == address(0), "Protocol Control: already initialized.");
 
     bytes memory marketBytecode = abi.encodePacked(type(Market).creationCode, abi.encode(address(this)));
     address market = Create2.deploy(0, MARKET, marketBytecode);
@@ -97,27 +102,6 @@ contract ProtocolControl is AccessControl {
     modules[_moduleId] = _newModuleAddress;
 
     emit ModuleUpdated(_moduleId, _newModuleAddress);
-  }
-
-  /// @dev Grants the `PROTOCOL_ADMIN` role to `_newAdmin`.
-  function makeProtocolAdmin(address _newAdmin) external onlyProtocolAdmin {
-    approvedForAdminRole[_newAdmin] = true;
-  } 
-
-  /// @dev Lets an address approved for the protocol admin role accept the role.
-  function acceptProtocolAdminRole() external {
-    require(approvedForAdminRole[msg.sender], "Protocol Control: not approved to accept admin role.");
-    _setupRole(PROTOCOL_ADMIN, msg.sender);
-
-    emit NewAdmin(msg.sender);
-  }
-
-  /// @dev Revokes the `PROTOCOL_ADMIN` role from `_revokeFrom`
-  function removeProtocolAdmin(address _revokeFrom) external onlyProtocolAdmin {
-    revokeRole(PROTOCOL_ADMIN, _revokeFrom);
-    approvedForAdminRole[_revokeFrom] = false;
-
-    emit AdminRemoved(_revokeFrom);
   }
 
   /// @dev Lets a protocol admin transfer the accrued protocol fees.
