@@ -30,7 +30,7 @@ interface IRNG {
    * @dev Sends a request for random number to an external.
    *      Returns the unique request Id of the request, and the block number of the request.
   **/ 
-  function requestRandomNumber() external returns (uint requestId, uint lockBlock);
+  function requestRandomNumber() external returns (uint requestId);
 
   /// @notice Gets the Fee for making a Request against an RNG service
   function getRequestFee() external view returns (address feeToken, uint requestFee);

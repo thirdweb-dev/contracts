@@ -189,7 +189,7 @@ contract Pack is ERC1155, IERC1155Receiver {
   /// @dev Initiates a pack opening; sends a random number request to an external RNG service.
   function asyncOpenPack(address _opener, uint _packId) internal {
     // Request external service for a random number. Store the request ID.
-    (uint requestId,) = rng().requestRandomNumber();
+    uint requestId = rng().requestRandomNumber();
 
     randomnessRequests[requestId] = RandomnessRequest({
       opener: _opener,
