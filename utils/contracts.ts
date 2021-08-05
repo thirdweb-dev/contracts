@@ -11,27 +11,27 @@ import rewardsABI from '../abi/Rewards.json';
 dotenv.config();
 
 export const controlCenterObj = {
-  address: "0x1F7B09caE043b76AdF7BD3aB27D181e8f363Fab8",
+  address: "0x2d1Fb9f24775551a0331ACc6444Dfa10D9bb0eB0",
   abi: controlCenterAbi
 }
 
 export const packObj = {
-  address: "0xAeAd01CF2280E5B55B62F7fa621cA63c8d6af029",
+  address: "0x826e5Fe2548a47EFe5ed6D1a11915b7F7511DB04",
   abi: packABI
 }
 
 export const marketObj = {
-  address: "0xdE2624Ac39A13bb08F316f3156c2d707a8B479A3",
+  address: "0xb83c938C06600Cc5a93794df783285FC2d64c259",
   abi: marketAbi
 }
 
 export const rngObj = {
-  address: "0xb90518CEaee065beAC311733CBC4EF41FC6f520C",
+  address: "0x31Fe46A9f5046f329a7c4dD5ad87f1A2543390f6",
   abi: rngAbi
 }
 
 export const rewardsObj = {
-  address: "0x4B2F4f0e9197401dE59f001a782B517E6F0A4aac",
+  address: "0xF0D1064ec8Dee772af45D6e9E45Cfa5F429d80a7",
   abi: rewardsABI
 }
 
