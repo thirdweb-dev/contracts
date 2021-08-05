@@ -11,6 +11,12 @@ import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 interface IProtocolControl {
   /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
+
+  /// @dev Access Control: hasRole()
+  function hasRole(bytes32 role, address account) external view returns (bool);
+
+  /// @dev Access control: PROTOCOL_ADMIN role
+  function PROTOCOL_ADMIN() external view returns (bytes32);
 }
 
 contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
@@ -23,8 +29,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
 
   /// @dev Chainlink VRF variables.
   uint public vrfSeed;
-  uint public fees;
-  bytes32 public keyHash;
+  uint public vrfFees;
+  bytes32 public vrfKeyHash;
   
   /// @dev The state of packs with a unique tokenId.
   struct PackState {
@@ -88,8 +94,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
   ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) {
     controlCenter = IProtocolControl(_controlCenter);
 
-    keyHash = _keyHash;
-    fees = _fees;
+    vrfKeyHash = _keyHash;
+    vrfFees = _fees;
   }
 
   /**
@@ -164,7 +170,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
   /// @notice Lets a pack owner open a single pack.
   function openPack(uint _packId) external {
 
-    require(LINK.balanceOf(address(this)) >= fees, "Pack: Not enough LINK to fulfill randomness request.");
+    require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
     require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
     require(!pendingRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
 
@@ -177,7 +183,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
 
     // Send random number request.
     vrfSeed += 1;
-    bytes32 requestId = requestRandomness(keyHash, fees, uint(keccak256(abi.encode(msg.sender, vrfSeed))));
+    bytes32 requestId = requestRandomness(vrfKeyHash, vrfFees, uint(keccak256(abi.encode(msg.sender, vrfSeed))));
 
     // Update state to reflect the Chainlink VRF request.
     randomnessRequests[requestId] = RandomnessRequest({
@@ -210,6 +216,12 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
     IERC1155(rewardsInPack.source).safeTransferFrom(address(this), request.opener, rewardId, 1, "");
 
     emit PackOpenFulfilled(request.packId, request.opener, _requestId, rewardsInPack.source, rewardId);
+  }
+
+  /// @dev Lets a protocol admin change the Chainlink VRF fee.
+  function setChainlinkFees(uint _newFees) external {
+    require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Pack: only a protocol admin set VRF fees.");
+    vrfFees = _newFees;
   }
 
   /**
