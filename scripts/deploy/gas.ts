@@ -1,5 +1,5 @@
 import { run, ethers } from "hardhat";
-import { Contract, ContractFactory, BigNumber } from 'ethers';
+import { Contract, ContractFactory } from 'ethers';
 import { chainlinkVarsMumbai } from "../../utils/chainlink";
 
 async function main() {
@@ -24,25 +24,9 @@ async function main() {
   )
 
   console.log(
-    "Estimated gas to deploy ControlCenter.sol: ",
+    "Estimated gas to deploy $PACK Protocol contracts: ",
     parseInt(controlCenter.deployTransaction.gasLimit.toString())
   );
-
-  // // 2. Initialize protocol's ERC 1155 pack token.
-  // const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMumbai;
-
-  // const gasForPack: BigNumber = await controlCenter.estimateGas.initializePack(
-  //   "$PACK Protocol",
-  //   vrfCoordinator,
-  //   linkTokenAddress,
-  //   keyHash,
-  //   fees
-  // )
-  // console.log("Est. gas to initialize Pack: ", parseInt(gasForPack.toString()))
-  
-  // // 3. Initialize protocol's market for packs and rewards.
-  // const gasForMarket: BigNumber = await controlCenter.estimateGas.initializeMarket();
-  // console.log("Est. gas to initialize Market: ", parseInt(gasForMarket.toString())) 
 }
 
 main()
