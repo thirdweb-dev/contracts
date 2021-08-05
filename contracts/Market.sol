@@ -51,7 +51,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   /// @dev Events
   event NewListing(address indexed assetContract, address indexed seller, Listing listing);
   event ListingUpdate(address indexed seller, uint indexed listingId, Listing lisitng);
-  event NewSale(address indexed assetContract, address indexed seller, uint indexed listingId, address buyer, uint tokenId, address currency, uint price, uint quantity);
+  event NewSale(address indexed assetContract, address indexed seller, uint indexed listingId, address buyer, Listing listing);
 
   /// @dev Checks whether Pack protocol is paused.
   modifier onlyUnpausedProtocol() {
@@ -242,7 +242,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     require(IERC20(listing.currency).transferFrom(msg.sender, _seller, sellerCut), "Market: failed to transfer seller cut.");
     require(IERC20(listing.currency).transferFrom(msg.sender, creator, creatorCut), "Market: failed to transfer creator cut.");
 
-    emit NewSale(listing.assetContract, _seller, _listingId,  msg.sender, listing.tokenId, listing.currency, listing.pricePerToken, _quantity);
+    emit NewSale(listing.assetContract, _seller, _listingId,  msg.sender, listing);
   }
 
   /// @notice Returns the total number of listings created by seller.
