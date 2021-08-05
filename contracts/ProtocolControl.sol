@@ -9,6 +9,7 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 import { Pack } from "./Pack.sol";
@@ -117,5 +118,10 @@ contract ProtocolControl is AccessControl {
     approvedForAdminRole[_revokeFrom] = false;
 
     emit AdminRemoved(_revokeFrom);
+  }
+
+  /// @dev Lets a protocol admin transfer the accrued protocol fees.
+  function transferProtocolFunds(address _asset, address _to, uint _amount) external onlyProtocolAdmin {
+    require(IERC20(_asset).transfer(_to, _amount), "Protocol Control: failed to transfer protocol funds.");
   }
 }
