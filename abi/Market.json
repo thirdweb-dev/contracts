@@ -26,28 +26,52 @@
         "type": "uint256"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "assetContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "currency",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pricePerToken",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleStart",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleEnd",
+            "type": "uint256"
+          }
+        ],
         "indexed": false,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "currency",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
+        "internalType": "struct Market.Listing",
+        "name": "lisitng",
+        "type": "tuple"
       }
     ],
     "name": "ListingUpdate",
@@ -69,34 +93,52 @@
         "type": "address"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "assetContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "currency",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pricePerToken",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleStart",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleEnd",
+            "type": "uint256"
+          }
+        ],
         "indexed": false,
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "currency",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
+        "internalType": "struct Market.Listing",
+        "name": "listing",
+        "type": "tuple"
       }
     ],
     "name": "NewListing",
@@ -130,62 +172,55 @@
         "type": "address"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "assetContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "currency",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pricePerToken",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleStart",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleEnd",
+            "type": "uint256"
+          }
+        ],
         "indexed": false,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "currency",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
+        "internalType": "struct Market.Listing",
+        "name": "listing",
+        "type": "tuple"
       }
     ],
     "name": "NewSale",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "start",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "end",
-        "type": "uint256"
-      }
-    ],
-    "name": "SaleWindowUpdate",
     "type": "event"
   },
   {
@@ -252,7 +287,7 @@
     ],
     "name": "buy",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -314,40 +349,21 @@
             "internalType": "uint256",
             "name": "pricePerToken",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleStart",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "saleEnd",
+            "type": "uint256"
           }
         ],
         "internalType": "struct Market.Listing",
         "name": "listing",
         "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_seller",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getSaleWindow",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -459,6 +475,16 @@
         "internalType": "uint256",
         "name": "pricePerToken",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "saleStart",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "saleEnd",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -558,35 +584,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "saleWindow",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "start",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "end",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -648,40 +645,14 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "_newCurrency",
-        "type": "address"
-      }
-    ],
-    "name": "updateListingCurrency",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
-        "name": "_listingId",
+        "name": "_pricePerToken",
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "_newPricePerToken",
-        "type": "uint256"
-      }
-    ],
-    "name": "updateListingPrice",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_currency",
+        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -694,7 +665,7 @@
         "type": "uint256"
       }
     ],
-    "name": "updateSaleWindow",
+    "name": "updateListingParams",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
