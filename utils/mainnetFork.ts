@@ -9,7 +9,8 @@ export const forkFrom = async (blockNumber: any) => {
       params: [
         {
           forking: {
-            jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+            // jsonRpcUrl: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+            jsonRpcUrl: `https://rpc-mumbai.matic.today`,
             blockNumber: blockNumber,
           },
         },

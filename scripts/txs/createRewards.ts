@@ -2,30 +2,31 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { ethers } from 'hardhat';
-import { Contract, Wallet } from 'ethers';
+import { Contract, Wallet, BigNumber } from 'ethers';
 
-import { accessPacksObj } from '../../utils/contracts';
+import { rewardsObj } from '../../utils/contracts';
 
 // Transaction parameters.
 const rewardURIs: string[] = [
-  "ipfs://QmUEfhF9FpucMVfjySnDmFvq3nKwGNtNk83qDwMEt3JDCL",
-  "ipfs://QmXmp3FWWELBwb7wxRD98ps96iYRUXUycPvd1LQ23WhRhW",
-  "ipfs://QmUxgEgxvFeiJHAMLK9oWpS6yZmR8EzyJpzQmCc2Gv99U6"
+  "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1",
+  "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/2",
+  "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/3"
 ]
 const rewardSupplies: number[] = [5, 10, 20];
 
 async function createRewards(rewardURIs: string[], rewardSupplies: number[]) {
-  
+  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
+
   // Get Wallet instance.
-  const rinkebyProvider = new ethers.providers.JsonRpcProvider(`https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`, "rinkeby");
+  const mumbaiProvider = new ethers.providers.JsonRpcProvider(`https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`);
   const privateKey = process.env.TEST_PRIVATE_KEY || "";
-  const rinkebyWallet: Wallet = new ethers.Wallet(privateKey, rinkebyProvider);
+  const mumbaiWallet: Wallet = new ethers.Wallet(privateKey, mumbaiProvider);
 
   // Get contract instance connected to wallet.
-  const accessPacks: Contract = new ethers.Contract(accessPacksObj.address, accessPacksObj.abi, rinkebyWallet);
+  const rewards: Contract = new ethers.Contract(rewardsObj.address, rewardsObj.abi, mumbaiWallet);
 
   // Create rewards.
-  const createRewardsTx = await accessPacks.createNativeRewards(rewardURIs, rewardSupplies);
+  const createRewardsTx = await rewards.createNativeRewards(rewardURIs, rewardSupplies, { gasPrice: manualGasPrice});
   console.log("Creating rewards: ", createRewardsTx.hash);
   await createRewardsTx.wait();
 }

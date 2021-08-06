@@ -1,22 +1,27 @@
 import hre from 'hardhat'
-import { chainlinkVarsRinkeby } from "..//utils/chainlink";
-import { controlCenterObj, packObj, marketObj, rngObj, rewardsObj } from "../utils/contracts";
+import { chainlinkVarsMumbai } from "..//utils/chainlink";
+import { controlCenterObj, packObj, marketObj, rewardsObj } from "../utils/contracts";
 
 async function ProtocolControl() {
+
   await hre.run("verify:verify", {
     address: controlCenterObj.address,
-    constructorArguments: [
-      "0x2Ee4c2e9666Ff48DE2779EB6f33cDC342d761372" // Deployer address
-    ]
+    constructorArguments: []
   });
 }
 
 async function Pack() {
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMumbai;
+
   await hre.run("verify:verify", {
     address: packObj.address,
     constructorArguments: [
-        controlCenterObj.address, // Control center adddress
+      controlCenterObj.address, // Control center adddress
       "$PACK Protocol", // global URI
+      vrfCoordinator,
+      linkTokenAddress,
+      keyHash,
+      fees
     ],
   });
 }
@@ -30,34 +35,18 @@ async function Market() {
   });
 }
 
-async function RNG() {
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsRinkeby;
-
-  await hre.run("verify:verify", {
-    address: rngObj.address,
-    constructorArguments: [
-      controlCenterObj.address, // Control center adddress
-      vrfCoordinator,
-      linkTokenAddress,
-      keyHash,
-      fees
-    ],
-  });
-}
-
-async function Rewards() {
-  await hre.run("verify:verify", {
-    address: rewardsObj.address,
-    constructorArguments: [],
-  });
-}
+// async function Rewards() {
+//   await hre.run("verify:verify", {
+//     address: rewardsObj.address,
+//     constructorArguments: [],
+//   });
+// }
 
 async function verify() {
-  // await ProtocolControl()
+  await ProtocolControl()
   await Pack()
   await Market()
-  await RNG()
-  await Rewards()
+  // await Rewards()
 }
 
 verify()

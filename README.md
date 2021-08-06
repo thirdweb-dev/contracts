@@ -6,16 +6,14 @@ from the pack is distributed to the pack opener.
 ## Deployments
 The contracts in the `/contracts` directory are deployed on the following networks.
 
-### Rinkeby
-- `ProtocolControl.sol`: [0xA0dd9C617a941de9B044C43f330aA0B9F2111CAf](https://rinkeby.etherscan.io/address/0xA0dd9C617a941de9B044C43f330aA0B9F2111CAf#code)
+### Mumbai
+- `ProtocolControl.sol`: [0x28F7BDF6902d09c6EF2496976Fd886e47adce744](https://mumbai.polygonscan.com/address/0x28F7BDF6902d09c6EF2496976Fd886e47adce744#code)
 
-- `Pack.sol`: [0x69b014f52059127f0119e9e1Ab5E3c60f4A5FF58](https://rinkeby.etherscan.io/address/0x69b014f52059127f0119e9e1Ab5E3c60f4A5FF58#code)
+- `Pack.sol`: [0xFe92320f002062e8dE6Af21970Ad8Fc4B024C2Bf](https://mumbai.polygonscan.com/address/0xFe92320f002062e8dE6Af21970Ad8Fc4B024C2Bf#code)
 
-- `Market.sol`: [0x49ae606B0AC72D744C6A84C3Cf0e8c29aB8a3db5](https://rinkeby.etherscan.io/address/0x49ae606B0AC72D744C6A84C3Cf0e8c29aB8a3db5#code)
+- `Market.sol`: [0xD73f01f9c143EFc6Fe8eE110aF334D9ff1F2E852](https://mumbai.polygonscan.com/address/0xD73f01f9c143EFc6Fe8eE110aF334D9ff1F2E852#code)
 
-- `RNG.sol`: [0xF53dFc5B65c5C8712235A1ee81e18fb021ebCC0f](https://rinkeby.etherscan.io/address/0xF53dFc5B65c5C8712235A1ee81e18fb021ebCC0f#code)
-
-- `Rewards.sol`: [0x32E94dfd93D9a409572561B1D54cda229d61B051](https://rinkeby.etherscan.io/address/0x32E94dfd93D9a409572561B1D54cda229d61B051#code)
+- `Rewards.sol`: [0xF0D1064ec8Dee772af45D6e9E45Cfa5F429d80a7](https://mumbai.polygonscan.com/address/0xF0D1064ec8Dee772af45D6e9E45Cfa5F429d80a7#code)
 
 ## Run Locally
 
@@ -44,18 +42,18 @@ Run tests
 To use scripts, update the transaction parameters in the particular script and run
 
 ```bash
-  npx hardhat run scripts/txs/${testFileName}.ts --network rinkeby
+  npx hardhat run scripts/.../${testFileName}.ts --network mumbai
 ```
   
 ## Deploying contracts
 
-To deploy this project on a given network (e.g. rinkeby) update the `hardhat.config.ts` file with the following
+To deploy this project on a given network (e.g. mumbai) update the `hardhat.config.ts` file with the following
 
 ```javascript
 // ...
 if (testPrivateKey) {
   config.networks = {
-    rinkeby: createTestnetConfig("rinkeby"),
+    mumbai: createTestnetConfig("mumbai"),
   };
 }
 ```
@@ -63,13 +61,7 @@ if (testPrivateKey) {
 Finally, run 
 
 ```bash
-  npx hardhat run scripts/deploySimple.js --network rinkeby
-```
-
-To verify the deployment on Etherscan
-
-```bash
-  npx hardhat verify --network rinkeby ${contract-address} ${constructor-args}
+  npx hardhat run scripts/deploySimple.js --network mumbai
 ```
   
 ## Feedback
