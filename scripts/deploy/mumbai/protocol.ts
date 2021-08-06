@@ -1,11 +1,13 @@
 import { run, ethers } from "hardhat";
-import { BytesLike, Contract, ContractFactory } from 'ethers';
+import { BigNumber, BytesLike, Contract, ContractFactory } from 'ethers';
 import { chainlinkVarsMumbai } from "../../../utils/chainlink";
 
 async function main() {
   await run("compile");
 
   console.log("\n");
+
+  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
 
   const [deployer] = await ethers.getSigners();
 
@@ -20,7 +22,10 @@ async function main() {
     vrfCoordinator,
     linkTokenAddress,
     keyHash,
-    fees
+    fees,
+    {
+      gasPrice: manualGasPrice
+    }
   )
 
   console.log(

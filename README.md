@@ -7,11 +7,11 @@ from the pack is distributed to the pack opener.
 The contracts in the `/contracts` directory are deployed on the following networks.
 
 ### Mumbai
-- `ProtocolControl.sol`: [0x312c3Dd6E0102F872535c3618Ae2Fb3D68C8C087](https://mumbai.polygonscan.com/address/0x312c3Dd6E0102F872535c3618Ae2Fb3D68C8C087#code)
+- `ProtocolControl.sol`: [0xb0F5B77Af59e7952C431CF0B5748A1Cf99aD99Da](https://mumbai.polygonscan.com/address/0xb0F5B77Af59e7952C431CF0B5748A1Cf99aD99Da#code)
 
-- `Pack.sol`: [0x9C90C6073Cefd64055e4fc6AB9E8127e1a2b44F3](https://mumbai.polygonscan.com/address/0x9C90C6073Cefd64055e4fc6AB9E8127e1a2b44F3#code)
+- `Pack.sol`: [0x80Eb6657CcA9A9CDE0dB42b6859c05bd3ceD9cBA](https://mumbai.polygonscan.com/address/0x80Eb6657CcA9A9CDE0dB42b6859c05bd3ceD9cBA#code)
 
-- `Market.sol`: [0x1C86CC9D4C79486571B465eB98ee7De8260BDBE6](https://mumbai.polygonscan.com/address/0x1C86CC9D4C79486571B465eB98ee7De8260BDBE6#code)
+- `Market.sol`: [0x7C55c3e86681016364Db715EB408235a3189daf9](https://mumbai.polygonscan.com/address/0x7C55c3e86681016364Db715EB408235a3189daf9#code)
 
 - `Rewards.sol`: [0xF0D1064ec8Dee772af45D6e9E45Cfa5F429d80a7](https://mumbai.polygonscan.com/address/0xF0D1064ec8Dee772af45D6e9E45Cfa5F429d80a7#code)
 

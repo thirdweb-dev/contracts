@@ -70,7 +70,7 @@ contract ProtocolControl is AccessControl {
     bytes memory packBytecode = abi.encodePacked(type(Pack).creationCode, abi.encode(
       address(this), _packGlobalURI, _vrfCoordinator, _linkToken, _keyHash, _fees
     ));
-    address pack = Create2.deploy(0, PACK, packBytecode);
+    address pack = Create2.deploy(0, keccak256(abi.encode(block.number)), packBytecode);
 
     // Update modules
     modules[PACK] = pack;
@@ -83,7 +83,7 @@ contract ProtocolControl is AccessControl {
     require(modules[MARKET] == address(0), "Protocol Control: already initialized.");
 
     bytes memory marketBytecode = abi.encodePacked(type(Market).creationCode, abi.encode(address(this)));
-    address market = Create2.deploy(0, MARKET, marketBytecode);
+    address market = Create2.deploy(0, keccak256(abi.encode(block.number)), marketBytecode);
 
     // Update modules
     modules[MARKET] = market;

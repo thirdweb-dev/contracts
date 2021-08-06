@@ -47,7 +47,7 @@ describe("Testing main actions", function() {
   before(async () => {
 
     // Fork mainnet
-    await forkFrom(12845437);
+    await forkFrom(17304936);
 
     /// Get Signers
     [protocolAdmin, creator, fan, superFan] = await ethers.getSigners();

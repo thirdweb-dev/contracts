@@ -118,6 +118,35 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
   *   External functions.   
   **/
 
+  /// @notice Lets a pack owner open a single pack.
+  function openPack(uint _packId) external {
+
+    require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
+    require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
+    require(!(pendingRequests[_packId][msg.sender]), "Pack: must wait for the pending pack to be opened.");
+
+    PackState memory packState = packs[_packId];
+
+    require(
+      block.timestamp >= packState.openStart && block.timestamp <= packState.openEnd, 
+      "Pack: the window to open packs has not started or closed."
+    );
+
+    // Send random number request.
+    vrfSeed += 1;
+    bytes32 requestId = requestRandomness(vrfKeyHash, vrfFees, (vrfSeed + block.number));
+
+    // Update state to reflect the Chainlink VRF request.
+    randomnessRequests[requestId] = RandomnessRequest({
+      packId: _packId,
+      opener: msg.sender
+    });
+
+    pendingRequests[_packId][msg.sender] = true;
+
+    emit PackOpenRequest(_packId, msg.sender, requestId);
+  }
+
   /// @dev Creates packs with rewards.
   function createPack(
     string calldata _packURI,
@@ -165,35 +194,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
     _mint(msg.sender, packId, packTotalSupply, "");
 
     emit PackCreated(_rewardContract, msg.sender, packState, rewardsInPack);
-  }
-
-  /// @notice Lets a pack owner open a single pack.
-  function openPack(uint _packId) external {
-
-    require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
-    require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
-    require(!pendingRequests[_packId][msg.sender], "Pack: must wait for the pending pack to be opened.");
-
-    PackState memory packState = packs[_packId];
-
-    require(
-      block.timestamp >= packState.openStart && block.timestamp <= packState.openEnd, 
-      "Pack: the window to open packs has not started or closed."
-    );
-
-    // Send random number request.
-    vrfSeed += 1;
-    bytes32 requestId = requestRandomness(vrfKeyHash, vrfFees, uint(keccak256(abi.encode(msg.sender, vrfSeed))));
-
-    // Update state to reflect the Chainlink VRF request.
-    randomnessRequests[requestId] = RandomnessRequest({
-      packId: _packId,
-      opener: msg.sender
-    });
-
-    pendingRequests[_packId][msg.sender] = true;
-
-    emit PackOpenRequest(_packId, msg.sender, requestId);
   }
 
   /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
