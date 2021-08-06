@@ -1,5 +1,5 @@
 import { run, ethers } from "hardhat";
-import { Contract, ContractFactory, BytesLike } from 'ethers';
+import { BigNumber, Contract, ContractFactory } from 'ethers';
 import { chainlinkVarsMatic } from "../../../utils/chainlink";
 
 async function main() {
@@ -7,34 +7,49 @@ async function main() {
 
   console.log("\n");
 
+  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
+
   const [deployer] = await ethers.getSigners();
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()}`)
 
-  // // 1. Deploy ControlCenter
+  // Deploy ProtocolControl
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMatic;
 
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  const controlCenter: Contract = await ProtocolControl_Factory.deploy(
-    "$PACK Protocol",
-    vrfCoordinator,
-    linkTokenAddress,
-    keyHash,
-    fees
-  )
+  const controlCenter: Contract = await ProtocolControl_Factory.deploy({
+      gasPrice: manualGasPrice
+  })
 
   console.log(
     "ProtocolControl.sol deployed at: ",
     controlCenter.address
   );
 
-  const PACK: BytesLike = await controlCenter.PACK();
-  const packAddress: string = await controlCenter.modules(PACK);
-  console.log("Pack.sol is deployed at: ", packAddress);
+  // Deploy Pack
+  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
+  const pack: Contract = await Pack_Factory.deploy(
+    controlCenter.address,
+    "$PACK Protocol",
+    vrfCoordinator,
+    linkTokenAddress,
+    keyHash,
+    fees,
+    {gasPrice: manualGasPrice}
+  )
 
-  const MARKET: BytesLike = await controlCenter.MARKET();
-  const marketAddress: string = await controlCenter.modules(MARKET);
-  console.log("Market.sol is deployed at: ", marketAddress);
+  console.log("Pack.sol is deployed at: ", pack.address);
+  
+  // Deploy Market
+  const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
+  const market: Contract = await Market_Factory.deploy(controlCenter.address, {gasPrice: manualGasPrice});
+
+  console.log("Market.sol is deployed at: ", market.address);
+
+  // Initialize protocol
+  const initTx = await controlCenter.initializeProtocol(pack.address, market.address, {gasPrice: manualGasPrice});
+  console.log("Initializing protocol: ", initTx.hash);
+  await initTx.wait()
 }
 
 main()
