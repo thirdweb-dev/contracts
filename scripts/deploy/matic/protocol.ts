@@ -1,5 +1,5 @@
 import { run, ethers } from "hardhat";
-import { Contract, ContractFactory } from 'ethers';
+import { Contract, ContractFactory, BytesLike } from 'ethers';
 import { chainlinkVarsMatic } from "../../../utils/chainlink";
 
 async function main() {
@@ -27,6 +27,14 @@ async function main() {
     "ProtocolControl.sol deployed at: ",
     controlCenter.address
   );
+
+  const PACK: BytesLike = await controlCenter.PACK();
+  const packAddress: string = await controlCenter.modules(PACK);
+  console.log("Pack.sol is deployed at: ", packAddress);
+
+  const MARKET: BytesLike = await controlCenter.MARKET();
+  const marketAddress: string = await controlCenter.modules(MARKET);
+  console.log("Market.sol is deployed at: ", marketAddress);
 }
 
 main()
