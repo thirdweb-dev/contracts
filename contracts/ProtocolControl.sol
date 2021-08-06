@@ -6,14 +6,11 @@
 // ╚══════╝░    ╚═╝░░░░░    ╚═╝░░╚═╝    ░╚════╝░    ╚═╝░░╚═╝
 
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-
-import { Pack } from "./Pack.sol";
-import { Market } from "./Market.sol";
 
 contract ProtocolControl is AccessControl {
 
@@ -40,60 +37,21 @@ contract ProtocolControl is AccessControl {
     _;
   }
 
-  constructor(
-    string memory _packGlobalURI,
-
-    address _vrfCoordinator,
-    address _linkToken,
-    bytes32 _keyHash,
-    uint _fees
-  ) {
+  constructor() {
     _setupRole(PROTOCOL_ADMIN, msg.sender);
     _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
-
-    initializePack(_packGlobalURI, _vrfCoordinator, _linkToken, _keyHash, _fees);
-    initializeMarket();
   }
 
   /// @dev Iniializes the ERC 1155 pack token of the protocol.
-  function initializePack(
-    string memory _packGlobalURI,
-
-    address _vrfCoordinator,
-    address _linkToken,
-    bytes32 _keyHash,
-    uint _fees
-  ) internal onlyProtocolAdmin {
-    require(modules[PACK] == address(0), "Protocol Control: already initialized.");
-
-    // Deploy `Pack` ERC 1155 token.
-    bytes memory packBytecode = abi.encodePacked(type(Pack).creationCode, abi.encode(
-      address(this), _packGlobalURI, _vrfCoordinator, _linkToken, _keyHash, _fees
-    ));
-    address pack = Create2.deploy(0, keccak256(abi.encode(block.number)), packBytecode);
+  function initializeProtocol(address _pack, address _market) external onlyProtocolAdmin {
+    require(modules[PACK] == address(0) && modules[MARKET] == address(0), "Protocol Control: already initialized.");
 
     // Update modules
-    modules[PACK] = pack;
+    modules[PACK] = _pack;
+    modules[MARKET] = _market;
 
-    emit ModuleInitialized(PACK, pack);
-  }
-
-  /// @dev Iniializes the market for packs and rewards.
-  function initializeMarket() internal onlyProtocolAdmin {
-    require(modules[MARKET] == address(0), "Protocol Control: already initialized.");
-
-    bytes memory marketBytecode = abi.encodePacked(type(Market).creationCode, abi.encode(address(this)));
-    address market = Create2.deploy(0, keccak256(abi.encode(block.number)), marketBytecode);
-
-    // Update modules
-    modules[MARKET] = market;
-
-    emit ModuleInitialized(MARKET, market);
-  }
-
-  /// @dev Lets a protocol admin pause the entire protocol.
-  function pauseProtocol(bool _pause) external onlyProtocolAdmin {
-    systemPaused = _pause;
+    emit ModuleInitialized(PACK, _pack);
+    emit ModuleInitialized(MARKET, _market);
   }
 
   /// @dev Lets a protocol admin change the address of a module of the protocol.

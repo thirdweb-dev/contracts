@@ -3,17 +3,10 @@ import { chainlinkVarsMumbai } from "..//utils/chainlink";
 import { controlCenterObj, packObj, marketObj, rewardsObj } from "../utils/contracts";
 
 async function ProtocolControl() {
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMumbai;
 
   await hre.run("verify:verify", {
     address: controlCenterObj.address,
-    constructorArguments: [
-      "$PACK Protocol", // global URI
-      vrfCoordinator,
-      linkTokenAddress,
-      keyHash,
-      fees
-    ]
+    constructorArguments: []
   });
 }
 

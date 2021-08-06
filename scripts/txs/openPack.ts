@@ -7,7 +7,7 @@ import { Wallet, Contract, BigNumber } from 'ethers';
 import { packObj } from '../../utils/contracts';
 
 // Transaction parameters.
-const packId: BigNumber = BigNumber.from(0);
+const id: BigNumber = BigNumber.from(0);
 
 async function openPack(packId: BigNumber) {
 
@@ -29,7 +29,7 @@ async function openPack(packId: BigNumber) {
   await openTx.wait();
 }
 
-openPack(packId)
+openPack(id)
   .then(() => process.exit(0))
   .catch(err => {
     console.error(err);

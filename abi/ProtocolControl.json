@@ -1,32 +1,6 @@
 [
   {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_packGlobalURI",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "_vrfCoordinator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_linkToken",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_keyHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_fees",
-        "type": "uint256"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -259,6 +233,24 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_pack",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_market",
+        "type": "address"
+      }
+    ],
+    "name": "initializeProtocol",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
@@ -273,19 +265,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_pause",
-        "type": "bool"
-      }
-    ],
-    "name": "pauseProtocol",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

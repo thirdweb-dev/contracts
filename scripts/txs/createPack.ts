@@ -9,7 +9,7 @@ import { packObj, rewardsObj } from '../../utils/contracts';
 // Transaction parameters.
 const rewardContract = rewardsObj.address;
 const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
-const rewardIds: number[] = [12,13,14]
+const rewardIds: number[] = [36,37,38]
 const rewardSupplies: number[] = [5, 10, 20];
 const openStartAndEnd: number = 0;
 
