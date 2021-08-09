@@ -199,7 +199,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
 
   /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
   function fulfillRandomness(bytes32 _requestId, uint _randomness) internal override {
-    
     RandomnessRequest memory request = randomnessRequests[_requestId];
 
     // Pending request completed
@@ -233,7 +232,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
     uint step = 0;
 
     for(uint i = 0; i < _rewardsInPack.tokenIds.length; i += 1) {
-
       if(prob < (_rewardsInPack.amountsPacked[i] + step)) {
         
         // Return the reward's tokenId

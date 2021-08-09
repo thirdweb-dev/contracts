@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import { chainlinkVars } from "../../utils/chainlink";
 import { pairs } from "../../utils/ammPairs"
-import { forkFrom } from "../../utils/mainnetFork";
+import { forkFrom } from "../../utils/hardhatFork";
 
 describe("Buy packs using Market.sol", function() {
   // Signers.

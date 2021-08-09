@@ -3,14 +3,28 @@ import hre from "hardhat";
 const ethers = hre.ethers;
 require('dotenv').config();
 
-export const forkFrom = async (blockNumber: any) => {  
+const chainIds = {
+  mainnet: 1,
+  rinkeby: 4,
+    
+  matic: 137,
+  mumbai: 80001,
+};
+
+export const forkFrom = async (blockNumber: any, network: keyof typeof chainIds) => {
+    
+    let alchemyKey: string = process.env.ALCHEMY_KEY || "";
+
+    let nodeUrl: string = (chainIds[network] == 137 || chainIds[network] == 80001) 
+    ? `https://polygon-${network}.g.alchemy.com/v2/${alchemyKey}` 
+    :  `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
+
     await hre.network.provider.request({
       method: "hardhat_reset",
       params: [
         {
           forking: {
-            // jsonRpcUrl: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-            jsonRpcUrl: `https://rpc-mumbai.matic.today`,
+            jsonRpcUrl: nodeUrl,
             blockNumber: blockNumber,
           },
         },

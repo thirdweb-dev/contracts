@@ -81,6 +81,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "protocolFeeBps",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "creatorFeeBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "MarketFeesChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "assetContract",
@@ -373,25 +392,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_seller",
-        "type": "address"
-      }
-    ],
-    "name": "getTotalNumOfListings",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "numOfListings",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_assetContract",
         "type": "address"
       },
@@ -584,6 +584,24 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_protocolCut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_creatorCut",
+        "type": "uint256"
+      }
+    ],
+    "name": "setFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -601,13 +619,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "totalListings",
     "outputs": [
       {

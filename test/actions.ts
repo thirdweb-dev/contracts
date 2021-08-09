@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BigNumber } from "ethers";
 import { expect } from "chai";
 
-import { forkFrom } from "../utils/mainnetFork";
+import { forkFrom } from "../utils/hardhatFork";
 import { pairs } from "../utils/ammPairs";
 import { chainlinkVars } from "../utils/chainlink";
 
