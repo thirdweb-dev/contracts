@@ -10,10 +10,10 @@ export const addresses = {
     rewards: ""
   },
   mumbai: {
-    controlCenter: "0x28F7BDF6902d09c6EF2496976Fd886e47adce744",
-    pack: "0xFe92320f002062e8dE6Af21970Ad8Fc4B024C2Bf",
-    market: "0xD73f01f9c143EFc6Fe8eE110aF334D9ff1F2E852",
-    rewards: "0xF0D1064ec8Dee772af45D6e9E45Cfa5F429d80a7"
+    controlCenter: "0x932a80d12133daDa78d1eFeAa69C53f35b7717eB",
+    pack: "0xdF6D4D22918048bA57e849dBBc83d9Bb502bb150",
+    market: "0x0F839498F3A16765BAc2c8164E2711b35c3e2cb6",
+    rewards: "0xe9559e34a8A32FA8Dc050fAaFD9343B666BC92CF"
   },
   rinkeby: {
     controlCenter: "",

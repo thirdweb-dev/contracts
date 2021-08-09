@@ -1,11 +1,14 @@
 import hre from 'hardhat'
 import { chainlinkVars } from "..//utils/chainlink";
-import { controlCenterObj, packObj, marketObj, rewardsObj } from "../utils/contracts";
+import { addresses } from "../utils/contracts";
+
+/// NOTE: set the right address you want
+const { controlCenter, pack, market, rewards } = addresses.mumbai
 
 async function ProtocolControl() {
 
   await hre.run("verify:verify", {
-    address: controlCenterObj.address,
+    address: controlCenter,
     constructorArguments: []
   });
 }
@@ -14,9 +17,9 @@ async function Pack() {
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.mumbai;
 
   await hre.run("verify:verify", {
-    address: packObj.address,
+    address: pack,
     constructorArguments: [
-      controlCenterObj.address, // Control center adddress
+      controlCenter, // Control center adddress
       "$PACK Protocol", // global URI
       vrfCoordinator,
       linkTokenAddress,
@@ -28,25 +31,25 @@ async function Pack() {
 
 async function Market() {
   await hre.run("verify:verify", {
-    address: marketObj.address, 
+    address: market,
     constructorArguments: [
-        controlCenterObj.address, // Control center adddress
+        controlCenter, // Control center adddress
     ],
   });
 }
 
-// async function Rewards() {
-//   await hre.run("verify:verify", {
-//     address: rewardsObj.address,
-//     constructorArguments: [],
-//   });
-// }
+async function Rewards() {
+  await hre.run("verify:verify", {
+    address: rewards,
+    constructorArguments: [],
+  });
+}
 
 async function verify() {
   await ProtocolControl()
   await Pack()
   await Market()
-  // await Rewards()
+  await Rewards()
 }
 
 verify()

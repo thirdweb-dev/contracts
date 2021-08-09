@@ -12,14 +12,21 @@ async function main() {
   const [funder] = await ethers.getSigners();
 
   // Get LINK contract
-  const { linkTokenAddress } = chainlinkVars.rinkeby;
-  const { rinkeby: { pack }} = addresses;
+  const { linkTokenAddress } = chainlinkVars.mumbai;
+  const { mumbai: { pack }} = addresses;
   const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress);
 
   // Fund pack contract.
-  const amountToFund: BigNumber = ethers.utils.parseEther("1");
+  const amountToFund: BigNumber = ethers.utils.parseEther("0.1");
   const transferTx = await linkContract.connect(funder).transfer(pack, amountToFund);
   console.log("Transferring link: ", transferTx.hash);
 
   await transferTx.wait()
 }
+
+main()
+.then(() => process.exit(0))
+  .catch(err => {
+    console.error(err)
+    process.exit(1)
+  })
