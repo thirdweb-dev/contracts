@@ -201,16 +201,18 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
 
   /// @dev Updates a token's total supply.
   function _beforeTokenTransfer(
-    address,
-    address,
+    address operator,
+    address from,
     address to,
     uint256[] memory ids,
     uint256[] memory amounts,
-    bytes memory
+    bytes memory data
   )
     internal
     override
   {
+    super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
     // Decrease total supply if tokens are being burned.
     if (to == address(0)) {
 
