@@ -34,6 +34,9 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   uint public protocolFeeBps = 500; // 5%
   uint public creatorFeeBps = 500; // 5%
 
+  /// @dev Total number of listings on market.
+  uint public totalListings;
+
   struct Listing {
     address seller;
 
@@ -47,9 +50,6 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     uint saleStart;
     uint saleEnd;
   }
-
-  /// @dev seller address => total number of listings.
-  mapping(address => uint) public totalListings;
 
   /// @dev seller address => listingId => listing info.
   mapping(address => mapping(uint => Listing)) public listings;
@@ -125,8 +125,8 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     );
 
     // Get listing ID.
-    uint listingId = totalListings[msg.sender];
-    totalListings[msg.sender] += 1;
+    uint listingId = totalListings;
+    totalListings += 1;
 
     // Create listing.
     Listing memory newListing = Listing({
@@ -261,11 +261,6 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     creatorFeeBps = _creatorCut;
 
     emit MarketFeesChanged(_protocolCut, _creatorCut);
-  }
-
-  /// @notice Returns the total number of listings created by seller.
-  function getTotalNumOfListings(address _seller) external view returns (uint numOfListings) {
-    numOfListings = totalListings[_seller];
   }
 
   /// @notice Returns the listing for the given seller and Listing ID.
