@@ -9,6 +9,12 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 interface IProtocolControl {
   /// @dev Returns whether the pack protocol is paused.
   function systemPaused() external view returns (bool);
+
+  /// @dev Access Control: hasRole()
+  function hasRole(bytes32 role, address account) external view returns (bool);
+
+  /// @dev Access control: PROTOCOL_ADMIN role
+  function PROTOCOL_ADMIN() external view returns (bytes32);
 }
 
 interface IListingAsset {
@@ -49,6 +55,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   mapping(address => mapping(uint => Listing)) public listings;
 
   /// @dev Events
+  event MarketFeesChanged(uint protocolFeeBps, uint creatorFeeBps);
   event NewListing(address indexed assetContract, address indexed seller, Listing listing);
   event ListingUpdate(address indexed seller, uint indexed listingId, Listing lisitng);
   event NewSale(address indexed assetContract, address indexed seller, uint indexed listingId, address buyer, Listing listing);
@@ -243,6 +250,17 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     require(IERC20(listing.currency).transferFrom(msg.sender, creator, creatorCut), "Market: failed to transfer creator cut.");
 
     emit NewSale(listing.assetContract, _seller, _listingId,  msg.sender, listing);
+  }
+
+  /// @dev Lets a protocol admin set protocol and cretor fees.
+  function setFees(uint _protocolCut, uint _creatorCut) external {
+    require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Market: only a protocol admin can set fees.");
+    require((_protocolCut + _creatorCut) <= MAX_BPS, "Market: Invalid protocol or creator cut provided.");
+
+    protocolFeeBps = _protocolCut;
+    creatorFeeBps = _creatorCut;
+
+    emit MarketFeesChanged(_protocolCut, _creatorCut);
   }
 
   /// @notice Returns the total number of listings created by seller.
