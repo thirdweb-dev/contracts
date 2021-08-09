@@ -30,6 +30,7 @@ contract ProtocolControl is AccessControl {
   /// @dev Events.
   event ModuleInitialized(bytes32 moduleId, address module);
   event ModuleUpdated(bytes32 moduleId, address module);
+  event FundsTransferred(address asset, address to, uint amount);
 
   /// @dev Check whether the caller is a protocol admin
   modifier onlyProtocolAdmin() {
@@ -65,5 +66,7 @@ contract ProtocolControl is AccessControl {
   /// @dev Lets a protocol admin transfer the accrued protocol fees.
   function transferProtocolFunds(address _asset, address _to, uint _amount) external onlyProtocolAdmin {
     require(IERC20(_asset).transfer(_to, _amount), "Protocol Control: failed to transfer protocol funds.");
+
+    emit FundsTransferred(_asset, _to, _amount);
   }
 }
