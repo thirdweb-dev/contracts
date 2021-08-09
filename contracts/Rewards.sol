@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
+contract Rewards is ERC1155, ERC721Holder {
 
   /// @dev The token Id of the reward to mint.
   uint public nextTokenId;
@@ -49,9 +49,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
   /// @dev Reward tokenId => Underlying ERC20 reward state.
   mapping(uint => ERC20Reward) public erc20Rewards;
 
-  constructor() ERC1155PresetMinterPauser("") {
-    _setRoleAdmin(MINTER_ROLE, MINTER_ROLE);
-  }
+  constructor() ERC1155("") {}
 
   /// @notice Create native ERC 1155 rewards.
   function createNativeRewards(string[] calldata _rewardURIs, uint[] calldata _rewardSupplies) external returns (uint[] memory rewardIds) {
@@ -76,9 +74,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     }
 
     // Mint reward tokens to `msg.sender`
-    _setupRole(MINTER_ROLE, msg.sender);
-    mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
-    revokeRole(MINTER_ROLE, msg.sender);
+    _mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
 
     emit NativeRewards(msg.sender, rewardIds, _rewardURIs, _rewardSupplies);
   }
@@ -102,9 +98,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     );
 
     // Mint reward tokens to `msg.sender`
-    _setupRole(MINTER_ROLE, msg.sender);
-    mint(msg.sender, nextTokenId, 1, "");
-    revokeRole(MINTER_ROLE, msg.sender); 
+    _mint(msg.sender, nextTokenId, 1, "");
 
     // Store reward state.
     rewards[nextTokenId] = Reward({
@@ -130,7 +124,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     require(balanceOf(msg.sender, _rewardId) > 0, "Rewards: Cannot redeem a reward you do not own.");
         
     // Burn the reward token
-    burn(msg.sender, _rewardId, 1);
+    _burn(msg.sender, _rewardId, 1);
         
     // Transfer the NFT to `msg.sender`
     IERC721(erc721Rewards[_rewardId].nftContract).safeTransferFrom(
@@ -158,9 +152,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     require(IERC20(_tokenContract).transferFrom(msg.sender, address(this), _tokenAmount), "Failed to transfer ERC20 tokens.");
 
     // Mint reward tokens to `msg.sender`
-    _setupRole(MINTER_ROLE, msg.sender);
-    mint(msg.sender, nextTokenId, _numOfRewardsToMint, "");
-    revokeRole(MINTER_ROLE, msg.sender); 
+    _mint(msg.sender, nextTokenId, _numOfRewardsToMint, "");
 
     rewards[nextTokenId] = Reward({
       creator: msg.sender,
@@ -185,7 +177,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     require(balanceOf(msg.sender, _rewardId) >= _amount, "Rewards: Cannot redeem a reward you do not own.");
         
     // Burn the reward token
-    burn(msg.sender, _rewardId, _amount);
+    _burn(msg.sender, _rewardId, _amount);
 
     // Get the ERC20 token amount to distribute
     uint amountToDistribute = (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].shares;
