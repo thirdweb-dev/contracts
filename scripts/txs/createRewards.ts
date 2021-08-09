@@ -1,10 +1,9 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
 import { ethers } from 'hardhat';
-import { Contract, Wallet, BigNumber } from 'ethers';
+import { Contract, BigNumber } from 'ethers';
 
-import { rewardsObj } from '../../utils/contracts';
+import { addresses } from '../../utils/contracts';
+
+/// NOTE: set the right network you want.
 
 // Transaction parameters.
 const rewardURIs: string[] = [
@@ -15,18 +14,17 @@ const rewardURIs: string[] = [
 const rewardSupplies: number[] = [5, 10, 20];
 
 async function createRewards(rewardURIs: string[], rewardSupplies: number[]) {
-  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
+  const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
 
-  // Get Wallet instance.
-  const mumbaiProvider = new ethers.providers.JsonRpcProvider(`https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`);
-  const privateKey = process.env.TEST_PRIVATE_KEY || "";
-  const mumbaiWallet: Wallet = new ethers.Wallet(privateKey, mumbaiProvider);
+  // Get signer.
+  const [caller] = await ethers.getSigners();
 
   // Get contract instance connected to wallet.
-  const rewards: Contract = new ethers.Contract(rewardsObj.address, rewardsObj.abi, mumbaiWallet);
+  const { mumbai: { rewards } } = addresses;
+  const rewardsContract: Contract = await ethers.getContractAt("Rewards", rewards);
 
   // Create rewards.
-  const createRewardsTx = await rewards.createNativeRewards(rewardURIs, rewardSupplies, { gasPrice: manualGasPrice});
+  const createRewardsTx = await rewardsContract.connect(caller).createNativeRewards(rewardURIs, rewardSupplies, { gasPrice: manualGasPrice});
   console.log("Creating rewards: ", createRewardsTx.hash);
   await createRewardsTx.wait();
 }

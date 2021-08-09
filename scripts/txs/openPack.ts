@@ -1,10 +1,7 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
 import { ethers } from 'hardhat';
-import { Wallet, Contract, BigNumber } from 'ethers';
+import { Contract, BigNumber } from 'ethers';
 
-import { packObj } from '../../utils/contracts';
+import { addresses } from '../../utils/contracts';
 
 // Transaction parameters.
 const id: BigNumber = BigNumber.from(0);
@@ -12,19 +9,17 @@ const id: BigNumber = BigNumber.from(0);
 async function openPack(packId: BigNumber) {
 
   // Setting manual gas limit.
-  const manualGasLimit: number = 2000000; // 1 mil
-  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
+  const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
 
-  // Get Wallet instance.
-  const mumbaiProvider = new ethers.providers.JsonRpcProvider(`https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`);
-  const privateKey = process.env.TEST_PRIVATE_KEY || "";
-  const mumbaiWallet: Wallet = new ethers.Wallet(privateKey, mumbaiProvider);
+  // Get signer.
+  const [caller] = await ethers.getSigners();
 
-  // Get contract instance connected to wallet.
-  const pack: Contract = new ethers.Contract(packObj.address, packObj.abi, mumbaiWallet);
+  // Get contract instances connected to wallet.
+  const { mumbai: { pack } } = addresses;
+  const packContract: Contract = await ethers.getContractAt("Pack", pack)
 
   // Open pack.
-  const openTx = await pack.openPack(packId, { gasLimit: manualGasLimit, gasPrice: manualGasPrice });
+  const openTx = await packContract.connect(caller).openPack(packId, { gasPrice: manualGasPrice });
   console.log("Opening pack: ", openTx.hash);
   await openTx.wait();
 }

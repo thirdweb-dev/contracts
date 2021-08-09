@@ -13,7 +13,7 @@ async function main() {
 
   // Get LINK contract
   const { linkTokenAddress } = chainlinkVars.rinkeby;
-  const { rinkeby: pack} = addresses;
+  const { rinkeby: { pack }} = addresses;
   const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress);
 
   // Fund pack contract.

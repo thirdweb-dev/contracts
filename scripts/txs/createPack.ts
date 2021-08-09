@@ -1,15 +1,14 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
 import { ethers } from 'hardhat';
-import { Wallet, Contract, BigNumber } from 'ethers';
+import { Contract, BigNumber } from 'ethers';
 
-import { packObj, rewardsObj } from '../../utils/contracts';
+import { addresses } from '../../utils/contracts';
+
+/// NOTE: set the right network you want.
 
 // Transaction parameters.
-const rewardContract = rewardsObj.address;
+const rewardContract = addresses.mumbai.rewards;
 const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
-const rewardIds: number[] = [36,37,38]
+const rewardIds: number[] = [0,1,2]
 const rewardSupplies: number[] = [5, 10, 20];
 const openStartAndEnd: number = 0;
 
@@ -23,24 +22,23 @@ async function createPack(
   openEnd: number
 ) {
 
-  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
+  const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
 
-  // Get Wallet instance.
-  const mumbaiProvider = new ethers.providers.JsonRpcProvider(`https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`);
-  const privateKey = process.env.TEST_PRIVATE_KEY || "";
-  const mumbaiWallet: Wallet = new ethers.Wallet(privateKey, mumbaiProvider);
+  // Get signer.
+  const [caller] = await ethers.getSigners();
 
   // Get contract instances connected to wallet.
-  const pack: Contract = new ethers.Contract(packObj.address, packObj.abi, mumbaiWallet);
-  const rewards: Contract = new ethers.Contract(rewardsObj.address, rewardsObj.abi, mumbaiWallet);
+  const { mumbai: { pack, rewards } } = addresses;
+  const packContract: Contract = await ethers.getContractAt("Pack", pack)
+  const rewardsContract: Contract = await ethers.getContractAt("Rewards", rewards)
 
   // Approve Handler to transfer reward tokens.
-  const approveHandlerTx = await rewards.setApprovalForAll(pack.address, true, { gasPrice: manualGasPrice});
+  const approveHandlerTx = await rewardsContract.connect(caller).setApprovalForAll(pack, true, { gasPrice: manualGasPrice});
   console.log("Approving Handler for reward tokens: ", approveHandlerTx.hash);
   await approveHandlerTx.wait()
 
   // Create packs with rewards and list packs for sale.
-  const createPackTx = await pack.createPack(
+  const createPackTx = await packContract.connect(caller).createPack(
     packURI,
     rewardContract,
     rewardIds,
