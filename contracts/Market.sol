@@ -196,8 +196,8 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     // Update listing info.
     listing.pricePerToken = _pricePerToken;
     listing.currency = _currency;
-    listing.saleStart = _secondsUntilStart;
-    listing.saleEnd = _secondsUntilEnd;
+    listing.saleStart = block.timestamp + _secondsUntilStart;
+    listing.saleEnd = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
     listings[msg.sender][_listingId] = listing;
 
