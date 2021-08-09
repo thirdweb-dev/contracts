@@ -31,6 +31,7 @@ contract ProtocolControl is AccessControl {
   event ModuleInitialized(bytes32 moduleId, address module);
   event ModuleUpdated(bytes32 moduleId, address module);
   event FundsTransferred(address asset, address to, uint amount);
+  event SystemPaused(bool isPaused);
 
   /// @dev Check whether the caller is a protocol admin
   modifier onlyProtocolAdmin() {
@@ -61,6 +62,12 @@ contract ProtocolControl is AccessControl {
     modules[_moduleId] = _newModuleAddress;
 
     emit ModuleUpdated(_moduleId, _newModuleAddress);
+  }
+
+  /// @dev Lets a protocol admin pause the protocol.
+  function pausePackProtocol(bool _toPause) external onlyProtocolAdmin {
+    systemPaused = _toPause;
+    emit SystemPaused(_toPause);
   }
 
   /// @dev Lets a protocol admin transfer the accrued protocol fees.
