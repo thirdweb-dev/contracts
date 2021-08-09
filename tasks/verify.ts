@@ -3,7 +3,7 @@ import { chainlinkVars } from "..//utils/chainlink";
 import { addresses } from "../utils/contracts";
 
 /// NOTE: set the right address you want
-const { controlCenter, pack, market, rewards } = addresses.mumbai
+const { controlCenter, pack, market, rewards } = addresses.rinkeby
 
 async function ProtocolControl() {
 
@@ -14,7 +14,7 @@ async function ProtocolControl() {
 }
 
 async function Pack() {
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.mumbai;
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.rinkeby;
 
   await hre.run("verify:verify", {
     address: pack,

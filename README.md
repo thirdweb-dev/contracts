@@ -15,6 +15,16 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Rewards.sol`: [0xe9559e34a8A32FA8Dc050fAaFD9343B666BC92CF](https://mumbai.polygonscan.com/address/0xe9559e34a8A32FA8Dc050fAaFD9343B666BC92CF#code)
 
+### Rinkeby
+
+- `ProtocolControl.sol`: [0x916a0c502Ea07B50e48c5c5D6e6C5e26E6F04e02](https://rinkeby.etherscan.io/address/0x916a0c502Ea07B50e48c5c5D6e6C5e26E6F04e02#code)
+
+- `Pack.sol`: [0xcD6c2E7439C712464B8D49DD6369C976894EbAdb](https://rinkeby.etherscan.io/address/0xcD6c2E7439C712464B8D49DD6369C976894EbAdb#code)
+
+- `Market.sol`: [0xe24f0974F40af6a4F050181Abf072EB7A2A9db83](https://rinkeby.etherscan.io/address/0xe24f0974F40af6a4F050181Abf072EB7A2A9db83#code)
+
+- `Rewards.sol`: [0x906f3c4643F0C721eB48A40d3903043B43C43434](https://rinkeby.etherscan.io/address/0x906f3c4643F0C721eB48A40d3903043B43C43434#code)
+
 ## Run Locally
 
 Clone the project
