@@ -173,6 +173,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
     require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
     require(!(pendingRequests[_packId][msg.sender]), "Pack: must wait for the pending pack to be opened.");
 
+    // Burn the pack being opened.
+    _burn(msg.sender, _packId, 1);
+
     PackState memory packState = packs[_packId];
 
     require(
@@ -201,9 +204,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
 
     // Pending request completed
     pendingRequests[request.packId][request.opener] = false;
-
-    // Burn the pack being opened.
-    _burn(msg.sender, randomnessRequests[_requestId].packId, 1);
 
     // Get tokenId of the reward to distribute.
     Rewards memory rewardsInPack = rewards[request.packId];
