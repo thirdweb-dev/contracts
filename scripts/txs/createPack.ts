@@ -34,7 +34,7 @@ async function createPack(
 
   // Approve Handler to transfer reward tokens.
   const approveHandlerTx = await rewardsContract.connect(caller).setApprovalForAll(pack, true, { gasPrice: manualGasPrice});
-  console.log("Approving Handler for reward tokens: ", approveHandlerTx.hash);
+  console.log("Approving Pack for reward tokens: ", approveHandlerTx.hash);
   await approveHandlerTx.wait()
 
   // Create packs with rewards and list packs for sale.
