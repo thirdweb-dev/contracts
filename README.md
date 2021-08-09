@@ -52,7 +52,7 @@ Run tests
 To use scripts, update the transaction parameters in the particular script and run
 
 ```bash
-  npx hardhat run scripts/.../${testFileName}.ts --network mumbai
+  npx hardhat run scripts/.../${testFileName}.ts --network {name of network}
 ```
   
 ## Deploying contracts
@@ -71,7 +71,7 @@ if (testPrivateKey) {
 Finally, run 
 
 ```bash
-  npx hardhat run scripts/deploySimple.js --network mumbai
+  npx hardhat run scripts/deploy/mumbai/protocol.js --network mumbai
 ```
   
 ## Feedback
