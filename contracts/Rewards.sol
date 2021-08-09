@@ -28,7 +28,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
 
   struct ERC20Reward {
     address tokenContract;
-    uint numOfRewards;
+    uint shares;
     uint underlyingTokenAmount;
   }
 
@@ -171,7 +171,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
 
     erc20Rewards[nextTokenId] = ERC20Reward({
       tokenContract: _tokenContract,
-      numOfRewards: _numOfRewardsToMint,
+      shares: _numOfRewardsToMint,
       underlyingTokenAmount: _tokenAmount
     });
 
@@ -188,7 +188,7 @@ contract Rewards is ERC1155PresetMinterPauser, ERC721Holder {
     burn(msg.sender, _rewardId, _amount);
 
     // Get the ERC20 token amount to distribute
-    uint amountToDistribute = (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].numOfRewards;
+    uint amountToDistribute = (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) / erc20Rewards[_rewardId].shares;
 
     // Transfer the ERC20 tokens to `msg.sender` 
     require(
