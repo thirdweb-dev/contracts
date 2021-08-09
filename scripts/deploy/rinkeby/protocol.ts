@@ -7,7 +7,7 @@ async function main() {
 
   console.log("\n");
 
-  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
+  const manualGasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
 
   const [deployer] = await ethers.getSigners();
 

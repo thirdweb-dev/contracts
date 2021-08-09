@@ -7,8 +7,7 @@ async function main() {
 
   console.log("\n");
 
-  const manualGasPrice: BigNumber = ethers.utils.parseEther("0.000000005");
-
+  const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
   const [deployer] = await ethers.getSigners();
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()}`)
