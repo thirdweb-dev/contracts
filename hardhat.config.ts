@@ -81,7 +81,7 @@ const config: ConfigWithEtherscan = {
 if (testPrivateKey) {
   config.networks = {
     mainnet: createTestnetConfig("mainnet"),
-    goerli: createTestnetConfig("goerli"),
+    rinkeby: createTestnetConfig("rinkeby"),
     matic: createTestnetConfig("matic"),
     mumbai: createTestnetConfig("mumbai")
   };
