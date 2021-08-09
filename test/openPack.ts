@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BytesLike, BigNumber } from "ethers";
 import { expect } from "chai";
 
-import { chainlinkVarsMumbai } from "../utils/chainlink";
+import { chainlinkVars } from "../utils/chainlink";
 // import { forkFrom } from "../utils/mainnetFork";
 
 describe("Testing openPack", function() {
@@ -50,7 +50,7 @@ describe("Testing openPack", function() {
     console.log("Hello 4");
 
     // Deploy $PACK Protocol
-    const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMumbai;
+    const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.mumbai;
 
     const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
     const controlCenter: Contract = await ProtocolControl_Factory.deploy(

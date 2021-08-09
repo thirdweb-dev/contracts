@@ -1,6 +1,6 @@
 import { run, ethers } from "hardhat";
 import { BigNumber, Contract, ContractFactory } from 'ethers';
-import { chainlinkVarsRinkeby } from "../../../utils/chainlink";
+import { chainlinkVars } from "../../../utils/chainlink";
 
 async function main() {
   await run("compile");
@@ -14,7 +14,7 @@ async function main() {
   console.log(`Deploying contracts with account: ${await deployer.getAddress()}`)
 
   // Deploy ProtocolControl
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsRinkeby;
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.rinkeby;
 
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
   const controlCenter: Contract = await ProtocolControl_Factory.deploy({

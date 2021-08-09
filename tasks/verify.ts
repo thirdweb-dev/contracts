@@ -1,5 +1,5 @@
 import hre from 'hardhat'
-import { chainlinkVarsMumbai } from "..//utils/chainlink";
+import { chainlinkVars } from "..//utils/chainlink";
 import { controlCenterObj, packObj, marketObj, rewardsObj } from "../utils/contracts";
 
 async function ProtocolControl() {
@@ -11,7 +11,7 @@ async function ProtocolControl() {
 }
 
 async function Pack() {
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVarsMumbai;
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.mumbai;
 
   await hre.run("verify:verify", {
     address: packObj.address,

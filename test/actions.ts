@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import { forkFrom } from "../utils/mainnetFork";
 import { pairs } from "../utils/ammPairs";
-import { chainlinkVarsRinkeby } from "../utils/chainlink";
+import { chainlinkVars } from "../utils/chainlink";
 
 describe("Testing main actions", function() {
 
@@ -66,7 +66,7 @@ describe("Testing main actions", function() {
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
     market = await Market_Factory.deploy(controlCenter.address);
 
-    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
+    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVars.rinkeby;
     const fees: BigNumber = ethers.utils.parseEther("0.1");
     
     const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");

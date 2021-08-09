@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BigNumber } from "ethers";
 import { expect } from "chai";
 
-import { chainlinkVarsRinkeby } from "../../utils/chainlink";
+import { chainlinkVars } from "../../utils/chainlink";
 
 describe("Create a pack with rewards using Pack.sol", function() {
 
@@ -64,7 +64,7 @@ describe("Create a pack with rewards using Pack.sol", function() {
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
     const market: Contract = await Market_Factory.deploy(controlCenter.address);
 
-    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVarsRinkeby;
+    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVars.rinkeby;
     const fees: BigNumber = ethers.utils.parseEther("0.1");
     
     const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
