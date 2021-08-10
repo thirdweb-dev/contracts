@@ -56,7 +56,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
   /// @dev Events
   event MarketFeesChanged(uint protocolFeeBps, uint creatorFeeBps);
-  event NewListing(address indexed assetContract, address indexed seller, Listing listing);
+  event NewListing(address indexed assetContract, address indexed seller, uint indexed listingId, Listing listing);
   event ListingUpdate(address indexed seller, uint indexed listingId, Listing lisitng);
   event NewSale(address indexed assetContract, address indexed seller, uint indexed listingId, address buyer, Listing listing);
 
@@ -142,7 +142,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
     listings[msg.sender][listingId] = newListing;
 
-    emit NewListing(_assetContract, msg.sender, newListing);
+    emit NewListing(_assetContract, msg.sender, listingId, newListing);
   }
 
   /// @notice Unlist `_quantity` amount of tokens.
