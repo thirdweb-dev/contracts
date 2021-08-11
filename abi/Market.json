@@ -70,7 +70,7 @@
         ],
         "indexed": false,
         "internalType": "struct Market.Listing",
-        "name": "lisitng",
+        "name": "listing",
         "type": "tuple"
       }
     ],
