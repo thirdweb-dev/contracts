@@ -217,8 +217,16 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
 
   /// @dev Lets a protocol admin change the Chainlink VRF fee.
   function setChainlinkFees(uint _newFees) external {
-    require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Pack: only a protocol admin set VRF fees.");
+    require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Pack: only a protocol admin can set VRF fees.");
     vrfFees = _newFees;
+  }
+
+  /// @dev Lets a protocol admin transfer LINK from the contract.
+  function transferLink(address _to, uint _amount) external {
+    require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Pack: only a protocol admin can transfer LINK.");
+    
+    bool success = LINK.transfer(_to, _amount);
+    require(success, "Pack: Failed to transfer LINK.");
   }
 
   /**
