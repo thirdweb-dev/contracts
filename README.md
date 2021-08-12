@@ -6,6 +6,16 @@ from the pack is distributed to the pack opener.
 ## Deployments
 The contracts in the `/contracts` directory are deployed on the following networks.
 
+
+### Polygon
+- `ProtocolControl.sol`: [0x429ACf993C992b322668122a5fC5593200493ea8](https://mumbai.polygonscan.com/address/0x429ACf993C992b322668122a5fC5593200493ea8#code)
+
+- `Pack.sol`: [0x3d5a51975fD29E45Eb285349F12b77b4c153c8e0](https://mumbai.polygonscan.com/address/0x3d5a51975fD29E45Eb285349F12b77b4c153c8e0#code)
+
+- `Market.sol`: [0xfC958641E52563f071534495886A8Ac590DCBFA2](https://mumbai.polygonscan.com/address/0xfC958641E52563f071534495886A8Ac590DCBFA2#code)
+
+- `Rewards.sol`: [0x58408Fa085ae3942C3A6532ee6215bFC7f80c47A](https://mumbai.polygonscan.com/address/0x58408Fa085ae3942C3A6532ee6215bFC7f80c47A#code)
+
 ### Mumbai
 - `ProtocolControl.sol`: [0x932a80d12133daDa78d1eFeAa69C53f35b7717eB](https://mumbai.polygonscan.com/address/0x932a80d12133daDa78d1eFeAa69C53f35b7717eB#code)
 
