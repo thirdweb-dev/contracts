@@ -71,7 +71,6 @@ const config: ConfigWithEtherscan = {
       },
     },
   },
-
   abiExporter: {
     flat: true,
   },
