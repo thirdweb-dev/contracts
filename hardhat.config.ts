@@ -16,7 +16,7 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
-  matic: 137,
+  polygon: 137,
   mumbai: 80001,
 };
 
@@ -24,14 +24,13 @@ const chainIds = {
 let testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
 let alchemyKey: string = process.env.ALCHEMY_KEY || "";
 let etherscanKey: string = process.env.ETHERSCAN_API_KEY || "";
-let polygonscanKey: string = process.env.POLYGONSCAN_API_KEY || "";
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (!alchemyKey) {
     throw new Error("Missing ALCHEMY_KEY");
   }
 
-  const polygonNetworkName = network === "matic" ? "mainnet" : "mumbai";
+  const polygonNetworkName = network === "polygon" ? "mainnet" : "mumbai";
 
   let nodeUrl =
     chainIds[network] == 137 || chainIds[network] == 80001
@@ -86,7 +85,7 @@ if (testPrivateKey) {
   config.networks = {
     mainnet: createTestnetConfig("mainnet"),
     rinkeby: createTestnetConfig("rinkeby"),
-    matic: createTestnetConfig("matic"),
+    polygon: createTestnetConfig("polygon"),
     mumbai: createTestnetConfig("mumbai"),
   };
 }
