@@ -2,6 +2,7 @@ import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BytesLike, BigNumber } from "ethers";
 import { expect } from "chai";
 
+import { forkFrom } from "../utils/hardhatFork";
 import { chainlinkVars } from "../utils/chainlink";
 
 describe("Deploying $PACK Protocol contracts", function() {
@@ -10,75 +11,59 @@ describe("Deploying $PACK Protocol contracts", function() {
   let deployerAddress: string;
 
   // AccessControl roles.
-  const MINTER_ROLE: BytesLike = ethers.utils.keccak256(
-    ethers.utils.toUtf8Bytes("MINTER_ROLE")
-  )
-  const PAUSER_ROLE: BytesLike = ethers.utils.keccak256(
-    ethers.utils.toUtf8Bytes("PAUSER_ROLE")
-  )
   const PROTOCOL_ADMIN_ROLE: BytesLike = ethers.utils.keccak256(
     ethers.utils.toUtf8Bytes("PROTOCOL_ADMIN")
   );
 
   before(async () => {
+    // Fork rinkeby
+    await forkFrom(9075707, "rinkeby");
+
     [deployer] = await ethers.getSigners()
     deployerAddress = await deployer.getAddress();
   })
 
-  it("Should deploy the $PACK Protocol contracts", async () => {
+  it("Should deploy the $PACK Protocol contracts and Rewards contract", async () => {
     // 1. Deploy ControlCenter
     const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-    const controlCenter: Contract = await ProtocolControl_Factory.deploy(deployerAddress);
+    const controlCenter: Contract = await ProtocolControl_Factory.deploy();
 
-    // 2. Deploy rest of the protocol modules.
+    // 2. Deploy protocol modules: `Pack` and `Market`
+    const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.rinkeby;
     const packTokenURI: string = "$PACK Protocol"
+
     const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-    const pack: Contract = await Pack_Factory.deploy(controlCenter.address, packTokenURI);
-
-    const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-    const market: Contract = await Market_Factory.deploy(controlCenter.address);
-
-    const { vrfCoordinator, linkTokenAddress, keyHash } = chainlinkVars.rinkeby;
-    const fees: BigNumber = ethers.utils.parseEther("0.1");
-    
-    const RNG_Factory: ContractFactory = await ethers.getContractFactory("RNG");
-    const rng: Contract = await RNG_Factory.deploy(
+    const pack: Contract = await Pack_Factory.deploy(
       controlCenter.address,
+      packTokenURI,
       vrfCoordinator,
       linkTokenAddress,
       keyHash,
       fees
     );
 
+    const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
+    const market: Contract = await Market_Factory.deploy(controlCenter.address);
+
     // Initialize $PACK Protocol in ControlCenter
-    await controlCenter.initPackProtocol(
-      pack.address,
-      market.address,
-      rng.address,
-    );
+    await controlCenter.initializeProtocol(pack.address, market.address);
     
     // Check whether the protocol has been initialized correctly.
     expect(
-      await controlCenter.getModule(await controlCenter.PACK())
+      await controlCenter.modules(await controlCenter.PACK())
     ).to.equal(pack.address)
 
     expect(
-      await controlCenter.getModule(await controlCenter.MARKET())
+      await controlCenter.modules(await controlCenter.MARKET())
     ).to.equal(market.address)
 
-    expect(
-      await controlCenter.getModule(await controlCenter.RNG())
-    ).to.equal(rng.address)
-
     expect(await controlCenter.hasRole(PROTOCOL_ADMIN_ROLE, deployerAddress)).to.equal(true);
-  })
 
-  it("Should deploy the Rewards contracts", async () => {
-
+    // Deploy rewards contract.
     const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
-    const rewards: Contract = await Rewards_Factory.deploy();
+    const rewards: Contract = await Rewards_Factory.deploy(pack.address);
 
-    expect(await rewards.hasRole(MINTER_ROLE, deployerAddress)).to.equal(true);
-    expect(await rewards.hasRole(PAUSER_ROLE, deployerAddress)).to.equal(true);
+    expect(await rewards.nextTokenId()).to.equal(0);
+    expect(await rewards.pack()).to.equal(pack.address);
   })
 })
