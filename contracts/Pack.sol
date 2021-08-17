@@ -109,62 +109,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
     return this.onERC1155Received.selector;
   }
 
-  function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
-    return this.onERC1155BatchReceived.selector;
-  }
-
   /**
   *   External functions.   
   **/
-
-  /// @dev Creates packs with rewards.
-  function createPack(
-    string calldata _packURI,
-
-    address _rewardContract, 
-    uint[] calldata _rewardIds, 
-    uint[] calldata _rewardAmounts,
-
-    uint _secondsUntilOpenStart,
-    uint _secondsUntilOpenEnd
-
-  ) external onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
-
-    require(IERC1155(_rewardContract).supportsInterface(0xd9b67a26), "Pack: reward contract does not implement ERC 1155.");
-    require(_rewardIds.length == _rewardAmounts.length, "Pack: unequal number of reward IDs and reward amounts provided.");
-    require(IERC1155(_rewardContract).isApprovedForAll(msg.sender, address(this)), "Pack: not approved to transer the reward tokens.");
-
-    // Get pack tokenId and total supply.
-    packId = _newPackId();
-    packTotalSupply = _sumArr(_rewardAmounts);
-
-    // Transfer ERC 1155 reward tokens Pack Protocol's asset manager. Will revert if `msg.sender` does not own the given amounts of tokens.
-    IERC1155(_rewardContract).safeBatchTransferFrom(msg.sender, address(this), _rewardIds, _rewardAmounts, "");
-
-    // Store pack state.
-    PackState memory packState = PackState({
-      packId: packId,
-      creator: msg.sender,
-      uri: _packURI,
-      currentSupply: packTotalSupply,
-      openStart: block.timestamp + _secondsUntilOpenStart,
-      openEnd: _secondsUntilOpenEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilOpenEnd
-    });
-
-    Rewards memory rewardsInPack = Rewards({
-      source: _rewardContract,
-      tokenIds: _rewardIds,
-      amountsPacked: _rewardAmounts
-    });
-
-    packs[packId] = packState;
-    rewards[packId] = rewardsInPack;
-    
-    // Mint packs to creator.
-    _mint(msg.sender, packId, packTotalSupply, "");
-
-    emit PackCreated(_rewardContract, msg.sender, packState, rewardsInPack);
-  }
 
   /// @notice Lets a pack owner open a single pack.
   function openPack(uint _packId) external onlyUnpausedProtocol {
@@ -229,9 +176,86 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
     require(success, "Pack: Failed to transfer LINK.");
   }
 
+  /// @dev Creates pack on receiving ERC 1155 reward tokens
+  function onERC1155BatchReceived(
+    address,
+    address _from, 
+    uint256[] memory _ids, 
+    uint256[] memory _values, 
+    bytes memory _data
+  
+  ) external override returns (bytes4) {
+
+    (
+      string memory packURI,
+      address rewardContract,
+      uint secondsUntilOpenStart,
+      uint secondsUntilOpenEnd
+    
+    ) = abi.decode(_data, (string, address, uint, uint));
+
+    createPack(
+      _from,
+      packURI,
+      rewardContract,
+      _ids,
+      _values,
+      secondsUntilOpenStart,
+      secondsUntilOpenEnd
+    );
+
+    return this.onERC1155BatchReceived.selector;
+  }
+
   /**
   *   Internal functions.
   **/
+
+  /// @dev Creates packs with rewards.
+  function createPack(
+    address _creator,
+    string memory _packURI,
+
+    address _rewardContract, 
+    uint[] memory _rewardIds, 
+    uint[] memory _rewardAmounts,
+
+    uint _secondsUntilOpenStart,
+    uint _secondsUntilOpenEnd
+
+  ) internal onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
+
+    require(IERC1155(_rewardContract).supportsInterface(0xd9b67a26), "Pack: reward contract does not implement ERC 1155.");
+    require(_rewardIds.length == _rewardAmounts.length, "Pack: unequal number of reward IDs and reward amounts provided.");
+
+    // Get pack tokenId and total supply.
+    packId = _newPackId();
+    packTotalSupply = _sumArr(_rewardAmounts);
+
+    // Store pack state.
+    PackState memory packState = PackState({
+      packId: packId,
+      creator: _creator,
+      uri: _packURI,
+      currentSupply: packTotalSupply,
+      openStart: block.timestamp + _secondsUntilOpenStart,
+      openEnd: _secondsUntilOpenEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilOpenEnd
+    });
+
+    Rewards memory rewardsInPack = Rewards({
+      source: _rewardContract,
+      tokenIds: _rewardIds,
+      amountsPacked: _rewardAmounts
+    });
+
+    packs[packId] = packState;
+    rewards[packId] = rewardsInPack;
+    
+    // Mint packs to creator.
+    _mint(_creator, packId, packTotalSupply, "");
+
+    emit PackCreated(_rewardContract, _creator, packState, rewardsInPack);
+  }
 
   /// @dev Returns a reward tokenId using `_randomness` provided by RNG.
   function getReward(uint _packId, uint _randomness, Rewards memory _rewardsInPack) internal returns (uint rewardTokenId) {
