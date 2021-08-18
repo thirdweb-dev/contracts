@@ -95,7 +95,7 @@ describe("Testing createPack", function() {
   describe("Events", function() {
 
     it("Should emit RewardsCreated with the relevant reward info", async () => {
-      expect(await await rewards.connect(creator).createPack(
+      expect( await rewards.connect(creator).createPack(
         rewardURIs,
         rewardSupplies,
         packURI,
