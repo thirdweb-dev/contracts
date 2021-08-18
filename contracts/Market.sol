@@ -52,7 +52,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @dev seller address => listingId => listing info.
-  mapping(address => mapping(uint => Listing)) public listings;
+  mapping(uint => Listing) public listings;
 
   /// @dev Events
   event MarketFeesChanged(uint protocolFeeBps, uint creatorFeeBps);
@@ -67,8 +67,14 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @dev Check whether the listing exists.
-  modifier onlyExistingListing(address _seller, uint _listingId) {
-    require(listings[_seller][_listingId].seller != address(0), "Market: The listing does not exist.");
+  modifier onlyExistingListing(uint _listingId) {
+    require(listings[_listingId].seller != address(0), "Market: The listing does not exist.");
+    _;
+  }
+
+  /// @dev Check whether the function is called by the seller of the listing.
+  modifier onlySeller(address _seller, uint _listingId) {
+    require(listings[_listingId].seller == _seller, "Market: Only the seller can call this function.");
     _;
   }
 
@@ -140,15 +146,15 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
       saleEnd: _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd
     });
 
-    listings[msg.sender][listingId] = newListing;
+    listings[listingId] = newListing;
 
     emit NewListing(_assetContract, msg.sender, listingId, newListing);
   }
 
   /// @notice Unlist `_quantity` amount of tokens.
-  function unlist(uint _listingId, uint _quantity) external onlyExistingListing(msg.sender, _listingId) {
+  function unlist(uint _listingId, uint _quantity) external onlySeller(msg.sender, _listingId) {
 
-    Listing memory listing = listings[msg.sender][_listingId];
+    Listing memory listing = listings[_listingId];
 
     require(listing.quantity >= _quantity, "Market: cannot unlist more tokens than are listed.");
 
@@ -157,15 +163,15 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
     // Update listing info.
     listing.quantity -= _quantity;
-    listings[msg.sender][_listingId] = listing;
+    listings[_listingId] = listing;
 
     emit ListingUpdate(msg.sender, _listingId, listing);
   }
 
   /// @notice Lets a seller add tokens to an existing listing.
-  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol onlyExistingListing(msg.sender, _listingId) {
+  function addToListing(uint _listingId, uint _quantity) external onlyUnpausedProtocol onlySeller(msg.sender, _listingId) {
     
-    Listing memory listing = listings[msg.sender][_listingId];
+    Listing memory listing = listings[_listingId];
 
     require(_quantity > 0, "Market: must add at least one token.");
     require(
@@ -184,7 +190,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
     // Update listing info.
     listing.quantity += _quantity;
-    listings[msg.sender][_listingId] = listing;
+    listings[_listingId] = listing;
 
     emit ListingUpdate(msg.sender, _listingId, listing);
   }
@@ -196,9 +202,9 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     address _currency, 
     uint _secondsUntilStart, 
     uint _secondsUntilEnd
-  ) external onlyExistingListing(msg.sender, _listingId) {
+  ) external onlySeller(msg.sender, _listingId) {
 
-    Listing memory listing = listings[msg.sender][_listingId];
+    Listing memory listing = listings[_listingId];
 
     // Update listing info.
     listing.pricePerToken = _pricePerToken;
@@ -206,16 +212,16 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     listing.saleStart = block.timestamp + _secondsUntilStart;
     listing.saleEnd = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
-    listings[msg.sender][_listingId] = listing;
+    listings[_listingId] = listing;
 
     emit ListingUpdate(msg.sender, _listingId, listing);
   }
 
   /// @notice Lets buyer buy a given amount of tokens listed for sale.
-  function buy(address _seller, uint _listingId, uint _quantity) external nonReentrant onlyExistingListing(_seller, _listingId) {
+  function buy(uint _listingId, uint _quantity) external nonReentrant onlyExistingListing(_listingId) {
 
     // Get listing
-    Listing memory listing = listings[_seller][_listingId];
+    Listing memory listing = listings[_listingId];
 
     require(_quantity > 0 && _quantity <= listing.quantity, "Market: must buy an appropriate amount of tokens.");
     require(
@@ -228,7 +234,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
     // Update listing info.
     listing.quantity -= _quantity;
-    listings[_seller][_listingId] = listing;
+    listings[_listingId] = listing;
 
     // Get token creator.
     address creator = IListingAsset(listing.assetContract).creator(listing.tokenId);
@@ -241,15 +247,15 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
     );
 
     uint protocolCut = (totalPrice * protocolFeeBps) / MAX_BPS;
-    uint creatorCut = _seller == creator ? 0 : (totalPrice * creatorFeeBps) / MAX_BPS;
+    uint creatorCut = listing.seller == creator ? 0 : (totalPrice * creatorFeeBps) / MAX_BPS;
     uint sellerCut = totalPrice - protocolCut - creatorCut;
 
     // Distribute relveant shares of sale value to seller, creator and protocol.
     require(IERC20(listing.currency).transferFrom(msg.sender, address(controlCenter), protocolCut), "Market: failed to transfer protocol cut.");
-    require(IERC20(listing.currency).transferFrom(msg.sender, _seller, sellerCut), "Market: failed to transfer seller cut.");
+    require(IERC20(listing.currency).transferFrom(msg.sender, listing.seller, sellerCut), "Market: failed to transfer seller cut.");
     require(IERC20(listing.currency).transferFrom(msg.sender, creator, creatorCut), "Market: failed to transfer creator cut.");
 
-    emit NewSale(listing.assetContract, _seller, _listingId,  msg.sender, listing);
+    emit NewSale(listing.assetContract, listing.seller, _listingId,  msg.sender, listing);
   }
 
   /// @dev Lets a protocol admin set protocol and cretor fees.
@@ -264,7 +270,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   }
 
   /// @notice Returns the listing for the given seller and Listing ID.
-  function getListing(address _seller, uint _listingId) external view returns (Listing memory listing) {
-    listing = listings[_seller][_listingId];
+  function getListing(uint _listingId) external view returns (Listing memory listing) {
+    listing = listings[_listingId];
   }
 }
