@@ -40,7 +40,7 @@ contract Rewards is ERC1155 {
 		
 		uint[] memory rewardIds = createRewards(_rewardURIs, _rewardSupplies);
 
-		bytes memory args = abi.encode(_packURI, address(this), rewardIds, _rewardSupplies, _secondsUntilOpenStart, _secondsUntilOpenEnd);
+		bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd);
 
 		safeBatchTransferFrom(msg.sender, pack, rewardIds, _rewardSupplies, args);
 	}

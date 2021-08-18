@@ -226,7 +226,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
   ) internal onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
 
     require(IERC1155(_rewardContract).supportsInterface(0xd9b67a26), "Pack: reward contract does not implement ERC 1155.");
-    require(_rewardIds.length == _rewardAmounts.length, "Pack: unequal number of reward IDs and reward amounts provided.");
 
     // Get pack tokenId and total supply.
     packId = _newPackId();
@@ -241,7 +240,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
       openStart: block.timestamp + _secondsUntilOpenStart,
       openEnd: _secondsUntilOpenEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilOpenEnd
     });
-
+    
     Rewards memory rewardsInPack = Rewards({
       source: _rewardContract,
       tokenIds: _rewardIds,
