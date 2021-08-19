@@ -25,6 +25,55 @@ The `data` argument in `safeTransferFrom` allows sending whatever information to
 
 - Call `createPack` in `Rewards.sol` with the relevant arguments.
 
+## Notes for AccessPacks frontend integration
+
+### Creating packs with rewards
+
+The entire create flow is a now one step (just one frontend call):
+- **Create packs with rewards:** Call `createPackAtomic` on `Rewards.sol`. The interface is:
+
+```java
+/// @dev Creates packs with rewards.
+	function createPackAtomic(
+		string[] calldata _rewardURIs,
+		uint[] calldata _rewardSupplies,
+
+		string calldata _packURI,
+		uint _secondsUntilOpenStart,
+        uint _secondsUntilOpenEnd
+
+	) external {}
+```
+
+### Listing packs for sale
+
+The list-for-sale flow is a two step process (two frontend calls)
+- **Approve market to transfer tokens being listed for sale:** This approval needs to be given only once *ever* (unless the user has removed the approval at a later time).
+
+```javascript
+// First check if approval already exists
+await packContract.isApprovedForAll(userAddress, marketAddress);
+
+// If no approval, ask user for approval
+await packContract.connect(useSigner).setApprovalForAll(marketAddress, true)
+```
+
+- **List packs on market:** Call `list` on `Market.sol`. The interface is:
+
+```java
+/// @notice List a given amount of pack or reward tokens for sale.
+  function list(
+    address _assetContract, 
+    uint _tokenId,
+
+    address _currency,
+    uint _pricePerToken,
+    uint _quantity,
+
+    uint _secondsUntilStart,
+    uint _secondsUntilEnd
+  ) external onlyUnpausedProtocol {}
+```
 ## Deployments
 The contracts in the `/contracts` directory are deployed on the following networks.
 
