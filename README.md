@@ -40,8 +40,7 @@ The entire create flow is a now one step (just one frontend call):
 
 		string calldata _packURI,
 		uint _secondsUntilOpenStart,
-        uint _secondsUntilOpenEnd
-
+    uint _secondsUntilOpenEnd
 	) external {}
 ```
 
