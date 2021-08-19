@@ -3,6 +3,28 @@
 $PACK Protocol lets anyone create and sell packs filled with rewards. A pack can be opened only once. On opening a pack, a reward 
 from the pack is distributed to the pack opener.
 
+## Difference from `main`
+The contracts in this branch `create-in-one-tx` have a different flow for creating packs.
+
+### Creating Packs: Before (in `main`)
+Creating packs was a 3 step process:
+- Create rewards with `Rewards.sol` by calling e.g. `createNativeRewards`
+- Approve `Pack.sol` to transfer the created rewards, by calling `setApprovalForAll`.
+- Create packs with `Pack.sol` by calling `createPack`.
+
+### Creating Packs: Now (in `create-in-one-tx`)
+Creating packs is now a one step process:
+- Call `createPackAtomic` in `Rewards.sol` with the relevant arguments.
+
+On calling `createPackAtomic`, the contracts first mints rewards to the creator, and then transfers the rewards from the caller to `Pack.sol`. On receiving the rewards, `Pack.sol` mints packs to the creator with the sent underlying rewards.
+
+The `data` argument in `safeTransferFrom` allows sending whatever information to `Pack.sol` that is required to create the relevant packs.
+
+**Note:** Creating packs with wrapped rewards is a two step process:
+- First create your rewards by calling the relevant reward creation function e.g. `wrapERC721`.
+
+- Call `createPack` in `Rewards.sol` with the relevant arguments.
+
 ## Deployments
 The contracts in the `/contracts` directory are deployed on the following networks.
 
