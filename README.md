@@ -146,7 +146,7 @@ Finally, run
   
 ## Feedback
 
-If you have any feedback, please reach out to us at support@nftlabs.co
+If you have any feedback, please reach out to us at support@nftlabs.co.
 
 ## Authors
 
