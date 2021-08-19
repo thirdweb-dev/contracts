@@ -101,7 +101,7 @@ describe("Testing openPack", function() {
     rewards = await Rewards_factory.connect(creator).deploy(pack.address);
 
     // Create pack with rewards.
-    await rewards.connect(creator).createPack(
+    await rewards.connect(creator).createPackAtomic(
       rewardURIs,
       rewardSupplies,
       packURI,

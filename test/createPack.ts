@@ -70,7 +70,7 @@ describe("Testing createPack", function() {
   describe("Revert cases", function() {
 
     it("Should revert if an unequal number of reward IDs and amounts are supplied", async () => {
-      await expect(rewards.connect(creator).createPack(
+      await expect(rewards.connect(creator).createPackAtomic(
         rewardURIs.slice(-2),
         rewardSupplies,
         packURI,
@@ -81,7 +81,7 @@ describe("Testing createPack", function() {
     })
 
     it("Should revert if the creator has not approved the contract to transfer reward tokens", async () => {
-      await expect(rewards.connect(creator).createPack(
+      await expect(rewards.connect(creator).createPackAtomic(
         [],
         [],
         packURI,
@@ -94,15 +94,15 @@ describe("Testing createPack", function() {
 
   describe("Events", function() {
 
-    it("Should emit RewardsCreated with the relevant reward info", async () => {
-      expect( await rewards.connect(creator).createPack(
+    it("Should emit NativeRewards with the relevant reward info", async () => {
+      expect( await rewards.connect(creator).createPackAtomic(
         rewardURIs,
         rewardSupplies,
         packURI,
         openStartAndEnd,
         openStartAndEnd
       ))
-      .to.emit(rewards, "RewardsCreated")
+      .to.emit(rewards, "NativeRewards")
       .withArgs(await creator.getAddress(), expectedRewardIds, rewardURIs, rewardSupplies)
     })
 
@@ -127,7 +127,7 @@ describe("Testing createPack", function() {
         }, 5000)
       })
 
-      await rewards.connect(creator).createPack(
+      await rewards.connect(creator).createPackAtomic(
         rewardURIs,
         rewardSupplies,
         packURI,
@@ -142,7 +142,7 @@ describe("Testing createPack", function() {
   describe("Balances", function() {
     beforeEach(async () => {
       // Create pack
-      await rewards.connect(creator).createPack(
+      await rewards.connect(creator).createPackAtomic(
         rewardURIs,
         rewardSupplies,
         packURI,
@@ -167,7 +167,7 @@ describe("Testing createPack", function() {
   describe("Contract state changes", function() {
     beforeEach(async () => {      
       // Create pack
-      await rewards.connect(creator).createPack(
+      await rewards.connect(creator).createPackAtomic(
         rewardURIs,
         rewardSupplies,
         packURI,

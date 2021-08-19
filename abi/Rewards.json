@@ -41,6 +41,142 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenAmountReceived",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "rewardAmountRedeemed",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC20Redeemed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "rewardsMinted",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "rewardURI",
+        "type": "string"
+      }
+    ],
+    "name": "ERC20Rewards",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "nftContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nftTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "rewardTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC721Redeemed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "nftContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nftTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "rewardTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "rewardURI",
+        "type": "string"
+      }
+    ],
+    "name": "ERC721Rewards",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "creator",
         "type": "address"
       },
@@ -63,7 +199,7 @@
         "type": "uint256[]"
       }
     ],
-    "name": "RewardsCreated",
+    "name": "NativeRewards",
     "type": "event"
   },
   {
@@ -218,6 +354,30 @@
         "internalType": "uint256[]",
         "name": "_rewardSupplies",
         "type": "uint256[]"
+      }
+    ],
+    "name": "createNativeRewards",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "rewardIds",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "_rewardIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_rewardAmounts",
+        "type": "uint256[]"
       },
       {
         "internalType": "string",
@@ -243,6 +403,39 @@
   {
     "inputs": [
       {
+        "internalType": "string[]",
+        "name": "_rewardURIs",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_rewardSupplies",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string",
+        "name": "_packURI",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_secondsUntilOpenStart",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_secondsUntilOpenEnd",
+        "type": "uint256"
+      }
+    ],
+    "name": "createPackAtomic",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_rewardId",
         "type": "uint256"
@@ -254,6 +447,59 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "erc20Rewards",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "shares",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "underlyingTokenAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "erc721Rewards",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "nftContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nftTokenId",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -313,6 +559,37 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_rewardId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "redeemERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_rewardId",
+        "type": "uint256"
+      }
+    ],
+    "name": "redeemERC721",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -333,6 +610,11 @@
         "internalType": "uint256",
         "name": "supply",
         "type": "uint256"
+      },
+      {
+        "internalType": "enum Rewards.UnderlyingType",
+        "name": "underlyingType",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -458,6 +740,57 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_tokenContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_numOfRewardsToMint",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_rewardURI",
+        "type": "string"
+      }
+    ],
+    "name": "wrapERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_nftContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_rewardURI",
+        "type": "string"
+      }
+    ],
+    "name": "wrapERC721",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
