@@ -10,16 +10,16 @@ export const addresses = {
     rewards: ""
   },
   mumbai: {
-    controlCenter: "0x932a80d12133daDa78d1eFeAa69C53f35b7717eB",
-    pack: "0xdF6D4D22918048bA57e849dBBc83d9Bb502bb150",
-    market: "0x420dF8F7659cad7b9701b882E5A0f0282c49907d",
-    rewards: "0xe9559e34a8A32FA8Dc050fAaFD9343B666BC92CF"
+    controlCenter: "0x3d86dD9846c0a15B0f40037AAf51CC68A4236add",
+    pack: "0xD89eE4F34BC76315E77D808305c0931f28Fa3C5D",
+    market: "0xD521909301724a02E0C66599Dfb5A47d4390fc43",
+    rewards: "0x7c6c7048Cd447BA200bde9A89A2ECc83435b7E51"
   },
   rinkeby: {
-    controlCenter: "0x916a0c502Ea07B50e48c5c5D6e6C5e26E6F04e02",
-    pack: "0xcD6c2E7439C712464B8D49DD6369C976894EbAdb",
-    market: "0x87Fe40CAC2Ba4b2d8d5639Ea712Bab6C294e5454",
-    rewards: "0x906f3c4643F0C721eB48A40d3903043B43C43434"
+    controlCenter: "0xAFe8f8EDad3Fd7b0108997b51CCd24286FbF000B",
+    pack: "0x928C9EE38048e5D0A4601D1FDcF7B9E57317278D",
+    market: "0x92902EF66B71a4646d3B33FD16ffC7EaD0182faC",
+    rewards: "0xebC0b11f62A416634fe400bbB750f0E40833a4d0"
   },
   mainnet: {
     controlCenter: "",

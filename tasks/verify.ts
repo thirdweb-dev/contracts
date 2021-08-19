@@ -41,7 +41,9 @@ async function Market() {
 async function Rewards() {
   await hre.run("verify:verify", {
     address: rewards,
-    constructorArguments: [],
+    constructorArguments: [
+        pack
+    ],
   });
 }
 
