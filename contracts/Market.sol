@@ -32,7 +32,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
   /// @dev Pack protocol fee constants.
   uint public constant MAX_BPS = 10000; // 100%
   uint public protocolFeeBps = 250; // 2.5%
-  uint public creatorFeeBps = 20; // 2.5%
+  uint public creatorFeeBps = 250; // 2.5%
 
   /// @dev Total number of listings on market.
   uint public totalListings;
