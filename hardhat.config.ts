@@ -1,5 +1,5 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-abi-exporter";
@@ -16,7 +16,7 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
-  matic: 137,
+  polygon: 137,
   mumbai: 80001,
 };
 
@@ -24,15 +24,18 @@ const chainIds = {
 let testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
 let alchemyKey: string = process.env.ALCHEMY_KEY || "";
 let etherscanKey: string = process.env.ETHERSCAN_API_KEY || "";
-let polygonscanKey: string = process.env.POLYGONSCAN_API_KEY || "";
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (!alchemyKey) {
     throw new Error("Missing ALCHEMY_KEY");
   }
-  let nodeUrl = (chainIds[network] == 137 || chainIds[network] == 80001) 
-    ? `https://polygon-${network}.g.alchemy.com/v2/${alchemyKey}` 
-    :  `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
+
+  const polygonNetworkName = network === "polygon" ? "mainnet" : "mumbai";
+
+  let nodeUrl =
+    chainIds[network] == 137 || chainIds[network] == 80001
+      ? `https://polygon-${polygonNetworkName}.g.alchemy.com/v2/${alchemyKey}`
+      : `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
 
   return {
     chainId: chainIds[network],
@@ -42,7 +45,7 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
 }
 
 interface ConfigWithEtherscan extends HardhatUserConfig {
-    etherscan: { apiKey: string};
+  etherscan: { apiKey: string };
 }
 
 const config: ConfigWithEtherscan = {
@@ -68,23 +71,22 @@ const config: ConfigWithEtherscan = {
       },
     },
   },
-
   abiExporter: {
     flat: true,
   },
   etherscan: {
-    apiKey: etherscanKey
+    apiKey: etherscanKey,
     // apiKey: polygonscanKey
-  }
+  },
 };
 
 if (testPrivateKey) {
   config.networks = {
     mainnet: createTestnetConfig("mainnet"),
     rinkeby: createTestnetConfig("rinkeby"),
-    matic: createTestnetConfig("matic"),
-    mumbai: createTestnetConfig("mumbai")
+    polygon: createTestnetConfig("polygon"),
+    mumbai: createTestnetConfig("mumbai"),
   };
 }
 
-export default config
+export default config;

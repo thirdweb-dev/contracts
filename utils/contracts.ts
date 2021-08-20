@@ -1,13 +1,13 @@
-import { ethers } from 'ethers';
-import * as dotenv from 'dotenv'
+import { ethers } from "ethers";
+import * as dotenv from "dotenv";
 dotenv.config();
 
 export const addresses = {
   matic: {
-    controlCenter: "",
-    pack: "",
-    market: "",
-    rewards: ""
+    controlCenter: "0x429ACf993C992b322668122a5fC5593200493ea8",
+    pack: "0x3d5a51975fD29E45Eb285349F12b77b4c153c8e0",
+    market: "0xfC958641E52563f071534495886A8Ac590DCBFA2",
+    rewards: "0x58408Fa085ae3942C3A6532ee6215bFC7f80c47A",
   },
   mumbai: {
     controlCenter: "0x3d86dD9846c0a15B0f40037AAf51CC68A4236add",
@@ -25,17 +25,13 @@ export const addresses = {
     controlCenter: "",
     pack: "",
     market: "",
-    rewards: ""
-  }
-}
+    rewards: "",
+  },
+};
 
-export const provider = (network: string) => new ethers.providers.JsonRpcProvider(
-  `https://eth-${network}.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-  network
-);
+export const provider = (network: string) =>
+  new ethers.providers.JsonRpcProvider(`https://eth-${network}.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`, network);
 
-export const privateKey = process.env.TEST_PRIVATE_KEY || ""
+export const privateKey = process.env.TEST_PRIVATE_KEY || "";
 
 export const wallet = (network: string) => new ethers.Wallet(privateKey, provider(network));
-
-
