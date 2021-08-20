@@ -91,7 +91,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Pack.sol`: [0xD89eE4F34BC76315E77D808305c0931f28Fa3C5D](https://mumbai.polygonscan.com/address/0xD89eE4F34BC76315E77D808305c0931f28Fa3C5D#code)
 
-- `Market.sol`: [0xD521909301724a02E0C66599Dfb5A47d4390fc43](https://mumbai.polygonscan.com/address/0xD521909301724a02E0C66599Dfb5A47d4390fc43#code)
+- `Market.sol`: [0xF1089C7a0Ae7d0729d94ff6806d7BeA0A02C3bF2](https://mumbai.polygonscan.com/address/0xF1089C7a0Ae7d0729d94ff6806d7BeA0A02C3bF2#code)
 
 - `Rewards.sol`: [0x7c6c7048Cd447BA200bde9A89A2ECc83435b7E51](https://mumbai.polygonscan.com/address/0x7c6c7048Cd447BA200bde9A89A2ECc83435b7E51#code)
 
@@ -101,7 +101,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Pack.sol`: [0x928C9EE38048e5D0A4601D1FDcF7B9E57317278D](https://rinkeby.etherscan.io/address/0x928C9EE38048e5D0A4601D1FDcF7B9E57317278D#code)
 
-- `Market.sol`: [0x92902EF66B71a4646d3B33FD16ffC7EaD0182faC](https://rinkeby.etherscan.io/address/0x92902EF66B71a4646d3B33FD16ffC7EaD0182faC#code)
+- `Market.sol`: [0xE0C0158A9d498EF4D0b02a8256A6957718Af8B5B](https://rinkeby.etherscan.io/address/0xE0C0158A9d498EF4D0b02a8256A6957718Af8B5B#code)
 
 - `Rewards.sol`: [0xebC0b11f62A416634fe400bbB750f0E40833a4d0](https://rinkeby.etherscan.io/address/0xebC0b11f62A416634fe400bbB750f0E40833a4d0#code)
 

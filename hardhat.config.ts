@@ -24,6 +24,7 @@ const chainIds = {
 let testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
 let alchemyKey: string = process.env.ALCHEMY_KEY || "";
 let etherscanKey: string = process.env.ETHERSCAN_API_KEY || "";
+let polygonscanKey: string = process.env.POLYGONSCAN_API_KEY || "";
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (!alchemyKey) {
@@ -75,8 +76,8 @@ const config: ConfigWithEtherscan = {
     flat: true,
   },
   etherscan: {
-    apiKey: etherscanKey,
-    // apiKey: polygonscanKey
+    // apiKey: etherscanKey,
+    apiKey: polygonscanKey
   },
 };
 
