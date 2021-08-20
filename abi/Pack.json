@@ -346,55 +346,6 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_packURI",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "_rewardContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_rewardIds",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_rewardAmounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilOpenStart",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilOpenEnd",
-        "type": "uint256"
-      }
-    ],
-    "name": "createPack",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "packTotalSupply",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "_packId",
         "type": "uint256"
@@ -603,22 +554,22 @@
       },
       {
         "internalType": "address",
-        "name": "",
+        "name": "_from",
         "type": "address"
       },
       {
         "internalType": "uint256[]",
-        "name": "",
+        "name": "_ids",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "",
+        "name": "_values",
         "type": "uint256[]"
       },
       {
         "internalType": "bytes",
-        "name": "",
+        "name": "_data",
         "type": "bytes"
       }
     ],

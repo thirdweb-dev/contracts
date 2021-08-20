@@ -295,11 +295,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_seller",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "_listingId",
         "type": "uint256"
@@ -330,11 +325,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "_seller",
-        "type": "address"
-      },
       {
         "internalType": "uint256",
         "name": "_listingId",
@@ -439,11 +429,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
       {
         "internalType": "uint256",
         "name": "",

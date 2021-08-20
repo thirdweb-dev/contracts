@@ -3,11 +3,13 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Rewards is ERC1155, ERC721Holder {
+contract Rewards is ERC1155 {
+
+  /// @dev Address of $PACK Protocol's `pack` token.
+  address public pack;
 
   /// @dev The token Id of the reward to mint.
   uint public nextTokenId;
@@ -39,7 +41,6 @@ contract Rewards is ERC1155, ERC721Holder {
   event ERC20Rewards(address indexed creator, address indexed tokenContract, uint tokenAmount, uint rewardsMinted, string rewardURI);
   event ERC20Redeemed(address indexed redeemer, address indexed tokenContract, uint tokenAmountReceived, uint rewardAmountRedeemed);
 
-
   /// @dev Reward tokenId => Reward state.
   mapping(uint => Reward) public rewards;
 
@@ -49,10 +50,12 @@ contract Rewards is ERC1155, ERC721Holder {
   /// @dev Reward tokenId => Underlying ERC20 reward state.
   mapping(uint => ERC20Reward) public erc20Rewards;
 
-  constructor() ERC1155("") {}
+  constructor(address  _pack) ERC1155("") {
+    pack = _pack;
+  }
 
   /// @notice Create native ERC 1155 rewards.
-  function createNativeRewards(string[] calldata _rewardURIs, uint[] calldata _rewardSupplies) external returns (uint[] memory rewardIds) {
+  function createNativeRewards(string[] calldata _rewardURIs, uint[] calldata _rewardSupplies) public returns (uint[] memory rewardIds) {
     require(_rewardURIs.length == _rewardSupplies.length, "Rewards: Must specify equal number of URIs and supplies.");
     require(_rewardURIs.length > 0, "Rewards: Must create at least one reward.");
 
@@ -77,6 +80,37 @@ contract Rewards is ERC1155, ERC721Holder {
     _mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
 
     emit NativeRewards(msg.sender, rewardIds, _rewardURIs, _rewardSupplies);
+  }
+
+  /// @dev Creates packs with rewards.
+	function createPackAtomic(
+		string[] calldata _rewardURIs,
+		uint[] calldata _rewardSupplies,
+
+		string calldata _packURI,
+		uint _secondsUntilOpenStart,
+    uint _secondsUntilOpenEnd
+
+	) external {
+		
+		uint[] memory rewardIds = createNativeRewards(_rewardURIs, _rewardSupplies);
+
+		bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd);
+		safeBatchTransferFrom(msg.sender, pack, rewardIds, _rewardSupplies, args);
+	}
+
+  /// @dev Creates packs with rewards.
+	function createPack(
+		uint[] calldata _rewardIds,
+		uint[] calldata _rewardAmounts,
+
+		string calldata _packURI,
+		uint _secondsUntilOpenStart,
+    uint _secondsUntilOpenEnd
+
+	) external {
+    bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd);
+		safeBatchTransferFrom(msg.sender, pack, _rewardIds, _rewardAmounts, args);
   }
 
   /// @dev Wraps an ERC721 NFT as ERC1155 reward tokens. 
