@@ -2,6 +2,10 @@ import { run, ethers } from "hardhat";
 import { BigNumber, Contract, ContractFactory } from 'ethers';
 import { chainlinkVars } from "../../../utils/chainlink";
 
+/**
+ * NOTE: First run `protocol.ts` -> update addresses in `utils/contracts.ts` -> run `rewards.ts` -> update address in `utils/contracts.ts`
+ */
+
 async function main() {
   await run("compile");
 
