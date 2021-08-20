@@ -1,13 +1,12 @@
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BigNumber, BytesLike } from "ethers";
 import { expect } from "chai";
 
 import { chainlinkVars } from "../utils/chainlink";
-import { forkFrom, impersonate } from "../utils/hardhatFork";
+import { forkFrom } from "../utils/hardhatFork";
 import { setTimeout } from "timers";
-import linkTokenABi from "../abi/LinkTokenInterface.json";
 
-describe("Buy packs using Market.sol", function() {
+describe("List packs on sale using Market.sol", function() {
 
   // Signers
   let protocolAdmin: Signer;
@@ -33,23 +32,15 @@ describe("Buy packs using Market.sol", function() {
   const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
   const openStartAndEnd: number = 0;
 
-  // Randomness request parameters
-  let requestId: BytesLike = "";
-  const randomNumber: number = Math.floor((Math.random() * 10000) + 1000);
-
   // Expected results
   const expectedPackId: number = 0;
   const expectedPackSupply: number = rewardSupplies.reduce((a,b) => a + b);
-  const expectedRewardIds: number[] = [0, 1, 2]
 
   // List packs on sale: Market parameters
   const expectedListingId: number = 0;
   let currency: string = "";
   const pricePerToken: BigNumber = ethers.utils.parseEther("1");
   const saleWindowLimits: number = 0
-
-  // Buy packs from market: Market parameters
-  const quantityToBuy: BigNumber = BigNumber.from(1)
 
   beforeEach(async () => {
 

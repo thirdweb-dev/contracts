@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { forkFrom } from "../utils/hardhatFork";
 import { chainlinkVars } from "../utils/chainlink";
 
-describe("Deploying $PACK Protocol contracts", function() {
+describe("Deploying $PACK Protocol contracts and Rewards contract", function() {
 
   let deployer: Signer;
   let deployerAddress: string;

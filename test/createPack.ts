@@ -6,7 +6,7 @@ import { chainlinkVars } from "../utils/chainlink";
 import { forkFrom } from "../utils/hardhatFork";
 
 
-describe("Testing createPack", function() {
+describe("Create a pack with rewards in a single tx", function() {
 
   // Signers
   let protocolAdmin: Signer;

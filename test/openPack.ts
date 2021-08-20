@@ -1,4 +1,4 @@
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import { Signer, Contract, ContractFactory, BytesLike, BigNumber } from "ethers";
 import { expect } from "chai";
 
@@ -7,7 +7,7 @@ import { forkFrom, impersonate } from "../utils/hardhatFork";
 import { setTimeout } from "timers";
 import linkTokenABi from "../abi/LinkTokenInterface.json";
 
-describe("Testing openPack", function() {
+describe("Request to open a pack", function() {
 
   // Signers
   let protocolAdmin: Signer;
@@ -31,7 +31,6 @@ describe("Testing openPack", function() {
 
   // Expected results
   const expectedPackId: number = 0;
-  const expectedRewardIds: number[] = [0, 1, 2]
 
   // Fund `Pack` with LINK
   const fundPack = async () => {
