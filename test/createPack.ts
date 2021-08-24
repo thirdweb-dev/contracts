@@ -106,6 +106,17 @@ describe("Create a pack with rewards in a single tx", function() {
       .withArgs(await creator.getAddress(), expectedRewardIds, rewardURIs, rewardSupplies)
     })
 
+    it("Should emit PackCreated", async () => {
+      expect( await rewards.connect(creator).createPackAtomic(
+        rewardURIs,
+        rewardSupplies,
+        packURI,
+        openStartAndEnd,
+        openStartAndEnd
+      ))
+      .to.emit(pack, "PackCreated")
+    })
+
     it("Should emit PackCreated with pack related info", async () => {
 
       const packCreatedPromise = new Promise((resolve, reject) => {
