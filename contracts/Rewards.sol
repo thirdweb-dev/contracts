@@ -5,8 +5,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Rewards is ERC1155 {
+contract Rewards is ERC1155, Ownable {
 
   /// @dev Address of $PACK Protocol's `pack` token.
   address public pack;
@@ -250,6 +251,11 @@ contract Rewards is ERC1155 {
 
   /// @dev See EIP 1155
   function uri(uint _rewardId) public view override returns (string memory) {
+    return rewards[_rewardId].uri;
+  }
+
+  /// @dev Alternative function to return a token's URI
+  function tokenURI(uint _rewardId) public view returns (string memory) {
     return rewards[_rewardId].uri;
   }
 

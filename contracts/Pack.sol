@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
@@ -19,7 +20,7 @@ interface IProtocolControl {
   function PROTOCOL_ADMIN() external view returns (bytes32);
 }
 
-contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
+contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
   /// @dev The $PACK Protocol control center.
   IProtocolControl internal controlCenter;
@@ -102,6 +103,10 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase {
   **/
 
   function uri(uint _id) public view override returns (string memory) {
+    return packs[_id].uri;
+  }
+
+  function tokenURI(uint _id) public view returns (string memory) {
     return packs[_id].uri;
   }
 
