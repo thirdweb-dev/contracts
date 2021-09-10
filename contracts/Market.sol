@@ -241,10 +241,13 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
 
     // Get value distribution parameters.
     uint totalPrice = listing.pricePerToken * _quantity;
-    require(
-      IERC20(listing.currency).allowance(msg.sender, address(this)) >= totalPrice, 
-      "Market: must approve Market to transfer price to pay."
-    );
+
+    if(listing.pricePerToken > 0) {
+      require(
+        IERC20(listing.currency).allowance(msg.sender, address(this)) >= totalPrice, 
+        "Market: must approve Market to transfer price to pay."
+      );
+    }    
 
     uint protocolCut = (totalPrice * protocolFeeBps) / MAX_BPS;
     uint creatorCut = listing.seller == creator ? 0 : (totalPrice * creatorFeeBps) / MAX_BPS;
