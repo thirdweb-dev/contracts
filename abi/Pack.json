@@ -66,6 +66,25 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "rewardContract",
         "type": "address"
       },
@@ -129,6 +148,11 @@
             "internalType": "uint256[]",
             "name": "amountsPacked",
             "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "rewardsPerOpen",
+            "type": "uint256"
           }
         ],
         "indexed": false,
@@ -169,9 +193,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "rewardId",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "rewardIds",
+        "type": "uint256[]"
       }
     ],
     "name": "PackOpenFulfilled",
@@ -637,6 +661,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -747,6 +784,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -760,6 +804,11 @@
         "internalType": "address",
         "name": "source",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rewardsPerOpen",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -884,6 +933,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_to",
         "type": "address"
@@ -895,6 +963,19 @@
       }
     ],
     "name": "transferLink",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

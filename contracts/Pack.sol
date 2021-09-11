@@ -49,6 +49,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
     uint[] tokenIds;
     uint[] amountsPacked;
+
+    uint rewardsPerOpen;
   }
 
   /// @dev The state of a random number request made to Chainlink VRF on opening a pack.
@@ -74,7 +76,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
   /// @dev Emitted on a request to open a pack.
   event PackOpenRequest(uint indexed packId, address indexed opener, bytes32 requestId);
   /// @dev Emitted when a request to open a pack is fulfilled.
-  event PackOpenFulfilled(uint indexed packId, address indexed opener, bytes32 requestId, address indexed rewardContract, uint rewardId);
+  event PackOpenFulfilled(uint indexed packId, address indexed opener, bytes32 requestId, address indexed rewardContract, uint[] rewardIds);
 
   /// @dev Checks whether $PACK Protocol is paused.
   modifier onlyUnpausedProtocol() {
@@ -159,12 +161,12 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     // Get tokenId of the reward to distribute.
     Rewards memory rewardsInPack = rewards[request.packId];
 
-    uint rewardId = getReward(request.packId, _randomness, rewardsInPack);
+    (uint[] memory rewardIds, uint[] memory rewardAmounts) = getReward(request.packId, _randomness, rewardsInPack);
 
     // Distribute the reward to the pack opener.
-    IERC1155(rewardsInPack.source).safeTransferFrom(address(this), request.opener, rewardId, 1, "");
+    IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), request.opener, rewardIds, rewardAmounts, "");
 
-    emit PackOpenFulfilled(request.packId, request.opener, _requestId, rewardsInPack.source, rewardId);
+    emit PackOpenFulfilled(request.packId, request.opener, _requestId, rewardsInPack.source, rewardIds);
   }
 
   /// @dev Lets a protocol admin change the Chainlink VRF fee.
@@ -195,9 +197,10 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
       string memory packURI,
       address rewardContract,
       uint secondsUntilOpenStart,
-      uint secondsUntilOpenEnd
+      uint secondsUntilOpenEnd,
+      uint rewardsPerOpen
     
-    ) = abi.decode(_data, (string, address, uint, uint));
+    ) = abi.decode(_data, (string, address, uint, uint, uint));
 
     createPack(
       _from,
@@ -206,7 +209,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
       _ids,
       _values,
       secondsUntilOpenStart,
-      secondsUntilOpenEnd
+      secondsUntilOpenEnd,
+      rewardsPerOpen
     );
 
     return this.onERC1155BatchReceived.selector;
@@ -226,7 +230,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     uint[] memory _rewardAmounts,
 
     uint _secondsUntilOpenStart,
-    uint _secondsUntilOpenEnd
+    uint _secondsUntilOpenEnd,
+
+    uint _rewardsPerOpen
 
   ) internal onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
 
@@ -234,7 +240,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
     // Get pack tokenId and total supply.
     packId = _newPackId();
-    packTotalSupply = _sumArr(_rewardAmounts);
+    packTotalSupply = _sumArr(_rewardAmounts) / _rewardsPerOpen;
+
+    require(packTotalSupply % _rewardsPerOpen == 0, "Pack: invalid number of rewards per open.");
 
     // Store pack state.
     PackState memory packState = PackState({
@@ -249,7 +257,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     Rewards memory rewardsInPack = Rewards({
       source: _rewardContract,
       tokenIds: _rewardIds,
-      amountsPacked: _rewardAmounts
+      amountsPacked: _rewardAmounts,
+      rewardsPerOpen: _rewardsPerOpen
     });
 
     packs[packId] = packState;
@@ -262,25 +271,46 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
   }
 
   /// @dev Returns a reward tokenId using `_randomness` provided by RNG.
-  function getReward(uint _packId, uint _randomness, Rewards memory _rewardsInPack) internal returns (uint rewardTokenId) {
+  function getReward(
+    uint _packId, 
+    uint _randomness, 
+    Rewards memory _rewardsInPack
+  )
 
-    uint prob = _randomness % _sumArr(_rewardsInPack.amountsPacked);
-    uint step = 0;
+    internal 
+    returns (uint[] memory rewardTokenIds, uint[] memory rewardAmounts) 
+  
+  {
 
-    for(uint i = 0; i < _rewardsInPack.tokenIds.length; i += 1) {
-      if(prob < (_rewardsInPack.amountsPacked[i] + step)) {
-        
-        // Return the reward's tokenId
-        rewardTokenId = _rewardsInPack.tokenIds[i];
-        
-        // Update amount of reward available in pack.
-        rewards[_packId].amountsPacked[i] -= 1;
-        break;
+    uint base = _sumArr(_rewardsInPack.amountsPacked);
+    uint step;
+    uint prob;
 
-      } else {
-        step += _rewardsInPack.amountsPacked[i];
+    for(uint j = 0; j < _rewardsInPack.rewardsPerOpen; j += 1) {
+      prob = uint256(keccak256(abi.encode(_randomness, j))) % base;
+
+      for(uint i = 0; i < _rewardsInPack.tokenIds.length; i += 1) {
+  
+        if(prob < (_rewardsInPack.amountsPacked[i] + step)) {
+          
+          // Store the reward's tokenId
+          rewardTokenIds[j] = _rewardsInPack.tokenIds[i];
+          rewardAmounts[j] = 1;
+          
+          // Update amount of reward available in pack.
+          _rewardsInPack.amountsPacked[i] -= 1;
+
+          // Reset step
+          step = 0;
+          break;
+
+        } else {
+          step += _rewardsInPack.amountsPacked[i];
+        }
       }
     }
+
+    rewards[_packId] = _rewardsInPack;
   }
 
   /// @dev Updates a token's total supply.

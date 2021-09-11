@@ -90,13 +90,15 @@ contract Rewards is ERC1155, Ownable {
 
 		string calldata _packURI,
 		uint _secondsUntilOpenStart,
-    uint _secondsUntilOpenEnd
+    uint _secondsUntilOpenEnd,
+
+    uint _rewardsPerOpen
 
 	) external {
 		
 		uint[] memory rewardIds = createNativeRewards(_rewardURIs, _rewardSupplies);
 
-		bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd);
+		bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd, _rewardsPerOpen);
 		safeBatchTransferFrom(msg.sender, pack, rewardIds, _rewardSupplies, args);
 	}
 
