@@ -58,9 +58,10 @@ interface IPack is IERC1155MetadataURI, IERC1155Receiver {
   /**
    * @notice Distributes rewards entitled to `_receiver` from `_receiver` opening a pack.
    *
-   * @dev Transfers the reward tokens entitled to the caller.
+   * @dev Transfers the reward tokens entitled to `_receiver`.
    *
    * @param _packId The tokenId of the pack for which the rewards are to be collected.
+   * @param _receiver The relevant opener of the pack.
    */
   function collectRewards(uint _packId, address _receiver) external;
 

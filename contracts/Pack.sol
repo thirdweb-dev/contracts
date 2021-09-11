@@ -34,9 +34,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
   
   /// @dev The state of packs with a unique tokenId.
   struct PackState {
-    uint packId;
-    address creator;
     string uri;
+    address creator;
     uint currentSupply;
 
     uint openStart;
@@ -57,6 +56,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
   struct RandomnessRequest {
     uint packId;
     address opener;
+    uint randomNumberResult;
   }
 
   /// @dev pack tokenId => The state of packs with id `tokenId`.
@@ -65,18 +65,33 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
   /// @dev pack tokenId => rewards in pack with id `tokenId`.
   mapping(uint => Rewards) public rewards;
 
-  /// @dev requestId => Chainlink VRF request state with id `requestId`.
+  /// @dev Chainlink VRF requestId => Chainlink VRF request state with id `requestId`.
   mapping(bytes32 => RandomnessRequest) public randomnessRequests;
 
-  /// @dev pack tokenId => pack opener => whether there is a pending Chainlink VRF random number request.
-  mapping(uint => mapping(address => bool)) public pendingRequests;
+  /// @dev pack tokenId => pack opener => Chainlink VRF request ID if there is an incomplete pack opening process.
+  mapping(uint => mapping(address => bytes32)) public currentRequestId;
 
   /// @dev Emitted when a set of packs is created.
-  event PackCreated(address indexed rewardContract, address indexed creator, PackState packState, Rewards rewards);
+  event PackCreated(
+    address indexed rewardContract, 
+    address indexed creator, 
+    PackState packState, 
+    Rewards rewards
+  );
   /// @dev Emitted on a request to open a pack.
-  event PackOpenRequest(uint indexed packId, address indexed opener, bytes32 requestId);
+  event PackOpenRequest(
+    uint indexed packId, 
+    address indexed opener, 
+    bytes32 requestId
+  );
   /// @dev Emitted when a request to open a pack is fulfilled.
-  event PackOpenFulfilled(uint indexed packId, address indexed opener, bytes32 requestId, address indexed rewardContract, uint[] rewardIds);
+  event PackOpenFulfilled(
+    uint indexed packId, 
+    address indexed opener, 
+    bytes32 requestId, 
+    address indexed rewardContract, 
+    uint[] rewardIds
+  );
 
   /// @dev Checks whether $PACK Protocol is paused.
   modifier onlyUnpausedProtocol() {
@@ -94,8 +109,11 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     uint _fees
 
   ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) {
+
+    // Set $PACK Protocol control center.
     controlCenter = IProtocolControl(_controlCenter);
 
+    // Set Chainlink vars.
     vrfKeyHash = _keyHash;
     vrfFees = _fees;
   }
@@ -120,12 +138,17 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
   *   External functions.   
   **/
 
-  /// @notice Lets a pack owner open a single pack.
-  function openPack(uint _packId) external onlyUnpausedProtocol {
+  /// @notice Lets a pack owner request to open a single pack.
+  function openPack(
+    uint _packId
+  ) 
+    external 
+    onlyUnpausedProtocol
+  {
 
     require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
     require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
-    require(!(pendingRequests[_packId][msg.sender]), "Pack: must wait for the pending pack to be opened.");
+    require(currentRequestId[_packId][msg.sender] == "", "Pack: must wait for the pending pack to be opened.");
 
     // Burn the pack being opened.
     _burn(msg.sender, _packId, 1);
@@ -143,40 +166,70 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     // Update state to reflect the Chainlink VRF request.
     randomnessRequests[requestId] = RandomnessRequest({
       packId: _packId,
-      opener: msg.sender
+      opener: msg.sender,
+      randomNumberResult: 0
     });
 
-    pendingRequests[_packId][msg.sender] = true;
+    currentRequestId[_packId][msg.sender] = requestId;
 
     emit PackOpenRequest(_packId, msg.sender, requestId);
   }
 
   /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
-  function fulfillRandomness(bytes32 _requestId, uint _randomness) internal override {
-    RandomnessRequest memory request = randomnessRequests[_requestId];
+  function fulfillRandomness(
+    bytes32 _requestId, 
+    uint _randomness
+  ) 
+    internal
+    override 
+  {
+    randomnessRequests[_requestId].randomNumberResult = _randomness;
+  }
+
+  /// @dev Distributes rewards entitled to `_receiver` from `_receiver` opening a pack.
+  function collectRewards(
+    uint _packId, 
+    address _receiver
+  ) 
+    external 
+    onlyUnpausedProtocol  
+  {
+    
+    bytes32 requestId = currentRequestId[_packId][_receiver];
+    uint randomValue = randomnessRequests[requestId].randomNumberResult;
+    require(randomValue > 0, "Pack: wait for VRF to fulfill random number request.");
 
     // Pending request completed
-    pendingRequests[request.packId][request.opener] = false;
+    delete currentRequestId[_packId][_receiver];
 
     // Get tokenId of the reward to distribute.
-    Rewards memory rewardsInPack = rewards[request.packId];
+    Rewards memory rewardsInPack = rewards[_packId];
 
-    (uint[] memory rewardIds, uint[] memory rewardAmounts) = getReward(request.packId, _randomness, rewardsInPack);
+    (uint[] memory rewardIds, uint[] memory rewardAmounts) = getReward(_packId, randomValue, rewardsInPack);
 
     // Distribute the reward to the pack opener.
-    IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), request.opener, rewardIds, rewardAmounts, "");
+    IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), _receiver, rewardIds, rewardAmounts, "");
 
-    emit PackOpenFulfilled(request.packId, request.opener, _requestId, rewardsInPack.source, rewardIds);
+    emit PackOpenFulfilled(_packId, _receiver, requestId, rewardsInPack.source, rewardIds);
   }
 
   /// @dev Lets a protocol admin change the Chainlink VRF fee.
-  function setChainlinkFees(uint _newFees) external {
+  function setChainlinkFees(
+    uint _newFees
+  ) 
+    external 
+  {
     require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Pack: only a protocol admin can set VRF fees.");
     vrfFees = _newFees;
   }
 
   /// @dev Lets a protocol admin transfer LINK from the contract.
-  function transferLink(address _to, uint _amount) external {
+  function transferLink(
+    address _to, 
+    uint _amount
+  ) 
+    external 
+  {
     require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender), "Pack: only a protocol admin can transfer LINK.");
     
     bool success = LINK.transfer(_to, _amount);
@@ -191,7 +244,11 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     uint256[] memory _values, 
     bytes memory _data
   
-  ) external override returns (bytes4) {
+  ) 
+    external 
+    override 
+    returns (bytes4) 
+  {
 
     (
       string memory packURI,
@@ -234,7 +291,11 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
     uint _rewardsPerOpen
 
-  ) internal onlyUnpausedProtocol returns (uint packId, uint packTotalSupply) {
+  ) 
+    internal 
+    onlyUnpausedProtocol 
+    returns (uint packId, uint packTotalSupply) 
+  {
 
     require(IERC1155(_rewardContract).supportsInterface(0xd9b67a26), "Pack: reward contract does not implement ERC 1155.");
 
@@ -246,7 +307,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
     // Store pack state.
     PackState memory packState = PackState({
-      packId: packId,
       creator: _creator,
       uri: _packURI,
       currentSupply: packTotalSupply,
