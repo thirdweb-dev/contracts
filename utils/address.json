@@ -1,9 +1,9 @@
 {
   "mumbai": {
     "protocolControl": "0x9d7DDC9585a6C24bb2fA7980D825e6830A402753",
-    "pack": "0xb82d2f432A489b629f5574Bc7FcDEa4a9D2a9a99",
+    "pack": "0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4",
     "market": "0xC0C872a7eBCDA2c206B76CCAF7546d4f22642e8b",
-    "rewards": "0xb9943602a34987535440AE49c12A921C26Ac9e77"
+    "rewards": "0xC63AE70150F94ab97342dE57Fb920914BC836f77"
   },
   "matic": {
     "protocolControl": "0x429ACf993C992b322668122a5fC5593200493ea8",
