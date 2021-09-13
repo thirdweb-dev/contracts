@@ -16,13 +16,14 @@ describe("Request to open a pack", function () {
   let pack: Contract;
   let rewards: Contract;
 
-  // Reward parameters
+  // Reward parameterrs
   const rewardURIs: string[] = [
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1",
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/2",
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/3",
   ];
-  const rewardSupplies: number[] = [5, 10, 20];
+  const rewardSupplies: number[] = [5, 25, 60];
+  const rewardsPerOpen: number = 3;
 
   // Pack parameters
   const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
@@ -78,7 +79,7 @@ describe("Request to open a pack", function () {
     // Create pack with rewards.
     await rewards
       .connect(creator)
-      .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd);
+      .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
   });
 
   describe("Revert cases", function () {
@@ -142,7 +143,7 @@ describe("Request to open a pack", function () {
     it("Should show the caller has a Chainlink call in-flight for the pack", async () => {
       await pack.connect(creator).openPack(expectedPackId);
 
-      const isPending: boolean = await pack.pendingRequests(expectedPackId, await creator.getAddress());
+      const isPending: boolean = await pack.currentRequestId(expectedPackId, await creator.getAddress()) !== "";
       expect(isPending).to.equal(true);
     });
 

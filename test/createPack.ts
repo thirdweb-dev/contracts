@@ -20,7 +20,8 @@ describe("Create a pack with rewards in a single tx", function () {
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/2",
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/3",
   ];
-  const rewardSupplies: number[] = [5, 10, 20];
+  const rewardSupplies: number[] = [5, 25, 60];
+  const rewardsPerOpen: number = 3;
 
   // Pack parameters
   const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
@@ -28,7 +29,7 @@ describe("Create a pack with rewards in a single tx", function () {
 
   // Expected results
   const expectedPackId: number = 0;
-  const expectedPackSupply: number = rewardSupplies.reduce((a, b) => a + b);
+  const expectedPackSupply: number = rewardSupplies.reduce((a, b) => a + b) / rewardsPerOpen;
   const expectedRewardIds: number[] = [0, 1, 2];
 
   beforeEach(async () => {
@@ -69,13 +70,13 @@ describe("Create a pack with rewards in a single tx", function () {
       await expect(
         rewards
           .connect(creator)
-          .createPackAtomic(rewardURIs.slice(-2), rewardSupplies, packURI, openStartAndEnd, openStartAndEnd),
+          .createPackAtomic(rewardURIs.slice(-2), rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       ).to.be.revertedWith("Rewards: Must specify equal number of URIs and supplies.");
     });
 
     it("Should revert if the creator has not approved the contract to transfer reward tokens", async () => {
       await expect(
-        rewards.connect(creator).createPackAtomic([], [], packURI, openStartAndEnd, openStartAndEnd),
+        rewards.connect(creator).createPackAtomic([], [], packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       ).to.be.revertedWith("Rewards: Must create at least one reward.");
     });
   });
@@ -85,7 +86,7 @@ describe("Create a pack with rewards in a single tx", function () {
       expect(
         await rewards
           .connect(creator)
-          .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd),
+          .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       )
         .to.emit(rewards, "NativeRewards")
         .withArgs(await creator.getAddress(), expectedRewardIds, rewardURIs, rewardSupplies);
@@ -95,16 +96,16 @@ describe("Create a pack with rewards in a single tx", function () {
       expect(
         await rewards
           .connect(creator)
-          .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd),
+          .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       ).to.emit(pack, "PackCreated");
     });
 
     it("Should emit PackCreated with pack related info", async () => {
       const packCreatedPromise = new Promise((resolve, reject) => {
-        pack.on("PackCreated", async (_rewardContract, _creator, _packState, _rewards) => {
+        pack.on("PackCreated", async (_packId, _rewardContract, _creator, _packState, _rewards) => {
+          expect(_packId).to.equal(expectedPackId)
           expect(_rewardContract).to.equal(rewards.address);
           expect(_creator).to.equal(await creator.getAddress());
-          expect(_packState.packId).to.equal(expectedPackId);
           expect(_packState.uri).to.equal(packURI);
           expect(_packState.currentSupply).to.equal(expectedPackSupply);
 
@@ -120,7 +121,7 @@ describe("Create a pack with rewards in a single tx", function () {
 
       await rewards
         .connect(creator)
-        .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd);
+        .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
 
       await packCreatedPromise;
     });
@@ -131,7 +132,7 @@ describe("Create a pack with rewards in a single tx", function () {
       // Create pack
       await rewards
         .connect(creator)
-        .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd);
+        .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
     });
 
     it("Should lock all reward tokens in the Pack contract", async () => {
@@ -142,7 +143,7 @@ describe("Create a pack with rewards in a single tx", function () {
     });
 
     it("Should mint the total supply of packs to the creator", async () => {
-      expect(await pack.balanceOf(await creator.getAddress(), 0)).to.equal(35);
+      expect(await pack.balanceOf(await creator.getAddress(), 0)).to.equal(expectedPackSupply);
     });
   });
 
@@ -151,7 +152,7 @@ describe("Create a pack with rewards in a single tx", function () {
       // Create pack
       await rewards
         .connect(creator)
-        .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd);
+        .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
     });
 
     it("Should update the next token ID to be one more than the pack's tokenId", async () => {
