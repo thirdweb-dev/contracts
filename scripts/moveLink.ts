@@ -1,22 +1,19 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
 
-import { chainlinkVars } from "../utils/chainlink";
-import { addresses } from "../utils/contracts";
+import { getChainlinkVars, ChainlinkVars } from "../utils/chainlink";
+import { getContractAddress } from "../utils/contracts";
 
 import LinkTokenABI from "../abi/LinkTokenInterface.json";
-
-/**
- *  NOTE: set the right netowrk.
- *
- *  Caller must have PROTOCOL_ADMIN role.
- **/
 
 // Enter the address of the contract you want to withdraw LINK from.
 const prevPackAddr: string = "";
 
 async function main(prevPackAddress: string): Promise<void> {
   const [protocolAdmin] = await ethers.getSigners();
+  const chainId: number = await protocolAdmin.getChainId();
+
+  console.log(`Moving with LINK on chain: ${chainId} by account: ${await protocolAdmin.getAddress()}`)
 
   // Get `Pack` contract
   const relevantABI = [
@@ -42,15 +39,13 @@ async function main(prevPackAddress: string): Promise<void> {
   const packContract: Contract = await ethers.getContractAt(relevantABI, prevPackAddress);
 
   // Get total LINK balance to transfer
-  const { linkTokenAddress } = chainlinkVars.mumbai;
-  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress);
+  const { linkTokenAddress } = (await getChainlinkVars(chainId) as ChainlinkVars);
+  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, (linkTokenAddress as string));
   const amountToTransfer: BigNumber = await linkContract.balanceOf(prevPackAddress);
 
   // Transfer LINK to new pack contract.
-  const {
-    mumbai: { pack },
-  } = addresses;
-  const transferTx = await packContract.connect(protocolAdmin).transferLink(pack, amountToTransfer);
+  const packAddress = await getContractAddress("pack", chainId);
+  const transferTx = await packContract.connect(protocolAdmin).transferLink(packAddress, amountToTransfer);
 
   await transferTx.wait();
 }

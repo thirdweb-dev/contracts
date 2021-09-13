@@ -1,8 +1,8 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
 
-import { chainlinkVars } from "../utils/chainlink";
-import { addresses } from "../utils/contracts";
+import { getChainlinkVars, ChainlinkVars } from "../utils/chainlink";
+import { getContractAddress } from "../utils/contracts";
 
 import LinkTokenABI from "../abi/LinkTokenInterface.json";
 
@@ -10,17 +10,18 @@ import LinkTokenABI from "../abi/LinkTokenInterface.json";
 
 async function main() {
   const [funder] = await ethers.getSigners();
+  const chainId: number = await funder.getChainId();
+
+  console.log(`Funding with LINK on chain: ${chainId} by account: ${await funder.getAddress()}`)
 
   // Get LINK contract
-  const { linkTokenAddress } = chainlinkVars.mumbai;
-  const {
-    mumbai: { pack },
-  } = addresses;
-  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress);
+  const { linkTokenAddress } = (await getChainlinkVars(chainId) as ChainlinkVars);
+  const packAddress = await getContractAddress("pack", chainId);
+  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, (linkTokenAddress as string));
 
   // Fund pack contract.
   const amountToFund: BigNumber = ethers.utils.parseEther("10");
-  const transferTx = await linkContract.connect(funder).transfer(pack, amountToFund);
+  const transferTx = await linkContract.connect(funder).transfer(packAddress, amountToFund);
   console.log("Transferring link: ", transferTx.hash);
 
   await transferTx.wait();
