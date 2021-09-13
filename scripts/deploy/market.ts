@@ -1,5 +1,5 @@
 import hre, { run, ethers } from "hardhat";
-import { Contract, ContractFactory } from "ethers";
+import { Contract, ContractFactory, Bytes } from "ethers";
 
 import addresses from "../../utils/address.json";
 import { getTxOptions } from "../../utils/txOptions";
@@ -19,15 +19,25 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
 
-  // Get `Pack.sol` address + tx option
-  const packAddress: string = (await getContractAddress("pack", chainId)) as string;
+  // Get `ProtocolControl.sol` contract + tx option
+  const protocolControlAddr: string = (await getContractAddress("protocolControl", chainId)) as string;
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
+
   const txOption = await getTxOptions(chainId);
 
-  // Deploy Rewards.sol
-  const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
-  const rewards: Contract = await Rewards_Factory.deploy(packAddress, txOption);
+  // Deploy Market.sol
+  const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
+  const market: Contract = await Market_Factory.deploy(protocolControl.address, txOption);
 
-  console.log("Rewards.sol deployed at: ", rewards.address);
+  console.log("Market.sol deployed at: ", market.address);
+
+  // Update module in `ProtocolControl`
+  const moduleId: Bytes = await protocolControl.MARKET();
+  const updateTx = await protocolControl.updateModule(moduleId, market.address, txOption);
+
+  console.log("Updating MARKET module in ProtocolControl: ", updateTx.hash);
+
+  await updateTx.wait();
 
   // Update contract addresses in `/utils`
   const networkName: string = hre.network.name;
@@ -37,7 +47,7 @@ async function main() {
     [networkName]: {
       ...prevNetworkAddresses,
       
-      rewards
+      market
     },
 
     ...addresses

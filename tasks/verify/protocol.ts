@@ -1,9 +1,12 @@
 import hre from "hardhat";
-import { chainlinkVars } from "..//utils/chainlink";
-import { addresses } from "../utils/contracts";
+import { chainlinkVars } from "../../utils/chainlink";
+import { addresses } from "../../utils/contracts";
 
-/// NOTE: set the right address you want
-const { controlCenter, pack, market, rewards } = addresses.rinkeby;
+const networkName: string = hre.network.name;
+
+// Get network dependent vars.
+const { controlCenter, pack, market, rewards } = addresses[networkName];
+const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName];
 
 async function ProtocolControl() {
   await hre.run("verify:verify", {
@@ -13,8 +16,6 @@ async function ProtocolControl() {
 }
 
 async function Pack() {
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.rinkeby;
-
   await hre.run("verify:verify", {
     address: pack,
     constructorArguments: [

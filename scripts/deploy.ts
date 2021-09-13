@@ -10,7 +10,7 @@ async function main() {
 
   const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
   const [deployer]: SignerWithAddress[] = await ethers.getSigners();
-  
+
   const chainId: number = await deployer.getChainId();
   console.log("ChainId: ", chainId);
 
@@ -20,39 +20,39 @@ async function main() {
   console.log(`Deploying contracts with account: ${await deployer.getAddress()}`);
 
   // Deploy ProtocolControl
-//   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.mumbai;
+  //   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.mumbai;
 
-//   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-//   const controlCenter: Contract = await ProtocolControl_Factory.deploy({
-//     gasPrice: manualGasPrice,
-//   });
+  //   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
+  //   const controlCenter: Contract = await ProtocolControl_Factory.deploy({
+  //     gasPrice: manualGasPrice,
+  //   });
 
-//   console.log("ProtocolControl.sol deployed at: ", controlCenter.address);
+  //   console.log("ProtocolControl.sol deployed at: ", controlCenter.address);
 
-//   // Deploy Pack
-//   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-//   const pack: Contract = await Pack_Factory.deploy(
-//     controlCenter.address,
-//     "$PACK Protocol",
-//     vrfCoordinator,
-//     linkTokenAddress,
-//     keyHash,
-//     fees,
-//     { gasPrice: manualGasPrice },
-//   );
+  //   // Deploy Pack
+  //   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
+  //   const pack: Contract = await Pack_Factory.deploy(
+  //     controlCenter.address,
+  //     "$PACK Protocol",
+  //     vrfCoordinator,
+  //     linkTokenAddress,
+  //     keyHash,
+  //     fees,
+  //     { gasPrice: manualGasPrice },
+  //   );
 
-//   console.log("Pack.sol is deployed at: ", pack.address);
+  //   console.log("Pack.sol is deployed at: ", pack.address);
 
-//   // Deploy Market
-//   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-//   const market: Contract = await Market_Factory.deploy(controlCenter.address, { gasPrice: manualGasPrice });
+  //   // Deploy Market
+  //   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
+  //   const market: Contract = await Market_Factory.deploy(controlCenter.address, { gasPrice: manualGasPrice });
 
-//   console.log("Market.sol is deployed at: ", market.address);
+  //   console.log("Market.sol is deployed at: ", market.address);
 
-//   // Initialize protocol
-//   const initTx = await controlCenter.initializeProtocol(pack.address, market.address, { gasPrice: manualGasPrice });
-//   console.log("Initializing protocol: ", initTx.hash);
-//   await initTx.wait();
+  //   // Initialize protocol
+  //   const initTx = await controlCenter.initializeProtocol(pack.address, market.address, { gasPrice: manualGasPrice });
+  //   console.log("Initializing protocol: ", initTx.hash);
+  //   await initTx.wait();
 }
 
 main()

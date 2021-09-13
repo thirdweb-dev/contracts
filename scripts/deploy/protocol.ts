@@ -1,10 +1,14 @@
-import { run, ethers } from "hardhat";
+import hre, { run, ethers } from "hardhat";
 
 import { Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-import { getChainlinkVars, ChainlinkVars } from "../../utils/chainlink";
+import addresses from "../../utils/address.json";
 import { getTxOptions } from "../../utils/txOptions";
+import { getChainlinkVars, ChainlinkVars } from "../../utils/chainlink";
+
+import * as fs from "fs";
+import * as path from "path";
 
 async function main() {
   await run("compile");
@@ -16,7 +20,7 @@ async function main() {
   const chainId: number = await deployer.getChainId();
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
-  
+
   // Get chainlink vars + tx options.
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId) as ChainlinkVars);
   const txOption = await getTxOptions(chainId);
@@ -24,9 +28,9 @@ async function main() {
   // Deploy ProtocolControl
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
   const protocolControl: Contract = await ProtocolControl_Factory.deploy(txOption);
-  
+
   console.log("ProtocolControl.sol deployed at: ", protocolControl.address);
-  
+
   await protocolControl.deployTransaction.wait()
 
   // Deploy Pack
@@ -55,10 +59,28 @@ async function main() {
 
   // Initialize protocol
   const initTx = await protocolControl.initializeProtocol(pack.address, market.address, txOption);
-  
+
   console.log("Initializing protocol: ", initTx.hash);
 
   await initTx.wait();
+
+  // Update contract addresses in `/utils`
+  const networkName: string = hre.network.name;
+  const prevNetworkAddresses = addresses[(networkName as keyof typeof addresses)]
+
+  const updatedAddresses = {
+    [networkName]: {
+      ...prevNetworkAddresses,
+      
+      protocolControl,
+      pack,
+      market,
+    },
+
+    ...addresses
+  }
+
+  fs.writeFileSync(path.join(__dirname, "../../utils/address.json"), JSON.stringify(updatedAddresses));
 }
 
 main()
