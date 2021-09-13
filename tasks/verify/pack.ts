@@ -5,8 +5,8 @@ import addresses from "../../utils/address.json";
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
-const { protocolControl, pack } = addresses[networkName];
-const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName];
+const { protocolControl, pack } = addresses[networkName as keyof typeof addresses];
+const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
 async function Pack() {
   await hre.run("verify:verify", {

@@ -143,7 +143,7 @@ describe("Request to open a pack", function () {
     it("Should show the caller has a Chainlink call in-flight for the pack", async () => {
       await pack.connect(creator).openPack(expectedPackId);
 
-      const isPending: boolean = await pack.currentRequestId(expectedPackId, await creator.getAddress()) !== "";
+      const isPending: boolean = (await pack.currentRequestId(expectedPackId, await creator.getAddress())) !== "";
       expect(isPending).to.equal(true);
     });
 

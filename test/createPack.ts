@@ -70,7 +70,14 @@ describe("Create a pack with rewards in a single tx", function () {
       await expect(
         rewards
           .connect(creator)
-          .createPackAtomic(rewardURIs.slice(-2), rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+          .createPackAtomic(
+            rewardURIs.slice(-2),
+            rewardSupplies,
+            packURI,
+            openStartAndEnd,
+            openStartAndEnd,
+            rewardsPerOpen,
+          ),
       ).to.be.revertedWith("Rewards: Must specify equal number of URIs and supplies.");
     });
 
@@ -103,7 +110,7 @@ describe("Create a pack with rewards in a single tx", function () {
     it("Should emit PackCreated with pack related info", async () => {
       const packCreatedPromise = new Promise((resolve, reject) => {
         pack.on("PackCreated", async (_packId, _rewardContract, _creator, _packState, _rewards) => {
-          expect(_packId).to.equal(expectedPackId)
+          expect(_packId).to.equal(expectedPackId);
           expect(_rewardContract).to.equal(rewards.address);
           expect(_creator).to.equal(await creator.getAddress());
           expect(_packState.uri).to.equal(packURI);

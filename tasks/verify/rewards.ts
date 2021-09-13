@@ -5,7 +5,7 @@ import addresses from "../../utils/address.json";
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
-const { pack, rewards } = addresses[networkName];
+const { pack, rewards } = addresses[networkName as keyof typeof addresses];
 
 async function Rewards() {
   await hre.run("verify:verify", {

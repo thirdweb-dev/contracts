@@ -40,18 +40,18 @@ async function main() {
   await updateTx.wait();
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name;
-  const prevNetworkAddresses = addresses[(networkName as keyof typeof addresses)]
+  const networkName: string = hre.network.name.toLowerCase();
+  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
 
   const updatedAddresses = {
+    ...addresses,
+
     [networkName]: {
       ...prevNetworkAddresses,
-      
-      market
-    },
 
-    ...addresses
-  }
+      market: market.address,
+    },
+  };
 
   fs.writeFileSync(path.join(__dirname, "../../utils/address.json"), JSON.stringify(updatedAddresses));
 }

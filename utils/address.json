@@ -1,15 +1,15 @@
 {
+  "mumbai": {
+    "protocolControl": "0x9d7DDC9585a6C24bb2fA7980D825e6830A402753",
+    "pack": "0xb82d2f432A489b629f5574Bc7FcDEa4a9D2a9a99",
+    "market": "0xC0C872a7eBCDA2c206B76CCAF7546d4f22642e8b",
+    "rewards": "0xb9943602a34987535440AE49c12A921C26Ac9e77"
+  },
   "matic": {
     "protocolControl": "0x429ACf993C992b322668122a5fC5593200493ea8",
     "pack": "0x3d5a51975fD29E45Eb285349F12b77b4c153c8e0",
     "market": "0xfC958641E52563f071534495886A8Ac590DCBFA2",
     "rewards": "0x58408Fa085ae3942C3A6532ee6215bFC7f80c47A"
-  },
-  "mumbai": {
-    "protocolControl": "0x3d86dD9846c0a15B0f40037AAf51CC68A4236add",
-    "pack": "0xD89eE4F34BC76315E77D808305c0931f28Fa3C5D",
-    "market": "0xF1089C7a0Ae7d0729d94ff6806d7BeA0A02C3bF2",
-    "rewards": "0x7c6c7048Cd447BA200bde9A89A2ECc83435b7E51"
   },
   "rinkeby": {
     "protocolControl": "0xAFe8f8EDad3Fd7b0108997b51CCd24286FbF000B",

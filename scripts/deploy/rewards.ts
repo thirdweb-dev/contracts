@@ -30,18 +30,18 @@ async function main() {
   console.log("Rewards.sol deployed at: ", rewards.address);
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name;
-  const prevNetworkAddresses = addresses[(networkName as keyof typeof addresses)]
+  const networkName: string = hre.network.name.toLowerCase();
+  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
 
   const updatedAddresses = {
+    ...addresses,
+
     [networkName]: {
       ...prevNetworkAddresses,
-      
-      rewards
-    },
 
-    ...addresses
-  }
+      rewards: rewards.address,
+    },
+  };
 
   fs.writeFileSync(path.join(__dirname, "../../utils/address.json"), JSON.stringify(updatedAddresses));
 }

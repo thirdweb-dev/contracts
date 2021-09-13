@@ -1,10 +1,10 @@
-import hre, { ethers } from 'hardhat';
+import hre, { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Contract } from '@ethersproject/contracts';
+import { Contract } from "@ethersproject/contracts";
 
 import addresses from "../../utils/address.json";
-import { getTxOptions } from '../../utils/txOptions';
-import { BigNumber } from 'ethers';
+import { getTxOptions } from "../../utils/txOptions";
+import { BigNumber } from "ethers";
 
 // Transaction parameters.
 const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
@@ -18,26 +18,22 @@ const openStartAndEnd: number = 0;
 const rewardsPerOpen: number = 3;
 
 async function main() {
-
   // Get signer + Rewards.sol contract + txOptions
   const [caller]: SignerWithAddress[] = await ethers.getSigners();
   const chainId: number = await caller.getChainId();
   console.log(`Performing tx with account: ${await caller.getAddress()} in chain: ${chainId}`);
 
-  const networkName: string = hre.network.name
+  const networkName: string = hre.network.name;
   const rewards: Contract = await ethers.getContractAt(
-    "Rewards", 
-    addresses[(networkName as keyof typeof addresses)].rewards
-  )
-  const pack: Contract = await ethers.getContractAt(
-    "Pack", 
-    addresses[(networkName as keyof typeof addresses)].pack
-  )
+    "Rewards",
+    addresses[networkName as keyof typeof addresses].rewards,
+  );
+  const pack: Contract = await ethers.getContractAt("Pack", addresses[networkName as keyof typeof addresses].pack);
 
   const txOption = await getTxOptions(chainId);
 
   // Perform transaction.
-  const packId: BigNumber = (await pack.nextTokenId());
+  const packId: BigNumber = await pack.nextTokenId();
 
   const tx = await rewards.createPackAtomic(
     rewardURIs,
@@ -46,7 +42,7 @@ async function main() {
     openStartAndEnd,
     openStartAndEnd,
     rewardsPerOpen,
-    txOption
+    txOption,
   );
 
   console.log("Creating packs: ", tx.hash);

@@ -24,7 +24,7 @@ async function main() {
   const protocolControlAddr: string = (await getContractAddress("protocolControl", chainId)) as string;
   const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
 
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId) as ChainlinkVars);
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId)) as ChainlinkVars;
 
   const txOption = await getTxOptions(chainId);
 
@@ -37,7 +37,7 @@ async function main() {
     linkTokenAddress,
     keyHash,
     fees,
-    txOption
+    txOption,
   );
 
   console.log("Pack.sol deployed at: ", pack.address);
@@ -51,18 +51,18 @@ async function main() {
   await updateTx.wait();
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name;
-  const prevNetworkAddresses = addresses[(networkName as keyof typeof addresses)]
+  const networkName: string = hre.network.name.toLowerCase();
+  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
 
   const updatedAddresses = {
+    ...addresses,
+
     [networkName]: {
       ...prevNetworkAddresses,
-      
-      pack
-    },
 
-    ...addresses
-  }
+      pack: pack.address,
+    },
+  };
 
   fs.writeFileSync(path.join(__dirname, "../../utils/address.json"), JSON.stringify(updatedAddresses));
 }

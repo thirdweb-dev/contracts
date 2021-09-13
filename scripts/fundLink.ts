@@ -12,12 +12,12 @@ async function main() {
   const [funder] = await ethers.getSigners();
   const chainId: number = await funder.getChainId();
 
-  console.log(`Funding with LINK on chain: ${chainId} by account: ${await funder.getAddress()}`)
+  console.log(`Funding with LINK on chain: ${chainId} by account: ${await funder.getAddress()}`);
 
   // Get LINK contract
-  const { linkTokenAddress } = (await getChainlinkVars(chainId) as ChainlinkVars);
+  const { linkTokenAddress } = (await getChainlinkVars(chainId)) as ChainlinkVars;
   const packAddress = await getContractAddress("pack", chainId);
-  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, (linkTokenAddress as string));
+  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress as string);
 
   // Fund pack contract.
   const amountToFund: BigNumber = ethers.utils.parseEther("10");

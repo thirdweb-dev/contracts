@@ -22,7 +22,7 @@ async function main() {
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
 
   // Get chainlink vars + tx options.
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId) as ChainlinkVars);
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId)) as ChainlinkVars;
   const txOption = await getTxOptions(chainId);
 
   // Deploy ProtocolControl
@@ -31,7 +31,7 @@ async function main() {
 
   console.log("ProtocolControl.sol deployed at: ", protocolControl.address);
 
-  await protocolControl.deployTransaction.wait()
+  await protocolControl.deployTransaction.wait();
 
   // Deploy Pack
   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
@@ -42,12 +42,12 @@ async function main() {
     linkTokenAddress,
     keyHash,
     fees,
-    txOption
+    txOption,
   );
 
   console.log("Pack.sol is deployed at: ", pack.address);
 
-  await pack.deployTransaction.wait()
+  await pack.deployTransaction.wait();
 
   // Deploy Market
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
@@ -55,7 +55,7 @@ async function main() {
 
   console.log("Market.sol is deployed at: ", market.address);
 
-  await market.deployTransaction.wait()
+  await market.deployTransaction.wait();
 
   // Initialize protocol
   const initTx = await protocolControl.initializeProtocol(pack.address, market.address, txOption);
@@ -65,20 +65,20 @@ async function main() {
   await initTx.wait();
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name;
-  const prevNetworkAddresses = addresses[(networkName as keyof typeof addresses)]
+  const networkName: string = hre.network.name.toLowerCase();
+  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
 
   const updatedAddresses = {
+    ...addresses,
+
     [networkName]: {
       ...prevNetworkAddresses,
-      
-      protocolControl,
-      pack,
-      market,
-    },
 
-    ...addresses
-  }
+      protocolControl: protocolControl.address,
+      pack: pack.address,
+      market: market.address,
+    },
+  };
 
   fs.writeFileSync(path.join(__dirname, "../../utils/address.json"), JSON.stringify(updatedAddresses));
 }

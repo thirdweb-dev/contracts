@@ -2,11 +2,11 @@ import hre from "hardhat";
 import { chainlinkVars } from "../../utils/chainlink";
 import addresses from "../../utils/address.json";
 
-const networkName: string = hre.network.name;
+const networkName: string = hre.network.name.toLowerCase();
 
 // Get network dependent vars.
-const { protocolControl, pack, market, rewards } = addresses[networkName];
-const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName];
+const { protocolControl, pack, market, rewards } = addresses[networkName as keyof typeof addresses];
+const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
 async function ProtocolControl() {
   await hre.run("verify:verify", {

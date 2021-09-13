@@ -13,7 +13,7 @@ async function main(prevPackAddress: string): Promise<void> {
   const [protocolAdmin] = await ethers.getSigners();
   const chainId: number = await protocolAdmin.getChainId();
 
-  console.log(`Moving with LINK on chain: ${chainId} by account: ${await protocolAdmin.getAddress()}`)
+  console.log(`Moving with LINK on chain: ${chainId} by account: ${await protocolAdmin.getAddress()}`);
 
   // Get `Pack` contract
   const relevantABI = [
@@ -39,8 +39,8 @@ async function main(prevPackAddress: string): Promise<void> {
   const packContract: Contract = await ethers.getContractAt(relevantABI, prevPackAddress);
 
   // Get total LINK balance to transfer
-  const { linkTokenAddress } = (await getChainlinkVars(chainId) as ChainlinkVars);
-  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, (linkTokenAddress as string));
+  const { linkTokenAddress } = (await getChainlinkVars(chainId)) as ChainlinkVars;
+  const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress as string);
   const amountToTransfer: BigNumber = await linkContract.balanceOf(prevPackAddress);
 
   // Transfer LINK to new pack contract.

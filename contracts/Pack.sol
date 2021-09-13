@@ -9,8 +9,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-import "hardhat/console.sol";
-
 interface IProtocolControl {
     /// @dev Returns whether the pack protocol is paused.
     function systemPaused() external view returns (bool);
@@ -253,8 +251,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
             IERC1155(_rewardContract).supportsInterface(0xd9b67a26),
             "Pack: reward contract does not implement ERC 1155."
         );
-        
-        uint sumOfRewards = _sumArr(_rewardAmounts);
+
+        uint256 sumOfRewards = _sumArr(_rewardAmounts);
 
         require(sumOfRewards % _rewardsPerOpen == 0, "Pack: invalid number of rewards per open.");
 
@@ -298,18 +296,13 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
         uint256 step;
         uint256 prob;
 
-        rewardTokenIds = new uint[](_rewardsInPack.rewardsPerOpen);
-        rewardAmounts = new uint[](_rewardsInPack.rewardsPerOpen);
+        rewardTokenIds = new uint256[](_rewardsInPack.rewardsPerOpen);
+        rewardAmounts = new uint256[](_rewardsInPack.rewardsPerOpen);
 
         for (uint256 j = 0; j < _rewardsInPack.rewardsPerOpen; j += 1) {
             prob = uint256(keccak256(abi.encode(_randomness, j))) % base;
 
-            console.log("j index", j);
-            console.log("prob", prob);
-
             for (uint256 i = 0; i < _rewardsInPack.tokenIds.length; i += 1) {
-                console.log("i index", i);
-
                 if (prob < (_rewardsInPack.amountsPacked[i] + step)) {
                     // Store the reward's tokenId
                     rewardTokenIds[j] = _rewardsInPack.tokenIds[i];
