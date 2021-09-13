@@ -20,7 +20,7 @@ async function main() {
   const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress as string);
 
   // Fund pack contract.
-  const amountToFund: BigNumber = ethers.utils.parseEther("10");
+  const amountToFund: BigNumber = ethers.utils.parseEther("1");
   const transferTx = await linkContract.connect(funder).transfer(packAddress, amountToFund);
   console.log("Transferring link: ", transferTx.hash);
 
