@@ -1,33 +1,42 @@
-import { ethers } from "hardhat";
-import { Contract, BigNumber } from "ethers";
+import hre, { ethers } from 'hardhat';
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Contract } from '@ethersproject/contracts';
 
-import { addresses } from "../../utils/contracts";
+import addresses from "../../utils/address.json";
+import { getTxOptions } from '../../utils/txOptions';
 
 // Transaction parameters.
-const id: BigNumber = BigNumber.from(0);
+const packId: number = 0;
 
-async function openPack(packId: BigNumber) {
-  // Setting manual gas limit.
-  const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
+async function main() {
 
-  // Get signer.
-  const [caller] = await ethers.getSigners();
+  // Get signer + Rewards.sol contract + txOptions
+  const [caller]: SignerWithAddress[] = await ethers.getSigners();
+  const chainId: number = await caller.getChainId();
+  console.log(`Performing tx with account: ${await caller.getAddress()} in chain: ${chainId}`);
 
-  // Get contract instances connected to wallet.
-  const {
-    mumbai: { pack },
-  } = addresses;
-  const packContract: Contract = await ethers.getContractAt("Pack", pack);
+  const networkName: string = hre.network.name
+  const pack: Contract = await ethers.getContractAt(
+    "Pack", 
+    addresses[(networkName as keyof typeof addresses)].pack
+  )
 
-  // Open pack.
-  const openTx = await packContract.connect(caller).openPack(packId, { gasPrice: manualGasPrice });
-  console.log("Opening pack: ", openTx.hash);
-  await openTx.wait();
+  const txOption = await getTxOptions(chainId);
+
+  // Display creator's pack balance
+  const packBalance = await pack.balanceOf(await caller.getAddress(), packId);
+  console.log("Pack balance: ", parseInt(packBalance.toString()), "Pack ID: ", packId);
+
+  // Perform transaction.
+  const tx = await pack.openPack(packId, txOption);
+  console.log("Opening pack: ", tx.hash);
+
+  await tx.wait();
 }
 
-openPack(id)
+main()
   .then(() => process.exit(0))
-  .catch(err => {
-    console.error(err);
+  .catch(error => {
+    console.error(error);
     process.exit(1);
   });
