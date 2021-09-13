@@ -13,13 +13,13 @@ export const addresses = {
     controlCenter: "0x3d86dD9846c0a15B0f40037AAf51CC68A4236add",
     pack: "0xD89eE4F34BC76315E77D808305c0931f28Fa3C5D",
     market: "0xF1089C7a0Ae7d0729d94ff6806d7BeA0A02C3bF2",
-    rewards: "0x7c6c7048Cd447BA200bde9A89A2ECc83435b7E51"
+    rewards: "0x7c6c7048Cd447BA200bde9A89A2ECc83435b7E51",
   },
   rinkeby: {
     controlCenter: "0xAFe8f8EDad3Fd7b0108997b51CCd24286FbF000B",
     pack: "0x928C9EE38048e5D0A4601D1FDcF7B9E57317278D",
     market: "0xE0C0158A9d498EF4D0b02a8256A6957718Af8B5B",
-    rewards: "0xebC0b11f62A416634fe400bbB750f0E40833a4d0"
+    rewards: "0xebC0b11f62A416634fe400bbB750f0E40833a4d0",
   },
   mainnet: {
     controlCenter: "",

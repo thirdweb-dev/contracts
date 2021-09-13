@@ -77,7 +77,7 @@ const config: ConfigWithEtherscan = {
   },
   etherscan: {
     // apiKey: etherscanKey,
-    apiKey: polygonscanKey
+    apiKey: polygonscanKey,
   },
 };
 

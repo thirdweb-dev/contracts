@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { BigNumber, Contract } from 'ethers';
+import { BigNumber, Contract } from "ethers";
 
 import { chainlinkVars } from "../utils/chainlink";
 import { addresses } from "../utils/contracts";
@@ -13,7 +13,9 @@ async function main() {
 
   // Get LINK contract
   const { linkTokenAddress } = chainlinkVars.mumbai;
-  const { mumbai: { pack }} = addresses;
+  const {
+    mumbai: { pack },
+  } = addresses;
   const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress);
 
   // Fund pack contract.
@@ -21,12 +23,12 @@ async function main() {
   const transferTx = await linkContract.connect(funder).transfer(pack, amountToFund);
   console.log("Transferring link: ", transferTx.hash);
 
-  await transferTx.wait()
+  await transferTx.wait();
 }
 
 main()
-.then(() => process.exit(0))
+  .then(() => process.exit(0))
   .catch(err => {
-    console.error(err)
-    process.exit(1)
-  })
+    console.error(err);
+    process.exit(1);
+  });

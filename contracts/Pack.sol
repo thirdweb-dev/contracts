@@ -52,7 +52,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
     struct RandomnessRequest {
         uint256 packId;
         address opener;
-        uint256 randomNumberResult;
     }
 
     /// @dev pack tokenId => The state of packs with id `tokenId`.
@@ -154,11 +153,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
         bytes32 requestId = requestRandomness(vrfKeyHash, vrfFees);
 
         // Update state to reflect the Chainlink VRF request.
-        randomnessRequests[requestId] = RandomnessRequest({
-            packId: _packId,
-            opener: msg.sender,
-            randomNumberResult: 0
-        });
+        randomnessRequests[requestId] = RandomnessRequest({ packId: _packId, opener: msg.sender });
         currentRequestId[_packId][msg.sender] = requestId;
 
         emit PackOpenRequest(_packId, msg.sender, requestId);
@@ -166,27 +161,23 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
     /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
     function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
-        randomnessRequests[_requestId].randomNumberResult = _randomness;
-    }
+        RandomnessRequest memory request = randomnessRequests[_requestId];
 
-    /// @dev Distributes rewards entitled to `_receiver` from `_receiver` opening a pack.
-    function collectRewards(uint256 _packId, address _receiver) external onlyUnpausedProtocol {
-        bytes32 requestId = currentRequestId[_packId][_receiver];
-        uint256 randomValue = randomnessRequests[requestId].randomNumberResult;
-        require(randomValue > 0, "Pack: wait for VRF to fulfill random number request.");
+        uint256 packId = request.packId;
+        address receiver = request.opener;
 
         // Pending request completed
-        delete currentRequestId[_packId][_receiver];
+        delete currentRequestId[packId][receiver];
 
         // Get tokenId of the reward to distribute.
-        Rewards memory rewardsInPack = rewards[_packId];
+        Rewards memory rewardsInPack = rewards[packId];
 
-        (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(_packId, randomValue, rewardsInPack);
+        (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(packId, _randomness, rewardsInPack);
 
         // Distribute the reward to the pack opener.
-        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), _receiver, rewardIds, rewardAmounts, "");
+        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), receiver, rewardIds, rewardAmounts, "");
 
-        emit PackOpenFulfilled(_packId, _receiver, requestId, rewardsInPack.source, rewardIds);
+        emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
     }
 
     /// @dev Lets a protocol admin change the Chainlink VRF fee.

@@ -1,15 +1,14 @@
-import hre from 'hardhat'
+import hre from "hardhat";
 import { chainlinkVars } from "..//utils/chainlink";
 import { addresses } from "../utils/contracts";
 
 /// NOTE: set the right address you want
-const { controlCenter, pack, market, rewards } = addresses.rinkeby
+const { controlCenter, pack, market, rewards } = addresses.rinkeby;
 
 async function ProtocolControl() {
-
   await hre.run("verify:verify", {
     address: controlCenter,
-    constructorArguments: []
+    constructorArguments: [],
   });
 }
 
@@ -24,7 +23,7 @@ async function Pack() {
       vrfCoordinator,
       linkTokenAddress,
       keyHash,
-      fees
+      fees,
     ],
   });
 }
@@ -33,7 +32,7 @@ async function Market() {
   await hre.run("verify:verify", {
     address: market,
     constructorArguments: [
-        controlCenter, // Control center adddress
+      controlCenter, // Control center adddress
     ],
   });
 }
@@ -41,22 +40,20 @@ async function Market() {
 async function Rewards() {
   await hre.run("verify:verify", {
     address: rewards,
-    constructorArguments: [
-        pack
-    ],
+    constructorArguments: [pack],
   });
 }
 
 async function verify() {
-  await ProtocolControl()
-  await Pack()
-  await Market()
-  await Rewards()
+  await ProtocolControl();
+  await Pack();
+  await Market();
+  await Rewards();
 }
 
 verify()
   .then(() => process.exit(0))
   .catch(err => {
-    console.error(err)
-    process.exit(1)
-  })
+    console.error(err);
+    process.exit(1);
+  });

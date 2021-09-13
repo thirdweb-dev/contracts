@@ -1,13 +1,12 @@
-import { ethers } from 'hardhat';
-import { Contract, BigNumber } from 'ethers';
+import { ethers } from "hardhat";
+import { Contract, BigNumber } from "ethers";
 
-import { addresses } from '../../utils/contracts';
+import { addresses } from "../../utils/contracts";
 
 // Transaction parameters.
 const id: BigNumber = BigNumber.from(0);
 
 async function openPack(packId: BigNumber) {
-
   // Setting manual gas limit.
   const manualGasPrice: BigNumber = ethers.utils.parseUnits("5", "gwei");
 
@@ -15,8 +14,10 @@ async function openPack(packId: BigNumber) {
   const [caller] = await ethers.getSigners();
 
   // Get contract instances connected to wallet.
-  const { mumbai: { pack } } = addresses;
-  const packContract: Contract = await ethers.getContractAt("Pack", pack)
+  const {
+    mumbai: { pack },
+  } = addresses;
+  const packContract: Contract = await ethers.getContractAt("Pack", pack);
 
   // Open pack.
   const openTx = await packContract.connect(caller).openPack(packId, { gasPrice: manualGasPrice });
@@ -29,4 +30,4 @@ openPack(id)
   .catch(err => {
     console.error(err);
     process.exit(1);
-  })
+  });
