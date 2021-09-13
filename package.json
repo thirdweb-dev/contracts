@@ -33,7 +33,7 @@
     "husky": "^7.0.1",
     "mocha": "^9.0.3",
     "prettier": "^2.1.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.9",
+    "prettier-plugin-solidity": "^1.0.0-beta.18",
     "ts-node": "^10.2.0",
     "typechain": "^5.1.2",
     "typescript": "4.3.5"
