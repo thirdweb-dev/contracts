@@ -41,10 +41,10 @@ Run tests
   npx hardhat test
 ```
 
-To use scripts, update the transaction parameters in the particular script and run
+To use scripts, update the transaction parameters in the particular script (e.g. `packId` in `scripts/txs/openPack.ts`) and run e.g -
 
 ```bash
-  npx hardhat run scripts/.../${testFileName}.ts --network {name of network}
+  yarn run openPack --network {network name}
 ```
 
 ## Deploying contracts
@@ -60,10 +60,32 @@ if (testPrivateKey) {
 }
 ```
 
-Finally, run
+To deploy the entire protocol, run
 
 ```bash
-  npx hardhat run scripts/deploy/mumbai/protocol.js --network mumbai
+  yarn run deploy-protocol --network {network name}
+```
+
+To deploy `Pack.sol` and `Market.sol` as individual modules, run e.g.
+
+```bash
+  yarn run deploy-pack --network {network name}
+```
+
+Finally, update the `README.md` files with the new addresses, which can be found in `utils/addresses.json`.
+
+## Verify contracts on Etherscan / Polygonscan
+
+To verify the entire protocol, run
+
+```bash
+  yarn run verify-protocol --network {network name}
+```
+
+To verify individual modules like `Pack.sol`, run
+
+```bash
+  yarn run verify-pack --network {network name}
 ```
 
 ## Feedback
