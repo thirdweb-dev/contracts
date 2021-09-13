@@ -84,6 +84,12 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "packId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "rewardContract",
         "type": "address"
@@ -97,19 +103,14 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "packId",
-            "type": "uint256"
+            "internalType": "string",
+            "name": "uri",
+            "type": "string"
           },
           {
             "internalType": "address",
             "name": "creator",
             "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
           },
           {
             "internalType": "uint256",
@@ -390,6 +391,30 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "currentRequestId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "_packId",
         "type": "uint256"
       }
@@ -399,19 +424,14 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "packId",
-            "type": "uint256"
+            "internalType": "string",
+            "name": "uri",
+            "type": "string"
           },
           {
             "internalType": "address",
             "name": "creator",
             "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
           },
           {
             "internalType": "uint256",
@@ -450,19 +470,14 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "packId",
-            "type": "uint256"
+            "internalType": "string",
+            "name": "uri",
+            "type": "string"
           },
           {
             "internalType": "address",
             "name": "creator",
             "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
           },
           {
             "internalType": "uint256",
@@ -684,19 +699,14 @@
     "name": "packs",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
       },
       {
         "internalType": "address",
         "name": "creator",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "uri",
-        "type": "string"
       },
       {
         "internalType": "uint256",
@@ -712,30 +722,6 @@
         "internalType": "uint256",
         "name": "openEnd",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "pendingRequests",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",

@@ -1,15 +1,9 @@
 // from: https://github.com/ethereumvex/SushiMaker-bridge-exploit/blob/master/utils/utils.js
 import hre from "hardhat";
+import { chainIds } from "./chainIds";
+
 const ethers = hre.ethers;
 require("dotenv").config();
-
-const chainIds = {
-  mainnet: 1,
-  rinkeby: 4,
-
-  matic: 137,
-  mumbai: 80001,
-};
 
 export const forkFrom = async (blockNumber: any, network: keyof typeof chainIds) => {
   let alchemyKey: string = process.env.ALCHEMY_KEY || "";

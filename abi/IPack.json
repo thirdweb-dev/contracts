@@ -168,6 +168,24 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_packId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      }
+    ],
+    "name": "collectRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "_packURI",
         "type": "string"
@@ -196,6 +214,11 @@
         "internalType": "uint256",
         "name": "_secondsUntilOpenEnd",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_rewardsPerOpen",
+        "type": "uint256"
       }
     ],
     "name": "createPack",
@@ -218,25 +241,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "creator",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "_creator",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_requestId",
         "type": "uint256"
       },
@@ -249,57 +253,6 @@
     "name": "fulfillRandomness",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getPackById",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "packId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "creator",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "currentSupply",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openStart",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPack.PackInfo",
-        "name": "pack",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -544,44 +497,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "tokenURI",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "_supply",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
