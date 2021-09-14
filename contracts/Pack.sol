@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
@@ -20,7 +21,7 @@ interface IProtocolControl {
     function PROTOCOL_ADMIN() external view returns (bytes32);
 }
 
-contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
+contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Context {
     /// @dev The $PACK Protocol control center.
     IProtocolControl internal controlCenter;
 
@@ -93,12 +94,19 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
 
     constructor(
         address _controlCenter,
+
         string memory _uri,
         address _vrfCoordinator,
         address _linkToken,
         bytes32 _keyHash,
-        uint256 _fees
-    ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) {
+        uint256 _fees,
+
+        address _trustedForwarder
+    ) 
+        ERC1155(_uri) 
+        VRFConsumerBase(_vrfCoordinator, _linkToken)
+        ERC2771Context(_trustedForwarder) 
+    {
         // Set $PACK Protocol control center.
         controlCenter = IProtocolControl(_controlCenter);
 
@@ -399,5 +407,13 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable {
         source = rewards[_packId].source;
         tokenIds = rewards[_packId].tokenIds;
         amountsPacked = rewards[_packId].amountsPacked;
+    }
+
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
     }
 }
