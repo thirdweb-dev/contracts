@@ -152,20 +152,20 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         );
 
         require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
-        require(balanceOf(msg.sender, _packId) > 0, "Pack: sender owns no packs of the given packId.");
-        require(currentRequestId[_packId][msg.sender] == "", "Pack: must wait for the pending pack to be opened.");
+        require(balanceOf(_msgSender(), _packId) > 0, "Pack: sender owns no packs of the given packId.");
+        require(currentRequestId[_packId][_msgSender()] == "", "Pack: must wait for the pending pack to be opened.");
 
         // Burn the pack being opened.
-        _burn(msg.sender, _packId, 1);
+        _burn(_msgSender(), _packId, 1);
 
         // Send random number request.
         bytes32 requestId = requestRandomness(vrfKeyHash, vrfFees);
 
         // Update state to reflect the Chainlink VRF request.
-        randomnessRequests[requestId] = RandomnessRequest({ packId: _packId, opener: msg.sender });
-        currentRequestId[_packId][msg.sender] = requestId;
+        randomnessRequests[requestId] = RandomnessRequest({ packId: _packId, opener: _msgSender() });
+        currentRequestId[_packId][_msgSender()] = requestId;
 
-        emit PackOpenRequest(_packId, msg.sender, requestId);
+        emit PackOpenRequest(_packId, _msgSender(), requestId);
     }
 
     /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
@@ -192,7 +192,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     /// @dev Lets a protocol admin change the Chainlink VRF fee.
     function setChainlinkFees(uint256 _newFees) external {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender),
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
             "Pack: only a protocol admin can set VRF fees."
         );
         vrfFees = _newFees;
@@ -201,7 +201,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     /// @dev Lets a protocol admin transfer LINK from the contract.
     function transferLink(address _to, uint256 _amount) external {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender),
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
             "Pack: only a protocol admin can transfer LINK."
         );
 

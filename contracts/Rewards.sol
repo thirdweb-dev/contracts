@@ -99,7 +99,7 @@ contract Rewards is ERC1155, Ownable {
             rewardIds[i] = nextTokenId;
 
             rewards[nextTokenId] = Reward({
-                creator: msg.sender,
+                creator: _msgSender(),
                 uri: _rewardURIs[i],
                 supply: _rewardSupplies[i],
                 underlyingType: UnderlyingType.None
@@ -108,10 +108,10 @@ contract Rewards is ERC1155, Ownable {
             nextTokenId++;
         }
 
-        // Mint reward tokens to `msg.sender`
-        _mintBatch(msg.sender, rewardIds, _rewardSupplies, "");
+        // Mint reward tokens to `_msgSender()`
+        _mintBatch(_msgSender(), rewardIds, _rewardSupplies, "");
 
-        emit NativeRewards(msg.sender, rewardIds, _rewardURIs, _rewardSupplies);
+        emit NativeRewards(_msgSender(), rewardIds, _rewardURIs, _rewardSupplies);
     }
 
     /// @dev Creates packs with rewards.
@@ -132,7 +132,7 @@ contract Rewards is ERC1155, Ownable {
             _secondsUntilOpenEnd,
             _rewardsPerOpen
         );
-        safeBatchTransferFrom(msg.sender, pack, rewardIds, _rewardSupplies, args);
+        safeBatchTransferFrom(_msgSender(), pack, rewardIds, _rewardSupplies, args);
     }
 
     /// @dev Creates packs with rewards.
@@ -144,7 +144,7 @@ contract Rewards is ERC1155, Ownable {
         uint256 _secondsUntilOpenEnd
     ) external {
         bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd);
-        safeBatchTransferFrom(msg.sender, pack, _rewardIds, _rewardAmounts, args);
+        safeBatchTransferFrom(_msgSender(), pack, _rewardIds, _rewardAmounts, args);
     }
 
     /// @dev Wraps an ERC721 NFT as ERC1155 reward tokens.
@@ -154,24 +154,24 @@ contract Rewards is ERC1155, Ownable {
         string calldata _rewardURI
     ) external {
         require(
-            IERC721(_nftContract).ownerOf(_tokenId) == msg.sender,
+            IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
             "Rewards: Only the owner of the NFT can wrap it."
         );
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
-                IERC721(_nftContract).isApprovedForAll(msg.sender, address(this)),
+                IERC721(_nftContract).isApprovedForAll(_msgSender(), address(this)),
             "Rewards: Must approve the contract to transfer the NFT."
         );
 
         // Transfer the NFT to this contract.
-        IERC721(_nftContract).safeTransferFrom(msg.sender, address(this), _tokenId);
+        IERC721(_nftContract).safeTransferFrom(_msgSender(), address(this), _tokenId);
 
-        // Mint reward tokens to `msg.sender`
-        _mint(msg.sender, nextTokenId, 1, "");
+        // Mint reward tokens to `_msgSender()`
+        _mint(_msgSender(), nextTokenId, 1, "");
 
         // Store reward state.
         rewards[nextTokenId] = Reward({
-            creator: msg.sender,
+            creator: _msgSender(),
             uri: _rewardURI,
             supply: 1,
             underlyingType: UnderlyingType.ERC721
@@ -180,27 +180,27 @@ contract Rewards is ERC1155, Ownable {
         // Map the reward tokenId to the underlying NFT
         erc721Rewards[nextTokenId] = ERC721Reward({ nftContract: _nftContract, nftTokenId: _tokenId });
 
-        emit ERC721Rewards(msg.sender, _nftContract, _tokenId, nextTokenId, _rewardURI);
+        emit ERC721Rewards(_msgSender(), _nftContract, _tokenId, nextTokenId, _rewardURI);
 
         nextTokenId++;
     }
 
     /// @dev Lets the reward owner redeem their ERC721 NFT.
     function redeemERC721(uint256 _rewardId) external {
-        require(balanceOf(msg.sender, _rewardId) > 0, "Rewards: Cannot redeem a reward you do not own.");
+        require(balanceOf(_msgSender(), _rewardId) > 0, "Rewards: Cannot redeem a reward you do not own.");
 
         // Burn the reward token
-        _burn(msg.sender, _rewardId, 1);
+        _burn(_msgSender(), _rewardId, 1);
 
-        // Transfer the NFT to `msg.sender`
+        // Transfer the NFT to `_msgSender()`
         IERC721(erc721Rewards[_rewardId].nftContract).safeTransferFrom(
             address(this),
-            msg.sender,
+            _msgSender(),
             erc721Rewards[_rewardId].nftTokenId
         );
 
         emit ERC721Redeemed(
-            msg.sender,
+            _msgSender(),
             erc721Rewards[_rewardId].nftContract,
             erc721Rewards[_rewardId].nftTokenId,
             _rewardId
@@ -215,25 +215,25 @@ contract Rewards is ERC1155, Ownable {
         string calldata _rewardURI
     ) external {
         require(
-            IERC20(_tokenContract).balanceOf(msg.sender) >= _tokenAmount,
+            IERC20(_tokenContract).balanceOf(_msgSender()) >= _tokenAmount,
             "Rewards: Must own the amount of tokens that are being wrapped."
         );
 
         require(
-            IERC20(_tokenContract).allowance(msg.sender, address(this)) >= _tokenAmount,
+            IERC20(_tokenContract).allowance(_msgSender(), address(this)) >= _tokenAmount,
             "Rewards: Must approve this contract to transfer ERC20 tokens."
         );
 
         require(
-            IERC20(_tokenContract).transferFrom(msg.sender, address(this), _tokenAmount),
+            IERC20(_tokenContract).transferFrom(_msgSender(), address(this), _tokenAmount),
             "Failed to transfer ERC20 tokens."
         );
 
-        // Mint reward tokens to `msg.sender`
-        _mint(msg.sender, nextTokenId, _numOfRewardsToMint, "");
+        // Mint reward tokens to `_msgSender()`
+        _mint(_msgSender(), nextTokenId, _numOfRewardsToMint, "");
 
         rewards[nextTokenId] = Reward({
-            creator: msg.sender,
+            creator: _msgSender(),
             uri: _rewardURI,
             supply: _numOfRewardsToMint,
             underlyingType: UnderlyingType.ERC20
@@ -245,29 +245,29 @@ contract Rewards is ERC1155, Ownable {
             underlyingTokenAmount: _tokenAmount
         });
 
-        emit ERC20Rewards(msg.sender, _tokenContract, _tokenAmount, _numOfRewardsToMint, _rewardURI);
+        emit ERC20Rewards(_msgSender(), _tokenContract, _tokenAmount, _numOfRewardsToMint, _rewardURI);
 
         nextTokenId++;
     }
 
     /// @dev Lets the reward owner redeem their ERC20 tokens.
     function redeemERC20(uint256 _rewardId, uint256 _amount) external {
-        require(balanceOf(msg.sender, _rewardId) >= _amount, "Rewards: Cannot redeem a reward you do not own.");
+        require(balanceOf(_msgSender(), _rewardId) >= _amount, "Rewards: Cannot redeem a reward you do not own.");
 
         // Burn the reward token
-        _burn(msg.sender, _rewardId, _amount);
+        _burn(_msgSender(), _rewardId, _amount);
 
         // Get the ERC20 token amount to distribute
         uint256 amountToDistribute = (erc20Rewards[_rewardId].underlyingTokenAmount * _amount) /
             erc20Rewards[_rewardId].shares;
 
-        // Transfer the ERC20 tokens to `msg.sender`
+        // Transfer the ERC20 tokens to `_msgSender()`
         require(
-            IERC20(erc20Rewards[_rewardId].tokenContract).transfer(msg.sender, amountToDistribute),
+            IERC20(erc20Rewards[_rewardId].tokenContract).transfer(_msgSender(), amountToDistribute),
             "Rewards: Failed to transfer ERC20 tokens."
         );
 
-        emit ERC20Redeemed(msg.sender, erc20Rewards[_rewardId].tokenContract, amountToDistribute, _amount);
+        emit ERC20Redeemed(_msgSender(), erc20Rewards[_rewardId].tokenContract, amountToDistribute, _amount);
     }
 
     /// @dev Updates a token's total supply.

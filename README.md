@@ -17,6 +17,16 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Rewards.sol`: [0xC63AE70150F94ab97342dE57Fb920914BC836f77](https://mumbai.polygonscan.com/address/0xC63AE70150F94ab97342dE57Fb920914BC836f77#code)
 
+### Mumbai - with meta transactions.
+
+- `ProtocolControl.sol`: [0x9d7DDC9585a6C24bb2fA7980D825e6830A402753](https://mumbai.polygonscan.com/address/0x9d7DDC9585a6C24bb2fA7980D825e6830A402753#code)
+
+- `Pack.sol`: [0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4](https://mumbai.polygonscan.com/address/0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4#code)
+
+- `Market.sol`: [0xC0C872a7eBCDA2c206B76CCAF7546d4f22642e8b](https://mumbai.polygonscan.com/address/0xC0C872a7eBCDA2c206B76CCAF7546d4f22642e8b#code)
+
+- `Rewards.sol`: [0xC63AE70150F94ab97342dE57Fb920914BC836f77](https://mumbai.polygonscan.com/address/0xC63AE70150F94ab97342dE57Fb920914BC836f77#code)
+
 ## Run Locally
 
 Clone the project
