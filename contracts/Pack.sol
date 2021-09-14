@@ -95,19 +95,13 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
 
     constructor(
         address _controlCenter,
-
         string memory _uri,
         address _vrfCoordinator,
         address _linkToken,
         bytes32 _keyHash,
         uint256 _fees,
-
         MinimalForwarder _trustedForwarder
-    ) 
-        ERC1155(_uri) 
-        VRFConsumerBase(_vrfCoordinator, _linkToken)
-        ERC2771Context(address(_trustedForwarder)) 
-    {
+    ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(address(_trustedForwarder)) {
         // Set $PACK Protocol control center.
         controlCenter = IProtocolControl(_controlCenter);
 

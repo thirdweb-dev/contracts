@@ -42,7 +42,7 @@ async function main() {
     keyHash,
     fees,
     forwarder,
-    txOption
+    txOption,
   );
 
   console.log("Pack.sol deployed at: ", pack.address);

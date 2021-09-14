@@ -9,14 +9,14 @@ import * as path from "path";
 
 async function main() {
   await run("compile");
-  
+
   console.log("\n");
-  
+
   // Get signer and chainId
   const [deployer] = await ethers.getSigners();
   const chainId: number = await deployer.getChainId();
   const txOption = await getTxOptions(chainId);
-  
+
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
 
   // Deploy MinimalForwarder.sol

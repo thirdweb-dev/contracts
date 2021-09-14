@@ -30,6 +30,11 @@
         "internalType": "uint256",
         "name": "_fees",
         "type": "uint256"
+      },
+      {
+        "internalType": "contract MinimalForwarder",
+        "name": "_trustedForwarder",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -561,6 +566,25 @@
       }
     ],
     "name": "isApprovedForAll",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "isTrustedForwarder",
     "outputs": [
       {
         "internalType": "bool",

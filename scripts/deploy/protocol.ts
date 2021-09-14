@@ -23,7 +23,7 @@ async function main() {
 
   const networkName: string = hre.network.name.toLowerCase();
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { forwarder } = curentNetworkAddreses; 
+  const { forwarder } = curentNetworkAddreses;
 
   // Get chainlink vars + tx options.
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId)) as ChainlinkVars;
@@ -40,7 +40,7 @@ async function main() {
 
     await minimalForwarder.deployTransaction.wait();
 
-    forwarderAddress = minimalForwarder.address
+    forwarderAddress = minimalForwarder.address;
   }
 
   // Deploy ProtocolControl
