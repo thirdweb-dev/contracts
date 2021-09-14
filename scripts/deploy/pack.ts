@@ -20,6 +20,9 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
 
+  const networkName: string = hre.network.name.toLowerCase();
+  const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
+
   // Get `ProtocolControl.sol` contract + chainlink vars + tx option
   const protocolControlAddr: string = (await getContractAddress("protocolControl", chainId)) as string;
   const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
@@ -29,6 +32,7 @@ async function main() {
   const txOption = await getTxOptions(chainId);
 
   // Deploy Pack.sol
+  const { forwarder } = curentNetworkAddreses;
   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
   const pack: Contract = await Pack_Factory.deploy(
     protocolControl.address,
@@ -37,7 +41,8 @@ async function main() {
     linkTokenAddress,
     keyHash,
     fees,
-    txOption,
+    forwarder,
+    txOption
   );
 
   console.log("Pack.sol deployed at: ", pack.address);
@@ -51,14 +56,11 @@ async function main() {
   await updateTx.wait();
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name.toLowerCase();
-  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
-
   const updatedAddresses = {
     ...addresses,
 
     [networkName]: {
-      ...prevNetworkAddresses,
+      ...curentNetworkAddreses,
 
       pack: pack.address,
     },

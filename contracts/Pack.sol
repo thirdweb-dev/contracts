@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
@@ -101,11 +102,11 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         bytes32 _keyHash,
         uint256 _fees,
 
-        address _trustedForwarder
+        MinimalForwarder _trustedForwarder
     ) 
         ERC1155(_uri) 
         VRFConsumerBase(_vrfCoordinator, _linkToken)
-        ERC2771Context(_trustedForwarder) 
+        ERC2771Context(address(_trustedForwarder)) 
     {
         // Set $PACK Protocol control center.
         controlCenter = IProtocolControl(_controlCenter);

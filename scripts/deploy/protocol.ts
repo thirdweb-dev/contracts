@@ -21,9 +21,27 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
 
+  const networkName: string = hre.network.name.toLowerCase();
+  const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
+  const { forwarder } = curentNetworkAddreses; 
+
   // Get chainlink vars + tx options.
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId)) as ChainlinkVars;
   const txOption = await getTxOptions(chainId);
+
+  let forwarderAddress = forwarder;
+
+  if (!forwarderAddress) {
+    // Deploy MinimalForwarder.sol
+    const minimalForwarder_factory: ContractFactory = await ethers.getContractFactory("MinimalForwarder");
+    const minimalForwarder: Contract = await minimalForwarder_factory.deploy(txOption);
+
+    console.log("Deployed MinimalForwarder at: ", minimalForwarder.address);
+
+    await minimalForwarder.deployTransaction.wait();
+
+    forwarderAddress = minimalForwarder.address
+  }
 
   // Deploy ProtocolControl
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
@@ -42,6 +60,7 @@ async function main() {
     linkTokenAddress,
     keyHash,
     fees,
+    forwarderAddress,
     txOption,
   );
 
@@ -65,18 +84,16 @@ async function main() {
   await initTx.wait();
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name.toLowerCase();
-  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
-
   const updatedAddresses = {
     ...addresses,
 
     [networkName]: {
-      ...prevNetworkAddresses,
+      ...curentNetworkAddreses,
 
       protocolControl: protocolControl.address,
       pack: pack.address,
       market: market.address,
+      forwarder: forwarderAddress,
     },
   };
 

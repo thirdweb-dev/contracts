@@ -3,19 +3,22 @@
     "protocolControl": "0x9d7DDC9585a6C24bb2fA7980D825e6830A402753",
     "pack": "0x741d2eF63d1b1646BAef2EC01b8605a23Dc2d4E4",
     "market": "0xC0C872a7eBCDA2c206B76CCAF7546d4f22642e8b",
-    "rewards": "0xC63AE70150F94ab97342dE57Fb920914BC836f77"
+    "rewards": "0xC63AE70150F94ab97342dE57Fb920914BC836f77",
+    "forwarder": ""
   },
   "matic": {
     "protocolControl": "0x429ACf993C992b322668122a5fC5593200493ea8",
     "pack": "0x3d5a51975fD29E45Eb285349F12b77b4c153c8e0",
     "market": "0xfC958641E52563f071534495886A8Ac590DCBFA2",
-    "rewards": "0x58408Fa085ae3942C3A6532ee6215bFC7f80c47A"
+    "rewards": "0x58408Fa085ae3942C3A6532ee6215bFC7f80c47A",
+    "forwarder": ""
   },
   "rinkeby": {
     "protocolControl": "0xAFe8f8EDad3Fd7b0108997b51CCd24286FbF000B",
     "pack": "0x928C9EE38048e5D0A4601D1FDcF7B9E57317278D",
     "market": "0xE0C0158A9d498EF4D0b02a8256A6957718Af8B5B",
-    "rewards": "0xebC0b11f62A416634fe400bbB750f0E40833a4d0"
+    "rewards": "0xebC0b11f62A416634fe400bbB750f0E40833a4d0",
+    "forwarder": ""
   },
-  "mainnet": { "protocolControl": "", "pack": "", "market": "", "rewards": "" }
+  "mainnet": { "protocolControl": "", "pack": "", "market": "", "rewards": "", "forwarder": "" }
 }
