@@ -5,7 +5,11 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "src/typings"
+    ]
   },
   "include": ["./scripts", "./test", "./utils"],
   "files": ["./hardhat.config.ts"]

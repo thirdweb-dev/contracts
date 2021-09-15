@@ -15,7 +15,7 @@ const rewardURIs: string[] = [
 ];
 const rewardSupplies: number[] = [5, 25, 60];
 const openStartAndEnd: number = 0;
-const rewardsPerOpen: number = 6;
+const rewardsPerOpen: number = 3;
 
 async function main() {
   // Get signer + Rewards.sol contract + txOptions

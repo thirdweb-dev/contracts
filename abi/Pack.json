@@ -32,7 +32,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "contract MinimalForwarder",
+        "internalType": "contract Forwarder",
         "name": "_trustedForwarder",
         "type": "address"
       }
