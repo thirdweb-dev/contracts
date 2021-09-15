@@ -33,7 +33,7 @@ async function main() {
 
   if (!forwarderAddress) {
     // Deploy MinimalForwarder.sol
-    const minimalForwarder_factory: ContractFactory = await ethers.getContractFactory("MinimalForwarder");
+    const minimalForwarder_factory: ContractFactory = await ethers.getContractFactory("Forwarder");
     const minimalForwarder: Contract = await minimalForwarder_factory.deploy(txOption);
 
     console.log("Deployed MinimalForwarder at: ", minimalForwarder.address);

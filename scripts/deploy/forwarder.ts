@@ -19,13 +19,13 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
 
-  // Deploy MinimalForwarder.sol
-  const minimalForwarder_factory: ContractFactory = await ethers.getContractFactory("MinimalForwarder");
-  const minimalForwarder: Contract = await minimalForwarder_factory.deploy(txOption);
+  // Deploy forwarder.sol
+  const forwarder_factory: ContractFactory = await ethers.getContractFactory("Forwarder");
+  const forwarder: Contract = await forwarder_factory.deploy(txOption);
 
-  console.log("Deployed MinimalForwarder at: ", minimalForwarder.address);
+  console.log("Deployed Forwarder at: ", forwarder.address);
 
-  await minimalForwarder.deployTransaction.wait();
+  await forwarder.deployTransaction.wait();
 
   // Update contract addresses in `/utils`
   const networkName: string = hre.network.name.toLowerCase();
@@ -37,7 +37,7 @@ async function main() {
     [networkName]: {
       ...prevNetworkAddresses,
 
-      forwarder: minimalForwarder.address,
+      forwarder: forwarder.address,
     },
   };
 
