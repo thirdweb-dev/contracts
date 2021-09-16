@@ -2,8 +2,7 @@ import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory, Bytes } from "ethers";
 
 import addresses from "../../utils/address.json";
-import { getTxOptions } from "../../utils/txOptions";
-import { getContractAddress } from "../../utils/contracts";
+import { txOptions } from "../../utils/txOptions";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -15,23 +14,24 @@ async function main() {
 
   // Get signer and chainId
   const [deployer] = await ethers.getSigners();
-  const chainId: number = await deployer.getChainId();
+  const networkName: string = hre.network.name.toLowerCase();
 
-  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
+  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
-  // Get `ProtocolControl.sol` contract + tx option
-  const protocolControlAddr: string = (await getContractAddress("protocolControl", chainId)) as string;
-  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
-
-  const txOption = await getTxOptions(chainId);
+  // Get chain specific values
+  const currentNetworkAddresses = addresses[networkName as keyof typeof addresses];
+  const { protocolControl: protocolControlAddr, forwarder: forwarderAddr } = currentNetworkAddresses;
+  const txOption = txOptions[networkName as keyof typeof txOptions];
 
   // Deploy Market.sol
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  const market: Contract = await Market_Factory.deploy(protocolControl.address, txOption);
+  const market: Contract = await Market_Factory.deploy(protocolControlAddr, forwarderAddr, txOption);
 
   console.log("Market.sol deployed at: ", market.address);
 
   // Update module in `ProtocolControl`
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
+
   const moduleId: Bytes = await protocolControl.MARKET();
   const updateTx = await protocolControl.updateModule(moduleId, market.address, txOption);
 
@@ -40,14 +40,11 @@ async function main() {
   await updateTx.wait();
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name.toLowerCase();
-  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
-
   const updatedAddresses = {
     ...addresses,
 
     [networkName]: {
-      ...prevNetworkAddresses,
+      ...currentNetworkAddresses,
 
       market: market.address,
     },

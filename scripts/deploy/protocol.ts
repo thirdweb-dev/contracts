@@ -1,11 +1,10 @@
 import hre, { run, ethers } from "hardhat";
-
 import { Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import addresses from "../../utils/address.json";
-import { getTxOptions } from "../../utils/txOptions";
-import { getChainlinkVars, ChainlinkVars } from "../../utils/chainlink";
+import { txOptions } from "../../utils/txOptions";
+import { chainlinkVars } from "../../utils/chainlink";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -17,22 +16,21 @@ async function main() {
 
   // Get signer and chainId.
   const [deployer]: SignerWithAddress[] = await ethers.getSigners();
-  const chainId: number = await deployer.getChainId();
-
-  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
-
   const networkName: string = hre.network.name.toLowerCase();
+
+  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to: ${networkName}`);
+
+  // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { forwarder } = curentNetworkAddreses;
+  const { forwarder: forwarderAddr } = curentNetworkAddreses;
+  const txOption = txOptions[networkName as keyof typeof txOptions];
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
-  // Get chainlink vars + tx options.
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId)) as ChainlinkVars;
-  const txOption = await getTxOptions(chainId);
+  let forwarderAddress = forwarderAddr;
 
-  let forwarderAddress = forwarder;
-
+  // Deploy `Forwarder.sol` if it isn't deployed already.
   if (!forwarderAddress) {
-    // Deploy MinimalForwarder.sol
+    
     const minimalForwarder_factory: ContractFactory = await ethers.getContractFactory("Forwarder");
     const minimalForwarder: Contract = await minimalForwarder_factory.deploy(txOption);
 
@@ -70,7 +68,7 @@ async function main() {
 
   // Deploy Market
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  const market: Contract = await Market_Factory.deploy(protocolControl.address, txOption);
+  const market: Contract = await Market_Factory.deploy(protocolControl.address, forwarderAddress, txOption);
 
   console.log("Market.sol is deployed at: ", market.address);
 

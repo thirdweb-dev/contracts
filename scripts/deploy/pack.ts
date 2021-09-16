@@ -2,9 +2,8 @@ import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory, Bytes } from "ethers";
 
 import addresses from "../../utils/address.json";
-import { getTxOptions } from "../../utils/txOptions";
-import { getContractAddress } from "../../utils/contracts";
-import { getChainlinkVars, ChainlinkVars } from "../../utils/chainlink";
+import { txOptions } from "../../utils/txOptions";
+import { chainlinkVars } from "../../utils/chainlink";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -14,40 +13,36 @@ async function main() {
 
   console.log("\n");
 
-  // Get signer and chainId
+  // Get signer
   const [deployer] = await ethers.getSigners();
-  const chainId: number = await deployer.getChainId();
-
-  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
-
   const networkName: string = hre.network.name.toLowerCase();
+
+  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to: ${networkName}`);
+
+  // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-
-  // Get `ProtocolControl.sol` contract + chainlink vars + tx option
-  const protocolControlAddr: string = (await getContractAddress("protocolControl", chainId)) as string;
-  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
-
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = (await getChainlinkVars(chainId)) as ChainlinkVars;
-
-  const txOption = await getTxOptions(chainId);
+  const { protocolControl: protocolControlAddr, forwarder: forwarderAddr } = curentNetworkAddreses;
+  const txOption = txOptions[networkName as keyof typeof txOptions];
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
   // Deploy Pack.sol
-  const { forwarder } = curentNetworkAddreses;
   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
   const pack: Contract = await Pack_Factory.deploy(
-    protocolControl.address,
+    protocolControlAddr,
     "$PACK Protocol",
     vrfCoordinator,
     linkTokenAddress,
     keyHash,
     fees,
-    forwarder,
+    forwarderAddr,
     txOption,
   );
 
   console.log("Pack.sol deployed at: ", pack.address);
 
   // Update module in `ProtocolControl`
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddr);
+
   const moduleId: Bytes = await protocolControl.PACK();
   const updateTx = await protocolControl.updateModule(moduleId, pack.address, txOption);
 

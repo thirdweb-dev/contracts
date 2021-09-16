@@ -2,8 +2,7 @@ import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
 import addresses from "../../utils/address.json";
-import { getTxOptions } from "../../utils/txOptions";
-import { getContractAddress } from "../../utils/contracts";
+import { txOptions } from "../../utils/txOptions";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -13,31 +12,29 @@ async function main() {
 
   console.log("\n");
 
-  // Get signer and chainId
+  // Get signer
   const [deployer] = await ethers.getSigners();
-  const chainId: number = await deployer.getChainId();
+  const networkName: string = hre.network.name.toLowerCase();
 
-  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to chain: ${chainId}`);
+  console.log(`Deploying contracts with account: ${await deployer.getAddress()} to: ${networkName}`);
 
-  // Get `Pack.sol` address + tx option
-  const packAddress: string = (await getContractAddress("pack", chainId)) as string;
-  const txOption = await getTxOptions(chainId);
+  // Get chain specific values
+  const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
+  const { pack: packAddr, forwarder: forwarderAddr } = curentNetworkAddreses;
+  const txOption = txOptions[networkName as keyof typeof txOptions];
 
   // Deploy Rewards.sol
   const Rewards_Factory: ContractFactory = await ethers.getContractFactory("Rewards");
-  const rewards: Contract = await Rewards_Factory.deploy(packAddress, txOption);
+  const rewards: Contract = await Rewards_Factory.deploy(packAddr, forwarderAddr, txOption);
 
   console.log("Rewards.sol deployed at: ", rewards.address);
 
   // Update contract addresses in `/utils`
-  const networkName: string = hre.network.name.toLowerCase();
-  const prevNetworkAddresses = addresses[networkName as keyof typeof addresses];
-
   const updatedAddresses = {
     ...addresses,
 
     [networkName]: {
-      ...prevNetworkAddresses,
+      ...curentNetworkAddreses,
 
       rewards: rewards.address,
     },

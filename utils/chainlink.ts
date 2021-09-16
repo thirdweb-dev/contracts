@@ -1,20 +1,4 @@
-import { BigNumber, ethers } from "ethers";
-import { chainIds } from "./chainIds";
-
-export async function getChainlinkVars(chainId: number) {
-  for (let network of Object.keys(chainIds)) {
-    if (chainIds[network as keyof typeof chainIds] == chainId) {
-      return chainlinkVars[network as keyof typeof chainlinkVars];
-    }
-  }
-}
-
-export interface ChainlinkVars {
-  vrfCoordinator: String;
-  linkTokenAddress: String;
-  keyHash: String;
-  fees: BigNumber;
-}
+import { ethers } from "ethers";
 
 export const chainlinkVars = {
   matic: {
