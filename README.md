@@ -17,18 +17,6 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Rewards.sol`: [0xEe63992e7AaE8578E7239991960F7494F8dFF005](https://mumbai.polygonscan.com/address/0xEe63992e7AaE8578E7239991960F7494F8dFF005#code)
 
-### Mumbai - Previous
-
-- `ProtocolControl.sol`: [0x0A77F4Dcb1059F05702193CBc1EE4A3B21c75a20](https://mumbai.polygonscan.com/address/0x0A77F4Dcb1059F05702193CBc1EE4A3B21c75a20#code)
-
-- `Pack.sol`: [0x1661BE79f65f5139AeADB7584402D22DEEC2DD66](https://mumbai.polygonscan.com/address/0x1661BE79f65f5139AeADB7584402D22DEEC2DD66#code)
-
-- `Market.sol`: [0xFbF92fF1983B419151530DF0b1e6daD3cF25F1Ef](https://mumbai.polygonscan.com/address/0xFbF92fF1983B419151530DF0b1e6daD3cF25F1Ef#code)
-
-- `Rewards.sol`: [0x1d7647bD978754064EA10E70e40A021D86E9487A](https://mumbai.polygonscan.com/address/0x1d7647bD978754064EA10E70e40A021D86E9487A#code)
-
-- `MinimalForwarder.sol`: [0x879C0B8388591F542C509d58e3fa061040EB08b4](https://mumbai.polygonscan.com/address/0x879C0B8388591F542C509d58e3fa061040EB08b4#code)
-
 ## Run Locally
 
 Clone the project
