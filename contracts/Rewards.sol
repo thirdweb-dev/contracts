@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
+// Tokens
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+// Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Rewards is ERC1155, Ownable {
+// Meta transactions
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { Forwarder } from "./Forwarder.sol";
+
+contract Rewards is ERC1155, Ownable, ERC2771Context {
     /// @dev Address of $PACK Protocol's `pack` token.
     address public pack;
 
@@ -76,7 +83,13 @@ contract Rewards is ERC1155, Ownable {
     /// @dev Reward tokenId => Underlying ERC20 reward state.
     mapping(uint256 => ERC20Reward) public erc20Rewards;
 
-    constructor(address _pack) ERC1155("") {
+    constructor(
+        address _pack,
+        address _trustedForwarder
+    ) 
+        ERC1155("")
+        ERC2771Context(_trustedForwarder)    
+    {
         pack = _pack;
     }
 
@@ -290,5 +303,13 @@ contract Rewards is ERC1155, Ownable {
     /// @dev Returns the creator of reward token
     function creator(uint256 _rewardId) external view returns (address) {
         return rewards[_rewardId].creator;
+    }
+
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
     }
 }
