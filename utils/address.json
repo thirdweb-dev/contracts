@@ -1,10 +1,10 @@
 {
   "mumbai": {
-    "protocolControl": "0x0A77F4Dcb1059F05702193CBc1EE4A3B21c75a20",
-    "pack": "0x1661BE79f65f5139AeADB7584402D22DEEC2DD66",
-    "market": "0xFbF92fF1983B419151530DF0b1e6daD3cF25F1Ef",
-    "rewards": "0x1d7647bD978754064EA10E70e40A021D86E9487A",
-    "forwarder": "0x879C0B8388591F542C509d58e3fa061040EB08b4"
+    "protocolControl": "0xeDd7196cf17AF82D28c79138214Bd03d74ad0ccb",
+    "pack": "0x1054163AD131120D1Ff3F06A4F7d641B16Cd7d37",
+    "market": "0x13F465c02e661B556d31d97521FA8416A97fB57f",
+    "rewards": "0xdbDd5496E09DBAc397d1e6B5d6267eeAC0499a89",
+    "forwarder": "0xF2c1F9c70e0E09835ABfD89d7D2E0a9358Cc3A91"
   },
   "matic": {
     "protocolControl": "0x429ACf993C992b322668122a5fC5593200493ea8",
@@ -17,7 +17,7 @@
     "protocolControl": "0xAFe8f8EDad3Fd7b0108997b51CCd24286FbF000B",
     "pack": "0x928C9EE38048e5D0A4601D1FDcF7B9E57317278D",
     "market": "0xE0C0158A9d498EF4D0b02a8256A6957718Af8B5B",
-    "rewards": "0xebC0b11f62A416634fe400bbB750f0E40833a4d0",
+    "rewards": "0xb0Caac3B48f8A11F7E88a7000CE07D6a8e17Ab3E",
     "forwarder": ""
   },
   "mainnet": { "protocolControl": "", "pack": "", "market": "", "rewards": "", "forwarder": "" }

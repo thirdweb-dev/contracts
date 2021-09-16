@@ -13,9 +13,9 @@ const rewardURIs: string[] = [
   "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/2",
   "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/3",
 ];
-const rewardSupplies: number[] = [5, 25, 60];
+const rewardSupplies: number[] = [5, 25, 70];
 const openStartAndEnd: number = 0;
-const rewardsPerOpen: number = 3;
+const rewardsPerOpen: number = 1;
 
 async function main() {
   // Get signer + Rewards.sol contract + txOptions

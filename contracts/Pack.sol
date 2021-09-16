@@ -139,7 +139,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
 
     /// @dev Lets a pack owner request to open a single pack.
     function openPack(uint256 _packId) external onlyUnpausedProtocol {
-        
         // Check whether this call is made within the window to open packs.
         PackState memory packState = packs[_packId];
         require(

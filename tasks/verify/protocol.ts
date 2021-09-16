@@ -5,7 +5,7 @@ import addresses from "../../utils/address.json";
 const networkName: string = hre.network.name.toLowerCase();
 
 // Get network dependent vars.
-const { protocolControl, pack, market, rewards } = addresses[networkName as keyof typeof addresses];
+const { protocolControl, pack, market, rewards, forwarder } = addresses[networkName as keyof typeof addresses];
 const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
 async function ProtocolControl() {
@@ -25,6 +25,7 @@ async function Pack() {
       linkTokenAddress,
       keyHash,
       fees,
+      forwarder,
     ],
   });
 }

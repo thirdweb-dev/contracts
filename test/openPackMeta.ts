@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { ethers } from 'hardhat'
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
 import { chainlinkVars } from "../utils/chainlink";
 import { forkFrom, impersonate } from "../utils/hardhatFork";
@@ -57,7 +57,7 @@ describe("Request to open a pack", function () {
     [protocolAdmin, creator, relayer] = signers;
 
     // Deploy Forwarder
-    const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder")
+    const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder");
     forwarder = await Forwarder_Factory.deploy();
 
     // Deploy $PACK Protocol
@@ -74,7 +74,7 @@ describe("Request to open a pack", function () {
       linkTokenAddress,
       keyHash,
       fees,
-      forwarder.address
+      forwarder.address,
     );
 
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
@@ -90,13 +90,12 @@ describe("Request to open a pack", function () {
     await rewards
       .connect(creator)
       .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
+    
+    // Fund `Pack` with LINK
+    await fundPack();
   });
 
   describe("Open pack - REGULAR transaction", function () {
-    beforeEach(async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
-    });
 
     it("Should store the random number request with the id and caller address", async () => {
       // Get request Id of the open pack request
@@ -125,12 +124,11 @@ describe("Request to open a pack", function () {
 
   describe("Open pack - META transaction", function () {
 
-    beforeEach(async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
-    });
-
     it("Should verify the meta tx", async () => {
+
+
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+
       // Get request Id of the open pack request
       let requestId = "";
       const openPackPromise = new Promise((resolve, reject) => {
@@ -144,24 +142,26 @@ describe("Request to open a pack", function () {
           reject(new Error("Timeout: PackOpenRequest"));
         }, 5000);
       });
-      
-      // Meta tx setup   
+
+      // Meta tx setup
       const { request, signature } = await signMetaTxRequest(creator.provider, forwarder, {
         from: creator.address,
         to: pack.address,
-        data: pack.interface.encodeFunctionData('openPack', [
-          ethers.utils.defaultAbiCoder.encode(["uint256"], [0]).slice(2)
+        data: pack.interface.encodeFunctionData("openPack", [
+          ethers.utils.defaultAbiCoder.encode(["uint256"], [0]).slice(2),
         ]),
       });
 
-      
-      await forwarder.connect(relayer).execute(request, signature)
+      await forwarder.connect(relayer).execute(request, signature);
       await openPackPromise;
 
       const requestInfo = await pack.randomnessRequests(requestId);
 
       expect(requestInfo.packId).to.equal(expectedPackId);
       expect(requestInfo.opener).to.equal(await creator.getAddress());
+
+      const packBalanceAfter = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore.sub(packBalanceAfter)).to.equal(1);
     });
   });
 });
