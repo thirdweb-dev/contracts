@@ -35,6 +35,7 @@ async function Market() {
     address: market,
     constructorArguments: [
       protocolControl, // Control center adddress
+      forwarder
     ],
   });
 }
@@ -42,7 +43,10 @@ async function Market() {
 async function Rewards() {
   await hre.run("verify:verify", {
     address: rewards,
-    constructorArguments: [pack],
+    constructorArguments: [
+      pack,
+      forwarder
+    ],
   });
 }
 

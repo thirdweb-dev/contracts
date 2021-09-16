@@ -1,17 +1,17 @@
 import hre from "hardhat";
-import { chainlinkVars } from "../../utils/chainlink";
 import addresses from "../../utils/address.json";
 
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
-const { protocolControl, market } = addresses[networkName as keyof typeof addresses];
+const { protocolControl, market, forwarder } = addresses[networkName as keyof typeof addresses];
 
 async function Market() {
   await hre.run("verify:verify", {
     address: market,
     constructorArguments: [
-      protocolControl, // Control center adddress
+      protocolControl,
+      forwarder
     ],
   });
 }

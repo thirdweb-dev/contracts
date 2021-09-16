@@ -1,16 +1,18 @@
 import hre from "hardhat";
-import { chainlinkVars } from "../../utils/chainlink";
 import addresses from "../../utils/address.json";
 
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
-const { pack, rewards } = addresses[networkName as keyof typeof addresses];
+const { pack, rewards, forwarder } = addresses[networkName as keyof typeof addresses];
 
 async function Rewards() {
   await hre.run("verify:verify", {
     address: rewards,
-    constructorArguments: [pack],
+    constructorArguments: [
+      pack,
+      forwarder
+    ],
   });
 }
 
