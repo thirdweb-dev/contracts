@@ -3,7 +3,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "@ethersproject/contracts";
 
 import addresses from "../../utils/address.json";
-import { getTxOptions } from "../../utils/txOptions";
+import { txOptions } from "../../utils/txOptions";
 import { BigNumber } from "ethers";
 
 // Transaction parameters.
@@ -30,7 +30,7 @@ async function main() {
   );
   const pack: Contract = await ethers.getContractAt("Pack", addresses[networkName as keyof typeof addresses].pack);
 
-  const txOption = await getTxOptions(chainId);
+  const txOption = txOptions[networkName as keyof typeof txOptions];
 
   // Perform transaction.
   const packId: BigNumber = await pack.nextTokenId();
