@@ -135,18 +135,6 @@ contract Rewards is ERC1155, Ownable {
         safeBatchTransferFrom(_msgSender(), pack, rewardIds, _rewardSupplies, args);
     }
 
-    /// @dev Creates packs with rewards.
-    function createPack(
-        uint256[] calldata _rewardIds,
-        uint256[] calldata _rewardAmounts,
-        string calldata _packURI,
-        uint256 _secondsUntilOpenStart,
-        uint256 _secondsUntilOpenEnd
-    ) external {
-        bytes memory args = abi.encode(_packURI, address(this), _secondsUntilOpenStart, _secondsUntilOpenEnd);
-        safeBatchTransferFrom(_msgSender(), pack, _rewardIds, _rewardAmounts, args);
-    }
-
     /// @dev Wraps an ERC721 NFT as ERC1155 reward tokens.
     function wrapERC721(
         address _nftContract,
