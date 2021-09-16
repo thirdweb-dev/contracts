@@ -2,14 +2,19 @@
 
 pragma solidity ^0.8.0;
 
+// Tokens
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
+// Access Control
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+// Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
+// Meta transactions
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { Forwarder } from "./Forwarder.sol";
 
 interface IProtocolControl {
