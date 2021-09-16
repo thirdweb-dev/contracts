@@ -6,6 +6,7 @@
     "@chainlink/contracts": "^0.2.1",
     "@nomiclabs/hardhat-etherscan": "^2.1.4",
     "@openzeppelin/contracts": "^4.3.2",
+    "defender-autotask-client": "^1.10.0",
     "defender-relay-client": "^1.11.1",
     "eth-sig-util": "^3.0.1"
   },

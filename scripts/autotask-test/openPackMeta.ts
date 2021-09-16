@@ -5,7 +5,7 @@ import { Contract } from "@ethersproject/contracts";
 import addresses from "../../utils/address.json";
 import fetch from 'node-fetch';
 
-const { signMetaTxRequest } = require("../../utils/signer.js");
+const { signMetaTxRequest } = require("../../utils/meta-tx/signer.js");
 
 import dotenv from "dotenv";
 import { Wallet } from "@ethersproject/wallet";
