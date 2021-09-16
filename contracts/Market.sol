@@ -6,6 +6,10 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+// Meta transactions
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { Forwarder } from "./Forwarder.sol";
+
 interface IProtocolControl {
     /// @dev Returns whether the pack protocol is paused.
     function systemPaused() external view returns (bool);
@@ -21,7 +25,7 @@ interface IListingAsset {
     function creator(uint256 _tokenId) external view returns (address _creator);
 }
 
-contract Market is IERC1155Receiver, ReentrancyGuard {
+contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     /// @dev The pack protocol admin contract.
     IProtocolControl internal controlCenter;
 
@@ -80,7 +84,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard {
         _;
     }
 
-    constructor(address _controlCenter) {
+    constructor(
+        address _controlCenter,
+        address _trustedForwarder
+    ) 
+        ERC2771Context(_trustedForwarder)
+    {
         controlCenter = IProtocolControl(_controlCenter);
     }
 
