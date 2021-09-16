@@ -3,7 +3,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "@ethersproject/contracts";
 
 import addresses from "../../utils/address.json";
-import fetch from 'node-fetch';
+import fetch from "node-fetch";
 
 const { signMetaTxRequest } = require("../../utils/meta-tx/signer.js");
 
@@ -16,7 +16,6 @@ const packId: number = 1;
 const encodedPackId = ethers.utils.defaultAbiCoder.encode(["uint256"], [packId]).slice(2);
 
 async function main() {
-  
   // Get signers
   const [packOwner]: SignerWithAddress[] = await ethers.getSigners();
 
@@ -38,13 +37,13 @@ async function main() {
   // Send each account a pack.
   const generatedSigners: Wallet[] = [];
 
-  for(let i = 0; i < 10; i += 1) {
+  for (let i = 0; i < 10; i += 1) {
     const newWallet: Wallet = ethers.Wallet.createRandom();
     generatedSigners.push(newWallet);
 
-    const sendTx = await pack.connect(packOwner).safeTransferFrom(
-      packOwner.address, newWallet.address, packId, 1, ethers.utils.toUtf8Bytes("")
-    )
+    const sendTx = await pack
+      .connect(packOwner)
+      .safeTransferFrom(packOwner.address, newWallet.address, packId, 1, ethers.utils.toUtf8Bytes(""));
 
     console.log(`Sending packs to ${newWallet.address} at ${sendTx.hash}`);
 
@@ -56,36 +55,37 @@ async function main() {
   // =====  Meta tx setup  =====
 
   let alchemyKey: string = process.env.ALCHEMY_KEY || "";
-  const providerURL = `https://polygon-${networkName}.g.alchemy.com/v2/${alchemyKey}`
-  const provider = new ethers.providers.JsonRpcProvider(providerURL)
+  const providerURL = `https://polygon-${networkName}.g.alchemy.com/v2/${alchemyKey}`;
+  const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-  const blocks: number[] = []
+  const blocks: number[] = [];
 
-  await Promise.all(generatedSigners.map(async (signer) => { 
+  await Promise.all(
+    generatedSigners.map(async signer => {
+      // Get payload parameters
+      const from = signer.address;
+      const to = pack.address;
+      const data = pack.interface.encodeFunctionData("openPack", [encodedPackId]);
 
-    // Get payload parameters
-    const from = signer.address;
-    const to = pack.address;
-    const data = pack.interface.encodeFunctionData("openPack", [encodedPackId]);
+      // Get signed transaction data
+      let txRequest = await signMetaTxRequest(signer.privateKey, forwarder, { from, to, data });
 
-    // Get signed transaction data
-    let txRequest = await signMetaTxRequest(signer.privateKey, forwarder, { from, to, data });
+      const response = await (fetch as any)(process.env.OZ_AUTOTASK_URL, {
+        method: "POST",
+        body: JSON.stringify(txRequest),
+        headers: { "Content-Type": "application/json" },
+        mode: "no-cors",
+      });
 
-    const response = await (fetch as any)(process.env.OZ_AUTOTASK_URL, {
-      method: "POST",
-      body: JSON.stringify(txRequest),
-      headers: { "Content-Type": "application/json" },
-      mode: "no-cors",
-    })
+      const parsedResponse = await response.json();
+      const parsedResult = JSON.parse(parsedResponse.result);
 
-    const parsedResponse = await response.json();
-    const parsedResult = JSON.parse(parsedResponse.result);
+      const txBlockNumber: number | undefined = (await provider.getTransaction(parsedResult.txHash)).blockNumber;
+      blocks.push(txBlockNumber as number);
 
-    const txBlockNumber: number | undefined = (await provider.getTransaction(parsedResult.txHash)).blockNumber;
-    blocks.push((txBlockNumber as number));
-
-    console.log(`Pack opened by ${signer.address} at block ${txBlockNumber} and hash ${parsedResult.txHash}`);
-  }));
+      console.log(`Pack opened by ${signer.address} at block ${txBlockNumber} and hash ${parsedResult.txHash}`);
+    }),
+  );
 
   // Display max block difference
   console.log(`Block difference: ${Math.max(...blocks) - Math.min(...blocks)}`);

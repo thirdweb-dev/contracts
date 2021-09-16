@@ -17,7 +17,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Rewards.sol`: [0xC63AE70150F94ab97342dE57Fb920914BC836f77](https://mumbai.polygonscan.com/address/0xC63AE70150F94ab97342dE57Fb920914BC836f77#code)
 
-### Mumbai - with meta transactions.
+### Mumbai - Previous
 
 - `ProtocolControl.sol`: [0x0A77F4Dcb1059F05702193CBc1EE4A3B21c75a20](https://mumbai.polygonscan.com/address/0x0A77F4Dcb1059F05702193CBc1EE4A3B21c75a20#code)
 

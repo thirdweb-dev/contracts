@@ -2,7 +2,6 @@ const ethers = require("ethers");
 const { DefenderRelaySigner, DefenderRelayProvider } = require("defender-relay-client/lib/ethers");
 
 exports.handler = async function (event) {
-
   // Forwarder details
   const ForwarderAddress = "0xF2c1F9c70e0E09835ABfD89d7D2E0a9358Cc3A91";
   const ForwarderAbi = [
@@ -86,4 +85,4 @@ exports.handler = async function (event) {
 
   console.log(`Sent meta-tx: ${tx.hash}`);
   return { txHash: tx.hash, receipt: tx };
-}
+};

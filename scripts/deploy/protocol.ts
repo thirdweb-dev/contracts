@@ -30,7 +30,6 @@ async function main() {
 
   // Deploy `Forwarder.sol` if it isn't deployed already.
   if (!forwarderAddress) {
-    
     const minimalForwarder_factory: ContractFactory = await ethers.getContractFactory("Forwarder");
     const minimalForwarder: Contract = await minimalForwarder_factory.deploy(txOption);
 

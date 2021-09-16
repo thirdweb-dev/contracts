@@ -90,13 +90,12 @@ describe("Request to open a pack", function () {
     await rewards
       .connect(creator)
       .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
-    
+
     // Fund `Pack` with LINK
     await fundPack();
   });
 
   describe("Open pack - REGULAR transaction", function () {
-
     it("Should store the random number request with the id and caller address", async () => {
       // Get request Id of the open pack request
       let requestId = "";
@@ -123,10 +122,7 @@ describe("Request to open a pack", function () {
   });
 
   describe("Open pack - META transaction", function () {
-
     it("Should verify the meta tx", async () => {
-
-
       const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
 
       // Get request Id of the open pack request

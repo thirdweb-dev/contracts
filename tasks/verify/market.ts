@@ -9,10 +9,7 @@ const { protocolControl, market, forwarder } = addresses[networkName as keyof ty
 async function Market() {
   await hre.run("verify:verify", {
     address: market,
-    constructorArguments: [
-      protocolControl,
-      forwarder
-    ],
+    constructorArguments: [protocolControl, forwarder],
   });
 }
 

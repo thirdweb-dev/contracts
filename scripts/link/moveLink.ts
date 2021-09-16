@@ -44,7 +44,7 @@ async function main(prevPackAddress: string): Promise<void> {
   const amountToTransfer: BigNumber = await linkContract.balanceOf(prevPackAddress);
 
   // Transfer LINK to new pack contract.
-  const {pack: packAddress} = addresses[networkName as keyof typeof addresses]
+  const { pack: packAddress } = addresses[networkName as keyof typeof addresses];
   const transferTx = await packContract.connect(protocolAdmin).transferLink(packAddress, amountToTransfer);
 
   await transferTx.wait();

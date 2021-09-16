@@ -16,7 +16,7 @@ async function main() {
 
   // Get LINK contract
   const { linkTokenAddress } = chainlinkVars[networkName as keyof typeof chainlinkVars];
-  const {pack: packAddress} = addresses[networkName as keyof typeof addresses]
+  const { pack: packAddress } = addresses[networkName as keyof typeof addresses];
   const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress as string);
 
   // Fund pack contract.

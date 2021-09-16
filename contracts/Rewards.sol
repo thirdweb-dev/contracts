@@ -83,13 +83,7 @@ contract Rewards is ERC1155, Ownable, ERC2771Context {
     /// @dev Reward tokenId => Underlying ERC20 reward state.
     mapping(uint256 => ERC20Reward) public erc20Rewards;
 
-    constructor(
-        address _pack,
-        address _trustedForwarder
-    ) 
-        ERC1155("")
-        ERC2771Context(_trustedForwarder)    
-    {
+    constructor(address _pack, address _trustedForwarder) ERC1155("") ERC2771Context(_trustedForwarder) {
         pack = _pack;
     }
 

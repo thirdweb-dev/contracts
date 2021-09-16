@@ -9,10 +9,7 @@ const { pack, rewards, forwarder } = addresses[networkName as keyof typeof addre
 async function Rewards() {
   await hre.run("verify:verify", {
     address: rewards,
-    constructorArguments: [
-      pack,
-      forwarder
-    ],
+    constructorArguments: [pack, forwarder],
   });
 }
 

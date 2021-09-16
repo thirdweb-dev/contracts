@@ -87,12 +87,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         _;
     }
 
-    constructor(
-        address _controlCenter,
-        address _trustedForwarder
-    ) 
-        ERC2771Context(_trustedForwarder)
-    {
+    constructor(address _controlCenter, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         controlCenter = IProtocolControl(_controlCenter);
     }
 

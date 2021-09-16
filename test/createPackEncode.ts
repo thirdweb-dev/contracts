@@ -43,7 +43,7 @@ describe("Create a pack with rewards in a single tx", function () {
 
     // deploy forwarder
     const Forwarder_factory = await ethers.getContractFactory("Forwarder");
-    const forwarder = await Forwarder_factory.deploy()
+    const forwarder = await Forwarder_factory.deploy();
 
     // Deploy $PACK Protocol
     const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.rinkeby;
@@ -59,7 +59,7 @@ describe("Create a pack with rewards in a single tx", function () {
       linkTokenAddress,
       keyHash,
       fees,
-      forwarder.address
+      forwarder.address,
     );
 
     const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
@@ -71,24 +71,22 @@ describe("Create a pack with rewards in a single tx", function () {
     const Rewards_factory: ContractFactory = await ethers.getContractFactory("Rewards");
     rewards = await Rewards_factory.connect(creator).deploy(pack.address);
     // Create rewards
-    await rewards
-    .connect(creator)
-    .createNativeRewards(rewardURIs, rewardSupplies);
+    await rewards.connect(creator).createNativeRewards(rewardURIs, rewardSupplies);
   });
 
   describe("Balances", function () {
-
     it("Should mint the total supply of packs to the creator", async () => {
-
       // Encoded arguments
       const abiCoder = ethers.utils.defaultAbiCoder;
       const args: BytesLike = abiCoder.encode(
         ["string", "address", "uint256", "uint256", "uint256"],
-        [packURI, rewards.address, openStartAndEnd, openStartAndEnd, rewardsPerOpen]
+        [packURI, rewards.address, openStartAndEnd, openStartAndEnd, rewardsPerOpen],
       );
 
       // Safe transfer with args
-      await rewards.connect(creator).safeBatchTransferFrom(creator.address, pack.address, expectedRewardIds, rewardSupplies, args);
+      await rewards
+        .connect(creator)
+        .safeBatchTransferFrom(creator.address, pack.address, expectedRewardIds, rewardSupplies, args);
 
       expect(await pack.balanceOf(await creator.getAddress(), 0)).to.equal(expectedPackSupply);
     });
