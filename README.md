@@ -13,7 +13,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Pack.sol`: [0x0c56B393043CDA7c726c27FdD64Bd9262428515F](https://mumbai.polygonscan.com/address/0x0c56B393043CDA7c726c27FdD64Bd9262428515F#code)
 
-- `Market.sol`: [0x463380BBf3A3f91C6C02148203D327e08A14f994](https://mumbai.polygonscan.com/address/0x463380BBf3A3f91C6C02148203D327e08A14f994#code)
+- `Market.sol`: [0xe2A8acC6D641b7D2b5922cB90969D0B6B76d689E](https://mumbai.polygonscan.com/address/0xe2A8acC6D641b7D2b5922cB90969D0B6B76d689E#code)
 
 - `Rewards.sol`: [0xEe63992e7AaE8578E7239991960F7494F8dFF005](https://mumbai.polygonscan.com/address/0xEe63992e7AaE8578E7239991960F7494F8dFF005#code)
 

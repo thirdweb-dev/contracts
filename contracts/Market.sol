@@ -140,12 +140,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     ) external onlyUnpausedProtocol {
         require(_quantity > 0, "Market: must list at least one token.");
         require(
-            IERC1155(_assetContract).isApprovedForAll(msg.sender, address(this)),
+            IERC1155(_assetContract).isApprovedForAll(_msgSender(), address(this)),
             "Market: must approve the market to transfer tokens being listed."
         );
 
         // Transfer tokens being listed to Pack Protocol's asset safe.
-        IERC1155(_assetContract).safeTransferFrom(msg.sender, address(this), _tokenId, _quantity, "");
+        IERC1155(_assetContract).safeTransferFrom(_msgSender(), address(this), _tokenId, _quantity, "");
 
         // Get listing ID.
         uint256 listingId = totalListings;
@@ -153,7 +153,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         // Create listing.
         Listing memory newListing = Listing({
-            seller: msg.sender,
+            seller: _msgSender(),
             assetContract: _assetContract,
             tokenId: _tokenId,
             currency: _currency,
@@ -165,47 +165,47 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         listings[listingId] = newListing;
 
-        emit NewListing(_assetContract, msg.sender, listingId, newListing);
+        emit NewListing(_assetContract, _msgSender(), listingId, newListing);
     }
 
     /// @notice Unlist `_quantity` amount of tokens.
-    function unlist(uint256 _listingId, uint256 _quantity) external onlySeller(msg.sender, _listingId) {
+    function unlist(uint256 _listingId, uint256 _quantity) external onlySeller(_msgSender(), _listingId) {
         Listing memory listing = listings[_listingId];
 
         require(listing.quantity >= _quantity, "Market: cannot unlist more tokens than are listed.");
 
         // Transfer way tokens being unlisted.
-        IERC1155(listing.assetContract).safeTransferFrom(address(this), msg.sender, listing.tokenId, _quantity, "");
+        IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
 
         // Update listing info.
         listing.quantity -= _quantity;
         listings[_listingId] = listing;
 
-        emit ListingUpdate(msg.sender, _listingId, listing);
+        emit ListingUpdate(_msgSender(), _listingId, listing);
     }
 
     /// @notice Lets a seller add tokens to an existing listing.
     function addToListing(uint256 _listingId, uint256 _quantity)
         external
         onlyUnpausedProtocol
-        onlySeller(msg.sender, _listingId)
+        onlySeller(_msgSender(), _listingId)
     {
         Listing memory listing = listings[_listingId];
 
         require(_quantity > 0, "Market: must add at least one token.");
         require(
-            IERC1155(listing.assetContract).isApprovedForAll(msg.sender, address(this)),
+            IERC1155(listing.assetContract).isApprovedForAll(_msgSender(), address(this)),
             "Market: must approve the market to transfer tokens being added."
         );
 
         // Transfer tokens being listed to Pack Protocol's asset manager.
-        IERC1155(listing.assetContract).safeTransferFrom(msg.sender, address(this), listing.tokenId, _quantity, "");
+        IERC1155(listing.assetContract).safeTransferFrom(_msgSender(), address(this), listing.tokenId, _quantity, "");
 
         // Update listing info.
         listing.quantity += _quantity;
         listings[_listingId] = listing;
 
-        emit ListingUpdate(msg.sender, _listingId, listing);
+        emit ListingUpdate(_msgSender(), _listingId, listing);
     }
 
     /// @notice Lets a seller change the currency or price of a listing.
@@ -215,7 +215,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         address _currency,
         uint256 _secondsUntilStart,
         uint256 _secondsUntilEnd
-    ) external onlySeller(msg.sender, _listingId) {
+    ) external onlySeller(_msgSender(), _listingId) {
         Listing memory listing = listings[_listingId];
 
         // Update listing info.
@@ -226,7 +226,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         listings[_listingId] = listing;
 
-        emit ListingUpdate(msg.sender, _listingId, listing);
+        emit ListingUpdate(_msgSender(), _listingId, listing);
     }
 
     /// @notice Lets buyer buy a given amount of tokens listed for sale.
@@ -241,7 +241,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         );
 
         // Transfer tokens being bought to buyer.
-        IERC1155(listing.assetContract).safeTransferFrom(address(this), msg.sender, listing.tokenId, _quantity, "");
+        IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
 
         // Update listing info.
         listing.quantity -= _quantity;
@@ -255,7 +255,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         if (listing.pricePerToken > 0) {
             require(
-                IERC20(listing.currency).allowance(msg.sender, address(this)) >= totalPrice,
+                IERC20(listing.currency).allowance(_msgSender(), address(this)) >= totalPrice,
                 "Market: must approve Market to transfer price to pay."
             );
         }
@@ -266,25 +266,25 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         // Distribute relveant shares of sale value to seller, creator and protocol.
         require(
-            IERC20(listing.currency).transferFrom(msg.sender, address(controlCenter), protocolCut),
+            IERC20(listing.currency).transferFrom(_msgSender(), address(controlCenter), protocolCut),
             "Market: failed to transfer protocol cut."
         );
         require(
-            IERC20(listing.currency).transferFrom(msg.sender, listing.seller, sellerCut),
+            IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
             "Market: failed to transfer seller cut."
         );
         require(
-            IERC20(listing.currency).transferFrom(msg.sender, creator, creatorCut),
+            IERC20(listing.currency).transferFrom(_msgSender(), creator, creatorCut),
             "Market: failed to transfer creator cut."
         );
 
-        emit NewSale(listing.assetContract, listing.seller, _listingId, msg.sender, listing);
+        emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), listing);
     }
 
     /// @dev Lets a protocol admin set protocol and cretor fees.
     function setFees(uint256 _protocolCut, uint256 _creatorCut) external {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), msg.sender),
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
             "Market: only a protocol admin can set fees."
         );
         require((_protocolCut + _creatorCut) <= MAX_BPS, "Market: Invalid protocol or creator cut provided.");
