@@ -37,8 +37,8 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
     /// @dev Pack protocol fee constants.
     uint256 public constant MAX_BPS = 10000; // 100%
-    uint256 public protocolFeeBps = 250; // 2.5%
-    uint256 public creatorFeeBps = 250; // 2.5%
+    uint256 public protocolFeeBps;
+    uint256 public creatorFeeBps;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -58,7 +58,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     mapping(uint256 => Listing) public listings;
 
     /// @dev Events
-    event MarketFeesChanged(uint256 protocolFeeBps, uint256 creatorFeeBps);
+    event MarketFeesUpdated(uint256 protocolFeeBps, uint256 creatorFeeBps);
     event NewListing(address indexed assetContract, address indexed seller, uint256 indexed listingId, Listing listing);
     event ListingUpdate(address indexed seller, uint256 indexed listingId, Listing listing);
     event NewSale(
@@ -89,6 +89,11 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
     constructor(address _controlCenter, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         controlCenter = IProtocolControl(_controlCenter);
+
+        protocolFeeBps = 250; // 2.5%
+        creatorFeeBps = 250; // 2.5%
+
+        emit MarketFeesUpdated(protocolFeeBps, creatorFeeBps);
     }
 
     /**
@@ -287,7 +292,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         protocolFeeBps = _protocolCut;
         creatorFeeBps = _creatorCut;
 
-        emit MarketFeesChanged(_protocolCut, _creatorCut);
+        emit MarketFeesUpdated(_protocolCut, _creatorCut);
     }
 
     /// @notice Returns the listing for the given seller and Listing ID.
