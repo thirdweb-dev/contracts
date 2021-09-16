@@ -1,22 +1,22 @@
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
 
-import { getChainlinkVars, ChainlinkVars } from "../utils/chainlink";
-import { getContractAddress } from "../utils/contracts";
+import addresses from "../../utils/address.json";
+import { chainlinkVars } from "../../utils/chainlink";
 
-import LinkTokenABI from "../abi/LinkTokenInterface.json";
+import LinkTokenABI from "../../abi/LinkTokenInterface.json";
 
 /// NOTE: set the right netowrk.
 
 async function main() {
   const [funder] = await ethers.getSigners();
-  const chainId: number = await funder.getChainId();
+  const networkName: string = hre.network.name.toLowerCase();
 
-  console.log(`Funding with LINK on chain: ${chainId} by account: ${await funder.getAddress()}`);
+  console.log(`Funding with LINK on ${networkName} by account: ${await funder.getAddress()}`);
 
   // Get LINK contract
-  const { linkTokenAddress } = (await getChainlinkVars(chainId)) as ChainlinkVars;
-  const packAddress = await getContractAddress("pack", chainId);
+  const { linkTokenAddress } = chainlinkVars[networkName as keyof typeof chainlinkVars];
+  const {pack: packAddress} = addresses[networkName as keyof typeof addresses]
   const linkContract: Contract = await ethers.getContractAt(LinkTokenABI, linkTokenAddress as string);
 
   // Fund pack contract.
