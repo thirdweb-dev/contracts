@@ -24,6 +24,7 @@ contract ProtocolControl is AccessControl {
     mapping(bytes32 => address) public modules;
 
     /// @dev Events.
+    event ProtocolInitialized(address pack, address market, address coin, address nft);
     event ModuleInitialized(bytes32 moduleId, address module);
     event ModuleUpdated(bytes32 moduleId, address module);
     event FundsTransferred(address asset, address to, uint256 amount);
@@ -38,6 +39,22 @@ contract ProtocolControl is AccessControl {
     constructor(address _admin) {
         _setupRole(PROTOCOL_ADMIN, _admin);
         _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
+    }
+
+    /// @dev Iniializes the ERC 1155 pack token of the protocol.
+    function initializeProtocol(address _coin, address _nft, address _pack, address _market) external onlyProtocolAdmin {
+        require(
+            modules[PACK] == address(0) && modules[MARKET] == address(0) && modules[COIN] == address(0) && modules[NFT] == address(0), 
+            "Protocol Control: already initialized."
+        );
+
+        // Update modules
+        modules[COIN] = _coin;
+        modules[NFT] = _nft;
+        modules[PACK] = _pack;
+        modules[MARKET] = _market;
+
+        emit ProtocolInitialized(_pack, _market, _coin, _nft);
     }
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.
