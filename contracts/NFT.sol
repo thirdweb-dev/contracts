@@ -20,7 +20,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
+contract Nft is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -29,6 +29,9 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
 
     /// @dev NFT sale royalties -- see EIP 2981
     uint256 public nftRoyaltyBps;
+
+    /// @dev Collection level metadata.
+    string public _contractURI;
 
     enum UnderlyingType {
         None,
@@ -183,6 +186,11 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
         nftRoyaltyBps = _royaltyBps;
 
         emit NftRoyaltyUpdated(_royaltyBps);
+    }
+
+    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin(msg.sender) {
+        _contractURI = _URI;
     }
 
     /// @dev Wraps an ERC721 NFT as ERC1155 NFTs.
@@ -343,6 +351,11 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     /// @dev Alternative function to return a token's URI
     function tokenURI(uint256 _nftId) public view returns (string memory) {
         return nftInfo[_nftId].uri;
+    }
+
+    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
     }
 
     /// @dev Returns the creator of an NFT

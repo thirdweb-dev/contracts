@@ -22,7 +22,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Context, IERC2981 {
+contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IERC2981 {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -35,6 +35,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
 
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public packRoyaltyBps;
+    
+    /// @dev Collection level metadata.
+    string public _contractURI;
 
     /// @dev The state of packs with a unique tokenId.
     struct PackState {
@@ -218,6 +221,11 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         emit PackRoyaltyUpdated(_royaltyBps);
     }
 
+    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin(msg.sender) {
+        _contractURI = _URI;
+    }
+
     /// @dev Creates pack on receiving ERC 1155 reward tokens
     function onERC1155BatchReceived(
         address,
@@ -385,6 +393,11 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     /// @dev Returns a pack for the given pack tokenId
     function getPack(uint256 _packId) external view returns (PackState memory pack) {
         pack = packs[_packId];
+    }
+
+    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
     }
 
     /// @dev Returns a pack with its underlying rewards
