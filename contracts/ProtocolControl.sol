@@ -40,17 +40,6 @@ contract ProtocolControl is AccessControl {
     uint256 public marketFeeBps;
 
     /// @dev Events.
-    event ProtocolInitialized(
-        address pack,
-        bytes32 packModuleId,
-        address market,
-        bytes32 marketModuleId,
-        address coin,
-        bytes32 coinModuleId,
-        address nft,
-        bytes32 nftModuleId
-    );
-    event ModuleInitialized(bytes32 moduleId, address module);
     event ModuleUpdated(bytes32 indexed moduleId, address indexed module, uint256 indexed moduleType);
     event FundsTransferred(address asset, address to, uint256 amount);
     event SystemPaused(bool isPaused);
