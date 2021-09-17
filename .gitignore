@@ -6,6 +6,7 @@ artifacts/@chainlink
 artifacts/@openzeppelin
 artifacts/build-info
 build/
+scripts/reference-scripts
 cache/
 coverage/
 dist/
