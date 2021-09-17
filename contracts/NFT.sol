@@ -94,9 +94,6 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     /// @dev NFT tokenId => Underlying ERC20 NFT state.
     mapping(uint256 => ERC20Wrapped) public erc20WrappedNfts;
 
-    /// @dev NFT tokenId => whether the token is transferable
-    mapping(uint256 => bool) public transferrable;
-
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
         require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
@@ -129,11 +126,10 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     /// @notice Create native ERC 1155 NFTs.
     function createNativeNfts(
         string[] calldata _nftURIs,
-        uint256[] calldata _nftSupplies,
-        bool[] calldata _isTransferrable
+        uint256[] calldata _nftSupplies
     ) public returns (uint256[] memory nftIds) {
         require(
-            _nftURIs.length == _nftSupplies.length && _nftURIs.length == _isTransferrable.length,
+            _nftURIs.length == _nftSupplies.length,
             "NFT: Must specify equal number of config values."
         );
         require(_nftURIs.length > 0, "NFT: Must create at least one NFT.");
@@ -152,8 +148,6 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
                 underlyingType: UnderlyingType.None
             });
 
-            transferrable[nextTokenId] = _isTransferrable[i];
-
             nextTokenId++;
         }
 
@@ -168,13 +162,12 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
         address _pack,
         string[] calldata _nftURIs,
         uint256[] calldata _nftSupplies,
-        bool[] calldata _nftIsTransferrable,
         string calldata _packURI,
         uint256 _secondsUntilOpenStart,
         uint256 _secondsUntilOpenEnd,
         uint256 _nftsPerOpen
     ) external {
-        uint256[] memory nftIds = createNativeNfts(_nftURIs, _nftSupplies, _nftIsTransferrable);
+        uint256[] memory nftIds = createNativeNfts(_nftURIs, _nftSupplies);
 
         bytes memory args = abi.encode(
             _packURI,
@@ -331,10 +324,6 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
             for (uint256 i = 0; i < ids.length; i++) {
                 nftInfo[ids[i]].supply -= amounts[i];
             }
-        }
-
-        for (uint256 i = 0; i < ids.length; i++) {
-            require(transferrable[ids[i]], "NFT: this token is not transferrable.");
         }
     }
 
