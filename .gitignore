@@ -2,7 +2,9 @@
 .coverage_artifacts/
 .coverage_cache/
 .coverage_contracts/
-artifacts/
+artifacts/@chainlink
+artifacts/@openzeppelin
+artifacts/build-info
 build/
 cache/
 coverage/
