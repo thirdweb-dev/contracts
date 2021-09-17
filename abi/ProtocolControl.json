@@ -76,16 +76,22 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "bytes32",
         "name": "moduleId",
         "type": "bytes32"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "module",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "moduleType",
+        "type": "uint256"
       }
     ],
     "name": "ModuleUpdated",
@@ -102,9 +108,21 @@
       },
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "packModuleId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "market",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "marketModuleId",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -114,9 +132,21 @@
       },
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "coinModuleId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "nft",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "nftModuleId",
+        "type": "bytes32"
       }
     ],
     "name": "ProtocolInitialized",
@@ -212,33 +242,7 @@
   },
   {
     "inputs": [],
-    "name": "COIN",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "DEFAULT_ADMIN_ROLE",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MARKET",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -264,33 +268,7 @@
   },
   {
     "inputs": [],
-    "name": "NFT",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "NFTLABS",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "PACK",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -312,6 +290,30 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_newModuleAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_moduleType",
+        "type": "uint256"
+      }
+    ],
+    "name": "addModule",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "moduleId",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -424,6 +426,25 @@
         "type": "bytes32"
       }
     ],
+    "name": "moduleType",
+    "outputs": [
+      {
+        "internalType": "enum ProtocolControl.ModuleType",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "name": "modules",
     "outputs": [
       {
@@ -443,6 +464,25 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "numOfModuleType",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
