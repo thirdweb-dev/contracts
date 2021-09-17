@@ -184,9 +184,9 @@
     "name": "MAX_BPS",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint128",
         "name": "",
-        "type": "uint256"
+        "type": "uint128"
       }
     ],
     "stateMutability": "view",
@@ -239,9 +239,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "_moduleType",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "name": "addModule",
@@ -353,9 +353,9 @@
     "name": "marketFeeBps",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint128",
         "name": "",
-        "type": "uint256"
+        "type": "uint128"
       }
     ],
     "stateMutability": "view",
@@ -551,9 +551,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint128",
         "name": "_newFeeBps",
-        "type": "uint256"
+        "type": "uint128"
       }
     ],
     "name": "updateMarketFeeBps",
