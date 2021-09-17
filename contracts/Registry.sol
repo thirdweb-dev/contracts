@@ -13,15 +13,28 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Registry is Ownable {
 
-    // Mapping from deployer => `ProtocolControl`
-    mapping(address => address) public protocolControl;
+    // NFTLabs treasury
+    address public nftlabsTreasury;
+
+    struct ControlCenters {
+        // Total number of versions
+        uint latestVersion;
+
+        // Version number => protocol control center address
+        mapping(uint => address) protocolControl;
+    }
+
+    mapping(address => ControlCenters) public controlCenters;
+
     // Mapping from deployer => `Forwarder`
     mapping(address => address) public forwarder;
 
     // Emitted on protocol deployment
-    event DeployedProtocol(address indexed deployer, address indexed protocolControl, address indexed forwarder);
+    event DeployedProtocol(address indexed deployer, address indexed protocolControl, address indexed forwarder, uint version);
 
-    constructor() {}
+    constructor(address _nftlabs) {
+        nftlabsTreasury = _nftlabs;
+    }
 
     /// @dev Deploys the control center, pack and market components of the protocol.
     function deployProtocol() external {
@@ -40,11 +53,24 @@ contract Registry is Ownable {
         }
 
         // Deploy `ProtocolControl`
-        bytes memory protocolControlByteCode = abi.encodePacked(type(ProtocolControl).creationCode, abi.encode(msg.sender));
+        bytes memory protocolControlByteCode = abi.encodePacked(type(ProtocolControl).creationCode, abi.encode(msg.sender, nftlabsTreasury));
 
         address protocolControlAddr = Create2.deploy(0, salt, protocolControlByteCode);
-        protocolControl[msg.sender] = protocolControlAddr;
+        
+        uint currentVersion = controlCenters[msg.sender].latestVersion;
+        controlCenters[msg.sender].protocolControl[currentVersion] = protocolControlAddr;
+        controlCenters[msg.sender].latestVersion += 1;
 
-        emit DeployedProtocol(msg.sender, protocolControlAddr, forwarderAddress);
+        emit DeployedProtocol(msg.sender, protocolControlAddr, forwarderAddress, currentVersion);
+    }
+
+    /// @dev Returns the latest version of protocol control
+    function getLatestVersion(address _protocolDeployer) external view returns (uint) {
+        return controlCenters[_protocolDeployer].latestVersion;
+    }
+
+    /// @dev Returns the protocol control address for the given version
+    function getProtocolControl(address _protocolDeployer, uint _version) external view returns (address) {
+        return controlCenters[_protocolDeployer].protocolControl[_version];
     }
 }
