@@ -42,7 +42,7 @@ async function main() {
       ...currentNetworkAddresses,
 
       registry: registry.address,
-      forwarder: forwarderAddr
+      forwarder: forwarderAddr,
     },
   };
 

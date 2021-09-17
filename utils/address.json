@@ -9,6 +9,14 @@
     "registry": "0x6DE94249Ca8B390bdA899f2854aE204099813c81"
   },
   "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "", "registry": "" },
-  "rinkeby": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "", "registry": "" },
+  "rinkeby": {
+    "protocolControl": "",
+    "pack": "",
+    "market": "",
+    "nft": "",
+    "coin": "",
+    "forwarder": "",
+    "registry": ""
+  },
   "mainnet": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "", "registry": "" }
 }
