@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { Forwarder } from "./Forwarder.sol";
 
-contract Rewards is ERC1155, Ownable, ERC2771Context {
+contract NFT is ERC1155, Ownable, ERC2771Context {
     /// @dev Address of $PACK Protocol's `pack` token.
     address public pack;
 
