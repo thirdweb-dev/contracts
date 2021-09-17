@@ -80,7 +80,7 @@ contract ProtocolControl is AccessControl {
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.
     function addModule(address _newModuleAddress, uint256 _moduleType)
-        public
+        external
         onlyProtocolAdmin
         returns (bytes32 moduleId)
     {
