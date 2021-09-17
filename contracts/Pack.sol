@@ -16,20 +16,16 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { Forwarder } from "./Forwarder.sol";
 
-interface IProtocolControl {
-    /// @dev Returns whether the pack protocol is paused.
-    function systemPaused() external view returns (bool);
+// Royalties
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-    /// @dev Access Control: hasRole()
-    function hasRole(bytes32 role, address account) external view returns (bool);
+// Protocol control center.
+import { ProtocolControl } from "./ProtocolControl.sol";
 
-    /// @dev Access control: PROTOCOL_ADMIN role
-    function PROTOCOL_ADMIN() external view returns (bytes32);
-}
-
-contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Context {
-    /// @dev The $PACK Protocol control center.
-    IProtocolControl internal controlCenter;
+contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Context, IERC2981 {
+    
+    /// @dev The protocol control center.
+    ProtocolControl internal controlCenter;
 
     /// @dev The tokenId for the next set of packs to be minted.
     uint256 public nextTokenId;
@@ -37,6 +33,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     /// @dev Chainlink VRF variables.
     uint256 public vrfFees;
     bytes32 public vrfKeyHash;
+
+    /// @dev Pack sale royalties -- see EIP 2981
+    uint public packRoyaltyBps;
 
     /// @dev The state of packs with a unique tokenId.
     struct PackState {
@@ -92,9 +91,18 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         uint256[] rewardIds
     );
 
+    /// @dev Emitted when royalties for pack sales are updated.
+    event PackRoyaltyUpdated(uint royaltyBps);
+
     /// @dev Checks whether $PACK Protocol is paused.
     modifier onlyUnpausedProtocol() {
         require(!controlCenter.systemPaused(), "Pack: The protocol is paused.");
+        _;
+    }
+
+    /// @dev Checks whether $PACK Protocol is paused.
+    modifier onlyProtocolAdmin(address _caller) {
+        require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller), "Pack: only a protocol admin can call this function.");
         _;
     }
 
@@ -108,7 +116,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         address _trustedForwarder
     ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
         // Set $PACK Protocol control center.
-        controlCenter = IProtocolControl(_controlCenter);
+        controlCenter = ProtocolControl(_controlCenter);
 
         // Set Chainlink vars.
         vrfKeyHash = _keyHash;
@@ -189,23 +197,24 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     }
 
     /// @dev Lets a protocol admin change the Chainlink VRF fee.
-    function setChainlinkFees(uint256 _newFees) external {
-        require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "Pack: only a protocol admin can set VRF fees."
-        );
+    function setChainlinkFees(uint256 _newFees) external onlyProtocolAdmin(msg.sender) {
         vrfFees = _newFees;
     }
 
     /// @dev Lets a protocol admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external {
-        require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "Pack: only a protocol admin can transfer LINK."
-        );
+    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin(msg.sender) {
 
         bool success = LINK.transfer(_to, _amount);
         require(success, "Pack: Failed to transfer LINK.");
+    }
+
+    /// @dev Lets a protocol admin update the royalties paid on pack sales.
+    function setPackRoyaltyBps(uint _royaltyBps) external onlyProtocolAdmin(msg.sender) {
+        require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
+        
+        packRoyaltyBps = _royaltyBps;
+
+        emit PackRoyaltyUpdated(_royaltyBps);
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -407,6 +416,12 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         source = rewards[_packId].source;
         tokenIds = rewards[_packId].tokenIds;
         amountsPacked = rewards[_packId].amountsPacked;
+    }
+
+    /// @dev See EIP 2918
+    function royaltyInfo(uint256 tokenId, uint256 salePrice) external override view returns (address receiver, uint256 royaltyAmount) {
+        receiver = packs[tokenId].creator;
+        royaltyAmount = (salePrice * packRoyaltyBps) / controlCenter.MAX_BPS();
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
