@@ -387,21 +387,6 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         pack = packs[_packId];
     }
 
-    /// @dev Returns the the underlying rewards of a pack
-    function getRewardsInPack(uint256 _packId)
-        external
-        view
-        returns (
-            address source,
-            uint256[] memory tokenIds,
-            uint256[] memory amountsPacked
-        )
-    {
-        source = rewards[_packId].source;
-        tokenIds = rewards[_packId].tokenIds;
-        amountsPacked = rewards[_packId].amountsPacked;
-    }
-
     /// @dev Returns a pack with its underlying rewards
     function getPackWithRewards(uint256 _packId)
         external
