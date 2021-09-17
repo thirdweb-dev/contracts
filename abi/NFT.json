@@ -3,6 +3,11 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_controlCenter",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "_trustedForwarder",
         "type": "address"
       },
@@ -64,7 +69,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "rewardAmountRedeemed",
+        "name": "nftAmountRedeemed",
         "type": "uint256"
       }
     ],
@@ -95,17 +100,17 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "rewardsMinted",
+        "name": "nftsMinted",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "rewardURI",
+        "name": "nftURI",
         "type": "string"
       }
     ],
-    "name": "ERC20Rewards",
+    "name": "ERC20WrappedNfts",
     "type": "event"
   },
   {
@@ -132,7 +137,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "rewardTokenId",
+        "name": "nativeNftTokenId",
         "type": "uint256"
       }
     ],
@@ -163,17 +168,17 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "rewardTokenId",
+        "name": "nativeNftTokenId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "rewardURI",
+        "name": "nativeNftURI",
         "type": "string"
       }
     ],
-    "name": "ERC721Rewards",
+    "name": "ERC721WrappedNft",
     "type": "event"
   },
   {
@@ -188,23 +193,36 @@
       {
         "indexed": false,
         "internalType": "uint256[]",
-        "name": "rewardIds",
+        "name": "nftIds",
         "type": "uint256[]"
       },
       {
         "indexed": false,
         "internalType": "string[]",
-        "name": "rewardURIs",
+        "name": "nftURIs",
         "type": "string[]"
       },
       {
         "indexed": false,
         "internalType": "uint256[]",
-        "name": "rewardSupplies",
+        "name": "nftSupplies",
         "type": "uint256[]"
       }
     ],
-    "name": "NativeRewards",
+    "name": "NativeNfts",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "royaltyBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "NftRoyaltyUpdated",
     "type": "event"
   },
   {
@@ -224,6 +242,94 @@
       }
     ],
     "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "previousAdminRole",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "newAdminRole",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RoleAdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleGranted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleRevoked",
     "type": "event"
   },
   {
@@ -320,6 +426,58 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_ADMIN_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MINTER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "PAUSER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -370,21 +528,67 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "burn",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "values",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "burnBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string[]",
-        "name": "_rewardURIs",
+        "name": "_nftURIs",
         "type": "string[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_rewardSupplies",
+        "name": "_nftSupplies",
         "type": "uint256[]"
       }
     ],
-    "name": "createNativeRewards",
+    "name": "createNativeNfts",
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "rewardIds",
+        "name": "nftIds",
         "type": "uint256[]"
       }
     ],
@@ -400,12 +604,12 @@
       },
       {
         "internalType": "string[]",
-        "name": "_rewardURIs",
+        "name": "_nftURIs",
         "type": "string[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_rewardSupplies",
+        "name": "_nftSupplies",
         "type": "uint256[]"
       },
       {
@@ -425,7 +629,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_rewardsPerOpen",
+        "name": "_nftsPerOpen",
         "type": "uint256"
       }
     ],
@@ -438,7 +642,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_rewardId",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -461,7 +665,7 @@
         "type": "uint256"
       }
     ],
-    "name": "erc20Rewards",
+    "name": "erc20WrappedNfts",
     "outputs": [
       {
         "internalType": "address",
@@ -490,7 +694,7 @@
         "type": "uint256"
       }
     ],
-    "name": "erc721Rewards",
+    "name": "erc721WrappedNfts",
     "outputs": [
       {
         "internalType": "address",
@@ -501,6 +705,110 @@
         "internalType": "uint256",
         "name": "nftTokenId",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleAdmin",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRoleMember",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleMemberCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "grantRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "hasRole",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -550,8 +858,111 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "mint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "mintBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "nextTokenId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "nftInfo",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "supply",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum Nft.UnderlyingType",
+        "name": "underlyingType",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nftRoyaltyBps",
     "outputs": [
       {
         "internalType": "uint256",
@@ -576,10 +987,30 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_rewardId",
+        "name": "_nftId",
         "type": "uint256"
       },
       {
@@ -597,7 +1028,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_rewardId",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -616,32 +1047,63 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "renounceRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
-        "name": "",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "salePrice",
         "type": "uint256"
       }
     ],
-    "name": "rewards",
+    "name": "royaltyInfo",
     "outputs": [
       {
         "internalType": "address",
-        "name": "creator",
+        "name": "receiver",
         "type": "address"
       },
       {
-        "internalType": "string",
-        "name": "uri",
-        "type": "string"
-      },
-      {
         "internalType": "uint256",
-        "name": "supply",
+        "name": "royaltyAmount",
         "type": "uint256"
-      },
-      {
-        "internalType": "enum Nft.UnderlyingType",
-        "name": "underlyingType",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -734,6 +1196,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_royaltyBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "setNftRoyaltyBps",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -754,7 +1229,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_rewardId",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -783,10 +1258,17 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "unpause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_rewardId",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -815,12 +1297,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "_numOfRewardsToMint",
+        "name": "_numOfNftsToMint",
         "type": "uint256"
       },
       {
         "internalType": "string",
-        "name": "_rewardURI",
+        "name": "_nftURI",
         "type": "string"
       }
     ],
@@ -843,7 +1325,7 @@
       },
       {
         "internalType": "string",
-        "name": "_rewardURI",
+        "name": "_nftURI",
         "type": "string"
       }
     ],

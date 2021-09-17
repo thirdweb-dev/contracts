@@ -7,16 +7,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_protocolFeeBps",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_creatorFeeBps",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "_trustedForwarder",
         "type": "address"
@@ -264,32 +254,6 @@
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "MAX_BPS",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "PACK",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -323,19 +287,6 @@
     "name": "buy",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "creatorFeeBps",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -590,37 +541,6 @@
         "type": "bytes4"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "protocolFeeBps",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_protocolCut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_creatorCut",
-        "type": "uint256"
-      }
-    ],
-    "name": "setFees",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
