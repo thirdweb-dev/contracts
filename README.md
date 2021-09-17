@@ -1,21 +1,11 @@
-# $Pack Protocol
+# NFTLabs Protocol
 
-$PACK Protocol lets anyone create and sell packs filled with rewards. A pack can be opened only once. On opening a pack, a reward
+NFTLabs lets anyone create and sell packs filled with rewards. A pack can be opened only once. On opening a pack, a reward
 from the pack is distributed to the pack opener.
 
 ## Deployments
 
 The contracts in the `/contracts` directory are deployed on the following networks.
-
-### Mumbai
-
-- `ProtocolControl.sol`: [0x1d169c30b6b2606878b319327e2C0E7529141f71](https://mumbai.polygonscan.com/address/0x1d169c30b6b2606878b319327e2C0E7529141f71#code)
-
-- `Pack.sol`: [0x0c56B393043CDA7c726c27FdD64Bd9262428515F](https://mumbai.polygonscan.com/address/0x0c56B393043CDA7c726c27FdD64Bd9262428515F#code)
-
-- `Market.sol`: [0xe2A8acC6D641b7D2b5922cB90969D0B6B76d689E](https://mumbai.polygonscan.com/address/0xe2A8acC6D641b7D2b5922cB90969D0B6B76d689E#code)
-
-- `Rewards.sol`: [0xEe63992e7AaE8578E7239991960F7494F8dFF005](https://mumbai.polygonscan.com/address/0xEe63992e7AaE8578E7239991960F7494F8dFF005#code)
 
 ## Run Locally
 
