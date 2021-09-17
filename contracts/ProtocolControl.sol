@@ -36,8 +36,8 @@ contract ProtocolControl is AccessControl {
     mapping(uint256 => uint256) public numOfModuleType;
 
     /// @dev Market fees
-    uint256 public constant MAX_BPS = 10000; // 100%
-    uint256 public marketFeeBps;
+    uint128 public constant MAX_BPS = 10000; // 100%
+    uint128 public marketFeeBps;
 
     /// @dev Contract level metadata.
     string public _contractURI;
@@ -71,12 +71,12 @@ contract ProtocolControl is AccessControl {
     }
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.
-    function addModule(address _newModuleAddress, uint256 _moduleType)
+    function addModule(address _newModuleAddress, uint8 _moduleType)
         external
         onlyProtocolAdmin
         returns (bytes32 moduleId)
     {
-        require(_moduleType <= uint256(ModuleType.Other), "ProtocolControl: invalid module type provided.");
+        require(_moduleType <= uint8(ModuleType.Other), "ProtocolControl: invalid module type provided.");
 
         // `moduleId` is collision resitant -- unique `_moduleType` and incrementing `numOfModuleType`
         moduleId = keccak256(abi.encodePacked(numOfModuleType[_moduleType], _moduleType));
@@ -95,7 +95,7 @@ contract ProtocolControl is AccessControl {
     }
 
     /// @dev Lets a nftlabs admin change the market fee basis points.
-    function updateMarketFeeBps(uint256 _newFeeBps) external onlyNftlabsAdmin {
+    function updateMarketFeeBps(uint128 _newFeeBps) external onlyNftlabsAdmin {
         require(_newFeeBps <= 300, "ProtocolControl: fee cannot be greater than 3%");
 
         marketFeeBps = _newFeeBps;
