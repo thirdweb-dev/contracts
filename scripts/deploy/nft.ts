@@ -3,12 +3,11 @@ import { Contract, ContractFactory } from "ethers";
 
 import addresses from "../../utils/address.json";
 import { txOptions } from "../../utils/txOptions";
-import { chainlinkVars } from "../../utils/chainlink";
 
 import ProtocolControlABI from "../../abi/ProtocolControl.json";
 import RegistryABI from "../../abi/Registry.json";
-import PackABI from "../../abi/Pack.json";
-import { bytecode } from "../../artifacts/contracts/Pack.sol/Pack.json";
+import NftABI from "../../abi/NFT.json";
+import { bytecode } from "../../artifacts/contracts/Nft.sol/Nft.json";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -34,7 +33,6 @@ async function main() {
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
   const { protocolControl: protocolControlAddress, registry: registryAddress } = curentNetworkAddreses;
   const txOption = txOptions[networkName as keyof typeof txOptions];
-  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
@@ -42,29 +40,22 @@ async function main() {
   const registry: Contract = await ethers.getContractAt(RegistryABI, registryAddress);
   const forwarderAddr: string = await registry.forwarder();
 
-  // Deploy `Pack`
-  const Pack_Factory: ContractFactory = new ethers.ContractFactory(PackABI, bytecode);
-  const tx = await Pack_Factory.connect(deployer).deploy(
-    protocolControlAddress,
-    "$PACK Protocol", // This is supposed to be an `ipfs://...` type URI
-    vrfCoordinator,
-    linkTokenAddress,
-    keyHash,
-    fees,
-    forwarderAddr,
-    txOption,
-  );
+  // Deploy `NFT`
+  const contractURI: string = "ipfs://...";
 
-  console.log("Deploying Pack: ", tx.hash);
+  const Nft_Factory: ContractFactory = new ethers.ContractFactory(NftABI, bytecode);
+  const tx = await Nft_Factory.connect(deployer).deploy(contractURI, protocolControlAddress, forwarderAddr, txOption);
+
+  console.log("Deploying Nft: ", tx.hash);
 
   await tx.wait();
 
-  // Get deployed `Pack`'s address
-  const packAddress = tx.address;
+  // Get deployed `Nft`'s address
+  const nftAddress = tx.address;
 
   // Get `ProtocolControl`
   const protocolControl: Contract = await ethers.getContractAt(ProtocolControlABI, protocolControlAddress);
-  const addModuleTx = await protocolControl.addModule(packAddress, ModuleType.Pack);
+  const addModuleTx = await protocolControl.addModule(nftAddress, ModuleType.NFT);
   await addModuleTx.wait();
 
   // Update contract addresses in `/utils`
@@ -74,7 +65,7 @@ async function main() {
     [networkName]: {
       ...curentNetworkAddreses,
 
-      pack: packAddress,
+      nft: nftAddress,
     },
   };
 

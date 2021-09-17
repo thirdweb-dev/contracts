@@ -1,5 +1,5 @@
 import hre, { run, ethers } from "hardhat";
-import { Contract, ContractFactory } from "ethers";
+import { Contract } from "ethers";
 
 import addresses from "../../utils/address.json";
 import { txOptions } from "../../utils/txOptions";

@@ -21,13 +21,16 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
-  // Deploy forwarder.sol
+  // Deploy Registry.sol
   const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
   const registry: Contract = await Registry_Factory.deploy(deployer.address, txOption);
 
   console.log("Deployed Registry at: ", registry.address);
 
   await registry.deployTransaction.wait();
+
+  // Get Forwarder from registry
+  const forwarderAddr: string = await registry.forwarder();
 
   // Update contract addresses in `/utils`
   const currentNetworkAddresses = addresses[networkName as keyof typeof addresses];
@@ -39,6 +42,7 @@ async function main() {
       ...currentNetworkAddresses,
 
       registry: registry.address,
+      forwarder: forwarderAddr
     },
   };
 
