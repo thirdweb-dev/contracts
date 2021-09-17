@@ -126,6 +126,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
         // Set Chainlink vars.
         vrfKeyHash = _keyHash;
         vrfFees = _fees;
+
+        // Set contract URI
+        _contractURI = _uri;
     }
 
     /**

@@ -121,9 +121,13 @@ contract Nft is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     constructor(
         address _controlCenter,
         address _trustedForwarder,
-        string memory _baseURI
-    ) ERC1155PresetMinterPauser(_baseURI) ERC2771Context(_trustedForwarder) {
+        string memory _uri
+    ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
+        
         controlCenter = ProtocolControl(_controlCenter);
+
+        // Set contract URI
+        _contractURI = _uri;
     }
 
     /// @notice Create native ERC 1155 NFTs.
