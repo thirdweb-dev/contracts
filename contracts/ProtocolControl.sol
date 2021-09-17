@@ -8,11 +8,17 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProtocolControl is AccessControl {
-    /// @dev Admin role for pack protocol.
+    
+    /// @dev Admin role for protocol.
     bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
+    /// @dev Admin role for NFTLabs.
+    bytes32 public constant NFTLABS = keccak256("NFTLABS");
 
     /// @dev Protocol status.
     bool public systemPaused;
+
+    /// @dev NFTLabs protocol treasury
+    address public nftlabsTreasury;
 
     /// @dev Pack protocol module names.
     bytes32 public constant COIN = keccak256("COIN");
@@ -23,12 +29,17 @@ contract ProtocolControl is AccessControl {
     /// @dev Module ID => Module address.
     mapping(bytes32 => address) public modules;
 
+    /// @dev Market fees
+    uint256 public constant MAX_BPS = 10000; // 100%
+    uint public marketFeeBps;
+
     /// @dev Events.
     event ProtocolInitialized(address pack, address market, address coin, address nft);
     event ModuleInitialized(bytes32 moduleId, address module);
     event ModuleUpdated(bytes32 moduleId, address module);
     event FundsTransferred(address asset, address to, uint256 amount);
     event SystemPaused(bool isPaused);
+    event MarketFeeBps(uint marketFeeBps);
 
     /// @dev Check whether the caller is a protocol admin
     modifier onlyProtocolAdmin() {
@@ -36,12 +47,27 @@ contract ProtocolControl is AccessControl {
         _;
     }
 
-    constructor(address _admin) {
-        _setupRole(PROTOCOL_ADMIN, _admin);
-        _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
+    /// @dev Check whether the caller is an NFTLabs admin
+    modifier onlyNftlabsAdmin() {
+        require(hasRole(NFTLABS, msg.sender), "Protocol: Only NFTLabs admins can call this function.");
+        _;
     }
 
-    /// @dev Iniializes the ERC 1155 pack token of the protocol.
+    constructor(
+        address _admin,
+        address _nftlabs
+    ) {
+
+        nftlabsTreasury = _nftlabs;
+
+        _setupRole(NFTLABS, _nftlabs);
+        _setupRole(PROTOCOL_ADMIN, _admin);
+
+        _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
+        _setRoleAdmin(NFTLABS, NFTLABS);
+    }
+
+    /// @dev Iniializes all components of the protocol.
     function initializeProtocol(address _coin, address _nft, address _pack, address _market) external onlyProtocolAdmin {
         require(
             modules[PACK] == address(0) && modules[MARKET] == address(0) && modules[COIN] == address(0) && modules[NFT] == address(0), 
@@ -62,6 +88,18 @@ contract ProtocolControl is AccessControl {
         modules[_moduleId] = _newModuleAddress;
 
         emit ModuleUpdated(_moduleId, _newModuleAddress);
+    }
+
+    /// @dev Lets a nftlabs admin change the market fee basis points.
+    function updateMarketFeeBps(uint _newFeeBps) external onlyNftlabsAdmin {
+        marketFeeBps = _newFeeBps;
+
+        emit MarketFeeBps(_newFeeBps);
+    }
+
+    /// @dev Lets a nftlabs admin change the market fee basis points.
+    function updateNftlabsTreasury(address _newTreasury) external onlyNftlabsAdmin {
+        nftlabsTreasury = _newTreasury;
     }
 
     /// @dev Lets a protocol admin pause the protocol.
