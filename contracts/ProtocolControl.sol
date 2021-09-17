@@ -78,29 +78,6 @@ contract ProtocolControl is AccessControl {
         _setRoleAdmin(NFTLABS, NFTLABS);
     }
 
-    /// @dev Iniializes all components of the protocol.
-    function initializeProtocol(
-        address _coin,
-        address _nft,
-        address _pack,
-        address _market
-    ) external onlyProtocolAdmin {
-        require(
-            numOfModuleType[uint256(ModuleType.Pack)] == 0 &&
-                numOfModuleType[uint256(ModuleType.Market)] == 0 &&
-                numOfModuleType[uint256(ModuleType.NFT)] == 0 &&
-                numOfModuleType[uint256(ModuleType.Coin)] == 0,
-            "Protocol Control: already initialized."
-        );
-
-        bytes32 packModuleId = addModule(_pack, uint256(ModuleType.Pack));
-        bytes32 marketModuleId = addModule(_market, uint256(ModuleType.Market));
-        bytes32 coinModuleId = addModule(_nft, uint256(ModuleType.NFT));
-        bytes32 nftModuleId = addModule(_coin, uint256(ModuleType.Coin));
-
-        emit ProtocolInitialized(_pack, packModuleId, _market, marketModuleId, _coin, coinModuleId, _nft, nftModuleId);
-    }
-
     /// @dev Lets a protocol admin change the address of a module of the protocol.
     function addModule(address _newModuleAddress, uint256 _moduleType)
         public
