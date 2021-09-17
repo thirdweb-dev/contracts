@@ -1,13 +1,1 @@
-{
-  "mumbai": {
-    "protocolControl": "",
-    "pack": "",
-    "market": "",
-    "rewards": "",
-    "forwarder": "",
-    "registry": "0xB94a042d3B15062C247175a741bA1b67a1F31fB5"
-  },
-  "matic": { "protocolControl": "", "pack": "", "market": "", "rewards": "", "forwarder": "", "registry": "" },
-  "rinkeby": { "protocolControl": "", "pack": "", "market": "", "rewards": "", "forwarder": "", "registry": "" },
-  "mainnet": { "protocolControl": "", "pack": "", "market": "", "rewards": "", "forwarder": "", "registry": "" }
-}
+{"mumbai":{"protocolControl":"","pack":"","market":"","rewards":"","forwarder":"","registry":"0x38fb0D6E09Cfcf2B8a6c8b6B28994E208726deA3"},"matic":{"protocolControl":"","pack":"","market":"","rewards":"","forwarder":"","registry":""},"rinkeby":{"protocolControl":"","pack":"","market":"","rewards":"","forwarder":"","registry":""},"mainnet":{"protocolControl":"","pack":"","market":"","rewards":"","forwarder":"","registry":""}}

@@ -9,7 +9,7 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 ### Mumbai
 
-- `Registry.sol`: [0xB94a042d3B15062C247175a741bA1b67a1F31fB5](https://mumbai.polygonscan.com/address/0xB94a042d3B15062C247175a741bA1b67a1F31fB5#code)
+- `Registry.sol`: [0x38fb0D6E09Cfcf2B8a6c8b6B28994E208726deA3](https://mumbai.polygonscan.com/address/0x38fb0D6E09Cfcf2B8a6c8b6B28994E208726deA3#code)
 
 ## Run Locally
 
