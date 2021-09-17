@@ -13,32 +13,18 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { Forwarder } from "./Forwarder.sol";
 
-interface IProtocolControl {
-    /// @dev Returns whether the pack protocol is paused.
-    function systemPaused() external view returns (bool);
+// Royalties
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-    /// @dev Access Control: hasRole()
-    function hasRole(bytes32 role, address account) external view returns (bool);
-
-    /// @dev Access control: PROTOCOL_ADMIN role
-    function PROTOCOL_ADMIN() external view returns (bytes32);
-}
-
-interface IListingAsset {
-    function creator(uint256 _tokenId) external view returns (address _creator);
-}
+// Protocol control center.
+import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
-    /// @dev The pack protocol admin contract.
-    IProtocolControl internal controlCenter;
+    /// @dev The protocol control center.
+    ProtocolControl internal controlCenter;
 
-    /// @dev Pack protocol module names.
-    string public constant PACK = "PACK";
-
-    /// @dev Pack protocol fee constants.
-    uint256 public constant MAX_BPS = 10000; // 100%
-    uint256 public protocolFeeBps;
-    uint256 public creatorFeeBps;
+    // See EIP 2981
+    bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -69,7 +55,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         Listing listing
     );
 
-    /// @dev Checks whether Pack protocol is paused.
+    /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
         require(!controlCenter.systemPaused(), "Market: The pack protocol is paused.");
         _;
@@ -87,13 +73,8 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         _;
     }
 
-    constructor(address _controlCenter, uint _protocolFeeBps, uint _creatorFeeBps,  address _trustedForwarder) ERC2771Context(_trustedForwarder) {
-        controlCenter = IProtocolControl(_controlCenter);
-
-        protocolFeeBps = _protocolFeeBps;
-        creatorFeeBps = _creatorFeeBps;
-
-        emit MarketFeesUpdated(_protocolFeeBps, _creatorFeeBps);
+    constructor(address _controlCenter,  address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+        controlCenter = ProtocolControl(_controlCenter);
     }
 
     /**
@@ -240,15 +221,9 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
             "Market: the sale has either not started or closed."
         );
 
-        // Transfer tokens being bought to buyer.
-        IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
-
         // Update listing info.
         listing.quantity -= _quantity;
         listings[_listingId] = listing;
-
-        // Get token creator.
-        address creator = IListingAsset(listing.assetContract).creator(listing.tokenId);
 
         // Get value distribution parameters.
         uint256 totalPrice = listing.pricePerToken * _quantity;
@@ -260,39 +235,35 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
             );
         }
 
-        uint256 protocolCut = (totalPrice * protocolFeeBps) / MAX_BPS;
-        uint256 creatorCut = listing.seller == creator ? 0 : (totalPrice * creatorFeeBps) / MAX_BPS;
-        uint256 sellerCut = totalPrice - protocolCut - creatorCut;
-
-        // Distribute relveant shares of sale value to seller, creator and protocol.
+        // Protocol fee
+        uint protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
         require(
-            IERC20(listing.currency).transferFrom(_msgSender(), address(controlCenter), protocolCut),
+            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
             "Market: failed to transfer protocol cut."
         );
+
+        uint256 sellerCut = totalPrice - protocolCut;
+
+        if(IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
+            (address royaltyReceiver, uint royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(listing.tokenId, totalPrice);
+
+            sellerCut -= royaltyAmount;
+
+            require(
+                IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
+                "Market: failed to transfer creator cut."
+            );
+        }
+
         require(
             IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
             "Market: failed to transfer seller cut."
         );
-        require(
-            IERC20(listing.currency).transferFrom(_msgSender(), creator, creatorCut),
-            "Market: failed to transfer creator cut."
-        );
+
+        // Transfer tokens being bought to buyer.
+        IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
 
         emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), listing);
-    }
-
-    /// @dev Lets a protocol admin set protocol and cretor fees.
-    function setFees(uint256 _protocolCut, uint256 _creatorCut) external {
-        require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "Market: only a protocol admin can set fees."
-        );
-        require((_protocolCut + _creatorCut) <= MAX_BPS, "Market: Invalid protocol or creator cut provided.");
-
-        protocolFeeBps = _protocolCut;
-        creatorFeeBps = _creatorCut;
-
-        emit MarketFeesUpdated(_protocolCut, _creatorCut);
     }
 
     /// @notice Returns the listing for the given seller and Listing ID.
