@@ -124,14 +124,11 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     }
 
     /// @notice Create native ERC 1155 NFTs.
-    function createNativeNfts(
-        string[] calldata _nftURIs,
-        uint256[] calldata _nftSupplies
-    ) public returns (uint256[] memory nftIds) {
-        require(
-            _nftURIs.length == _nftSupplies.length,
-            "NFT: Must specify equal number of config values."
-        );
+    function createNativeNfts(string[] calldata _nftURIs, uint256[] calldata _nftSupplies)
+        public
+        returns (uint256[] memory nftIds)
+    {
+        require(_nftURIs.length == _nftSupplies.length, "NFT: Must specify equal number of config values.");
         require(_nftURIs.length > 0, "NFT: Must create at least one NFT.");
 
         // Get tokenIds.

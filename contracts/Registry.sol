@@ -15,6 +15,9 @@ contract Registry is Ownable {
     // NFTLabs treasury
     address public nftlabsTreasury;
 
+    // `Forwarder` for gasless transacitons
+    address public forwarder;
+
     struct ControlCenters {
         // Total number of versions
         uint256 latestVersion;
@@ -24,35 +27,29 @@ contract Registry is Ownable {
 
     mapping(address => ControlCenters) public controlCenters;
 
-    // Mapping from deployer => `Forwarder`
-    mapping(address => address) public forwarder;
-
     // Emitted on protocol deployment
     event DeployedProtocol(
         address indexed deployer,
         address indexed protocolControl,
-        address indexed forwarder,
         uint256 version
     );
 
+    // Emitted in constructor
+    event DeployedForwarder(address forwarder);
+
     constructor(address _nftlabs) {
         nftlabsTreasury = _nftlabs;
+
+        bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
+        bytes memory forwarderByteCode = abi.encodePacked(type(Forwarder).creationCode);
+        forwarder = Create2.deploy(0, salt, forwarderByteCode);
+
+        emit DeployedForwarder(forwarder);
     }
 
     /// @dev Deploys the control center, pack and market components of the protocol.
     function deployProtocol() external {
         bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
-
-        // Deploy `Forwarder`
-        address forwarderAddress = forwarder[msg.sender];
-
-        if (forwarderAddress == address(0)) {
-            bytes memory forwarderByteCode = abi.encodePacked(type(Forwarder).creationCode);
-            address forwarderAddr = Create2.deploy(0, salt, forwarderByteCode);
-
-            forwarder[msg.sender] = forwarderAddr;
-            forwarderAddress = forwarderAddr;
-        }
 
         // Deploy `ProtocolControl`
         bytes memory protocolControlByteCode = abi.encodePacked(
@@ -66,7 +63,7 @@ contract Registry is Ownable {
         controlCenters[msg.sender].protocolControl[currentVersion] = protocolControlAddr;
         controlCenters[msg.sender].latestVersion += 1;
 
-        emit DeployedProtocol(msg.sender, protocolControlAddr, forwarderAddress, currentVersion);
+        emit DeployedProtocol(msg.sender, protocolControlAddr, currentVersion);
     }
 
     /// @dev Returns the latest version of protocol control
