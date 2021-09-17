@@ -52,6 +52,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         address indexed seller,
         uint256 indexed listingId,
         address buyer,
+        uint quanitytBought,
         Listing listing
     );
 
@@ -225,48 +226,52 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         listing.quantity -= _quantity;
         listings[_listingId] = listing;
 
-        // Get value distribution parameters.
-        uint256 totalPrice = listing.pricePerToken * _quantity;
-
         if (listing.pricePerToken > 0) {
+
+            // Get value distribution parameters.
+            uint256 totalPrice = listing.pricePerToken * _quantity;
+
+            // Check buyer's currency allowance
             require(
                 IERC20(listing.currency).allowance(_msgSender(), address(this)) >= totalPrice,
                 "Market: must approve Market to transfer price to pay."
             );
-        }
 
-        // Protocol fee
-        uint256 protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
-        require(
-            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
-            "Market: failed to transfer protocol cut."
-        );
-
-        uint256 sellerCut = totalPrice - protocolCut;
-
-        if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
-            (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(
-                listing.tokenId,
-                totalPrice
-            );
-
-            sellerCut -= royaltyAmount;
-
+            // Collect protocol fee if any
+            uint256 protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
             require(
-                IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
-                "Market: failed to transfer creator cut."
+                IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
+                "Market: failed to transfer protocol cut."
+            );
+
+            uint256 sellerCut = totalPrice - protocolCut;
+            
+            // Distribute royalties if any
+            if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
+                (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(
+                    listing.tokenId,
+                    totalPrice
+                );
+
+                sellerCut -= royaltyAmount;
+
+                require(
+                    IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
+                    "Market: failed to transfer creator cut."
+                );
+            }
+
+            // Distribute price to seller
+            require(
+                IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
+                "Market: failed to transfer seller cut."
             );
         }
-
-        require(
-            IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
-            "Market: failed to transfer seller cut."
-        );
 
         // Transfer tokens being bought to buyer.
         IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
 
-        emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), listing);
+        emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), _quantity, listing);
     }
 
     /// @notice Returns the listing for the given seller and Listing ID.
