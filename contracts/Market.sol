@@ -73,7 +73,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         _;
     }
 
-    constructor(address _controlCenter,  address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(address _controlCenter, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         controlCenter = ProtocolControl(_controlCenter);
     }
 
@@ -236,7 +236,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         }
 
         // Protocol fee
-        uint protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
+        uint256 protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
         require(
             IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
             "Market: failed to transfer protocol cut."
@@ -244,8 +244,11 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         uint256 sellerCut = totalPrice - protocolCut;
 
-        if(IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
-            (address royaltyReceiver, uint royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(listing.tokenId, totalPrice);
+        if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
+            (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(
+                listing.tokenId,
+                totalPrice
+            );
 
             sellerCut -= royaltyAmount;
 

@@ -68,7 +68,13 @@ async function main() {
   // Deploy Market
   const feeBps: number = 250; // 2.5%
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  const market: Contract = await Market_Factory.deploy(protocolControl.address, feeBps, feeBps, forwarderAddress, txOption);
+  const market: Contract = await Market_Factory.deploy(
+    protocolControl.address,
+    feeBps,
+    feeBps,
+    forwarderAddress,
+    txOption,
+  );
 
   console.log("Market.sol is deployed at: ", market.address);
 

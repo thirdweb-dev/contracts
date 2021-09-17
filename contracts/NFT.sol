@@ -21,7 +21,6 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
-
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -29,7 +28,7 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     uint256 public nextTokenId;
 
     /// @dev NFT sale royalties -- see EIP 2981
-    uint public nftRoyaltyBps;
+    uint256 public nftRoyaltyBps;
 
     enum UnderlyingType {
         None,
@@ -83,8 +82,8 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
         uint256 tokenAmountReceived,
         uint256 nftAmountRedeemed
     );
-    
-    event NftRoyaltyUpdated(uint royaltyBps);
+
+    event NftRoyaltyUpdated(uint256 royaltyBps);
 
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
@@ -96,7 +95,7 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     mapping(uint256 => ERC20Wrapped) public erc20WrappedNfts;
 
     /// @dev NFT tokenId => whether the token is transferable
-    mapping(uint => bool) public transferrable;
+    mapping(uint256 => bool) public transferrable;
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
@@ -106,7 +105,10 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin(address _caller) {
-        require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller), "NFT: only a protocol admin can call this function.");
+        require(
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller),
+            "NFT: only a protocol admin can call this function."
+        );
         _;
     }
 
@@ -118,20 +120,18 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
 
     constructor(
         address _controlCenter,
-        address _trustedForwarder, 
+        address _trustedForwarder,
         string memory _baseURI
-    ) 
-        ERC1155PresetMinterPauser(_baseURI) 
-        ERC2771Context(_trustedForwarder) 
-    {
+    ) ERC1155PresetMinterPauser(_baseURI) ERC2771Context(_trustedForwarder) {
         controlCenter = ProtocolControl(_controlCenter);
     }
 
     /// @notice Create native ERC 1155 NFTs.
-    function createNativeNfts(string[] calldata _nftURIs, uint256[] calldata _nftSupplies, bool[] calldata _isTransferrable)
-        public
-        returns (uint256[] memory nftIds)
-    {
+    function createNativeNfts(
+        string[] calldata _nftURIs,
+        uint256[] calldata _nftSupplies,
+        bool[] calldata _isTransferrable
+    ) public returns (uint256[] memory nftIds) {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _isTransferrable.length,
             "NFT: Must specify equal number of config values."
@@ -187,9 +187,9 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setNftRoyaltyBps(uint _royaltyBps) external onlyProtocolAdmin(msg.sender) {
+    function setNftRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin(msg.sender) {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
-        
+
         nftRoyaltyBps = _royaltyBps;
 
         emit NftRoyaltyUpdated(_royaltyBps);
@@ -201,10 +201,7 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
         uint256 _tokenId,
         string calldata _nftURI
     ) external {
-        require(
-            IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
-            "NFT: Only the owner of the NFT can wrap it."
-        );
+        require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "NFT: Only the owner of the NFT can wrap it.");
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
                 IERC721(_nftContract).isApprovedForAll(_msgSender(), address(this)),
@@ -342,7 +339,12 @@ contract Nft is ERC1155PresetMinterPauser, Ownable, ERC2771Context, IERC2981 {
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice) external override view returns (address receiver, uint256 royaltyAmount) {
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
         receiver = nftInfo[tokenId].creator;
         royaltyAmount = (salePrice * nftRoyaltyBps) / controlCenter.MAX_BPS();
     }

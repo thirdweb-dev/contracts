@@ -23,7 +23,6 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Context, IERC2981 {
-    
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -35,7 +34,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     bytes32 public vrfKeyHash;
 
     /// @dev Pack sale royalties -- see EIP 2981
-    uint public packRoyaltyBps;
+    uint256 public packRoyaltyBps;
 
     /// @dev The state of packs with a unique tokenId.
     struct PackState {
@@ -92,7 +91,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     );
 
     /// @dev Emitted when royalties for pack sales are updated.
-    event PackRoyaltyUpdated(uint royaltyBps);
+    event PackRoyaltyUpdated(uint256 royaltyBps);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
@@ -102,7 +101,10 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin(address _caller) {
-        require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller), "Pack: only a protocol admin can call this function.");
+        require(
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller),
+            "Pack: only a protocol admin can call this function."
+        );
         _;
     }
 
@@ -203,15 +205,14 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
 
     /// @dev Lets a protocol admin transfer LINK from the contract.
     function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin(msg.sender) {
-
         bool success = LINK.transfer(_to, _amount);
         require(success, "Pack: Failed to transfer LINK.");
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setPackRoyaltyBps(uint _royaltyBps) external onlyProtocolAdmin(msg.sender) {
+    function setPackRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin(msg.sender) {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
-        
+
         packRoyaltyBps = _royaltyBps;
 
         emit PackRoyaltyUpdated(_royaltyBps);
@@ -419,7 +420,12 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice) external override view returns (address receiver, uint256 royaltyAmount) {
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
         receiver = packs[tokenId].creator;
         royaltyAmount = (salePrice * packRoyaltyBps) / controlCenter.MAX_BPS();
     }
