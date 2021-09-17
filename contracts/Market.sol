@@ -78,10 +78,10 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     }
 
     /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin(address _caller) {
+    modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller),
-            "NFT: only a protocol admin can call this function."
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            "Pack: only a protocol admin can call this function."
         );
         _;
     }
@@ -286,7 +286,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin(msg.sender) {
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
     }
 

@@ -103,9 +103,9 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin(address _caller) {
+    modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller),
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
             "Pack: only a protocol admin can call this function."
         );
         _;
@@ -205,18 +205,18 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev Lets a protocol admin change the Chainlink VRF fee.
-    function setChainlinkFees(uint256 _newFees) external onlyProtocolAdmin(msg.sender) {
+    function setChainlinkFees(uint256 _newFees) external onlyProtocolAdmin {
         vrfFees = _newFees;
     }
 
     /// @dev Lets a protocol admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin(msg.sender) {
+    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin {
         bool success = LINK.transfer(_to, _amount);
         require(success, "Pack: Failed to transfer LINK.");
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setPackRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin(msg.sender) {
+    function setPackRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
 
         packRoyaltyBps = _royaltyBps;
@@ -225,7 +225,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin(msg.sender) {
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
     }
 

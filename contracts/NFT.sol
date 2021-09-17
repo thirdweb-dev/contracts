@@ -104,10 +104,10 @@ contract Nft is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin(address _caller) {
+    modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller),
-            "NFT: only a protocol admin can call this function."
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            "Pack: only a protocol admin can call this function."
         );
         _;
     }
@@ -183,7 +183,7 @@ contract Nft is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setNftRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin(msg.sender) {
+    function setNftRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
 
         nftRoyaltyBps = _royaltyBps;
@@ -192,7 +192,7 @@ contract Nft is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin(msg.sender) {
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
     }
 
