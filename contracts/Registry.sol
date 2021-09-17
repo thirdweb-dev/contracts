@@ -28,11 +28,7 @@ contract Registry is Ownable {
     mapping(address => ControlCenters) public controlCenters;
 
     // Emitted on protocol deployment
-    event DeployedProtocol(
-        address indexed deployer,
-        address indexed protocolControl,
-        uint256 version
-    );
+    event DeployedProtocol(address indexed deployer, address indexed protocolControl, uint256 version);
 
     // Emitted in constructor
     event DeployedForwarder(address forwarder);

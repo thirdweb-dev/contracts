@@ -25,25 +25,22 @@ async function main() {
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
   // Get Registry
-  const { registry: registryAddress } = (currentNetworkAddresses as any);
+  const { registry: registryAddress } = currentNetworkAddresses as any;
   const registry: Contract = await ethers.getContractAt(RegistryABI, registryAddress);
 
   // Deploy `ProtocolControl`
-  const tx = await registry.connect(deployer).deployProtocol(txOption)
+  const tx = await registry.connect(deployer).deployProtocol(txOption);
 
   console.log("Deploying ProtocolControl: ", tx.hash);
 
   const receipt = await tx.wait();
 
   // Get Protocol control address.
-  const topic = registry.interface.getEventTopic('DeployedProtocol');
+  const topic = registry.interface.getEventTopic("DeployedProtocol");
   const log = receipt.logs.find((x: any) => x.topics.indexOf(topic) >= 0);
   const deployEvent = registry.interface.parseLog(log);
   const {
-    args: {
-      protocolControlAddr,
-      currentVersion
-    },
+    args: { protocolControlAddr, currentVersion },
   } = deployEvent;
 
   console.log(`ProtocolControl version ${currentVersion} deployed at ${protocolControlAddr}`);
@@ -55,7 +52,7 @@ async function main() {
     [networkName]: {
       ...currentNetworkAddresses,
 
-      protocolControl: protocolControlAddr
+      protocolControl: protocolControlAddr,
     },
   };
 

@@ -12,17 +12,15 @@ import { bytecode } from "../../artifacts/contracts/ProtocolControl.sol/Protocol
 import * as fs from "fs";
 import * as path from "path";
 
-
 enum ModuleType {
   Coin,
   NFT,
   Pack,
   Market,
-  Other
+  Other,
 }
 
 async function main() {
-
   await run("compile");
 
   console.log("\n");
@@ -55,7 +53,7 @@ async function main() {
   console.log("Deploying Pack: ", tx.hash);
 
   await tx.wait();
-  
+
   // Get deployed `Pack`'s address
   const packAddress = tx.address;
 
@@ -70,7 +68,7 @@ async function main() {
     [networkName]: {
       ...curentNetworkAddreses,
 
-      pack: packAddress
+      pack: packAddress,
     },
   };
 

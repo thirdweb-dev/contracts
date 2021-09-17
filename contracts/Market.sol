@@ -55,7 +55,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         address indexed seller,
         uint256 indexed listingId,
         address buyer,
-        uint quanitytBought,
+        uint256 quanitytBought,
         Listing listing
     );
 
@@ -239,7 +239,6 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         listings[_listingId] = listing;
 
         if (listing.pricePerToken > 0) {
-
             // Get value distribution parameters.
             uint256 totalPrice = listing.pricePerToken * _quantity;
 
@@ -257,7 +256,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
             );
 
             uint256 sellerCut = totalPrice - protocolCut;
-            
+
             // Distribute royalties if any
             if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
                 (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(

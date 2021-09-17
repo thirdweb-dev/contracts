@@ -35,7 +35,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
 
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public packRoyaltyBps;
-    
+
     /// @dev Collection level metadata.
     string public _contractURI;
 
