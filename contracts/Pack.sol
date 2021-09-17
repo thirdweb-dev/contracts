@@ -94,13 +94,13 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
     /// @dev Emitted when royalties for pack sales are updated.
     event PackRoyaltyUpdated(uint royaltyBps);
 
-    /// @dev Checks whether $PACK Protocol is paused.
+    /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
         require(!controlCenter.systemPaused(), "Pack: The protocol is paused.");
         _;
     }
 
-    /// @dev Checks whether $PACK Protocol is paused.
+    /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin(address _caller) {
         require(controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller), "Pack: only a protocol admin can call this function.");
         _;
@@ -115,7 +115,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         uint256 _fees,
         address _trustedForwarder
     ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
-        // Set $PACK Protocol control center.
+        // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
 
         // Set Chainlink vars.
