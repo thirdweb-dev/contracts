@@ -7,6 +7,10 @@ from the pack is distributed to the pack opener.
 
 The contracts in the `/contracts` directory are deployed on the following networks.
 
+### Mumbai
+
+- `Registry.sol`: [0xB4Cde2C26bB40f8de99E9136832960bdEDa3EE0F](https://mumbai.polygonscan.com/address/0xB4Cde2C26bB40f8de99E9136832960bdEDa3EE0F#code)
+
 ## Run Locally
 
 Clone the project
