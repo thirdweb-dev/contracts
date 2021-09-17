@@ -29,6 +29,9 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     /// @dev Total number of listings on market.
     uint256 public totalListings;
 
+    /// @dev Collection level metadata.
+    string public _contractURI;
+
     struct Listing {
         address seller;
         address assetContract;
@@ -71,6 +74,15 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     /// @dev Check whether the function is called by the seller of the listing.
     modifier onlySeller(address _seller, uint256 _listingId) {
         require(listings[_listingId].seller == _seller, "Market: Only the seller can call this function.");
+        _;
+    }
+
+    /// @dev Checks whether the protocol is paused.
+    modifier onlyProtocolAdmin(address _caller) {
+        require(
+            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _caller),
+            "NFT: only a protocol admin can call this function."
+        );
         _;
     }
 
@@ -272,6 +284,16 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
 
         emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), _quantity, listing);
+    }
+
+    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin(msg.sender) {
+        _contractURI = _URI;
+    }
+
+    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
     }
 
     /// @notice Returns the listing for the given seller and Listing ID.

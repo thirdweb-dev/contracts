@@ -39,6 +39,9 @@ contract ProtocolControl is AccessControl {
     uint256 public constant MAX_BPS = 10000; // 100%
     uint256 public marketFeeBps;
 
+    /// @dev Contract level metadata.
+    string public _contractURI;
+
     /// @dev Events.
     event ModuleUpdated(bytes32 indexed moduleId, address indexed module, uint256 indexed moduleType);
     event FundsTransferred(address asset, address to, uint256 amount);
@@ -122,5 +125,27 @@ contract ProtocolControl is AccessControl {
         require(IERC20(_asset).transfer(_to, _amount), "Protocol Control: failed to transfer protocol funds.");
 
         emit FundsTransferred(_asset, _to, _amount);
+    }
+
+    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+        _contractURI = _URI;
+    }
+
+    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
+    }
+
+    /// @dev Returns all addresses for a module type
+    function getAllModulesOfType(uint _moduleType) external view returns (address[] memory allModules) {
+        
+        uint numOfModules = numOfModuleType[_moduleType];
+        allModules = new address[](numOfModules);
+
+        for(uint i = 0; i < numOfModules; i += 1) {
+            bytes32 moduleId = keccak256(abi.encodePacked(i, _moduleType));
+            allModules[i] = modules[moduleId];
+        }
     }
 }
