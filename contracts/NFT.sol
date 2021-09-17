@@ -14,9 +14,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { Forwarder } from "./Forwarder.sol";
 
-contract NFT is ERC1155, Ownable, ERC2771Context {
-    /// @dev Address of $PACK Protocol's `pack` token.
-    address public pack;
+contract Nft is ERC1155, Ownable, ERC2771Context {
 
     /// @dev The token Id of the reward to mint.
     uint256 public nextTokenId;
@@ -83,9 +81,13 @@ contract NFT is ERC1155, Ownable, ERC2771Context {
     /// @dev Reward tokenId => Underlying ERC20 reward state.
     mapping(uint256 => ERC20Reward) public erc20Rewards;
 
-    constructor(address _pack, address _trustedForwarder) ERC1155("") ERC2771Context(_trustedForwarder) {
-        pack = _pack;
-    }
+    constructor(
+        address _trustedForwarder, 
+        string memory _baseURI
+    ) 
+        ERC1155(_baseURI) 
+        ERC2771Context(_trustedForwarder) 
+    {}
 
     /// @notice Create native ERC 1155 rewards.
     function createNativeRewards(string[] calldata _rewardURIs, uint256[] calldata _rewardSupplies)
@@ -123,6 +125,7 @@ contract NFT is ERC1155, Ownable, ERC2771Context {
 
     /// @dev Creates packs with rewards.
     function createPackAtomic(
+        address _pack,
         string[] calldata _rewardURIs,
         uint256[] calldata _rewardSupplies,
         string calldata _packURI,
@@ -139,7 +142,7 @@ contract NFT is ERC1155, Ownable, ERC2771Context {
             _secondsUntilOpenEnd,
             _rewardsPerOpen
         );
-        safeBatchTransferFrom(_msgSender(), pack, rewardIds, _rewardSupplies, args);
+        safeBatchTransferFrom(_msgSender(), _pack, rewardIds, _rewardSupplies, args);
     }
 
     /// @dev Wraps an ERC721 NFT as ERC1155 reward tokens.

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+// Access Control
 import "@openzeppelin/contracts/access/AccessControl.sol";
+
+// Tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract ProtocolControl is AccessControl {
     /// @dev Admin role for pack protocol.
@@ -13,6 +15,8 @@ contract ProtocolControl is AccessControl {
     bool public systemPaused;
 
     /// @dev Pack protocol module names.
+    bytes32 public constant COIN = keccak256("COIN");
+    bytes32 public constant NFT = keccak256("NFT");
     bytes32 public constant PACK = keccak256("PACK");
     bytes32 public constant MARKET = keccak256("MARKET");
 
@@ -31,21 +35,9 @@ contract ProtocolControl is AccessControl {
         _;
     }
 
-    constructor() {
-        _setupRole(PROTOCOL_ADMIN, msg.sender);
+    constructor(address _admin) {
+        _setupRole(PROTOCOL_ADMIN, _admin);
         _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
-    }
-
-    /// @dev Iniializes the ERC 1155 pack token of the protocol.
-    function initializeProtocol(address _pack, address _market) external onlyProtocolAdmin {
-        require(modules[PACK] == address(0) && modules[MARKET] == address(0), "Protocol Control: already initialized.");
-
-        // Update modules
-        modules[PACK] = _pack;
-        modules[MARKET] = _market;
-
-        emit ModuleInitialized(PACK, _pack);
-        emit ModuleInitialized(MARKET, _market);
     }
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.

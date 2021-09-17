@@ -7,6 +7,16 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "_protocolFeeBps",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_creatorFeeBps",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_trustedForwarder",
         "type": "address"

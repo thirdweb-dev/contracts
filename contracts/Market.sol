@@ -87,13 +87,13 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         _;
     }
 
-    constructor(address _controlCenter, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(address _controlCenter, uint _protocolFeeBps, uint _creatorFeeBps,  address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         controlCenter = IProtocolControl(_controlCenter);
 
-        protocolFeeBps = 250; // 2.5%
-        creatorFeeBps = 250; // 2.5%
+        protocolFeeBps = _protocolFeeBps;
+        creatorFeeBps = _creatorFeeBps;
 
-        emit MarketFeesUpdated(protocolFeeBps, creatorFeeBps);
+        emit MarketFeesUpdated(_protocolFeeBps, _creatorFeeBps);
     }
 
     /**

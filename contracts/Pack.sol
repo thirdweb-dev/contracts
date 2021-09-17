@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity ^0.8.0;
 
 // Tokens
@@ -106,8 +105,8 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, Ownable, ERC2771Con
         address _linkToken,
         bytes32 _keyHash,
         uint256 _fees,
-        Forwarder _trustedForwarder
-    ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(address(_trustedForwarder)) {
+        address _trustedForwarder
+    ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
         // Set $PACK Protocol control center.
         controlCenter = IProtocolControl(_controlCenter);
 
