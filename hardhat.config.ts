@@ -95,4 +95,11 @@ if (testPrivateKey) {
   };
 }
 
+config.networks = {
+  ...config.networks,
+  hardhat: {
+    chainId: 1337
+  },
+}
+
 export default config;
