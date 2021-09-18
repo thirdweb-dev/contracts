@@ -18,6 +18,22 @@
     "forwarder": "",
     "registry": ""
   },
-  "mainnet": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "", "registry": "" }
+  "mainnet": {
+    "protocolControl": "",
+    "pack": "",
+    "market": "",
+    "nft": "",
+    "coin": "",
+    "forwarder": "",
+    "registry": ""
+  },
+  "localhost": {
+    "protocolControl": "",
+    "pack": "",
+    "market": "",
+    "nft": "",
+    "coin": "",
+    "forwarder": "",
+    "registry": ""
+  }
 }
-

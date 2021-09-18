@@ -12,4 +12,8 @@ export const txOptions = {
   rinkeby: {
     gasPrice: ethers.utils.parseUnits("10", "gwei"),
   },
+
+  localhost: {
+    gasPrice: ethers.utils.parseUnits("10", "gwei"),
+  },
 };
