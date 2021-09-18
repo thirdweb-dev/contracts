@@ -6,8 +6,8 @@ import { txOptions } from "../../utils/txOptions";
 
 import ProtocolControlABI from "../../abi/ProtocolControl.json";
 import RegistryABI from "../../abi/Registry.json";
-import NftABI from "../../abi/NFT.json";
-import { bytecode } from "../../artifacts/contracts/Nft.sol/Nft.json";
+import NftABI from "../../abi/Nft.json";
+import { bytecode } from "../../artifacts/contracts/NFT.sol/Nft.json";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -41,20 +41,20 @@ async function main() {
   const forwarderAddr: string = await registry.forwarder();
 
   // Deploy `NFT`
-  const contractURI: string = "ipfs://...";
+  const contractURI: string = "ipfs://QmYMgpVGBgVZunM2uDPnobsHpryMmkXF8ZPJGiHfLpwShS";
 
   const Nft_Factory: ContractFactory = new ethers.ContractFactory(NftABI, bytecode);
-  const tx = await Nft_Factory.connect(deployer).deploy(contractURI, protocolControlAddress, forwarderAddr, txOption);
-
-  console.log("Deploying Nft: ", tx.hash);
-
-  await tx.wait();
+  const tx = await Nft_Factory.connect(deployer).deploy(protocolControlAddress, forwarderAddr, contractURI, txOption);
+  console.log(protocolControlAddress, forwarderAddr, contractURI);
+  console.log("Deploying Nft: ", tx.hash, tx.address);
+  await tx.deployed();
 
   // Get deployed `Nft`'s address
   const nftAddress = tx.address;
 
   // Get `ProtocolControl`
   const protocolControl: Contract = await ethers.getContractAt(ProtocolControlABI, protocolControlAddress);
+  console.log(protocolControlAddress, nftAddress);
   const addModuleTx = await protocolControl.addModule(nftAddress, ModuleType.NFT);
   await addModuleTx.wait();
 

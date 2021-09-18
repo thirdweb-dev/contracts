@@ -79,7 +79,7 @@ contract ProtocolControl is AccessControl {
         require(_moduleType <= uint8(ModuleType.Other), "ProtocolControl: invalid module type provided.");
 
         // `moduleId` is collision resitant -- unique `_moduleType` and incrementing `numOfModuleType`
-        moduleId = keccak256(abi.encodePacked(numOfModuleType[_moduleType], _moduleType));
+        moduleId = keccak256(abi.encodePacked(numOfModuleType[_moduleType], uint256(_moduleType)));
         numOfModuleType[_moduleType] += 1;
 
         modules[moduleId] = _newModuleAddress;
