@@ -56,6 +56,7 @@
     "deploy-forwarder": "hardhat run scripts/deploy/forwarder.ts",
     "createPackAtomic": "hardhat run scripts/txs/createPackAtomic.ts",
     "openPack": "hardhat run scripts/txs/openPack.ts",
+    "verify-registry": "hardhat run tasks/verify/registry.ts",
     "verify-protocol": "hardhat run tasks/verify/protocol.ts",
     "verify-pack": "hardhat run tasks/verify/pack.ts",
     "verify-market": "hardhat run tasks/verify/market.ts",
