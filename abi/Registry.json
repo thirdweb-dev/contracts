@@ -87,7 +87,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_protocolControlURI",
+        "type": "string"
+      }
+    ],
     "name": "deployProtocol",
     "outputs": [],
     "stateMutability": "nonpayable",

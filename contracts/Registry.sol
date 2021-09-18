@@ -44,13 +44,13 @@ contract Registry is Ownable {
     }
 
     /// @dev Deploys the control center, pack and market components of the protocol.
-    function deployProtocol() external {
+    function deployProtocol(string memory _protocolControlURI) external {
         bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
 
         // Deploy `ProtocolControl`
         bytes memory protocolControlByteCode = abi.encodePacked(
             type(ProtocolControl).creationCode,
-            abi.encode(msg.sender, nftlabsTreasury)
+            abi.encode(msg.sender, nftlabsTreasury, _protocolControlURI)
         );
 
         address protocolControlAddr = Create2.deploy(0, salt, protocolControlByteCode);

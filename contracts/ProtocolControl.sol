@@ -60,9 +60,18 @@ contract ProtocolControl is AccessControl {
         _;
     }
 
-    constructor(address _admin, address _nftlabs) {
+    constructor(
+        address _admin,
+        address _nftlabs,
+        string memory _uri
+    ) {
+        // Set contract URI
+        _contractURI = _uri;
+
+        // Set NFTLabs treasury
         nftlabsTreasury = _nftlabs;
 
+        // Set access control roles
         _setupRole(NFTLABS, _nftlabs);
         _setupRole(PROTOCOL_ADMIN, _admin);
 

@@ -10,6 +10,11 @@
         "internalType": "address",
         "name": "_nftlabs",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_uri",
+        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",

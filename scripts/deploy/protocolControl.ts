@@ -29,6 +29,7 @@ async function main() {
   const registry: Contract = await ethers.getContractAt(RegistryABI, registryAddress);
 
   // Deploy `ProtocolControl`
+  const protocolControlURI: string = "ipfs://...";
   const tx = await registry.connect(deployer).deployProtocol(txOption);
 
   console.log("Deploying ProtocolControl: ", tx.hash);
