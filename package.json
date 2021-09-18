@@ -48,6 +48,7 @@
   "scripts": {
     "clean": "hardhat clean",
     "compile": "hardhat compile",
+    "deploy-registry": "hardhat run scripts/deploy/registry.ts",
     "deploy-protocol": "hardhat run scripts/deploy/protocolControl.ts",
     "deploy-rewards": "hardhat run scripts/deploy/rewards.ts",
     "deploy-pack": "hardhat run scripts/deploy/pack.ts",
