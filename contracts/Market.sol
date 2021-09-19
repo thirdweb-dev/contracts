@@ -389,4 +389,84 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     function getListing(uint256 _listingId) external view returns (Listing memory listing) {
         listing = listings[_listingId];
     }
+
+    /// @dev Returns all listings
+    function getAllListings() external view returns (Listing[] memory allListings) {
+
+        uint numOfListings = totalListings;
+        allListings = new Listing[](numOfListings);
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            allListings[i] = listings[i];
+        }
+    }
+
+    /// @dev Returns all listings by seller
+    function getListingsBySeller(address _seller) external view returns (Listing[] memory sellerListings) {
+
+        uint numOfListings = totalListings;
+        uint numOfSellerListings;
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            if(listings[i].seller == _seller) {
+                numOfSellerListings += 1;
+            }
+        }
+
+        sellerListings = new Listing[](numOfSellerListings);
+        uint idx;
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            if(listings[i].seller == _seller) {
+                sellerListings[idx] = listings[i];
+                idx += 1;
+            }
+        }
+    }
+
+    /// @dev Returns all listings by assetContract
+    function getListingsByAssetContract(address _assetContract) external view returns (Listing[] memory tokenListings) {
+
+        uint numOfListings = totalListings;
+        uint numOfTokenListings;
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            if(listings[i].assetContract == _assetContract) {
+                numOfTokenListings += 1;
+            }
+        }
+
+        tokenListings = new Listing[](numOfTokenListings);
+        uint idx;
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            if(listings[i].assetContract == _assetContract) {
+                tokenListings[idx] = listings[i];
+                idx += 1;
+            }
+        }
+    }
+
+    /// @dev Returns all listings by asset; `asset == assetContract x tokenId`
+    function getListingsByAsset(address _assetContract, uint _tokenId) external view returns (Listing[] memory tokenListings) {
+
+        uint numOfListings = totalListings;
+        uint numOfTokenListings;
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            if(listings[i].assetContract == _assetContract && listings[i].tokenId == _tokenId) {
+                numOfTokenListings += 1;
+            }
+        }
+
+        tokenListings = new Listing[](numOfTokenListings);
+        uint idx;
+
+        for (uint i = 0; i < numOfListings; i += 1) {
+            if(listings[i].assetContract == _assetContract && listings[i].tokenId == _tokenId) {
+                tokenListings[idx] = listings[i];
+                idx += 1;
+            }
+        }
+    }
 }
