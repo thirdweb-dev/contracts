@@ -43,10 +43,11 @@ async function main() {
   const forwarderAddr: string = await registry.forwarder();
 
   // Deploy `Pack`
+  const contractURI: string = "ipfs://QmYMgpVGBgVZunM2uDPnobsHpryMmkXF8ZPJGiHfLpwShS";
   const Pack_Factory: ContractFactory = new ethers.ContractFactory(PackABI, bytecode);
   const tx = await Pack_Factory.connect(deployer).deploy(
     protocolControlAddress,
-    "$PACK Protocol", // This is supposed to be an `ipfs://...` type URI
+    contractURI,
     vrfCoordinator,
     linkTokenAddress,
     keyHash,
@@ -55,9 +56,19 @@ async function main() {
     txOption,
   );
 
-  console.log("Deploying Pack: ", tx.hash);
+  console.log("Deploying Pack: ", tx.hash, tx.address);
+  console.log(
+    tx.address,
+    protocolControlAddress,
+    contractURI,
+    vrfCoordinator,
+    linkTokenAddress,
+    keyHash,
+    fees,
+    forwarderAddr,
+  );
 
-  await tx.wait();
+  await tx.deployed();
 
   // Get deployed `Pack`'s address
   const packAddress = tx.address;
