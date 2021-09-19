@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { Forwarder } from "./Forwarder.sol";
 
 contract Coin is ERC20PresetMinterPauser, ERC2771Context {
-
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -35,10 +34,9 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
         address _trustedForwarder,
         string memory _uri
     ) ERC20PresetMinterPauser(_name, _symbol) ERC2771Context(_trustedForwarder) {
-        
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
-        
+
         // Set contract URI
         _contractURI = _uri;
     }

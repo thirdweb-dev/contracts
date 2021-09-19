@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 // Tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 // Security
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -19,7 +21,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
+contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Context {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -32,6 +34,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     /// @dev Collection level metadata.
     string public _contractURI;
 
+    /// @dev Token type of the listing.
+    enum TokenType {
+        ERC1155,
+        ERC721
+    }
+
     struct Listing {
         address seller;
         address assetContract;
@@ -41,6 +49,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         uint256 pricePerToken;
         uint256 saleStart;
         uint256 saleEnd;
+        TokenType tokenType;
     }
 
     /// @dev seller address => listingId => listing info.
@@ -86,8 +95,11 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         _;
     }
 
-    constructor(address _controlCenter, address _trustedForwarder, string memory _uri) ERC2771Context(_trustedForwarder) {
-        
+    constructor(
+        address _controlCenter,
+        address _trustedForwarder,
+        string memory _uri
+    ) ERC2771Context(_trustedForwarder) {
         // Set contract URI
         _contractURI = _uri;
 
@@ -96,7 +108,7 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     }
 
     /**
-     *   ERC 1155 Receiver functions.
+     *   ERC 1155 and ERC 721 Receiver functions.
      **/
 
     function onERC1155Received(
@@ -119,8 +131,17 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         return this.onERC1155BatchReceived.selector;
     }
 
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IERC1155Receiver).interfaceId;
+        return interfaceId == type(IERC1155Receiver).interfaceId || interfaceId == type(IERC721Receiver).interfaceId;
     }
 
     /**
@@ -138,17 +159,19 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         uint256 _secondsUntilEnd
     ) external onlyUnpausedProtocol {
         require(_quantity > 0, "Market: must list at least one token.");
-        require(
-            IERC1155(_assetContract).isApprovedForAll(_msgSender(), address(this)),
-            "Market: must approve the market to transfer tokens being listed."
-        );
-
-        // Transfer tokens being listed to Pack Protocol's asset safe.
-        IERC1155(_assetContract).safeTransferFrom(_msgSender(), address(this), _tokenId, _quantity, "");
 
         // Get listing ID.
         uint256 listingId = totalListings;
         totalListings += 1;
+
+        // Transfer tokens being listed to Market.
+        TokenType tokenTypeOfListing = takeTokensOnList(
+            _assetContract,
+            _msgSender(),
+            address(this),
+            _tokenId,
+            _quantity
+        );
 
         // Create listing.
         Listing memory newListing = Listing({
@@ -159,7 +182,8 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
             pricePerToken: _pricePerToken,
             quantity: _quantity,
             saleStart: block.timestamp + _secondsUntilStart,
-            saleEnd: _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd
+            saleEnd: _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd,
+            tokenType: tokenTypeOfListing
         });
 
         listings[listingId] = newListing;
@@ -173,12 +197,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         require(listing.quantity >= _quantity, "Market: cannot unlist more tokens than are listed.");
 
-        // Transfer way tokens being unlisted.
-        IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
-
         // Update listing info.
         listing.quantity -= _quantity;
         listings[_listingId] = listing;
+
+        // Transfer way tokens being unlisted.
+        sendTokens(listing, _quantity);
 
         emit ListingUpdate(_msgSender(), _listingId, listing);
     }
@@ -191,7 +215,12 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
     {
         Listing memory listing = listings[_listingId];
 
+        // Update listing info.
+        listing.quantity += _quantity;
+        listings[_listingId] = listing;
+
         require(_quantity > 0, "Market: must add at least one token.");
+        require(listing.tokenType == TokenType.ERC1155, "Market: Can only add to ERC 1155 listings.");
         require(
             IERC1155(listing.assetContract).isApprovedForAll(_msgSender(), address(this)),
             "Market: must approve the market to transfer tokens being added."
@@ -199,10 +228,6 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
 
         // Transfer tokens being listed to Pack Protocol's asset manager.
         IERC1155(listing.assetContract).safeTransferFrom(_msgSender(), address(this), listing.tokenId, _quantity, "");
-
-        // Update listing info.
-        listing.quantity += _quantity;
-        listings[_listingId] = listing;
 
         emit ListingUpdate(_msgSender(), _listingId, listing);
     }
@@ -243,51 +268,111 @@ contract Market is IERC1155Receiver, ReentrancyGuard, ERC2771Context {
         listing.quantity -= _quantity;
         listings[_listingId] = listing;
 
+        // Distribute sale value to stakeholders
         if (listing.pricePerToken > 0) {
-            // Get value distribution parameters.
-            uint256 totalPrice = listing.pricePerToken * _quantity;
-
-            // Check buyer's currency allowance
-            require(
-                IERC20(listing.currency).allowance(_msgSender(), address(this)) >= totalPrice,
-                "Market: must approve Market to transfer price to pay."
-            );
-
-            // Collect protocol fee if any
-            uint256 protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
-            require(
-                IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
-                "Market: failed to transfer protocol cut."
-            );
-
-            uint256 sellerCut = totalPrice - protocolCut;
-
-            // Distribute royalties if any
-            if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
-                (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(
-                    listing.tokenId,
-                    totalPrice
-                );
-
-                sellerCut -= royaltyAmount;
-
-                require(
-                    IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
-                    "Market: failed to transfer creator cut."
-                );
-            }
-
-            // Distribute price to seller
-            require(
-                IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
-                "Market: failed to transfer seller cut."
-            );
+            payoutOnSale(listing, _quantity);
         }
 
         // Transfer tokens being bought to buyer.
-        IERC1155(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, _quantity, "");
+        sendTokens(listing, _quantity);
 
         emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), _quantity, listing);
+    }
+
+    /// @dev Transfers the token being listed to the Market.
+    function takeTokensOnList(
+        address _assetContract,
+        address _from,
+        address _market,
+        uint256 _tokenId,
+        uint256 _quantity
+    ) internal returns (TokenType tokenType) {
+        if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
+            require(
+                IERC1155(_assetContract).isApprovedForAll(_from, _market),
+                "Market: must approve the market to transfer tokens being listed."
+            );
+
+            tokenType = TokenType.ERC1155;
+
+            // Transfer tokens being listed to Market.
+            IERC1155(_assetContract).safeTransferFrom(_from, _market, _tokenId, _quantity, "");
+        } else if (IERC165(_assetContract).supportsInterface(type(IERC1155).interfaceId)) {
+            require(_quantity == 1, "Market: Cannot list more than 1 of an ERC721 NFT.");
+
+            require(
+                IERC721(_assetContract).isApprovedForAll(_from, _market) ||
+                    IERC721(_assetContract).getApproved(_tokenId) == _market,
+                "Market: must approve the market to transfer tokens being listed."
+            );
+
+            tokenType = TokenType.ERC721;
+
+            // Transfer tokens being listed to Market.
+            IERC721(_assetContract).safeTransferFrom(_from, _market, _tokenId, "");
+        } else {
+            revert("Market: token must implement either ERC 1155 or ERC 721.");
+        }
+    }
+
+    /// @dev Sends the appropriate kind of token to caller.
+    function sendTokens(Listing memory listing, uint256 _quantity) internal {
+        if (listing.tokenType == TokenType.ERC1155) {
+            IERC1155(listing.assetContract).safeTransferFrom(
+                address(this),
+                _msgSender(),
+                listing.tokenId,
+                _quantity,
+                ""
+            );
+        } else if (listing.tokenType == TokenType.ERC721) {
+            require(_quantity == 1, "Market: Cannot unlist more than one of an ERC 721 NFT.");
+            IERC721(listing.assetContract).safeTransferFrom(address(this), _msgSender(), listing.tokenId, "");
+        }
+    }
+
+    /// @dev Payout stakeholders on sale
+    function payoutOnSale(Listing memory listing, uint256 _quantity) internal {
+        // Get value distribution parameters.
+        uint256 totalPrice = listing.pricePerToken * _quantity;
+
+        // Check buyer's currency allowance
+        require(
+            IERC20(listing.currency).allowance(_msgSender(), address(this)) >= totalPrice,
+            "Market: must approve Market to transfer price to pay."
+        );
+
+        // Collect protocol fee if any
+        uint256 protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
+        require(
+            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
+            "Market: failed to transfer protocol cut."
+        );
+
+        uint256 sellerCut = totalPrice - protocolCut;
+
+        // Distribute royalties if any
+        if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
+            (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(listing.assetContract).royaltyInfo(
+                listing.tokenId,
+                totalPrice
+            );
+
+            require(royaltyAmount + protocolCut < totalPrice, "Market: Total market fees exceed the price.");
+
+            sellerCut -= royaltyAmount;
+
+            require(
+                IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
+                "Market: failed to transfer creator cut."
+            );
+        }
+
+        // Distribute price to seller
+        require(
+            IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
+            "Market: failed to transfer seller cut."
+        );
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
