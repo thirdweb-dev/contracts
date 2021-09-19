@@ -3,10 +3,10 @@
     "protocolControl": "",
     "pack": "",
     "market": "",
-    "nft": "",
+    "nft": "0x933C5f2C4e9175bD31ee3A27E34DeF605416403F",
     "coin": "",
-    "forwarder": "0x8a53433d28aBF5d019b80d09DE70FFe60dc241FA",
-    "registry": "0x24574D0C177ad9E5cD74d9dBF5a9A729924e72e2"
+    "forwarder": "0x33Ab0E676bcbDe6F7e8f78f373E3F6F97a23E304",
+    "registry": "0x603Ff733763F86b7B9248Be9454c57114eDacC13"
   },
   "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "", "registry": "" },
   "rinkeby": {
