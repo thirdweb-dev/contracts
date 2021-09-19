@@ -45,11 +45,20 @@ async function main() {
   const symbol: string = "e.g. LINK";
 
   const Coin_Factory: ContractFactory = new ethers.ContractFactory(CoinABI, bytecode);
-  const tx = await Coin_Factory.connect(deployer).deploy(name, symbol, forwarderAddr, txOption);
+  const contractURI: string = "ipfs://QmYMgpVGBgVZunM2uDPnobsHpryMmkXF8ZPJGiHfLpwShS";
+  const tx = await Coin_Factory.connect(deployer).deploy(
+    protocolControlAddress,
+    name,
+    symbol,
+    forwarderAddr,
+    contractURI,
+    txOption,
+  );
 
   console.log("Deploying Nft: ", tx.hash);
+  console.log(tx.address, protocolControlAddress, name, symbol, forwarderAddr, contractURI);
 
-  await tx.wait();
+  await tx.deployed();
 
   // Get deployed `Coin`'s address
   const coinAddress = tx.address;

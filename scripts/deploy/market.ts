@@ -41,12 +41,20 @@ async function main() {
   const forwarderAddr: string = await registry.forwarder();
 
   // Deploy `Market`
+  const contractURI: string = "ipfs://QmYMgpVGBgVZunM2uDPnobsHpryMmkXF8ZPJGiHfLpwShS";
+
   const Market_Factory: ContractFactory = new ethers.ContractFactory(MarketABI, bytecode);
-  const tx = await Market_Factory.connect(deployer).deploy(protocolControlAddress, forwarderAddr, txOption);
+  const tx = await Market_Factory.connect(deployer).deploy(
+    protocolControlAddress,
+    forwarderAddr,
+    contractURI,
+    txOption,
+  );
 
-  console.log("Deploying Market: ", tx.hash);
+  console.log("Deploying Market: ", tx.hash, tx.address);
+  console.log(tx.address, protocolControlAddress, forwarderAddr, contractURI);
 
-  await tx.wait();
+  await tx.deployed();
 
   // Get deployed `Market`'s address
   const marketAddress = tx.address;

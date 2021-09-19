@@ -45,8 +45,8 @@ async function main() {
 
   const Nft_Factory: ContractFactory = new ethers.ContractFactory(NftABI, bytecode);
   const tx = await Nft_Factory.connect(deployer).deploy(protocolControlAddress, forwarderAddr, contractURI, txOption);
-  console.log(protocolControlAddress, forwarderAddr, contractURI);
   console.log("Deploying Nft: ", tx.hash, tx.address);
+  console.log(tx.address, protocolControlAddress, forwarderAddr, contractURI);
   await tx.deployed();
 
   // Get deployed `Nft`'s address
