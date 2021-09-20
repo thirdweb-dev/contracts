@@ -107,19 +107,13 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "Pack: only a protocol admin can call this function."
+            "NFT: only a protocol admin can call this function."
         );
         _;
     }
 
-    /// @dev Checks whether the caller has MINTER_ROLE
-    modifier onlyMinter(address _caller) {
-        require(hasRole(MINTER_ROLE, _caller), "NFT: only a minter can call this function.");
-        _;
-    }
-
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
@@ -133,6 +127,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @notice Create native ERC 1155 NFTs.
     function createNativeNfts(string[] calldata _nftURIs, uint256[] calldata _nftSupplies)
         public
+        onlyUnpausedProtocol
         returns (uint256[] memory nftIds)
     {
         require(_nftURIs.length == _nftSupplies.length, "NFT: Must specify equal number of config values.");
@@ -170,7 +165,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _secondsUntilOpenStart,
         uint256 _secondsUntilOpenEnd,
         uint256 _nftsPerOpen
-    ) external {
+    ) external onlyUnpausedProtocol {
         uint256[] memory nftIds = createNativeNfts(_nftURIs, _nftSupplies);
 
         bytes memory args = abi.encode(_packURI, _secondsUntilOpenStart, _secondsUntilOpenEnd, _nftsPerOpen);
@@ -179,7 +174,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setNftRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
+        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         nftRoyaltyBps = _royaltyBps;
 
@@ -196,7 +191,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         address _nftContract,
         uint256 _tokenId,
         string calldata _nftURI
-    ) external {
+    ) external onlyUnpausedProtocol {
         require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "NFT: Only the owner of the NFT can wrap it.");
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
@@ -254,7 +249,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _tokenAmount,
         uint256 _numOfNftsToMint,
         string calldata _nftURI
-    ) external {
+    ) external onlyUnpausedProtocol {
         require(
             IERC20(_tokenContract).balanceOf(_msgSender()) >= _tokenAmount,
             "NFT: Must own the amount of tokens that are being wrapped."
