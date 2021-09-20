@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Token + Access Control
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -10,25 +10,35 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract Coin is ERC20PresetMinterPauser, ERC2771Context {
+contract NFT721 is ERC721PresetMinterPauserAutoId, ERC2771Context {
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
+    /// @dev The token Id of the NFT to mint.
+    uint256 public nextTokenId;
+
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    /// @dev Mapping from tokenId => URI
+    mapping(uint => string) public nftURI;
+
+    /// @dev Emitted when an NFT is minted;
+    event MintedNFT721(address indexed to, uint tokenId, string tokenURI);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "Coin: only a protocol admin can call this function."
+            "NFT721: only a protocol admin can call this function."
         );
         _;
     }
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "Coin: The protocol is paused.");
+        require(!controlCenter.systemPaused(), "NFT721: The protocol is paused.");
         _;
     }
 
@@ -38,7 +48,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
-    ) ERC20PresetMinterPauser(_name, _symbol) ERC2771Context(_trustedForwarder) {
+    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -46,9 +56,26 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
         _contractURI = _uri;
     }
 
-    /// @dev Mints `amount` of coins to `to`.
-    function mint(address to, uint256 amount) public override onlyUnpausedProtocol {
-        super.mint(to, amount);
+    /// @dev Revert inherited mint function.
+    function mint(address) public pure override {
+        revert("NFT721: Call mintNFT instead.");
+    }
+
+    /// @dev Mints an NFT to `_to` with URI `_uri`
+    function mintNFT(address _to, string calldata _uri) external onlyUnpausedProtocol {
+        require(hasRole(MINTER_ROLE, _msgSender()), "NFT721: must have minter role to mint");
+
+        // Get tokenId
+        uint id = nextTokenId;
+        
+        // Mint NFT
+        _mint(_to, id);
+        nextTokenId += 1;
+
+        // Update URI
+        nftURI[id] = _uri;
+
+        emit MintedNFT721(_to, id, _uri);
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
