@@ -10,7 +10,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract NFT721 is ERC721PresetMinterPauserAutoId, ERC2771Context {
+contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context {
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
@@ -25,7 +25,7 @@ contract NFT721 is ERC721PresetMinterPauserAutoId, ERC2771Context {
     mapping(uint => string) public nftURI;
 
     /// @dev Emitted when an NFT is minted;
-    event MintedNFT721(address indexed to, uint tokenId, string tokenURI);
+    event Minted(address indexed to, uint tokenId, string tokenURI);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -75,7 +75,7 @@ contract NFT721 is ERC721PresetMinterPauserAutoId, ERC2771Context {
         // Update URI
         nftURI[id] = _uri;
 
-        emit MintedNFT721(_to, id, _uri);
+        emit Minted(_to, id, _uri);
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.

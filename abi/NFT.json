@@ -102,7 +102,7 @@
         "type": "string"
       }
     ],
-    "name": "MintedNFT721",
+    "name": "Minted",
     "type": "event"
   },
   {
