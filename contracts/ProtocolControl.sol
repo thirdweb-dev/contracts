@@ -94,8 +94,6 @@ contract ProtocolControl is AccessControl {
         onlyProtocolAdmin
         returns (bytes32 moduleId)
     {
-        require(_moduleType <= uint8(ModuleType.Other), "ProtocolControl: invalid module type provided.");
-
         // `moduleId` is collision resitant -- unique `_moduleType` and incrementing `numOfModuleType`
         moduleId = keccak256(abi.encodePacked(numOfModuleType[_moduleType], uint256(_moduleType)));
         numOfModuleType[_moduleType] += 1;
