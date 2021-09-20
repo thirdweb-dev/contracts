@@ -12,10 +12,10 @@ import { Forwarder } from "./Forwarder.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Registry is Ownable {
-    // NFTLabs treasury
-    address public nftlabsTreasury;
+    // NFTLabs admin signer
+    address public nftlabsAdminSigner;
 
-    // `Forwarder` for gasless transacitons
+    // `Forwarder` for meta-transacitons
     address public forwarder;
 
     struct ControlCenters {
@@ -25,17 +25,20 @@ contract Registry is Ownable {
         mapping(uint256 => address) protocolControl;
     }
 
+    // Mapping from app deployer => app address.
     mapping(address => ControlCenters) public controlCenters;
 
     // Emitted on protocol deployment
     event DeployedProtocol(address indexed deployer, address indexed protocolControl, uint256 version);
-
     // Emitted in constructor
     event DeployedForwarder(address forwarder);
+    // Emitted when the NFTLabs admin signer is updated
+    event UpdatedNftlabsAdmin(address prevAdmin, address newAdmin);
 
     constructor(address _nftlabs) {
-        nftlabsTreasury = _nftlabs;
+        nftlabsAdminSigner = _nftlabs;
 
+        // Deploy forwarder for meta-transactions
         bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
         bytes memory forwarderByteCode = abi.encodePacked(type(Forwarder).creationCode);
         forwarder = Create2.deploy(0, salt, forwarderByteCode);
@@ -50,7 +53,7 @@ contract Registry is Ownable {
         // Deploy `ProtocolControl`
         bytes memory protocolControlByteCode = abi.encodePacked(
             type(ProtocolControl).creationCode,
-            abi.encode(msg.sender, nftlabsTreasury, _protocolControlURI)
+            abi.encode(msg.sender, nftlabsAdminSigner, _protocolControlURI)
         );
 
         address protocolControlAddr = Create2.deploy(0, salt, protocolControlByteCode);
@@ -60,6 +63,14 @@ contract Registry is Ownable {
         controlCenters[msg.sender].latestVersion += 1;
 
         emit DeployedProtocol(msg.sender, protocolControlAddr, currentVersion);
+    }
+
+    /// @dev Lets the owner of the contract update the NFTLabs admin signer
+    function setNftlabsAdmin(address _newAdminSigner) external onlyOwner {
+        address prevAdmin = nftlabsAdminSigner;
+        nftlabsAdminSigner = _newAdminSigner;
+
+        emit UpdatedNftlabsAdmin(prevAdmin, _newAdminSigner);
     }
 
     /// @dev Returns the latest version of protocol control
