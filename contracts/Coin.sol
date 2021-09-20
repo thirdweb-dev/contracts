@@ -9,7 +9,6 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import { Forwarder } from "./Forwarder.sol";
 
 contract Coin is ERC20PresetMinterPauser, ERC2771Context {
     /// @dev The protocol control center.

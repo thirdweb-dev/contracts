@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import { Forwarder } from "./Forwarder.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";

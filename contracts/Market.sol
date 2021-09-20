@@ -13,7 +13,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import { Forwarder } from "./Forwarder.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
