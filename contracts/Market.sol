@@ -26,7 +26,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     ProtocolControl internal controlCenter;
 
     // See EIP 2981
-    bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
+    bytes4 private constant _INTERFACE_ID_ERC2981 = type(IERC2981).interfaceId;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -97,7 +97,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC2771Context(_trustedForwarder) {
@@ -241,7 +241,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         address _currency,
         uint256 _secondsUntilStart,
         uint256 _secondsUntilEnd
-    ) external onlySeller(_msgSender(), _listingId) {
+    ) external onlyUnpausedProtocol onlySeller(_msgSender(), _listingId) {
         Listing memory listing = listings[_listingId];
 
         // Update listing info.
@@ -256,7 +256,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     /// @notice Lets buyer buy a given amount of tokens listed for sale.
-    function buy(uint256 _listingId, uint256 _quantity) external nonReentrant onlyExistingListing(_listingId) {
+    function buy(uint256 _listingId, uint256 _quantity) external nonReentrant onlyUnpausedProtocol onlyExistingListing(_listingId) {
         // Get listing
         Listing memory listing = listings[_listingId];
 
