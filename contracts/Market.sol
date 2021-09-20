@@ -255,7 +255,12 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     /// @notice Lets buyer buy a given amount of tokens listed for sale.
-    function buy(uint256 _listingId, uint256 _quantity) external nonReentrant onlyUnpausedProtocol onlyExistingListing(_listingId) {
+    function buy(uint256 _listingId, uint256 _quantity)
+        external
+        nonReentrant
+        onlyUnpausedProtocol
+        onlyExistingListing(_listingId)
+    {
         // Get listing
         Listing memory listing = listings[_listingId];
 

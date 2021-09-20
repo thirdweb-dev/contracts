@@ -104,7 +104,7 @@ contract ProtocolControl is AccessControl {
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.
     function updateModule(bytes32 _moduleId, address _newModuleAddress) external onlyProtocolAdmin {
-        require(modules[_moduleId] != address(0), "ProtocolControl: a module with this ID does not exist." );
+        require(modules[_moduleId] != address(0), "ProtocolControl: a module with this ID does not exist.");
 
         modules[_moduleId] = _newModuleAddress;
 
@@ -139,11 +139,10 @@ contract ProtocolControl is AccessControl {
         address _to,
         uint256 _amount
     ) external onlyProtocolAdmin {
-
         bool success;
 
-        if(_asset == address(0)) {
-            (success,) = (_to).call{value: _amount}("");
+        if (_asset == address(0)) {
+            (success, ) = (_to).call{ value: _amount }("");
         } else {
             success = IERC20(_asset).transfer(_to, _amount);
         }

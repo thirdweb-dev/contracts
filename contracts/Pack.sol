@@ -274,10 +274,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256 _secondsUntilOpenEnd,
         uint256 _rewardsPerOpen
     ) internal onlyUnpausedProtocol {
-        require(
-            hasRole(MINTER_ROLE, _creator),
-            "Pack: only creators with MINTER_ROLE can create packs."
-        );
+        require(hasRole(MINTER_ROLE, _creator), "Pack: only creators with MINTER_ROLE can create packs.");
         require(
             IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
             "Pack: reward contract does not implement ERC 1155."
