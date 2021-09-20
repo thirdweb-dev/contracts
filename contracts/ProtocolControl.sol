@@ -47,6 +47,7 @@ contract ProtocolControl is AccessControl {
     event FundsTransferred(address asset, address to, uint256 amount);
     event SystemPaused(bool isPaused);
     event MarketFeeBps(uint256 marketFeeBps);
+    event NFTLabsTreasury(address _nftlabsTreasury);
 
     /// @dev Check whether the caller is a protocol admin
     modifier onlyProtocolAdmin() {
@@ -77,9 +78,14 @@ contract ProtocolControl is AccessControl {
 
         _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
         _setRoleAdmin(NFTLABS, NFTLABS);
+
+        emit NFTLabsTreasury(_nftlabs);
     }
 
-    /// @dev Lets a protocol admin change the address of a module of the protocol.
+    /// @dev Let the contract accept ether.
+    receive() external payable {}
+
+    /// @dev Lets a protocol admin add a module to the protocol.
     function addModule(address _newModuleAddress, uint8 _moduleType)
         external
         onlyProtocolAdmin
@@ -98,6 +104,8 @@ contract ProtocolControl is AccessControl {
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.
     function updateModule(bytes32 _moduleId, address _newModuleAddress) external onlyProtocolAdmin {
+        require(modules[_moduleId] != address(0), "ProtocolControl: a module with this ID does not exist." );
+
         modules[_moduleId] = _newModuleAddress;
 
         emit ModuleUpdated(_moduleId, _newModuleAddress, uint256(moduleType[_moduleId]));
@@ -115,31 +123,42 @@ contract ProtocolControl is AccessControl {
     /// @dev Lets a nftlabs admin change the market fee basis points.
     function updateNftlabsTreasury(address _newTreasury) external onlyNftlabsAdmin {
         nftlabsTreasury = _newTreasury;
+
+        emit NFTLabsTreasury(_newTreasury);
     }
 
     /// @dev Lets a protocol admin pause the protocol.
-    function pausePackProtocol(bool _toPause) external onlyProtocolAdmin {
+    function pauseProtocol(bool _toPause) external onlyProtocolAdmin {
         systemPaused = _toPause;
         emit SystemPaused(_toPause);
     }
 
-    /// @dev Lets a protocol admin transfer the accrued protocol fees.
+    /// @dev Lets a protocol admin transfer this contract's funds.
     function transferProtocolFunds(
         address _asset,
         address _to,
         uint256 _amount
     ) external onlyProtocolAdmin {
-        require(IERC20(_asset).transfer(_to, _amount), "Protocol Control: failed to transfer protocol funds.");
+
+        bool success;
+
+        if(_asset == address(0)) {
+            (success,) = (_to).call{value: _amount}("");
+        } else {
+            success = IERC20(_asset).transfer(_to, _amount);
+        }
+
+        require(success, "Protocol Control: failed to transfer protocol funds.");
 
         emit FundsTransferred(_asset, _to, _amount);
     }
 
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
     }
 
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    /// @dev Returns the URI for the contract-level metadata of the contract.
     function contractURI() public view returns (string memory) {
         return _contractURI;
     }
