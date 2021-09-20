@@ -156,7 +156,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         }
 
         // Mint NFTs to `_msgSender()`
-        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        mintBatch(_msgSender(), nftIds, _nftSupplies, "");
 
         emit NativeNfts(_msgSender(), nftIds, _nftURIs, _nftSupplies);
     }
@@ -208,7 +208,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         IERC721(_nftContract).safeTransferFrom(_msgSender(), address(this), _tokenId);
 
         // Mint NFTs to `_msgSender()`
-        _mint(_msgSender(), nextTokenId, 1, "");
+        mint(_msgSender(), nextTokenId, 1, "");
 
         // Store nft state.
         nftInfo[nextTokenId] = NftInfo({
@@ -271,7 +271,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         );
 
         // Mint NFTs to `_msgSender()`
-        _mint(_msgSender(), nextTokenId, _numOfNftsToMint, "");
+        mint(_msgSender(), nextTokenId, _numOfNftsToMint, "");
 
         nftInfo[nextTokenId] = NftInfo({
             creator: _msgSender(),

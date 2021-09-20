@@ -51,7 +51,7 @@ describe("Create a pack with rewards in a single tx", function () {
     );
 
     const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-    pack = await Pack_Factory.deploy(
+    pack = await Pack_Factory.connect(creator).deploy(
       controlCenter.address,
       "$PACK Protocol",
       vrfCoordinator,

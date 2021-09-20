@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Tokens
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -22,7 +22,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IERC2981 {
+contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IERC2981 {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -119,7 +119,7 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
         bytes32 _keyHash,
         uint256 _fees,
         address _trustedForwarder
-    ) ERC1155(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
+    ) ERC1155PresetMinterPauser(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -275,6 +275,10 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
         uint256 _secondsUntilOpenEnd,
         uint256 _rewardsPerOpen
     ) internal onlyUnpausedProtocol {
+        require(
+            hasRole(MINTER_ROLE, _creator),
+            "Pack: only creators with MINTER_ROLE can create packs."
+        );
         require(
             IERC1155(_rewardContract).supportsInterface(0xd9b67a26),
             "Pack: reward contract does not implement ERC 1155."
