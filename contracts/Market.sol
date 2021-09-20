@@ -41,6 +41,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     struct Listing {
+        uint listingId;
         address seller;
         address assetContract;
         uint256 tokenId;
@@ -175,6 +176,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
         // Create listing.
         Listing memory newListing = Listing({
+            listingId: listingId,
             seller: _msgSender(),
             assetContract: _assetContract,
             tokenId: _tokenId,
