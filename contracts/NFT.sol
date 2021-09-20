@@ -173,13 +173,7 @@ contract NFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) external {
         uint256[] memory nftIds = createNativeNfts(_nftURIs, _nftSupplies);
 
-        bytes memory args = abi.encode(
-            _packURI,
-            address(this),
-            _secondsUntilOpenStart,
-            _secondsUntilOpenEnd,
-            _nftsPerOpen
-        );
+        bytes memory args = abi.encode(_packURI, _secondsUntilOpenStart, _secondsUntilOpenEnd, _nftsPerOpen);
         safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, args);
     }
 

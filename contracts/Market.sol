@@ -41,7 +41,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     struct Listing {
-        uint listingId;
+        uint256 listingId;
         address seller;
         address assetContract;
         uint256 tokenId;
@@ -394,32 +394,30 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
     /// @dev Returns all listings
     function getAllListings() external view returns (Listing[] memory allListings) {
-
-        uint numOfListings = totalListings;
+        uint256 numOfListings = totalListings;
         allListings = new Listing[](numOfListings);
 
-        for (uint i = 0; i < numOfListings; i += 1) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
             allListings[i] = listings[i];
         }
     }
 
     /// @dev Returns all listings by seller
     function getListingsBySeller(address _seller) external view returns (Listing[] memory sellerListings) {
+        uint256 numOfListings = totalListings;
+        uint256 numOfSellerListings;
 
-        uint numOfListings = totalListings;
-        uint numOfSellerListings;
-
-        for (uint i = 0; i < numOfListings; i += 1) {
-            if(listings[i].seller == _seller) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
+            if (listings[i].seller == _seller) {
                 numOfSellerListings += 1;
             }
         }
 
         sellerListings = new Listing[](numOfSellerListings);
-        uint idx;
+        uint256 idx;
 
-        for (uint i = 0; i < numOfListings; i += 1) {
-            if(listings[i].seller == _seller) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
+            if (listings[i].seller == _seller) {
                 sellerListings[idx] = listings[i];
                 idx += 1;
             }
@@ -428,21 +426,20 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
     /// @dev Returns all listings by assetContract
     function getListingsByAssetContract(address _assetContract) external view returns (Listing[] memory tokenListings) {
+        uint256 numOfListings = totalListings;
+        uint256 numOfTokenListings;
 
-        uint numOfListings = totalListings;
-        uint numOfTokenListings;
-
-        for (uint i = 0; i < numOfListings; i += 1) {
-            if(listings[i].assetContract == _assetContract) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
+            if (listings[i].assetContract == _assetContract) {
                 numOfTokenListings += 1;
             }
         }
 
         tokenListings = new Listing[](numOfTokenListings);
-        uint idx;
+        uint256 idx;
 
-        for (uint i = 0; i < numOfListings; i += 1) {
-            if(listings[i].assetContract == _assetContract) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
+            if (listings[i].assetContract == _assetContract) {
                 tokenListings[idx] = listings[i];
                 idx += 1;
             }
@@ -450,22 +447,25 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     /// @dev Returns all listings by asset; `asset == assetContract x tokenId`
-    function getListingsByAsset(address _assetContract, uint _tokenId) external view returns (Listing[] memory tokenListings) {
+    function getListingsByAsset(address _assetContract, uint256 _tokenId)
+        external
+        view
+        returns (Listing[] memory tokenListings)
+    {
+        uint256 numOfListings = totalListings;
+        uint256 numOfTokenListings;
 
-        uint numOfListings = totalListings;
-        uint numOfTokenListings;
-
-        for (uint i = 0; i < numOfListings; i += 1) {
-            if(listings[i].assetContract == _assetContract && listings[i].tokenId == _tokenId) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
+            if (listings[i].assetContract == _assetContract && listings[i].tokenId == _tokenId) {
                 numOfTokenListings += 1;
             }
         }
 
         tokenListings = new Listing[](numOfTokenListings);
-        uint idx;
+        uint256 idx;
 
-        for (uint i = 0; i < numOfListings; i += 1) {
-            if(listings[i].assetContract == _assetContract && listings[i].tokenId == _tokenId) {
+        for (uint256 i = 0; i < numOfListings; i += 1) {
+            if (listings[i].assetContract == _assetContract && listings[i].tokenId == _tokenId) {
                 tokenListings[idx] = listings[i];
                 idx += 1;
             }

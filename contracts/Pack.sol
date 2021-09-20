@@ -240,17 +240,16 @@ contract Pack is ERC1155, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IER
         // Get parameters for creating packs.
         (
             string memory packURI,
-            address rewardContract,
             uint256 secondsUntilOpenStart,
             uint256 secondsUntilOpenEnd,
             uint256 rewardsPerOpen
-        ) = abi.decode(_data, (string, address, uint256, uint256, uint256));
+        ) = abi.decode(_data, (string, uint256, uint256, uint256));
 
         // Create packs.
         createPack(
             _from,
             packURI,
-            rewardContract,
+            _msgSender(),
             _ids,
             _values,
             secondsUntilOpenStart,
