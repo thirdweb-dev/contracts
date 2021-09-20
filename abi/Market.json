@@ -38,6 +38,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
+          {
             "internalType": "address",
             "name": "seller",
             "type": "address"
@@ -135,6 +140,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
+          {
             "internalType": "address",
             "name": "seller",
             "type": "address"
@@ -224,6 +234,11 @@
       },
       {
         "components": [
+          {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
           {
             "internalType": "address",
             "name": "seller",
@@ -348,6 +363,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
+          {
             "internalType": "address",
             "name": "seller",
             "type": "address"
@@ -413,6 +433,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
           {
             "internalType": "address",
             "name": "seller",
@@ -485,6 +510,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
+          {
             "internalType": "address",
             "name": "seller",
             "type": "address"
@@ -551,6 +581,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
+          {
             "internalType": "address",
             "name": "seller",
             "type": "address"
@@ -616,6 +651,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "uint256",
+            "name": "listingId",
+            "type": "uint256"
+          },
           {
             "internalType": "address",
             "name": "seller",
@@ -742,6 +782,11 @@
     ],
     "name": "listings",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "listingId",
+        "type": "uint256"
+      },
       {
         "internalType": "address",
         "name": "seller",
