@@ -9,6 +9,15 @@
     "registry": "0x33A44fd78e1ffe818354c2cE28300c60Fa702D3A"
   },
   "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "", "registry": "" },
+  "polygon": {
+    "protocolControl": "",
+    "pack": "",
+    "market": "",
+    "nft": "",
+    "coin": "",
+    "forwarder": "0xC77F2AAbad46d8a21200a456543e696FD3d91681",
+    "registry": "0xcf2E9F069F02e7FF0bE7cFDF522fa83679912e79"
+  },
   "rinkeby": {
     "protocolControl": "",
     "pack": "",
@@ -37,3 +46,4 @@
     "registry": ""
   }
 }
+
