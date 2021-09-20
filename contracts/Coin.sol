@@ -28,7 +28,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
@@ -39,6 +39,17 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
 
         // Set contract URI
         _contractURI = _uri;
+    }
+
+    /// @dev Checks whether the protocol is paused.
+    modifier onlyUnpausedProtocol() {
+        require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
+        _;
+    }
+
+    /// @dev Mints `amount` of coins to `to`.
+    function mint(address to, uint256 amount) public override onlyUnpausedProtocol {
+        super.mint(to, amount);
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
