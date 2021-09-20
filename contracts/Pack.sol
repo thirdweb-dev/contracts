@@ -112,7 +112,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         string memory _uri,
         address _vrfCoordinator,
         address _linkToken,
@@ -236,7 +236,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256[] memory _ids,
         uint256[] memory _values,
         bytes memory _data
-    ) external override returns (bytes4) {
+    ) external override onlyUnpausedProtocol returns (bytes4) {
         // Get parameters for creating packs.
         (
             string memory packURI,
@@ -280,7 +280,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
             "Pack: only creators with MINTER_ROLE can create packs."
         );
         require(
-            IERC1155(_rewardContract).supportsInterface(0xd9b67a26),
+            IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
             "Pack: reward contract does not implement ERC 1155."
         );
 
