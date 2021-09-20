@@ -15,8 +15,8 @@
     "market": "",
     "nft": "",
     "coin": "",
-    "forwarder": "0xC77F2AAbad46d8a21200a456543e696FD3d91681",
-    "registry": "0xcf2E9F069F02e7FF0bE7cFDF522fa83679912e79"
+    "forwarder": "0x5B86E7e3339A486cf921ee9d9F29866E4E3ba4a0",
+    "registry": "0x06aD00C173012AAd5Eea4Ec5b3737fB6a6dFDDf6"
   },
   "rinkeby": {
     "protocolControl": "",
