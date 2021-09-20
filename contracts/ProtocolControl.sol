@@ -22,7 +22,10 @@ contract ProtocolControl is AccessControl {
     /// @dev Pack protocol module names.
     enum ModuleType {
         Coin,
+        NFTCollection,
         NFT,
+        DynamicNFT,
+        AccessNFT,
         Pack,
         Market,
         Other
