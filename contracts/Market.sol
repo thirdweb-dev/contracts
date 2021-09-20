@@ -287,7 +287,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         uint256 _tokenId,
         uint256 _quantity
     ) internal returns (TokenType tokenType) {
-        if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
+        if (IERC165(_assetContract).supportsInterface(type(IERC1155).interfaceId)) {
             require(
                 IERC1155(_assetContract).isApprovedForAll(_from, _market),
                 "Market: must approve the market to transfer tokens being listed."
@@ -297,7 +297,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
             // Transfer tokens being listed to Market.
             IERC1155(_assetContract).safeTransferFrom(_from, _market, _tokenId, _quantity, "");
-        } else if (IERC165(_assetContract).supportsInterface(type(IERC1155).interfaceId)) {
+        } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
             require(_quantity == 1, "Market: Cannot list more than 1 of an ERC721 NFT.");
 
             require(
