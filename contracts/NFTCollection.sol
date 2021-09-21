@@ -207,7 +207,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets a protocol admin update the the next level of an NFT.
-    function updateLevelOfNft(uint _tokenId, string calldata _levelURI) external onlyProtocolAdmin {
+    function updateMaxLevelOfNft(uint _tokenId, string calldata _levelURI) external onlyProtocolAdmin {
         
         require(
             _tokenId < nextTokenId,
@@ -221,6 +221,30 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uriByLevel[_tokenId][level] = _levelURI;
 
         emit NftLevelUpdated(_tokenId, level, _levelURI);
+    }
+
+    /// @dev Let NFT owner level up their NFTs (as many as eligible)
+    function levelUpNFTs(uint _tokenId, uint _amount, uint _fromLevel, uint _toLevel) external {
+        uint maxLevel = maxLevelOfNft[_tokenId];
+
+        require(
+            _fromLevel < maxLevel && _toLevel <= maxLevel,
+            "NFTCollection: invalid levels provided."
+        );
+
+        require(
+            balanceByLevel[_tokenId][_msgSender()][_fromLevel] >= _amount,
+            "NFTCollection: not enough NFTs of provided level, owned."
+        );
+
+        /**
+         * NEED eligibility condition for an aditional require check to see if user is eligible to level up `_amount` of 
+         * NFT from `_fromLevel` to `_toLevel`
+         */
+
+        // Update balances by level
+        balanceByLevel[_tokenId][_msgSender()][_fromLevel] -= _amount;
+        balanceByLevel[_tokenId][_msgSender()][_toLevel] += _amount;
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
