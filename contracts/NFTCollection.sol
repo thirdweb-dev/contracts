@@ -152,6 +152,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint id = nextTokenId;
         uint initialLevel = 0;
         address creatorOfNfts = _msgSender();
+        uint[] memory levels = new uint[](_nftURIs.length);
 
         // Store NFT state for each NFT.
         for (uint256 i = 0; i < _nftURIs.length; i++) {
@@ -175,7 +176,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
             // Update NFT URI by level
             uriByLevel[id][initialLevel] = _nftURIs[i];
 
-            // Increment Id
+            // Update vars
+            levels[i] = initialLevel;
             id += 1;
         }
 
@@ -183,7 +185,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         nextTokenId = id;
 
         // Mint NFTs to `_msgSender()`
-        mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        mintBatch(_msgSender(), nftIds, _nftSupplies, abi.encode(levels));
 
         emit NativeNfts(_msgSender(), nftIds, _nftURIs, _nftSupplies);
     }
@@ -252,7 +254,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         IERC721(_nftContract).safeTransferFrom(_msgSender(), address(this), _tokenId);
 
         // Mint NFTs to `_msgSender()`
-        mint(_msgSender(), nextTokenId, 1, "");
+        uint[1] memory level = [uint256(0)];
+        mint(_msgSender(), nextTokenId, 1, abi.encode(level));
 
         // Store nft state.
         nftInfo[nextTokenId] = NftInfo({
@@ -315,7 +318,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         );
 
         // Mint NFTs to `_msgSender()`
-        mint(_msgSender(), nextTokenId, _numOfNftsToMint, "");
+        uint[1] memory level = [uint256(0)];
+        mint(_msgSender(), nextTokenId, _numOfNftsToMint, abi.encode(level));
 
         nftInfo[nextTokenId] = NftInfo({
             creator: _msgSender(),
@@ -371,6 +375,27 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
             for (uint256 i = 0; i < ids.length; i++) {
                 nftInfo[ids[i]].supply -= amounts[i];
             }
+        }
+
+        // Update balances by level
+        uint[] memory levels = abi.decode(data, (uint[]));
+        require(
+            levels.length == ids.length,
+            "NFTCollection: Must specify levels for all tokens."
+        );
+        
+        for (uint256 i = 0; i < ids.length; i++) {
+            uint level = levels[i];
+            uint id = ids[i];
+            uint amount = amounts[i];
+
+            require(
+                balanceByLevel[id][from][level] >= amount,
+                "NFTCollection: Not enough NFTs of the level provided, owned."
+            );
+
+            balanceByLevel[id][from][level] -= amount;
+            balanceByLevel[id][to][level] += amount;
         }
     }
 
