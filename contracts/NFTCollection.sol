@@ -32,6 +32,9 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Collection level metadata.
     string public _contractURI;
 
+    /// @dev The current max level of an NFT.
+    uint public maxLevel;
+
     enum UnderlyingType {
         None,
         ERC20,
@@ -90,6 +93,15 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
 
+    /// @dev NFT tokenId => owner address => NFT level => owner balance.
+    mapping(uint => mapping(address => mapping(uint => uint))) public balanceByLevel;
+
+    /// @dev NFT tokenId => NFT level => total supply of NFTs at that level.
+    mapping(uint => mapping(uint => string)) public uriByLevel;
+
+    /// @dev NFT tokenId => NFT level => total supply of NFTs at that level.
+    mapping(uint => mapping(uint => uint)) public totalSupplyOfLevel;
+
     /// @dev NFT tokenId => Underlying ERC721 NFT state.
     mapping(uint256 => ERC721Wrapped) public erc721WrappedNfts;
 
@@ -135,19 +147,38 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         // Get tokenIds.
         nftIds = new uint256[](_nftURIs.length);
 
+        uint id = nextTokenId;
+        uint initialLevel = 0;
+        address creatorOfNfts = _msgSender();
+
         // Store NFT state for each NFT.
         for (uint256 i = 0; i < _nftURIs.length; i++) {
-            nftIds[i] = nextTokenId;
+            // Store NFT tokenId
+            nftIds[i] = id;
 
-            nftInfo[nextTokenId] = NftInfo({
-                creator: _msgSender(),
+            // Update NFT data at global level.
+            nftInfo[id] = NftInfo({
+                creator: creatorOfNfts,
                 uri: _nftURIs[i],
                 supply: _nftSupplies[i],
                 underlyingType: UnderlyingType.None
             });
 
-            nextTokenId++;
+            // Update NFT supply by level
+            totalSupplyOfLevel[id][initialLevel] = _nftSupplies[i];
+
+            // Update NFT balance by level
+            balanceByLevel[id][creatorOfNfts][initialLevel] = _nftSupplies[i];
+
+            // Update NFT URI by level
+            uriByLevel[id][initialLevel] = _nftURIs[i];
+
+            // Increment Id
+            id += 1;
         }
+
+        // Update the global tokenId counter.
+        nextTokenId = id;
 
         // Mint NFTs to `_msgSender()`
         mintBatch(_msgSender(), nftIds, _nftSupplies, "");
