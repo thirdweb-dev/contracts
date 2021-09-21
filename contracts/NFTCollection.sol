@@ -32,9 +32,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Collection level metadata.
     string public _contractURI;
 
-    /// @dev The current max level of an NFT.
-    uint public maxLevel;
-
     enum UnderlyingType {
         None,
         ERC20,
@@ -90,8 +87,13 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     event NftRoyaltyUpdated(uint256 royaltyBps);
 
+    event NftLevelUpdated(uint tokenId, uint newMaxLevel, string levelURI);
+
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
+
+    /// @dev NFT tokenId => max level of NFT
+    mapping(uint => uint) public maxLevelOfNft;
 
     /// @dev NFT tokenId => owner address => NFT level => owner balance.
     mapping(uint => mapping(address => mapping(uint => uint))) public balanceByLevel;
@@ -200,6 +202,23 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         bytes memory args = abi.encode(_packURI, _secondsUntilOpenStart, _secondsUntilOpenEnd, _nftsPerOpen);
         safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, args);
+    }
+
+    /// @dev Lets a protocol admin update the the next level of an NFT.
+    function updateLevelOfNft(uint _tokenId, string calldata _levelURI) external onlyProtocolAdmin {
+        
+        require(
+            _tokenId < nextTokenId,
+            "NFTCollection: cannot update the level of a non existent NFT."
+        );
+
+        // Update max level of NFT
+        uint level = ++maxLevelOfNft[_tokenId];
+
+        // Update URI of level
+        uriByLevel[_tokenId][level] = _levelURI;
+
+        emit NftLevelUpdated(_tokenId, level, _levelURI);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
