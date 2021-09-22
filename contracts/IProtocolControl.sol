@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 interface IProtocolControl is IAccessControl {
     /// @dev Admin role for protocol.
     function PROTOCOL_ADMIN() external view returns (bytes32);
+
     /// @dev Admin role for NFTLabs.
     function NFTLABS() external view returns (bytes32);
 
@@ -33,13 +34,16 @@ interface IProtocolControl is IAccessControl {
 
     /// @dev Module ID => Module address.
     function modules(bytes32) external view returns (address);
+
     /// @dev Module ID => Module type.
     function moduleType(bytes32) external view returns (ModuleType);
+
     /// @dev Module type => Num of modules of that type.
     function numOfModuleType(uint256) external view returns (uint256);
 
     /// @dev Market fees
     function MAX_BPS() external view returns (uint256);
+
     function marketFeeBps() external view returns (uint256);
 
     /// @dev Contract level metadata.
@@ -54,7 +58,6 @@ interface IProtocolControl is IAccessControl {
 
     /// @dev Lets a protocol admin add a module to the protocol.
     function addModule(address _newModuleAddress, uint8 _moduleType) external returns (bytes32 moduleId);
-    
 
     /// @dev Lets a protocol admin change the address of a module of the protocol.
     function updateModule(bytes32 _moduleId, address _newModuleAddress) external;
@@ -69,7 +72,11 @@ interface IProtocolControl is IAccessControl {
     function pauseProtocol(bool _toPause) external;
 
     /// @dev Lets a protocol admin transfer this contract's funds.
-    function transferProtocolFunds(address _asset,address _to,uint256 _amount) external;
+    function transferProtocolFunds(
+        address _asset,
+        address _to,
+        uint256 _amount
+    ) external;
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external;

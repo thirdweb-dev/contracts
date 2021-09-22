@@ -11,7 +11,6 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context {
-
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -22,10 +21,10 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context {
     string public _contractURI;
 
     /// @dev Mapping from tokenId => URI
-    mapping(uint => string) public nftURI;
+    mapping(uint256 => string) public nftURI;
 
     /// @dev Emitted when an NFT is minted;
-    event Minted(address indexed to, uint tokenId, string tokenURI);
+    event Minted(address indexed to, uint256 tokenId, string tokenURI);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -66,8 +65,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context {
         require(hasRole(MINTER_ROLE, _msgSender()), "NFT721: must have minter role to mint");
 
         // Get tokenId
-        uint id = nextTokenId;
-        
+        uint256 id = nextTokenId;
+
         // Mint NFT
         _mint(_to, id);
         nextTokenId += 1;

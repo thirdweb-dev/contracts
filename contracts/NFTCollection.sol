@@ -87,22 +87,22 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     event NftRoyaltyUpdated(uint256 royaltyBps);
 
-    event NftLevelUpdated(uint tokenId, uint newMaxLevel, string levelURI);
+    event NftLevelUpdated(uint256 tokenId, uint256 newMaxLevel, string levelURI);
 
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
 
     /// @dev NFT tokenId => max level of NFT
-    mapping(uint => uint) public maxLevelOfNft;
+    mapping(uint256 => uint256) public maxLevelOfNft;
 
     /// @dev NFT tokenId => owner address => NFT level => owner balance.
-    mapping(uint => mapping(address => mapping(uint => uint))) public balanceByLevel;
+    mapping(uint256 => mapping(address => mapping(uint256 => uint256))) public balanceByLevel;
 
     /// @dev NFT tokenId => NFT level => total supply of NFTs at that level.
-    mapping(uint => mapping(uint => string)) public uriByLevel;
+    mapping(uint256 => mapping(uint256 => string)) public uriByLevel;
 
     /// @dev NFT tokenId => NFT level => total supply of NFTs at that level.
-    mapping(uint => mapping(uint => uint)) public totalSupplyOfLevel;
+    mapping(uint256 => mapping(uint256 => uint256)) public totalSupplyOfLevel;
 
     /// @dev NFT tokenId => Underlying ERC721 NFT state.
     mapping(uint256 => ERC721Wrapped) public erc721WrappedNfts;
@@ -149,10 +149,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         // Get tokenIds.
         nftIds = new uint256[](_nftURIs.length);
 
-        uint id = nextTokenId;
-        uint initialLevel = 0;
+        uint256 id = nextTokenId;
+        uint256 initialLevel = 0;
         address creatorOfNfts = _msgSender();
-        uint[] memory levels = new uint[](_nftURIs.length);
+        uint256[] memory levels = new uint256[](_nftURIs.length);
 
         // Store NFT state for each NFT.
         for (uint256 i = 0; i < _nftURIs.length; i++) {
@@ -207,15 +207,11 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets a protocol admin update the the next level of an NFT.
-    function updateMaxLevelOfNft(uint _tokenId, string calldata _levelURI) external onlyProtocolAdmin {
-        
-        require(
-            _tokenId < nextTokenId,
-            "NFTCollection: cannot update the level of a non existent NFT."
-        );
+    function updateMaxLevelOfNft(uint256 _tokenId, string calldata _levelURI) external onlyProtocolAdmin {
+        require(_tokenId < nextTokenId, "NFTCollection: cannot update the level of a non existent NFT.");
 
         // Update max level of NFT
-        uint level = ++maxLevelOfNft[_tokenId];
+        uint256 level = ++maxLevelOfNft[_tokenId];
 
         // Update URI of level
         uriByLevel[_tokenId][level] = _levelURI;
@@ -224,13 +220,15 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Let NFT owner level up their NFTs (as many as eligible)
-    function levelUpNFTs(uint _tokenId, uint _amount, uint _fromLevel, uint _toLevel) external {
-        uint maxLevel = maxLevelOfNft[_tokenId];
+    function levelUpNFTs(
+        uint256 _tokenId,
+        uint256 _amount,
+        uint256 _fromLevel,
+        uint256 _toLevel
+    ) external {
+        uint256 maxLevel = maxLevelOfNft[_tokenId];
 
-        require(
-            _fromLevel < maxLevel && _toLevel <= maxLevel,
-            "NFTCollection: invalid levels provided."
-        );
+        require(_fromLevel < maxLevel && _toLevel <= maxLevel, "NFTCollection: invalid levels provided.");
 
         require(
             balanceByLevel[_tokenId][_msgSender()][_fromLevel] >= _amount,
@@ -238,7 +236,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         );
 
         /**
-         * NEED eligibility condition for an aditional require check to see if user is eligible to level up `_amount` of 
+         * NEED eligibility condition for an aditional require check to see if user is eligible to level up `_amount` of
          * NFT from `_fromLevel` to `_toLevel`
          */
 
@@ -278,7 +276,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         IERC721(_nftContract).safeTransferFrom(_msgSender(), address(this), _tokenId);
 
         // Mint NFTs to `_msgSender()`
-        uint[1] memory level = [uint256(0)];
+        uint256[1] memory level = [uint256(0)];
         mint(_msgSender(), nextTokenId, 1, abi.encode(level));
 
         // Store nft state.
@@ -342,7 +340,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         );
 
         // Mint NFTs to `_msgSender()`
-        uint[1] memory level = [uint256(0)];
+        uint256[1] memory level = [uint256(0)];
         mint(_msgSender(), nextTokenId, _numOfNftsToMint, abi.encode(level));
 
         nftInfo[nextTokenId] = NftInfo({
@@ -402,16 +400,13 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         }
 
         // Update balances by level
-        uint[] memory levels = abi.decode(data, (uint[]));
-        require(
-            levels.length == ids.length,
-            "NFTCollection: Must specify levels for all tokens."
-        );
-        
+        uint256[] memory levels = abi.decode(data, (uint256[]));
+        require(levels.length == ids.length, "NFTCollection: Must specify levels for all tokens.");
+
         for (uint256 i = 0; i < ids.length; i++) {
-            uint level = levels[i];
-            uint id = ids[i];
-            uint amount = amounts[i];
+            uint256 level = levels[i];
+            uint256 id = ids[i];
+            uint256 amount = amounts[i];
 
             require(
                 balanceByLevel[id][from][level] >= amount,
