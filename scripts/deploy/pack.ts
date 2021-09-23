@@ -14,11 +14,14 @@ import * as fs from "fs";
 import * as path from "path";
 
 enum ModuleType {
-  Coin,
-  NFT,
-  Pack,
-  Market,
-  Other,
+  Coin = 0,
+  NFTCollection = 1,
+  NFT = 2,
+  DynamicNFT = 3,
+  AccessNFT = 4,
+  Pack = 5,
+  Market = 6,
+  Other = 7,
 }
 
 async function main() {
