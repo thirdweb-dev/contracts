@@ -8,17 +8,10 @@ import ProtocolControlABI from "../../abi/ProtocolControl.json";
 import RegistryABI from "../../abi/Registry.json";
 import CoinABI from "../../abi/Coin.json";
 import { bytecode } from "../../artifacts/contracts/Coin.sol/Coin.json";
+import ModuleType from "../../utils/protocolModules";
 
 import * as fs from "fs";
 import * as path from "path";
-
-enum ModuleType {
-  Coin,
-  NFT,
-  Pack,
-  Market,
-  Other,
-}
 
 async function main() {
   await run("compile");

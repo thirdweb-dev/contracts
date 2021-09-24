@@ -19,10 +19,14 @@ async function main() {
 
   // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { protocolControl: protocolControlAddress, forwarder: forwarderAddr } = curentNetworkAddreses;
+  const { protocolControl: protocolControlAddress, registry: registryAddress } = curentNetworkAddreses;
   const txOption = txOptions[networkName as keyof typeof txOptions];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
+
+  // Get Forwarder from registry
+  const registry: Contract = await ethers.getContractAt("Registry", registryAddress);
+  const forwarderAddr: string = await registry.forwarder();
 
   // Deploy `NFT`
   const contractURI: string = "";
