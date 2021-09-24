@@ -26,17 +26,18 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) public nftURI;
+    
+    /// @dev Mapping from tokenId => creator
+    mapping(uint256 => address) public nftCreator;
 
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public royaltyBps;
-    address public royaltyReceiver;
 
     /// @dev Emitted when an NFT is minted;
-    event Minted(address indexed to, uint256 tokenId, string tokenURI);
-    event MintedBatch(address indexed to, uint256[] tokenIds, string[] tokenURI);
+    event Minted(address indexed creator, address indexed to, uint256 tokenId, string tokenURI);
+    event MintedBatch(address indexed creator, address indexed to, uint256[] tokenIds, string[] tokenURI);
 
     event RoyaltyUpdated(uint256 royaltyBps);
-    event RoyaltyReceiverUpdated(address receiver);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -79,14 +80,17 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         // Get tokenId
         uint256 id = nextTokenId;
 
+        // Update URI
+        nftURI[id] = _uri;
+
+        // Update creator
+        nftCreator[id] = _msgSender();
+
         // Mint NFT
         _mint(_to, id);
         nextTokenId += 1;
 
-        // Update URI
-        nftURI[id] = _uri;
-
-        emit Minted(_to, id, _uri);
+        emit Minted(_msgSender(), _to, id, _uri);
     }
 
     function mintNFTBatch(address _to, string[] calldata _uris) external onlyUnpausedProtocol {
@@ -96,19 +100,27 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
         // Get tokenId
         uint256 id = nextTokenId;
+        address creator = _msgSender();
 
         for (uint256 i = 0; i < _uris.length; i++) {
-            // Mint NFT
+            // Update Ids
             ids[i] = id;
-
-            _mint(_to, id);
-            nextTokenId += 1;
 
             // Update URI
             nftURI[id] = _uris[i];
+
+            // Update creator
+            nftCreator[id] = creator;
+            
+            // Mint NFT
+            _mint(_to, id);
+
+            id += 1;          
         }
 
-        emit MintedBatch(_to, ids, _uris);
+        nextTokenId = id;
+
+        emit MintedBatch(creator, _to, ids, _uris);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
@@ -118,12 +130,6 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         royaltyBps = _royaltyBps;
 
         emit RoyaltyUpdated(_royaltyBps);
-    }
-
-    function setRoyaltyReceiver(address receiver) external onlyProtocolAdmin {
-        royaltyReceiver = receiver;
-
-        emit RoyaltyReceiverUpdated(receiver);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721PresetMinterPauserAutoId, IERC165) returns (bool) {
@@ -137,7 +143,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyReceiver;
+        receiver = nftCreator[tokenId];
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
