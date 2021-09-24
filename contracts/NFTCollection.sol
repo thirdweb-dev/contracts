@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.0;
 
 // Tokens
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
@@ -7,9 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
-
-// Access Control
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -171,6 +168,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, args);
     }
 
+    /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155PresetMinterPauser, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
