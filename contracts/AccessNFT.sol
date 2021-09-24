@@ -7,9 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Access Control
-import "@openzeppelin/contracts/access/Ownable.sol";
-
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
@@ -78,7 +75,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
+        require(!controlCenter.systemPaused(), "AccessNFT: The protocol is paused.");
         _;
     }
 
@@ -86,7 +83,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "NFT: only a protocol admin can call this function."
+            "AccessNFT: only a protocol admin can call this function."
         );
         _;
     }
@@ -111,9 +108,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) public onlyUnpausedProtocol returns (uint256[] memory nftIds) {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
-            "NFT: Must specify equal number of config values."
+            "AccessNFT: Must specify equal number of config values."
         );
-        require(_nftURIs.length > 0, "NFT: Must create at least one NFT.");
+        require(_nftURIs.length > 0, "AccessNFT: Must create at least one NFT.");
 
         // Get tokenIds.
         nftIds = new uint256[](_nftURIs.length);
@@ -197,7 +194,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
+        require(_royaltyBps < controlCenter.MAX_BPS(), "AccessNFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
