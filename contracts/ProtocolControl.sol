@@ -135,6 +135,7 @@ contract ProtocolControl is AccessControl {
         emit ProviderTreasuryUpdated(_newTreasury);
     }
 
+    ///@dev Lets a protocol admin update the owner trasury address.
     function updateOwnerTreasury(address _newTreasury) external onlyProtocolAdmin {
         ownerTreasury = _newTreasury;
 
