@@ -7,9 +7,6 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
-// Access Control
-import "@openzeppelin/contracts/access/Ownable.sol";
-
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
@@ -145,7 +142,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
 
 
     /**
-     *   External functions.
+     *   Contract functions.
      **/
 
     /// @dev Lets a pack owner request to open a single pack.
@@ -227,7 +224,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256,
         bytes memory
     ) public virtual override returns (bytes4) {
-        return 0; // this.onERC1155Received.selector;
+        revert("Pack: Only batch transfers accepted.");
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -261,6 +258,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         return this.onERC1155BatchReceived.selector;
     }
 
+    /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155PresetMinterPauser, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
