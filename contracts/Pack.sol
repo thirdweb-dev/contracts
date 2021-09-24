@@ -205,7 +205,10 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
+        require(
+            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
+            "Pack: Bps provided must be less than 9,000"
+        );
 
         royaltyBps = _royaltyBps;
 
@@ -429,9 +432,9 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         view
         override
         returns (address receiver, uint256 royaltyAmount)
-    {
+    {   
         receiver = packs[tokenId].creator;
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();        
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

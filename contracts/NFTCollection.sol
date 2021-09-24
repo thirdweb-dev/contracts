@@ -95,7 +95,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
+        require(!controlCenter.systemPaused(), "NFTCollection: The protocol is paused.");
         _;
     }
 
@@ -103,7 +103,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "NFT: only a protocol admin can call this function."
+            "NFTCollection: only a protocol admin can call this function."
         );
         _;
     }
@@ -126,8 +126,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         onlyUnpausedProtocol
         returns (uint256[] memory nftIds)
     {
-        require(_nftURIs.length == _nftSupplies.length, "NFT: Must specify equal number of config values.");
-        require(_nftURIs.length > 0, "NFT: Must create at least one NFT.");
+        require(_nftURIs.length == _nftSupplies.length, "NFTCollection: Must specify equal number of config values.");
+        require(_nftURIs.length > 0, "NFTCollection: Must create at least one NFT.");
 
         // Get tokenIds.
         nftIds = new uint256[](_nftURIs.length);
@@ -175,7 +175,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
+        require(
+            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
+            "NFTCollection: Bps provided must be less than 9,000"
+        );
 
         royaltyBps = _royaltyBps;
 
@@ -193,11 +196,11 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _tokenId,
         string calldata _nftURI
     ) external onlyUnpausedProtocol {
-        require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "NFT: Only the owner of the NFT can wrap it.");
+        require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "NFTCollection: Only the owner of the NFT can wrap it.");
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
                 IERC721(_nftContract).isApprovedForAll(_msgSender(), address(this)),
-            "NFT: Must approve the contract to transfer the NFT."
+            "NFTCollection: Must approve the contract to transfer the NFT."
         );
 
         // Transfer the NFT to this contract.
@@ -224,7 +227,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets the nft owner redeem their ERC721 NFT.
     function redeemERC721(uint256 _nftId) external {
-        require(balanceOf(_msgSender(), _nftId) > 0, "NFT: Cannot redeem an NFT you do not own.");
+        require(balanceOf(_msgSender(), _nftId) > 0, "NFTCollection: Cannot redeem an NFT you do not own.");
 
         // Burn the ERC1155 NFT token
         _burn(_msgSender(), _nftId, 1);
@@ -253,17 +256,17 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) external onlyUnpausedProtocol {
         require(
             IERC20(_tokenContract).balanceOf(_msgSender()) >= _tokenAmount,
-            "NFT: Must own the amount of tokens that are being wrapped."
+            "NFTCollection: Must own the amount of tokens that are being wrapped."
         );
 
         require(
             IERC20(_tokenContract).allowance(_msgSender(), address(this)) >= _tokenAmount,
-            "NFT: Must approve this contract to transfer ERC20 tokens."
+            "NFTCollection: Must approve this contract to transfer ERC20 tokens."
         );
 
         require(
             IERC20(_tokenContract).transferFrom(_msgSender(), address(this), _tokenAmount),
-            "Failed to transfer ERC20 tokens."
+            "NFTCollection: Failed to transfer ERC20 tokens."
         );
 
         // Mint NFTs to `_msgSender()`
@@ -289,7 +292,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets the nft owner redeem their ERC20 tokens.
     function redeemERC20(uint256 _nftId, uint256 _amount) external {
-        require(balanceOf(_msgSender(), _nftId) >= _amount, "NFT: Cannot redeem an NFT you do not own.");
+        require(balanceOf(_msgSender(), _nftId) >= _amount, "NFTCollection: Cannot redeem an NFT you do not own.");
 
         // Burn the nft
         _burn(_msgSender(), _nftId, _amount);
@@ -301,7 +304,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         // Transfer the ERC20 tokens to `_msgSender()`
         require(
             IERC20(erc20WrappedNfts[_nftId].tokenContract).transfer(_msgSender(), amountToDistribute),
-            "NFT: Failed to transfer ERC20 tokens."
+            "NFTCollection: Failed to transfer ERC20 tokens."
         );
 
         emit ERC20Redeemed(_msgSender(), erc20WrappedNfts[_nftId].tokenContract, amountToDistribute, _amount);

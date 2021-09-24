@@ -194,7 +194,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "AccessNFT: Bps provided must be less than 10,000");
+        require(
+            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
+            "NFT: Bps provided must be less than 9,000"
+        );
 
         royaltyBps = _royaltyBps;
 

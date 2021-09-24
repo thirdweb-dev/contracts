@@ -43,14 +43,14 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
-            "NFT721: only a protocol admin can call this function."
+            "NFT: only a protocol admin can call this function."
         );
         _;
     }
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "NFT721: The protocol is paused.");
+        require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
         _;
     }
 
@@ -75,7 +75,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Mints an NFT to `_to` with URI `_uri`
     function mintNFT(address _to, string calldata _uri) external onlyUnpausedProtocol {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT721: must have minter role to mint");
+        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
 
         // Get tokenId
         uint256 id = nextTokenId;
@@ -94,7 +94,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     }
 
     function mintNFTBatch(address _to, string[] calldata _uris) external onlyUnpausedProtocol {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT721: must have minter role to mint");
+        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
 
         uint256[] memory ids = new uint256[](_uris.length);
 
@@ -125,7 +125,10 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
+        require(
+            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
+            "NFT: Bps provided must be less than 9,000"
+        );
 
         royaltyBps = _royaltyBps;
 
