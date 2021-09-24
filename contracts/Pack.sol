@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 // Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -33,7 +34,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     bytes32 public vrfKeyHash;
 
     /// @dev Pack sale royalties -- see EIP 2981
-    uint256 public packRoyaltyBps;
+    uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
     string public _contractURI;
@@ -93,7 +94,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     );
 
     /// @dev Emitted when royalties for pack sales are updated.
-    event PackRoyaltyUpdated(uint256 royaltyBps);
+    event RoyaltyUpdated(uint256 royaltyBps);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
@@ -142,15 +143,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         return packs[_id].uri;
     }
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
 
     /**
      *   External functions.
@@ -215,17 +207,27 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setPackRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
 
-        packRoyaltyBps = _royaltyBps;
+        royaltyBps = _royaltyBps;
 
-        emit PackRoyaltyUpdated(_royaltyBps);
+        emit RoyaltyUpdated(_royaltyBps);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return 0; // this.onERC1155Received.selector;
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -257,6 +259,10 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         );
 
         return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155PresetMinterPauser, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
     /**
@@ -419,7 +425,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         amountsPacked = rewards[_packId].amountsPacked;
     }
 
-    /// @dev See EIP 2918
+    /// @dev See EIP 2981
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
@@ -427,7 +433,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = packs[tokenId].creator;
-        royaltyAmount = (salePrice * packRoyaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

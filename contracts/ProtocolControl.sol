@@ -10,14 +10,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract ProtocolControl is AccessControl {
     /// @dev Admin role for protocol.
     bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
-    /// @dev Admin role for NFTLabs.
-    bytes32 public constant NFTLABS = keccak256("NFTLABS");
+    /// @dev Admin role for protocol provider.
+    bytes32 public constant PROTOCOL_PROVIDER = keccak256("PROTOCOL_PROVIDER");
 
     /// @dev Protocol status.
     bool public systemPaused;
 
-    /// @dev NFTLabs protocol treasury
-    address public nftlabsTreasury;
+    /// @dev Protocol provider's treasury
+    address public providerTreasury;
+
+    /// @dev deployer's treasury
+    address public ownerTreasury;
 
     /// @dev Pack protocol module names.
     enum ModuleType {
@@ -38,9 +41,10 @@ contract ProtocolControl is AccessControl {
     /// @dev Module type => Num of modules of that type.
     mapping(uint256 => uint256) public numOfModuleType;
 
-    /// @dev Market fees
+    /// @dev Protocol provider fees
     uint128 public constant MAX_BPS = 10000; // 100%
-    uint128 public marketFeeBps;
+    uint128 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
+    uint128 public providerFeeBps = 1000; // 10%
 
     /// @dev Contract level metadata.
     string public _contractURI;
@@ -48,9 +52,10 @@ contract ProtocolControl is AccessControl {
     /// @dev Events.
     event ModuleUpdated(bytes32 indexed moduleId, address indexed module, uint256 indexed moduleType);
     event FundsTransferred(address asset, address to, uint256 amount);
+    event OwnerTreasuryUpdated(address _providerTreasury);
     event SystemPaused(bool isPaused);
-    event MarketFeeBps(uint256 marketFeeBps);
-    event NFTLabsTreasury(address _nftlabsTreasury);
+    event ProviderFeeBpsUpdated(uint256 providerFeeBps);
+    event ProviderTreasuryUpdated(address _providerTreasury);
 
     /// @dev Check whether the caller is a protocol admin
     modifier onlyProtocolAdmin() {
@@ -58,31 +63,33 @@ contract ProtocolControl is AccessControl {
         _;
     }
 
-    /// @dev Check whether the caller is an NFTLabs admin
-    modifier onlyNftlabsAdmin() {
-        require(hasRole(NFTLABS, msg.sender), "Protocol: Only NFTLabs admins can call this function.");
+    /// @dev Check whether the caller is an protocol provider admin
+    modifier onlyProtocolProvider() {
+        require(hasRole(PROTOCOL_PROVIDER, msg.sender), "Protocol: Only protocol provider admins can call this function.");
         _;
     }
 
     constructor(
         address _admin,
-        address _nftlabs,
+        address _provider,
         string memory _uri
     ) {
         // Set contract URI
         _contractURI = _uri;
 
-        // Set NFTLabs treasury
-        nftlabsTreasury = _nftlabs;
+        // Set protocol provider treasury
+        providerTreasury = _provider;
+        ownerTreasury = _admin;
 
         // Set access control roles
-        _setupRole(NFTLABS, _nftlabs);
         _setupRole(PROTOCOL_ADMIN, _admin);
+        _setupRole(PROTOCOL_PROVIDER, _provider);
 
         _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
-        _setRoleAdmin(NFTLABS, NFTLABS);
+        _setRoleAdmin(PROTOCOL_PROVIDER, PROTOCOL_PROVIDER);
 
-        emit NFTLabsTreasury(_nftlabs);
+        emit OwnerTreasuryUpdated(_admin);
+        emit ProviderTreasuryUpdated(_provider);
     }
 
     /// @dev Let the contract accept ether.
@@ -113,19 +120,25 @@ contract ProtocolControl is AccessControl {
     }
 
     /// @dev Lets a nftlabs admin change the market fee basis points.
-    function updateMarketFeeBps(uint128 _newFeeBps) external onlyNftlabsAdmin {
-        require(_newFeeBps <= 300, "ProtocolControl: fee cannot be greater than 3%");
+    function updateProviderFeeBps(uint128 _newFeeBps) external onlyProtocolProvider {
+        require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "ProtocolControl: provider fee cannot be greater than 10%");
 
-        marketFeeBps = _newFeeBps;
+        providerFeeBps = _newFeeBps;
 
-        emit MarketFeeBps(_newFeeBps);
+        emit ProviderFeeBpsUpdated(_newFeeBps);
     }
 
-    /// @dev Lets a nftlabs admin change the market fee basis points.
-    function updateNftlabsTreasury(address _newTreasury) external onlyNftlabsAdmin {
-        nftlabsTreasury = _newTreasury;
+    /// @dev Lets provider admins change the address of providers tresury.
+    function updateProviderTreasury(address _newTreasury) external onlyProtocolProvider {
+        providerTreasury = _newTreasury;
 
-        emit NFTLabsTreasury(_newTreasury);
+        emit ProviderTreasuryUpdated(_newTreasury);
+    }
+
+    function updateOwnerTreasury(address _newTreasury) external onlyProtocolAdmin {
+        ownerTreasury = _newTreasury;
+
+        emit OwnerTreasuryUpdated(_newTreasury);
     }
 
     /// @dev Lets a protocol admin pause the protocol.

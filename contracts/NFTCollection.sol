@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 // Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -27,7 +28,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     uint256 public nextTokenId;
 
     /// @dev NFT sale royalties -- see EIP 2981
-    uint256 public nftRoyaltyBps;
+    uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
     string public _contractURI;
@@ -84,8 +85,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 tokenAmountReceived,
         uint256 nftAmountRedeemed
     );
-
-    event NftRoyaltyUpdated(uint256 royaltyBps);
+    event RoyaltyUpdated(uint256 royaltyBps);
 
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
@@ -171,13 +171,17 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, args);
     }
 
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155PresetMinterPauser, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+    }
+
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setNftRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
-        nftRoyaltyBps = _royaltyBps;
+        royaltyBps = _royaltyBps;
 
-        emit NftRoyaltyUpdated(_royaltyBps);
+        emit RoyaltyUpdated(_royaltyBps);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
@@ -332,7 +336,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = nftInfo[tokenId].creator;
-        royaltyAmount = (salePrice * nftRoyaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
     /// @dev See EIP 1155

@@ -33,6 +33,8 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     /// @dev Collection level metadata.
     string public _contractURI;
 
+    uint128 public marketFeeBps;
+
     /// @dev Token type of the listing.
     enum TokenType {
         ERC1155,
@@ -56,7 +58,6 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     mapping(uint256 => Listing) public listings;
 
     /// @dev Events
-    event MarketFeesUpdated(uint256 protocolFeeBps, uint256 creatorFeeBps);
     event NewListing(address indexed assetContract, address indexed seller, uint256 indexed listingId, Listing listing);
     event ListingUpdate(address indexed seller, uint256 indexed listingId, Listing listing);
     event NewSale(
@@ -64,9 +65,10 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         address indexed seller,
         uint256 indexed listingId,
         address buyer,
-        uint256 quanitytBought,
+        uint256 quantity,
         Listing listing
     );
+    event MarketFeeUpdate(uint128 newFee);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
@@ -349,13 +351,16 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         );
 
         // Collect protocol fee if any
-        uint256 protocolCut = (totalPrice * controlCenter.marketFeeBps()) / controlCenter.MAX_BPS();
+        uint256 protocolProviderFee = controlCenter.providerFeeBps();
+        uint256 marketCut = (totalPrice * marketFeeBps) / controlCenter.MAX_BPS();
+        uint256 protocolProviderCut = (marketCut * protocolProviderFee) / controlCenter.MAX_BPS();
+
         require(
-            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.nftlabsTreasury(), protocolCut),
+            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.ownerTreasury(), marketCut),
             "Market: failed to transfer protocol cut."
         );
 
-        uint256 sellerCut = totalPrice - protocolCut;
+        uint256 sellerCut = totalPrice - marketCut - protocolProviderCut;
 
         // Distribute royalties if any
         if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
@@ -364,21 +369,35 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
                 totalPrice
             );
 
-            require(royaltyAmount + protocolCut < totalPrice, "Market: Total market fees exceed the price.");
+            if (royaltyReceiver != address(0) && royaltyAmount > 0) {
+                require(royaltyAmount + marketCut + protocolProviderCut < totalPrice, "Market: Total market fees exceed the price.");
 
-            sellerCut -= royaltyAmount;
+                uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFee) / controlCenter.MAX_BPS();
+                sellerCut = sellerCut - royaltyAmount - providerRoyaltyCut;
+                protocolProviderCut += providerRoyaltyCut;
 
-            require(
-                IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
-                "Market: failed to transfer creator cut."
-            );
+                require(
+                    IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
+                    "Market: failed to transfer creator cut."
+                );
+            }
         }
+        // Distribute price to protocol provider
+        require(
+            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.providerTreasury(), protocolProviderCut),
+            "Market: failed to transfer provider cut."
+        );
 
         // Distribute price to seller
         require(
             IERC20(listing.currency).transferFrom(_msgSender(), listing.seller, sellerCut),
             "Market: failed to transfer seller cut."
         );
+    }
+
+    function setMarketFeeBps(uint128 feeBps) external onlyProtocolAdmin {
+        marketFeeBps = feeBps;
+        emit MarketFeeUpdate(feeBps);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
