@@ -156,6 +156,10 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        return nftURI[tokenId];
+    }
+
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     function contractURI() public view returns (string memory) {
         return _contractURI;
