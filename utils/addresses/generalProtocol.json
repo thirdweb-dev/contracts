@@ -1,0 +1,24 @@
+{
+    "mumbai": {
+      "forwarder": "0x29548A3320c0d007A64C2EeF6B5Ff0Fc0f8FAD66",
+      "registry": "0x2e494c9dD341C2C5AA182145175fa666341F8B7f"
+    },
+    "matic": { "forwarder": "", "registry": "" },
+    "polygon": {
+      "forwarder": "0x5B86E7e3339A486cf921ee9d9F29866E4E3ba4a0",
+      "registry": "0x06aD00C173012AAd5Eea4Ec5b3737fB6a6dFDDf6"
+    },
+    "rinkeby": {
+      "forwarder": "",
+      "registry": ""
+    },
+    "mainnet": {
+      "forwarder": "",
+      "registry": ""
+    },
+    "localhost": {
+      "forwarder": "",
+      "registry": ""
+    }
+  }
+  

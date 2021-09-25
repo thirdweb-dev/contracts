@@ -1,7 +1,7 @@
 import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
-import addresses from "../../utils/address.json";
+import addresses from "../../utils/addresses/accesspacks.json";
 import ModuleType from "../../utils/protocolModules";
 import { txOptions } from "../../utils/txOptions";
 
@@ -19,14 +19,10 @@ async function main() {
 
   // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { protocolControl: protocolControlAddress, registry: registryAddress } = curentNetworkAddreses;
+  const { protocolControl: protocolControlAddress, forwarder: forwarderAddr } = curentNetworkAddreses;
   const txOption = txOptions[networkName as keyof typeof txOptions];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
-
-  // Get Forwarder from registry
-  const registry: Contract = await ethers.getContractAt("Registry", registryAddress);
-  const forwarderAddr: string = await registry.forwarder();
 
   // Deploy `NFT`
   const contractURI: string = "";

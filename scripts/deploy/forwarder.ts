@@ -1,7 +1,7 @@
 import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
-import addresses from "../../utils/addresses/generalProtocol.json";
+import addresses from "../../utils/addresses/accesspacks.json";
 import { txOptions } from "../../utils/txOptions";
 
 import * as fs from "fs";
@@ -21,16 +21,13 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
-  // Deploy Registry.sol
-  const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
-  const registry: Contract = await Registry_Factory.deploy(deployer.address, txOption);
+  // Deploy forwarder.sol
+  const forwarder_factory: ContractFactory = await ethers.getContractFactory("Forwarder");
+  const forwarder: Contract = await forwarder_factory.deploy(txOption);
 
-  console.log("Deployed Registry at: ", registry.address);
+  console.log("Deployed Forwarder at: ", forwarder.address);
 
-  await registry.deployTransaction.wait();
-
-  // Get Forwarder from registry
-  const forwarderAddr: string = await registry.forwarder();
+  await forwarder.deployTransaction.wait();
 
   // Update contract addresses in `/utils`
   const currentNetworkAddresses = addresses[networkName as keyof typeof addresses];
@@ -41,8 +38,7 @@ async function main() {
     [networkName]: {
       ...currentNetworkAddresses,
 
-      registry: registry.address,
-      forwarder: forwarderAddr,
+      forwarder: forwarder.address,
     },
   };
 

@@ -1,10 +1,8 @@
 import hre, { run, ethers } from "hardhat";
-import { Contract } from "ethers";
+import { Contract, ContractFactory } from "ethers";
 
-import addresses from "../../utils/address.json";
+import addresses from "../../utils/addresses/accesspacks.json";
 import { txOptions } from "../../utils/txOptions";
-
-import RegistryABI from "../../abi/Registry.json";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -24,27 +22,24 @@ async function main() {
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
-  // Get Registry
-  const { registry: registryAddress } = currentNetworkAddresses as any;
-  const registry: Contract = await ethers.getContractAt(RegistryABI, registryAddress);
-
   // Deploy `ProtocolControl`
-  const protocolControlURI: string = "ipfs://...";
-  const tx = await registry.connect(deployer).deployProtocol(txOption);
+  const protocolControlURI: string = "";
+  const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
+  const protocolControl = await ProtocolControl_Factory.deploy(
+    deployer.address,
+    deployer.address,
+    protocolControlURI,
+    txOption,
+  );
 
-  console.log("Deploying ProtocolControl: ", tx.hash);
+  console.log(
+    `Deploying ProtocolControl: ${protocolControl.address} at tx hash: ${protocolControl.deployTransaction.hash}`,
+  );
 
-  const receipt = await tx.wait();
+  await protocolControl.deployed();
 
   // Get Protocol control address.
-  const topic = registry.interface.getEventTopic("DeployedProtocol");
-  const log = receipt.logs.find((x: any) => x.topics.indexOf(topic) >= 0);
-  const deployEvent = registry.interface.parseLog(log);
-  const {
-    args: { protocolControlAddr, currentVersion },
-  } = deployEvent;
-
-  console.log(`ProtocolControl version ${currentVersion} deployed at ${protocolControlAddr}`);
+  const protocolControlAddr: string = protocolControl.address;
 
   // Update contract addresses in `/utils`
   const updatedAddresses = {

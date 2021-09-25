@@ -1,28 +1,13 @@
 import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
-import addresses from "../../utils/address.json";
+import addresses from "../../utils/addresses/accesspacks.json";
+import ModuleType from "../../utils/protocolModules";
 import { txOptions } from "../../utils/txOptions";
 import { chainlinkVars } from "../../utils/chainlink";
 
-import ProtocolControlABI from "../../abi/ProtocolControl.json";
-import RegistryABI from "../../abi/Registry.json";
-import PackABI from "../../abi/Pack.json";
-import { bytecode } from "../../artifacts/contracts/Pack.sol/Pack.json";
-
 import * as fs from "fs";
 import * as path from "path";
-
-enum ModuleType {
-  Coin = 0,
-  NFTCollection = 1,
-  NFT = 2,
-  DynamicNFT = 3,
-  AccessNFT = 4,
-  Pack = 5,
-  Market = 6,
-  Other = 7,
-}
 
 async function main() {
   await run("compile");
@@ -35,20 +20,16 @@ async function main() {
 
   // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { protocolControl: protocolControlAddress, registry: registryAddress } = curentNetworkAddreses;
+  const { protocolControl: protocolControlAddress, forwarder: forwarderAddr } = curentNetworkAddreses;
   const txOption = txOptions[networkName as keyof typeof txOptions];
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
-  // Get Forwarder from registry
-  const registry: Contract = await ethers.getContractAt(RegistryABI, registryAddress);
-  const forwarderAddr: string = await registry.forwarder();
-
   // Deploy `Pack`
-  const contractURI: string = "ipfs://QmYMgpVGBgVZunM2uDPnobsHpryMmkXF8ZPJGiHfLpwShS";
-  const Pack_Factory: ContractFactory = new ethers.ContractFactory(PackABI, bytecode);
-  const tx = await Pack_Factory.connect(deployer).deploy(
+  const contractURI: string = "";
+  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
+  const pack = await Pack_Factory.connect(deployer).deploy(
     protocolControlAddress,
     contractURI,
     vrfCoordinator,
@@ -59,25 +40,15 @@ async function main() {
     txOption,
   );
 
-  console.log("Deploying Pack: ", tx.hash, tx.address);
-  console.log(
-    tx.address,
-    protocolControlAddress,
-    contractURI,
-    vrfCoordinator,
-    linkTokenAddress,
-    keyHash,
-    fees,
-    forwarderAddr,
-  );
+  console.log(`Deploying Pack: ${pack.address} at tx hash: ${pack.deployTransaction.hash}`);
 
-  await tx.deployed();
+  await pack.deployed();
 
   // Get deployed `Pack`'s address
-  const packAddress = tx.address;
+  const packAddress = pack.address;
 
   // Get `ProtocolControl`
-  const protocolControl: Contract = await ethers.getContractAt(ProtocolControlABI, protocolControlAddress);
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddress);
   const addModuleTx = await protocolControl.addModule(packAddress, ModuleType.Pack);
   await addModuleTx.wait();
 

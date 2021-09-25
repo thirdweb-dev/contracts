@@ -1,24 +1,12 @@
 import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
-import addresses from "../../utils/address.json";
+import addresses from "../../utils/addresses/accesspacks.json";
+import ModuleType from "../../utils/protocolModules";
 import { txOptions } from "../../utils/txOptions";
-
-import ProtocolControlABI from "../../abi/ProtocolControl.json";
-import RegistryABI from "../../abi/Registry.json";
-import MarketABI from "../../abi/Market.json";
-import { bytecode } from "../../artifacts/contracts/Market.sol/Market.json";
 
 import * as fs from "fs";
 import * as path from "path";
-
-enum ModuleType {
-  Coin,
-  NFT,
-  Pack,
-  Market,
-  Other,
-}
 
 async function main() {
   await run("compile");
@@ -31,36 +19,31 @@ async function main() {
 
   // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { protocolControl: protocolControlAddress, registry: registryAddress } = curentNetworkAddreses;
+  const { protocolControl: protocolControlAddress, forwarder: forwarderAddr } = curentNetworkAddreses;
   const txOption = txOptions[networkName as keyof typeof txOptions];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
-  // Get Forwarder from registry
-  const registry: Contract = await ethers.getContractAt(RegistryABI, registryAddress);
-  const forwarderAddr: string = await registry.forwarder();
-
   // Deploy `Market`
-  const contractURI: string = "ipfs://QmYMgpVGBgVZunM2uDPnobsHpryMmkXF8ZPJGiHfLpwShS";
+  const contractURI: string = "";
 
-  const Market_Factory: ContractFactory = new ethers.ContractFactory(MarketABI, bytecode);
-  const tx = await Market_Factory.connect(deployer).deploy(
+  const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
+  const market = await Market_Factory.connect(deployer).deploy(
     protocolControlAddress,
     forwarderAddr,
     contractURI,
     txOption,
   );
 
-  console.log("Deploying Market: ", tx.hash, tx.address);
-  console.log(tx.address, protocolControlAddress, forwarderAddr, contractURI);
+  console.log(`Deploying Market: ${market.address} at tx hash: ${market.deployTransaction.hash}`);
 
-  await tx.deployed();
+  await market.deployed();
 
   // Get deployed `Market`'s address
-  const marketAddress = tx.address;
+  const marketAddress = market.address;
 
   // Get `ProtocolControl`
-  const protocolControl: Contract = await ethers.getContractAt(ProtocolControlABI, protocolControlAddress);
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddress);
   const addModuleTx = await protocolControl.addModule(marketAddress, ModuleType.Market);
   await addModuleTx.wait();
 
