@@ -1,174 +1,119 @@
+// Test imports
 import { ethers } from "hardhat";
-import { Signer, Contract, ContractFactory, BytesLike, BigNumber } from "ethers";
 import { expect } from "chai";
 
-import { chainlinkVars } from "../utils/chainlink";
-import { forkFrom, impersonate } from "../utils/hardhatFork";
-import { setTimeout } from "timers";
-import linkTokenABi from "../abi/LinkTokenInterface.json";
+// Types
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("Request to open a pack", function () {
+// Test utils
+import { getContracts } from "../utils/tests/getContracts";
+import { forkFrom, impersonate } from "../utils/hardhatFork";
+import { chainlinkVars } from "../utils/chainlink";
+import linkTokenABi from "../abi/LinkTokenInterface.json";
+const { signMetaTxRequest } = require("../utils/meta-tx/signer");
+
+describe("Open pack", function () {
   // Signers
-  let protocolAdmin: Signer;
-  let creator: Signer;
+  let creator: SignerWithAddress;
+  let relayer: SignerWithAddress;
 
   // Contracts
   let pack: Contract;
-  let rewards: Contract;
+  let accessNft: Contract;
+  let forwarder: Contract;
 
   // Reward parameterrs
+  const packURI: string = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
   const rewardURIs: string[] = [
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1",
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/2",
     "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/3",
   ];
+  const accessURIs = rewardURIs;
   const rewardSupplies: number[] = [5, 25, 60];
-  const rewardsPerOpen: number = 3;
-
-  // Pack parameters
-  const packURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
   const openStartAndEnd: number = 0;
+  const rewardsPerOpen: number = 1;
 
   // Expected results
-  const expectedPackId: number = 0;
+  let expectedPackId: number;
 
   // Fund `Pack` with LINK
   const fundPack = async () => {
     const { linkTokenAddress } = chainlinkVars.rinkeby;
 
-    const linkHolderAddress: string = "0xa7a82dd06901f29ab14af63faf3358ad101724a8";
+    const linkHolderAddress = "0xa7a82dd06901f29ab14af63faf3358ad101724a8";
     await impersonate(linkHolderAddress);
-    const linkHolder: Signer = await ethers.getSigner(linkHolderAddress);
+    const linkHolder = await ethers.getSigner(linkHolderAddress);
 
     const linkContract = await ethers.getContractAt(linkTokenABi, linkTokenAddress);
     linkContract.connect(linkHolder).transfer(pack.address, ethers.utils.parseEther("1"));
   };
 
   beforeEach(async () => {
-    // Fork rinkeby
+    // Get signers
+    const networkName: string = "rinkeby";
     await forkFrom(9075707, "rinkeby");
 
-    const signers: Signer[] = await ethers.getSigners();
-    [protocolAdmin, creator] = signers;
+    const signers: SignerWithAddress[] = await ethers.getSigners();
+    [creator, relayer] = signers;
 
-    // Deploy $PACK Protocol
-    const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars.rinkeby;
+    // Get contracts
+    [pack, accessNft, forwarder] = await getContracts(creator, networkName, ["Pack", "AccessNFT", "Forwarder"]);
 
-    const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-    const controlCenter: Contract = await ProtocolControl_Factory.deploy();
+    // Get expected packId
+    expectedPackId = await pack.nextTokenId();
 
-    const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-    pack = await Pack_Factory.deploy(
-      controlCenter.address,
-      "$PACK Protocol",
-      vrfCoordinator,
-      linkTokenAddress,
-      keyHash,
-      fees,
-    );
-
-    const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-    const market: Contract = await Market_Factory.deploy(controlCenter.address);
-
-    await controlCenter.initializeProtocol(pack.address, market.address);
-
-    // Deploy Rewardds.sol and create rewards
-    const Rewards_factory: ContractFactory = await ethers.getContractFactory("Rewards");
-    rewards = await Rewards_factory.connect(creator).deploy(pack.address);
-
-    // Create pack with rewards.
-    await rewards
+    // Create access packs
+    await accessNft
       .connect(creator)
-      .createPackAtomic(rewardURIs, rewardSupplies, packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen);
-  });
-
-  describe("Revert cases", function () {
-    it("Should revert if the contract has no LINK", async () => {
-      await expect(pack.connect(creator).openPack(expectedPackId)).to.be.revertedWith(
-        "Pack: Not enough LINK to fulfill randomness request.",
+      .createAccessPack(
+        pack.address,
+        rewardURIs,
+        accessURIs,
+        rewardSupplies,
+        packURI,
+        openStartAndEnd,
+        openStartAndEnd,
+        rewardsPerOpen,
       );
-    });
 
-    it("Should revert if the caller has no packs to open", async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
-
-      await expect(pack.connect(protocolAdmin).openPack(expectedPackId)).to.be.revertedWith(
-        "Pack: sender owns no packs of the given packId.",
-      );
-    });
-
-    it("Should revert if caller already has a Chainlink request in-flight for the pack", async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
-
-      // Open Pack (request)
-      await pack.connect(creator).openPack(expectedPackId);
-
-      // Open pack again, before the earlier request is fulfilled
-      await expect(pack.connect(creator).openPack(expectedPackId)).to.be.revertedWith(
-        "Pack: must wait for the pending pack to be opened.",
-      );
-    });
+    // Fund `Pack` with LINK
+    await fundPack();
   });
 
-  describe("Events", function () {
-    it("Should emit PackOpenRequest", async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
+  describe("Should open 1 pack", function () {
+    it("Regular transaction", async () => {
+      // Get pack balance before opening pack.
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(rewardSupplies.reduce((a, b) => a + b));
 
-      expect(await pack.connect(creator).openPack(expectedPackId)).to.emit(pack, "PackOpenRequest");
-    });
-  });
-
-  describe("Balances", function () {
-    it("Should burn one pack of the caller", async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
-
-      const balBefore: BigNumber = await pack.balanceOf(await creator.getAddress(), expectedPackId);
-      await pack.connect(creator).openPack(expectedPackId);
-      const balAfter: BigNumber = await pack.balanceOf(await creator.getAddress(), expectedPackId);
-
-      expect(balBefore.sub(balAfter)).to.equal(BigNumber.from(1));
-    });
-  });
-
-  describe("Contract state changes", function () {
-    beforeEach(async () => {
-      // Fund `Pack` with LINK
-      await fundPack();
-    });
-
-    it("Should show the caller has a Chainlink call in-flight for the pack", async () => {
+      // Open pack
       await pack.connect(creator).openPack(expectedPackId);
 
-      const isPending: boolean = (await pack.currentRequestId(expectedPackId, await creator.getAddress())) !== "";
-      expect(isPending).to.equal(true);
+      // Get pack balance after opening pack.
+      const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b) - 1);
     });
 
-    it("Should store the random number request with the id and caller address", async () => {
-      // Get request Id of the open pack request
-      let requestId: BytesLike = "";
-      const openPackPromise = new Promise((resolve, reject) => {
-        pack.on("PackOpenRequest", (_packId, _caller, _requestId) => {
-          requestId = _requestId;
+    it("Meta-Tx", async () => {
+      // Get pack balance before opening pack.
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(rewardSupplies.reduce((a, b) => a + b));
 
-          resolve(null);
-        });
+      // Meta tx setup
+      const from = creator.address;
+      const to = pack.address;
 
-        setTimeout(() => {
-          reject(new Error("Timeout: PackOpenRequest"));
-        }, 5000);
-      });
+      const data = pack.interface.encodeFunctionData("openPack", [expectedPackId]);
 
-      await pack.connect(creator).openPack(expectedPackId);
-      await openPackPromise;
+      // Execute meta tx
+      const { request, signature } = await signMetaTxRequest(creator.provider, forwarder, { from, to, data });
+      await forwarder.connect(relayer).execute(request, signature);
 
-      const requestInfo = await pack.randomnessRequests(requestId);
-
-      expect(requestInfo.packId).to.equal(expectedPackId);
-      expect(requestInfo.opener).to.equal(await creator.getAddress());
+      // Get pack balance after opening pack.
+      const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b) - 1);
     });
   });
 });

@@ -5,7 +5,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC165.sol";
+
+// Access Control
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -140,9 +142,30 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         return packs[_id].uri;
     }
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        pure
+        override(ERC1155PresetMinterPauser, IERC165)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId;
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
 
     /**
-     *   Contract functions.
+     *   External functions.
      **/
 
     /// @dev Lets a pack owner request to open a single pack.
@@ -207,7 +230,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(
             _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
-            "Pack: Bps provided must be less than 9,000"
+            "NFT: Bps provided must be less than 9,000"
         );
 
         royaltyBps = _royaltyBps;
@@ -218,16 +241,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
-    }
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        revert("Pack: Only batch transfers accepted.");
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -261,11 +274,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         return this.onERC1155BatchReceived.selector;
     }
 
-    /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155PresetMinterPauser, IERC165) returns (bool) {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
-    }
-
     /**
      *   Internal functions.
      **/
@@ -281,10 +289,13 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256 _secondsUntilOpenEnd,
         uint256 _rewardsPerOpen
     ) internal onlyUnpausedProtocol {
-        require(hasRole(MINTER_ROLE, _creator), "Pack: only creators with MINTER_ROLE can create packs.");
         require(
             IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
             "Pack: reward contract does not implement ERC 1155."
+        );
+        require(
+            hasRole(MINTER_ROLE, _creator),
+            "Pack: Only accounts with MINTER_ROLE can call this function."
         );
 
         uint256 sumOfRewards = _sumArr(_rewardAmounts);
@@ -426,15 +437,15 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         amountsPacked = rewards[_packId].amountsPacked;
     }
 
-    /// @dev See EIP 2981
+    /// @dev See EIP 2918
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         override
         returns (address receiver, uint256 royaltyAmount)
-    {   
+    {
         receiver = packs[tokenId].creator;
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();        
+        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

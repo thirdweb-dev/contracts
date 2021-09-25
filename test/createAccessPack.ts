@@ -10,16 +10,14 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { getContracts } from "../utils/tests/getContracts";
 const { signMetaTxRequest } = require("../utils/meta-tx/signer");
 
-describe("List token for sale", function () {
+describe("Create a pack with rewards in a single tx", function () {
   // Signers
   let creator: SignerWithAddress;
   let relayer: SignerWithAddress;
 
   // Contracts
   let pack: Contract;
-  let market: Contract;
   let accessNft: Contract;
-  let coin: Contract;
   let forwarder: Contract;
 
   // Reward parameterrs
@@ -34,13 +32,6 @@ describe("List token for sale", function () {
   const openStartAndEnd: number = 0;
   const rewardsPerOpen: number = 1;
 
-  // Expected results
-  let expectedPackId: number;
-
-  // Market params
-  const pricePerToken = ethers.utils.parseEther("1");
-  const amountToList = 5;
-
   beforeEach(async () => {
     // Get signers
     const networkName: string = "mumbai";
@@ -48,21 +39,50 @@ describe("List token for sale", function () {
     [creator, relayer] = signers;
 
     // Get contracts
-    [pack, accessNft, forwarder, market, coin] = await getContracts(creator, networkName, [
-      "Pack",
-      "AccessNFT",
-      "Forwarder",
-      "Market",
-      "Coin"
-    ]);
+    [pack, accessNft, forwarder] = await getContracts(creator, networkName, ["Pack", "AccessNFT", "Forwarder"]);
+  });
 
-    // Get expected packId
-    expectedPackId = await pack.nextTokenId();
+  describe("Should create access packs", function () {
+    it("Regular transaction", async () => {
+      // Get expected pack tokenId
+      const expectedPackId: number = await pack.nextTokenId();
 
-    // Create access packs
-    await accessNft
-      .connect(creator)
-      .createAccessPack(
+      // Get pack balance before pack creation.
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(0);
+
+      // Create access packs
+      await accessNft
+        .connect(creator)
+        .createAccessPack(
+          pack.address,
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          packURI,
+          openStartAndEnd,
+          openStartAndEnd,
+          rewardsPerOpen,
+        );
+
+      // Get pack balance after pack creation.
+      const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b));
+    });
+
+    it("Meta-Tx", async () => {
+      // Get expected pack tokenId
+      const expectedPackId: number = await pack.nextTokenId();
+
+      // Get pack balance before pack creation.
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(0);
+
+      // Meta tx setup
+      const from = creator.address;
+      const to = accessNft.address;
+
+      const data = accessNft.interface.encodeFunctionData("createAccessPack", [
         pack.address,
         rewardURIs,
         accessURIs,
@@ -71,53 +91,6 @@ describe("List token for sale", function () {
         openStartAndEnd,
         openStartAndEnd,
         rewardsPerOpen,
-      );
-
-    // Approve market to transfer tokens
-    await pack.connect(creator).setApprovalForAll(market.address, true);
-  });
-
-  describe("Should create access packs", function () {
-    it("Regular transaction", async () => {
-      // Get pack balance before pack creation.
-      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
-      expect(packBalanceBefore).to.equal(rewardSupplies.reduce((a, b) => a + b));
-
-      // List on market
-      await market
-        .connect(creator)
-        .list(
-          pack.address,
-          expectedPackId,
-          coin.address,
-          pricePerToken,
-          amountToList,
-          openStartAndEnd,
-          openStartAndEnd,
-        );
-
-      // Get pack balance after pack creation.
-      const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
-      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b) - amountToList);
-    });
-
-    it("Meta-Tx", async () => {
-      // Get pack balance before pack creation.
-      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
-      expect(packBalanceBefore).to.equal(rewardSupplies.reduce((a, b) => a + b));
-
-      // Meta tx setup
-      const from = creator.address;
-      const to = market.address;
-
-      const data = market.interface.encodeFunctionData("list", [
-        pack.address,
-        expectedPackId,
-        coin.address,
-        pricePerToken,
-        amountToList,
-        openStartAndEnd,
-        openStartAndEnd,
       ]);
 
       // Execute meta tx
@@ -126,7 +99,7 @@ describe("List token for sale", function () {
 
       // Get pack balance after pack creation.
       const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
-      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b) - amountToList);
+      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b));
     });
   });
 });

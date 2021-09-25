@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.0;
 
 // Tokens
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
@@ -16,7 +16,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Context, IERC2981 {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -32,22 +32,16 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     enum UnderlyingType {
         None,
         ERC20,
-        ERC721,
-        ERC1155
+        ERC721
     }
 
     struct NftInfo {
         address creator;
         string uri;
         uint256 supply;
+        bool isAccess;
         uint256 accessNftId;
         UnderlyingType underlyingType;
-    }
-
-    struct AccessNftInfo {
-        address creator;
-        string uri;
-        uint256 supply;
     }
 
     /// @notice Events.
@@ -69,9 +63,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
-
-    /// @dev Access NFT tokenId => Access NFT state.
-    mapping(uint256 => AccessNftInfo) public accessNftInfo;
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
@@ -100,6 +91,39 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         _contractURI = _uri;
     }
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        pure
+        override(ERC1155PresetMinterPauser, IERC165)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId;
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    /// @dev Creates pack on receiving ERC 1155 reward tokens
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) external virtual override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
     /// @notice Create native ERC 1155 NFTs.
     function createAccessNfts(
         string[] calldata _nftURIs,
@@ -120,11 +144,18 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         // Store NFT state for each NFT.
         for (uint256 i = 0; i < _nftURIs.length; i++) {
-            // Store NFT tokenId
+            // Store Access NFT tokenId
             accessNftIds[i] = id;
 
-            // Store NFT info
-            accessNftInfo[id] = AccessNftInfo({ creator: _msgSender(), uri: _nftURIs[i], supply: _nftSupplies[i] });
+            // Store Access NFT info
+            nftInfo[id] = NftInfo({
+                creator: _msgSender(),
+                uri: _accessNftURIs[i],
+                supply: _nftSupplies[i],
+                isAccess: true,
+                accessNftId: 0,
+                underlyingType: UnderlyingType.None
+            });
 
             // Update id
             id += 1;
@@ -137,8 +168,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
                 creator: _msgSender(),
                 uri: _nftURIs[i],
                 supply: _nftSupplies[i],
+                isAccess: false,
                 accessNftId: (id - 1),
-                underlyingType: UnderlyingType.ERC1155
+                underlyingType: UnderlyingType.None
             });
 
             // Update id
@@ -148,10 +180,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         nextTokenId = id;
 
         // Mint Access NFTs to contract
-        _mintBatch(address(this), accessNftIds, _nftSupplies, "");
+        mintBatch(address(this), accessNftIds, _nftSupplies, "");
 
         // Mint NFTs to `_msgSender()`
-        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        mintBatch(_msgSender(), nftIds, _nftSupplies, "");
 
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);
     }
@@ -175,19 +207,21 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets an NFT holder redeem the underlying Access NFT.
     function redeemAccess(uint256 _tokenId, uint256 _amount) external onlyUnpausedProtocol {
+        require(!nftInfo[_tokenId].isAccess, "AccessNFT: This token is not redeemable for access.");
+
         // Get redeemer
         address redeemer = _msgSender();
 
         require(balanceOf(redeemer, _tokenId) >= _amount, "AccessNFT: Cannot redeem more NFTs than owned.");
 
-        // Transfer NFTs to this contract
-        safeTransferFrom(redeemer, address(this), _tokenId, _amount, "");
+        // Burn NFTs of the 'unredeemed' state.
+        burn(_msgSender(), _tokenId, _amount);
 
         // Get access nft Id
         uint256 accessNftId = nftInfo[_tokenId].accessNftId;
 
         // Transfer Access NFTs to redeemer
-        safeTransferFrom(address(this), redeemer, accessNftId, _amount, "");
+        this.safeTransferFrom(address(this), redeemer, accessNftId, _amount, "");
 
         emit AccessNFTRedeemed(redeemer, _tokenId, accessNftId, _amount);
     }
@@ -221,9 +255,16 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // Decrease total supply if tokens are being burned.
-        if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (to == address(0)) {
                 nftInfo[ids[i]].supply -= amounts[i];
+            }
+
+            if (nftInfo[ids[i]].isAccess) {
+                require(
+                    from == address(0) || from == address(this),
+                    "AccessNFT: cannot transfer an access NFT that is redeemed"
+                );
             }
         }
     }
@@ -247,6 +288,11 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Alternative function to return a token's URI
     function tokenURI(uint256 _nftId) public view returns (string memory) {
         return nftInfo[_nftId].uri;
+    }
+
+    /// @dev Returns whether a token represents a 'redeemed' or 'not redeemed' state.
+    function isRedeemed(uint256 _nftId) public view returns (bool) {
+        return nftInfo[_nftId].isAccess;
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
