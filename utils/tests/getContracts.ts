@@ -55,9 +55,9 @@ export async function getContracts(
   );
 
   // Deploy Coin
-  const coinName = ""
-  const coinSymbol = ""
-  const coinURI = ""
+  const coinName = "";
+  const coinSymbol = "";
+  const coinURI = "";
 
   const Coin_Factory: ContractFactory = await ethers.getContractFactory("Coin");
   const coin: Contract = await Coin_Factory.deploy(
@@ -65,7 +65,7 @@ export async function getContracts(
     coinName,
     coinSymbol,
     forwarder.address,
-    coinURI
+    coinURI,
   );
 
   // Contracts
@@ -77,7 +77,7 @@ export async function getContracts(
     Pack: pack,
     Market: market,
     AccessNFT: accessNft,
-    Coin: coin
+    Coin: coin,
   };
 
   for (let contractName of contractNames) {

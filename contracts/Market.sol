@@ -370,7 +370,10 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
             );
 
             if (royaltyReceiver != address(0) && royaltyAmount > 0) {
-                require(royaltyAmount + marketCut + protocolProviderCut < totalPrice, "Market: Total market fees exceed the price.");
+                require(
+                    royaltyAmount + marketCut + protocolProviderCut < totalPrice,
+                    "Market: Total market fees exceed the price."
+                );
 
                 uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFee) / controlCenter.MAX_BPS();
                 sellerCut = sellerCut - royaltyAmount - providerRoyaltyCut;

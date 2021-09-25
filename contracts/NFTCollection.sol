@@ -169,14 +169,20 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155PresetMinterPauser, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155PresetMinterPauser, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(
-            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
+            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()),
             "NFTCollection: Bps provided must be less than 9,000"
         );
 
@@ -196,7 +202,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _tokenId,
         string calldata _nftURI
     ) external onlyUnpausedProtocol {
-        require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "NFTCollection: Only the owner of the NFT can wrap it.");
+        require(
+            IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
+            "NFTCollection: Only the owner of the NFT can wrap it."
+        );
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
                 IERC721(_nftContract).isApprovedForAll(_msgSender(), address(this)),

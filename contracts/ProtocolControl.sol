@@ -65,7 +65,10 @@ contract ProtocolControl is AccessControl {
 
     /// @dev Check whether the caller is an protocol provider admin
     modifier onlyProtocolProvider() {
-        require(hasRole(PROTOCOL_PROVIDER, msg.sender), "Protocol: Only protocol provider admins can call this function.");
+        require(
+            hasRole(PROTOCOL_PROVIDER, msg.sender),
+            "Protocol: Only protocol provider admins can call this function."
+        );
         _;
     }
 

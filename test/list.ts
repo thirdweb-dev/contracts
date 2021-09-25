@@ -53,7 +53,7 @@ describe("List token for sale", function () {
       "AccessNFT",
       "Forwarder",
       "Market",
-      "Coin"
+      "Coin",
     ]);
 
     // Get expected packId

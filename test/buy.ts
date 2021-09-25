@@ -55,7 +55,7 @@ describe("Buy tokens", function () {
       "AccessNFT",
       "Forwarder",
       "Market",
-      "Coin"
+      "Coin",
     ]);
 
     // Mint coins to buyer

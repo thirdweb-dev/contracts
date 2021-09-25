@@ -26,7 +26,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) public nftURI;
-    
+
     /// @dev Mapping from tokenId => creator
     mapping(uint256 => address) public nftCreator;
 
@@ -111,11 +111,11 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
             // Update creator
             nftCreator[id] = creator;
-            
+
             // Mint NFT
             _mint(_to, id);
 
-            id += 1;          
+            id += 1;
         }
 
         nextTokenId = id;
@@ -126,7 +126,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(
-            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()), 
+            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()),
             "NFT: Bps provided must be less than 9,000"
         );
 
@@ -135,7 +135,13 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         emit RoyaltyUpdated(_royaltyBps);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721PresetMinterPauserAutoId, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721PresetMinterPauserAutoId, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
