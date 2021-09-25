@@ -1,25 +1,19 @@
+   
 import hre from "hardhat";
 import { chainlinkVars } from "../../utils/chainlink";
-import addresses from "../../utils/address.json";
+import addresses from "../../utils/addresses/accesspacks.json";
 
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
 const { protocolControl, pack, forwarder } = addresses[networkName as keyof typeof addresses];
 const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
+const contractURI: string = "";
 
 async function Pack() {
   await hre.run("verify:verify", {
     address: pack,
-    constructorArguments: [
-      protocolControl, // Control center adddress
-      "$PACK Protocol", // global URI
-      vrfCoordinator,
-      linkTokenAddress,
-      keyHash,
-      fees,
-      forwarder,
-    ],
+    constructorArguments: [protocolControl, contractURI, vrfCoordinator, linkTokenAddress, keyHash, fees, forwarder],
   });
 }
 

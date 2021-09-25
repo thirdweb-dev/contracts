@@ -5,15 +5,17 @@
     "market": "",
     "nft": "",
     "coin": "",
+    "accessNft": "",
     "forwarder": ""
   },
-  "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "forwarder": "" },
+  "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "accessNft": "", "forwarder": "" },
   "polygon": {
     "protocolControl": "",
     "pack": "",
     "market": "",
     "nft": "",
     "coin": "",
+    "accessNft": "",
     "forwarder": "0x5B86E7e3339A486cf921ee9d9F29866E4E3ba4a0"
   },
   "rinkeby": {
@@ -22,6 +24,7 @@
     "market": "",
     "nft": "",
     "coin": "",
+    "accessNft": "",
     "forwarder": ""
   },
   "mainnet": {
@@ -30,6 +33,7 @@
     "market": "",
     "nft": "",
     "coin": "",
+    "accessNft": "",
     "forwarder": ""
   },
   "localhost": {
@@ -38,6 +42,7 @@
     "market": "",
     "nft": "",
     "coin": "",
+    "accessNft": "",
     "forwarder": ""
   }
 }

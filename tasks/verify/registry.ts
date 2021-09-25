@@ -1,11 +1,11 @@
 import hre, { ethers } from "hardhat";
-import addresses from "../../utils/address.json";
+import addresses from "../../utils/addresses/generalProtocol.json";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
-const { registry } = addresses[networkName as keyof typeof addresses];
+const { registry, forwarder } = addresses[networkName as keyof typeof addresses];
 
 async function Registry() {
   const [deployer]: SignerWithAddress[] = await ethers.getSigners();
@@ -15,8 +15,16 @@ async function Registry() {
   });
 }
 
+async function Forwarder() {
+  await hre.run("verify:verify", {
+    address: forwarder,
+    constructorArguments: [],
+  });
+}
+
 async function verify() {
   await Registry();
+  await Forwarder();
 }
 
 verify()

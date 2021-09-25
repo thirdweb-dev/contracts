@@ -4,17 +4,18 @@ import addresses from "../../utils/addresses/accesspacks.json";
 const networkName: string = hre.network.name;
 
 // Get network dependent vars.
-const { forwarder } = addresses[networkName as keyof typeof addresses];
+const { protocolControl, accessNft, forwarder } = addresses[networkName as keyof typeof addresses];
+const contractURI: string = "";
 
-async function Forwarder() {
+async function AccessNFT() {
   await hre.run("verify:verify", {
-    address: forwarder,
-    constructorArguments: [],
+    address: accessNft,
+    constructorArguments: [protocolControl, forwarder, contractURI],
   });
 }
 
 async function verify() {
-  await Forwarder();
+  await AccessNFT();
 }
 
 verify()
