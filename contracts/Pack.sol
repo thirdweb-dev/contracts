@@ -6,9 +6,6 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Access Control
-import "@openzeppelin/contracts/access/Ownable.sol";
-
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
