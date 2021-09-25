@@ -1,12 +1,12 @@
 {
   "mumbai": {
-    "protocolControl": "",
-    "pack": "",
-    "market": "",
+    "protocolControl": "0x75E68Fc66Dc1B7D9fEdde874Daa9f6928De47dAa",
+    "pack": "0xf86dae2466888981677e8CaB67D50A3D87A06fEC",
+    "market": "0xAcc2f9F70af22B539a9B38A9880E608cC7583F39",
     "nft": "",
     "coin": "",
-    "accessNft": "",
-    "forwarder": ""
+    "accessNft": "0x403a9060F8eFE3668b6DBB7746C2476Fe74037cf",
+    "forwarder": "0x717ae3154b0AA1b783544E161F4A95B92B11d830"
   },
   "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "accessNft": "", "forwarder": "" },
   "polygon": {

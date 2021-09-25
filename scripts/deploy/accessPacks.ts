@@ -100,7 +100,7 @@ async function main(): Promise<void> {
     },
   };
 
-  fs.writeFileSync(path.join(__dirname, "../../utils/address.json"), JSON.stringify(updatedAddresses));
+  fs.writeFileSync(path.join(__dirname, "../../utils/addresses/accesspacks.json"), JSON.stringify(updatedAddresses));
 }
 
 main()
