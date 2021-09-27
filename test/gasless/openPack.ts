@@ -7,11 +7,11 @@ import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts } from "../utils/tests/getContracts";
-import { forkFrom, impersonate } from "../utils/hardhatFork";
-import { chainlinkVars } from "../utils/chainlink";
-import linkTokenABi from "../abi/LinkTokenInterface.json";
-const { signMetaTxRequest } = require("../utils/meta-tx/signer");
+import { getContracts } from "../../utils/tests/getContracts";
+import { forkFrom, impersonate } from "../../utils/hardhatFork";
+import { chainlinkVars } from "../../utils/chainlink";
+import linkTokenABi from "../../abi/LinkTokenInterface.json";
+const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("Open pack", function () {
   // Signers

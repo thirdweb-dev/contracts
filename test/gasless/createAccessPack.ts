@@ -7,8 +7,9 @@ import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts } from "../utils/tests/getContracts";
-const { signMetaTxRequest } = require("../utils/meta-tx/signer");
+import { getContracts } from "../../utils/tests/getContracts";
+import { getURIs, getSupplies, openStartAndEnd, rewardsPerOpen } from "../../utils/tests/params";
+const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("Create a pack with rewards in a single tx", function () {
   // Signers
@@ -21,16 +22,10 @@ describe("Create a pack with rewards in a single tx", function () {
   let forwarder: Contract;
 
   // Reward parameterrs
-  const packURI: string = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1";
-  const rewardURIs: string[] = [
-    "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1",
-    "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/2",
-    "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/3",
-  ];
-  const accessURIs = rewardURIs;
-  const rewardSupplies: number[] = [5, 25, 60];
-  const openStartAndEnd: number = 0;
-  const rewardsPerOpen: number = 1;
+  const [packURI]: string[] = getURIs(1);
+  const rewardURIs: string[] = getURIs();
+  const accessURIs = getURIs(rewardURIs.length);
+  const rewardSupplies: number[] = getSupplies(rewardURIs.length);
 
   beforeEach(async () => {
     // Get signers
@@ -81,7 +76,6 @@ describe("Create a pack with rewards in a single tx", function () {
       // Meta tx setup
       const from = creator.address;
       const to = accessNft.address;
-
       const data = accessNft.interface.encodeFunctionData("createAccessPack", [
         pack.address,
         rewardURIs,

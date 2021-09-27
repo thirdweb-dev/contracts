@@ -7,8 +7,8 @@ import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts } from "../utils/tests/getContracts";
-const { signMetaTxRequest } = require("../utils/meta-tx/signer");
+import { getContracts } from "../../utils/tests/getContracts";
+const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("List token for sale", function () {
   // Signers
