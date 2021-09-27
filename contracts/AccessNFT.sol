@@ -44,7 +44,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         UnderlyingType underlyingType;
     }
 
-    /// @notice Events.
+    /// @dev Emmitted when Access NFTs are created.
     event AccessNFTsCreated(
         address indexed creator,
         uint256[] nftIds,
