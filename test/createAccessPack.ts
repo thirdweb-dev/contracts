@@ -5,13 +5,11 @@ import { expect } from "chai";
 // Types
 import { AccessNFT } from "../typechain/AccessNFT";
 import { Pack } from "../typechain/Pack";
-import { Forwarder } from "../typechain/Forwarder"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts, Contracts } from "../utils/tests/getContracts";
 import { getURIs, getSupplies, openStartAndEnd, rewardsPerOpen } from "../utils/tests/params";
-import { BigNumber } from "ethers";
 
 describe("Create a pack with rewards in a single tx", function() {
   // Signers
@@ -21,9 +19,8 @@ describe("Create a pack with rewards in a single tx", function() {
   // Contracts
   let pack: Pack;
   let accessNft: AccessNFT;
-  let forwarder: Forwarder;
 
-  // Reward parameterrs
+  // Reward parameters
   const [packURI]: string[] = getURIs(1);
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
@@ -39,7 +36,6 @@ describe("Create a pack with rewards in a single tx", function() {
     const contracts: Contracts = await getContracts(creator, networkName);
     pack = contracts.pack;
     accessNft = contracts.accessNft;
-    forwarder = contracts.forwarder;
   });
 
   describe("Revert", function() {
