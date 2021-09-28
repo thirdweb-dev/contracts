@@ -254,6 +254,13 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
+        if(controlCenter.isRestrictedTransfers(address(this))) {
+            require(
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), operator),
+                "AccessNFT: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
+
         // Decrease total supply if tokens are being burned.
         for (uint256 i = 0; i < ids.length; i++) {
             if (to == address(0)) {

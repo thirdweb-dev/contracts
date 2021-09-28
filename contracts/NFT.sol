@@ -145,6 +145,18 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view override returns (bool) {
+        
+        if(controlCenter.isRestrictedTransfers(address(this))) {
+            require(
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), spender),
+                "NFT: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
+
+        return super._isApprovedOrOwner(spender, tokenId);
+    }
+
     /// @dev See EIP 2981
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
