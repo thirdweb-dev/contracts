@@ -330,9 +330,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if(controlCenter.isRestrictedTransfers(address(this))) {
+        if (controlCenter.isRestrictedTransfers(address(this))) {
             require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), operator),
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
                 "NFTCollection: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }

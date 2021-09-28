@@ -374,9 +374,10 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if(controlCenter.isRestrictedTransfers(address(this))) {
+        if (controlCenter.isRestrictedTransfers(address(this))) {
             require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), operator),
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
                 "Pack: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }

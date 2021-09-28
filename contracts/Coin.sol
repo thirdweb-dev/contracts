@@ -46,6 +46,23 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
         _contractURI = _uri;
     }
 
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override (ERC20PresetMinterPauser) {
+        super._beforeTokenTransfer(from, to, amount);
+
+        if (controlCenter.isRestrictedTransfers(address(this))) {
+            require(
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
+                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
+                "NFT: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
+    }
+
+
     /// @dev Mints `amount` of coins to `to`.
     function mint(address to, uint256 amount) public override onlyUnpausedProtocol {
         super.mint(to, amount);
