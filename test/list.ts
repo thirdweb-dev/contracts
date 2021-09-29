@@ -18,7 +18,7 @@ import {
   rewardsPerOpen,
   pricePerToken,
   amountToList,
-  maxTokensPerBuyer
+  maxTokensPerBuyer,
 } from "../utils/tests/params";
 import { BigNumber } from "ethers";
 
@@ -45,9 +45,7 @@ describe("List token for sale", function () {
   // Market params
   const price: BigNumber = pricePerToken();
   const amountOfTokenToList = amountToList(rewardSupplies.reduce((a, b) => a + b));
-  const tokensPerBuyer = maxTokensPerBuyer(
-      parseInt(amountOfTokenToList.toString())
-  );
+  const tokensPerBuyer = maxTokensPerBuyer(parseInt(amountOfTokenToList.toString()));
 
   beforeEach(async () => {
     // Get signers
@@ -104,7 +102,16 @@ describe("List token for sale", function () {
       await expect(
         market
           .connect(creator)
-          .list(pack.address, packId, coin.address, price, invalidQuantity, tokensPerBuyer, openStartAndEnd, openStartAndEnd),
+          .list(
+            pack.address,
+            packId,
+            coin.address,
+            price,
+            invalidQuantity,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
       ).to.be.revertedWith("Market: must list at least one token.");
     });
 
@@ -112,7 +119,16 @@ describe("List token for sale", function () {
       await expect(
         market
           .connect(creator)
-          .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd),
+          .list(
+            pack.address,
+            packId,
+            coin.address,
+            price,
+            amountOfTokenToList,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
       ).to.be.reverted;
     });
   });
@@ -151,7 +167,16 @@ describe("List token for sale", function () {
 
       await market
         .connect(creator)
-        .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd);
+        .list(
+          pack.address,
+          packId,
+          coin.address,
+          price,
+          amountOfTokenToList,
+          tokensPerBuyer,
+          openStartAndEnd,
+          openStartAndEnd,
+        );
 
       await eventPromise;
     });
@@ -165,7 +190,16 @@ describe("List token for sale", function () {
       // List tokens
       await market
         .connect(creator)
-        .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd);
+        .list(
+          pack.address,
+          packId,
+          coin.address,
+          price,
+          amountOfTokenToList,
+          tokensPerBuyer,
+          openStartAndEnd,
+          openStartAndEnd,
+        );
     });
 
     it("Should transfer all tokens from seller to Market", async () => {
@@ -190,7 +224,16 @@ describe("List token for sale", function () {
       // List tokens
       await market
         .connect(creator)
-        .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd);
+        .list(
+          pack.address,
+          packId,
+          coin.address,
+          price,
+          amountOfTokenToList,
+          tokensPerBuyer,
+          openStartAndEnd,
+          openStartAndEnd,
+        );
     });
 
     it("Should increment the number of total listings on the market", async () => {
