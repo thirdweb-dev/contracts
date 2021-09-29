@@ -18,7 +18,11 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public isRestrictedTransfer;
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
@@ -31,8 +35,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Collection level metadata.
     string public _contractURI;
-
-    bool public isRestrictedTransfer;
 
     enum UnderlyingType {
         None,
@@ -326,11 +328,12 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         emit ERC20Redeemed(_msgSender(), erc20WrappedNfts[_nftId].tokenContract, amountToDistribute, _amount);
     }
 
+    /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
         isRestrictedTransfer = _restrictedTransfer;
     }
 
-    /// @dev Updates a token's total supply.
+    /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
         address from,

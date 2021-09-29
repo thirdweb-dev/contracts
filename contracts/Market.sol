@@ -33,6 +33,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     /// @dev Collection level metadata.
     string public _contractURI;
 
+    /// @dev The marketplace fee.
     uint128 public marketFeeBps;
 
     /// @dev Token type of the listing.
@@ -423,6 +424,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         );
     }
 
+    /// @dev Lets a protocol admin set market fees.
     function setMarketFeeBps(uint128 feeBps) external onlyProtocolAdmin {
         marketFeeBps = feeBps;
         emit MarketFeeUpdate(feeBps);

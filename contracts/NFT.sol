@@ -15,7 +15,11 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public isRestrictedTransfer;
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
@@ -25,8 +29,6 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Collection level metadata.
     string public _contractURI;
-
-    bool public isRestrictedTransfer;
 
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) public nftURI;
@@ -147,14 +149,17 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         view
         virtual
         override(ERC721PresetMinterPauserAutoId, IERC165)
-        returns (bool) {
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
+    /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
         isRestrictedTransfer = _restrictedTransfer;
     }
 
+    /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address from,
         address to,
