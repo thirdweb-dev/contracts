@@ -56,9 +56,6 @@ async function main(): Promise<void> {
 
   console.log(`Deploying Pack: ${pack.address} at tx hash: ${pack.deployTransaction.hash}`);
 
-  const addModulePackTx = await protocolControl.addModule(pack.address, ModuleType.Pack);
-  await addModulePackTx.wait();
-
   // Deploy Market
   const marketContractURI: string = "";
 
@@ -66,9 +63,6 @@ async function main(): Promise<void> {
   const market: Contract = await Market_Factory.deploy(protocolControl.address, forwarder.address, marketContractURI);
 
   console.log(`Deploying Market: ${market.address} at tx hash: ${market.deployTransaction.hash}`);
-
-  const addModuleMarketTx = await protocolControl.addModule(pack.address, ModuleType.Market);
-  await addModuleMarketTx.wait();
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
@@ -81,9 +75,6 @@ async function main(): Promise<void> {
   );
 
   console.log(`Deploying AccessNFT: ${accessNft.address} at tx hash: ${accessNft.deployTransaction.hash}`);
-
-  const addModuleAccessTx = await protocolControl.addModule(pack.address, ModuleType.AccessNFT);
-  await addModuleAccessTx.wait();
 
   // Update contract addresses in `/utils`
   const updatedAddresses = {

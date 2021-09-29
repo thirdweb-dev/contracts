@@ -2,7 +2,6 @@ import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
 import addresses from "../../utils/addresses/accesspacks.json";
-import ModuleType from "../../utils/protocolModules";
 import { txOptions } from "../../utils/txOptions";
 
 import * as fs from "fs";
@@ -28,7 +27,7 @@ async function main() {
   const contractURI: string = "";
 
   const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT");
-  const accessNft = await AccessNFT_Factory.connect(deployer).deploy(
+  const accessNft: Contract = await AccessNFT_Factory.connect(deployer).deploy(
     protocolControlAddress,
     forwarderAddr,
     contractURI,
@@ -39,16 +38,6 @@ async function main() {
 
   await accessNft.deployed();
 
-  // Get deployed `Nft`'s address
-  const nftAddress = accessNft.address;
-
-  // Get `ProtocolControl`
-  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddress);
-
-  // Add Module
-  const addModuleTx = await protocolControl.addModule(nftAddress, ModuleType.AccessNFT);
-  await addModuleTx.wait();
-
   // Update contract addresses in `/utils`
   const updatedAddresses = {
     ...addresses,
@@ -56,7 +45,7 @@ async function main() {
     [networkName]: {
       ...curentNetworkAddreses,
 
-      accessNft: nftAddress,
+      accessNft: accessNft.address,
     },
   };
 
