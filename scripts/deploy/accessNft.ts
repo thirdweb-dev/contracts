@@ -28,7 +28,7 @@ async function main() {
   const contractURI: string = "";
 
   const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT");
-  const accessNft = await AccessNFT_Factory.connect(deployer).deploy(
+  const accessNft: Contract = await AccessNFT_Factory.connect(deployer).deploy(
     protocolControlAddress,
     forwarderAddr,
     contractURI,

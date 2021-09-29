@@ -29,7 +29,7 @@ async function main() {
   // Deploy `Pack`
   const contractURI: string = "";
   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-  const pack = await Pack_Factory.connect(deployer).deploy(
+  const pack: Contract = await Pack_Factory.connect(deployer).deploy(
     protocolControlAddress,
     contractURI,
     vrfCoordinator,

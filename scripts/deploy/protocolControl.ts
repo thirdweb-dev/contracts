@@ -25,7 +25,7 @@ async function main() {
   // Deploy `ProtocolControl`
   const protocolControlURI: string = "";
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  const protocolControl = await ProtocolControl_Factory.deploy(
+  const protocolControl: Contract = await ProtocolControl_Factory.deploy(
     deployer.address,
     deployer.address,
     protocolControlURI,

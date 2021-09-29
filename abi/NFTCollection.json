@@ -460,6 +460,19 @@
   },
   {
     "inputs": [],
+    "name": "TRANSFER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "_contractURI",
     "outputs": [
       {
@@ -846,6 +859,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "isRestrictedTransfer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1189,6 +1215,19 @@
       }
     ],
     "name": "setContractURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "_restrictedTransfer",
+        "type": "bool"
+      }
+    ],
+    "name": "setRestrictedTransfer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

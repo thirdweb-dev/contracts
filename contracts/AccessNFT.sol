@@ -17,6 +17,12 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Context, IERC2981 {
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public isRestrictedTransfer;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -44,7 +50,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         UnderlyingType underlyingType;
     }
 
-    /// @notice Events.
+    /// @dev Emmitted when Access NFTs are created.
     event AccessNFTsCreated(
         address indexed creator,
         uint256[] nftIds,
@@ -89,6 +95,8 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -243,7 +251,12 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         _contractURI = _URI;
     }
 
-    /// @dev Updates a token's total supply.
+    /// @dev Lets a protocol admin restrict token transfers.
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
+    }
+
+    /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -253,6 +266,13 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         bytes memory data
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (isRestrictedTransfer) {
+            require(
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
+                "AccessNFT: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
 
         // Decrease total supply if tokens are being burned.
         for (uint256 i = 0; i < ids.length; i++) {

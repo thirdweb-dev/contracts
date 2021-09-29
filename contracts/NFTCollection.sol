@@ -18,6 +18,12 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public isRestrictedTransfer;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -118,6 +124,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     /// @notice Create native ERC 1155 NFTs.
@@ -319,7 +327,12 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         emit ERC20Redeemed(_msgSender(), erc20WrappedNfts[_nftId].tokenContract, amountToDistribute, _amount);
     }
 
-    /// @dev Updates a token's total supply.
+    /// @dev Lets a protocol admin restrict token transfers.
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
+    }
+
+    /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -329,6 +342,13 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         bytes memory data
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (isRestrictedTransfer) {
+            require(
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
+                "NFTCollection: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
 
         // Decrease total supply if tokens are being burned.
         if (to == address(0)) {

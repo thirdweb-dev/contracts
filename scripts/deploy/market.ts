@@ -28,7 +28,7 @@ async function main() {
   const contractURI: string = "";
 
   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  const market = await Market_Factory.connect(deployer).deploy(
+  const market: Contract = await Market_Factory.connect(deployer).deploy(
     protocolControlAddress,
     forwarderAddr,
     contractURI,

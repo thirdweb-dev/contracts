@@ -7,7 +7,8 @@ import { BigNumber, Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts } from "../utils/tests/getContracts";
+import { getContracts } from "../../utils/tests/getContracts";
+const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("Buy tokens", function () {
   // Signers
@@ -89,8 +90,38 @@ describe("Buy tokens", function () {
       .list(pack.address, expectedPackId, coin.address, pricePerToken, amountToList, openStartAndEnd, openStartAndEnd);
   });
 
-  describe("Revert");
-  describe("Events");
-  describe("Balances");
-  describe("Contract state");
+  describe("Should create access packs", function () {
+    it("Regular transaction", async () => {
+      // Get pack balance before pack creation.
+      const packBalanceBefore = await pack.balanceOf(buyer.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(0);
+
+      // Buy packs
+      await market.connect(buyer).buy(expectedListingId, amountToList);
+
+      // Get pack balance after pack creation.
+      const packBalanceAfer = await pack.balanceOf(buyer.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(amountToList);
+    });
+
+    it("Meta-Tx", async () => {
+      // Get pack balance before pack creation.
+      const packBalanceBefore = await pack.balanceOf(buyer.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(0);
+
+      // Meta tx setup
+      const from = buyer.address;
+      const to = market.address;
+
+      const data = market.interface.encodeFunctionData("buy", [expectedListingId, amountToList]);
+
+      // Execute meta tx
+      const { request, signature } = await signMetaTxRequest(creator.provider, forwarder, { from, to, data });
+      await forwarder.connect(relayer).execute(request, signature);
+
+      // Get pack balance after pack creation.
+      const packBalanceAfer = await pack.balanceOf(buyer.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(amountToList);
+    });
+  });
 });

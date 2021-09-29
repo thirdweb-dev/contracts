@@ -8,7 +8,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts } from "../utils/tests/getContracts";
-const { signMetaTxRequest } = require("../utils/meta-tx/signer");
+const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("Redeem access", function () {
   // Signers
@@ -53,56 +53,8 @@ describe("Redeem access", function () {
       .safeTransferFrom(creator.address, fan.address, expectedRewardIds[accessIndex], 1, ethers.utils.toUtf8Bytes(""));
   });
 
-  describe("Should create access packs", function () {
-    it("Regular transaction", async () => {
-      // Get access id
-      const rewardId = expectedRewardIds[accessIndex];
-      const accessId = expectedAccessIds[accessIndex];
-      const redeemAmount: number = 1;
-
-      // Get access balance before pack creation.
-      const rewardBalanceBefore = await accessNft.balanceOf(fan.address, rewardId);
-      expect(rewardBalanceBefore).to.equal(1);
-      const accessBalanceBefore = await accessNft.balanceOf(fan.address, accessId);
-      expect(accessBalanceBefore).to.equal(0);
-
-      // Redeem access
-      await accessNft.connect(fan).redeemAccess(rewardId, redeemAmount);
-
-      // Get access balance before pack creation.
-      const rewardBalanceAfter = await accessNft.balanceOf(fan.address, rewardId);
-      expect(rewardBalanceAfter).to.equal(0);
-      const accessBalanceAfter = await accessNft.balanceOf(fan.address, accessId);
-      expect(accessBalanceAfter).to.equal(1);
-    });
-
-    it("Meta-Tx", async () => {
-      // Get access id
-      const rewardId = expectedRewardIds[accessIndex];
-      const accessId = expectedAccessIds[accessIndex];
-      const redeemAmount: number = 1;
-
-      // Get access balance before pack creation.
-      const rewardBalanceBefore = await accessNft.balanceOf(fan.address, rewardId);
-      expect(rewardBalanceBefore).to.equal(1);
-      const accessBalanceBefore = await accessNft.balanceOf(fan.address, accessId);
-      expect(accessBalanceBefore).to.equal(0);
-
-      // Meta tx setup
-      const from = fan.address;
-      const to = accessNft.address;
-
-      const data = accessNft.interface.encodeFunctionData("redeemAccess", [rewardId, redeemAmount]);
-
-      // Execute meta tx
-      const { request, signature } = await signMetaTxRequest(creator.provider, forwarder, { from, to, data });
-      await forwarder.connect(relayer).execute(request, signature);
-
-      // Get access balance before pack creation.
-      const rewardBalanceAfter = await accessNft.balanceOf(fan.address, rewardId);
-      expect(rewardBalanceAfter).to.equal(0);
-      const accessBalanceAfter = await accessNft.balanceOf(fan.address, accessId);
-      expect(accessBalanceAfter).to.equal(1);
-    });
-  });
+  describe("Revert");
+  describe("Events");
+  describe("Balances");
+  describe("Contract state");
 });

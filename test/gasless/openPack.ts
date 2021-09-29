@@ -7,10 +7,10 @@ import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts } from "../utils/tests/getContracts";
-import { forkFrom, impersonate } from "../utils/hardhatFork";
-import { chainlinkVars } from "../utils/chainlink";
-import linkTokenABi from "../abi/LinkTokenInterface.json";
+import { getContracts } from "../../utils/tests/getContracts";
+import { forkFrom, impersonate } from "../../utils/hardhatFork";
+import { chainlinkVars } from "../../utils/chainlink";
+import linkTokenABi from "../../abi/LinkTokenInterface.json";
 const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("Open pack", function () {
@@ -82,8 +82,38 @@ describe("Open pack", function () {
     await fundPack();
   });
 
-  describe("Revert");
-  describe("Events");
-  describe("Balances");
-  describe("Contract state");
+  describe("Should open 1 pack", function () {
+    it("Regular transaction", async () => {
+      // Get pack balance before opening pack.
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(rewardSupplies.reduce((a, b) => a + b));
+
+      // Open pack
+      await pack.connect(creator).openPack(expectedPackId);
+
+      // Get pack balance after opening pack.
+      const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b) - 1);
+    });
+
+    it("Meta-Tx", async () => {
+      // Get pack balance before opening pack.
+      const packBalanceBefore = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceBefore).to.equal(rewardSupplies.reduce((a, b) => a + b));
+
+      // Meta tx setup
+      const from = creator.address;
+      const to = pack.address;
+
+      const data = pack.interface.encodeFunctionData("openPack", [expectedPackId]);
+
+      // Execute meta tx
+      const { request, signature } = await signMetaTxRequest(creator.provider, forwarder, { from, to, data });
+      await forwarder.connect(relayer).execute(request, signature);
+
+      // Get pack balance after opening pack.
+      const packBalanceAfer = await pack.balanceOf(creator.address, expectedPackId);
+      expect(packBalanceAfer).to.equal(rewardSupplies.reduce((a, b) => a + b) - 1);
+    });
+  });
 });

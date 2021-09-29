@@ -83,7 +83,7 @@
         "type": "address"
       }
     ],
-    "name": "UpdatedNftlabsAdmin",
+    "name": "UpdatedProviderAdmin",
     "type": "event"
   },
   {
@@ -176,7 +176,7 @@
   },
   {
     "inputs": [],
-    "name": "nftlabsAdminSigner",
+    "name": "owner",
     "outputs": [
       {
         "internalType": "address",
@@ -189,7 +189,7 @@
   },
   {
     "inputs": [],
-    "name": "owner",
+    "name": "providerAdmin",
     "outputs": [
       {
         "internalType": "address",
@@ -215,7 +215,7 @@
         "type": "address"
       }
     ],
-    "name": "setNftlabsAdmin",
+    "name": "setProviderAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

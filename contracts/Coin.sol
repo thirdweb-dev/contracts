@@ -11,6 +11,12 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract Coin is ERC20PresetMinterPauser, ERC2771Context {
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public isRestrictedTransfer;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -44,6 +50,29 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
+    }
+
+    /// @dev Runs on every transfer.
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20PresetMinterPauser) {
+        super._beforeTokenTransfer(from, to, amount);
+
+        if (isRestrictedTransfer) {
+            require(
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
+                "NFT: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
+    }
+
+    /// @dev Lets a protocol admin restrict token transfers.
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
     }
 
     /// @dev Mints `amount` of coins to `to`.

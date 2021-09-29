@@ -19,6 +19,12 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IERC2981 {
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public isRestrictedTransfer;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -125,6 +131,8 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     /**
@@ -158,6 +166,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256,
         bytes memory
     ) public virtual override returns (bytes4) {
+        revert("Pack: Must use batch transfer.");
         return this.onERC1155Received.selector;
     }
 
@@ -167,13 +176,12 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
 
     /// @dev Lets a pack owner request to open a single pack.
     function openPack(uint256 _packId) external onlyUnpausedProtocol {
-        // Check whether this call is made within the window to open packs.
         PackState memory packState = packs[_packId];
+
         require(
             block.timestamp >= packState.openStart && block.timestamp <= packState.openEnd,
             "Pack: the window to open packs has not started or closed."
         );
-
         require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
         require(balanceOf(_msgSender(), _packId) > 0, "Pack: sender owns no packs of the given packId.");
         require(currentRequestId[_packId][_msgSender()] == "", "Pack: must wait for the pending pack to be opened.");
@@ -226,7 +234,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
         require(
-            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()),
+            _royaltyBps < (controlCenter.MAX_BPS() - controlCenter.MAX_PROVIDER_FEE_BPS()),
             "NFT: Bps provided must be less than 9,000"
         );
 
@@ -238,6 +246,11 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
+    }
+
+    /// @dev Lets a protocol admin restrict token transfers.
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -363,7 +376,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         rewards[_packId] = _rewardsInPack;
     }
 
-    /// @dev Updates a token's total supply.
+    /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -373,6 +386,13 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (isRestrictedTransfer) {
+            require(
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
+                "Pack: Transfers are restricted to TRANSFER_ROLE holders"
+            );
+        }
 
         // Decrease total supply if tokens are being burned.
         if (to == address(0)) {

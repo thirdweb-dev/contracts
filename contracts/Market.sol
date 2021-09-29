@@ -33,6 +33,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     /// @dev Collection level metadata.
     string public _contractURI;
 
+    /// @dev The marketplace fee.
     uint128 public marketFeeBps;
 
     /// @dev Token type of the listing.
@@ -51,11 +52,14 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         uint256 pricePerToken;
         uint256 saleStart;
         uint256 saleEnd;
+        uint256 tokensPerBuyer;
         TokenType tokenType;
     }
 
-    /// @dev seller address => listingId => listing info.
+    /// @dev listingId => listing info.
     mapping(uint256 => Listing) public listings;
+    /// @dev listingId => buyer address => tokens bought
+    mapping(uint256 => mapping(address => uint256)) public boughtFromListing;
 
     /// @dev Events
     event NewListing(address indexed assetContract, address indexed seller, uint256 indexed listingId, Listing listing);
@@ -157,10 +161,12 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         address _currency,
         uint256 _pricePerToken,
         uint256 _quantity,
+        uint256 _tokensPerBuyer,
         uint256 _secondsUntilStart,
         uint256 _secondsUntilEnd
     ) external onlyUnpausedProtocol {
         require(_quantity > 0, "Market: must list at least one token.");
+        require(_tokensPerBuyer <= _quantity, "Market: cannot let buyer buy more than listed quantity.");
 
         // Get listing ID.
         uint256 listingId = totalListings;
@@ -184,6 +190,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
             currency: _currency,
             pricePerToken: _pricePerToken,
             quantity: _quantity,
+            tokensPerBuyer: _tokensPerBuyer == 0 ? _quantity : _tokensPerBuyer,
             saleStart: block.timestamp + _secondsUntilStart,
             saleEnd: _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd,
             tokenType: tokenTypeOfListing
@@ -240,14 +247,18 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         uint256 _listingId,
         uint256 _pricePerToken,
         address _currency,
+        uint256 _tokensPerBuyer,
         uint256 _secondsUntilStart,
         uint256 _secondsUntilEnd
     ) external onlyUnpausedProtocol onlySeller(_msgSender(), _listingId) {
         Listing memory listing = listings[_listingId];
 
+        require(_tokensPerBuyer <= listing.quantity, "Market: cannot let buyer buy more than listed quantity.");
+
         // Update listing info.
         listing.pricePerToken = _pricePerToken;
         listing.currency = _currency;
+        listing.tokensPerBuyer = _tokensPerBuyer == 0 ? listing.quantity : _tokensPerBuyer;
         listing.saleStart = block.timestamp + _secondsUntilStart;
         listing.saleEnd = _secondsUntilEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilEnd;
 
@@ -265,12 +276,20 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     {
         // Get listing
         Listing memory listing = listings[_listingId];
+        address buyer = _msgSender();
 
         require(_quantity > 0 && _quantity <= listing.quantity, "Market: must buy an appropriate amount of tokens.");
         require(
             block.timestamp <= listing.saleEnd && block.timestamp >= listing.saleStart,
             "Market: the sale has either not started or closed."
         );
+        require(
+            _quantity + boughtFromListing[_listingId][buyer] <= listing.tokensPerBuyer,
+            "Market: Cannot buy more from listing than permitted."
+        );
+
+        // Update buyer info
+        boughtFromListing[_listingId][buyer] += _quantity;
 
         // Update listing info.
         listing.quantity -= _quantity;
@@ -284,7 +303,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         // Transfer tokens being bought to buyer.
         sendTokens(listing, _quantity);
 
-        emit NewSale(listing.assetContract, listing.seller, _listingId, _msgSender(), _quantity, listing);
+        emit NewSale(listing.assetContract, listing.seller, _listingId, buyer, _quantity, listing);
     }
 
     /// @dev Transfers the token being listed to the Market.
@@ -351,9 +370,12 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         );
 
         // Collect protocol fee if any
-        uint256 protocolProviderFee = controlCenter.providerFeeBps();
         uint256 marketCut = (totalPrice * marketFeeBps) / controlCenter.MAX_BPS();
-        uint256 protocolProviderCut = (marketCut * protocolProviderFee) / controlCenter.MAX_BPS();
+
+        // Collect provider fees, % of the cut.
+        uint256 protocolProviderFeeBps = controlCenter.providerFeeBps();
+        uint256 protocolProviderCut = (marketCut * protocolProviderFeeBps) / controlCenter.MAX_BPS();
+        marketCut = marketCut - protocolProviderCut;
 
         require(
             IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.ownerTreasury(), marketCut),
@@ -371,13 +393,16 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
             if (royaltyReceiver != address(0) && royaltyAmount > 0) {
                 require(
-                    royaltyAmount + marketCut + protocolProviderCut < totalPrice,
+                    royaltyAmount + marketCut + protocolProviderCut <= totalPrice,
                     "Market: Total market fees exceed the price."
                 );
 
-                uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFee) / controlCenter.MAX_BPS();
-                sellerCut = sellerCut - royaltyAmount - providerRoyaltyCut;
-                protocolProviderCut += providerRoyaltyCut;
+                uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFeeBps) / controlCenter.MAX_BPS();
+                sellerCut = sellerCut - royaltyAmount;
+
+                // protocol takes royalty cut lol
+                protocolProviderCut = protocolProviderCut + providerRoyaltyCut;
+                royaltyAmount = royaltyAmount - providerRoyaltyCut;
 
                 require(
                     IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
@@ -398,6 +423,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         );
     }
 
+    /// @dev Lets a protocol admin set market fees.
     function setMarketFeeBps(uint128 feeBps) external onlyProtocolAdmin {
         marketFeeBps = feeBps;
         emit MarketFeeUpdate(feeBps);

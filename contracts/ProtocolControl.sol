@@ -38,6 +38,8 @@ contract ProtocolControl is AccessControl {
     mapping(bytes32 => address) public modules;
     /// @dev Module ID => Module type.
     mapping(bytes32 => ModuleType) public moduleType;
+    ///@dev Module address => Module ID
+    mapping(address => bytes32) public moduleIds;
     /// @dev Module type => Num of modules of that type.
     mapping(uint256 => uint256) public numOfModuleType;
 
@@ -56,6 +58,7 @@ contract ProtocolControl is AccessControl {
     event SystemPaused(bool isPaused);
     event ProviderFeeBpsUpdated(uint256 providerFeeBps);
     event ProviderTreasuryUpdated(address _providerTreasury);
+    event TransferRestricted(bytes32 moduleId, address moduleAddress, bool restriction);
 
     /// @dev Check whether the caller is a protocol admin
     modifier onlyProtocolAdmin() {
@@ -109,6 +112,7 @@ contract ProtocolControl is AccessControl {
         numOfModuleType[_moduleType] += 1;
 
         modules[moduleId] = _newModuleAddress;
+        moduleIds[_newModuleAddress] = moduleId;
 
         emit ModuleUpdated(moduleId, _newModuleAddress, _moduleType);
     }
@@ -118,6 +122,7 @@ contract ProtocolControl is AccessControl {
         require(modules[_moduleId] != address(0), "ProtocolControl: a module with this ID does not exist.");
 
         modules[_moduleId] = _newModuleAddress;
+        moduleIds[_newModuleAddress] = _moduleId;
 
         emit ModuleUpdated(_moduleId, _newModuleAddress, uint256(moduleType[_moduleId]));
     }
