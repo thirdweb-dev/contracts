@@ -12,8 +12,6 @@ contract ProtocolControl is AccessControl {
     bytes32 public constant PROTOCOL_ADMIN = keccak256("PROTOCOL_ADMIN");
     /// @dev Admin role for protocol provider.
     bytes32 public constant PROTOCOL_PROVIDER = keccak256("PROTOCOL_PROVIDER");
-    /// @dev Admin role that lets only accounts with the role transfer the module's tokens
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Protocol status.
     bool public systemPaused;
@@ -44,8 +42,6 @@ contract ProtocolControl is AccessControl {
     mapping(address => bytes32) public moduleIds;
     /// @dev Module type => Num of modules of that type.
     mapping(uint256 => uint256) public numOfModuleType;
-    /// @dev Module ID => transfer restrictions
-    mapping(bytes32 => bool) public transfersRestricted;
 
     /// @dev Protocol provider fees
     uint128 public constant MAX_BPS = 10000; // 100%
@@ -93,11 +89,9 @@ contract ProtocolControl is AccessControl {
 
         // Set access control roles
         _setupRole(PROTOCOL_ADMIN, _admin);
-        _setupRole(TRANSFER_ROLE, _admin);
         _setupRole(PROTOCOL_PROVIDER, _provider);
 
         _setRoleAdmin(PROTOCOL_ADMIN, PROTOCOL_ADMIN);
-        _setRoleAdmin(TRANSFER_ROLE, PROTOCOL_ADMIN);
         _setRoleAdmin(PROTOCOL_PROVIDER, PROTOCOL_PROVIDER);
 
         emit OwnerTreasuryUpdated(_admin);
@@ -160,19 +154,6 @@ contract ProtocolControl is AccessControl {
     function pauseProtocol(bool _toPause) external onlyProtocolAdmin {
         systemPaused = _toPause;
         emit SystemPaused(_toPause);
-    }
-
-    /// @dev Lets a protocol admin restric transfers of a module's tokens
-    function restrictTransfers(bytes32 _moduleId, bool _restriction) external onlyProtocolAdmin {
-        require(modules[_moduleId] != address(0), "ProtocolControl: a module with this ID does not exist.");
-        transfersRestricted[_moduleId] = _restriction;
-
-        emit TransferRestricted(_moduleId, modules[_moduleId], _restriction);
-    }
-
-    /// @dev Returns whether transfers on a module are restricted
-    function isRestrictedTransfers(address _moduleAddress) external view returns (bool) {
-        return transfersRestricted[moduleIds[_moduleAddress]];
     }
 
     /// @dev Lets a protocol admin transfer this contract's funds.

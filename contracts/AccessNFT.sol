@@ -17,6 +17,8 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Context, IERC2981 {
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -28,6 +30,8 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
 
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    bool public isRestrictedTransfer;
 
     enum UnderlyingType {
         None,
@@ -89,6 +93,8 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -243,6 +249,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         _contractURI = _URI;
     }
 
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
+    }
+
     /// @dev Updates a token's total supply.
     function _beforeTokenTransfer(
         address operator,
@@ -254,9 +264,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if(controlCenter.isRestrictedTransfers(address(this))) {
+        if (isRestrictedTransfer) {
             require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), operator),
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "AccessNFT: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }

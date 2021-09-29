@@ -11,11 +11,15 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract Coin is ERC20PresetMinterPauser, ERC2771Context {
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    bool public isRestrictedTransfer;
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -44,6 +48,8 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     function _beforeTokenTransfer(
@@ -53,15 +59,17 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
     ) internal override (ERC20PresetMinterPauser) {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (controlCenter.isRestrictedTransfers(address(this))) {
+        if (isRestrictedTransfer) {
             require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }
     }
 
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
+    }
 
     /// @dev Mints `amount` of coins to `to`.
     function mint(address to, uint256 amount) public override onlyUnpausedProtocol {

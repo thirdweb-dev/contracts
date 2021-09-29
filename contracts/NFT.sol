@@ -15,6 +15,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -23,6 +25,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    bool public isRestrictedTransfer;
 
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) public nftURI;
@@ -66,6 +70,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     /// @dev Revert inherited mint function.
@@ -144,6 +150,10 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -151,10 +161,9 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     ) internal virtual override(ERC721PresetMinterPauserAutoId) {
         super._beforeTokenTransfer(from, to, tokenId);
 
-        if (controlCenter.isRestrictedTransfers(address(this))) {
+        if (isRestrictedTransfer) {
             require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }

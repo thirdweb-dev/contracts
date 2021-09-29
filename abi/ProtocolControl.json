@@ -289,19 +289,6 @@
   },
   {
     "inputs": [],
-    "name": "TRANSFER_ROLE",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "_contractURI",
     "outputs": [
       {
@@ -420,25 +407,6 @@
       }
     ],
     "name": "hasRole",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_moduleAddress",
-        "type": "address"
-      }
-    ],
-    "name": "isRestrictedTransfers",
     "outputs": [
       {
         "internalType": "bool",
@@ -599,24 +567,6 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "_moduleId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bool",
-        "name": "_restriction",
-        "type": "bool"
-      }
-    ],
-    "name": "restrictTransfers",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
       },
@@ -697,25 +647,6 @@
     "name": "transferProtocolFunds",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "transfersRestricted",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

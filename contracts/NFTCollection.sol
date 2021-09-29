@@ -18,6 +18,8 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -29,6 +31,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    bool public isRestrictedTransfer;
 
     enum UnderlyingType {
         None,
@@ -118,6 +122,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     /// @notice Create native ERC 1155 NFTs.
@@ -319,6 +325,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         emit ERC20Redeemed(_msgSender(), erc20WrappedNfts[_nftId].tokenContract, amountToDistribute, _amount);
     }
 
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
+    }
+
     /// @dev Updates a token's total supply.
     function _beforeTokenTransfer(
         address operator,
@@ -330,10 +340,9 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (controlCenter.isRestrictedTransfers(address(this))) {
+        if (isRestrictedTransfer) {
             require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
+                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "NFTCollection: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }

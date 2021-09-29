@@ -19,6 +19,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IERC2981 {
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -34,6 +36,8 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
 
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    bool public isRestrictedTransfer;
 
     /// @dev The state of packs with a unique tokenId.
     struct PackState {
@@ -125,6 +129,8 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
 
         // Set contract URI
         _contractURI = _uri;
+
+        _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     /**
@@ -238,6 +244,10 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
         _contractURI = _URI;
+    }
+
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+        isRestrictedTransfer = _restrictedTransfer;
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -374,10 +384,8 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (controlCenter.isRestrictedTransfers(address(this))) {
-            require(
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), from) ||
-                controlCenter.hasRole(controlCenter.TRANSFER_ROLE(), to),
+        if (isRestrictedTransfer) {
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "Pack: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }
