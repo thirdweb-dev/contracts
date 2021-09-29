@@ -303,7 +303,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
             IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
             "Pack: reward contract does not implement ERC 1155."
         );
-        require(hasRole(MINTER_ROLE, _creator), "Pack: Only accounts with MINTER_ROLE can call this function.");
 
         uint256 sumOfRewards = _sumArr(_rewardAmounts);
 
