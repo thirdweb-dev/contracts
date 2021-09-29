@@ -23,7 +23,7 @@ async function main() {
 
   // Deploy Registry.sol
   const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
-  const registry: Contract = await Registry_Factory.deploy(deployer.address, txOption);
+  const registry: Contract = await Registry_Factory.deploy(deployer.address, deployer.address, txOption);
 
   console.log("Deployed Registry at: ", registry.address);
 
