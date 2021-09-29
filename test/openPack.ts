@@ -82,8 +82,8 @@ describe("Open pack", function () {
     await fundPack();
   });
 
-  describe("Revert")
-  describe("Events")
-  describe("Balances")
-  describe("Contract state")
+  describe("Revert");
+  describe("Events");
+  describe("Balances");
+  describe("Contract state");
 });

@@ -11,7 +11,15 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts, Contracts } from "../utils/tests/getContracts";
-import { getURIs, getSupplies, openStartAndEnd, rewardsPerOpen, pricePerToken, amountToList } from "../utils/tests/params";
+import {
+  getURIs,
+  getSupplies,
+  openStartAndEnd,
+  rewardsPerOpen,
+  pricePerToken,
+  amountToList,
+  maxTokensPerBuyer
+} from "../utils/tests/params";
 import { BigNumber } from "ethers";
 
 describe("List token for sale", function () {
@@ -36,7 +44,10 @@ describe("List token for sale", function () {
 
   // Market params
   const price: BigNumber = pricePerToken();
-  const amountOfTokenToList = amountToList(rewardSupplies.reduce((a,b) => a+b));
+  const amountOfTokenToList = amountToList(rewardSupplies.reduce((a, b) => a + b));
+  const tokensPerBuyer = maxTokensPerBuyer(
+      parseInt(amountOfTokenToList.toString())
+  );
 
   beforeEach(async () => {
     // Get signers
@@ -69,18 +80,17 @@ describe("List token for sale", function () {
         openStartAndEnd,
         rewardsPerOpen,
       );
-    
+
     // Get NFT IDs
     const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
     const expectedRewardIds: number[] = [];
     const expectedAccessIds: number[] = [];
     for (let val of [...Array(nextAccessNftId).keys()]) {
-            
-      if(val % 2 == 0) {
-        expectedAccessIds.push(val)
+      if (val % 2 == 0) {
+        expectedAccessIds.push(val);
       } else {
-        expectedRewardIds.push(val)
-      }              
+        expectedRewardIds.push(val);
+      }
     }
 
     rewardIds = expectedRewardIds;
@@ -88,49 +98,36 @@ describe("List token for sale", function () {
   });
 
   describe("Revert", async () => {
-    
-    it("Should revert if no amount of tokens is listed", async () => {      
+    it("Should revert if no amount of tokens is listed", async () => {
       const invalidQuantity: number = 0;
 
-      await expect(market.connect(creator).list(
-        pack.address,
-        packId,
-        coin.address,
-        price,
-        invalidQuantity,
-        openStartAndEnd,
-        openStartAndEnd
-      )).to.be.revertedWith("Market: must list at least one token.");
-    })
+      await expect(
+        market
+          .connect(creator)
+          .list(pack.address, packId, coin.address, price, invalidQuantity, tokensPerBuyer, openStartAndEnd, openStartAndEnd),
+      ).to.be.revertedWith("Market: must list at least one token.");
+    });
 
     it("Should revert if Market is not approved to transfer tokens", async () => {
-      await expect(market.connect(creator).list(
-        pack.address,
-        packId,
-        coin.address,
-        price,
-        amountOfTokenToList,
-        openStartAndEnd,
-        openStartAndEnd
-      )).to.be.reverted;
-    })
-  })
+      await expect(
+        market
+          .connect(creator)
+          .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd),
+      ).to.be.reverted;
+    });
+  });
 
-  describe("Events", function() {
-
+  describe("Events", function () {
     beforeEach(async () => {
       // Approve Market to transfer tokens
       await pack.connect(creator).setApprovalForAll(market.address, true);
-    })
+    });
 
     it("Should emit NewListing", async () => {
-
       const listingId: BigNumber = await market.totalListings();
 
       const eventPromise = new Promise((resolve, reject) => {
-
         market.on("NewListing", (_assetContract, _seller, _listingId, _listing) => {
-
           expect(_assetContract).to.equal(pack.address);
           expect(_seller).to.equal(creator.address);
           expect(_listingId).to.equal(listingId);
@@ -140,61 +137,47 @@ describe("List token for sale", function () {
           expect(_listing.assetContract).to.equal(pack.address);
           expect(_listing.tokenId).to.equal(packId);
           expect(_listing.quantity).to.equal(amountOfTokenToList);
-          expect(_listing.currency).to.equal(coin.address)
+          expect(_listing.currency).to.equal(coin.address);
           expect(_listing.pricePerToken).to.equal(price);
-          expect(_listing.tokenType).to.equal(0) // 0 == ERC1155 i.e. pack / NFTCollection / AccessNFT
+          expect(_listing.tokenType).to.equal(0); // 0 == ERC1155 i.e. pack / NFTCollection / AccessNFT
 
           resolve(null);
-        })
+        });
 
         setTimeout(() => {
-          reject(new Error("Timeout: NewListing"))
-        }, 10000)
-      })
+          reject(new Error("Timeout: NewListing"));
+        }, 10000);
+      });
 
-      await market.connect(creator).list(
-        pack.address,
-        packId,
-        coin.address,
-        price,
-        amountOfTokenToList,
-        openStartAndEnd,
-        openStartAndEnd
-      )
+      await market
+        .connect(creator)
+        .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd);
 
       await eventPromise;
-    })
-  })
+    });
+  });
 
-  describe("Balances", function() {
-
+  describe("Balances", function () {
     beforeEach(async () => {
       // Approve Market to transfer tokens
       await pack.connect(creator).setApprovalForAll(market.address, true);
 
       // List tokens
-      await market.connect(creator).list(
-        pack.address,
-        packId,
-        coin.address,
-        price,
-        amountOfTokenToList,
-        openStartAndEnd,
-        openStartAndEnd
-      )
-    })
+      await market
+        .connect(creator)
+        .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd);
+    });
 
     it("Should transfer all tokens from seller to Market", async () => {
       expect(await pack.balanceOf(creator.address, packId)).to.equal(
-        BigNumber.from(rewardSupplies.reduce((a,b) => a+b)).sub(amountOfTokenToList)
+        BigNumber.from(rewardSupplies.reduce((a, b) => a + b)).sub(amountOfTokenToList),
       );
 
       expect(await pack.balanceOf(market.address, packId)).to.equal(amountOfTokenToList);
-    })
-  })
+    });
+  });
 
-  describe("Contract state", function() {
-
+  describe("Contract state", function () {
     let listingId: BigNumber;
 
     beforeEach(async () => {
@@ -205,20 +188,14 @@ describe("List token for sale", function () {
       listingId = await market.totalListings();
 
       // List tokens
-      await market.connect(creator).list(
-        pack.address,
-        packId,
-        coin.address,
-        price,
-        amountOfTokenToList,
-        openStartAndEnd,
-        openStartAndEnd
-      )
-    })
+      await market
+        .connect(creator)
+        .list(pack.address, packId, coin.address, price, amountOfTokenToList, tokensPerBuyer, openStartAndEnd, openStartAndEnd);
+    });
 
     it("Should increment the number of total listings on the market", async () => {
       expect(await market.totalListings()).to.equal(listingId.add(1));
-    })
+    });
 
     it("Should store the state of the lsiting created", async () => {
       const listing = await market.listings(listingId);
@@ -228,9 +205,9 @@ describe("List token for sale", function () {
       expect(listing.assetContract).to.equal(pack.address);
       expect(listing.tokenId).to.equal(packId);
       expect(listing.quantity).to.equal(amountOfTokenToList);
-      expect(listing.currency).to.equal(coin.address)
+      expect(listing.currency).to.equal(coin.address);
       expect(listing.pricePerToken).to.equal(price);
-      expect(listing.tokenType).to.equal(0) // 0 == ERC1155 i.e. pack / NFTCollection / AccessNFT
-    })
-  })
+      expect(listing.tokenType).to.equal(0); // 0 == ERC1155 i.e. pack / NFTCollection / AccessNFT
+    });
+  });
 });

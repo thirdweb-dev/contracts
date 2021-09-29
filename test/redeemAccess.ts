@@ -53,8 +53,8 @@ describe("Redeem access", function () {
       .safeTransferFrom(creator.address, fan.address, expectedRewardIds[accessIndex], 1, ethers.utils.toUtf8Bytes(""));
   });
 
-  describe("Revert")
-  describe("Events")
-  describe("Balances")
-  describe("Contract state")
+  describe("Revert");
+  describe("Events");
+  describe("Balances");
+  describe("Contract state");
 });

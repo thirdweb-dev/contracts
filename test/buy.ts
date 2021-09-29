@@ -89,8 +89,8 @@ describe("Buy tokens", function () {
       .list(pack.address, expectedPackId, coin.address, pricePerToken, amountToList, openStartAndEnd, openStartAndEnd);
   });
 
-  describe("Revert")
-  describe("Events")
-  describe("Balances")
-  describe("Contract state")
+  describe("Revert");
+  describe("Events");
+  describe("Balances");
+  describe("Contract state");
 });
