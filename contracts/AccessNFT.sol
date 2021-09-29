@@ -188,10 +188,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         nextTokenId = id;
 
         // Mint Access NFTs to contract
-        mintBatch(address(this), accessNftIds, _nftSupplies, "");
+        _mintBatch(address(this), accessNftIds, _nftSupplies, "");
 
         // Mint NFTs to `_msgSender()`
-        mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
 
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);
     }
