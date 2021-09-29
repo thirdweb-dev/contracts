@@ -3,37 +3,21 @@
 NFTLabs lets anyone create and sell packs filled with rewards. A pack can be opened only once. On opening a pack, a reward
 from the pack is distributed to the pack opener.
 
-## Deployments
+## Deployments: Access Packs contracts
 
 The contracts in the `/contracts` directory are deployed on the following networks.
 
-## Fresh contracts -
-
 ### Mumbai
 
-- `ProtocolControl.sol`: [0x75E68Fc66Dc1B7D9fEdde874Daa9f6928De47dAa](https://mumbai.polygonscan.com/address/0x75E68Fc66Dc1B7D9fEdde874Daa9f6928De47dAa#code)
+- `ProtocolControl.sol`: [0x8bB9B8305543cdF927e22648DC6392b5FF11a38A](https://mumbai.polygonscan.com/address/0x8bB9B8305543cdF927e22648DC6392b5FF11a38A#code)
 
-- `Pack.sol`: [0xf86dae2466888981677e8CaB67D50A3D87A06fEC](https://mumbai.polygonscan.com/address/0xf86dae2466888981677e8CaB67D50A3D87A06fEC#code)
+- `Pack.sol`: [0xDca0089f941b7f8b4f9D818eA51204DB7d3b05f6](https://mumbai.polygonscan.com/address/0xDca0089f941b7f8b4f9D818eA51204DB7d3b05f6#code)
 
-- `Market.sol`: [0xAcc2f9F70af22B539a9B38A9880E608cC7583F39](https://mumbai.polygonscan.com/address/0xAcc2f9F70af22B539a9B38A9880E608cC7583F39#code)
+- `Market.sol`: [0xe448A5878866dD47F61C6654Ee297631eEb98966](https://mumbai.polygonscan.com/address/0xe448A5878866dD47F61C6654Ee297631eEb98966#code)
 
-- `AccessNFT.sol`: [0x403a9060F8eFE3668b6DBB7746C2476Fe74037cf](https://mumbai.polygonscan.com/address/0x403a9060F8eFE3668b6DBB7746C2476Fe74037cf#code)
+- `AccessNFT.sol`: [0x32e28ac9F548A845C2E62EFA4F32ee6ecB257F4D](https://mumbai.polygonscan.com/address/0x32e28ac9F548A845C2E62EFA4F32ee6ecB257F4D#code)
 
-- `Forwarder.sol`: [0x717ae3154b0AA1b783544E161F4A95B92B11d830](https://mumbai.polygonscan.com/address/0x717ae3154b0AA1b783544E161F4A95B92B11d830#code)
-
-## Access Packs is using:
-
-### Mumbai
-
-- `ProtocolControl.sol`: [0xE3A652bb9C3e14d883e4F7204799B43DBe0083c7](https://mumbai.polygonscan.com/address/0xE3A652bb9C3e14d883e4F7204799B43DBe0083c7#code)
-
-- `Pack.sol`: [0x3502E335C76Aac3f2d15A4Dd63A2d4a2F10533Fd](https://mumbai.polygonscan.com/address/0x3502E335C76Aac3f2d15A4Dd63A2d4a2F10533Fd#code)
-
-- `Market.sol`: [0x7988037F7ea75e585eD97a81354EA6fbfF0D91F5](https://mumbai.polygonscan.com/address/0x7988037F7ea75e585eD97a81354EA6fbfF0D91F5#code)
-
-- `AccessNFT.sol`: [0x5330157deafbA9B0425e33268de1D5043E09F0c0](https://mumbai.polygonscan.com/address/0x5330157deafbA9B0425e33268de1D5043E09F0c0#code)
-
-- `Forwarder.sol`: [0xE361f049d4A7298dE53Cd431966ECf0de809cdf6](https://mumbai.polygonscan.com/address/0xE361f049d4A7298dE53Cd431966ECf0de809cdf6#code)
+- `Forwarder.sol`: [0x9B73b547191170e76238c7C24cF75b8653D7Aa82](https://mumbai.polygonscan.com/address/0x9B73b547191170e76238c7C24cF75b8653D7Aa82#code)
 
 ## Run Locally
 
