@@ -296,7 +296,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = nftInfo[tokenId].creator;
+        receiver = controlCenter.ownerTreasury();
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 

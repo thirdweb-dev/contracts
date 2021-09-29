@@ -12,6 +12,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "_providerTreasury",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "_uri",
         "type": "string"

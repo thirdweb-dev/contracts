@@ -365,7 +365,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = nftInfo[tokenId].creator;
+        receiver = controlCenter.ownerTreasury();
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
