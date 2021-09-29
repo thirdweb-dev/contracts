@@ -369,9 +369,12 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         );
 
         // Collect protocol fee if any
-        uint256 protocolProviderFee = controlCenter.providerFeeBps();
         uint256 marketCut = (totalPrice * marketFeeBps) / controlCenter.MAX_BPS();
-        uint256 protocolProviderCut = (marketCut * protocolProviderFee) / controlCenter.MAX_BPS();
+
+        // Collect provider fees, % of the cut.
+        uint256 protocolProviderFeeBps = controlCenter.providerFeeBps();
+        uint256 protocolProviderCut = (marketCut * protocolProviderFeeBps) / controlCenter.MAX_BPS();
+        marketCut = marketCut - protocolProviderCut;
 
         require(
             IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.ownerTreasury(), marketCut),
@@ -389,13 +392,16 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
             if (royaltyReceiver != address(0) && royaltyAmount > 0) {
                 require(
-                    royaltyAmount + marketCut + protocolProviderCut < totalPrice,
+                    royaltyAmount + marketCut + protocolProviderCut <= totalPrice,
                     "Market: Total market fees exceed the price."
                 );
 
-                uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFee) / controlCenter.MAX_BPS();
-                sellerCut = sellerCut - royaltyAmount - providerRoyaltyCut;
-                protocolProviderCut += providerRoyaltyCut;
+                uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFeeBps) / controlCenter.MAX_BPS();
+                sellerCut = sellerCut - royaltyAmount;
+
+                // protocol takes royalty cut lol
+                protocolProviderCut = protocolProviderCut + providerRoyaltyCut;
+                royaltyAmount = royaltyAmount - providerRoyaltyCut;
 
                 require(
                     IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
