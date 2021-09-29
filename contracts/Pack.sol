@@ -131,6 +131,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         _contractURI = _uri;
 
         _setupRole(TRANSFER_ROLE, _msgSender());
+        controlCenter.addModule(address(this), uint8(ProtocolControl.ModuleType.Pack));
     }
 
     /**

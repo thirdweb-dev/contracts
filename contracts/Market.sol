@@ -110,6 +110,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
+        controlCenter.addModule(address(this), uint8(ProtocolControl.ModuleType.Market));
     }
 
     /**

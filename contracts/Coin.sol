@@ -50,6 +50,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
         _contractURI = _uri;
 
         _setupRole(TRANSFER_ROLE, _msgSender());
+        controlCenter.addModule(address(this), uint8(ProtocolControl.ModuleType.Coin));
     }
 
     function _beforeTokenTransfer(

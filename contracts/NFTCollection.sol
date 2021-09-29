@@ -124,6 +124,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         _contractURI = _uri;
 
         _setupRole(TRANSFER_ROLE, _msgSender());
+        controlCenter.addModule(address(this), uint8(ProtocolControl.ModuleType.NFTCollection));
     }
 
     /// @notice Create native ERC 1155 NFTs.
