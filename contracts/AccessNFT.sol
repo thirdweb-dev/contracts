@@ -97,7 +97,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         _contractURI = _uri;
 
         _setupRole(TRANSFER_ROLE, _msgSender());
-        controlCenter.addModule(address(this), uint8(ProtocolControl.ModuleType.AccessNFT));
     }
 
     function supportsInterface(bytes4 interfaceId)

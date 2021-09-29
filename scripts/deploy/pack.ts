@@ -2,6 +2,7 @@ import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
 import addresses from "../../utils/addresses/accesspacks.json";
+import ModuleType from "../../utils/protocolModules";
 import { txOptions } from "../../utils/txOptions";
 import { chainlinkVars } from "../../utils/chainlink";
 
@@ -43,6 +44,14 @@ async function main() {
 
   await pack.deployed();
 
+  // Get deployed `Pack`'s address
+  const packAddress = pack.address;
+
+  // Get `ProtocolControl`
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddress);
+  const addModuleTx = await protocolControl.addModule(packAddress, ModuleType.Pack);
+  await addModuleTx.wait();
+
   // Update contract addresses in `/utils`
   const updatedAddresses = {
     ...addresses,
@@ -50,7 +59,7 @@ async function main() {
     [networkName]: {
       ...curentNetworkAddreses,
 
-      pack: pack.address,
+      pack: packAddress,
     },
   };
 

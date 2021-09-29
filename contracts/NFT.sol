@@ -74,7 +74,6 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         _contractURI = _uri;
 
         _setupRole(TRANSFER_ROLE, _msgSender());
-        controlCenter.addModule(address(this), uint8(ProtocolControl.ModuleType.NFT));
     }
 
     /// @dev Revert inherited mint function.

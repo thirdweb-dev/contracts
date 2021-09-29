@@ -2,6 +2,7 @@ import hre, { run, ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
 import addresses from "../../utils/addresses/accesspacks.json";
+import ModuleType from "../../utils/protocolModules";
 import { txOptions } from "../../utils/txOptions";
 
 import * as fs from "fs";
@@ -38,6 +39,14 @@ async function main() {
 
   await market.deployed();
 
+  // Get deployed `Market`'s address
+  const marketAddress = market.address;
+
+  // Get `ProtocolControl`
+  const protocolControl: Contract = await ethers.getContractAt("ProtocolControl", protocolControlAddress);
+  const addModuleTx = await protocolControl.addModule(marketAddress, ModuleType.Market);
+  await addModuleTx.wait();
+
   // Update contract addresses in `/utils`
   const updatedAddresses = {
     ...addresses,
@@ -45,7 +54,7 @@ async function main() {
     [networkName]: {
       ...curentNetworkAddreses,
 
-      market: market.address,
+      market: marketAddress,
     },
   };
 
