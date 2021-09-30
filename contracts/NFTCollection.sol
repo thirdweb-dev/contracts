@@ -362,6 +362,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
+        virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {

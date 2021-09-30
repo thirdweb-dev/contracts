@@ -16,4 +16,15 @@ contract NFTCollection_PL is NFTCollection {
     function hasRole(bytes32 role, address account) public view override returns (bool) {
         return role == MINTER_ROLE || super.hasRole(role, account);
     }
+
+    /// @dev See EIP 2981
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = nftInfo[tokenId].creator;
+        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+    }
 }
