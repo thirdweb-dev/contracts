@@ -114,6 +114,11 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         _;
     }
 
+    modifier onlyMinterRole() {
+        require(hasRole(MINTER_ROLE, _msgSender()), "NFTCollection: Only accounts with MINTER_ROLE can call this function.");
+        _;
+    }
+
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
@@ -132,6 +137,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     function createNativeNfts(string[] calldata _nftURIs, uint256[] calldata _nftSupplies)
         public
         onlyUnpausedProtocol
+        onlyMinterRole
         returns (uint256[] memory nftIds)
     {
         require(_nftURIs.length == _nftSupplies.length, "NFTCollection: Must specify equal number of config values.");
@@ -155,7 +161,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         }
 
         // Mint NFTs to `_msgSender()`
-        mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
 
         emit NativeNfts(_msgSender(), nftIds, _nftURIs, _nftSupplies);
     }
@@ -169,7 +175,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _secondsUntilOpenStart,
         uint256 _secondsUntilOpenEnd,
         uint256 _nftsPerOpen
-    ) external onlyUnpausedProtocol {
+    ) external onlyUnpausedProtocol onlyMinterRole {
         uint256[] memory nftIds = createNativeNfts(_nftURIs, _nftSupplies);
 
         bytes memory args = abi.encode(_packURI, _secondsUntilOpenStart, _secondsUntilOpenEnd, _nftsPerOpen);
@@ -209,7 +215,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         address _nftContract,
         uint256 _tokenId,
         string calldata _nftURI
-    ) external onlyUnpausedProtocol {
+    ) external onlyUnpausedProtocol onlyMinterRole {
         require(
             IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
             "NFTCollection: Only the owner of the NFT can wrap it."
@@ -224,7 +230,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         IERC721(_nftContract).safeTransferFrom(_msgSender(), address(this), _tokenId);
 
         // Mint NFTs to `_msgSender()`
-        mint(_msgSender(), nextTokenId, 1, "");
+        _mint(_msgSender(), nextTokenId, 1, "");
 
         // Store nft state.
         nftInfo[nextTokenId] = NftInfo({
@@ -270,7 +276,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _tokenAmount,
         uint256 _numOfNftsToMint,
         string calldata _nftURI
-    ) external onlyUnpausedProtocol {
+    ) external onlyUnpausedProtocol onlyMinterRole {
         require(
             IERC20(_tokenContract).balanceOf(_msgSender()) >= _tokenAmount,
             "NFTCollection: Must own the amount of tokens that are being wrapped."
@@ -287,7 +293,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         );
 
         // Mint NFTs to `_msgSender()`
-        mint(_msgSender(), nextTokenId, _numOfNftsToMint, "");
+        _mint(_msgSender(), nextTokenId, _numOfNftsToMint, "");
 
         nftInfo[nextTokenId] = NftInfo({
             creator: _msgSender(),
@@ -362,10 +368,11 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
+        virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = nftInfo[tokenId].creator;
+        receiver = controlCenter.ownerTreasury();
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
