@@ -178,10 +178,11 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
+        virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = nftCreator[tokenId];
+        receiver = controlCenter.ownerTreasury();
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
