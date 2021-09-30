@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
-import "../AccessNFT.sol";
+import { AccessNFT, AccessControl } from "../AccessNFT.sol";
+
+import "hardhat/console.sol";
 
 contract AccessNFT_PL is AccessNFT {
     constructor(
@@ -13,6 +14,7 @@ contract AccessNFT_PL is AccessNFT {
 
     /// @dev Ignore MINTER_ROLE
     function hasRole(bytes32 role, address account) public view override returns (bool) {
+        console.log("hello");        
         return role == MINTER_ROLE || super.hasRole(role, account);
     }
 
