@@ -3,8 +3,8 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { AccessNFT } from "../typechain/AccessNFT";
-import { Pack } from "../typechain/Pack";
+import { AccessNFTPL } from "../typechain/AccessNFTPL";
+import { PackPL } from "../typechain/PackPL";
 import { Market } from "../typechain/Market";
 import { Coin } from "../typechain/Coin";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -28,9 +28,9 @@ describe("List token for sale", function () {
   let relayer: SignerWithAddress;
 
   // Contracts
-  let pack: Pack;
+  let pack: PackPL;
   let market: Market;
-  let accessNft: AccessNFT;
+  let accessNft: AccessNFTPL;
   let coin: Coin;
 
   // Reward parameters

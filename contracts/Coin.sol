@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Token + Access Control
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import "./openzeppelin-presets/ERC20PresetMinterPauser.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";

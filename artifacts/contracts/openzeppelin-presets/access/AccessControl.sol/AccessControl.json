@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "AccessControl",
-  "sourceName": "contracts/AccessControl.sol",
+  "sourceName": "contracts/openzeppelin-presets/access/AccessControl.sol",
   "abi": [
     {
       "anonymous": false,

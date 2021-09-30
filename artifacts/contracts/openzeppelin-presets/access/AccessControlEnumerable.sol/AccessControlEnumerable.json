@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "AccessControlEnumerable",
-  "sourceName": "contracts/AccessControlEnumerable.sol",
+  "sourceName": "contracts/openzeppelin-presets/access/AccessControlEnumerable.sol",
   "abi": [
     {
       "anonymous": false,
