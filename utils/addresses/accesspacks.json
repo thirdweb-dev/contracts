@@ -8,15 +8,12 @@
     "accessNft": "0x5Eac339651C18012238a3F89f63F70C2ec21A7B2",
     "forwarder": "0x10A40362A24f11e4C9e1Dd288b00A55B95b2F807"
   },
-  "matic": { "protocolControl": "", "pack": "", "market": "", "nft": "", "coin": "", "accessNft": "", "forwarder": "" },
   "polygon": {
-    "protocolControl": "",
-    "pack": "",
-    "market": "",
-    "nft": "",
-    "coin": "",
-    "accessNft": "",
-    "forwarder": "0x5B86E7e3339A486cf921ee9d9F29866E4E3ba4a0"
+    "protocolControl": "0x389a2b24B3eDc8649083eAC2A82598D131F0f237",
+    "forwarder": "0xE4b2DD52566ED7057dB565B1FEaEEBAf27470D89",
+    "pack": "0xB3a811bc88924808c19d8Cf22b2c11485Deb50aD",
+    "market": "0xc63D5b5FD4a028992B7Ca9389DF0D8E442A817D0",
+    "accessNft": "0x967Db8d757E5dcf007d5aaA666b06eE6E648E4b2"
   },
   "rinkeby": {
     "protocolControl": "",
