@@ -452,9 +452,10 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256, uint256 salePrice)
         external
         view
+        virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {

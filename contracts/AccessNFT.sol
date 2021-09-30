@@ -139,6 +139,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         uint256[] calldata _nftSupplies
     ) public onlyUnpausedProtocol returns (uint256[] memory nftIds) {
         require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "AccessNFT: Only accounts with MINTER_ROLE can call this function."
+        );
+        require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
             "AccessNFT: Must specify equal number of config values."
         );
@@ -188,10 +192,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         nextTokenId = id;
 
         // Mint Access NFTs to contract
-        mintBatch(address(this), accessNftIds, _nftSupplies, "");
+        _mintBatch(address(this), accessNftIds, _nftSupplies, "");
 
         // Mint NFTs to `_msgSender()`
-        mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
 
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);
     }
@@ -290,9 +294,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256, uint256 salePrice)
         external
         view
+        virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {
