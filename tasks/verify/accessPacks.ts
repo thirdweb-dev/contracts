@@ -15,7 +15,7 @@ async function ProtocolControl() {
 
   await hre.run("verify:verify", {
     address: protocolControl,
-    constructorArguments: [deployer.address, deployer.address, contractURI],
+    constructorArguments: [deployer.address, deployer.address, deployer.address, contractURI],
   });
 }
 

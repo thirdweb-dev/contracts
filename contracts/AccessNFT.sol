@@ -138,7 +138,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         string[] calldata _accessNftURIs,
         uint256[] calldata _nftSupplies
     ) public onlyUnpausedProtocol returns (uint256[] memory nftIds) {
-        require(hasRole(MINTER_ROLE, _msgSender()), "AccessNFT: Only accounts with MINTER_ROLE can call this function.");
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "AccessNFT: Only accounts with MINTER_ROLE can call this function."
+        );
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
             "AccessNFT: Must specify equal number of config values."

@@ -115,7 +115,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     modifier onlyMinterRole() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFTCollection: Only accounts with MINTER_ROLE can call this function.");
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "NFTCollection: Only accounts with MINTER_ROLE can call this function."
+        );
         _;
     }
 

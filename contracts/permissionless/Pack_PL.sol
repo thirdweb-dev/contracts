@@ -14,8 +14,7 @@ contract Pack_PL is Pack {
         bytes32 _keyHash,
         uint256 _fees,
         address _trustedForwarder
-    ) Pack(_controlCenter, _uri, _vrfCoordinator, _linkToken, _keyHash, _fees, _trustedForwarder) {
-    }
+    ) Pack(_controlCenter, _uri, _vrfCoordinator, _linkToken, _keyHash, _fees, _trustedForwarder) {}
 
     /// @dev Ignore MINTER_ROLE
     function hasRole(bytes32 role, address account) public view override returns (bool) {
@@ -28,7 +27,7 @@ contract Pack_PL is Pack {
         uint256,
         uint256,
         bytes memory
-    ) public override pure {
+    ) public pure override {
         revert("AccessNFT: cannot use regular mint function.");
     }
 
@@ -38,7 +37,7 @@ contract Pack_PL is Pack {
         uint256[] memory,
         uint256[] memory,
         bytes memory
-    ) public override pure {
+    ) public pure override {
         revert("AccessNFT: cannot use regular mintBatch function.");
     }
 

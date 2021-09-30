@@ -12,8 +12,7 @@ contract Coin_PL is Coin {
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
-    ) Coin(_controlCenter, _name, _symbol, _trustedForwarder, _uri) {
-    }
+    ) Coin(_controlCenter, _name, _symbol, _trustedForwarder, _uri) {}
 
     /// @dev Ignore MINTER_ROLE
     function hasRole(bytes32 role, address account) public view override returns (bool) {

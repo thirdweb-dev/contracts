@@ -9,8 +9,7 @@ contract AccessNFT_PL is AccessNFT {
         address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
-    ) AccessNFT(_controlCenter, _trustedForwarder, _uri) {
-    }
+    ) AccessNFT(_controlCenter, _trustedForwarder, _uri) {}
 
     /// @dev Ignore MINTER_ROLE
     function hasRole(bytes32 role, address account) public view override returns (bool) {
@@ -23,7 +22,7 @@ contract AccessNFT_PL is AccessNFT {
         uint256,
         uint256,
         bytes memory
-    ) public override pure {
+    ) public pure override {
         revert("AccessNFT: cannot use regular mint function.");
     }
 
@@ -33,10 +32,9 @@ contract AccessNFT_PL is AccessNFT {
         uint256[] memory,
         uint256[] memory,
         bytes memory
-    ) public override pure {
+    ) public pure override {
         revert("AccessNFT: cannot use regular mintBatch function.");
     }
-
 
     /// @dev See EIP 2918
     function royaltyInfo(uint256 tokenId, uint256 salePrice)

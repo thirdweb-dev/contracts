@@ -10,8 +10,7 @@ contract NFTCollection_PL is NFTCollection {
         address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
-    ) NFTCollection(_controlCenter, _trustedForwarder, _uri) {
-    }
+    ) NFTCollection(_controlCenter, _trustedForwarder, _uri) {}
 
     /// @dev Ignore MINTER_ROLE
     function hasRole(bytes32 role, address account) public view override returns (bool) {
@@ -24,7 +23,7 @@ contract NFTCollection_PL is NFTCollection {
         uint256,
         uint256,
         bytes memory
-    ) public override pure {
+    ) public pure override {
         revert("AccessNFT: cannot use regular mint function.");
     }
 
@@ -34,7 +33,7 @@ contract NFTCollection_PL is NFTCollection {
         uint256[] memory,
         uint256[] memory,
         bytes memory
-    ) public override pure {
+    ) public pure override {
         revert("AccessNFT: cannot use regular mintBatch function.");
     }
 
