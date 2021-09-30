@@ -7,34 +7,14 @@
         "type": "address"
       },
       {
-        "internalType": "string",
-        "name": "_uri",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "_vrfCoordinator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_linkToken",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_keyHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_fees",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "_trustedForwarder",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_uri",
+        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",
@@ -70,16 +50,35 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "rewardContract",
+        "name": "tokenContract",
         "type": "address"
       },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenAmountReceived",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nftAmountRedeemed",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC20Redeemed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
       {
         "indexed": true,
         "internalType": "address",
@@ -87,68 +86,31 @@
         "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "creator",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "currentSupply",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openStart",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct Pack.PackState",
-        "name": "packState",
-        "type": "tuple"
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "source",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "tokenIds",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "amountsPacked",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "rewardsPerOpen",
-            "type": "uint256"
-          }
-        ],
         "indexed": false,
-        "internalType": "struct Pack.Rewards",
-        "name": "rewards",
-        "type": "tuple"
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nftsMinted",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "nftURI",
+        "type": "string"
       }
     ],
-    "name": "PackCreated",
+    "name": "ERC20WrappedNfts",
     "type": "event"
   },
   {
@@ -156,61 +118,98 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "opener",
+        "name": "nftContract",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "requestId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "nftTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nativeNftTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC721Redeemed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "rewardContract",
+        "name": "nftContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nftTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nativeNftTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "nativeNftURI",
+        "type": "string"
+      }
+    ],
+    "name": "ERC721WrappedNft",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256[]",
-        "name": "rewardIds",
+        "name": "nftIds",
         "type": "uint256[]"
-      }
-    ],
-    "name": "PackOpenFulfilled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "packId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "opener",
-        "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "requestId",
-        "type": "bytes32"
+        "internalType": "string[]",
+        "name": "nftURIs",
+        "type": "string[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "nftSupplies",
+        "type": "uint256[]"
       }
     ],
-    "name": "PackOpenRequest",
+    "name": "NativeNfts",
     "type": "event"
   },
   {
@@ -595,8 +594,75 @@
   {
     "inputs": [
       {
+        "internalType": "string[]",
+        "name": "_nftURIs",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_nftSupplies",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "createNativeNfts",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "nftIds",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_pack",
+        "type": "address"
+      },
+      {
+        "internalType": "string[]",
+        "name": "_nftURIs",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_nftSupplies",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string",
+        "name": "_packURI",
+        "type": "string"
+      },
+      {
         "internalType": "uint256",
-        "name": "_packId",
+        "name": "_secondsUntilOpenStart",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_secondsUntilOpenEnd",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_nftsPerOpen",
+        "type": "uint256"
+      }
+    ],
+    "name": "createPackAtomic",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -617,19 +683,24 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
-    "name": "currentRequestId",
+    "name": "erc20WrappedNfts",
     "outputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "shares",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "underlyingTokenAmount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -639,104 +710,21 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_packId",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "name": "getPack",
+    "name": "erc721WrappedNfts",
     "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "creator",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "currentSupply",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openStart",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Pack.PackState",
-        "name": "pack",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getPackWithRewards",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "uri",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "creator",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "currentSupply",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openStart",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Pack.PackState",
-        "name": "pack",
-        "type": "tuple"
-      },
       {
         "internalType": "address",
-        "name": "source",
+        "name": "nftContract",
         "type": "address"
       },
       {
-        "internalType": "uint256[]",
-        "name": "tokenIds",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amountsPacked",
-        "type": "uint256[]"
+        "internalType": "uint256",
+        "name": "nftTokenId",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -906,56 +894,56 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "to",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "",
         "type": "bytes"
       }
     ],
     "name": "mint",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "to",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "amounts",
+        "name": "",
         "type": "uint256[]"
       },
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "",
         "type": "bytes"
       }
     ],
     "name": "mintBatch",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -974,128 +962,32 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_ids",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_values",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_data",
-        "type": "bytes"
+        "type": "uint256"
       }
     ],
-    "name": "onERC1155BatchReceived",
+    "name": "nftInfo",
     "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "",
-        "type": "bytes4"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "name": "onERC1155Received",
-    "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "",
-        "type": "bytes4"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packId",
-        "type": "uint256"
-      }
-    ],
-    "name": "openPack",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "packs",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "uri",
-        "type": "string"
-      },
       {
         "internalType": "address",
         "name": "creator",
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "currentSupply",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
       },
       {
         "internalType": "uint256",
-        "name": "openStart",
+        "name": "supply",
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "openEnd",
-        "type": "uint256"
+        "internalType": "enum NFTCollection.UnderlyingType",
+        "name": "underlyingType",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -1124,41 +1016,30 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "randomnessRequests",
-    "outputs": [
-      {
         "internalType": "uint256",
-        "name": "packId",
+        "name": "_nftId",
         "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "opener",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "name": "redeemERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "requestId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "uint256",
-        "name": "randomness",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
-    "name": "rawFulfillRandomness",
+    "name": "redeemERC721",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1200,30 +1081,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "rewards",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "source",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "rewardsPerOpen",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "royaltyBps",
     "outputs": [
@@ -1240,7 +1097,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "tokenId",
         "type": "uint256"
       },
       {
@@ -1352,19 +1209,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_newFees",
-        "type": "uint256"
-      }
-    ],
-    "name": "setChainlinkFees",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "string",
         "name": "_URI",
         "type": "string"
@@ -1417,14 +1261,14 @@
         "type": "bool"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_id",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -1440,24 +1284,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "transferLink",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "unpause",
     "outputs": [],
@@ -1468,7 +1294,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_id",
+        "name": "_nftId",
         "type": "uint256"
       }
     ],
@@ -1484,29 +1310,54 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "vrfFees",
-    "outputs": [
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_tokenContract",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_tokenAmount",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_numOfNftsToMint",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_nftURI",
+        "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "name": "wrapERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "vrfKeyHash",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "_nftContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_nftURI",
+        "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "name": "wrapERC721",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

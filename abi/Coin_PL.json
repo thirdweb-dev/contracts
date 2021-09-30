@@ -2,18 +2,23 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_admin",
+        "internalType": "address payable",
+        "name": "_controlCenter",
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_provider",
-        "type": "address"
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_symbol",
+        "type": "string"
       },
       {
         "internalType": "address",
-        "name": "_providerTreasury",
+        "name": "_trustedForwarder",
         "type": "address"
       },
       {
@@ -29,50 +34,25 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "asset",
+        "name": "owner",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "to",
+        "name": "spender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amount",
+        "name": "value",
         "type": "uint256"
       }
     ],
-    "name": "FundsTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "moduleId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "module",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "moduleType",
-        "type": "uint256"
-      }
-    ],
-    "name": "ModuleUpdated",
+    "name": "Approval",
     "type": "event"
   },
   {
@@ -81,37 +61,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_providerTreasury",
+        "name": "account",
         "type": "address"
       }
     ],
-    "name": "OwnerTreasuryUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "providerFeeBps",
-        "type": "uint256"
-      }
-    ],
-    "name": "ProviderFeeBpsUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_providerTreasury",
-        "type": "address"
-      }
-    ],
-    "name": "ProviderTreasuryUpdated",
+    "name": "Paused",
     "type": "event"
   },
   {
@@ -193,13 +147,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
         "indexed": false,
-        "internalType": "bool",
-        "name": "isPaused",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
       }
     ],
-    "name": "SystemPaused",
+    "name": "Transfer",
     "type": "event"
   },
   {
@@ -207,24 +173,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "moduleId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
-        "name": "moduleAddress",
+        "name": "account",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "restriction",
-        "type": "bool"
       }
     ],
-    "name": "TransferRestricted",
+    "name": "Unpaused",
     "type": "event"
   },
   {
@@ -242,33 +196,7 @@
   },
   {
     "inputs": [],
-    "name": "MAX_BPS",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_PROVIDER_FEE_BPS",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "PROTOCOL_ADMIN",
+    "name": "MINTER_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -281,7 +209,20 @@
   },
   {
     "inputs": [],
-    "name": "PROTOCOL_PROVIDER",
+    "name": "PAUSER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TRANSFER_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -309,23 +250,97 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_newModuleAddress",
+        "name": "owner",
         "type": "address"
       },
       {
-        "internalType": "uint8",
-        "name": "_moduleType",
-        "type": "uint8"
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
       }
     ],
-    "name": "addModule",
+    "name": "allowance",
     "outputs": [
       {
-        "internalType": "bytes32",
-        "name": "moduleId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "burn",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "burnFrom",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -343,22 +358,40 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_moduleType",
-        "type": "uint256"
-      }
-    ],
-    "name": "getAllModulesOfType",
+    "inputs": [],
+    "name": "decimals",
     "outputs": [
       {
-        "internalType": "address[]",
-        "name": "allModules",
-        "type": "address[]"
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "subtractedValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "decreaseAllowance",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -375,6 +408,49 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRoleMember",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleMemberCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -426,86 +502,34 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "spender",
         "type": "address"
-      }
-    ],
-    "name": "moduleIds",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "moduleType",
-    "outputs": [
-      {
-        "internalType": "enum ProtocolControl.ModuleType",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "modules",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "addedValue",
         "type": "uint256"
       }
     ],
-    "name": "numOfModuleType",
+    "name": "increaseAllowance",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "bool",
         "name": "",
-        "type": "uint256"
+        "type": "bool"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "ownerTreasury",
+    "name": "isRestrictedTransfer",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "bool",
         "name": "",
-        "type": "address"
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -514,24 +538,48 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "isTrustedForwarder",
+    "outputs": [
+      {
         "internalType": "bool",
-        "name": "_toPause",
+        "name": "",
         "type": "bool"
       }
     ],
-    "name": "pauseProtocol",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "mint",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "providerFeeBps",
+    "name": "name",
     "outputs": [
       {
-        "internalType": "uint128",
+        "internalType": "string",
         "name": "",
-        "type": "uint128"
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -539,12 +587,19 @@
   },
   {
     "inputs": [],
-    "name": "providerTreasury",
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "bool",
         "name": "",
-        "type": "address"
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -602,6 +657,19 @@
   {
     "inputs": [
       {
+        "internalType": "bool",
+        "name": "_restrictedTransfer",
+        "type": "bool"
+      }
+    ],
+    "name": "setRestrictedTransfer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -620,12 +688,25 @@
   },
   {
     "inputs": [],
-    "name": "systemPaused",
+    "name": "symbol",
     "outputs": [
       {
-        "internalType": "bool",
+        "internalType": "string",
         "name": "",
-        "type": "bool"
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -635,84 +716,60 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_asset",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_to",
+        "name": "recipient",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "transferProtocolFunds",
-    "outputs": [],
+    "name": "transfer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_moduleId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_newModuleAddress",
+        "name": "recipient",
         "type": "address"
-      }
-    ],
-    "name": "updateModule",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
-        "internalType": "address",
-        "name": "_newTreasury",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
-    "name": "updateOwnerTreasury",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+    "name": "transferFrom",
+    "outputs": [
       {
-        "internalType": "uint128",
-        "name": "_newFeeBps",
-        "type": "uint128"
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
-    "name": "updateProviderFeeBps",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_newTreasury",
-        "type": "address"
-      }
-    ],
-    "name": "updateProviderTreasury",
+    "inputs": [],
+    "name": "unpause",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
   }
 ]
