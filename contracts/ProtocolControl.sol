@@ -46,7 +46,7 @@ contract ProtocolControl is AccessControl {
     /// @dev Protocol provider fees
     uint128 public constant MAX_BPS = 10000; // 100%
     uint128 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
-    uint128 public providerFeeBps = 1000; // 10%
+    uint128 public providerFeeBps = 500; // 5%
 
     /// @dev Contract level metadata.
     string public _contractURI;
@@ -78,13 +78,14 @@ contract ProtocolControl is AccessControl {
     constructor(
         address _admin,
         address _provider,
+        address _providerTreasury,
         string memory _uri
     ) {
         // Set contract URI
         _contractURI = _uri;
 
         // Set protocol provider treasury
-        providerTreasury = _provider;
+        providerTreasury = _providerTreasury;
         ownerTreasury = _admin;
 
         // Set access control roles
