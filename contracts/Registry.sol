@@ -14,6 +14,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 contract Registry is Ownable {
     // NFTLabs admin signer
     address public providerAdmin;
+    address public providerTreasury;
 
     // `Forwarder` for meta-transacitons
     address public forwarder;
@@ -34,9 +35,11 @@ contract Registry is Ownable {
     event DeployedForwarder(address forwarder);
     // Emitted when the NFTLabs admin signer is updated
     event UpdatedProviderAdmin(address prevAdmin, address newAdmin);
+    event UpdatedProviderTreasury(address prevTreasury, address newTreasury);
 
-    constructor(address _nftlabs) {
-        providerAdmin = _nftlabs;
+    constructor(address _admin, address _treasury) {
+        providerAdmin = _admin;
+        providerTreasury = _treasury;
 
         // Deploy forwarder for meta-transactions
         bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
@@ -53,7 +56,7 @@ contract Registry is Ownable {
         // Deploy `ProtocolControl`
         bytes memory protocolControlByteCode = abi.encodePacked(
             type(ProtocolControl).creationCode,
-            abi.encode(msg.sender, providerAdmin, _protocolControlURI)
+            abi.encode(msg.sender, providerAdmin, providerTreasury, _protocolControlURI)
         );
 
         address protocolControlAddr = Create2.deploy(0, salt, protocolControlByteCode);
@@ -71,6 +74,13 @@ contract Registry is Ownable {
         providerAdmin = _newAdminSigner;
 
         emit UpdatedProviderAdmin(prevAdmin, _newAdminSigner);
+    }
+
+    function setProviderTreasury(address _newTreasury) external onlyOwner {
+        address prevTreasury = providerTreasury;
+        providerTreasury = _newTreasury;
+
+        emit UpdatedProviderTreasury(prevTreasury, _newTreasury);
     }
 
     /// @dev Returns the latest version of protocol control
