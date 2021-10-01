@@ -3,8 +3,8 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { AccessNFT } from "../typechain/AccessNFT";
-import { Pack } from "../typechain/Pack";
+import { AccessNFTPL } from "../typechain/AccessNFTPL";
+import { PackPL } from "../typechain/PackPL";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
@@ -13,12 +13,13 @@ import { getURIs, getSupplies, openStartAndEnd, rewardsPerOpen } from "../utils/
 
 describe("Create a pack with rewards in a single tx", function () {
   // Signers
+  let deployer: SignerWithAddress;
   let creator: SignerWithAddress;
   let relayer: SignerWithAddress;
 
   // Contracts
-  let pack: Pack;
-  let accessNft: AccessNFT;
+  let pack: PackPL;
+  let accessNft: AccessNFTPL;
 
   // Reward parameters
   const [packURI]: string[] = getURIs(1);
@@ -30,10 +31,10 @@ describe("Create a pack with rewards in a single tx", function () {
     // Get signers
     const networkName: string = "mumbai";
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [creator, relayer] = signers;
+    [deployer, creator, relayer] = signers;
 
     // Get contracts
-    const contracts: Contracts = await getContracts(creator, networkName);
+    const contracts: Contracts = await getContracts(deployer, networkName);
     pack = contracts.pack;
     accessNft = contracts.accessNft;
   });

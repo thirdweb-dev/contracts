@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-// Token + Access Control
-import "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol";
-import "../NFT.sol";
+// Base
+import { NFT } from "../NFT.sol";
 
 contract NFT_PL is NFT {
     constructor(

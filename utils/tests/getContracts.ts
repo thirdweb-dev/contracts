@@ -3,9 +3,9 @@ import { chainlinkVars } from "../../utils/chainlink";
 import { Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-import { AccessNFT } from "../../typechain/AccessNFT";
+import { AccessNFTPL } from "../../typechain/AccessNFTPL";
 import { Coin } from "../../typechain/Coin";
-import { Pack } from "../../typechain/Pack";
+import { PackPL } from "../../typechain/PackPL";
 import { Market } from "../../typechain/Market";
 import { Forwarder } from "../../typechain/Forwarder";
 import { ProtocolControl } from "../../typechain/ProtocolControl";
@@ -13,9 +13,9 @@ import { ProtocolControl } from "../../typechain/ProtocolControl";
 export type Contracts = {
   forwarder: Forwarder;
   protocolControl: ProtocolControl;
-  accessNft: AccessNFT;
+  accessNft: AccessNFTPL;
   coin: Coin;
-  pack: Pack;
+  pack: PackPL;
   market: Market;
 };
 
@@ -27,13 +27,15 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
   // Deploy ProtocolControl
 
   const admin = deployer.address;
-  const nftlabs = deployer.address;
+  const protocolProvider = deployer.address;
+  const providerTreasury = deployer.address;
   const protocolControlURI: string = "";
 
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
   const protocolControl: ProtocolControl = (await ProtocolControl_Factory.deploy(
     admin,
-    nftlabs,
+    protocolProvider,
+    providerTreasury,
     protocolControlURI,
   )) as ProtocolControl;
 
@@ -41,8 +43,8 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
   const packContractURI: string = "";
 
-  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-  const pack: Pack = (await Pack_Factory.deploy(
+  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack_PL");
+  const pack: PackPL = (await Pack_Factory.deploy(
     protocolControl.address,
     packContractURI,
     vrfCoordinator,
@@ -50,7 +52,7 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
     keyHash,
     fees,
     forwarder.address,
-  )) as Pack;
+  )) as PackPL;
 
   // Deploy Market
   const marketContractURI: string = "";
@@ -65,12 +67,12 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
 
-  const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT");
-  const accessNft: AccessNFT = (await AccessNFT_Factory.deploy(
+  const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT_PL");
+  const accessNft: AccessNFTPL = (await AccessNFT_Factory.deploy(
     protocolControl.address,
     forwarder.address,
     accessNFTContractURI,
-  )) as AccessNFT;
+  )) as AccessNFTPL;
 
   // Deploy Coin
   const coinName = "";

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-// Token + Access Control
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import "../Coin.sol";
+// Base
+import { Coin } from "../Coin.sol";
 
 contract Coin_PL is Coin {
     constructor(

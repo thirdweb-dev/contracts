@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Tokens
-import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
+import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
