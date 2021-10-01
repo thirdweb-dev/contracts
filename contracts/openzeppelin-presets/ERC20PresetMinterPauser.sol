@@ -10,6 +10,9 @@ import "@openzeppelin/contracts/utils/Context.sol";
 /// @dev Edit: Make `hasRole` virtual
 import "./access/AccessControlEnumerable.sol";
 
+/// @dev Edit: Allow setting allowances by signatures. See EIP-2612
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+
 /**
  * @dev {ERC20} token, including:
  *
@@ -24,7 +27,7 @@ import "./access/AccessControlEnumerable.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract ERC20PresetMinterPauser is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable {
+contract ERC20PresetMinterPauser is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable, ERC20Permit {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
@@ -34,7 +37,7 @@ contract ERC20PresetMinterPauser is Context, AccessControlEnumerable, ERC20Burna
      *
      * See {ERC20-constructor}.
      */
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol) ERC20Permit(name) ERC20(name, symbol) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         _setupRole(MINTER_ROLE, _msgSender());

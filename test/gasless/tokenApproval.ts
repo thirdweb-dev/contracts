@@ -1,11 +1,14 @@
 // Test imports
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { BigNumber, ContractFactory } from "ethers";
+import { BigNumber, ContractFactory, Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { PermitCoin } from "../../typechain/PermitCoin";
+import { Coin } from "../../typechain/Coin";
+
+// Test utils
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 
 // EIP-2612 Signature
 import { signERC2612Permit } from 'eth-permit';
@@ -20,7 +23,7 @@ describe("ERC20Permit approve spending via signature", function() {
   let relayer: SignerWithAddress;
 
   // Get contract
-  let erc20PermitToken: PermitCoin;
+  let erc20PermitToken: Coin;
 
   // Params
   const tokenAmount: BigNumber = ethers.utils.parseEther("1");
@@ -32,11 +35,11 @@ describe("ERC20Permit approve spending via signature", function() {
     [deployer, owner, spender, receiver, relayer] = signers;
 
     // Contract
-    const erc20PermitToken_factory: ContractFactory = await ethers.getContractFactory("PermitCoin");
-    erc20PermitToken = await erc20PermitToken_factory.connect(deployer).deploy() as PermitCoin;
+    const contracts: Contracts = await getContracts(deployer, hre.network.name);
+    erc20PermitToken = contracts.coin;
 
     // Mint tokens to owner
-    await erc20PermitToken.connect(owner).freeMint(tokenAmount);
+    await erc20PermitToken.connect(deployer).mint(owner.address, tokenAmount);
   })
 
   it("Should let spender transfer tokens from owner to receiver", async () => {
