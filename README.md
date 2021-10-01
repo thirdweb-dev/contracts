@@ -19,6 +19,13 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Forwarder.sol`: [0x10A40362A24f11e4C9e1Dd288b00A55B95b2F807](https://mumbai.polygonscan.com/address/0x10A40362A24f11e4C9e1Dd288b00A55B95b2F807#code)
 
+
+## Test helper contracts
+
+### Mumbai
+
+- `MintableERC20Permit.sol`: [0xCe8271Ad06e8CB0EE47d1486947313b7c1290D14](https://mumbai.polygonscan.com/address/0xCe8271Ad06e8CB0EE47d1486947313b7c1290D14#code)
+
 ## Run Locally
 
 Clone the project
