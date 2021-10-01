@@ -11,9 +11,9 @@
   "polygon": {
     "protocolControl": "0x389a2b24B3eDc8649083eAC2A82598D131F0f237",
     "forwarder": "0xE4b2DD52566ED7057dB565B1FEaEEBAf27470D89",
-    "pack": "0xB3a811bc88924808c19d8Cf22b2c11485Deb50aD",
+    "pack": "0x8882Bf2DE48E129094b8e26d208a5Cb2D8642f58",
     "market": "0xc63D5b5FD4a028992B7Ca9389DF0D8E442A817D0",
-    "accessNft": "0x967Db8d757E5dcf007d5aaA666b06eE6E648E4b2"
+    "accessNft": "0x5FD7De3f1633434BE38B0b810187fc02fb1090B9"
   },
   "rinkeby": {
     "protocolControl": "",
