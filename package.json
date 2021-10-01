@@ -8,6 +8,7 @@
     "@openzeppelin/contracts": "^4.3.2",
     "defender-autotask-client": "^1.10.0",
     "defender-relay-client": "^1.11.1",
+    "eth-permit": "^0.1.10",
     "eth-sig-util": "^3.0.1"
   },
   "devDependencies": {
