@@ -260,6 +260,99 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         isRestrictedTransfer = _restrictedTransfer;
     }
 
+    /**
+     * @dev See {ERC1155-_mint}.
+     */
+    function _mint(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual override {
+        super._mint(account, id, amount, data);
+        nftInfo[id].supply += amount;
+    }
+
+    function mint(
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override {
+        require(id < nextTokenId, "NFTCollection: cannot call this fn for creating new NFTs.");
+        require(nftInfo[id].underlyingType == UnderlyingType.None, "NFTCollection: cannot freely mint more of ERC20 or ERC721.");
+        
+        super.mint(to, id, amount, data);
+    }
+
+    /**
+     * @dev See {ERC1155-_mintBatch}.
+     */
+    function _mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._mintBatch(to, ids, amounts, data);
+        for (uint256 i = 0; i < ids.length; ++i) {
+            nftInfo[ids[i]].supply += amounts[i];
+        }
+    }
+
+    function mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override {
+        
+        bool validIds = true;
+        bool validTokenType = true;
+        
+        for (uint256 i = 0; i < ids.length; ++i) {
+            if(ids[i] >= nextTokenId && validIds) {
+                validIds = false;
+            }
+
+            if(nftInfo[ids[i]].underlyingType != UnderlyingType.None && validTokenType) {
+                validTokenType = false;
+            }        
+        }
+
+        require(validIds, "NFTCollection: cannot call this fn for creating new NFTs.");
+        require(validTokenType, "NFTCollection: cannot freely mint more of ERC20 or ERC721.");
+
+
+        super.mintBatch(to, ids, amounts, data);
+    }
+
+    /**
+     * @dev See {ERC1155-_burn}.
+     */
+    function _burn(
+        address account,
+        uint256 id,
+        uint256 amount
+    ) internal virtual override {
+        super._burn(account, id, amount);
+        nftInfo[id].supply -= amount;
+    }
+
+    /**
+     * @dev See {ERC1155-_burnBatch}.
+     */
+    function _burnBatch(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual override {
+        super._burnBatch(account, ids, amounts);
+        for (uint256 i = 0; i < ids.length; ++i) {
+            nftInfo[ids[i]].supply -= amounts[i];
+        }
+    }
+
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
