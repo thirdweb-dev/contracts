@@ -66,9 +66,13 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         uint256 amount
     );
     event RoyaltyUpdated(uint256 royaltyBps);
+    event LastRedeemTimeUpdated(uint accessNftId, address creator, uint lastTimeToRedeem);
 
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
+
+    /// @dev Access NFT tokenId => final redemption timestamp.
+    mapping(uint256 => uint256) public lastTimeToRedeem;
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyUnpausedProtocol() {
@@ -232,10 +236,32 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         // Get access nft Id
         uint256 accessNftId = nftInfo[_tokenId].accessNftId;
 
+        require(
+            block.timestamp <= lastTimeToRedeem[accessNftId] || lastTimeToRedeem[accessNftId] == 0,
+            "AccessNFT: Window to redeem access has closed."
+        );
+
         // Transfer Access NFTs to redeemer
         this.safeTransferFrom(address(this), redeemer, accessNftId, _amount, "");
 
         emit AccessNFTRedeemed(redeemer, _tokenId, accessNftId, _amount);
+    }
+
+    /// @dev Lets an Access NFT creator set a limit for when the reward can be redeemed.
+    function setLastTimeToRedeem(uint _tokenId, uint _secondsUntilRedeem) external {
+        require(
+            _msgSender() == nftInfo[_tokenId].creator,
+            "AccessNFT: only the creator can call this function."
+        );
+        require(
+            nftInfo[_tokenId].isAccess,
+            "AccessNFT: can set redeem time for only Access NFTs."
+        );
+        
+        uint lastTimeToRedeemNFT = _secondsUntilRedeem == 0 ? type(uint).max : block.timestamp + _secondsUntilRedeem;
+        lastTimeToRedeem[_tokenId] = lastTimeToRedeemNFT;
+
+        emit LastRedeemTimeUpdated(_tokenId, _msgSender(), lastTimeToRedeemNFT);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
