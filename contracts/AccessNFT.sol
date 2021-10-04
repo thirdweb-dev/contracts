@@ -304,7 +304,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public override {
+    ) public virtual override {
         require(id < nextTokenId, "NFTCollection: cannot call this fn for creating new NFTs.");
         require(nftInfo[id].underlyingType == UnderlyingType.None, "NFTCollection: cannot freely mint more of ERC20 or ERC721.");
         
@@ -331,7 +331,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public override {
+    ) public virtual override {
         
         bool validIds = true;
         bool validTokenType = true;

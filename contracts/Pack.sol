@@ -394,7 +394,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256,
         uint256,
         bytes memory
-    ) public pure override {
+    ) public virtual override {
         revert("Pack: cannot freely mint more packs");
     }
 
@@ -418,7 +418,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256[] memory,
         uint256[] memory,
         bytes memory
-    ) public pure override {        
+    ) public virtual override {        
         revert("Pack: cannot freely mint more packs");
     }
 
