@@ -35,6 +35,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     /// @dev Collection level metadata.
     string public _contractURI;
 
+    /// @dev Transferability of AccessNFTs
+    bool public accessNftIsTransferable;
+
     enum UnderlyingType {
         None,
         ERC20,
@@ -67,6 +70,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     );
     event RoyaltyUpdated(uint256 royaltyBps);
     event LastRedeemTimeUpdated(uint accessNftId, address creator, uint lastTimeToRedeem);
+    event AccessTransferabilityUpdated(bool isTransferable);
 
     /// @dev NFT tokenId => NFT state.
     mapping(uint256 => NftInfo) public nftInfo;
@@ -262,6 +266,13 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         lastTimeToRedeem[_tokenId] = lastTimeToRedeemNFT;
 
         emit LastRedeemTimeUpdated(_tokenId, _msgSender(), lastTimeToRedeemNFT);
+    }
+
+    /// @dev Lets the protocol admin set the transferability of Access NFTs.
+    function setTransferability(bool _isTransferable) external onlyProtocolAdmin {
+        accessNftIsTransferable = _isTransferable;
+
+        emit AccessTransferabilityUpdated(_isTransferable);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
