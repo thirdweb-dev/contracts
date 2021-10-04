@@ -376,6 +376,78 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         rewards[_packId] = _rewardsInPack;
     }
 
+    /**
+     * @dev See {ERC1155-_mint}.
+     */
+    function _mint(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual override {
+        super._mint(account, id, amount, data);
+        packs[id].currentSupply += amount;
+    }
+
+    function mint(
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public pure override {
+        revert("Pack: cannot freely mint more packs");
+    }
+
+    /**
+     * @dev See {ERC1155-_mintBatch}.
+     */
+    function _mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._mintBatch(to, ids, amounts, data);
+        for (uint256 i = 0; i < ids.length; ++i) {
+            packs[ids[i]].currentSupply += amounts[i];
+        }
+    }
+
+    function mintBatch(
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public pure override {        
+        revert("Pack: cannot freely mint more packs");
+    }
+
+    /**
+     * @dev See {ERC1155-_burn}.
+     */
+    function _burn(
+        address account,
+        uint256 id,
+        uint256 amount
+    ) internal virtual override {
+        super._burn(account, id, amount);
+        packs[id].currentSupply -= amount;
+    }
+
+    /**
+     * @dev See {ERC1155-_burnBatch}.
+     */
+    function _burnBatch(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual override {
+        super._burnBatch(account, ids, amounts);
+        for (uint256 i = 0; i < ids.length; ++i) {
+            packs[ids[i]].currentSupply -= amounts[i];
+        }
+    }
+
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
