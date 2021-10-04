@@ -16,7 +16,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Context, IERC2981 {
+contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -47,7 +47,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     struct NftInfo {
         address creator;
         string uri;
-        uint256 supply;
         bool isAccess;
         uint256 accessNftId;
         UnderlyingType underlyingType;
@@ -129,17 +128,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         return this.onERC1155Received.selector;
     }
 
-    /// @dev Creates pack on receiving ERC 1155 reward tokens
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) external virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-
     /// @notice Create native ERC 1155 NFTs.
     function createAccessNfts(
         string[] calldata _nftURIs,
@@ -171,7 +159,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
             nftInfo[id] = NftInfo({
                 creator: _msgSender(),
                 uri: _accessNftURIs[i],
-                supply: _nftSupplies[i],
                 isAccess: true,
                 accessNftId: 0,
                 underlyingType: UnderlyingType.None
@@ -187,7 +174,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
             nftInfo[id] = NftInfo({
                 creator: _msgSender(),
                 uri: _nftURIs[i],
-                supply: _nftSupplies[i],
                 isAccess: false,
                 accessNftId: (id - 1),
                 underlyingType: UnderlyingType.None
@@ -300,16 +286,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     /**
      * @dev See {ERC1155-_mint}.
      */
-    function _mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual override {
-        super._mint(account, id, amount, data);
-        nftInfo[id].supply += amount;
-    }
-
     function mint(
         address to,
         uint256 id,
@@ -325,18 +301,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
     /**
      * @dev See {ERC1155-_mintBatch}.
      */
-    function _mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._mintBatch(to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            nftInfo[ids[i]].supply += amounts[i];
-        }
-    }
-
     function mintBatch(
         address to,
         uint256[] memory ids,
@@ -364,32 +328,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         super.mintBatch(to, ids, amounts, data);
     }
 
-    /**
-     * @dev See {ERC1155-_burn}.
-     */
-    function _burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) internal virtual override {
-        super._burn(account, id, amount);
-        nftInfo[id].supply -= amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_burnBatch}.
-     */
-    function _burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual override {
-        super._burnBatch(account, ids, amounts);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            nftInfo[ids[i]].supply -= amounts[i];
-        }
-    }
-
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
@@ -409,11 +347,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, IERC1155Receiver, ERC2771Contex
         }
 
         // Decrease total supply if tokens are being burned.
-        for (uint256 i = 0; i < ids.length; i++) {
-            if (to == address(0)) {
-                nftInfo[ids[i]].supply -= amounts[i];
-            }
-
+        for (uint256 i = 0; i < ids.length; i++) {            
             if (nftInfo[ids[i]].isAccess) {
                 require(
                     from == address(0) || from == address(this),

@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
+/// @dev Edit: Make ERC-721 and ERC-1155 receiver.
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+
 /// @dev Edit: Make `hasRole` virtual
 import "./access/AccessControlEnumerable.sol";
 
@@ -24,7 +28,7 @@ import "./access/AccessControlEnumerable.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155Burnable, ERC1155Pausable {
+contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155Burnable, ERC1155Pausable, ERC721Holder, ERC1155Holder {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
@@ -171,7 +175,7 @@ contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155B
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC1155)
+        override(AccessControlEnumerable, ERC1155, ERC1155Receiver)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

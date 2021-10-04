@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Tokens
 import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
@@ -45,7 +44,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     struct NftInfo {
         address creator;
         string uri;
-        uint256 supply;
         UnderlyingType underlyingType;
     }
 
@@ -156,7 +154,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
             nftInfo[nextTokenId] = NftInfo({
                 creator: _msgSender(),
                 uri: _nftURIs[i],
-                supply: 0, // Supply set on _mint | _mintBatch
                 underlyingType: UnderlyingType.None
             });
 
@@ -239,7 +236,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         nftInfo[nextTokenId] = NftInfo({
             creator: _msgSender(),
             uri: _nftURI,
-            supply: 1,
             underlyingType: UnderlyingType.ERC721
         });
 
@@ -301,7 +297,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         nftInfo[nextTokenId] = NftInfo({
             creator: _msgSender(),
             uri: _nftURI,
-            supply: _numOfNftsToMint,
             underlyingType: UnderlyingType.ERC20
         });
 
@@ -344,15 +339,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /**
      * @dev See {ERC1155-_mint}.
      */
-    function _mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual override {
-        super._mint(account, id, amount, data);
-        nftInfo[id].supply += amount;
-    }
 
     function mint(
         address to,
@@ -369,17 +355,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /**
      * @dev See {ERC1155-_mintBatch}.
      */
-    function _mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._mintBatch(to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            nftInfo[ids[i]].supply += amounts[i];
-        }
-    }
 
     function mintBatch(
         address to,
@@ -406,32 +381,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
 
         super.mintBatch(to, ids, amounts, data);
-    }
-
-    /**
-     * @dev See {ERC1155-_burn}.
-     */
-    function _burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) internal virtual override {
-        super._burn(account, id, amount);
-        nftInfo[id].supply -= amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_burnBatch}.
-     */
-    function _burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual override {
-        super._burnBatch(account, ids, amounts);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            nftInfo[ids[i]].supply -= amounts[i];
-        }
     }
 
     /// @dev Runs on every transfer.

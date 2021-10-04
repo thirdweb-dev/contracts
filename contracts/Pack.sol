@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, ERC2771Context, IERC2981 {
+contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IERC2981 {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -45,7 +45,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     struct PackState {
         string uri;
         address creator;
-        uint256 currentSupply;
         uint256 openStart;
         uint256 openEnd;
     }
@@ -260,7 +259,7 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         uint256[] memory _ids,
         uint256[] memory _values,
         bytes memory _data
-    ) external override onlyUnpausedProtocol returns (bytes4) {
+    ) public override onlyUnpausedProtocol returns (bytes4) {
         // Get parameters for creating packs.
         (
             string memory packURI,
@@ -317,7 +316,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         PackState memory packState = PackState({
             creator: _creator,
             uri: _packURI,
-            currentSupply: packTotalSupply,
             openStart: block.timestamp + _secondsUntilOpenStart,
             openEnd: _secondsUntilOpenEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilOpenEnd
         });
@@ -379,16 +377,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     /**
      * @dev See {ERC1155-_mint}.
      */
-    function _mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual override {
-        super._mint(account, id, amount, data);
-        packs[id].currentSupply += amount;
-    }
-
     function mint(
         address,
         uint256,
@@ -401,18 +389,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
     /**
      * @dev See {ERC1155-_mintBatch}.
      */
-    function _mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._mintBatch(to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            packs[ids[i]].currentSupply += amounts[i];
-        }
-    }
-
     function mintBatch(
         address,
         uint256[] memory,
@@ -420,32 +396,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
         bytes memory
     ) public virtual override {        
         revert("Pack: cannot freely mint more packs");
-    }
-
-    /**
-     * @dev See {ERC1155-_burn}.
-     */
-    function _burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) internal virtual override {
-        super._burn(account, id, amount);
-        packs[id].currentSupply -= amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_burnBatch}.
-     */
-    function _burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual override {
-        super._burnBatch(account, ids, amounts);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            packs[ids[i]].currentSupply -= amounts[i];
-        }
     }
 
     /// @dev Runs on every transfer.
@@ -464,13 +414,6 @@ contract Pack is ERC1155PresetMinterPauser, IERC1155Receiver, VRFConsumerBase, E
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "Pack: Transfers are restricted to TRANSFER_ROLE holders"
             );
-        }
-
-        // Decrease total supply if tokens are being burned.
-        if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; i += 1) {
-                packs[ids[i]].currentSupply -= amounts[i];
-            }
         }
     }
 
