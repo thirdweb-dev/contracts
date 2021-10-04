@@ -906,22 +906,22 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "to",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "",
         "type": "bytes"
       }
     ],
@@ -934,22 +934,22 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "to",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "amounts",
+        "name": "",
         "type": "uint256[]"
       },
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "",
         "type": "bytes"
       }
     ],
