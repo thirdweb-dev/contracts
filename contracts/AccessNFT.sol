@@ -72,7 +72,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 indexed accessNftId,
         uint256 amount
     );
-    
+
     /// @dev Emitted when the EIP 2981 royalty of the contract is updated.
     event RoyaltyUpdated(uint256 royaltyBps);
 
@@ -345,8 +345,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
             );
         }
 
-        for (uint256 i = 0; i < ids.length; i++) {            
-
+        for (uint256 i = 0; i < ids.length; i++) {
             if (tokenState[ids[i]].isAccess && !accessNftIsTransferable) {
                 require(
                     from == address(0) || from == address(this),

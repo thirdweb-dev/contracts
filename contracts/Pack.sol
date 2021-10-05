@@ -88,7 +88,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
 
     /// @dev Emitted on a request to open a pack.
     event PackOpenRequest(uint256 indexed packId, address indexed opener, bytes32 requestId);
-    
+
     /// @dev Emitted when a request to open a pack is fulfilled.
     event PackOpenFulfilled(
         uint256 indexed packId,
@@ -453,7 +453,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         receiver = controlCenter.ownerTreasury();
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
-    
+
     /// @dev See EIP 1155
     function uri(uint256 _id) public view override returns (string memory) {
         return packs[_id].uri;
