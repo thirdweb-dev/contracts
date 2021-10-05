@@ -19,7 +19,6 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 - `Forwarder.sol`: [0x10A40362A24f11e4C9e1Dd288b00A55B95b2F807](https://mumbai.polygonscan.com/address/0x10A40362A24f11e4C9e1Dd288b00A55B95b2F807#code)
 
-
 ## Test helper contracts
 
 ### Mumbai

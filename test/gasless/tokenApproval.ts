@@ -11,10 +11,9 @@ import { Coin } from "../../typechain/Coin";
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 
 // EIP-2612 Signature
-import { signERC2612Permit } from 'eth-permit';
+import { signERC2612Permit } from "eth-permit";
 
-describe("ERC20Permit approve spending via signature", function() {
-  
+describe("ERC20Permit approve spending via signature", function () {
   // Get signers
   let deployer: SignerWithAddress;
   let owner: SignerWithAddress;
@@ -29,9 +28,8 @@ describe("ERC20Permit approve spending via signature", function() {
   const tokenAmount: BigNumber = ethers.utils.parseEther("1");
 
   before(async () => {
-
     // Signers
-    const signers: SignerWithAddress[] = await ethers.getSigners(); 
+    const signers: SignerWithAddress[] = await ethers.getSigners();
     [deployer, owner, spender, receiver, relayer] = signers;
 
     // Contract
@@ -40,29 +38,30 @@ describe("ERC20Permit approve spending via signature", function() {
 
     // Mint tokens to owner
     await erc20PermitToken.connect(deployer).mint(owner.address, tokenAmount);
-  })
+  });
 
   it("Should let spender transfer tokens from owner to receiver", async () => {
-
     // Get signature from owner
     const signatureResult = await signERC2612Permit(
-      owner.provider, 
+      owner.provider,
       erc20PermitToken.address,
       owner.address,
       spender.address,
-      tokenAmount.toString()
-    )
+      tokenAmount.toString(),
+    );
 
     // Send permit transaction
-    await erc20PermitToken.connect(relayer).permit(
-      owner.address,
-      spender.address,
-      tokenAmount,
-      signatureResult.deadline,
-      signatureResult.v,
-      signatureResult.r,
-      signatureResult.s
-    )
+    await erc20PermitToken
+      .connect(relayer)
+      .permit(
+        owner.address,
+        spender.address,
+        tokenAmount,
+        signatureResult.deadline,
+        signatureResult.v,
+        signatureResult.r,
+        signatureResult.s,
+      );
 
     // Check allowance
     expect(await erc20PermitToken.allowance(owner.address, spender.address)).to.equal(tokenAmount);
@@ -78,6 +77,5 @@ describe("ERC20Permit approve spending via signature", function() {
 
     // Check allowance after transfer
     expect(await erc20PermitToken.allowance(owner.address, spender.address)).to.equal(0);
-
-  })
-})
+  });
+});

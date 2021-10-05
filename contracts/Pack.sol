@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-// Tokens
+// Base
 import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
+
+// Tokens
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -19,27 +21,27 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IERC2981 {
-    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isRestrictedTransfer;
-
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
-    /// @dev The tokenId for the next set of packs to be minted.
+    /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
 
-    /// @dev Chainlink VRF variables.
-    uint256 public vrfFees;
-    bytes32 public vrfKeyHash;
-
-    /// @dev Pack sale royalties -- see EIP 2981
+    /// @dev NFT sale royalties -- see EIP 2981
     uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
     string public _contractURI;
+
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public transfersRestricted;
+
+    /// @dev Chainlink VRF variables.
+    uint256 public vrfFees;
+    bytes32 public vrfKeyHash;
 
     /// @dev The state of packs with a unique tokenId.
     struct PackState {
@@ -83,8 +85,10 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         PackState packState,
         Rewards rewards
     );
+
     /// @dev Emitted on a request to open a pack.
     event PackOpenRequest(uint256 indexed packId, address indexed opener, bytes32 requestId);
+
     /// @dev Emitted when a request to open a pack is fulfilled.
     event PackOpenFulfilled(
         uint256 indexed packId,
@@ -103,7 +107,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         _;
     }
 
-    /// @dev Checks whether the protocol is paused.
+    /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
@@ -131,31 +135,36 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         // Set contract URI
         _contractURI = _uri;
 
+        // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
     /**
-     *   ERC 1155 and ERC 1155 Receiver functions.
-     **/
+     *      Public functions
+     */
 
-    function uri(uint256 _id) public view override returns (string memory) {
-        return packs[_id].uri;
+    /**
+     * @dev See {ERC1155-_mint}.
+     */
+    function mint(
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override {
+        revert("Pack: cannot freely mint more packs");
     }
 
-    function tokenURI(uint256 _id) public view returns (string memory) {
-        return packs[_id].uri;
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        pure
-        override(ERC1155PresetMinterPauser, IERC165)
-        returns (bool)
-    {
-        return
-            interfaceId == type(IERC1155Receiver).interfaceId ||
-            interfaceId == type(IERC1155).interfaceId ||
-            interfaceId == type(IERC2981).interfaceId;
+    /**
+     * @dev See {ERC1155-_mintBatch}.
+     */
+    function mintBatch(
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual override {
+        revert("Pack: cannot freely mint more packs");
     }
 
     function onERC1155Received(
@@ -167,6 +176,37 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     ) public virtual override returns (bytes4) {
         revert("Pack: Must use batch transfer.");
         return this.onERC1155Received.selector;
+    }
+
+    /// @dev Creates pack on receiving ERC 1155 reward tokens
+    function onERC1155BatchReceived(
+        address,
+        address _from,
+        uint256[] memory _ids,
+        uint256[] memory _values,
+        bytes memory _data
+    ) public override onlyUnpausedProtocol returns (bytes4) {
+        // Get parameters for creating packs.
+        (
+            string memory packURI,
+            uint256 secondsUntilOpenStart,
+            uint256 secondsUntilOpenEnd,
+            uint256 rewardsPerOpen
+        ) = abi.decode(_data, (string, uint256, uint256, uint256));
+
+        // Create packs.
+        createPack(
+            _from,
+            packURI,
+            _msgSender(),
+            _ids,
+            _values,
+            secondsUntilOpenStart,
+            secondsUntilOpenEnd,
+            rewardsPerOpen
+        );
+
+        return this.onERC1155BatchReceived.selector;
     }
 
     /**
@@ -219,15 +259,13 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
     }
 
+    /**
+     *      External: setter functions
+     */
+
     /// @dev Lets a protocol admin change the Chainlink VRF fee.
     function setChainlinkFees(uint256 _newFees) external onlyProtocolAdmin {
         vrfFees = _newFees;
-    }
-
-    /// @dev Lets a protocol admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin {
-        bool success = LINK.transfer(_to, _amount);
-        require(success, "Pack: Failed to transfer LINK.");
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
@@ -249,38 +287,13 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
 
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
-        isRestrictedTransfer = _restrictedTransfer;
+        transfersRestricted = _restrictedTransfer;
     }
 
-    /// @dev Creates pack on receiving ERC 1155 reward tokens
-    function onERC1155BatchReceived(
-        address,
-        address _from,
-        uint256[] memory _ids,
-        uint256[] memory _values,
-        bytes memory _data
-    ) public override onlyUnpausedProtocol returns (bytes4) {
-        // Get parameters for creating packs.
-        (
-            string memory packURI,
-            uint256 secondsUntilOpenStart,
-            uint256 secondsUntilOpenEnd,
-            uint256 rewardsPerOpen
-        ) = abi.decode(_data, (string, uint256, uint256, uint256));
-
-        // Create packs.
-        createPack(
-            _from,
-            packURI,
-            _msgSender(),
-            _ids,
-            _values,
-            secondsUntilOpenStart,
-            secondsUntilOpenEnd,
-            rewardsPerOpen
-        );
-
-        return this.onERC1155BatchReceived.selector;
+    /// @dev Lets a protocol admin transfer LINK from the contract.
+    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin {
+        bool success = LINK.transfer(_to, _amount);
+        require(success, "Pack: Failed to transfer LINK.");
     }
 
     /**
@@ -374,30 +387,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         rewards[_packId] = _rewardsInPack;
     }
 
-    /**
-     * @dev See {ERC1155-_mint}.
-     */
-    function mint(
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual override {
-        revert("Pack: cannot freely mint more packs");
-    }
-
-    /**
-     * @dev See {ERC1155-_mintBatch}.
-     */
-    function mintBatch(
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public virtual override {        
-        revert("Pack: cannot freely mint more packs");
-    }
-
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
@@ -409,7 +398,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (isRestrictedTransfer) {
+        if (transfersRestricted) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "Pack: Transfers are restricted to TRANSFER_ROLE holders"
@@ -430,9 +419,50 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         }
     }
 
+    /// @dev See EIP-2771
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+        return ERC2771Context._msgSender();
+    }
+
+    /// @dev See EIP-2771
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
+    }
+
     /**
-     *   Getter functions.
+     *   Rest: view functions
      **/
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155PresetMinterPauser, IERC165)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+    }
+
+    /// @dev See EIP 2918
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = controlCenter.ownerTreasury();
+        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+    }
+
+    /// @dev See EIP 1155
+    function uri(uint256 _id) public view override returns (string memory) {
+        return packs[_id].uri;
+    }
+
+    /// @dev Alternative function to return a token's URI
+    function tokenURI(uint256 _id) public view returns (string memory) {
+        return packs[_id].uri;
+    }
 
     /// @dev Returns the creator of a set of packs
     function creator(uint256 _packId) external view returns (address) {
@@ -464,25 +494,5 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         source = rewards[_packId].source;
         tokenIds = rewards[_packId].tokenIds;
         amountsPacked = rewards[_packId].amountsPacked;
-    }
-
-    /// @dev See EIP 2918
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.ownerTreasury();
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
-    }
-
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
-    }
-
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
     }
 }

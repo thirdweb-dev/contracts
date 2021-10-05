@@ -28,7 +28,14 @@ import "./access/AccessControlEnumerable.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155Burnable, ERC1155Pausable, ERC721Holder, ERC1155Holder {
+contract ERC1155PresetMinterPauser is
+    Context,
+    AccessControlEnumerable,
+    ERC1155Burnable,
+    ERC1155Pausable,
+    ERC721Holder,
+    ERC1155Holder
+{
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
