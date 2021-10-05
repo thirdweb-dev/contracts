@@ -295,7 +295,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets the protocol admin set the transferability of Access NFTs.
-    function setTransferability(bool _isTransferable) external onlyProtocolAdmin {
+    function setAccessNftTransferability(bool _isTransferable) external onlyProtocolAdmin {
         accessNftIsTransferable = _isTransferable;
 
         emit AccessTransferabilityUpdated(_isTransferable);
