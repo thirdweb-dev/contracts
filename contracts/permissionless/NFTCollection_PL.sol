@@ -43,7 +43,7 @@ contract NFTCollection_PL is NFTCollection {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = nftInfo[tokenId].creator;
+        receiver = tokenState[tokenId].creator;
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 }
