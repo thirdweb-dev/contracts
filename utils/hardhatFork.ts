@@ -5,7 +5,9 @@ import { chainIds } from "./chainIds";
 const ethers = hre.ethers;
 require("dotenv").config();
 
-export const forkFrom = async (blockNumber: any, network: keyof typeof chainIds) => {
+const defaultForkBlock = 9414004; // randomly set
+
+export const forkFrom = async (network: keyof typeof chainIds) => {
   let alchemyKey: string = process.env.ALCHEMY_KEY || "";
 
   let nodeUrl: string =
@@ -19,7 +21,7 @@ export const forkFrom = async (blockNumber: any, network: keyof typeof chainIds)
       {
         forking: {
           jsonRpcUrl: nodeUrl,
-          blockNumber: blockNumber,
+          blockNumber: defaultForkBlock,
         },
       },
     ],

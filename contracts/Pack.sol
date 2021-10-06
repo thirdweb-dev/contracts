@@ -4,10 +4,6 @@ pragma solidity ^0.8.0;
 // Base
 import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
 
-// Tokens
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
@@ -316,6 +312,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
             "Pack: reward contract does not implement ERC 1155."
         );
         require(hasRole(MINTER_ROLE, _creator), "Pack: Only accounts with MINTER_ROLE can call this function.");
+        require(_rewardIds.length > 0, "Pack: Must create a pack with at least one reward.");
 
         uint256 sumOfRewards = _sumArr(_rewardAmounts);
 

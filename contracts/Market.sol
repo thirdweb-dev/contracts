@@ -400,7 +400,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
                 uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFeeBps) / controlCenter.MAX_BPS();
                 sellerCut = sellerCut - royaltyAmount;
 
-                // protocol takes royalty cut lol
+                // protocol takes royalty cut
                 protocolProviderCut = protocolProviderCut + providerRoyaltyCut;
                 royaltyAmount = royaltyAmount - providerRoyaltyCut;
 

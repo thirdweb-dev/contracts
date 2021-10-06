@@ -4,10 +4,6 @@ pragma solidity ^0.8.0;
 // Base
 import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
 
-// Tokens
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
@@ -295,7 +291,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets the protocol admin set the transferability of Access NFTs.
-    function setTransferability(bool _isTransferable) external onlyProtocolAdmin {
+    function setAccessNftTransferability(bool _isTransferable) external onlyProtocolAdmin {
         accessNftIsTransferable = _isTransferable;
 
         emit AccessTransferabilityUpdated(_isTransferable);

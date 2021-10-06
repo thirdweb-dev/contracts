@@ -1177,6 +1177,19 @@
   {
     "inputs": [
       {
+        "internalType": "bool",
+        "name": "_isTransferable",
+        "type": "bool"
+      }
+    ],
+    "name": "setAccessNftTransferability",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "operator",
         "type": "address"
@@ -1245,19 +1258,6 @@
       }
     ],
     "name": "setRoyaltyBps",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_isTransferable",
-        "type": "bool"
-      }
-    ],
-    "name": "setTransferability",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
