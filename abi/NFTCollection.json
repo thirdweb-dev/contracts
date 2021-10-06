@@ -56,8 +56,14 @@
       },
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
-        "name": "tokenContract",
+        "name": "sourceOfUnderlying",
         "type": "address"
       },
       {
@@ -69,7 +75,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nftAmountRedeemed",
+        "name": "sharesRedeemed",
         "type": "uint256"
       }
     ],
@@ -88,29 +94,35 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "tokenContract",
+        "name": "sourceOfUnderlying",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokenAmount",
+        "name": "totalAmountOfUnderlying",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nftsMinted",
+        "name": "shares",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "nftURI",
+        "name": "tokenURI",
         "type": "string"
       }
     ],
-    "name": "ERC20WrappedNfts",
+    "name": "ERC20WrappedToken",
     "type": "event"
   },
   {
@@ -125,19 +137,19 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "nftContract",
+        "name": "sourceOfUnderlying",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nftTokenId",
+        "name": "tokenIdOfUnderlying",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nativeNftTokenId",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],
@@ -156,29 +168,29 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "nftContract",
+        "name": "sourceOfUnderlying",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nftTokenId",
+        "name": "tokenIdOfUnderlying",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nativeNftTokenId",
+        "name": "tokenId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "nativeNftURI",
+        "name": "tokenURI",
         "type": "string"
       }
     ],
-    "name": "ERC721WrappedNft",
+    "name": "ERC721WrappedToken",
     "type": "event"
   },
   {
@@ -193,23 +205,23 @@
       {
         "indexed": false,
         "internalType": "uint256[]",
-        "name": "nftIds",
+        "name": "tokenIds",
         "type": "uint256[]"
       },
       {
         "indexed": false,
         "internalType": "string[]",
-        "name": "nftURIs",
+        "name": "tokenURIs",
         "type": "string[]"
       },
       {
         "indexed": false,
         "internalType": "uint256[]",
-        "name": "nftSupplies",
+        "name": "tokenSupplies",
         "type": "uint256[]"
       }
     ],
-    "name": "NativeNfts",
+    "name": "NativeTokens",
     "type": "event"
   },
   {
@@ -604,7 +616,7 @@
         "type": "uint256[]"
       }
     ],
-    "name": "createNativeNfts",
+    "name": "createNativeTokens",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -685,11 +697,11 @@
         "type": "uint256"
       }
     ],
-    "name": "erc20WrappedNfts",
+    "name": "erc20WrappedTokens",
     "outputs": [
       {
         "internalType": "address",
-        "name": "tokenContract",
+        "name": "source",
         "type": "address"
       },
       {
@@ -714,16 +726,16 @@
         "type": "uint256"
       }
     ],
-    "name": "erc721WrappedNfts",
+    "name": "erc721WrappedTokens",
     "outputs": [
       {
         "internalType": "address",
-        "name": "nftContract",
+        "name": "source",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "nftTokenId",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],
@@ -859,19 +871,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "isRestrictedTransfer",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -962,35 +961,113 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nftInfo",
-    "outputs": [
-      {
         "internalType": "address",
-        "name": "creator",
+        "name": "",
         "type": "address"
       },
       {
-        "internalType": "string",
-        "name": "uri",
-        "type": "string"
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "onERC1155BatchReceived",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "supply",
+        "name": "",
         "type": "uint256"
       },
       {
-        "internalType": "enum NFTCollection.UnderlyingType",
-        "name": "underlyingType",
-        "type": "uint8"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
       }
     ],
-    "stateMutability": "view",
+    "name": "onERC1155Received",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "onERC721Received",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1268,6 +1345,35 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenState",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
+      },
+      {
+        "internalType": "enum NFTCollection.UnderlyingType",
+        "name": "underlyingType",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "_nftId",
         "type": "uint256"
       }
@@ -1278,6 +1384,38 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "transfersRestricted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

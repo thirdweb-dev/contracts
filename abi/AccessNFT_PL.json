@@ -98,6 +98,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isTransferable",
+        "type": "bool"
+      }
+    ],
+    "name": "AccessTransferabilityUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "account",
@@ -117,6 +130,31 @@
       }
     ],
     "name": "ApprovalForAll",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "accessNftId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "lastTimeToRedeem",
+        "type": "uint256"
+      }
+    ],
+    "name": "LastRedeemTimeUpdated",
     "type": "event"
   },
   {
@@ -386,6 +424,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "accessNftIsTransferable",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -723,19 +774,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "isRestrictedTransfer",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -749,6 +787,25 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "lastTimeToRedeem",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -826,50 +883,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nftInfo",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "uri",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "supply",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isAccess",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "accessNftId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum AccessNFT.UnderlyingType",
-        "name": "underlyingType",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -935,6 +948,40 @@
       }
     ],
     "name": "onERC1155Received",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "onERC721Received",
     "outputs": [
       {
         "internalType": "bytes4",
@@ -1161,6 +1208,24 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_secondsUntilRedeem",
+        "type": "uint256"
+      }
+    ],
+    "name": "setLastTimeToRedeem",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bool",
         "name": "_restrictedTransfer",
         "type": "bool"
@@ -1187,6 +1252,19 @@
   {
     "inputs": [
       {
+        "internalType": "bool",
+        "name": "_isTransferable",
+        "type": "bool"
+      }
+    ],
+    "name": "setTransferability",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -1200,7 +1278,46 @@
         "type": "bool"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenState",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAccess",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "accessNftId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum AccessNFT.UnderlyingType",
+        "name": "underlyingType",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1217,6 +1334,38 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "transfersRestricted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

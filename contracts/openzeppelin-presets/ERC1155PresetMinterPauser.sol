@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
+/// @dev Edit: Make ERC-721 and ERC-1155 receiver.
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+
 /// @dev Edit: Make `hasRole` virtual
 import "./access/AccessControlEnumerable.sol";
 
@@ -24,9 +28,18 @@ import "./access/AccessControlEnumerable.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155Burnable, ERC1155Pausable {
+contract ERC1155PresetMinterPauser is
+    Context,
+    AccessControlEnumerable,
+    ERC1155Burnable,
+    ERC1155Pausable,
+    ERC721Holder,
+    ERC1155Holder
+{
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    mapping(uint256 => uint256) private _totalSupply;
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE`, and `PAUSER_ROLE` to the account that
@@ -37,6 +50,67 @@ contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155B
 
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    /**
+     * @dev Total amount of tokens in with a given id.
+     */
+    function totalSupply(uint256 id) public view virtual returns (uint256) {
+        return _totalSupply[id];
+    }
+
+    /**
+     * @dev See {ERC1155-_mint}.
+     */
+    function _mint(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual override {
+        super._mint(account, id, amount, data);
+        _totalSupply[id] += amount;
+    }
+
+    /**
+     * @dev See {ERC1155-_mintBatch}.
+     */
+    function _mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._mintBatch(to, ids, amounts, data);
+        for (uint256 i = 0; i < ids.length; ++i) {
+            _totalSupply[ids[i]] += amounts[i];
+        }
+    }
+
+    /**
+     * @dev See {ERC1155-_burn}.
+     */
+    function _burn(
+        address account,
+        uint256 id,
+        uint256 amount
+    ) internal virtual override {
+        super._burn(account, id, amount);
+        _totalSupply[id] -= amount;
+    }
+
+    /**
+     * @dev See {ERC1155-_burnBatch}.
+     */
+    function _burnBatch(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual override {
+        super._burnBatch(account, ids, amounts);
+        for (uint256 i = 0; i < ids.length; ++i) {
+            _totalSupply[ids[i]] -= amounts[i];
+        }
     }
 
     /**
@@ -108,7 +182,7 @@ contract ERC1155PresetMinterPauser is Context, AccessControlEnumerable, ERC1155B
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC1155)
+        override(AccessControlEnumerable, ERC1155, ERC1155Receiver)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
