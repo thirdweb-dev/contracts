@@ -774,19 +774,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "isRestrictedTransfer",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -888,45 +875,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nftInfo",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "uri",
-        "type": "string"
-      },
-      {
-        "internalType": "bool",
-        "name": "isAccess",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "accessNftId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum AccessNFT.UnderlyingType",
-        "name": "underlyingType",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -1330,7 +1278,46 @@
         "type": "bool"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenState",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAccess",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "accessNftId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum AccessNFT.UnderlyingType",
+        "name": "underlyingType",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1366,6 +1353,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "transfersRestricted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
