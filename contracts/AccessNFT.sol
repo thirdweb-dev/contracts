@@ -4,10 +4,6 @@ pragma solidity ^0.8.0;
 // Base
 import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
 
-// Tokens
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 

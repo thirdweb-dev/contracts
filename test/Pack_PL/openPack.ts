@@ -48,33 +48,32 @@ describe("Open a pack", function () {
     _packCreator: SignerWithAddress,
     _rewardIds: number[],
     _rewardAmounts: number[],
-    _encodedParamsAsData: BytesLike
+    _encodedParamsAsData: BytesLike,
   ) => {
+    await sendGaslessTx(_packCreator, forwarder, relayer, {
+      from: _packCreator.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
+        _packCreator.address,
+        pack.address,
+        _rewardIds,
+        _rewardAmounts,
+        _encodedParamsAsData,
+      ]),
+    });
+  };
 
-    await sendGaslessTx(
-      _packCreator,
-      forwarder,
-      relayer,
-      {
-        from: _packCreator.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
-          _packCreator.address,
-          pack.address,
-          _rewardIds,
-          _rewardAmounts,
-          _encodedParamsAsData
-        ])
-      }
-    )
-  }
-
-  const encodeParams = (packURI: string, secondsUntilOpenStart: number, secondsUntilOpenEnd: number, rewardsPerOpen: number) => {
+  const encodeParams = (
+    packURI: string,
+    secondsUntilOpenStart: number,
+    secondsUntilOpenEnd: number,
+    rewardsPerOpen: number,
+  ) => {
     return ethers.utils.defaultAbiCoder.encode(
       ["string", "uint256", "uint256", "uint256"],
-      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen]
+      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen],
     );
-  }
+  };
 
   // Fund `Pack` with LINK
   const fundPack = async () => {
@@ -89,7 +88,6 @@ describe("Open a pack", function () {
   };
 
   before(async () => {
-
     // Fork rinkeby for testing
     await forkFrom(networkName);
 
@@ -106,20 +104,11 @@ describe("Open a pack", function () {
     forwarder = contracts.forwarder;
 
     // Create Access NFTs as rewards
-    await sendGaslessTx(
-      creator,
-      forwarder,
-      relayer,
-      {
-        from: creator.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
-          rewardURIs,
-          accessURIs,
-          rewardSupplies
-        ])
-      }
-    )
+    await sendGaslessTx(creator, forwarder, relayer, {
+      from: creator.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+    });
 
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
@@ -134,12 +123,10 @@ describe("Open a pack", function () {
     }
 
     rewardIds = expectedRewardIds;
-  })
+  });
 
-  describe("Revert cases", function() {
-
+  describe("Revert cases", function () {
     it("Should revert if window to openPack has ended", async () => {
-
       const secondsUntilOpenEnd: number = 100;
 
       // Create packs
@@ -147,33 +134,32 @@ describe("Open a pack", function () {
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, secondsUntilOpenEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, secondsUntilOpenEnd, rewardsPerOpen),
       );
 
       // Time travel
-      for(let i = 0; i < secondsUntilOpenEnd; i++) {
+      for (let i = 0; i < secondsUntilOpenEnd; i++) {
         await ethers.provider.send("evm_mine", []);
       }
 
-      await expect(
-        pack.connect(creator).openPack(packId)
-      ).to.be.revertedWith("Pack: the window to open packs has not started or closed.")
-    })
+      await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
+        "Pack: the window to open packs has not started or closed.",
+      );
+    });
 
     it("Should revert if the Pack contract has no LINK", async () => {
-      
       // Create packs
       await createPack(
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
-      await expect(
-        pack.connect(creator).openPack(packId)
-      ).to.be.revertedWith("Pack: Not enough LINK to fulfill randomness request.")
-    })
+      await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
+        "Pack: Not enough LINK to fulfill randomness request.",
+      );
+    });
 
     it("Should revert if caller has no packs", async () => {
       // Create packs
@@ -181,16 +167,16 @@ describe("Open a pack", function () {
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
       await fundPack();
 
-      await expect(
-        pack.connect(protocolAdmin).openPack(packId)
-      ).to.be.revertedWith("Pack: sender owns no packs of the given packId.")
-    })
+      await expect(pack.connect(protocolAdmin).openPack(packId)).to.be.revertedWith(
+        "Pack: sender owns no packs of the given packId.",
+      );
+    });
 
     it("Should revert if caller has an in-flight pack open request for the pack", async () => {
       // Create packs
@@ -198,129 +184,111 @@ describe("Open a pack", function () {
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
       await fundPack();
 
-      await pack.connect(creator).openPack(packId)
+      await pack.connect(creator).openPack(packId);
 
-      await expect(
-        pack.connect(creator).openPack(packId)
-      ).to.be.revertedWith("Pack: must wait for the pending pack to be opened.")
-    })
-  })
+      await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
+        "Pack: must wait for the pending pack to be opened.",
+      );
+    });
+  });
 
-  describe("Events", function() {
+  describe("Events", function () {
     beforeEach(async () => {
       // Create packs
       await createPack(
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
       await fundPack();
-    })
+    });
 
     it("Should emit PackOpenRequest", async () => {
-
       const eventPromise = new Promise((resolve, reject) => {
         pack.on("PackOpenRequest", (_packId, _opener, _requestId) => {
           expect(_packId).to.equal(packId);
           expect(_opener).to.equal(creator.address);
 
-          resolve(null)
-        })
+          resolve(null);
+        });
 
         setTimeout(() => {
-          reject(new Error("Timeout PackOpenRequest"))
-        }, 5000)
-      })
+          reject(new Error("Timeout PackOpenRequest"));
+        }, 5000);
+      });
 
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("openPack", [packId])
-        }
-      );
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("openPack", [packId]),
+      });
 
       try {
         await eventPromise;
-      } catch(e) {
-        console.error(e)
+      } catch (e) {
+        console.error(e);
       }
-    })
-  })
+    });
+  });
 
-  describe("Balances", function() {
-
+  describe("Balances", function () {
     beforeEach(async () => {
       // Create packs
       await createPack(
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
       await fundPack();
-    })
+    });
 
     it("Should decrement the opener's balance by 1", async () => {
       const balBefore: BigNumber = await pack.balanceOf(creator.address, packId);
 
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("openPack", [packId])
-        }
-      );
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("openPack", [packId]),
+      });
 
       const balAfter: BigNumber = await pack.balanceOf(creator.address, packId);
 
       expect(balBefore.sub(balAfter)).to.equal(1);
-    })
-  })
+    });
+  });
 
-  describe("Contract state", function() {
-
+  describe("Contract state", function () {
     beforeEach(async () => {
       // Create packs
       await createPack(
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
       await fundPack();
 
       // Open pack
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("openPack", [packId])
-        }
-      );
-    })
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("openPack", [packId]),
+      });
+    });
 
     it("Should update the randomnessRequests mapping with opener and request info", async () => {
       const requestId: BytesLike = await pack.currentRequestId(packId, creator.address);
@@ -328,6 +296,6 @@ describe("Open a pack", function () {
 
       expect(requestInfo.packId).to.equal(packId);
       expect(requestInfo.opener).to.equal(creator.address);
-    })
-  })
+    });
+  });
 });

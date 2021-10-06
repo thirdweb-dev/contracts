@@ -49,33 +49,32 @@ describe("Token transfers under various conditions", function () {
     _packCreator: SignerWithAddress,
     _rewardIds: number[],
     _rewardAmounts: number[],
-    _encodedParamsAsData: BytesLike
+    _encodedParamsAsData: BytesLike,
   ) => {
+    await sendGaslessTx(_packCreator, forwarder, relayer, {
+      from: _packCreator.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
+        _packCreator.address,
+        pack.address,
+        _rewardIds,
+        _rewardAmounts,
+        _encodedParamsAsData,
+      ]),
+    });
+  };
 
-    await sendGaslessTx(
-      _packCreator,
-      forwarder,
-      relayer,
-      {
-        from: _packCreator.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
-          _packCreator.address,
-          pack.address,
-          _rewardIds,
-          _rewardAmounts,
-          _encodedParamsAsData
-        ])
-      }
-    )
-  }
-
-  const encodeParams = (packURI: string, secondsUntilOpenStart: number, secondsUntilOpenEnd: number, rewardsPerOpen: number) => {
+  const encodeParams = (
+    packURI: string,
+    secondsUntilOpenStart: number,
+    secondsUntilOpenEnd: number,
+    rewardsPerOpen: number,
+  ) => {
     return ethers.utils.defaultAbiCoder.encode(
       ["string", "uint256", "uint256", "uint256"],
-      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen]
+      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen],
     );
-  }
+  };
 
   // Fund `Pack` with LINK
   const fundPack = async () => {
@@ -90,7 +89,6 @@ describe("Token transfers under various conditions", function () {
   };
 
   before(async () => {
-
     // Fork rinkeby for testing
     await forkFrom(networkName);
 
@@ -107,20 +105,11 @@ describe("Token transfers under various conditions", function () {
     forwarder = contracts.forwarder;
 
     // Create Access NFTs as rewards
-    await sendGaslessTx(
-      creator,
-      forwarder,
-      relayer,
-      {
-        from: creator.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
-          rewardURIs,
-          accessURIs,
-          rewardSupplies
-        ])
-      }
-    )
+    await sendGaslessTx(creator, forwarder, relayer, {
+      from: creator.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+    });
 
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
@@ -141,102 +130,69 @@ describe("Token transfers under various conditions", function () {
       creator,
       rewardIds,
       rewardSupplies,
-      encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+      encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
     );
 
     // Fund pack contract with LINK
     await fundPack();
-  })
+  });
 
-  describe("Transferring packs", function() {
-
+  describe("Transferring packs", function () {
     it("Should transfer tokens amongst non-TRANSFER_ROLE signers when transfers are not restricted", async () => {
-
       const creatorBalBefore: BigNumber = await pack.balanceOf(creator.address, packId);
       expect(await pack.balanceOf(fan.address, packId)).to.equal(0);
 
       // Send reward: creator to fan
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, packId, 1, ethers.utils.toUtf8Bytes("")
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("safeTransferFrom", [
+          creator.address,
+          fan.address,
+          packId,
+          1,
+          ethers.utils.toUtf8Bytes(""),
+        ]),
+      });
 
       const creatorBalAfter: BigNumber = await pack.balanceOf(creator.address, packId);
       expect(await pack.balanceOf(fan.address, packId)).to.equal(1);
       expect(creatorBalBefore.sub(creatorBalAfter)).to.equal(1);
-    })
+    });
 
     it("Should revert transfer if transfers are restricted, and no participant has TRANSFER_ROLE", async () => {
-
       // Restrict transfers: protocol admin
-      await sendGaslessTx(
-        protocolAdmin,
-        forwarder,
-        relayer,
-        {
-          from: protocolAdmin.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("setRestrictedTransfer", [true])
-        }
-      )
+      await sendGaslessTx(protocolAdmin, forwarder, relayer, {
+        from: protocolAdmin.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("setRestrictedTransfer", [true]),
+      });
 
       await expect(
-        pack.connect(creator).safeTransferFrom(
-          creator.address,
-          fan.address,
-          packId,
-          1,
-          ethers.utils.toUtf8Bytes("")
-        )
+        pack.connect(creator).safeTransferFrom(creator.address, fan.address, packId, 1, ethers.utils.toUtf8Bytes("")),
       ).to.be.revertedWith("Pack: Transfers are restricted to TRANSFER_ROLE holders");
-    })
+    });
 
     it("Should not revert transfer if transfers are restricted, but at least one participant has TRANSFER_ROLE", async () => {
-
       // Restrict transfers: protocol admin
-      await sendGaslessTx(
-        protocolAdmin,
-        forwarder,
-        relayer,
-        {
-          from: protocolAdmin.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("setRestrictedTransfer", [true])
-        }
-      )
+      await sendGaslessTx(protocolAdmin, forwarder, relayer, {
+        from: protocolAdmin.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("setRestrictedTransfer", [true]),
+      });
 
       // Grant TRANSFER_ROLE to creator.
       const TRANSFER_ROLE: BytesLike = await pack.TRANSFER_ROLE();
 
-      await sendGaslessTx(
-        protocolAdmin,
-        forwarder,
-        relayer,
-        {
-          from: protocolAdmin.address,
-          to: pack.address,
-          data: pack.interface.encodeFunctionData("grantRole", [TRANSFER_ROLE, creator.address])
-        }
-      )
-
+      await sendGaslessTx(protocolAdmin, forwarder, relayer, {
+        from: protocolAdmin.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("grantRole", [TRANSFER_ROLE, creator.address]),
+      });
 
       await expect(
-        pack.connect(creator).safeTransferFrom(
-          creator.address,
-          fan.address,
-          packId,
-          1,
-          ethers.utils.toUtf8Bytes("")
-        )
+        pack.connect(creator).safeTransferFrom(creator.address, fan.address, packId, 1, ethers.utils.toUtf8Bytes("")),
       ).to.not.be.reverted;
-    })
-  })
+    });
+  });
 });

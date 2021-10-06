@@ -15,7 +15,6 @@ import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
-
 describe("Create a pack with rewards", function () {
   // Signers
   let protocolAdmin: SignerWithAddress;
@@ -46,36 +45,34 @@ describe("Create a pack with rewards", function () {
     _packCreator: SignerWithAddress,
     _rewardIds: number[],
     _rewardAmounts: number[],
-    _encodedParamsAsData: BytesLike
+    _encodedParamsAsData: BytesLike,
   ) => {
+    await sendGaslessTx(_packCreator, forwarder, relayer, {
+      from: _packCreator.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
+        _packCreator.address,
+        pack.address,
+        _rewardIds,
+        _rewardAmounts,
+        _encodedParamsAsData,
+      ]),
+    });
+  };
 
-    await sendGaslessTx(
-      _packCreator,
-      forwarder,
-      relayer,
-      {
-        from: _packCreator.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
-          _packCreator.address,
-          pack.address,
-          _rewardIds,
-          _rewardAmounts,
-          _encodedParamsAsData
-        ])
-      }
-    )
-  }
-
-  const encodeParams = (packURI: string, secondsUntilOpenStart: number, secondsUntilOpenEnd: number, rewardsPerOpen: number) => {
+  const encodeParams = (
+    packURI: string,
+    secondsUntilOpenStart: number,
+    secondsUntilOpenEnd: number,
+    rewardsPerOpen: number,
+  ) => {
     return ethers.utils.defaultAbiCoder.encode(
       ["string", "uint256", "uint256", "uint256"],
-      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen]
+      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen],
     );
-  }
+  };
 
   before(async () => {
-
     // Fork rinkeby for testing
     await forkFrom(networkName);
 
@@ -92,20 +89,11 @@ describe("Create a pack with rewards", function () {
     forwarder = contracts.forwarder;
 
     // Create Access NFTs as rewards
-    await sendGaslessTx(
-      creator,
-      forwarder,
-      relayer,
-      {
-        from: creator.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
-          rewardURIs,
-          accessURIs,
-          rewardSupplies
-        ])
-      }
-    )
+    await sendGaslessTx(creator, forwarder, relayer, {
+      from: creator.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+    });
 
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
@@ -120,7 +108,7 @@ describe("Create a pack with rewards", function () {
     }
 
     rewardIds = expectedRewardIds;
-  })
+  });
 
   describe("Revert", function () {
     it("Should revert if unequal number of URIs and supplies are provided", async () => {
@@ -132,9 +120,9 @@ describe("Create a pack with rewards", function () {
             pack.address,
             rewardIds.slice(1),
             rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
-          )
-      ).to.be.reverted
+            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+          ),
+      ).to.be.reverted;
 
       await expect(
         accessNft
@@ -144,9 +132,9 @@ describe("Create a pack with rewards", function () {
             pack.address,
             rewardIds,
             rewardSupplies.slice(1),
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
-          )
-      ).to.be.reverted
+            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+          ),
+      ).to.be.reverted;
     });
 
     it("Should revert if no NFTs are to be created", async () => {
@@ -158,9 +146,9 @@ describe("Create a pack with rewards", function () {
             pack.address,
             [],
             [],
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
-          )
-      ).to.be.reverted
+            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+          ),
+      ).to.be.reverted;
     });
 
     it("Should not revert if caller does not have MINTER_ROLE", async () => {
@@ -172,9 +160,9 @@ describe("Create a pack with rewards", function () {
             pack.address,
             rewardIds,
             rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
-          )
-      ).to.not.be.reverted
+            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+          ),
+      ).to.not.be.reverted;
     });
 
     it("Should revert if total supply of NFTs is not divisible by the number of NFTs to distribute on pack opening.", async () => {
@@ -188,16 +176,14 @@ describe("Create a pack with rewards", function () {
             pack.address,
             rewardIds,
             rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, invalidRewardsPerOpen)
-          )
+            encodeParams(packURI, openStartAndEnd, openStartAndEnd, invalidRewardsPerOpen),
+          ),
       ).to.be.revertedWith("Pack: invalid number of rewards per open.");
     });
   });
 
   describe("Events", function () {
-
     it("Should emit PackCreated", async () => {
-
       const eventPromise = new Promise((resolve, reject) => {
         pack.on("PackCreated", async (_packId, _rewardContract, _creator, _packState, _rewards) => {
           expect(_packId).to.equal(packId);
@@ -227,7 +213,7 @@ describe("Create a pack with rewards", function () {
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
       await eventPromise;
@@ -235,13 +221,12 @@ describe("Create a pack with rewards", function () {
   });
 
   describe("Balances", async () => {
-
     beforeEach(async () => {
       await createPack(
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
     });
 
@@ -261,13 +246,12 @@ describe("Create a pack with rewards", function () {
   });
 
   describe("Contract state", function () {
-    
     beforeEach(async () => {
       await createPack(
         creator,
         rewardIds,
         rewardSupplies,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen)
+        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
     });
 
@@ -276,7 +260,7 @@ describe("Create a pack with rewards", function () {
 
       expect(packState.pack.uri).to.equal(packURI);
       expect(packState.pack.creator).to.equal(creator.address);
-      
+
       expect(await pack.totalSupply(packId)).to.equal(rewardSupplies.reduce((a, b) => a + b) / rewardsPerOpen);
 
       expect(packState.source).to.equal(accessNft.address);

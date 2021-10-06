@@ -32,7 +32,6 @@ describe("Calling 'createAccessNfts'", function () {
   const networkName = "rinkeby";
 
   before(async () => {
-
     // Fork rinkeby for testing
     await forkFrom(networkName);
 
@@ -46,55 +45,32 @@ describe("Calling 'createAccessNfts'", function () {
     const contracts: Contracts = await getContracts(deployer, networkName);
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
-  })
+  });
 
   describe("Revert", function () {
     it("Should revert if unequal number of URIs and supplies are provided", async () => {
-
       await expect(
-        accessNft.connect(creator).createAccessNfts(
-          rewardURIs.slice(1),
-          accessURIs,
-          rewardSupplies
-        )
+        accessNft.connect(creator).createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(
-          rewardURIs,
-          accessURIs.slice(1),
-          rewardSupplies
-        )
+        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(
-          rewardURIs,
-          accessURIs,
-          rewardSupplies.slice(1)
-        )
+        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1)),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
     });
 
     it("Should revert if no NFTs are to be created", async () => {
-
-      await expect(
-        accessNft.connect(creator).createAccessNfts(
-          [],
-          [],
-          []
-        )
-      ).to.be.revertedWith("AccessNFT: Must create at least one NFT.");
+      await expect(accessNft.connect(creator).createAccessNfts([], [], [])).to.be.revertedWith(
+        "AccessNFT: Must create at least one NFT.",
+      );
     });
 
     it("Should not revert if caller does not have MINTER_ROLE", async () => {
-      await expect(
-        accessNft.connect(creator).createAccessNfts(
-          rewardURIs,
-          accessURIs,
-          rewardSupplies
-        )
-      ).to.not.be.reverted;
+      await expect(accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies)).to.not.be
+        .reverted;
     });
   });
 
@@ -103,47 +79,48 @@ describe("Calling 'createAccessNfts'", function () {
       const eventPromise = new Promise(async (resolve, reject) => {
         const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
 
-        accessNft.on("AccessNFTsCreated", (_creator: string, _nftIds: number[], _nftURIs: string[], _accessNftIds: number[], _accessURIs: string[], _nftSupplies: number[]) => {
-          expect(_creator).to.equal(creator.address);
+        accessNft.on(
+          "AccessNFTsCreated",
+          (
+            _creator: string,
+            _nftIds: number[],
+            _nftURIs: string[],
+            _accessNftIds: number[],
+            _accessURIs: string[],
+            _nftSupplies: number[],
+          ) => {
+            expect(_creator).to.equal(creator.address);
 
-          for (let i = 0; i < rewardURIs.length; i++) {
-            expect(rewardURIs[i]).to.equal(_nftURIs[i]);
-            expect(accessURIs[i]).to.equal(_accessURIs[i]);
-            expect(rewardSupplies[i]).to.equal(_nftSupplies[i]);
-          }
-
-          expect(_nftIds.length).to.equal(_accessNftIds.length);
-
-          for (let val of [...Array(nextAccessNftId).keys()]) {
-            if (val % 2 == 0) {
-              expect(_accessNftIds.includes(val));
-            } else {
-              expect(_nftIds.includes(val));
+            for (let i = 0; i < rewardURIs.length; i++) {
+              expect(rewardURIs[i]).to.equal(_nftURIs[i]);
+              expect(accessURIs[i]).to.equal(_accessURIs[i]);
+              expect(rewardSupplies[i]).to.equal(_nftSupplies[i]);
             }
-          }
 
-          resolve(null);
-        });
+            expect(_nftIds.length).to.equal(_accessNftIds.length);
+
+            for (let val of [...Array(nextAccessNftId).keys()]) {
+              if (val % 2 == 0) {
+                expect(_accessNftIds.includes(val));
+              } else {
+                expect(_nftIds.includes(val));
+              }
+            }
+
+            resolve(null);
+          },
+        );
 
         setTimeout(() => {
           reject(new Error("Timeout: AccessNFTsCreated"));
         }, 10000);
       });
 
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("createAccessNfts", [
-            rewardURIs,
-            accessURIs,
-            rewardSupplies
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      });
 
       await eventPromise;
     });
@@ -154,21 +131,11 @@ describe("Calling 'createAccessNfts'", function () {
     let accessIds: number[];
 
     beforeEach(async () => {
-
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("createAccessNfts", [
-            rewardURIs,
-            accessURIs,
-            rewardSupplies
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      });
 
       const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
       const expectedRewardIds: number[] = [];
@@ -208,21 +175,11 @@ describe("Calling 'createAccessNfts'", function () {
     let accessIds: number[];
 
     beforeEach(async () => {
-
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("createAccessNfts", [
-            rewardURIs,
-            accessURIs,
-            rewardSupplies
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      });
 
       nextAccessNftId = parseInt((await accessNft.nextTokenId()).toString());
       const expectedRewardIds: number[] = [];
