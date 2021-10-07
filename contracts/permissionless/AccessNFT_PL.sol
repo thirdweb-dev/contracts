@@ -8,8 +8,9 @@ contract AccessNFT_PL is AccessNFT {
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
+        address _nftWrapper,
         string memory _uri
-    ) AccessNFT(_controlCenter, _trustedForwarder, _uri) {}
+    ) AccessNFT(_controlCenter, _trustedForwarder, _nftWrapper, _uri) {}
 
     /// @dev Ignore MINTER_ROLE
     function hasRole(bytes32 role, address account) public view override returns (bool) {
