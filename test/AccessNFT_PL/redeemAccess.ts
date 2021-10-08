@@ -6,13 +6,15 @@ import { expect } from "chai";
 import { AccessNFTPL } from "../../typechain/AccessNFTPL";
 import { Forwarder } from "../../typechain/Forwarder";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { BytesLike } from "@ethersproject/bytes";
+import { BigNumber } from "ethers";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
-import { getURIs, getAmounts, getAmountBounded } from "../../utils/tests/params";
+import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
-import { BigNumber } from "ethers";
+
 
 describe("Calling 'createAccessNfts'", function () {
   // Signers
@@ -29,6 +31,8 @@ describe("Calling 'createAccessNfts'", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
+  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Redeem Parameters
   const amountToRedeeem: number = 1;
@@ -57,7 +61,7 @@ describe("Calling 'createAccessNfts'", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
     });
   });
 
@@ -67,16 +71,16 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("redeemAccess", [rewardId, amountToRedeeem]),
+        data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
       });
 
-      await expect(accessNft.connect(creator).redeemAccess(accessId, 1)).to.be.revertedWith(
+      await expect(accessNft.connect(creator).redeemToken(accessId, 1)).to.be.revertedWith(
         "AccessNFT: This token is not redeemable for access.",
       );
     });
 
     it("Should revert if caller owns no redeemable token", async () => {
-      await expect(accessNft.connect(fan).redeemAccess(rewardId, 1)).to.be.revertedWith(
+      await expect(accessNft.connect(fan).redeemToken(rewardId, 1)).to.be.revertedWith(
         "AccessNFT: Cannot redeem more NFTs than owned.",
       );
     });
@@ -95,7 +99,7 @@ describe("Calling 'createAccessNfts'", function () {
         await ethers.provider.send("evm_mine", []);
       }
 
-      await expect(accessNft.connect(creator).redeemAccess(rewardId, 1)).to.be.revertedWith(
+      await expect(accessNft.connect(creator).redeemToken(rewardId, 1)).to.be.revertedWith(
         "AccessNFT: Window to redeem access has closed.",
       );
     });
@@ -138,7 +142,7 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(fan, forwarder, relayer, {
         from: fan.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("redeemAccess", [rewardId, amountToRedeeem]),
+        data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
       });
 
       try {
@@ -172,7 +176,7 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(fan, forwarder, relayer, {
         from: fan.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("redeemAccess", [rewardId, amountToRedeeem]),
+        data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
       });
 
       expect(await accessNft.balanceOf(fan.address, rewardId)).to.equal(0);
@@ -187,7 +191,7 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(fan, forwarder, relayer, {
         from: fan.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("redeemAccess", [rewardId, amountToRedeeem]),
+        data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
       });
 
       const contractBalanceOfAccessAfter: BigNumber = await accessNft.balanceOf(accessNft.address, accessId);

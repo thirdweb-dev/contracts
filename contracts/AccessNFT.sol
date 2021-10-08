@@ -13,7 +13,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-interface NFTWrapper {
+interface INFTWrapper {
 
     /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.
     function wrapERC721(
@@ -48,7 +48,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ProtocolControl internal controlCenter;
 
     /// @dev Trusted NFT wrapper
-    NFTWrapper internal nftWrapper;
+    INFTWrapper internal nftWrapper;
 
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
@@ -154,7 +154,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         _contractURI = _uri;
 
         // Set NFTWrapper
-        nftWrapper = NFTWrapper(_nftWrapper);
+        nftWrapper = INFTWrapper(_nftWrapper);
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());

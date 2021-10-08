@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { chainlinkVars } from "../../utils/chainlink";
-import { Contract, ContractFactory } from "ethers";
+import { ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { AccessNFTPL } from "../../typechain/AccessNFTPL";
@@ -8,6 +8,7 @@ import { Coin } from "../../typechain/Coin";
 import { PackPL } from "../../typechain/PackPL";
 import { Market } from "../../typechain/Market";
 import { Forwarder } from "../../typechain/Forwarder";
+import { NFTWrapper } from "../../typechain/NFTWrapper";
 import { ProtocolControl } from "../../typechain/ProtocolControl";
 
 export type Contracts = {
@@ -17,12 +18,17 @@ export type Contracts = {
   coin: Coin;
   pack: PackPL;
   market: Market;
+  nftWrapper: NFTWrapper;
 };
 
 export async function getContracts(deployer: SignerWithAddress, networkName: string): Promise<Contracts> {
   // Deploy Forwarder
   const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder");
   const forwarder: Forwarder = (await Forwarder_Factory.deploy()) as Forwarder;
+
+  // Deploy NFTWrapper
+  const NFTWrapper_Factory: ContractFactory = await ethers.getContractFactory("NFTWrapper");
+  const nftWrapper: NFTWrapper = await NFTWrapper_Factory.deploy() as NFTWrapper;
 
   // Deploy ProtocolControl
 
@@ -71,6 +77,7 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
   const accessNft: AccessNFTPL = (await AccessNFT_Factory.deploy(
     protocolControl.address,
     forwarder.address,
+    nftWrapper.address,
     accessNFTContractURI,
   )) as AccessNFTPL;
 
@@ -95,5 +102,6 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
     market,
     accessNft,
     coin,
+    nftWrapper
   };
 }

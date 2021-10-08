@@ -6,6 +6,7 @@ import { expect } from "chai";
 import { AccessNFTPL } from "../../typechain/AccessNFTPL";
 import { Forwarder } from "../../typechain/Forwarder";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { BytesLike } from "@ethersproject/bytes";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
@@ -27,6 +28,8 @@ describe("Calling 'createAccessNfts'", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
+  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Network
   const networkName = "rinkeby";
@@ -50,26 +53,26 @@ describe("Calling 'createAccessNfts'", function () {
   describe("Revert", function () {
     it("Should revert if unequal number of URIs and supplies are provided", async () => {
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies),
+        accessNft.connect(creator).createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies, zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies),
+        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies, zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1)),
+        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1), zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
     });
 
     it("Should revert if no NFTs are to be created", async () => {
-      await expect(accessNft.connect(creator).createAccessNfts([], [], [])).to.be.revertedWith(
+      await expect(accessNft.connect(creator).createAccessNfts([], [], [], zeroAddress, emptyData)).to.be.revertedWith(
         "AccessNFT: Must create at least one NFT.",
       );
     });
 
     it("Should not revert if caller does not have MINTER_ROLE", async () => {
-      await expect(accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies)).to.not.be
+      await expect(accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData)).to.not.be
         .reverted;
     });
   });
@@ -119,7 +122,7 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
       });
 
       await eventPromise;
@@ -134,7 +137,7 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
       });
 
       const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
@@ -178,7 +181,7 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
       });
 
       nextAccessNftId = parseInt((await accessNft.nextTokenId()).toString());
@@ -207,7 +210,7 @@ describe("Calling 'createAccessNfts'", function () {
         const rewardInfo = await accessNft.tokenState(rewardIds[i]);
         expect(rewardInfo.uri).to.equal(rewardURIs[i]);
         expect(rewardInfo.creator).to.equal(creator.address);
-        expect(rewardInfo.isAccess).to.equal(false);
+        expect(rewardInfo.isRedeemable).to.equal(true);
         expect(rewardInfo.underlyingType).to.equal(0);
 
         expect(await accessNft.totalSupply(rewardIds[i])).to.equal(rewardSupplies[i]);
@@ -215,7 +218,7 @@ describe("Calling 'createAccessNfts'", function () {
         const acessNftInfo = await accessNft.tokenState(accessIds[i]);
         expect(acessNftInfo.uri).to.equal(accessURIs[i]);
         expect(acessNftInfo.creator).to.equal(creator.address);
-        expect(acessNftInfo.isAccess).to.equal(true);
+        expect(acessNftInfo.isRedeemable).to.equal(false);
         expect(acessNftInfo.underlyingType).to.equal(0);
 
         expect(await accessNft.totalSupply(accessIds[i])).to.equal(rewardSupplies[i]);

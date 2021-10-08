@@ -29,6 +29,8 @@ describe("Token transfers under various conditions", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
+  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Redeem Parameters
   const amountToRedeeem: number = 1;
@@ -57,14 +59,14 @@ describe("Token transfers under various conditions", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
     });
 
     // Redeem access NFT: creator
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("redeemAccess", [rewardId, amountToRedeeem]),
+      data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
     });
   });
 
