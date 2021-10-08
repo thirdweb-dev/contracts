@@ -81,7 +81,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
         string[] calldata _nftURIs
     ) 
         external 
-        returns (uint[] memory tokenIds, uint256 endTokenId)
+        returns (uint[] memory tokenIds, uint[] memory tokenAmountsToMint, uint256 endTokenId)
     {
 
         require(
@@ -97,6 +97,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
         // Get tokenId
         endTokenId = startTokenId;
         tokenIds = new uint[](_nftContracts.length);
+        tokenAmountsToMint = new uint[](_nftContracts.length);
 
         for(uint i = 0; i < _nftContracts.length; i += 1) {
 
@@ -116,6 +117,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
                 // Update id
                 tokenIds[i] = endTokenId;
+                tokenAmountsToMint[i] = 1;
                 endTokenId += 1;
 
                 emit ERC721WrappedToken(_tokenCreator, _nftContracts[i], _tokenIds[i], endTokenId, _nftURIs[i]);

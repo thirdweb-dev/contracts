@@ -23,7 +23,7 @@ interface INFTWrapper {
         uint256[] memory _tokenIds,
         string[] calldata _nftURIs
     
-    ) external returns (uint[] memory tokenIds, uint256 endTokenId);
+    ) external returns (uint[] memory tokenIds, uint[] memory tokenAmountsToMint, uint256 endTokenId);
 
     /// @dev Wraps ERC20 tokens as ERC1155 NFTs.
     function wrapERC20(
@@ -287,7 +287,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         address tokenCreator = _msgSender();
 
-        (uint[] memory tokenIds, uint endTokenId) = nftWrapper.wrapERC721(
+        (uint[] memory tokenIds, uint[] memory tokenAmountsToMint, uint endTokenId) = nftWrapper.wrapERC721(
             nextTokenId, 
             tokenCreator, 
             _nftContracts, 
@@ -297,6 +297,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         // Update contract level tokenId
         nextTokenId = endTokenId;
+
+        // Mint tokens
+        _mintBatch(tokenCreator, tokenIds, tokenAmountsToMint, "");
 
         for(uint i = 0; i < tokenIds.length; i += 1) {
             // Store wrapped NFT state.
@@ -331,6 +334,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         // Update contract level tokenId
         nextTokenId = endTokenId;
+
+        // Mint tokens
+        _mintBatch(tokenCreator, tokenIds, _numOfNftsToMint, "");
 
         for(uint i = 0; i < tokenIds.length; i += 1) {
             // Store wrapped NFT state.

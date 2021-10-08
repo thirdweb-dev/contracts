@@ -4,6 +4,7 @@ import { ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { AccessNFTPL } from "../../typechain/AccessNFTPL";
+import { NFT } from "../../typechain/NFT";
 import { Coin } from "../../typechain/Coin";
 import { PackPL } from "../../typechain/PackPL";
 import { Market } from "../../typechain/Market";
@@ -19,6 +20,7 @@ export type Contracts = {
   pack: PackPL;
   market: Market;
   nftWrapper: NFTWrapper;
+  nft: NFT;
 };
 
 export async function getContracts(deployer: SignerWithAddress, networkName: string): Promise<Contracts> {
@@ -81,6 +83,16 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
     accessNFTContractURI,
   )) as AccessNFTPL;
 
+  // Get NFT contract
+  const NFT_Factory: ContractFactory = await ethers.getContractFactory("NFT");
+  const nft: NFT = await NFT_Factory.deploy(
+    protocolControl.address,
+    "name",
+    "SYMBOL",
+    forwarder.address,
+    "ipfs://base_uri"
+  ) as NFT;
+
   // Deploy Coin
   const coinName = "";
   const coinSymbol = "";
@@ -102,6 +114,7 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
     market,
     accessNft,
     coin,
-    nftWrapper
+    nftWrapper,
+    nft
   };
 }
