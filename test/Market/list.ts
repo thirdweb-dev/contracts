@@ -7,14 +7,15 @@ import { AccessNFTPL } from "../../typechain/AccessNFTPL";
 import { Market } from "../../typechain/Market";
 import { Coin } from "../../typechain/Coin";
 import { BigNumber } from "ethers";
+import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Forwarder } from "../../typechain/Forwarder";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
-import { Forwarder } from "../../typechain/Forwarder";
 
 describe("List token for sale", function () {
   // Signers
@@ -32,6 +33,8 @@ describe("List token for sale", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
+  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Token IDs
   let rewardId: number = 1;
@@ -67,7 +70,7 @@ describe("List token for sale", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
     });
   });
 
