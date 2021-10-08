@@ -51,20 +51,22 @@ describe("VRF fulfills a randomness request", function () {
 
   const createPack = async (
     _packCreator: SignerWithAddress,
-    _rewardIds: number[],
+    _rewardURIs: string[],
+    _accessURIs: string[],
     _rewardAmounts: number[],
+    _packAddress: string,
     _encodedParamsAsData: BytesLike,
   ) => {
     await sendGaslessTx(_packCreator, forwarder, relayer, {
       from: _packCreator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
-        _packCreator.address,
-        pack.address,
-        _rewardIds,
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        _rewardURIs,
+        _accessURIs,
         _rewardAmounts,
+        _packAddress,
         _encodedParamsAsData,
-      ]),
+      ])
     });
   };
 
@@ -124,15 +126,18 @@ describe("VRF fulfills a randomness request", function () {
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
 
-    // Create Access NFTs as rewards
-    await sendGaslessTx(creator, forwarder, relayer, {
-      from: creator.address,
-      to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
-    });
-
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
+
+    // Create packs
+    await createPack(
+      creator,
+      rewardURIs,
+      accessURIs,
+      rewardSupplies,
+      pack.address,
+      encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+    );
 
     // Get rewardIds
     const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
@@ -144,14 +149,6 @@ describe("VRF fulfills a randomness request", function () {
     }
 
     rewardIds = expectedRewardIds;
-
-    // Create packs
-    await createPack(
-      creator,
-      rewardIds,
-      rewardSupplies,
-      encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
-    );
 
     // Fund pack contract with LINK
     await fundPack();

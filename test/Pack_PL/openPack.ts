@@ -39,27 +39,28 @@ describe("Open a pack", function () {
 
   // Token IDs
   let packId: number;
-  let rewardIds: number[];
 
   // Network
   const networkName = "rinkeby";
 
   const createPack = async (
     _packCreator: SignerWithAddress,
-    _rewardIds: number[],
+    _rewardURIs: string[],
+    _accessURIs: string[],
     _rewardAmounts: number[],
+    _packAddress: string,
     _encodedParamsAsData: BytesLike,
   ) => {
     await sendGaslessTx(_packCreator, forwarder, relayer, {
       from: _packCreator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
-        _packCreator.address,
-        pack.address,
-        _rewardIds,
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        _rewardURIs,
+        _accessURIs,
         _rewardAmounts,
+        _packAddress,
         _encodedParamsAsData,
-      ]),
+      ])
     });
   };
 
@@ -103,26 +104,8 @@ describe("Open a pack", function () {
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
 
-    // Create Access NFTs as rewards
-    await sendGaslessTx(creator, forwarder, relayer, {
-      from: creator.address,
-      to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
-    });
-
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
-
-    // Get rewardIds
-    const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
-    const expectedRewardIds: number[] = [];
-    for (let val of [...Array(nextAccessNftId).keys()]) {
-      if (val % 2 != 0) {
-        expectedRewardIds.push(val);
-      }
-    }
-
-    rewardIds = expectedRewardIds;
   });
 
   describe("Revert cases", function () {
@@ -132,8 +115,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, secondsUntilOpenEnd, rewardsPerOpen),
       );
 
@@ -151,8 +136,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
@@ -165,8 +152,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
@@ -182,8 +171,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
@@ -203,8 +194,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
@@ -245,8 +238,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
@@ -274,8 +269,10 @@ describe("Open a pack", function () {
       // Create packs
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 

@@ -36,27 +36,28 @@ describe("Create a pack with rewards", function () {
 
   // Token IDs
   let packId: number;
-  let rewardIds: number[];
 
   // Network
   const networkName = "rinkeby";
 
   const createPack = async (
     _packCreator: SignerWithAddress,
-    _rewardIds: number[],
+    _rewardURIs: string[],
+    _accessURIs: string[],
     _rewardAmounts: number[],
+    _packAddress: string,
     _encodedParamsAsData: BytesLike,
   ) => {
     await sendGaslessTx(_packCreator, forwarder, relayer, {
       from: _packCreator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("safeBatchTransferFrom", [
-        _packCreator.address,
-        pack.address,
-        _rewardIds,
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        _rewardURIs,
+        _accessURIs,
         _rewardAmounts,
+        _packAddress,
         _encodedParamsAsData,
-      ]),
+      ])
     });
   };
 
@@ -88,26 +89,8 @@ describe("Create a pack with rewards", function () {
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
 
-    // Create Access NFTs as rewards
-    await sendGaslessTx(creator, forwarder, relayer, {
-      from: creator.address,
-      to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
-    });
-
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
-
-    // Get rewardIds
-    const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
-    const expectedRewardIds: number[] = [];
-    for (let val of [...Array(nextAccessNftId).keys()]) {
-      if (val % 2 != 0) {
-        expectedRewardIds.push(val);
-      }
-    }
-
-    rewardIds = expectedRewardIds;
   });
 
   describe("Revert", function () {
@@ -115,11 +98,11 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .safeBatchTransferFrom(
-            creator.address,
-            pack.address,
-            rewardIds.slice(1),
+          .createAccessNfts(                        
+            rewardURIs.slice(1),
+            accessURIs,            
             rewardSupplies,
+            pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.be.reverted;
@@ -127,11 +110,11 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .safeBatchTransferFrom(
-            creator.address,
+          .createAccessNfts(                        
+            rewardURIs,
+            accessURIs.slice(1),            
+            rewardSupplies,
             pack.address,
-            rewardIds,
-            rewardSupplies.slice(1),
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.be.reverted;
@@ -141,11 +124,11 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .safeBatchTransferFrom(
-            creator.address,
+          .createAccessNfts(                        
+            [],
+            [],            
+            [],
             pack.address,
-            [],
-            [],
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.be.reverted;
@@ -155,11 +138,11 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .safeBatchTransferFrom(
-            creator.address,
-            pack.address,
-            rewardIds,
+          .createAccessNfts(                        
+            rewardURIs,
+            accessURIs,            
             rewardSupplies,
+            pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.not.be.reverted;
@@ -171,11 +154,11 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .safeBatchTransferFrom(
-            creator.address,
-            pack.address,
-            rewardIds,
+          .createAccessNfts(                        
+            rewardURIs,
+            accessURIs,            
             rewardSupplies,
+            pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, invalidRewardsPerOpen),
           ),
       ).to.be.revertedWith("Pack: invalid number of rewards per open.");
@@ -206,13 +189,15 @@ describe("Create a pack with rewards", function () {
 
         setTimeout(() => {
           reject(new Error("Timeout: PackCreated"));
-        }, 10000);
+        }, 5000);
       });
 
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
 
@@ -221,13 +206,29 @@ describe("Create a pack with rewards", function () {
   });
 
   describe("Balances", async () => {
+
+    let rewardIds: number[];
+
     beforeEach(async () => {
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
+
+      // Get rewardIds
+      const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
+      const expectedRewardIds: number[] = [];
+      for (let val of [...Array(nextAccessNftId).keys()]) {
+        if (val % 2 != 0) {
+          expectedRewardIds.push(val);
+        }
+      }
+
+      rewardIds = expectedRewardIds;
     });
 
     it("Should mint all unredeemed access NFTs to the pack contract", async () => {
@@ -246,13 +247,28 @@ describe("Create a pack with rewards", function () {
   });
 
   describe("Contract state", function () {
+    let rewardIds: number[];
+
     beforeEach(async () => {
       await createPack(
         creator,
-        rewardIds,
+        rewardURIs,
+        accessURIs,
         rewardSupplies,
+        pack.address,
         encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
       );
+
+      // Get rewardIds
+      const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
+      const expectedRewardIds: number[] = [];
+      for (let val of [...Array(nextAccessNftId).keys()]) {
+        if (val % 2 != 0) {
+          expectedRewardIds.push(val);
+        }
+      }
+
+      rewardIds = expectedRewardIds;
     });
 
     it("Should store the state of the packs just created", async () => {
