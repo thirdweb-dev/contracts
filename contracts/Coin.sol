@@ -15,7 +15,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public isRestrictedTransfer;
+    bool public transfersRestricted;
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
@@ -62,7 +62,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
     ) internal override(ERC20PresetMinterPauser) {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (isRestrictedTransfer) {
+        if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
@@ -72,7 +72,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
 
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
-        isRestrictedTransfer = _restrictedTransfer;
+        transfersRestricted = _restrictedTransfer;
     }
 
     /// @dev Mints `amount` of coins to `to`.

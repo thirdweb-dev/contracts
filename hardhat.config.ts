@@ -71,7 +71,7 @@ const config: ConfigWithEtherscan = {
       optimizer: {
         enabled: true,
         // runs: 800,
-        runs: 600,
+        runs: 500,
       },
     },
   },
