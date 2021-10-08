@@ -87,6 +87,12 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "packTotalSupply",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "string",

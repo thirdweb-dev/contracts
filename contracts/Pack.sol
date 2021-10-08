@@ -78,6 +78,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         uint256 indexed packId,
         address indexed rewardContract,
         address indexed creator,
+        uint256 packTotalSupply,
         PackState packState,
         Rewards rewards
     );
@@ -344,7 +345,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         // Mint packs to creator.
         _mint(_creator, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _rewardContract, _creator, packState, rewardsInPack);
+        emit PackCreated(packId, _rewardContract, _creator, packTotalSupply, packState, rewardsInPack);
     }
 
     /// @dev Returns a reward tokenId using `_randomness` provided by RNG.
