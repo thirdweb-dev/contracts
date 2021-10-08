@@ -65,7 +65,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
-    /// @dev Whether AccessNFT are transferable.
+    /// @dev Whether AccessNFT (where TokenState.isRedeemable == false) are transferable.
     bool public accessNftIsTransferable;
 
     /// @dev Whether the ERC 1155 token is a wrapped ERC 20 / 721 token.
