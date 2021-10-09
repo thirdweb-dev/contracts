@@ -16,12 +16,14 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 contract NFTWrapper is ERC721Holder, ERC1155Holder {
     /// @dev The state of the underlying ERC 721 token, if any.
     struct ERC721Wrapped {
+        address baseToken;
         address source;
         uint256 tokenId;
     }
 
     /// @dev The state of the underlying ERC 20 token, if any.
     struct ERC20Wrapped {
+        address baseToken;
         address source;
         uint256 shares;
         uint256 underlyingTokenAmount;
@@ -29,6 +31,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
     /// @dev Emitted when ERC 721 wrapped as an ERC 1155 token is minted.
     event ERC721WrappedToken(
+        address indexed baseToken,
         address indexed creator,
         address indexed sourceOfUnderlying,
         uint256 tokenIdOfUnderlying,
@@ -38,6 +41,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
     /// @dev Emitted when an underlying ERC 721 token is redeemed.
     event ERC721Redeemed(
+        address indexed baseToken,
         address indexed redeemer,
         address indexed sourceOfUnderlying,
         uint256 tokenIdOfUnderlying,
@@ -46,6 +50,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
     /// @dev Emitted when ERC 20 wrapped as an ERC 1155 token is minted.
     event ERC20WrappedToken(
+        address indexed baseToken,
         address indexed creator,
         address indexed sourceOfUnderlying,
         uint256 totalAmountOfUnderlying,
@@ -56,9 +61,10 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
     /// @dev Emitted when an underlying ERC 20 token is redeemed.
     event ERC20Redeemed(
+        address indexed baseToken,
         address indexed redeemer,
-        uint256 indexed tokenId,
         address indexed sourceOfUnderlying,
+        uint256 tokenId,
         uint256 tokenAmountReceived,
         uint256 sharesRedeemed
     );
@@ -116,6 +122,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
                 // Map the native NFT tokenId to the underlying NFT
                 erc721WrappedTokens[baseToken][endTokenId] = ERC721Wrapped({
+                    baseToken: baseToken,
                     source: _nftContracts[i],
                     tokenId: _tokenIds[i]
                 });
@@ -125,7 +132,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
                 tokenAmountsToMint[i] = 1;
                 endTokenId += 1;
 
-                emit ERC721WrappedToken(_tokenCreator, _nftContracts[i], _tokenIds[i], endTokenId, _nftURIs[i]);
+                emit ERC721WrappedToken(baseToken, _tokenCreator, _nftContracts[i], _tokenIds[i], endTokenId, _nftURIs[i]);
             } else {
                 break;
             }
@@ -174,6 +181,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
                 // Store wrapped ERC20 token state.
                 erc20WrappedTokens[baseToken][endTokenId] = ERC20Wrapped({
+                    baseToken: baseToken,
                     source: _tokenContracts[i],
                     shares: _numOfNftsToMint[i],
                     underlyingTokenAmount: _tokenAmounts[i]
@@ -184,6 +192,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
                 endTokenId += 1;
 
                 emit ERC20WrappedToken(
+                    baseToken,
                     _tokenCreator,
                     _tokenContracts[i],
                     _tokenAmounts[i],
@@ -212,6 +221,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
         );
 
         emit ERC721Redeemed(
+            baseToken,
             _redeemer,
             erc721WrappedTokens[baseToken][_tokenId].source,
             erc721WrappedTokens[baseToken][_tokenId].tokenId,
@@ -238,9 +248,10 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
         );
 
         emit ERC20Redeemed(
-            _redeemer,
-            _tokenId,
+            baseToken,
+            _redeemer,            
             erc20WrappedTokens[baseToken][_tokenId].source,
+            _tokenId,
             amountToDistribute,
             _amount
         );
