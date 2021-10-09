@@ -10,20 +10,26 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "redeemer",
+        "name": "baseToken",
         "type": "address"
       },
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
         "name": "sourceOfUnderlying",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -44,6 +50,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "baseToken",
+        "type": "address"
+      },
       {
         "indexed": true,
         "internalType": "address",
@@ -90,6 +102,12 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "baseToken",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "redeemer",
         "type": "address"
       },
@@ -118,6 +136,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "baseToken",
+        "type": "address"
+      },
       {
         "indexed": true,
         "internalType": "address",
@@ -169,6 +193,11 @@
     "outputs": [
       {
         "internalType": "address",
+        "name": "baseToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "source",
         "type": "address"
       },
@@ -201,6 +230,11 @@
     ],
     "name": "erc721WrappedTokens",
     "outputs": [
+      {
+        "internalType": "address",
+        "name": "baseToken",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "source",

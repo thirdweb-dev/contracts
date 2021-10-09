@@ -1,19 +1,21 @@
 {
   "mumbai": {
-    "protocolControl": "0xe5c05a42478591516E6fd92B8D4d7812BC7a6166",
-    "pack": "0xf159C4052c9D846881E2e8D76e864bD56C20260b",
-    "market": "0x6c8F185EB8Ba93d30B2976D03DCA496D51A7ED21",
+    "protocolControl": "0x53975617f305fA0e6f29fd0870C32ad38ee6bD70",
+    "pack": "0x1b2812ba4fD7eCdfE357e93749d31B6C86B8063d",
+    "market": "0x66c132Fcd9bE13C48821486e27Dc19146056c3a1",
     "nft": "",
     "coin": "",
-    "accessNft": "0x5Eac339651C18012238a3F89f63F70C2ec21A7B2",
-    "forwarder": "0x10A40362A24f11e4C9e1Dd288b00A55B95b2F807"
+    "accessNft": "0xB056F10C3c44809c39B447462E48130d288FCc59",
+    "forwarder": "0x074048E2A7Df00F32563e7448A50769aAe735948",
+    "nftWrapper": "0x873c3e90f0dE5712FC0f5DDba2c4a08Ec4C40c36"
   },
   "polygon": {
     "protocolControl": "0x389a2b24B3eDc8649083eAC2A82598D131F0f237",
     "forwarder": "0xE4b2DD52566ED7057dB565B1FEaEEBAf27470D89",
     "pack": "0x8882Bf2DE48E129094b8e26d208a5Cb2D8642f58",
     "market": "0xc63D5b5FD4a028992B7Ca9389DF0D8E442A817D0",
-    "accessNft": "0x5FD7De3f1633434BE38B0b810187fc02fb1090B9"
+    "accessNft": "0x5FD7De3f1633434BE38B0b810187fc02fb1090B9",
+    "nftWrapper": ""
   },
   "rinkeby": {
     "protocolControl": "",
@@ -22,7 +24,8 @@
     "nft": "",
     "coin": "",
     "accessNft": "",
-    "forwarder": ""
+    "forwarder": "",
+    "nftWrapper": ""
   },
   "mainnet": {
     "protocolControl": "",
@@ -31,7 +34,8 @@
     "nft": "",
     "coin": "",
     "accessNft": "",
-    "forwarder": ""
+    "forwarder": "",
+    "nftWrapper": ""
   },
   "localhost": {
     "protocolControl": "",
@@ -40,6 +44,7 @@
     "nft": "",
     "coin": "",
     "accessNft": "",
-    "forwarder": ""
+    "forwarder": "",
+    "nftWrapper": ""
   }
 }

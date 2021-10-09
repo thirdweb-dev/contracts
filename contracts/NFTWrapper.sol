@@ -132,7 +132,14 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
                 tokenAmountsToMint[i] = 1;
                 endTokenId += 1;
 
-                emit ERC721WrappedToken(baseToken, _tokenCreator, _nftContracts[i], _tokenIds[i], endTokenId, _nftURIs[i]);
+                emit ERC721WrappedToken(
+                    baseToken,
+                    _tokenCreator,
+                    _nftContracts[i],
+                    _tokenIds[i],
+                    endTokenId,
+                    _nftURIs[i]
+                );
             } else {
                 break;
             }
@@ -249,7 +256,7 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
         emit ERC20Redeemed(
             baseToken,
-            _redeemer,            
+            _redeemer,
             erc20WrappedTokens[baseToken][_tokenId].source,
             _tokenId,
             amountToDistribute,

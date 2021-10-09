@@ -26,97 +26,103 @@ async function main(): Promise<void> {
 
   console.log(`Deploying Forwarder: ${forwarder.address} at tx hash: ${forwarder.deployTransaction.hash}`);
 
+  // Deploy NFTWrapper
+  const NFTWrapper_Factory: ContractFactory = await ethers.getContractFactory("NFTWrapper");
+  const nftWrapper: Contract = await NFTWrapper_Factory.deploy();
+
   await forwarder.deployed();
 
-  //   // Deploy ProtocolControl
+  // Deploy ProtocolControl
 
-  //   const admin = deployer.address;
-  //   const protocolProvider = deployer.address;
-  //   const providerTreasury = deployer.address;
-  //   const protocolControlURI: string = "";
+  const admin = deployer.address;
+  const protocolProvider = deployer.address;
+  const providerTreasury = deployer.address;
+  const protocolControlURI: string = "";
 
-  //   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  //   const protocolControl: Contract = await ProtocolControl_Factory.deploy(
-  //     admin,
-  //     protocolProvider,
-  //     providerTreasury,
-  //     protocolControlURI,
-  //   );
+  const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
+  const protocolControl: Contract = await ProtocolControl_Factory.deploy(
+    admin,
+    protocolProvider,
+    providerTreasury,
+    protocolControlURI,
+  );
 
-  //   console.log(
-  //     `Deploying ProtocolControl: ${protocolControl.address} at tx hash: ${protocolControl.deployTransaction.hash}`,
-  //   );
+  console.log(
+    `Deploying ProtocolControl: ${protocolControl.address} at tx hash: ${protocolControl.deployTransaction.hash}`,
+  );
 
-  //   await protocolControl.deployed();
+  await protocolControl.deployed();
 
-  //   // Deploy Pack
-  //   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
-  //   const packContractURI: string = "";
+  // Deploy Pack
+  const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
+  const packContractURI: string = "";
 
-  //   const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack_PL");
-  //   const pack: Contract = await Pack_Factory.deploy(
-  //     protocolControl.address,
-  //     packContractURI,
-  //     vrfCoordinator,
-  //     linkTokenAddress,
-  //     keyHash,
-  //     fees,
-  //     forwarder.address,
-  //   );
+  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
+  const pack: Contract = await Pack_Factory.deploy(
+    protocolControl.address,
+    packContractURI,
+    vrfCoordinator,
+    linkTokenAddress,
+    keyHash,
+    fees,
+    forwarder.address,
+  );
 
-  //   console.log(`Deploying Pack: ${pack.address} at tx hash: ${pack.deployTransaction.hash}`);
+  console.log(`Deploying Pack: ${pack.address} at tx hash: ${pack.deployTransaction.hash}`);
 
-  //   await pack.deployed();
+  await pack.deployed();
 
-  //   const addModuleTxPack = await protocolControl.addModule(pack.address, ModuleType.Pack);
-  //   await addModuleTxPack.wait();
+  const addModuleTxPack = await protocolControl.addModule(pack.address, ModuleType.Pack);
+  await addModuleTxPack.wait();
 
-  //   // Deploy Market
-  //   const marketContractURI: string = "";
+  // Deploy Market
+  const marketContractURI: string = "";
 
-  //   const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  //   const market: Contract = await Market_Factory.deploy(protocolControl.address, forwarder.address, marketContractURI);
+  const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
+  const market: Contract = await Market_Factory.deploy(protocolControl.address, forwarder.address, marketContractURI);
 
-  //   console.log(`Deploying Market: ${market.address} at tx hash: ${market.deployTransaction.hash}`);
+  console.log(`Deploying Market: ${market.address} at tx hash: ${market.deployTransaction.hash}`);
 
-  //   await market.deployed();
+  await market.deployed();
 
-  //   const addModuleTxMarket = await protocolControl.addModule(market.address, ModuleType.Market);
-  //   await addModuleTxMarket.wait();
+  const addModuleTxMarket = await protocolControl.addModule(market.address, ModuleType.Market);
+  await addModuleTxMarket.wait();
 
-  //   // Deploy AccessNFT
-  //   const accessNFTContractURI: string = "";
+  // Deploy AccessNFT
+  const accessNFTContractURI: string = "";
 
-  //   const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT_PL");
-  //   const accessNft: Contract = await AccessNFT_Factory.deploy(
-  //     protocolControl.address,
-  //     forwarder.address,
-  //     accessNFTContractURI,
-  //   );
+  const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT");
+  const accessNft: Contract = await AccessNFT_Factory.deploy(
+    protocolControl.address,
+    forwarder.address,
+    nftWrapper.address,
+    accessNFTContractURI,
+  );
 
-  //   console.log(`Deploying AccessNFT: ${accessNft.address} at tx hash: ${accessNft.deployTransaction.hash}`);
+  console.log(`Deploying AccessNFT: ${accessNft.address} at tx hash: ${accessNft.deployTransaction.hash}`);
 
-  //   await accessNft.deployed();
+  await accessNft.deployed();
 
-  //   const addModuleTxAccess = await protocolControl.addModule(accessNft.address, ModuleType.AccessNFT);
-  //   await addModuleTxAccess.wait();
+  const addModuleTxAccess = await protocolControl.addModule(accessNft.address, ModuleType.AccessNFT);
+  await addModuleTxAccess.wait();
 
-  //   // Update contract addresses in `/utils`
-  //   const updatedAddresses = {
-  //     ...addresses,
+  // Update contract addresses in `/utils`
+  const updatedAddresses = {
+    ...addresses,
 
-  //     [networkName]: {
-  //       ...curentNetworkAddreses,
+    [networkName]: {
+      ...curentNetworkAddreses,
 
-  //       protocolControl: protocolControl.address,
-  //       forwarder: forwarder.address,
-  //       pack: pack.address,
-  //       market: market.address,
-  //       accessNft: accessNft.address,
-  //     },
-  //   };
+      protocolControl: protocolControl.address,
+      forwarder: forwarder.address,
+      nftWrapper: nftWrapper.address,
+      pack: pack.address,
+      market: market.address,
+      accessNft: accessNft.address,
+    },
+  };
 
-  //   fs.writeFileSync(path.join(__dirname, "../../utils/addresses/accesspacks.json"), JSON.stringify(updatedAddresses));
+  fs.writeFileSync(path.join(__dirname, "../../utils/addresses/accesspacks.json"), JSON.stringify(updatedAddresses));
 }
 
 main()
