@@ -441,14 +441,14 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = controlCenter.ownerTreasury();
+        receiver = packs[tokenId].creator;
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
