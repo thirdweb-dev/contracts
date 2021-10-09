@@ -26,7 +26,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "Coin: only a protocol admin can call this function."
         );
         _;

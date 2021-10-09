@@ -3,93 +3,107 @@ pragma solidity ^0.8.0;
 
 // CREATE2 -- contract deployment.
 import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Protocol Components
+import { IControlDeployer } from "./interfaces/IControlDeployer.sol";
 import { Forwarder } from "./Forwarder.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Registry is Ownable {
-    // NFTLabs admin signer
-    address public providerAdmin;
-    address public providerTreasury;
+contract Registry is Context, Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
+    uint256 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
+    uint256 public defaultFeeBps = 500; // 5%
+
+    mapping(address => uint256) controlFeeBps;
+
+    // service provider / admin treasury
+    address public treasury;
 
     // `Forwarder` for meta-transacitons
     address public forwarder;
 
-    struct ControlCenters {
-        // Total number of versions
-        uint256 latestVersion;
-        // Version number => protocol control center address
-        mapping(uint256 => address) protocolControl;
-    }
+    IControlDeployer public deployer;
 
     // Mapping from app deployer => app address.
-    mapping(address => ControlCenters) public controlCenters;
+    mapping(address => EnumerableSet.AddressSet) private _protocolControls;
+    mapping(address => uint256) public protocolControlFeeBps;
 
-    // Emitted on protocol deployment
-    event DeployedProtocol(address indexed deployer, address indexed protocolControl, uint256 version);
-    // Emitted in constructor
-    event DeployedForwarder(address forwarder);
-    // Emitted when the NFTLabs admin signer is updated
-    event UpdatedProviderAdmin(address prevAdmin, address newAdmin);
-    event UpdatedProviderTreasury(address prevTreasury, address newTreasury);
+    // Emitted when the treasury is updated
+    event TreasuryUpdated(address newTreasury);
 
-    constructor(address _admin, address _treasury) {
-        providerAdmin = _admin;
-        providerTreasury = _treasury;
+    event DeployerUpdated(address newDeployer);
 
-        // Deploy forwarder for meta-transactions
-        bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
-        bytes memory forwarderByteCode = abi.encodePacked(type(Forwarder).creationCode);
-        forwarder = Create2.deploy(0, salt, forwarderByteCode);
+    // Emitted on fees updates
+    event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
+    event ProtocolControlFeeBpsUpdated(address indexed control, uint256 defaultFeeBps);
 
-        emit DeployedForwarder(forwarder);
+    constructor(
+        address _treasury,
+        address _forwarder,
+        address _deployer
+    ) {
+        treasury = _treasury;
+        forwarder = _forwarder;
+        deployer = IControlDeployer(_deployer);
     }
 
-    /// @dev Deploys the control center, pack and market components of the protocol.
-    function deployProtocol(string memory _protocolControlURI) external {
-        bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
+    function deployProtocol(string memory uri) external {
+        uint256 currentIndex = _protocolControls[_msgSender()].length();
 
-        // Deploy `ProtocolControl`
-        bytes memory protocolControlByteCode = abi.encodePacked(
-            type(ProtocolControl).creationCode,
-            abi.encode(msg.sender, providerAdmin, providerTreasury, _protocolControlURI)
-        );
+        address controlAddress = deployer.deployControl(address(this), currentIndex, _msgSender(), uri);
 
-        address protocolControlAddr = Create2.deploy(0, salt, protocolControlByteCode);
-
-        uint256 currentVersion = controlCenters[msg.sender].latestVersion;
-        controlCenters[msg.sender].protocolControl[currentVersion] = protocolControlAddr;
-        controlCenters[msg.sender].latestVersion += 1;
-
-        emit DeployedProtocol(msg.sender, protocolControlAddr, currentVersion);
-    }
-
-    /// @dev Lets the owner of the contract update the NFTLabs admin signer
-    function setProviderAdmin(address _newAdminSigner) external onlyOwner {
-        address prevAdmin = providerAdmin;
-        providerAdmin = _newAdminSigner;
-
-        emit UpdatedProviderAdmin(prevAdmin, _newAdminSigner);
-    }
-
-    function setProviderTreasury(address _newTreasury) external onlyOwner {
-        address prevTreasury = providerTreasury;
-        providerTreasury = _newTreasury;
-
-        emit UpdatedProviderTreasury(prevTreasury, _newTreasury);
+        _protocolControls[_msgSender()].add(controlAddress);
     }
 
     /// @dev Returns the latest version of protocol control
-    function getLatestVersion(address _protocolDeployer) external view returns (uint256) {
-        return controlCenters[_protocolDeployer].latestVersion;
+    function getProtocolControlCount(address deployer) external view returns (uint256) {
+        return _protocolControls[deployer].length();
     }
 
     /// @dev Returns the protocol control address for the given version
-    function getProtocolControl(address _protocolDeployer, uint256 _version) external view returns (address) {
-        return controlCenters[_protocolDeployer].protocolControl[_version];
+    function getProtocolControl(address deployer, uint256 index) external view returns (address) {
+        return _protocolControls[deployer].at(index);
+    }
+
+    function setDeployer(address _newDeployer) external onlyOwner {
+        deployer = IControlDeployer(_newDeployer);
+
+        emit DeployerUpdated(_newDeployer);
+    }
+
+    function setTreasury(address _newTreasury) external onlyOwner {
+        treasury = _newTreasury;
+
+        emit TreasuryUpdated(_newTreasury);
+    }
+
+    function setDefaultFeeBps(uint256 _newFeeBps) external onlyOwner {
+        require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "Registry: provider fee cannot be greater than 10%");
+
+        defaultFeeBps = _newFeeBps;
+
+        emit DefaultFeeBpsUpdated(_newFeeBps);
+    }
+
+    function setProtocolControlFeeBps(address protocolControl, uint256 _newFeeBps) external onlyOwner {
+        require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "Registry: provider fee cannot be greater than 10%");
+
+        protocolControlFeeBps[protocolControl] = _newFeeBps;
+
+        emit ProtocolControlFeeBpsUpdated(protocolControl, _newFeeBps);
+    }
+
+    function getFeeBps(address protocolControl) external view returns (uint256) {
+        uint256 fees = protocolControlFeeBps[protocolControl];
+        if (fees == 0) {
+            return defaultFeeBps;
+        }
+        return fees;
     }
 }

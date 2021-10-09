@@ -48,7 +48,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "NFT: only a protocol admin can call this function."
         );
         _;
@@ -133,10 +133,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(
-            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()),
-            "NFT: Bps provided must be less than 9,000"
-        );
+        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -182,7 +179,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = controlCenter.ownerTreasury();
+        receiver = controlCenter.getRoyaltyTreasury(address(this));
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 

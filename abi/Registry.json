@@ -3,12 +3,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_admin",
+        "name": "_treasury",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_treasury",
+        "name": "_forwarder",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_deployer",
         "type": "address"
       }
     ],
@@ -20,37 +25,25 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "forwarder",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "defaultFeeBps",
+        "type": "uint256"
       }
     ],
-    "name": "DeployedForwarder",
+    "name": "DefaultFeeBpsUpdated",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "deployer",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "protocolControl",
-        "type": "address"
-      },
-      {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "version",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "newDeployer",
+        "type": "address"
       }
     ],
-    "name": "DeployedProtocol",
+    "name": "DeployerUpdated",
     "type": "event"
   },
   {
@@ -76,19 +69,19 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "prevAdmin",
+        "name": "control",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "newAdmin",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "defaultFeeBps",
+        "type": "uint256"
       }
     ],
-    "name": "UpdatedProviderAdmin",
+    "name": "ProtocolControlFeeBpsUpdated",
     "type": "event"
   },
   {
@@ -97,32 +90,33 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "prevTreasury",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "newTreasury",
         "type": "address"
       }
     ],
-    "name": "UpdatedProviderTreasury",
+    "name": "TreasuryUpdated",
     "type": "event"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "controlCenters",
+    "inputs": [],
+    "name": "MAX_PROVIDER_FEE_BPS",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "latestVersion",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultFeeBps",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -133,13 +127,26 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_protocolControlURI",
+        "name": "uri",
         "type": "string"
       }
     ],
     "name": "deployProtocol",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "deployer",
+    "outputs": [
+      {
+        "internalType": "contract IControlDeployer",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -159,11 +166,11 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_protocolDeployer",
+        "name": "protocolControl",
         "type": "address"
       }
     ],
-    "name": "getLatestVersion",
+    "name": "getFeeBps",
     "outputs": [
       {
         "internalType": "uint256",
@@ -178,12 +185,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_protocolDeployer",
+        "name": "deployer",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "_version",
+        "name": "index",
         "type": "uint256"
       }
     ],
@@ -193,6 +200,25 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      }
+    ],
+    "name": "getProtocolControlCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -212,26 +238,19 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "providerAdmin",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "providerTreasury",
+    "name": "protocolControlFeeBps",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -247,12 +266,43 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_newFeeBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDefaultFeeBps",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
-        "name": "_newAdminSigner",
+        "name": "_newDeployer",
         "type": "address"
       }
     ],
-    "name": "setProviderAdmin",
+    "name": "setDeployer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "protocolControl",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_newFeeBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "setProtocolControlFeeBps",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -265,7 +315,7 @@
         "type": "address"
       }
     ],
-    "name": "setProviderTreasury",
+    "name": "setTreasury",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -281,6 +331,19 @@
     "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "treasury",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
