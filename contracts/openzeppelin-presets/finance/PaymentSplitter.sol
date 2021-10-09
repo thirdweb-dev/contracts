@@ -7,6 +7,13 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
+ * Changelog:
+ * 1. Remove add payees and shares in the constructor, so inherited class is responsible for adding.
+ * 2. Change _addPayee(...) visibility to internal. DANGEROUS: Make sure it is not called outside from constructor
+ *    initialization.
+ */
+
+/**
  * @title PaymentSplitter
  * @dev This contract allows to split Ether payments among a group of accounts. The sender does not need to be aware
  * that the Ether will be split in this way, since it is handled transparently by the contract.
@@ -24,12 +31,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * to run tests before sending real value to this contract.
  */
 
-/**
- * Changelog:
- * 1. Remove add payees and shares in the constructor, so inherited class is responsible for adding.
- * 2. Change _addPayee(...) visibility to internal. DANGEROUS: Make sure it is not called outside from constructor
- *    initialization.
- */
 contract PaymentSplitter is Context {
     event PayeeAdded(address account, uint256 shares);
     event PaymentReleased(address to, uint256 amount);
