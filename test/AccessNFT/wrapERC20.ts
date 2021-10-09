@@ -16,7 +16,6 @@ import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 import { BigNumber } from "ethers";
 
-
 describe("Wrapping ERC20 tokens as Access NFT", function () {
   // Signers
   let deployer: SignerWithAddress;
@@ -34,13 +33,13 @@ describe("Wrapping ERC20 tokens as Access NFT", function () {
   const tokenAmounts: BigNumber[] = [
     ethers.utils.parseEther("100"),
     ethers.utils.parseEther("100"),
-    ethers.utils.parseEther("100")
+    ethers.utils.parseEther("100"),
   ];
-  const totalAmount: BigNumber = tokenAmounts.reduce((a,b) => a.add(b));
-  const numOfSharesOfEach: number[] = [10, 50, 500]
+  const totalAmount: BigNumber = tokenAmounts.reduce((a, b) => a.add(b));
+  const numOfSharesOfEach: number[] = [10, 50, 500];
 
   // Redeem Parameters
-  const wrappedTokenIds: number[] = [0,1,2];
+  const wrappedTokenIds: number[] = [0, 1, 2];
   const amountToRedeeem: number = 1;
 
   // Network
@@ -75,57 +74,45 @@ describe("Wrapping ERC20 tokens as Access NFT", function () {
   });
 
   it("Should wrap ERC20 tokens and mint the wrapped tokens to the ERC20 token owner", async () => {
-
     expect(await coin.balanceOf(fan.address)).to.equal(totalAmount);
     expect(await coin.balanceOf(nftWrapper.address)).to.equal(0);
 
-    for(let i = 0 ; i < wrappedTokenIds.length; i += 1) {
+    for (let i = 0; i < wrappedTokenIds.length; i += 1) {
       expect(await accessNft.balanceOf(fan.address, wrappedTokenIds[i])).to.equal(0);
     }
 
     // Wrap ERC20 tokens
-    await sendGaslessTx(
-      fan,
-      forwarder,
-      relayer,
-      {
-        from: fan.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("wrapERC20", [
-          [coin.address, coin.address, coin.address],
-          tokenAmounts,
-          numOfSharesOfEach,
-          nftURIs
-        ])
-      }
-    )
+    await sendGaslessTx(fan, forwarder, relayer, {
+      from: fan.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("wrapERC20", [
+        [coin.address, coin.address, coin.address],
+        tokenAmounts,
+        numOfSharesOfEach,
+        nftURIs,
+      ]),
+    });
 
     expect(await coin.balanceOf(fan.address)).to.equal(0);
     expect(await coin.balanceOf(nftWrapper.address)).to.equal(totalAmount);
-    
-    for(let i = 0 ; i < wrappedTokenIds.length; i += 1) {
+
+    for (let i = 0; i < wrappedTokenIds.length; i += 1) {
       expect(await accessNft.balanceOf(fan.address, wrappedTokenIds[i])).to.equal(numOfSharesOfEach[i]);
     }
-  })
+  });
 
   it("Should let redeemable wrapped ERC20 token owner redeem the ERC20 tokens", async () => {
-
     // Wrap ERC20 tokens
-    await sendGaslessTx(
-      fan,
-      forwarder,
-      relayer,
-      {
-        from: fan.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("wrapERC20", [
-          [coin.address, coin.address, coin.address],
-          tokenAmounts,
-          numOfSharesOfEach,
-          nftURIs
-        ])
-      }
-    )
+    await sendGaslessTx(fan, forwarder, relayer, {
+      from: fan.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("wrapERC20", [
+        [coin.address, coin.address, coin.address],
+        tokenAmounts,
+        numOfSharesOfEach,
+        nftURIs,
+      ]),
+    });
 
     const targetWrappedTokenId: number = wrappedTokenIds[0];
     const totalSharesOfWrapped: number = numOfSharesOfEach[0];
@@ -135,21 +122,18 @@ describe("Wrapping ERC20 tokens as Access NFT", function () {
     expect(await accessNft.balanceOf(fan.address, targetWrappedTokenId)).to.equal(totalSharesOfWrapped);
 
     // Redeem 1 share of wrapped ERC20 token
-    await sendGaslessTx(
-      fan,
-      forwarder,
-      relayer,
-      {
-        from: fan.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("redeemToken", [targetWrappedTokenId, amountToRedeeem])
-      }
-    );
+    await sendGaslessTx(fan, forwarder, relayer, {
+      from: fan.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("redeemToken", [targetWrappedTokenId, amountToRedeeem]),
+    });
 
     const shareCollected = tokenAmounts[0].div(totalSharesOfWrapped);
-    
+
     expect(await coin.balanceOf(fan.address)).to.equal(shareCollected);
     expect(await coin.balanceOf(nftWrapper.address)).to.equal(totalAmount.sub(shareCollected));
-    expect(await accessNft.balanceOf(fan.address, targetWrappedTokenId)).to.equal(totalSharesOfWrapped - amountToRedeeem);
-  })
+    expect(await accessNft.balanceOf(fan.address, targetWrappedTokenId)).to.equal(
+      totalSharesOfWrapped - amountToRedeeem,
+    );
+  });
 });

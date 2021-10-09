@@ -57,15 +57,21 @@ describe("Calling 'createAccessNfts'", function () {
       await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies, zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies, zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies, zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies, zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1), zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1), zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
     });
 
@@ -73,25 +79,25 @@ describe("Calling 'createAccessNfts'", function () {
       // Grant Minter role to creator
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
       await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
-      
+
       await expect(accessNft.connect(creator).createAccessNfts([], [], [], zeroAddress, emptyData)).to.be.revertedWith(
         "AccessNFT: Must create at least one NFT.",
       );
     });
 
     it("Should revert if caller does not have MINTER_ROLE", async () => {
-      await expect(accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData)).to.be
-        .reverted;
+      await expect(
+        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData),
+      ).to.be.reverted;
     });
   });
 
   describe("Events", function () {
-
     beforeEach(async () => {
       // Grant Minter role to creator
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
       await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
-    })
+    });
 
     it("Should emit AccessNFTsCreated", async () => {
       const eventPromise = new Promise(async (resolve, reject) => {
@@ -137,7 +143,13 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          zeroAddress,
+          emptyData,
+        ]),
       });
 
       await eventPromise;
@@ -149,7 +161,6 @@ describe("Calling 'createAccessNfts'", function () {
     let accessIds: number[];
 
     beforeEach(async () => {
-
       // Grant Minter role to creator
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
       await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
@@ -157,7 +168,13 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          zeroAddress,
+          emptyData,
+        ]),
       });
 
       const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
@@ -198,7 +215,6 @@ describe("Calling 'createAccessNfts'", function () {
     let accessIds: number[];
 
     beforeEach(async () => {
-
       // Grant Minter role to creator
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
       await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
@@ -206,7 +222,13 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          zeroAddress,
+          emptyData,
+        ]),
       });
 
       nextAccessNftId = parseInt((await accessNft.nextTokenId()).toString());

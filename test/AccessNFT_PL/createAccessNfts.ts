@@ -53,15 +53,21 @@ describe("Calling 'createAccessNfts'", function () {
   describe("Revert", function () {
     it("Should revert if unequal number of URIs and supplies are provided", async () => {
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies, zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies, zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies, zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies, zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1), zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1), zeroAddress, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
     });
 
@@ -72,8 +78,9 @@ describe("Calling 'createAccessNfts'", function () {
     });
 
     it("Should not revert if caller does not have MINTER_ROLE", async () => {
-      await expect(accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData)).to.not.be
-        .reverted;
+      await expect(
+        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData),
+      ).to.not.be.reverted;
     });
   });
 
@@ -122,7 +129,13 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          zeroAddress,
+          emptyData,
+        ]),
       });
 
       await eventPromise;
@@ -137,7 +150,13 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          zeroAddress,
+          emptyData,
+        ]),
       });
 
       const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
@@ -181,7 +200,13 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          zeroAddress,
+          emptyData,
+        ]),
       });
 
       nextAccessNftId = parseInt((await accessNft.nextTokenId()).toString());

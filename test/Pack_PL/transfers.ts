@@ -62,7 +62,7 @@ describe("Token transfers under various conditions", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 

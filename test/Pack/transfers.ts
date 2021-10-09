@@ -62,7 +62,7 @@ describe("Token transfers under various conditions", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 
@@ -110,9 +110,9 @@ describe("Token transfers under various conditions", function () {
     packId = parseInt((await pack.nextTokenId()).toString());
 
     // Grant MINTER_ROLE to creator
-    const MINTER_ROLE = await accessNft.MINTER_ROLE()
-    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-    await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+    const MINTER_ROLE = await accessNft.MINTER_ROLE();
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+    await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
     // Create packs
     await createPack(

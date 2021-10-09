@@ -63,7 +63,13 @@ describe("Token transfers under various conditions", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        rewardURIs,
+        accessURIs,
+        rewardSupplies,
+        zeroAddress,
+        emptyData,
+      ]),
     });
 
     // Redeem access NFT: creator

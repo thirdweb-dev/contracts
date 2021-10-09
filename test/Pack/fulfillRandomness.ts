@@ -66,7 +66,7 @@ describe("VRF fulfills a randomness request", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 
@@ -130,9 +130,9 @@ describe("VRF fulfills a randomness request", function () {
     packId = parseInt((await pack.nextTokenId()).toString());
 
     // Grant MINTER_ROLE to creator
-		const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+    const MINTER_ROLE = await accessNft.MINTER_ROLE();
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+    await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
     // Create packs
     await createPack(

@@ -57,7 +57,7 @@ describe("Create a pack with rewards", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 
@@ -98,9 +98,9 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(                        
+          .createAccessNfts(
             rewardURIs.slice(1),
-            accessURIs,            
+            accessURIs,
             rewardSupplies,
             pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
@@ -110,9 +110,9 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(                        
+          .createAccessNfts(
             rewardURIs,
-            accessURIs.slice(1),            
+            accessURIs.slice(1),
             rewardSupplies,
             pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
@@ -124,9 +124,9 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(                        
+          .createAccessNfts(
             [],
-            [],            
+            [],
             [],
             pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
@@ -138,9 +138,9 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(                        
+          .createAccessNfts(
             rewardURIs,
-            accessURIs,            
+            accessURIs,
             rewardSupplies,
             pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
@@ -154,9 +154,9 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(                        
+          .createAccessNfts(
             rewardURIs,
-            accessURIs,            
+            accessURIs,
             rewardSupplies,
             pack.address,
             encodeParams(packURI, openStartAndEnd, openStartAndEnd, invalidRewardsPerOpen),
@@ -206,7 +206,6 @@ describe("Create a pack with rewards", function () {
   });
 
   describe("Balances", async () => {
-
     let rewardIds: number[];
 
     beforeEach(async () => {

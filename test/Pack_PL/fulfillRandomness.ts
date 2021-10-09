@@ -66,7 +66,7 @@ describe("VRF fulfills a randomness request", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 

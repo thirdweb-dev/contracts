@@ -15,7 +15,6 @@ import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
-
 describe("Calling 'createAccessNfts'", function () {
   // Signers
   let deployer: SignerWithAddress;
@@ -65,7 +64,13 @@ describe("Calling 'createAccessNfts'", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData]),
+      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        rewardURIs,
+        accessURIs,
+        rewardSupplies,
+        zeroAddress,
+        emptyData,
+      ]),
     });
   });
 

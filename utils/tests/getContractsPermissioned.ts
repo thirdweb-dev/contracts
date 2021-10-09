@@ -30,7 +30,7 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
 
   // Deploy NFTWrapper
   const NFTWrapper_Factory: ContractFactory = await ethers.getContractFactory("NFTWrapper");
-  const nftWrapper: NFTWrapper = await NFTWrapper_Factory.deploy() as NFTWrapper;
+  const nftWrapper: NFTWrapper = (await NFTWrapper_Factory.deploy()) as NFTWrapper;
 
   // Deploy ProtocolControl
 
@@ -85,13 +85,13 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
 
   // Get NFT contract
   const NFT_Factory: ContractFactory = await ethers.getContractFactory("NFT");
-  const nft: NFT = await NFT_Factory.deploy(
+  const nft: NFT = (await NFT_Factory.deploy(
     protocolControl.address,
     "name",
     "SYMBOL",
     forwarder.address,
-    "ipfs://base_uri"
-  ) as NFT;
+    "ipfs://base_uri",
+  )) as NFT;
 
   // Deploy Coin
   const coinName = "";
@@ -115,6 +115,6 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
     accessNft,
     coin,
     nftWrapper,
-    nft
+    nft,
   };
 }

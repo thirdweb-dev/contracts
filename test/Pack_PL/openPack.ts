@@ -60,7 +60,7 @@ describe("Open a pack", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 

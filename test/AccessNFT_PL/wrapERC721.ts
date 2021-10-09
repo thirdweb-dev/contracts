@@ -15,7 +15,6 @@ import { getURIs } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
-
 describe("Wrapping an ERC 721 NFT as Access NFT", function () {
   // Signers
   let deployer: SignerWithAddress;
@@ -64,64 +63,39 @@ describe("Wrapping an ERC 721 NFT as Access NFT", function () {
   });
 
   it("Should wrap ERC721 NFT and mint the wrapped token to the NFT owner", async () => {
-
     expect(await accessNft.balanceOf(fan.address, wrappedTokenId)).to.equal(0);
     expect(await nft.ownerOf(nftTokenId)).to.equal(fan.address);
 
     // Wrap NFT
-    await sendGaslessTx(
-      fan,
-      forwarder,
-      relayer,
-      {
-        from: fan.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("wrapERC721", [
-          [nft.address],
-          [nftTokenId],
-          [nftURI]
-        ])
-      }
-    )
+    await sendGaslessTx(fan, forwarder, relayer, {
+      from: fan.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("wrapERC721", [[nft.address], [nftTokenId], [nftURI]]),
+    });
 
     expect(await accessNft.balanceOf(fan.address, wrappedTokenId)).to.equal(1);
     expect(await nft.ownerOf(nftTokenId)).to.equal(nftWrapper.address);
-  })
+  });
 
   it("Should let redeemable erapped ERC721 token owner redeem the ERC 721 NFT", async () => {
-    
     // Wrap NFT
-    await sendGaslessTx(
-      fan,
-      forwarder,
-      relayer,
-      {
-        from: fan.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("wrapERC721", [
-          [nft.address],
-          [nftTokenId],
-          [nftURI]
-        ])
-      }
-    )
+    await sendGaslessTx(fan, forwarder, relayer, {
+      from: fan.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("wrapERC721", [[nft.address], [nftTokenId], [nftURI]]),
+    });
 
     expect(await accessNft.balanceOf(fan.address, wrappedTokenId)).to.equal(1);
     expect(await nft.ownerOf(nftTokenId)).to.equal(nftWrapper.address);
 
     // Redeem NFT
-    await sendGaslessTx(
-      fan,
-      forwarder,
-      relayer,
-      {
-        from: fan.address,
-        to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("redeemToken", [wrappedTokenId, amountToRedeeem])
-      }
-    );
+    await sendGaslessTx(fan, forwarder, relayer, {
+      from: fan.address,
+      to: accessNft.address,
+      data: accessNft.interface.encodeFunctionData("redeemToken", [wrappedTokenId, amountToRedeeem]),
+    });
 
     expect(await accessNft.balanceOf(fan.address, wrappedTokenId)).to.equal(0);
     expect(await nft.ownerOf(nftTokenId)).to.equal(fan.address);
-  })
+  });
 });

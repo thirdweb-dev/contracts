@@ -60,7 +60,7 @@ describe("Open a pack", function () {
         _rewardAmounts,
         _packAddress,
         _encodedParamsAsData,
-      ])
+      ]),
     });
   };
 
@@ -113,9 +113,9 @@ describe("Open a pack", function () {
       const secondsUntilOpenEnd: number = 100;
 
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       // Create packs
       await createPack(
@@ -139,9 +139,9 @@ describe("Open a pack", function () {
 
     it("Should revert if the Pack contract has no LINK", async () => {
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       // Create packs
       await createPack(
@@ -159,11 +159,10 @@ describe("Open a pack", function () {
     });
 
     it("Should revert if caller has no packs", async () => {
-
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       // Create packs
       await createPack(
@@ -184,11 +183,10 @@ describe("Open a pack", function () {
     });
 
     it("Should revert if caller has an in-flight pack open request for the pack", async () => {
-
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       // Create packs
       await createPack(
@@ -213,11 +211,10 @@ describe("Open a pack", function () {
 
   describe("Events", function () {
     beforeEach(async () => {
-
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       // Create packs
       await createPack(
@@ -263,11 +260,10 @@ describe("Open a pack", function () {
 
   describe("Balances", function () {
     beforeEach(async () => {
-
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       // Create packs
       await createPack(
@@ -300,12 +296,11 @@ describe("Open a pack", function () {
 
   describe("Contract state", function () {
     beforeEach(async () => {
-
       // Grant MINTER_ROLE to creator
-		  const MINTER_ROLE = await accessNft.MINTER_ROLE()
-		  await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-		  await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
-      
+      const MINTER_ROLE = await accessNft.MINTER_ROLE();
+      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+
       // Create packs
       await createPack(
         creator,

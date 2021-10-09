@@ -14,7 +14,6 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract NFTWrapper is ERC721Holder, ERC1155Holder {
-
     /// @dev The state of the underlying ERC 721 token, if any.
     struct ERC721Wrapped {
         address source;
@@ -79,11 +78,14 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
         address[] calldata _nftContracts,
         uint256[] memory _tokenIds,
         string[] calldata _nftURIs
-    ) 
-        external 
-        returns (uint[] memory tokenIds, uint[] memory tokenAmountsToMint, uint256 endTokenId)
+    )
+        external
+        returns (
+            uint256[] memory tokenIds,
+            uint256[] memory tokenAmountsToMint,
+            uint256 endTokenId
+        )
     {
-
         require(
             _nftContracts.length == _tokenIds.length && _nftContracts.length == _nftURIs.length,
             "NFTWrapper: Unequal number of configs provided."
@@ -96,24 +98,27 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
         // Get tokenId
         endTokenId = startTokenId;
-        tokenIds = new uint[](_nftContracts.length);
-        tokenAmountsToMint = new uint[](_nftContracts.length);
+        tokenIds = new uint256[](_nftContracts.length);
+        tokenAmountsToMint = new uint256[](_nftContracts.length);
 
-        for(uint i = 0; i < _nftContracts.length; i += 1) {
-
+        for (uint256 i = 0; i < _nftContracts.length; i += 1) {
             // Check ownership
             isOwnerOfAll = IERC721(_nftContracts[i]).ownerOf(_tokenIds[i]) == _tokenCreator;
             // Check approval
-            isApprovedToTransferAll = IERC721(_nftContracts[i]).getApproved(_tokenIds[i]) == address(this) 
-                                        || IERC721(_nftContracts[i]).isApprovedForAll(_tokenCreator, address(this));
-            
+            isApprovedToTransferAll =
+                IERC721(_nftContracts[i]).getApproved(_tokenIds[i]) == address(this) ||
+                IERC721(_nftContracts[i]).isApprovedForAll(_tokenCreator, address(this));
+
             // If owns NFT and approved to transfer.
-            if(isOwnerOfAll && isApprovedToTransferAll) {
+            if (isOwnerOfAll && isApprovedToTransferAll) {
                 // Transfer the NFT to this contract.
                 IERC721(_nftContracts[i]).safeTransferFrom(_tokenCreator, address(this), _tokenIds[i]);
 
                 // Map the native NFT tokenId to the underlying NFT
-                erc721WrappedTokens[baseToken][endTokenId] = ERC721Wrapped({ source: _nftContracts[i], tokenId: _tokenIds[i] });
+                erc721WrappedTokens[baseToken][endTokenId] = ERC721Wrapped({
+                    source: _nftContracts[i],
+                    tokenId: _tokenIds[i]
+                });
 
                 // Update id
                 tokenIds[i] = endTokenId;
@@ -126,8 +131,8 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
             }
         }
 
-        require(isOwnerOfAll,"NFTWrapper: Only the owner of the NFT can wrap it.");
-        require(isApprovedToTransferAll,"NFTWrapper: Must approve the contract to transfer the NFT.");
+        require(isOwnerOfAll, "NFTWrapper: Only the owner of the NFT can wrap it.");
+        require(isApprovedToTransferAll, "NFTWrapper: Must approve the contract to transfer the NFT.");
     }
 
     /// @dev Wraps ERC20 tokens as ERC1155 NFTs.
@@ -138,13 +143,11 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
         uint256[] memory _tokenAmounts,
         uint256[] memory _numOfNftsToMint,
         string[] calldata _nftURIs
-    ) 
-        external
-        returns (uint[] memory tokenIds, uint256 endTokenId)
-    {
-
+    ) external returns (uint256[] memory tokenIds, uint256 endTokenId) {
         require(
-            _tokenContracts.length == _tokenAmounts.length && _tokenContracts.length == _numOfNftsToMint.length && _tokenContracts.length == _nftURIs.length,
+            _tokenContracts.length == _tokenAmounts.length &&
+                _tokenContracts.length == _numOfNftsToMint.length &&
+                _tokenContracts.length == _nftURIs.length,
             "NFTWrapper: Unequal number of configs provided."
         );
 
@@ -155,21 +158,19 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
 
         // Get tokenId
         endTokenId = startTokenId;
-        tokenIds = new uint[](_tokenContracts.length);
+        tokenIds = new uint256[](_tokenContracts.length);
 
-        for(uint i = 0; i < _tokenContracts.length; i += 1) {
-            
-            // Check balance 
+        for (uint256 i = 0; i < _tokenContracts.length; i += 1) {
+            // Check balance
             hasBalance = IERC20(_tokenContracts[i]).balanceOf(_tokenCreator) >= _tokenAmounts[i];
             // Check allowance
             hasGivenAllowance = IERC20(_tokenContracts[i]).allowance(_tokenCreator, address(this)) >= _tokenAmounts[i];
 
-            if(hasBalance && hasGivenAllowance) { 
-
+            if (hasBalance && hasGivenAllowance) {
                 require(
                     IERC20(_tokenContracts[i]).transferFrom(_tokenCreator, address(this), _tokenAmounts[i]),
                     "NFTWrapper: Failed to transfer ERC20 tokens."
-                ); 
+                );
 
                 // Store wrapped ERC20 token state.
                 erc20WrappedTokens[baseToken][endTokenId] = ERC20Wrapped({
@@ -182,22 +183,25 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
                 tokenIds[i] = endTokenId;
                 endTokenId += 1;
 
-                emit ERC20WrappedToken(_tokenCreator, _tokenContracts[i], _tokenAmounts[i], _numOfNftsToMint[i], endTokenId, _nftURIs[i]);
+                emit ERC20WrappedToken(
+                    _tokenCreator,
+                    _tokenContracts[i],
+                    _tokenAmounts[i],
+                    _numOfNftsToMint[i],
+                    endTokenId,
+                    _nftURIs[i]
+                );
             } else {
                 break;
             }
-            
         }
 
-        require(hasBalance,"NFTWrapper: Must own the amount of tokens being wrapped.");
-        require(hasGivenAllowance,"NFTWrapper: Must approve this contract to transfer tokens.");
+        require(hasBalance, "NFTWrapper: Must own the amount of tokens being wrapped.");
+        require(hasGivenAllowance, "NFTWrapper: Must approve this contract to transfer tokens.");
     }
 
     /// @dev Lets a wrapped nft owner redeem the underlying ERC721 NFT.
-    function redeemERC721(uint256 _tokenId, address _redeemer) 
-        external
-    {
-
+    function redeemERC721(uint256 _tokenId, address _redeemer) external {
         address baseToken = msg.sender;
 
         // Transfer the NFT to redeemer
@@ -207,12 +211,20 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
             erc721WrappedTokens[baseToken][_tokenId].tokenId
         );
 
-        emit ERC721Redeemed(_redeemer, erc721WrappedTokens[baseToken][_tokenId].source, erc721WrappedTokens[baseToken][_tokenId].tokenId, _tokenId);
+        emit ERC721Redeemed(
+            _redeemer,
+            erc721WrappedTokens[baseToken][_tokenId].source,
+            erc721WrappedTokens[baseToken][_tokenId].tokenId,
+            _tokenId
+        );
     }
 
     /// @dev Lets the nft owner redeem their ERC20 tokens.
-    function redeemERC20(uint256 _tokenId, uint256 _amount, address _redeemer) external {
-
+    function redeemERC20(
+        uint256 _tokenId,
+        uint256 _amount,
+        address _redeemer
+    ) external {
         address baseToken = msg.sender;
 
         // Get the ERC20 token amount to distribute
@@ -225,6 +237,12 @@ contract NFTWrapper is ERC721Holder, ERC1155Holder {
             "NFTWrapper: Failed to transfer ERC20 tokens."
         );
 
-        emit ERC20Redeemed(_redeemer, _tokenId, erc20WrappedTokens[baseToken][_tokenId].source, amountToDistribute, _amount);
+        emit ERC20Redeemed(
+            _redeemer,
+            _tokenId,
+            erc20WrappedTokens[baseToken][_tokenId].source,
+            amountToDistribute,
+            _amount
+        );
     }
 }
