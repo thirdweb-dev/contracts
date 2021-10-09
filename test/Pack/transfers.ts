@@ -3,15 +3,15 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { AccessNFTPL } from "../../typechain/AccessNFTPL";
-import { PackPL } from "../../typechain/PackPL";
+import { AccessNFT } from "../../typechain/AccessNFT";
+import { Pack } from "../../typechain/Pack";
 import { Forwarder } from "../../typechain/Forwarder";
 import { BytesLike } from "@ethersproject/bytes";
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom, impersonate } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
@@ -26,8 +26,8 @@ describe("Token transfers under various conditions", function () {
   let relayer: SignerWithAddress;
 
   // Contracts
-  let pack: PackPL;
-  let accessNft: AccessNFTPL;
+  let pack: Pack;
+  let accessNft: AccessNFT;
   let forwarder: Forwarder;
 
   // Reward parameters
@@ -108,6 +108,11 @@ describe("Token transfers under various conditions", function () {
 
     // Get pack ID
     packId = parseInt((await pack.nextTokenId()).toString());
+
+    // Grant MINTER_ROLE to creator
+    const MINTER_ROLE = await accessNft.MINTER_ROLE()
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
+    await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address)
 
     // Create packs
     await createPack(
