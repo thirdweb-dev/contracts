@@ -1,5 +1,6 @@
 {
   "mumbai": {
+    "registry": "",
     "protocolControl": "0x53975617f305fA0e6f29fd0870C32ad38ee6bD70",
     "pack": "0x1b2812ba4fD7eCdfE357e93749d31B6C86B8063d",
     "market": "0x66c132Fcd9bE13C48821486e27Dc19146056c3a1",
@@ -10,6 +11,7 @@
     "nftWrapper": "0x873c3e90f0dE5712FC0f5DDba2c4a08Ec4C40c36"
   },
   "polygon": {
+    "registry": "",
     "protocolControl": "0x389a2b24B3eDc8649083eAC2A82598D131F0f237",
     "forwarder": "0xE4b2DD52566ED7057dB565B1FEaEEBAf27470D89",
     "pack": "0x8882Bf2DE48E129094b8e26d208a5Cb2D8642f58",
@@ -18,6 +20,7 @@
     "nftWrapper": ""
   },
   "rinkeby": {
+    "registry": "",
     "protocolControl": "",
     "pack": "",
     "market": "",
@@ -28,6 +31,7 @@
     "nftWrapper": ""
   },
   "mainnet": {
+    "registry": "",
     "protocolControl": "",
     "pack": "",
     "market": "",
@@ -38,6 +42,7 @@
     "nftWrapper": ""
   },
   "localhost": {
+    "registry": "",
     "protocolControl": "",
     "pack": "",
     "market": "",

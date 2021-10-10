@@ -31,12 +31,7 @@ async function main(): Promise<void> {
 
   console.log(`Deploying Forwarder: ${forwarder.address} at tx hash: ${forwarder.deployTransaction.hash}`);
 
-  // Deploy NFTWrapper
-  const NFTWrapper_Factory: ContractFactory = await ethers.getContractFactory("NFTWrapper");
-  const nftWrapper: Contract = await NFTWrapper_Factory.deploy();
-  await nftWrapper.deployed();
-
-  // Deploy NFTWrapper
+  // Deploy Registry
   const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
   const registry: Contract = await Registry_Factory.deploy(
     providerTreasury,
@@ -98,7 +93,6 @@ async function main(): Promise<void> {
   const accessNft: Contract = await AccessNFT_Factory.deploy(
     protocolControl.address,
     forwarder.address,
-    nftWrapper.address,
     accessNFTContractURI,
   );
 
@@ -115,10 +109,10 @@ async function main(): Promise<void> {
 
     [networkName]: {
       ...curentNetworkAddreses,
-
+      
+      registry: registry.address,
       protocolControl: protocolControl.address,
       forwarder: forwarder.address,
-      nftWrapper: nftWrapper.address,
       pack: pack.address,
       market: market.address,
       accessNft: accessNft.address,
