@@ -53,13 +53,16 @@ describe("Open pack", function () {
   beforeEach(async () => {
     // Get signers
     const networkName: string = "rinkeby";
-    await forkFrom(9075707, "rinkeby");
+    await forkFrom("rinkeby");
 
     const signers: SignerWithAddress[] = await ethers.getSigners();
     [creator, relayer] = signers;
 
     // Get contracts
-    [pack, accessNft, forwarder] = await getContracts(creator, networkName, ["Pack", "AccessNFT", "Forwarder"]);
+    let contracts = await getContracts(creator, networkName);
+    pack = contracts.pack;
+    accessNft = contracts.accessNft;
+    forwarder = contracts.forwarder;
 
     // Get expected packId
     expectedPackId = await pack.nextTokenId();

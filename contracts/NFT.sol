@@ -34,7 +34,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     mapping(uint256 => string) public nftURI;
 
     /// @dev Mapping from tokenId => creator
-    mapping(uint256 => address) public nftCreator;
+    mapping(uint256 => address) public creator;
 
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public royaltyBps;
@@ -48,7 +48,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "NFT: only a protocol admin can call this function."
         );
         _;
@@ -92,7 +92,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         nftURI[id] = _uri;
 
         // Update creator
-        nftCreator[id] = _msgSender();
+        creator[id] = _msgSender();
 
         // Mint NFT
         _mint(_to, id);
@@ -108,7 +108,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
         // Get tokenId
         uint256 id = nextTokenId;
-        address creator = _msgSender();
+        address _creator = _msgSender();
 
         for (uint256 i = 0; i < _uris.length; i++) {
             // Update Ids
@@ -118,7 +118,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
             nftURI[id] = _uris[i];
 
             // Update creator
-            nftCreator[id] = creator;
+            creator[id] = _creator;
 
             // Mint NFT
             _mint(_to, id);
@@ -128,15 +128,12 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
         nextTokenId = id;
 
-        emit MintedBatch(creator, _to, ids, _uris);
+        emit MintedBatch(_creator, _to, ids, _uris);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(
-            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()),
-            "NFT: Bps provided must be less than 9,000"
-        );
+        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -166,7 +163,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     ) internal virtual override(ERC721PresetMinterPauserAutoId) {
         super._beforeTokenTransfer(from, to, tokenId);
 
-        if (isRestrictedTransfer) {
+        // if transfer is restricted on the contract, we still want to allow burning and minting
+        if (isRestrictedTransfer && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
@@ -182,7 +180,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = controlCenter.ownerTreasury();
+        receiver = controlCenter.getRoyaltyTreasury(address(this));
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 

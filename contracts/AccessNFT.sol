@@ -13,42 +13,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-interface INFTWrapper {
-    /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.
-    function wrapERC721(
-        uint256 startTokenId,
-        address _tokenCreator,
-        address[] calldata _nftContracts,
-        uint256[] memory _tokenIds,
-        string[] calldata _nftURIs
-    )
-        external
-        returns (
-            uint256[] memory tokenIds,
-            uint256[] memory tokenAmountsToMint,
-            uint256 endTokenId
-        );
-
-    /// @dev Wraps ERC20 tokens as ERC1155 NFTs.
-    function wrapERC20(
-        uint256 startTokenId,
-        address _tokenCreator,
-        address[] calldata _tokenContracts,
-        uint256[] memory _tokenAmounts,
-        uint256[] memory _numOfNftsToMint,
-        string[] calldata _nftURIs
-    ) external returns (uint256[] memory tokenIds, uint256 endTokenId);
-
-    /// @dev Lets a wrapped nft owner redeem the underlying ERC721 NFT.
-    function redeemERC721(uint256 _tokenId, address _redeemer) external;
-
-    /// @dev Lets the nft owner redeem their ERC20 tokens.
-    function redeemERC20(
-        uint256 _tokenId,
-        uint256 _amount,
-        address _redeemer
-    ) external;
-}
+import "./interfaces/INFTWrapper.sol";
 
 contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev The protocol control center.
@@ -133,7 +98,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "AccessNFT: only a protocol admin can call this function."
         );
         _;
@@ -212,12 +177,12 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
      */
 
     /// @notice Create native ERC 1155 NFTs.
-    function createAccessNfts(
+    function createAccessTokens(
+        address to,
         string[] calldata _nftURIs,
         string[] calldata _accessNftURIs,
         uint256[] calldata _nftSupplies,
-        address _pack,
-        bytes calldata _packArgs
+        bytes calldata data
     ) external onlyUnpausedProtocol onlyMinterRole returns (uint256[] memory nftIds) {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
@@ -266,17 +231,13 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         nextTokenId = id;
 
-        // Mint Access NFTs to contract
+        // Mint Access NFTs (Redeemed) to contract
         _mintBatch(address(this), accessNftIds, _nftSupplies, "");
 
-        // Mint NFTs to `_msgSender()`
-        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        // Mint NFTs (Redeemable) to `to`
+        _mintBatch(to, nftIds, _nftSupplies, data);
 
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);
-
-        if (_pack != address(0)) {
-            safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, _packArgs);
-        }
     }
 
     /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.
@@ -397,10 +358,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(
-            _royaltyBps < (controlCenter.MAX_BPS() + controlCenter.MAX_PROVIDER_FEE_BPS()),
-            "NFT: Bps provided must be less than 9,000"
-        );
+        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -475,6 +433,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
+        // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
@@ -517,14 +476,14 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256, uint256 salePrice)
         external
         view
         virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = tokenState[tokenId].creator;
+        receiver = controlCenter.getRoyaltyTreasury(address(this));
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 

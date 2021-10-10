@@ -18,34 +18,37 @@ async function main(): Promise<void> {
   const networkName: string = hre.network.name;
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
 
+  const admin = deployer.address;
+  const protocolProvider = deployer.address;
+  const providerTreasury = deployer.address;
+
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
   // Deploy Forwarder
   const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder");
   const forwarder: Contract = await Forwarder_Factory.deploy();
+  await forwarder.deployed();
 
   console.log(`Deploying Forwarder: ${forwarder.address} at tx hash: ${forwarder.deployTransaction.hash}`);
 
   // Deploy NFTWrapper
   const NFTWrapper_Factory: ContractFactory = await ethers.getContractFactory("NFTWrapper");
   const nftWrapper: Contract = await NFTWrapper_Factory.deploy();
+  await nftWrapper.deployed();
 
-  await forwarder.deployed();
+  // Deploy NFTWrapper
+  const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
+  const registry: Contract = await Registry_Factory.deploy(
+    providerTreasury,
+    forwarder.address,
+    ethers.constants.AddressZero,
+  );
+  await registry.deployed();
 
   // Deploy ProtocolControl
-
-  const admin = deployer.address;
-  const protocolProvider = deployer.address;
-  const providerTreasury = deployer.address;
   const protocolControlURI: string = "";
-
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  const protocolControl: Contract = await ProtocolControl_Factory.deploy(
-    admin,
-    protocolProvider,
-    providerTreasury,
-    protocolControlURI,
-  );
+  const protocolControl: Contract = await ProtocolControl_Factory.deploy(registry.address, admin, protocolControlURI);
 
   console.log(
     `Deploying ProtocolControl: ${protocolControl.address} at tx hash: ${protocolControl.deployTransaction.hash}`,

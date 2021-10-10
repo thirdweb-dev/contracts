@@ -10,7 +10,7 @@ import { Forwarder } from "../../typechain/Forwarder";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getAmounts, getURIs } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";

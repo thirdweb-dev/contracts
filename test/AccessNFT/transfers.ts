@@ -8,7 +8,7 @@ import { Forwarder } from "../../typechain/Forwarder";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
@@ -63,11 +63,11 @@ describe("Token transfers under various conditions", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        creator.address,
         rewardURIs,
         accessURIs,
         rewardSupplies,
-        zeroAddress,
         emptyData,
       ]),
     });

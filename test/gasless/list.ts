@@ -48,13 +48,12 @@ describe("List token for sale", function () {
     [creator, relayer] = signers;
 
     // Get contracts
-    [pack, accessNft, forwarder, market, coin] = await getContracts(creator, networkName, [
-      "Pack",
-      "AccessNFT",
-      "Forwarder",
-      "Market",
-      "Coin",
-    ]);
+    let contracts = await getContracts(creator, networkName);
+    pack = contracts.pack;
+    accessNft = contracts.accessNft;
+    forwarder = contracts.forwarder;
+    market = contracts.market;
+    coin = contracts.coin;
 
     // Get expected packId
     expectedPackId = await pack.nextTokenId();

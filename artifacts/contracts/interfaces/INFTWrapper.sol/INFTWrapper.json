@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "INFTWrapper",
-  "sourceName": "contracts/AccessNFT.sol",
+  "sourceName": "contracts/interfaces/INFTWrapper.sol",
   "abi": [
     {
       "inputs": [

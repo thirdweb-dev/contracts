@@ -58,6 +58,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
     /// @dev listingId => listing info.
     mapping(uint256 => Listing) public listings;
+
     /// @dev listingId => buyer address => tokens bought
     mapping(uint256 => mapping(address => uint256)) public boughtFromListing;
 
@@ -95,7 +96,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "Pack: only a protocol admin can call this function."
         );
         _;
@@ -372,17 +373,16 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         // Collect protocol fee if any
         uint256 marketCut = (totalPrice * marketFeeBps) / controlCenter.MAX_BPS();
 
-        // Collect provider fees, % of the cut.
-        uint256 protocolProviderFeeBps = controlCenter.providerFeeBps();
-        uint256 protocolProviderCut = (marketCut * protocolProviderFeeBps) / controlCenter.MAX_BPS();
-        marketCut = marketCut - protocolProviderCut;
-
         require(
-            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.ownerTreasury(), marketCut),
+            IERC20(listing.currency).transferFrom(
+                _msgSender(),
+                controlCenter.getRoyaltyTreasury(address(this)),
+                marketCut
+            ),
             "Market: failed to transfer protocol cut."
         );
 
-        uint256 sellerCut = totalPrice - marketCut - protocolProviderCut;
+        uint256 sellerCut = totalPrice - marketCut;
 
         // Distribute royalties if any
         if (IERC165(listing.assetContract).supportsInterface(_INTERFACE_ID_ERC2981)) {
@@ -392,17 +392,9 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
             );
 
             if (royaltyReceiver != address(0) && royaltyAmount > 0) {
-                require(
-                    royaltyAmount + marketCut + protocolProviderCut <= totalPrice,
-                    "Market: Total market fees exceed the price."
-                );
+                require(royaltyAmount + marketCut <= totalPrice, "Market: Total market fees exceed the price.");
 
-                uint256 providerRoyaltyCut = (royaltyAmount * protocolProviderFeeBps) / controlCenter.MAX_BPS();
                 sellerCut = sellerCut - royaltyAmount;
-
-                // protocol takes royalty cut
-                protocolProviderCut = protocolProviderCut + providerRoyaltyCut;
-                royaltyAmount = royaltyAmount - providerRoyaltyCut;
 
                 require(
                     IERC20(listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
@@ -410,11 +402,6 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
                 );
             }
         }
-        // Distribute price to protocol provider
-        require(
-            IERC20(listing.currency).transferFrom(_msgSender(), controlCenter.providerTreasury(), protocolProviderCut),
-            "Market: failed to transfer provider cut."
-        );
 
         // Distribute price to seller
         require(

@@ -606,32 +606,8 @@
   {
     "inputs": [
       {
-        "internalType": "string[]",
-        "name": "_nftURIs",
-        "type": "string[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_nftSupplies",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "createNativeTokens",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "nftIds",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
-        "name": "_pack",
+        "name": "to",
         "type": "address"
       },
       {
@@ -645,28 +621,19 @@
         "type": "uint256[]"
       },
       {
-        "internalType": "string",
-        "name": "_packURI",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilOpenStart",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilOpenEnd",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_nftsPerOpen",
-        "type": "uint256"
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
       }
     ],
-    "name": "createPackAtomic",
-    "outputs": [],
+    "name": "createNativeTokens",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "nftIds",
+        "type": "uint256[]"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

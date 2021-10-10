@@ -8,7 +8,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts } from "../../utils/tests/getContracts";
-import { getURIs, getSupplies, openStartAndEnd, rewardsPerOpen } from "../../utils/tests/params";
+import { getURIs, getAmounts } from "../../utils/tests/params";
 const { signMetaTxRequest } = require("../../utils/meta-tx/signer");
 
 describe("Create a pack with rewards in a single tx", function () {
@@ -25,7 +25,10 @@ describe("Create a pack with rewards in a single tx", function () {
   const [packURI]: string[] = getURIs(1);
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
-  const rewardSupplies: number[] = getSupplies(rewardURIs.length);
+  const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+
+  const openStartAndEnd: number = 0;
+  const rewardsPerOpen: number = 1;
 
   beforeEach(async () => {
     // Get signers
@@ -34,7 +37,10 @@ describe("Create a pack with rewards in a single tx", function () {
     [creator, relayer] = signers;
 
     // Get contracts
-    [pack, accessNft, forwarder] = await getContracts(creator, networkName, ["Pack", "AccessNFT", "Forwarder"]);
+    let contracts = await getContracts(creator, networkName);
+    pack = contracts.pack;
+    accessNft = contracts.accessNft;
+    forwarder = contracts.forwarder;
   });
 
   describe("Should create access packs", function () {
@@ -55,7 +61,6 @@ describe("Create a pack with rewards in a single tx", function () {
           accessURIs,
           rewardSupplies,
           packURI,
-          openStartAndEnd,
           openStartAndEnd,
           rewardsPerOpen,
         );

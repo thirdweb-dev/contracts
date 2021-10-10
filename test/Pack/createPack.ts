@@ -10,7 +10,7 @@ import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
@@ -51,25 +51,20 @@ describe("Create a pack with rewards", function () {
     await sendGaslessTx(_packCreator, forwarder, relayer, {
       from: _packCreator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        _packAddress,
         _rewardURIs,
         _accessURIs,
         _rewardAmounts,
-        _packAddress,
         _encodedParamsAsData,
       ]),
     });
   };
 
-  const encodeParams = (
-    packURI: string,
-    secondsUntilOpenStart: number,
-    secondsUntilOpenEnd: number,
-    rewardsPerOpen: number,
-  ) => {
+  const encodeParams = (packURI: string, secondsUntilOpenStart: number, rewardsPerOpen: number) => {
     return ethers.utils.defaultAbiCoder.encode(
-      ["string", "uint256", "uint256", "uint256"],
-      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen],
+      ["string", "uint256", "uint256"],
+      [packURI, secondsUntilOpenStart, rewardsPerOpen],
     );
   };
 
@@ -103,24 +98,24 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(
+          .createAccessTokens(
+            pack.address,
             rewardURIs.slice(1),
             accessURIs,
             rewardSupplies,
-            pack.address,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+            encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.be.reverted;
 
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(
+          .createAccessTokens(
+            pack.address,
             rewardURIs,
             accessURIs.slice(1),
             rewardSupplies,
-            pack.address,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+            encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.be.reverted;
     });
@@ -134,13 +129,7 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(
-            [],
-            [],
-            [],
-            pack.address,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
-          ),
+          .createAccessTokens(pack.address, [], [], [], encodeParams(packURI, openStartAndEnd, rewardsPerOpen)),
       ).to.be.reverted;
     });
 
@@ -148,12 +137,12 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(
+          .createAccessTokens(
+            pack.address,
             rewardURIs,
             accessURIs,
             rewardSupplies,
-            pack.address,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+            encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
           ),
       ).to.be.reverted;
     });
@@ -169,12 +158,12 @@ describe("Create a pack with rewards", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(
+          .createAccessTokens(
+            pack.address,
             rewardURIs,
             accessURIs,
             rewardSupplies,
-            pack.address,
-            encodeParams(packURI, openStartAndEnd, openStartAndEnd, invalidRewardsPerOpen),
+            encodeParams(packURI, openStartAndEnd, invalidRewardsPerOpen),
           ),
       ).to.be.revertedWith("Pack: invalid number of rewards per open.");
     });
@@ -220,7 +209,7 @@ describe("Create a pack with rewards", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       await eventPromise;
@@ -242,7 +231,7 @@ describe("Create a pack with rewards", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Get rewardIds
@@ -287,7 +276,7 @@ describe("Create a pack with rewards", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Get rewardIds

@@ -557,6 +557,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
         "internalType": "string[]",
         "name": "_nftURIs",
         "type": "string[]"
@@ -572,17 +577,12 @@
         "type": "uint256[]"
       },
       {
-        "internalType": "address",
-        "name": "_pack",
-        "type": "address"
-      },
-      {
         "internalType": "bytes",
-        "name": "_packArgs",
+        "name": "data",
         "type": "bytes"
       }
     ],
-    "name": "createAccessNfts",
+    "name": "createAccessTokens",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -1050,7 +1050,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "",
         "type": "uint256"
       },
       {

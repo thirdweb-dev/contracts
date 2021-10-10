@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { AccessNFTPL } from "../../typechain/AccessNFTPL";
+import { AccessNFT } from "../../typechain/AccessNFT";
 import { Market } from "../../typechain/Market";
 import { Coin } from "../../typechain/Coin";
 import { Forwarder } from "../../typechain/Forwarder";
@@ -17,6 +17,7 @@ import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
+import { Registry } from "../../typechain/Registry";
 
 describe("List token for sale", function () {
   // Signers
@@ -26,8 +27,9 @@ describe("List token for sale", function () {
   let relayer: SignerWithAddress;
 
   // Contracts
+  let registry: Registry;
   let market: Market;
-  let accessNft: AccessNFTPL;
+  let accessNft: AccessNFT;
   let coin: Coin;
   let protocolControl: ProtocolControl;
   let forwarder: Forwarder;
@@ -73,16 +75,20 @@ describe("List token for sale", function () {
     coin = contracts.coin;
     forwarder = contracts.forwarder;
     protocolControl = contracts.protocolControl;
+    registry = contracts.registry;
 
     // Create access NFTs
+    const MINTER_ROLE = await accessNft.MINTER_ROLE();
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        creator.address,
         rewardURIs,
         accessURIs,
         rewardSupplies,
-        zeroAddress,
         emptyData,
       ]),
     });
@@ -218,13 +224,14 @@ describe("List token for sale", function () {
       // Get various fees
       const tokenRoyaltyBps: BigNumber = await accessNft.royaltyBps();
       const marketFeeBps: BigNumber = await market.marketFeeBps();
-      const providerFeeBps: BigNumber = await protocolControl.providerFeeBps();
+      const providerFeeBps: BigNumber = await registry.getFeeBps(protocolControl.address);
       const MAX_BPS = await protocolControl.MAX_BPS();
 
       // Get balances before
-      const creatorBalBefore: BigNumber = await coin.balanceOf(creator.address);
       const buyerBalBefore: BigNumber = await coin.balanceOf(buyer.address);
-      const treasuryBalBefore: BigNumber = await coin.balanceOf(await protocolControl.ownerTreasury());
+      const treasuryBalBefore: BigNumber = await coin.balanceOf(
+        await protocolControl.getRoyaltyTreasury(market.address),
+      );
 
       await sendGaslessTx(buyer, forwarder, relayer, {
         from: buyer.address,
@@ -233,27 +240,24 @@ describe("List token for sale", function () {
       });
 
       // Get balances after
-      const creatorBalAfter: BigNumber = await coin.balanceOf(creator.address);
       const buyerBalAfter: BigNumber = await coin.balanceOf(buyer.address);
-      const treasuryBalAfter: BigNumber = await coin.balanceOf(await protocolControl.ownerTreasury());
+      const treasuryBalAfter: BigNumber = await coin.balanceOf(
+        await protocolControl.getRoyaltyTreasury(market.address),
+      );
 
       // Get stakeholder shares
       const totalPrice: BigNumber = price.mul(amountToBuy);
 
       // Market cut
       const marketCutBeforeProvider = totalPrice.mul(marketFeeBps).div(MAX_BPS);
-      const providerCutOfMarket: BigNumber = marketCutBeforeProvider.mul(providerFeeBps).div(MAX_BPS);
-      const finalMarketCut: BigNumber = marketCutBeforeProvider.sub(providerCutOfMarket);
 
       // Creator shares - gets royalty too
       const royaltyAmountBeforeProvider: BigNumber = totalPrice.mul(tokenRoyaltyBps).div(MAX_BPS);
-      const providerCutOfRoyalty: BigNumber = royaltyAmountBeforeProvider.mul(providerFeeBps).div(MAX_BPS);
 
       // Provider cut
-      const totalProviderCut: BigNumber = providerCutOfMarket.add(providerCutOfRoyalty);
+      const totalRoyaltyTreasuryCut: BigNumber = marketCutBeforeProvider.add(royaltyAmountBeforeProvider);
 
-      expect(creatorBalAfter.sub(creatorBalBefore)).to.equal(totalPrice.sub(totalProviderCut.add(finalMarketCut)));
-      expect(treasuryBalAfter.sub(treasuryBalBefore)).to.equal(totalProviderCut.add(finalMarketCut));
+      expect(treasuryBalAfter.sub(treasuryBalBefore)).to.equal(totalRoyaltyTreasuryCut);
       expect(buyerBalBefore.sub(buyerBalAfter)).to.equal(totalPrice);
     });
   });
