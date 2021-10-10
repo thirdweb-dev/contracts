@@ -13,14 +13,9 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-import "./interfaces/INFTWrapper.sol";
-
 contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
-
-    /// @dev Trusted NFT wrapper
-    INFTWrapper internal nftWrapper;
 
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
@@ -37,7 +32,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
-    /// @dev Whether AccessNFT (where TokenState.isRedeemable == false) are transferable.
+    /// @dev Whether AccessNFTs (where TokenState.isRedeemable == false) are transferable.
     bool public accessNftIsTransferable;
 
     /// @dev Whether the ERC 1155 token is a wrapped ERC 20 / 721 token.
@@ -108,7 +103,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     modifier onlyMinterRole() {
         require(
             hasRole(MINTER_ROLE, _msgSender()),
-            "AccessNFT: Only accounts with MINTER_ROLE can call this function."
+            "AccessNFT: account does not have MINTER_ROLE."
         );
         _;
     }
@@ -116,7 +111,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
-        address _nftWrapper,
         string memory _uri
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
@@ -124,9 +118,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         // Set contract URI
         _contractURI = _uri;
-
-        // Set NFTWrapper
-        nftWrapper = INFTWrapper(_nftWrapper);
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
@@ -183,7 +174,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         string[] calldata _accessNftURIs,
         uint256[] calldata _nftSupplies,
         bytes calldata data
-    ) external onlyUnpausedProtocol onlyMinterRole returns (uint256[] memory nftIds) {
+    ) external onlyUnpausedProtocol onlyMinterRole {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
             "AccessNFT: Must specify equal number of config values."
@@ -191,7 +182,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         require(_nftURIs.length > 0, "AccessNFT: Must create at least one NFT.");
 
         // Get tokenIds.
-        nftIds = new uint256[](_nftURIs.length);
+        uint256[] memory nftIds = new uint256[](_nftURIs.length);
         uint256[] memory accessNftIds = new uint256[](_nftURIs.length);
 
         uint256 id = nextTokenId;
@@ -240,76 +231,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);
     }
 
-    /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.
-    function wrapERC721(
-        address[] calldata _nftContracts,
-        uint256[] memory _tokenIds,
-        string[] calldata _nftURIs
-    ) external onlyUnpausedProtocol onlyMinterRole {
-        address tokenCreator = _msgSender();
-
-        (uint256[] memory tokenIds, uint256[] memory tokenAmountsToMint, uint256 endTokenId) = nftWrapper.wrapERC721(
-            nextTokenId,
-            tokenCreator,
-            _nftContracts,
-            _tokenIds,
-            _nftURIs
-        );
-
-        // Update contract level tokenId
-        nextTokenId = endTokenId;
-
-        // Mint tokens
-        _mintBatch(tokenCreator, tokenIds, tokenAmountsToMint, "");
-
-        for (uint256 i = 0; i < tokenIds.length; i += 1) {
-            // Store wrapped NFT state.
-            tokenState[tokenIds[i]] = TokenState({
-                creator: tokenCreator,
-                uri: _nftURIs[i],
-                isRedeemable: true,
-                accessNftId: 0,
-                underlyingType: UnderlyingType.ERC721
-            });
-        }
-    }
-
-    /// @dev Wraps ERC20 tokens as ERC1155 NFTs.
-    function wrapERC20(
-        address[] calldata _tokenContracts,
-        uint256[] memory _tokenAmounts,
-        uint256[] memory _numOfNftsToMint,
-        string[] calldata _nftURIs
-    ) external onlyUnpausedProtocol onlyMinterRole {
-        address tokenCreator = _msgSender();
-
-        (uint256[] memory tokenIds, uint256 endTokenId) = nftWrapper.wrapERC20(
-            nextTokenId,
-            tokenCreator,
-            _tokenContracts,
-            _tokenAmounts,
-            _numOfNftsToMint,
-            _nftURIs
-        );
-
-        // Update contract level tokenId
-        nextTokenId = endTokenId;
-
-        // Mint tokens
-        _mintBatch(tokenCreator, tokenIds, _numOfNftsToMint, "");
-
-        for (uint256 i = 0; i < tokenIds.length; i += 1) {
-            // Store wrapped NFT state.
-            tokenState[tokenIds[i]] = TokenState({
-                creator: tokenCreator,
-                uri: _nftURIs[i],
-                isRedeemable: true,
-                accessNftId: 0,
-                underlyingType: UnderlyingType.ERC20
-            });
-        }
-    }
-
     /// @dev Lets a redeemable token holder to redeem token.
     function redeemToken(uint256 _tokenId, uint256 _amount) external onlyUnpausedProtocol {
         // Get redeemer
@@ -321,15 +242,21 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
             "AccessNFT: Cannot redeem more NFTs than owned."
         );
 
-        UnderlyingType underlyingType = tokenState[_tokenId].underlyingType;
+        // Burn NFTs of the 'unredeemed' state.
+        burn(redeemer, _tokenId, _amount);
 
-        if (underlyingType == UnderlyingType.None) {
-            redeemAccess(_tokenId, _amount, redeemer);
-        } else if (underlyingType == UnderlyingType.ERC20) {
-            redeemERC20(_tokenId, _amount, redeemer);
-        } else if (underlyingType == UnderlyingType.ERC721) {
-            redeemERC721(_tokenId, redeemer);
-        }
+        // Get access nft Id
+        uint256 accessNftId = tokenState[_tokenId].accessNftId;
+
+        require(
+            block.timestamp <= lastTimeToRedeem[accessNftId] || lastTimeToRedeem[accessNftId] == 0,
+            "AccessNFT: Window to redeem access has closed."
+        );
+
+        // Transfer Access NFTs to redeemer
+        this.safeTransferFrom(address(this), redeemer, accessNftId, _amount, "");
+
+        emit AccessNFTRedeemed(redeemer, _tokenId, accessNftId, _amount);
     }
 
     /**
@@ -366,8 +293,8 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
-        _contractURI = _URI;
+    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+        _contractURI = _uri;
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -378,49 +305,6 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /**
      *      Internal functions.
      */
-
-    /// @dev Lets an Access NFT holder redeem the NFT.
-    function redeemAccess(
-        uint256 _tokenId,
-        uint256 _amount,
-        address _redeemer
-    ) internal {
-        // Burn NFTs of the 'unredeemed' state.
-        burn(_msgSender(), _tokenId, _amount);
-
-        // Get access nft Id
-        uint256 accessNftId = tokenState[_tokenId].accessNftId;
-
-        require(
-            block.timestamp <= lastTimeToRedeem[accessNftId] || lastTimeToRedeem[accessNftId] == 0,
-            "AccessNFT: Window to redeem access has closed."
-        );
-
-        // Transfer Access NFTs to redeemer
-        this.safeTransferFrom(address(this), _redeemer, accessNftId, _amount, "");
-
-        emit AccessNFTRedeemed(_redeemer, _tokenId, accessNftId, _amount);
-    }
-
-    /// @dev Lets a wrapped nft owner redeem the underlying ERC721 NFT.
-    function redeemERC721(uint256 _tokenId, address _redeemer) internal {
-        // Burn the native NFT token
-        _burn(_redeemer, _tokenId, 1);
-
-        nftWrapper.redeemERC721(_tokenId, _redeemer);
-    }
-
-    /// @dev Lets the nft owner redeem their ERC20 tokens.
-    function redeemERC20(
-        uint256 _tokenId,
-        uint256 _amount,
-        address _redeemer
-    ) internal {
-        // Burn the native NFT token
-        _burn(_redeemer, _tokenId, _amount);
-
-        nftWrapper.redeemERC20(_tokenId, _amount, _redeemer);
-    }
 
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
