@@ -66,6 +66,10 @@ describe("List token for sale", function () {
     forwarder = contracts.forwarder;
 
     // Create access NFTs
+    //
+    const MINTER_ROLE = await accessNft.MINTER_ROLE();
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,

@@ -75,8 +75,12 @@ describe("List token for sale", function () {
     coin = contracts.coin;
     forwarder = contracts.forwarder;
     protocolControl = contracts.protocolControl;
+    registry = contracts.registry;
 
     // Create access NFTs
+    const MINTER_ROLE = await accessNft.MINTER_ROLE();
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
@@ -224,7 +228,6 @@ describe("List token for sale", function () {
       const MAX_BPS = await protocolControl.MAX_BPS();
 
       // Get balances before
-      const creatorBalBefore: BigNumber = await coin.balanceOf(creator.address);
       const buyerBalBefore: BigNumber = await coin.balanceOf(buyer.address);
       const treasuryBalBefore: BigNumber = await coin.balanceOf(
         await protocolControl.getRoyaltyTreasury(market.address),
@@ -237,7 +240,6 @@ describe("List token for sale", function () {
       });
 
       // Get balances after
-      const creatorBalAfter: BigNumber = await coin.balanceOf(creator.address);
       const buyerBalAfter: BigNumber = await coin.balanceOf(buyer.address);
       const treasuryBalAfter: BigNumber = await coin.balanceOf(
         await protocolControl.getRoyaltyTreasury(market.address),
@@ -248,18 +250,14 @@ describe("List token for sale", function () {
 
       // Market cut
       const marketCutBeforeProvider = totalPrice.mul(marketFeeBps).div(MAX_BPS);
-      const providerCutOfMarket: BigNumber = marketCutBeforeProvider.mul(providerFeeBps).div(MAX_BPS);
-      const finalMarketCut: BigNumber = marketCutBeforeProvider.sub(providerCutOfMarket);
 
       // Creator shares - gets royalty too
       const royaltyAmountBeforeProvider: BigNumber = totalPrice.mul(tokenRoyaltyBps).div(MAX_BPS);
-      const providerCutOfRoyalty: BigNumber = royaltyAmountBeforeProvider.mul(providerFeeBps).div(MAX_BPS);
 
       // Provider cut
-      const totalProviderCut: BigNumber = providerCutOfMarket.add(providerCutOfRoyalty);
+      const totalRoyaltyTreasuryCut: BigNumber = marketCutBeforeProvider.add(royaltyAmountBeforeProvider);
 
-      expect(creatorBalAfter.sub(creatorBalBefore)).to.equal(totalPrice.sub(totalProviderCut.add(finalMarketCut)));
-      expect(treasuryBalAfter.sub(treasuryBalBefore)).to.equal(totalProviderCut.add(finalMarketCut));
+      expect(treasuryBalAfter.sub(treasuryBalBefore)).to.equal(totalRoyaltyTreasuryCut);
       expect(buyerBalBefore.sub(buyerBalAfter)).to.equal(totalPrice);
     });
   });
