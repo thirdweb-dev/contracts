@@ -231,10 +231,10 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
         nextTokenId = id;
 
-        // Mint Access NFTs to contract
+        // Mint Access NFTs (Redeemed) to contract
         _mintBatch(address(this), accessNftIds, _nftSupplies, "");
 
-        // Mint NFTs to `_msgSender()`
+        // Mint NFTs (Redeemable) to `to`
         _mintBatch(to, nftIds, _nftSupplies, data);
 
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);

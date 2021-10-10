@@ -176,7 +176,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
     function onERC1155BatchReceived(
-        address,
+        address _operator,
         address _from,
         uint256[] memory _ids,
         uint256[] memory _values,
@@ -191,7 +191,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
 
         // Create packs.
         createPack(
-            _from,
+            _operator,
             packURI,
             _msgSender(),
             _ids,
