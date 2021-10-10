@@ -22,25 +22,35 @@ contract Registry is Context, Ownable {
 
     mapping(address => uint256) controlFeeBps;
 
-    // service provider / admin treasury
+    /// @dev service provider / admin treasury
     address public treasury;
 
-    // `Forwarder` for meta-transacitons
+    /// @dev `Forwarder` for meta-transacitons
     address public forwarder;
 
+    /// @dev The Create2 `ProtocolControl` contract factory.
     IControlDeployer public deployer;
 
-    // Mapping from app deployer => app address.
-    mapping(address => EnumerableSet.AddressSet) private _protocolControls;
+    struct ProtocolControls {
+        // E.g. if `latestVersion == 2`, there are 2 `ProtocolControl` contracts deployed.
+        uint256 latestVersion;
+        
+        // Mapping from version => contract address.
+        mapping(uint256 => address) protocolControlAddress;
+    }
+
+    /// @dev Mapping from app deployer => versions + app addresses.
+    mapping(address => ProtocolControls) private _protocolControls;
+    /// @dev Mapping from app => protocol provider fees for the app. 
     mapping(address => uint256) private protocolControlFeeBps;
 
-    // Emitted when the treasury is updated
+    /// @dev Emitted when the treasury is updated.
     event TreasuryUpdated(address newTreasury);
-
+    /// @dev Emitted when a new deployer is set.
     event DeployerUpdated(address newDeployer);
-
-    // Emitted on fees updates
+    /// @dev Emitted when the default protocol provider fees bps is updated.
     event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
+    /// @dev Emitted when the protocol provider fees bps for a particular `ProtocolControl` is updated.
     event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
 
     constructor(
@@ -53,36 +63,44 @@ contract Registry is Context, Ownable {
         deployer = IControlDeployer(_deployer);
     }
 
+    /// @dev Deploys `ProtocolControl` with `_msgSender()` as admin.
     function deployProtocol(string memory uri) external {
-        uint256 currentIndex = _protocolControls[_msgSender()].length();
 
-        address controlAddress = deployer.deployControl(address(this), currentIndex, _msgSender(), uri);
+        // Get deployer
+        address caller = _msgSender();        
+        // Get version for deployment
+        uint256 version = getNextVersion(caller);
+        // Deploy contract and get deployment address.
+        address controlAddress = deployer.deployControl(version, caller, uri);
 
-        _protocolControls[_msgSender()].add(controlAddress);
+        _protocolControls[caller].protocolControlAddress[version] = controlAddress;
     }
 
-    /// @dev Returns the latest version of protocol control
-    function getProtocolControlCount(address deployer) external view returns (uint256) {
-        return _protocolControls[deployer].length();
+    /// @dev Returns the latest version of protocol control.
+    function getProtocolControlCount(address _deployer) external view returns (uint256) {
+        return _protocolControls[_deployer].latestVersion;
     }
 
-    /// @dev Returns the protocol control address for the given version
-    function getProtocolControl(address deployer, uint256 index) external view returns (address) {
-        return _protocolControls[deployer].at(index);
+    /// @dev Returns the protocol control address for the given version.
+    function getProtocolControl(address _deployer, uint256 index) external view returns (address) {
+        return _protocolControls[_deployer].protocolControlAddress[index];
     }
 
+    /// @dev Sets a new `ProtocolControl` deployer in case `ProtocolControl` is upgraded.
     function setDeployer(address _newDeployer) external onlyOwner {
         deployer = IControlDeployer(_newDeployer);
 
         emit DeployerUpdated(_newDeployer);
     }
 
+    /// @dev Sets a new protocol provider treasury address.
     function setTreasury(address _newTreasury) external onlyOwner {
         treasury = _newTreasury;
 
         emit TreasuryUpdated(_newTreasury);
     }
 
+    /// @dev Sets a new `defaultFeeBps` for protocol provider fees.
     function setDefaultFeeBps(uint256 _newFeeBps) external onlyOwner {
         require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "Registry: provider fee cannot be greater than 10%");
 
@@ -91,6 +109,7 @@ contract Registry is Context, Ownable {
         emit DefaultFeeBpsUpdated(_newFeeBps);
     }
 
+    /// @dev Sets the protocol provider fee for a particular instance of `ProtocolControl`.
     function setProtocolControlFeeBps(address protocolControl, uint256 _newFeeBps) external onlyOwner {
         require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "Registry: provider fee cannot be greater than 10%");
 
@@ -99,11 +118,20 @@ contract Registry is Context, Ownable {
         emit ProtocolControlFeeBpsUpdated(protocolControl, _newFeeBps);
     }
 
+    /// @dev Returns the protocol provider fee for a particular instance of `ProtocolControl`.
     function getFeeBps(address protocolControl) external view returns (uint256) {
         uint256 fees = protocolControlFeeBps[protocolControl];
         if (fees == 0) {
             return defaultFeeBps;
         }
         return fees;
+    }
+
+    /// @dev Returns the next version of `ProtocolControl` for the given `_deployer`.
+    function getNextVersion(address _deployer) internal returns (uint256) {
+        // Increment version
+        _protocolControls[_deployer].latestVersion += 1;
+
+        return _protocolControls[_deployer].latestVersion;
     }
 }
