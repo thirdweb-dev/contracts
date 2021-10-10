@@ -44,7 +44,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         string uri;
         address creator;
         uint256 openStart;
-        uint256 openEnd;
     }
 
     /// @dev The rewards in a given set of packs with a unique tokenId.
@@ -187,9 +186,8 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         (
             string memory packURI,
             uint256 secondsUntilOpenStart,
-            uint256 secondsUntilOpenEnd,
             uint256 rewardsPerOpen
-        ) = abi.decode(_data, (string, uint256, uint256, uint256));
+        ) = abi.decode(_data, (string, uint256, uint256));
 
         // Create packs.
         createPack(
@@ -199,7 +197,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
             _ids,
             _values,
             secondsUntilOpenStart,
-            secondsUntilOpenEnd,
             rewardsPerOpen
         );
 
@@ -215,7 +212,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         PackState memory packState = packs[_packId];
 
         require(
-            block.timestamp >= packState.openStart && block.timestamp <= packState.openEnd,
+            block.timestamp >= packState.openStart,
             "Pack: the window to open packs has not started or closed."
         );
         require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
@@ -302,7 +299,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         uint256[] memory _rewardIds,
         uint256[] memory _rewardAmounts,
         uint256 _secondsUntilOpenStart,
-        uint256 _secondsUntilOpenEnd,
         uint256 _rewardsPerOpen
     ) internal onlyUnpausedProtocol {
         require(
@@ -324,8 +320,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         PackState memory packState = PackState({
             creator: _creator,
             uri: _packURI,
-            openStart: block.timestamp + _secondsUntilOpenStart,
-            openEnd: _secondsUntilOpenEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilOpenEnd
+            openStart: block.timestamp + _secondsUntilOpenStart
         });
 
         // Store reward state.
@@ -438,7 +433,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256, uint256 salePrice)
         external
         view
         virtual

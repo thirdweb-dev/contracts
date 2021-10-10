@@ -32,7 +32,7 @@ contract Registry is Context, Ownable {
 
     // Mapping from app deployer => app address.
     mapping(address => EnumerableSet.AddressSet) private _protocolControls;
-    mapping(address => uint256) public protocolControlFeeBps;
+    mapping(address => uint256) private protocolControlFeeBps;
 
     // Emitted when the treasury is updated
     event TreasuryUpdated(address newTreasury);
@@ -41,7 +41,7 @@ contract Registry is Context, Ownable {
 
     // Emitted on fees updates
     event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
-    event ProtocolControlFeeBpsUpdated(address indexed control, uint256 defaultFeeBps);
+    event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
 
     constructor(
         address _treasury,

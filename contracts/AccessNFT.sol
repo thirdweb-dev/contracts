@@ -437,6 +437,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
+        // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
@@ -479,7 +480,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev See EIP 2918
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256, uint256 salePrice)
         external
         view
         virtual

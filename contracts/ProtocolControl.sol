@@ -25,7 +25,7 @@ contract ProtocolControl is AccessControlEnumerable {
     mapping(uint256 => uint256) public numOfModuleType;
 
     /// @dev module address => royalty address
-    mapping(address => address) public moduleRoyalty;
+    mapping(address => address) private moduleRoyalty;
 
     address public registry;
 
