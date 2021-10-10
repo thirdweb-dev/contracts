@@ -9,6 +9,10 @@ import "./openzeppelin-presets/finance/PaymentSplitter.sol";
 import { Registry } from "./Registry.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
+/**
+ * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
+ * and shares that represent the fees.
+ */
 contract Royalty is PaymentSplitter, ERC2771Context {
     ProtocolControl private controlCenter;
 

@@ -37,7 +37,7 @@ contract Registry is Context, Ownable {
 
     /// @dev Mapping from app deployer => versions + app addresses.
     mapping(address => ProtocolControls) private _protocolControls;
-    /// @dev Mapping from app => protocol provider fees for the app.
+    /// @dev Mapping from app (protocol control) => protocol provider fees for the app.
     mapping(address => uint256) private protocolControlFeeBps;
 
     /// @dev Emitted when the treasury is updated.

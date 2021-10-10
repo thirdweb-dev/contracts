@@ -19,7 +19,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public isRestrictedTransfer;
+    bool public transfersRestricted;
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
@@ -152,7 +152,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
 
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
-        isRestrictedTransfer = _restrictedTransfer;
+        transfersRestricted = _restrictedTransfer;
     }
 
     /// @dev Runs on every transfer.
@@ -164,7 +164,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isRestrictedTransfer && from != address(0) && to != address(0)) {
+        if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
