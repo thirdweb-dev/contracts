@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { AccessNFTPL } from "../../typechain/AccessNFTPL";
+import { AccessNFT } from "../../typechain/AccessNFT";
 import { Market } from "../../typechain/Market";
 import { Coin } from "../../typechain/Coin";
 import { BigNumber } from "ethers";
@@ -25,7 +25,7 @@ describe("List token for sale", function () {
 
   // Contracts
   let market: Market;
-  let accessNft: AccessNFTPL;
+  let accessNft: AccessNFT;
   let coin: Coin;
   let forwarder: Forwarder;
 
@@ -69,11 +69,11 @@ describe("List token for sale", function () {
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        creator.address,
         rewardURIs,
         accessURIs,
         rewardSupplies,
-        zeroAddress,
         emptyData,
       ]),
     });

@@ -177,12 +177,12 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
      */
 
     /// @notice Create native ERC 1155 NFTs.
-    function createAccessNfts(
+    function createAccessTokens(
+        address to,
         string[] calldata _nftURIs,
         string[] calldata _accessNftURIs,
         uint256[] calldata _nftSupplies,
-        address _pack,
-        bytes calldata _packArgs
+        bytes calldata data
     ) external onlyUnpausedProtocol onlyMinterRole returns (uint256[] memory nftIds) {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
@@ -235,13 +235,9 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         _mintBatch(address(this), accessNftIds, _nftSupplies, "");
 
         // Mint NFTs to `_msgSender()`
-        _mintBatch(_msgSender(), nftIds, _nftSupplies, "");
+        _mintBatch(to, nftIds, _nftSupplies, data);
 
         emit AccessNFTsCreated(_msgSender(), nftIds, _nftURIs, accessNftIds, _accessNftURIs, _nftSupplies);
-
-        if (_pack != address(0)) {
-            safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, _packArgs);
-        }
     }
 
     /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.

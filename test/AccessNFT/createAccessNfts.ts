@@ -9,12 +9,12 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BytesLike } from "@ethersproject/bytes";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
-describe("Calling 'createAccessNfts'", function () {
+describe("Calling 'createAccessTokens'", function () {
   // Signers
   let deployer: SignerWithAddress;
   let creator: SignerWithAddress;
@@ -59,19 +59,19 @@ describe("Calling 'createAccessNfts'", function () {
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(rewardURIs.slice(1), accessURIs, rewardSupplies, zeroAddress, emptyData),
+          .createAccessTokens(creator.address, rewardURIs.slice(1), accessURIs, rewardSupplies, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(rewardURIs, accessURIs.slice(1), rewardSupplies, zeroAddress, emptyData),
+          .createAccessTokens(creator.address, rewardURIs.slice(1), accessURIs, rewardSupplies, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
         accessNft
           .connect(creator)
-          .createAccessNfts(rewardURIs, accessURIs, rewardSupplies.slice(1), zeroAddress, emptyData),
+          .createAccessTokens(creator.address, rewardURIs.slice(1), accessURIs, rewardSupplies, emptyData),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
     });
 
@@ -80,14 +80,16 @@ describe("Calling 'createAccessNfts'", function () {
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
       await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
 
-      await expect(accessNft.connect(creator).createAccessNfts([], [], [], zeroAddress, emptyData)).to.be.revertedWith(
-        "AccessNFT: Must create at least one NFT.",
-      );
+      await expect(
+        accessNft.connect(creator).createAccessTokens(creator.address, [], [], [], emptyData),
+      ).to.be.revertedWith("AccessNFT: Must create at least one NFT.");
     });
 
     it("Should revert if caller does not have MINTER_ROLE", async () => {
       await expect(
-        accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies, zeroAddress, emptyData),
+        accessNft
+          .connect(creator)
+          .createAccessTokens(creator.address, rewardURIs, accessURIs, rewardSupplies, emptyData),
       ).to.be.reverted;
     });
   });
@@ -143,11 +145,11 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+          creator.address,
           rewardURIs,
           accessURIs,
           rewardSupplies,
-          zeroAddress,
           emptyData,
         ]),
       });
@@ -168,11 +170,11 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+          creator.address,
           rewardURIs,
           accessURIs,
           rewardSupplies,
-          zeroAddress,
           emptyData,
         ]),
       });
@@ -222,11 +224,11 @@ describe("Calling 'createAccessNfts'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+        data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+          creator.address,
           rewardURIs,
           accessURIs,
           rewardSupplies,
-          zeroAddress,
           emptyData,
         ]),
       });

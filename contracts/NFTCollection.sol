@@ -159,7 +159,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
      */
 
     /// @notice Create native ERC 1155 NFTs.
-    function createNativeTokens(string[] calldata _nftURIs, uint256[] calldata _nftSupplies)
+    function createNativeTokens(address to, string[] calldata _nftURIs, uint256[] calldata _nftSupplies, bytes memory data)
         public
         onlyUnpausedProtocol
         onlyMinterRole
@@ -193,7 +193,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         nextTokenId = id;
 
         // Mint NFTs to token creator.
-        _mintBatch(tokenCreator, nftIds, _nftSupplies, "");
+        _mintBatch(to, nftIds, _nftSupplies, data);
 
         emit NativeTokens(tokenCreator, nftIds, _nftURIs, _nftSupplies);
     }
@@ -243,25 +243,6 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /**
      *      External functions
      */
-
-    /// @dev Creates packs with NFTs.
-    function createPackAtomic(
-        address _pack,
-        string[] calldata _nftURIs,
-        uint256[] calldata _nftSupplies,
-        string calldata _packURI,
-        uint256 _secondsUntilOpenStart,
-        uint256 _secondsUntilOpenEnd,
-        uint256 _nftsPerOpen
-    ) external onlyUnpausedProtocol onlyMinterRole {
-        // Create NFTs to pack and get their tokenIds.
-        uint256[] memory nftIds = createNativeTokens(_nftURIs, _nftSupplies);
-
-        // Create pack.
-        bytes memory args = abi.encode(_packURI, _secondsUntilOpenStart, _secondsUntilOpenEnd, _nftsPerOpen);
-        safeBatchTransferFrom(_msgSender(), _pack, nftIds, _nftSupplies, args);
-    }
-
     /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.
     function wrapERC721(
         address _nftContract,

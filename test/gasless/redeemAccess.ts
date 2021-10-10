@@ -42,7 +42,10 @@ describe("Redeem access", function () {
     [creator, fan, relayer] = signers;
 
     // Get contracts
-    [pack, accessNft, forwarder] = await getContracts(creator, networkName, ["Pack", "AccessNFT", "Forwarder"]);
+    let contracts = await getContracts(creator, networkName);
+    pack = contracts.pack;
+    accessNft = contracts.accessNft;
+    forwarder = contracts.forwarder;
 
     // Create access NFTs
     await accessNft.connect(creator).createAccessNfts(rewardURIs, accessURIs, rewardSupplies);

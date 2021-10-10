@@ -11,7 +11,7 @@ import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom, impersonate } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
@@ -56,25 +56,20 @@ describe("Token transfers under various conditions", function () {
     await sendGaslessTx(_packCreator, forwarder, relayer, {
       from: _packCreator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        _packAddress,
         _rewardURIs,
         _accessURIs,
         _rewardAmounts,
-        _packAddress,
         _encodedParamsAsData,
       ]),
     });
   };
 
-  const encodeParams = (
-    packURI: string,
-    secondsUntilOpenStart: number,
-    secondsUntilOpenEnd: number,
-    rewardsPerOpen: number,
-  ) => {
+  const encodeParams = (packURI: string, secondsUntilOpenStart: number, rewardsPerOpen: number) => {
     return ethers.utils.defaultAbiCoder.encode(
-      ["string", "uint256", "uint256", "uint256"],
-      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen],
+      ["string", "uint256", "uint256"],
+      [packURI, secondsUntilOpenStart, rewardsPerOpen],
     );
   };
 
@@ -121,7 +116,7 @@ describe("Token transfers under various conditions", function () {
       accessURIs,
       rewardSupplies,
       pack.address,
-      encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+      encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
     );
 
     // Get rewardIds

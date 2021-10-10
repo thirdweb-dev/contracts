@@ -58,6 +58,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
     /// @dev listingId => listing info.
     mapping(uint256 => Listing) public listings;
+
     /// @dev listingId => buyer address => tokens bought
     mapping(uint256 => mapping(address => uint256)) public boughtFromListing;
 

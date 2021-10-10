@@ -50,13 +50,12 @@ describe("Buy tokens", function () {
     [creator, buyer, relayer] = signers;
 
     // Get contracts
-    [pack, accessNft, forwarder, market, coin] = await getContracts(creator, networkName, [
-      "Pack",
-      "AccessNFT",
-      "Forwarder",
-      "Market",
-      "Coin",
-    ]);
+    let contracts = await getContracts(creator, networkName);
+    pack = contracts.pack;
+    accessNft = contracts.accessNft;
+    forwarder = contracts.forwarder;
+    market = contracts.market;
+    coin = contracts.coin;
 
     // Mint coins to buyer
     await coin.connect(creator).mint(buyer.address, pricePerToken.mul(BigNumber.from(amountToList)));
@@ -64,30 +63,30 @@ describe("Buy tokens", function () {
     await coin.connect(buyer).approve(market.address, pricePerToken.mul(BigNumber.from(amountToList)));
 
     // Get expected packId
-    expectedPackId = await pack.nextTokenId();
-    expectedListingId = await market.totalListings();
+    expectedPackId = (await pack.nextTokenId()).toNumber();
+    expectedListingId = (await market.totalListings()).toNumber();
 
     // Create access packs
-    await accessNft
-      .connect(creator)
-      .createAccessPack(
-        pack.address,
-        rewardURIs,
-        accessURIs,
-        rewardSupplies,
-        packURI,
-        openStartAndEnd,
-        openStartAndEnd,
-        rewardsPerOpen,
-      );
+    //await accessNft
+    //.connect(creator)
+    //.createAccessNfts(pack.address, rewardURIs, accessURIs, rewardSupplies, packURI, openStartAndEnd, rewardsPerOpen);
 
-    // Approve market to transfer tokens
-    await pack.connect(creator).setApprovalForAll(market.address, true);
+    //Approve market to transfer tokens
+    //await pack.connect(creator).setApprovalForAll(market.address, true);
 
-    // List token
-    await market
-      .connect(creator)
-      .list(pack.address, expectedPackId, coin.address, pricePerToken, amountToList, openStartAndEnd, openStartAndEnd);
+    //List token
+    //await market
+    //.connect(creator)
+    //.list(
+    //pack.address,
+    //expectedPackId,
+    //coin.address,
+    //pricePerToken,
+    //amountToList,
+    //amountToList,
+    //openStartAndEnd,
+    //openStartAndEnd,
+    //);
   });
 
   describe("Should create access packs", function () {

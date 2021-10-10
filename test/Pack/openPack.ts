@@ -11,7 +11,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 
 // Test utils
-import { getContracts, Contracts } from "../../utils/tests/getContractsPermissioned";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom, impersonate } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
@@ -54,25 +54,20 @@ describe("Open a pack", function () {
     await sendGaslessTx(_packCreator, forwarder, relayer, {
       from: _packCreator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        _packAddress,
         _rewardURIs,
         _accessURIs,
         _rewardAmounts,
-        _packAddress,
         _encodedParamsAsData,
       ]),
     });
   };
 
-  const encodeParams = (
-    packURI: string,
-    secondsUntilOpenStart: number,
-    secondsUntilOpenEnd: number,
-    rewardsPerOpen: number,
-  ) => {
+  const encodeParams = (packURI: string, secondsUntilOpenStart: number, rewardsPerOpen: number) => {
     return ethers.utils.defaultAbiCoder.encode(
-      ["string", "uint256", "uint256", "uint256"],
-      [packURI, secondsUntilOpenStart, secondsUntilOpenEnd, rewardsPerOpen],
+      ["string", "uint256", "uint256"],
+      [packURI, secondsUntilOpenStart, rewardsPerOpen],
     );
   };
 
@@ -109,34 +104,6 @@ describe("Open a pack", function () {
   });
 
   describe("Revert cases", function () {
-    it("Should revert if window to openPack has ended", async () => {
-      const secondsUntilOpenEnd: number = 100;
-
-      // Grant MINTER_ROLE to creator
-      const MINTER_ROLE = await accessNft.MINTER_ROLE();
-      await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
-      await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
-
-      // Create packs
-      await createPack(
-        creator,
-        rewardURIs,
-        accessURIs,
-        rewardSupplies,
-        pack.address,
-        encodeParams(packURI, openStartAndEnd, secondsUntilOpenEnd, rewardsPerOpen),
-      );
-
-      // Time travel
-      for (let i = 0; i < secondsUntilOpenEnd; i++) {
-        await ethers.provider.send("evm_mine", []);
-      }
-
-      await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
-        "Pack: the window to open packs has not started or closed.",
-      );
-    });
-
     it("Should revert if the Pack contract has no LINK", async () => {
       // Grant MINTER_ROLE to creator
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
@@ -150,7 +117,7 @@ describe("Open a pack", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
@@ -171,7 +138,7 @@ describe("Open a pack", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
@@ -195,7 +162,7 @@ describe("Open a pack", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
@@ -223,7 +190,7 @@ describe("Open a pack", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
@@ -272,7 +239,7 @@ describe("Open a pack", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
@@ -308,7 +275,7 @@ describe("Open a pack", function () {
         accessURIs,
         rewardSupplies,
         pack.address,
-        encodeParams(packURI, openStartAndEnd, openStartAndEnd, rewardsPerOpen),
+        encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
       // Fund pack contract with LINK
