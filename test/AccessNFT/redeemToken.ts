@@ -15,7 +15,7 @@ import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
-describe("Calling 'createAccessTokens'", function () {
+describe("Calling 'redeemToken'", function () {
   // Signers
   let deployer: SignerWithAddress;
   let creator: SignerWithAddress;

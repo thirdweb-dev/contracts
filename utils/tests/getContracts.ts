@@ -11,7 +11,6 @@ import { Coin } from "../../typechain/Coin";
 import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
 import { Forwarder } from "../../typechain/Forwarder";
-import { NFTWrapper } from "../../typechain/NFTWrapper";
 import { ProtocolControl } from "../../typechain/ProtocolControl";
 
 export type Contracts = {
@@ -22,7 +21,6 @@ export type Contracts = {
   coin: Coin;
   pack: Pack;
   market: Market;
-  nftWrapper: NFTWrapper;
   nft: NFT;
 };
 
@@ -30,10 +28,6 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
   // Deploy Forwarder
   const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder");
   const forwarder: Forwarder = (await Forwarder_Factory.deploy()) as Forwarder;
-
-  // Deploy NFTWrapper
-  const NFTWrapper_Factory: ContractFactory = await ethers.getContractFactory("NFTWrapper");
-  const nftWrapper: NFTWrapper = (await NFTWrapper_Factory.deploy()) as NFTWrapper;
 
   // Deploy NFTWrapper
   const ControlDeployer_Factory: ContractFactory = await ethers.getContractFactory("ControlDeployer");
@@ -92,7 +86,6 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
   const accessNft: AccessNFT = (await AccessNFT_Factory.deploy(
     protocolControl.address,
     forwarder.address,
-    nftWrapper.address,
     accessNFTContractURI,
   )) as AccessNFT;
 
@@ -128,7 +121,6 @@ export async function getContracts(deployer: SignerWithAddress, networkName: str
     market,
     accessNft,
     coin,
-    nftWrapper,
     nft,
   };
 }
