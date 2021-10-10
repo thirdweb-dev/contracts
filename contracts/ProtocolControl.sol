@@ -15,8 +15,8 @@ import { Royalty } from "./Royalty.sol";
 contract ProtocolControl is AccessControlEnumerable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    /// @dev Protocol provider fees
-    uint128 public constant MAX_BPS = 10000; // 100%
+    /// @dev MAX_BPS for the contract: 10_000 == 100%
+    uint128 public constant MAX_BPS = 10000;
 
     /// @dev Module ID => Module address.
     mapping(bytes32 => address) public modules;
@@ -27,10 +27,13 @@ contract ProtocolControl is AccessControlEnumerable {
     /// @dev module address => royalty address
     mapping(address => address) private moduleRoyalty;
 
+    /// @dev The top level app registry.
     address public registry;
 
-    /// @dev deployer's treasury
+    /// @dev Deployer's treasury
     address public royaltyTreasury;
+
+    /// @dev The Forwarder for this app's modules.
     address private _forwarder;
 
     /// @dev Contract level metadata.
@@ -47,7 +50,7 @@ contract ProtocolControl is AccessControlEnumerable {
 
     /// @dev Check whether the caller is a protocol admin
     modifier onlyProtocolAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Protocol: Only protocol admins can call this function.");
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "ProtocolControl: Only protocol admins can call this function.");
         _;
     }
 
@@ -58,29 +61,33 @@ contract ProtocolControl is AccessControlEnumerable {
     ) {
         // Set contract URI
         _contractURI = _uri;
-
+        // Set top level ap registry
         registry = _registry;
+        // Set default royalty treasury address
         royaltyTreasury = Registry(_registry).treasury();
-
         // Set access control roles
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
     }
 
     /// @dev Initialize treasury payment royalty splitting pool
     function setRoyaltyTreasury(address payable _treasury) external onlyProtocolAdmin {
-        require(_isRoyaltyTreasuryValid(_treasury), "fee is too low");
+        require(_isRoyaltyTreasuryValid(_treasury), "ProtocolControl: provider shares too low.");
         royaltyTreasury = _treasury;
     }
 
     // @dev _treasury must be PaymentSplitter compatible interface.
     function setModuleRoyaltyTreasury(address moduleAddress, address payable _treasury) external onlyProtocolAdmin {
-        require(_isRoyaltyTreasuryValid(_treasury), "fee is too low");
+        require(_isRoyaltyTreasuryValid(_treasury), "ProtocolControl: provider shares too low.");
         moduleRoyalty[moduleAddress] = _treasury;
     }
 
     function _isRoyaltyTreasuryValid(address payable _treasury) private view returns (bool) {
+        
+        // Get `Royalty` and `Registry` instances
         Royalty royalty = Royalty(_treasury);
         Registry _registry = Registry(registry);
+
+        // Calculate the protocol provider's shares.
         uint256 royaltyRegistryShares = royalty.shares(_registry.treasury());
         uint256 royaltyTotalShares = royalty.totalShares();
         uint256 registryCutBps = (royaltyRegistryShares * MAX_BPS) / royaltyTotalShares;

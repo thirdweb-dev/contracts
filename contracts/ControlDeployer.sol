@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IControlDeployer.sol";
 
 import { Registry } from "./Registry.sol";
-import { Royalty } from "./Royalty.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract ControlDeployer is AccessControl, IControlDeployer {
