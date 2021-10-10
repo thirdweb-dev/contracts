@@ -9,17 +9,17 @@ The contracts in the `/contracts` directory are deployed on the following networ
 
 ### Mumbai
 
-- `ProtocolControl.sol`: [0x53975617f305fA0e6f29fd0870C32ad38ee6bD70](https://mumbai.polygonscan.com/address/0x53975617f305fA0e6f29fd0870C32ad38ee6bD70#code)
+- `Registry.sol`: [0x5665e52Ed893891F44e0fFE67c40F29074d81a6B](https://mumbai.polygonscan.com/address/0x5665e52Ed893891F44e0fFE67c40F29074d81a6B#code)
 
-- `Pack.sol`: [0x1b2812ba4fD7eCdfE357e93749d31B6C86B8063d](https://mumbai.polygonscan.com/address/0x1b2812ba4fD7eCdfE357e93749d31B6C86B8063d#code)
+- `ProtocolControl.sol`: [0xea68422Cee517E2D5a702fA43cd891a8e3EDd7d7](https://mumbai.polygonscan.com/address/0xea68422Cee517E2D5a702fA43cd891a8e3EDd7d7#code)
 
-- `Market.sol`: [0x66c132Fcd9bE13C48821486e27Dc19146056c3a1](https://mumbai.polygonscan.com/address/0x66c132Fcd9bE13C48821486e27Dc19146056c3a1#code)
+- `Pack.sol`: [0x60734D85eD65641Cc20de6cC87e589e367876748](https://mumbai.polygonscan.com/address/0x60734D85eD65641Cc20de6cC87e589e367876748#code)
 
-- `AccessNFT.sol`: [0xB056F10C3c44809c39B447462E48130d288FCc59](https://mumbai.polygonscan.com/address/0xB056F10C3c44809c39B447462E48130d288FCc59#code)
+- `Market.sol`: [0x005b59d38EB1b76412bCe0BA37c45128EEbda362](https://mumbai.polygonscan.com/address/0x005b59d38EB1b76412bCe0BA37c45128EEbda362#code)
 
-- `Forwarder.sol`: [0x074048E2A7Df00F32563e7448A50769aAe735948](https://mumbai.polygonscan.com/address/0x074048E2A7Df00F32563e7448A50769aAe735948#code)
+- `AccessNFT.sol`: [0xE8cBcE800dcc6C2957626732e808E1833052DCEE](https://mumbai.polygonscan.com/address/0xE8cBcE800dcc6C2957626732e808E1833052DCEE#code)
 
-- `NFTWrapper.sol`: [0x873c3e90f0dE5712FC0f5DDba2c4a08Ec4C40c36](https://mumbai.polygonscan.com/address/0x873c3e90f0dE5712FC0f5DDba2c4a08Ec4C40c36#code)
+- `Forwarder.sol`: [0x4B649d0f9E8B00Df56E339C09939A8A15e55f264](https://mumbai.polygonscan.com/address/0x4B649d0f9E8B00Df56E339C09939A8A15e55f264#code)
 
 ## Test helper contracts
 

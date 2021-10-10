@@ -32,7 +32,6 @@ contract Royalty is PaymentSplitter, ERC2771Context {
         address[] memory payees,
         uint256[] memory shares_
     ) PaymentSplitter() ERC2771Context(_trustedForwarder) {
-        
         require(payees.length == shares_.length, "Royalty: unequal number of payees and shares provided.");
         require(payees.length > 0, "Royalty: no payees provided.");
 
@@ -40,7 +39,7 @@ contract Royalty is PaymentSplitter, ERC2771Context {
         _contractURI = _uri;
         // Set the protocol's control center.
         controlCenter = ProtocolControl(_controlCenter);
-        
+
         Registry registry = Registry(controlCenter.registry());
         uint256 feeBps = registry.getFeeBps(_controlCenter);
         uint256 totalScaledShares = 0;
@@ -62,7 +61,7 @@ contract Royalty is PaymentSplitter, ERC2771Context {
         // WARNING: Do not call _addPayee outside of this constructor.
         _addPayee(registry.treasury(), totalScaledShares - totalScaledSharesMinusFee);
     }
-    
+
     /// @dev See ERC2771
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();

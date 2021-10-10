@@ -22,7 +22,6 @@ contract ControlDeployer is AccessControl, IControlDeployer {
         address deployer,
         string memory uri
     ) external override returns (address control) {
-
         // Get registry address.
         address registry = _msgSender();
 

@@ -54,8 +54,7 @@ contract PaymentSplitter is Context {
      * All addresses in `payees` must be non-zero. Both arrays must have the same non-zero length, and there must be no
      * duplicates in `payees`.
      */
-    constructor() payable {
-    }
+    constructor() payable {}
 
     /**
      * @dev The Ether received will be logged with {PaymentReceived} events. Note that these events are not fully

@@ -50,7 +50,10 @@ contract ProtocolControl is AccessControlEnumerable {
 
     /// @dev Check whether the caller is a protocol admin
     modifier onlyProtocolAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "ProtocolControl: Only protocol admins can call this function.");
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "ProtocolControl: Only protocol admins can call this function."
+        );
         _;
     }
 
@@ -82,7 +85,6 @@ contract ProtocolControl is AccessControlEnumerable {
     }
 
     function _isRoyaltyTreasuryValid(address payable _treasury) private view returns (bool) {
-        
         // Get `Royalty` and `Registry` instances
         Royalty royalty = Royalty(_treasury);
         Registry _registry = Registry(registry);

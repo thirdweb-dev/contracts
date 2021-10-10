@@ -32,7 +32,7 @@ async function ProtocolControl() {
 
   await hre.run("verify:verify", {
     address: protocolControl,
-    constructorArguments: [deployer.address, deployer.address, deployer.address, contractURI],
+    constructorArguments: [registry, deployer.address, contractURI],
   });
 }
 
@@ -59,6 +59,7 @@ async function AccessNFT() {
 
 async function verify() {
   await Forwarder();
+  await Registry();
   await ProtocolControl();
   await Pack();
   await Market();

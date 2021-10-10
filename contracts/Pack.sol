@@ -182,22 +182,13 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         bytes memory _data
     ) public override onlyUnpausedProtocol returns (bytes4) {
         // Get parameters for creating packs.
-        (
-            string memory packURI,
-            uint256 secondsUntilOpenStart,
-            uint256 rewardsPerOpen
-        ) = abi.decode(_data, (string, uint256, uint256));
+        (string memory packURI, uint256 secondsUntilOpenStart, uint256 rewardsPerOpen) = abi.decode(
+            _data,
+            (string, uint256, uint256)
+        );
 
         // Create packs.
-        createPack(
-            _operator,
-            packURI,
-            _msgSender(),
-            _ids,
-            _values,
-            secondsUntilOpenStart,
-            rewardsPerOpen
-        );
+        createPack(_operator, packURI, _msgSender(), _ids, _values, secondsUntilOpenStart, rewardsPerOpen);
 
         return this.onERC1155BatchReceived.selector;
     }
@@ -210,10 +201,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     function openPack(uint256 _packId) external onlyUnpausedProtocol {
         PackState memory packState = packs[_packId];
 
-        require(
-            block.timestamp >= packState.openStart,
-            "Pack: the window to open packs has not started or closed."
-        );
+        require(block.timestamp >= packState.openStart, "Pack: the window to open packs has not started or closed.");
         require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
         require(balanceOf(_msgSender(), _packId) > 0, "Pack: sender owns no packs of the given packId.");
         require(currentRequestId[_packId][_msgSender()] == "", "Pack: must wait for the pending pack to be opened.");

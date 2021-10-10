@@ -101,10 +101,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
 
     /// @dev Checks whether the caller has MINTER_ROLE.
     modifier onlyMinterRole() {
-        require(
-            hasRole(MINTER_ROLE, _msgSender()),
-            "AccessNFT: account does not have MINTER_ROLE."
-        );
+        require(hasRole(MINTER_ROLE, _msgSender()), "AccessNFT: account does not have MINTER_ROLE.");
         _;
     }
 

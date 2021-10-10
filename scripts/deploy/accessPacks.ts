@@ -109,7 +109,7 @@ async function main(): Promise<void> {
 
     [networkName]: {
       ...curentNetworkAddreses,
-      
+
       registry: registry.address,
       protocolControl: protocolControl.address,
       forwarder: forwarder.address,

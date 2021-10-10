@@ -14,7 +14,6 @@ import { Forwarder } from "./Forwarder.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 contract Registry is Context, Ownable {
-
     uint256 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
     uint256 public defaultFeeBps = 500; // 5%
 
@@ -32,14 +31,13 @@ contract Registry is Context, Ownable {
     struct ProtocolControls {
         // E.g. if `latestVersion == 2`, there are 2 `ProtocolControl` contracts deployed.
         uint256 latestVersion;
-        
         // Mapping from version => contract address.
         mapping(uint256 => address) protocolControlAddress;
     }
 
     /// @dev Mapping from app deployer => versions + app addresses.
     mapping(address => ProtocolControls) private _protocolControls;
-    /// @dev Mapping from app => protocol provider fees for the app. 
+    /// @dev Mapping from app => protocol provider fees for the app.
     mapping(address => uint256) private protocolControlFeeBps;
 
     /// @dev Emitted when the treasury is updated.
@@ -63,9 +61,8 @@ contract Registry is Context, Ownable {
 
     /// @dev Deploys `ProtocolControl` with `_msgSender()` as admin.
     function deployProtocol(string memory uri) external {
-
         // Get deployer
-        address caller = _msgSender();        
+        address caller = _msgSender();
         // Get version for deployment
         uint256 version = getNextVersion(caller);
         // Deploy contract and get deployment address.

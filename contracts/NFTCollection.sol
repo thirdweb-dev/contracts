@@ -159,12 +159,12 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
      */
 
     /// @notice Create native ERC 1155 NFTs.
-    function createNativeTokens(address to, string[] calldata _nftURIs, uint256[] calldata _nftSupplies, bytes memory data)
-        public
-        onlyUnpausedProtocol
-        onlyMinterRole
-        returns (uint256[] memory nftIds)
-    {
+    function createNativeTokens(
+        address to,
+        string[] calldata _nftURIs,
+        uint256[] calldata _nftSupplies,
+        bytes memory data
+    ) public onlyUnpausedProtocol onlyMinterRole returns (uint256[] memory nftIds) {
         require(_nftURIs.length == _nftSupplies.length, "NFTCollection: Must specify equal number of config values.");
         require(_nftURIs.length > 0, "NFTCollection: Must create at least one NFT.");
 
