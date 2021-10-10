@@ -23,6 +23,7 @@ async function main() {
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
   // Deploy `ProtocolControl`
+  /*
   const protocolControlURI: string = "";
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
   const protocolControl: Contract = await ProtocolControl_Factory.deploy(
@@ -38,10 +39,8 @@ async function main() {
 
   await protocolControl.deployed();
 
-  // Get Protocol control address.
   const protocolControlAddr: string = protocolControl.address;
 
-  // Update contract addresses in `/utils`
   const updatedAddresses = {
     ...addresses,
 
@@ -53,6 +52,7 @@ async function main() {
   };
 
   fs.writeFileSync(path.join(__dirname, "../../utils/addresses/accesspacks.json"), JSON.stringify(updatedAddresses));
+  */
 }
 
 main()
