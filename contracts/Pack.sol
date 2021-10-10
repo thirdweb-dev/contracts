@@ -171,7 +171,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         bytes memory
     ) public virtual override returns (bytes4) {
         revert("Pack: Must use batch transfer.");
-        return this.onERC1155Received.selector;
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens

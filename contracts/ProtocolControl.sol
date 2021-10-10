@@ -80,15 +80,15 @@ contract ProtocolControl is AccessControlEnumerable {
 
     function _isRoyaltyTreasuryValid(address payable _treasury) private view returns (bool) {
         Royalty royalty = Royalty(_treasury);
-        Registry registry = Registry(registry);
-        uint256 royaltyRegistryShares = royalty.shares(registry.treasury());
+        Registry _registry = Registry(registry);
+        uint256 royaltyRegistryShares = royalty.shares(_registry.treasury());
         uint256 royaltyTotalShares = royalty.totalShares();
         uint256 registryCutBps = (royaltyRegistryShares * MAX_BPS) / royaltyTotalShares;
 
         // 10 bps (0.10%) tolerance in case of precision loss
         // making sure registry treasury gets at least the fee's worth of shares.
         uint256 feeBpsTolerance = 10;
-        return registryCutBps >= (registry.getFeeBps(address(this)) - feeBpsTolerance);
+        return registryCutBps >= (_registry.getFeeBps(address(this)) - feeBpsTolerance);
     }
 
     function getRoyaltyTreasury(address moduleAddress) external view returns (address) {
