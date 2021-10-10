@@ -12,11 +12,6 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_nftWrapper",
-        "type": "address"
-      },
-      {
         "internalType": "string",
         "name": "_uri",
         "type": "string"
@@ -583,13 +578,7 @@
       }
     ],
     "name": "createAccessTokens",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "nftIds",
-        "type": "uint256[]"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1176,7 +1165,7 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_URI",
+        "name": "_uri",
         "type": "string"
       }
     ],
@@ -1362,57 +1351,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "_tokenContracts",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_tokenAmounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_numOfNftsToMint",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "_nftURIs",
-        "type": "string[]"
-      }
-    ],
-    "name": "wrapERC20",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "_nftContracts",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_tokenIds",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "_nftURIs",
-        "type": "string[]"
-      }
-    ],
-    "name": "wrapERC721",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

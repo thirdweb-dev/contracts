@@ -133,11 +133,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "nonce",
         "type": "uint256"
@@ -157,7 +152,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "control",
         "type": "address"
       }
     ],
