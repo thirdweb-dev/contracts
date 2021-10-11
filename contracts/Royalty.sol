@@ -15,6 +15,8 @@ import { ProtocolControl } from "./ProtocolControl.sol";
  * and shares that represent the fees.
  */
 contract Royalty is PaymentSplitter, ERC2771Context {
+    
+    /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
     /// @dev Contract level metadata.
