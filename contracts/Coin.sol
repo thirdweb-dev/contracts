@@ -75,7 +75,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context {
         transfersRestricted = _restrictedTransfer;
     }
 
-    /// @dev Mints `amount` of coins to `to`.
+    /// @dev Mints `amount` of coins to `to`. `super.mint` checks for MINTER_ROLE.
     function mint(address to, uint256 amount) public override onlyUnpausedProtocol {
         super.mint(to, amount);
     }

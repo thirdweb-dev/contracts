@@ -78,12 +78,13 @@ contract ProtocolControl is AccessControlEnumerable {
         royaltyTreasury = _treasury;
     }
 
-    // @dev _treasury must be PaymentSplitter compatible interface.
+    /// @dev _treasury must be PaymentSplitter compatible interface.
     function setModuleRoyaltyTreasury(address moduleAddress, address payable _treasury) external onlyProtocolAdmin {
         require(_isRoyaltyTreasuryValid(_treasury), "ProtocolControl: provider shares too low.");
         moduleRoyalty[moduleAddress] = _treasury;
     }
 
+    /// @dev validate to make sure protocol provider (the registry) gets enough fees.
     function _isRoyaltyTreasuryValid(address payable _treasury) private view returns (bool) {
         // Get `Royalty` and `Registry` instances
         Royalty royalty = Royalty(_treasury);
