@@ -6,16 +6,33 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 const networkName: string = hre.network.name.toLowerCase();
 
 // Get network dependent vars.
-const { protocolControl, pack, market, accessNft, forwarder } = addresses[networkName as keyof typeof addresses];
+const { protocolControl, pack, market, accessNft, forwarder, registry } =
+  addresses[networkName as keyof typeof addresses];
 const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
 const contractURI: string = "";
+
+async function Forwarder() {
+  await hre.run("verify:verify", {
+    address: forwarder,
+    constructorArguments: [],
+  });
+}
+
+async function Registry() {
+  const [deployer]: SignerWithAddress[] = await ethers.getSigners();
+
+  await hre.run("verify:verify", {
+    address: registry,
+    constructorArguments: [deployer.address, forwarder, ethers.constants.AddressZero],
+  });
+}
 
 async function ProtocolControl() {
   const [deployer]: SignerWithAddress[] = await ethers.getSigners();
 
   await hre.run("verify:verify", {
     address: protocolControl,
-    constructorArguments: [deployer.address, deployer.address, deployer.address, contractURI],
+    constructorArguments: [registry, deployer.address, contractURI],
   });
 }
 
@@ -41,6 +58,8 @@ async function AccessNFT() {
 }
 
 async function verify() {
+  await Forwarder();
+  await Registry();
   await ProtocolControl();
   await Pack();
   await Market();

@@ -87,6 +87,12 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "packTotalSupply",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "string",
@@ -101,11 +107,6 @@
           {
             "internalType": "uint256",
             "name": "openStart",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
             "type": "uint256"
           }
         ],
@@ -656,11 +657,6 @@
             "internalType": "uint256",
             "name": "openStart",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
-            "type": "uint256"
           }
         ],
         "internalType": "struct Pack.PackState",
@@ -696,11 +692,6 @@
           {
             "internalType": "uint256",
             "name": "openStart",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "openEnd",
             "type": "uint256"
           }
         ],
@@ -947,7 +938,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "_operator",
         "type": "address"
       },
       {
@@ -1091,11 +1082,6 @@
       {
         "internalType": "uint256",
         "name": "openStart",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "openEnd",
         "type": "uint256"
       }
     ],

@@ -3,93 +3,130 @@ pragma solidity ^0.8.0;
 
 // CREATE2 -- contract deployment.
 import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 // Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Protocol Components
+import { IControlDeployer } from "./interfaces/IControlDeployer.sol";
 import { Forwarder } from "./Forwarder.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Registry is Ownable {
-    // NFTLabs admin signer
-    address public providerAdmin;
-    address public providerTreasury;
+contract Registry is Context, Ownable {
+    uint256 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
+    uint256 public defaultFeeBps = 500; // 5%
 
-    // `Forwarder` for meta-transacitons
+    mapping(address => uint256) controlFeeBps;
+
+    /// @dev service provider / admin treasury
+    address public treasury;
+
+    /// @dev `Forwarder` for meta-transacitons
     address public forwarder;
 
-    struct ControlCenters {
-        // Total number of versions
+    /// @dev The Create2 `ProtocolControl` contract factory.
+    IControlDeployer public deployer;
+
+    struct ProtocolControls {
+        // E.g. if `latestVersion == 2`, there are 2 `ProtocolControl` contracts deployed.
         uint256 latestVersion;
-        // Version number => protocol control center address
-        mapping(uint256 => address) protocolControl;
+        // Mapping from version => contract address.
+        mapping(uint256 => address) protocolControlAddress;
     }
 
-    // Mapping from app deployer => app address.
-    mapping(address => ControlCenters) public controlCenters;
+    /// @dev Mapping from app deployer => versions + app addresses.
+    mapping(address => ProtocolControls) private _protocolControls;
+    /// @dev Mapping from app (protocol control) => protocol provider fees for the app.
+    mapping(address => uint256) private protocolControlFeeBps;
 
-    // Emitted on protocol deployment
-    event DeployedProtocol(address indexed deployer, address indexed protocolControl, uint256 version);
-    // Emitted in constructor
-    event DeployedForwarder(address forwarder);
-    // Emitted when the NFTLabs admin signer is updated
-    event UpdatedProviderAdmin(address prevAdmin, address newAdmin);
-    event UpdatedProviderTreasury(address prevTreasury, address newTreasury);
+    /// @dev Emitted when the treasury is updated.
+    event TreasuryUpdated(address newTreasury);
+    /// @dev Emitted when a new deployer is set.
+    event DeployerUpdated(address newDeployer);
+    /// @dev Emitted when the default protocol provider fees bps is updated.
+    event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
+    /// @dev Emitted when the protocol provider fees bps for a particular `ProtocolControl` is updated.
+    event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
 
-    constructor(address _admin, address _treasury) {
-        providerAdmin = _admin;
-        providerTreasury = _treasury;
-
-        // Deploy forwarder for meta-transactions
-        bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
-        bytes memory forwarderByteCode = abi.encodePacked(type(Forwarder).creationCode);
-        forwarder = Create2.deploy(0, salt, forwarderByteCode);
-
-        emit DeployedForwarder(forwarder);
+    constructor(
+        address _treasury,
+        address _forwarder,
+        address _deployer
+    ) {
+        treasury = _treasury;
+        forwarder = _forwarder;
+        deployer = IControlDeployer(_deployer);
     }
 
-    /// @dev Deploys the control center, pack and market components of the protocol.
-    function deployProtocol(string memory _protocolControlURI) external {
-        bytes32 salt = keccak256(abi.encodePacked(block.number, msg.sender));
+    /// @dev Deploys `ProtocolControl` with `_msgSender()` as admin.
+    function deployProtocol(string memory uri) external {
+        // Get deployer
+        address caller = _msgSender();
+        // Get version for deployment
+        uint256 version = getNextVersion(caller);
+        // Deploy contract and get deployment address.
+        address controlAddress = deployer.deployControl(version, caller, uri);
 
-        // Deploy `ProtocolControl`
-        bytes memory protocolControlByteCode = abi.encodePacked(
-            type(ProtocolControl).creationCode,
-            abi.encode(msg.sender, providerAdmin, providerTreasury, _protocolControlURI)
-        );
-
-        address protocolControlAddr = Create2.deploy(0, salt, protocolControlByteCode);
-
-        uint256 currentVersion = controlCenters[msg.sender].latestVersion;
-        controlCenters[msg.sender].protocolControl[currentVersion] = protocolControlAddr;
-        controlCenters[msg.sender].latestVersion += 1;
-
-        emit DeployedProtocol(msg.sender, protocolControlAddr, currentVersion);
+        _protocolControls[caller].protocolControlAddress[version] = controlAddress;
     }
 
-    /// @dev Lets the owner of the contract update the NFTLabs admin signer
-    function setProviderAdmin(address _newAdminSigner) external onlyOwner {
-        address prevAdmin = providerAdmin;
-        providerAdmin = _newAdminSigner;
-
-        emit UpdatedProviderAdmin(prevAdmin, _newAdminSigner);
+    /// @dev Returns the latest version of protocol control.
+    function getProtocolControlCount(address _deployer) external view returns (uint256) {
+        return _protocolControls[_deployer].latestVersion;
     }
 
-    function setProviderTreasury(address _newTreasury) external onlyOwner {
-        address prevTreasury = providerTreasury;
-        providerTreasury = _newTreasury;
-
-        emit UpdatedProviderTreasury(prevTreasury, _newTreasury);
+    /// @dev Returns the protocol control address for the given version.
+    function getProtocolControl(address _deployer, uint256 index) external view returns (address) {
+        return _protocolControls[_deployer].protocolControlAddress[index];
     }
 
-    /// @dev Returns the latest version of protocol control
-    function getLatestVersion(address _protocolDeployer) external view returns (uint256) {
-        return controlCenters[_protocolDeployer].latestVersion;
+    /// @dev Sets a new `ProtocolControl` deployer in case `ProtocolControl` is upgraded.
+    function setDeployer(address _newDeployer) external onlyOwner {
+        deployer = IControlDeployer(_newDeployer);
+
+        emit DeployerUpdated(_newDeployer);
     }
 
-    /// @dev Returns the protocol control address for the given version
-    function getProtocolControl(address _protocolDeployer, uint256 _version) external view returns (address) {
-        return controlCenters[_protocolDeployer].protocolControl[_version];
+    /// @dev Sets a new protocol provider treasury address.
+    function setTreasury(address _newTreasury) external onlyOwner {
+        treasury = _newTreasury;
+
+        emit TreasuryUpdated(_newTreasury);
+    }
+
+    /// @dev Sets a new `defaultFeeBps` for protocol provider fees.
+    function setDefaultFeeBps(uint256 _newFeeBps) external onlyOwner {
+        require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "Registry: provider fee cannot be greater than 10%");
+
+        defaultFeeBps = _newFeeBps;
+
+        emit DefaultFeeBpsUpdated(_newFeeBps);
+    }
+
+    /// @dev Sets the protocol provider fee for a particular instance of `ProtocolControl`.
+    function setProtocolControlFeeBps(address protocolControl, uint256 _newFeeBps) external onlyOwner {
+        require(_newFeeBps <= MAX_PROVIDER_FEE_BPS, "Registry: provider fee cannot be greater than 10%");
+
+        protocolControlFeeBps[protocolControl] = _newFeeBps;
+
+        emit ProtocolControlFeeBpsUpdated(protocolControl, _newFeeBps);
+    }
+
+    /// @dev Returns the protocol provider fee for a particular instance of `ProtocolControl`.
+    function getFeeBps(address protocolControl) external view returns (uint256) {
+        uint256 fees = protocolControlFeeBps[protocolControl];
+        if (fees == 0) {
+            return defaultFeeBps;
+        }
+        return fees;
+    }
+
+    /// @dev Returns the next version of `ProtocolControl` for the given `_deployer`.
+    function getNextVersion(address _deployer) internal returns (uint256) {
+        // Increment version
+        _protocolControls[_deployer].latestVersion += 1;
+
+        return _protocolControls[_deployer].latestVersion;
     }
 }

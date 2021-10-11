@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-waffle";
 import "hardhat-abi-exporter";
 import "@nomiclabs/hardhat-etherscan";
 import "@typechain/hardhat";
+import "hardhat-contract-sizer";
 
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
@@ -69,7 +70,8 @@ const config: ConfigWithEtherscan = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        runs: 800,
+        // runs: 800,
+        runs: 700,
       },
     },
   },

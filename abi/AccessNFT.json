@@ -552,37 +552,8 @@
   {
     "inputs": [
       {
-        "internalType": "string[]",
-        "name": "_nftURIs",
-        "type": "string[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "_accessNftURIs",
-        "type": "string[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_nftSupplies",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "createAccessNfts",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "nftIds",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
-        "name": "_pack",
+        "name": "to",
         "type": "address"
       },
       {
@@ -601,27 +572,12 @@
         "type": "uint256[]"
       },
       {
-        "internalType": "string",
-        "name": "_packURI",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilOpenStart",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilOpenEnd",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_nftsPerOpen",
-        "type": "uint256"
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
       }
     ],
-    "name": "createAccessPack",
+    "name": "createAccessTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -762,7 +718,7 @@
         "type": "uint256"
       }
     ],
-    "name": "isRedeemed",
+    "name": "isRedeemable",
     "outputs": [
       {
         "internalType": "bool",
@@ -1025,7 +981,7 @@
         "type": "uint256"
       }
     ],
-    "name": "redeemAccess",
+    "name": "redeemToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1209,7 +1165,7 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_URI",
+        "name": "_uri",
         "type": "string"
       }
     ],
@@ -1303,7 +1259,7 @@
       },
       {
         "internalType": "bool",
-        "name": "isAccess",
+        "name": "isRedeemable",
         "type": "bool"
       },
       {

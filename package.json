@@ -33,6 +33,7 @@
     "fs-extra": "^10.0.0",
     "hardhat": "^2.6.5",
     "hardhat-abi-exporter": "^2.3.0",
+    "hardhat-contract-sizer": "^2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
     "husky": "^7.0.2",
     "mocha": "^9.1.2",

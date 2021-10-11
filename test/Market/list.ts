@@ -3,18 +3,19 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 // Types
-import { AccessNFTPL } from "../../typechain/AccessNFTPL";
+import { AccessNFT } from "../../typechain/AccessNFT";
 import { Market } from "../../typechain/Market";
 import { Coin } from "../../typechain/Coin";
 import { BigNumber } from "ethers";
+import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Forwarder } from "../../typechain/Forwarder";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../utils/tests/params";
 import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
-import { Forwarder } from "../../typechain/Forwarder";
 
 describe("List token for sale", function () {
   // Signers
@@ -24,7 +25,7 @@ describe("List token for sale", function () {
 
   // Contracts
   let market: Market;
-  let accessNft: AccessNFTPL;
+  let accessNft: AccessNFT;
   let coin: Coin;
   let forwarder: Forwarder;
 
@@ -32,6 +33,8 @@ describe("List token for sale", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
+  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Token IDs
   let rewardId: number = 1;
@@ -55,7 +58,6 @@ describe("List token for sale", function () {
   });
 
   beforeEach(async () => {
-
     // Get contracts
     const contracts: Contracts = await getContracts(creator, networkName);
     market = contracts.market;
@@ -64,18 +66,25 @@ describe("List token for sale", function () {
     forwarder = contracts.forwarder;
 
     // Create access NFTs
+    //
+    const MINTER_ROLE = await accessNft.MINTER_ROLE();
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessNfts", [rewardURIs, accessURIs, rewardSupplies]),
+      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
+        creator.address,
+        rewardURIs,
+        accessURIs,
+        rewardSupplies,
+        emptyData,
+      ]),
     });
   });
 
   describe("Revert", async () => {
-
     it("Should revert if Market is not approved to transfer listed tokens", async () => {
-      
-      
       await expect(
         market
           .connect(creator)
@@ -90,20 +99,14 @@ describe("List token for sale", function () {
             openStartAndEnd,
           ),
       ).to.be.reverted;
-    })
+    });
 
     it("Should revert if no amount of tokens is listed", async () => {
-
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true]),
+      });
 
       const invalidQuantity: number = 0;
 
@@ -124,18 +127,12 @@ describe("List token for sale", function () {
     });
 
     it("Should revert if buy limit for buyer is greater than total quantity of listing", async () => {
-      
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true])
-        }
-      )
-      
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true]),
+      });
+
       const invalidTokensPerBuyer: BigNumber = amountOfTokenToList.add(1);
 
       await expect(
@@ -158,16 +155,11 @@ describe("List token for sale", function () {
   describe("Events", function () {
     beforeEach(async () => {
       // Approve Market to transfer tokens
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true]),
+      });
     });
 
     it("Should emit NewListing", async () => {
@@ -175,7 +167,6 @@ describe("List token for sale", function () {
 
       const eventPromise = new Promise((resolve, reject) => {
         market.on("NewListing", (_assetContract, _seller, _listingId, _listing) => {
-
           expect(_assetContract).to.equal(accessNft.address);
           expect(_seller).to.equal(creator.address);
           expect(_listingId).to.equal(listingId);
@@ -198,25 +189,20 @@ describe("List token for sale", function () {
         }, 10000);
       });
 
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: market.address,
-          data: market.interface.encodeFunctionData("list", [
-            accessNft.address,
-            rewardId,
-            coin.address,
-            price,
-            amountOfTokenToList,
-            tokensPerBuyer,
-            openStartAndEnd,
-            openStartAndEnd,
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: market.address,
+        data: market.interface.encodeFunctionData("list", [
+          accessNft.address,
+          rewardId,
+          coin.address,
+          price,
+          amountOfTokenToList,
+          tokensPerBuyer,
+          openStartAndEnd,
+          openStartAndEnd,
+        ]),
+      });
 
       await eventPromise;
     });
@@ -225,37 +211,27 @@ describe("List token for sale", function () {
   describe("Balances", function () {
     beforeEach(async () => {
       // Approve Market to transfer tokens
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true]),
+      });
 
       // List tokens
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: market.address,
-          data: market.interface.encodeFunctionData("list", [
-            accessNft.address,
-            rewardId,
-            coin.address,
-            price,
-            amountOfTokenToList,
-            tokensPerBuyer,
-            openStartAndEnd,
-            openStartAndEnd,
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: market.address,
+        data: market.interface.encodeFunctionData("list", [
+          accessNft.address,
+          rewardId,
+          coin.address,
+          price,
+          amountOfTokenToList,
+          tokensPerBuyer,
+          openStartAndEnd,
+          openStartAndEnd,
+        ]),
+      });
     });
 
     it("Should transfer all tokens from seller to Market", async () => {
@@ -272,40 +248,30 @@ describe("List token for sale", function () {
 
     beforeEach(async () => {
       // Approve Market to transfer tokens
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true]),
+      });
 
       // Get listing ID
       listingId = await market.totalListings();
 
       // List tokens
-      await sendGaslessTx(
-        creator,
-        forwarder,
-        relayer,
-        {
-          from: creator.address,
-          to: market.address,
-          data: market.interface.encodeFunctionData("list", [
-            accessNft.address,
-            rewardId,
-            coin.address,
-            price,
-            amountOfTokenToList,
-            tokensPerBuyer,
-            openStartAndEnd,
-            openStartAndEnd,
-          ])
-        }
-      )
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: market.address,
+        data: market.interface.encodeFunctionData("list", [
+          accessNft.address,
+          rewardId,
+          coin.address,
+          price,
+          amountOfTokenToList,
+          tokensPerBuyer,
+          openStartAndEnd,
+          openStartAndEnd,
+        ]),
+      });
     });
 
     it("Should increment the number of total listings on the market", async () => {

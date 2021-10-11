@@ -18,30 +18,32 @@ async function main(): Promise<void> {
   const networkName: string = hre.network.name;
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
 
+  const admin = deployer.address;
+  const protocolProvider = deployer.address;
+  const providerTreasury = deployer.address;
+
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
 
   // Deploy Forwarder
   const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder");
   const forwarder: Contract = await Forwarder_Factory.deploy();
+  await forwarder.deployed();
 
   console.log(`Deploying Forwarder: ${forwarder.address} at tx hash: ${forwarder.deployTransaction.hash}`);
 
-  await forwarder.deployed();
+  // Deploy Registry
+  const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
+  const registry: Contract = await Registry_Factory.deploy(
+    providerTreasury,
+    forwarder.address,
+    ethers.constants.AddressZero,
+  );
+  await registry.deployed();
 
   // Deploy ProtocolControl
-
-  const admin = deployer.address;
-  const protocolProvider = deployer.address;
-  const providerTreasury = deployer.address;
   const protocolControlURI: string = "";
-
   const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  const protocolControl: Contract = await ProtocolControl_Factory.deploy(
-    admin,
-    protocolProvider,
-    providerTreasury,
-    protocolControlURI,
-  );
+  const protocolControl: Contract = await ProtocolControl_Factory.deploy(registry.address, admin, protocolControlURI);
 
   console.log(
     `Deploying ProtocolControl: ${protocolControl.address} at tx hash: ${protocolControl.deployTransaction.hash}`,
@@ -53,7 +55,7 @@ async function main(): Promise<void> {
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
   const packContractURI: string = "";
 
-  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack_PL");
+  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
   const pack: Contract = await Pack_Factory.deploy(
     protocolControl.address,
     packContractURI,
@@ -87,7 +89,7 @@ async function main(): Promise<void> {
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
 
-  const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT_PL");
+  const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT");
   const accessNft: Contract = await AccessNFT_Factory.deploy(
     protocolControl.address,
     forwarder.address,
@@ -108,6 +110,7 @@ async function main(): Promise<void> {
     [networkName]: {
       ...curentNetworkAddreses,
 
+      registry: registry.address,
       protocolControl: protocolControl.address,
       forwarder: forwarder.address,
       pack: pack.address,

@@ -44,7 +44,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         string uri;
         address creator;
         uint256 openStart;
-        uint256 openEnd;
     }
 
     /// @dev The rewards in a given set of packs with a unique tokenId.
@@ -78,6 +77,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         uint256 indexed packId,
         address indexed rewardContract,
         address indexed creator,
+        uint256 packTotalSupply,
         PackState packState,
         Rewards rewards
     );
@@ -106,7 +106,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
         require(
-            controlCenter.hasRole(controlCenter.PROTOCOL_ADMIN(), _msgSender()),
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "Pack: only a protocol admin can call this function."
         );
         _;
@@ -171,36 +171,24 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         bytes memory
     ) public virtual override returns (bytes4) {
         revert("Pack: Must use batch transfer.");
-        return this.onERC1155Received.selector;
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
     function onERC1155BatchReceived(
-        address,
+        address _operator,
         address _from,
         uint256[] memory _ids,
         uint256[] memory _values,
         bytes memory _data
     ) public override onlyUnpausedProtocol returns (bytes4) {
         // Get parameters for creating packs.
-        (
-            string memory packURI,
-            uint256 secondsUntilOpenStart,
-            uint256 secondsUntilOpenEnd,
-            uint256 rewardsPerOpen
-        ) = abi.decode(_data, (string, uint256, uint256, uint256));
+        (string memory packURI, uint256 secondsUntilOpenStart, uint256 rewardsPerOpen) = abi.decode(
+            _data,
+            (string, uint256, uint256)
+        );
 
         // Create packs.
-        createPack(
-            _from,
-            packURI,
-            _msgSender(),
-            _ids,
-            _values,
-            secondsUntilOpenStart,
-            secondsUntilOpenEnd,
-            rewardsPerOpen
-        );
+        createPack(_operator, packURI, _msgSender(), _ids, _values, secondsUntilOpenStart, rewardsPerOpen);
 
         return this.onERC1155BatchReceived.selector;
     }
@@ -213,10 +201,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     function openPack(uint256 _packId) external onlyUnpausedProtocol {
         PackState memory packState = packs[_packId];
 
-        require(
-            block.timestamp >= packState.openStart && block.timestamp <= packState.openEnd,
-            "Pack: the window to open packs has not started or closed."
-        );
+        require(block.timestamp >= packState.openStart, "Pack: the window to open packs has not started or closed.");
         require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
         require(balanceOf(_msgSender(), _packId) > 0, "Pack: sender owns no packs of the given packId.");
         require(currentRequestId[_packId][_msgSender()] == "", "Pack: must wait for the pending pack to be opened.");
@@ -266,10 +251,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
-        require(
-            _royaltyBps < (controlCenter.MAX_BPS() - controlCenter.MAX_PROVIDER_FEE_BPS()),
-            "NFT: Bps provided must be less than 9,000"
-        );
+        require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -304,7 +286,6 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         uint256[] memory _rewardIds,
         uint256[] memory _rewardAmounts,
         uint256 _secondsUntilOpenStart,
-        uint256 _secondsUntilOpenEnd,
         uint256 _rewardsPerOpen
     ) internal onlyUnpausedProtocol {
         require(
@@ -326,8 +307,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         PackState memory packState = PackState({
             creator: _creator,
             uri: _packURI,
-            openStart: block.timestamp + _secondsUntilOpenStart,
-            openEnd: _secondsUntilOpenEnd == 0 ? type(uint256).max : block.timestamp + _secondsUntilOpenEnd
+            openStart: block.timestamp + _secondsUntilOpenStart
         });
 
         // Store reward state.
@@ -344,7 +324,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         // Mint packs to creator.
         _mint(_creator, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _rewardContract, _creator, packState, rewardsInPack);
+        emit PackCreated(packId, _rewardContract, _creator, packTotalSupply, packState, rewardsInPack);
     }
 
     /// @dev Returns a reward tokenId using `_randomness` provided by RNG.
@@ -395,7 +375,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (transfersRestricted) {
+        if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "Pack: Transfers are restricted to TRANSFER_ROLE holders"
@@ -447,7 +427,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = controlCenter.ownerTreasury();
+        receiver = controlCenter.getRoyaltyTreasury(address(this));
         royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
     }
 
