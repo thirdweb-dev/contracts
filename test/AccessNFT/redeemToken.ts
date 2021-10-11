@@ -100,7 +100,7 @@ describe("Calling 'redeemToken'", function () {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
         to: accessNft.address,
-        data: accessNft.interface.encodeFunctionData("setLastTimeToRedeem", [accessId, secondsUntilWindowEnd]),
+        data: accessNft.interface.encodeFunctionData("setLastTimeToRedeem", [rewardId, secondsUntilWindowEnd]),
       });
 
       // Time travel

@@ -238,17 +238,16 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
             balanceOf(redeemer, _tokenId) >= _amount && _amount > 0,
             "AccessNFT: Cannot redeem more NFTs than owned."
         );
+        require(
+            block.timestamp <= lastTimeToRedeem[_tokenId] || lastTimeToRedeem[_tokenId] == 0,
+            "AccessNFT: Window to redeem access has closed."
+        );
 
         // Burn NFTs of the 'unredeemed' state.
         burn(redeemer, _tokenId, _amount);
 
         // Get access nft Id
         uint256 accessNftId = tokenState[_tokenId].accessNftId;
-
-        require(
-            block.timestamp <= lastTimeToRedeem[accessNftId] || lastTimeToRedeem[accessNftId] == 0,
-            "AccessNFT: Window to redeem access has closed."
-        );
 
         // Transfer Access NFTs to redeemer
         this.safeTransferFrom(address(this), redeemer, accessNftId, _amount, "");
@@ -263,7 +262,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Lets an Access NFT creator set a limit for when the reward can be redeemed.
     function setLastTimeToRedeem(uint256 _tokenId, uint256 _secondsUntilRedeem) external {
         require(_msgSender() == tokenState[_tokenId].creator, "AccessNFT: only the creator can call this function.");
-        require(!tokenState[_tokenId].isRedeemable, "AccessNFT: can set redeem time for only Access NFTs.");
+        require(tokenState[_tokenId].isRedeemable, "AccessNFT: can set redeem time for only redeemable NFTs.");
 
         uint256 lastTimeToRedeemNFT = _secondsUntilRedeem == 0
             ? type(uint256).max
