@@ -101,6 +101,7 @@ contract ProtocolControl is AccessControlEnumerable {
         return registryCutBps >= (_registry.getFeeBps(address(this)) - feeBpsTolerance);
     }
 
+    /// @dev Returns the Royalty payment splitter for a particular module.
     function getRoyaltyTreasury(address moduleAddress) external view returns (address) {
         address moduleRoyaltyTreasury = moduleRoyalty[moduleAddress];
         if (moduleRoyaltyTreasury == address(0)) {
@@ -144,6 +145,7 @@ contract ProtocolControl is AccessControlEnumerable {
         _contractURI = _URI;
     }
 
+    /// @dev Lets the admin set a new Forwarder address [NOTE: for off-chain convenience only.]
     function setForwarder(address forwarder) external onlyProtocolAdmin {
         _forwarder = forwarder;
         emit ForwarderUpdated(forwarder);
@@ -165,6 +167,7 @@ contract ProtocolControl is AccessControlEnumerable {
         }
     }
 
+    /// @dev Returns the forwarder address stored on the contract.
     function getForwarder() public view returns (address) {
         if (_forwarder == address(0)) {
             return Registry(registry).forwarder();
