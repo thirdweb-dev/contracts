@@ -11,12 +11,12 @@
     "nftWrapper": "0x873c3e90f0dE5712FC0f5DDba2c4a08Ec4C40c36"
   },
   "polygon": {
-    "registry": "",
-    "protocolControl": "0x389a2b24B3eDc8649083eAC2A82598D131F0f237",
-    "forwarder": "0xE4b2DD52566ED7057dB565B1FEaEEBAf27470D89",
-    "pack": "0x8882Bf2DE48E129094b8e26d208a5Cb2D8642f58",
-    "market": "0xc63D5b5FD4a028992B7Ca9389DF0D8E442A817D0",
-    "accessNft": "0x5FD7De3f1633434BE38B0b810187fc02fb1090B9",
+    "registry": "0xeC7714c9FAa1a554172A968E627b7c77f0FD949E",
+    "protocolControl": "0x6C9863e17Ca8E3B38cAfc25162869104242EA16C",
+    "forwarder": "0x480c497e50946f91fE106bdbA2e48303626c46e2",
+    "pack": "0x59F2a6E0d40be2A2D04AE1C261a68DA315EA38b6",
+    "market": "0x519C6Fd935FF3499E3920F78658f9A9986066257",
+    "accessNft": "0x7892BEcD4Bbde7Ba1d2a90786B81dc83fF80B302",
     "nftWrapper": ""
   },
   "rinkeby": {
@@ -53,3 +53,4 @@
     "nftWrapper": ""
   }
 }
+
