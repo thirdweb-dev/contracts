@@ -176,7 +176,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     /// @dev Creates pack on receiving ERC 1155 reward tokens
     function onERC1155BatchReceived(
         address _operator,
-        address _from,
+        address,
         uint256[] memory _ids,
         uint256[] memory _values,
         bytes memory _data
@@ -259,8 +259,8 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
-        _contractURI = _URI;
+    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+        _contractURI = _uri;
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
