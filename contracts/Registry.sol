@@ -45,6 +45,8 @@ contract Registry is Ownable {
     event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
     /// @dev Emitted when the protocol provider fees bps for a particular `ProtocolControl` is updated.
     event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
+    /// @dev Emitted when an instance of `ProtocolControl` is deployed.
+    event NewProtocolControl(address indexed deployer, uint indexed version, address indexed controlAddress, address controlDeployer);
 
     constructor(
         address _treasury,
@@ -66,6 +68,8 @@ contract Registry is Ownable {
         address controlAddress = deployer.deployControl(version, caller, uri);
 
         _protocolControls[caller].protocolControlAddress[version] = controlAddress;
+
+        emit NewProtocolControl(caller, version, controlAddress, address(deployer));
     }
 
     /// @dev Returns the latest version of protocol control.
