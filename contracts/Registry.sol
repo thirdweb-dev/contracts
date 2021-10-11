@@ -16,8 +16,6 @@ contract Registry is Ownable {
     uint256 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
     uint256 public defaultFeeBps = 500; // 5%
 
-    mapping(address => uint256) controlFeeBps;
-
     /// @dev service provider / admin treasury
     address public treasury;
 
