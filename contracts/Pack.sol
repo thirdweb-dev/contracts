@@ -462,12 +462,14 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         view
         returns (
             PackState memory pack,
+            uint256 packTotalSupply,
             address source,
             uint256[] memory tokenIds,
             uint256[] memory amountsPacked
         )
     {
         pack = packs[_packId];
+        packTotalSupply = totalSupply(_packId);
         source = rewards[_packId].source;
         tokenIds = rewards[_packId].tokenIds;
         amountsPacked = rewards[_packId].amountsPacked;
