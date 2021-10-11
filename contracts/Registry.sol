@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // CREATE2 -- contract deployment.
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 
 // Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,7 +12,7 @@ import { IControlDeployer } from "./interfaces/IControlDeployer.sol";
 import { Forwarder } from "./Forwarder.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Registry is Context, Ownable {
+contract Registry is Ownable {
     uint256 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
     uint256 public defaultFeeBps = 500; // 5%
 
