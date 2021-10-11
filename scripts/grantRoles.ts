@@ -9,7 +9,7 @@ async function main() {
 
   console.log("\n");
 
-  const grantTo: string = "0xbC0895f9d50dDcAD909f7089Fc642E59006a9460";
+  const grantTo: string = "0xF73d650e5523914f0915B81df1e3D8091a0D34F5";
 
   // Get signer
   const [deployer] = await ethers.getSigners();
