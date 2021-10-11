@@ -3,17 +3,12 @@ pragma solidity ^0.8.0;
 
 // Access Control
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
-// Tokens
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Registry
 import { Registry } from "./Registry.sol";
 import { Royalty } from "./Royalty.sol";
 
 contract ProtocolControl is AccessControlEnumerable {
-    using EnumerableSet for EnumerableSet.AddressSet;
 
     /// @dev MAX_BPS for the contract: 10_000 == 100%
     uint128 public constant MAX_BPS = 10000;
