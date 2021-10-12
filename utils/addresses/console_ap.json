@@ -1,0 +1,38 @@
+{
+  "mainnet": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "rinkeby": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "polygon": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562",
+    "registry": "0x3C8F6678b36291DDca275352D7413487C3Db2e20",
+    "forwarder": "0x3F3a82555bf686d8B8836a5Cd92409EF77511fbE",
+    "protocolControl": "0x04dACa227E30E50941e4c126bA7e4F4035Bb93f9",
+    "pack": "0xB350f6b4FD9e2009ad64db4E7a064E00dB82cE67",
+    "market": "0x55e4475DdE15F39E3bE837d205E2a09a8861153e",
+    "accessNft": "0xf1482e0aC5742B0683f51ed8e87bdbFA66f3da3f"
+  },
+  "mumbai": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562",
+    "registry": "0x3C8F6678b36291DDca275352D7413487C3Db2e20",
+    "forwarder": "0x3F3a82555bf686d8B8836a5Cd92409EF77511fbE",
+    "protocolControl": "0x04dACa227E30E50941e4c126bA7e4F4035Bb93f9",
+    "pack": "0xB350f6b4FD9e2009ad64db4E7a064E00dB82cE67",
+    "market": "0x55e4475DdE15F39E3bE837d205E2a09a8861153e",
+    "accessNft": "0xf1482e0aC5742B0683f51ed8e87bdbFA66f3da3f"
+  },
+  "avax": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "avax_testnet": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "fantom": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "fantom_testnet": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  }
+}

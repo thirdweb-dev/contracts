@@ -11,13 +11,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const chainIds = {
-  ganache: 1337,
-  goerli: 5,
   hardhat: 31337,
-  kovan: 42,
+  ganache: 1337,
   mainnet: 1,
-  rinkeby: 4,
   ropsten: 3,
+  rinkeby: 4,
+  goerli: 5,
+  kovan: 42,
+  avax: 43114,
+  avax_testnet: 43113,
+  fantom: 250,
+  fantom_testnet: 4002,
   polygon: 137,
   mumbai: 80001,
 };
@@ -25,8 +29,7 @@ const chainIds = {
 // Ensure that we have all the environment variables we need.
 let testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
 let alchemyKey: string = process.env.ALCHEMY_KEY || "";
-let etherscanKey: string = process.env.ETHERSCAN_API_KEY || "";
-let polygonscanKey: string = process.env.POLYGONSCAN_API_KEY || "";
+let explorerScanKey: string = process.env.SCAN_API_KEY || "";
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (!alchemyKey) {
@@ -39,6 +42,16 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
     chainIds[network] == 137 || chainIds[network] == 80001
       ? `https://polygon-${polygonNetworkName}.g.alchemy.com/v2/${alchemyKey}`
       : `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
+
+  if (network === "avax") {
+    nodeUrl = "https://api.avax.network/ext/bc/C/rpc";
+  } else if (network === "avax_testnet") {
+    nodeUrl = "https://api.avax-test.network/ext/bc/C/rpc";
+  } else if (network === "fantom") {
+    nodeUrl = "https://rpc.ftm.tools";
+  } else if (network === "fantom_testnet") {
+    nodeUrl = "https://rpc.testnet.fantom.network";
+  }
 
   return {
     chainId: chainIds[network],
@@ -83,8 +96,7 @@ const config: ConfigWithEtherscan = {
     target: "ethers-v5",
   },
   etherscan: {
-    // apiKey: etherscanKey,
-    apiKey: polygonscanKey,
+    apiKey: explorerScanKey,
   },
 };
 
@@ -94,6 +106,10 @@ if (testPrivateKey) {
     rinkeby: createTestnetConfig("rinkeby"),
     polygon: createTestnetConfig("polygon"),
     mumbai: createTestnetConfig("mumbai"),
+    fantom: createTestnetConfig("fantom"),
+    fantom_testnet: createTestnetConfig("fantom_testnet"),
+    avax: createTestnetConfig("avax"),
+    avax_testnet: createTestnetConfig("avax_testnet"),
   };
 }
 

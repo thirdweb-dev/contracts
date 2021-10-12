@@ -1,0 +1,32 @@
+{
+  "mainnet": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "rinkeby": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "polygon": {
+    "treasury": "0x4769df58427Cd840DF120E764fBB97a3fD968Caf",
+    "controlDeployer": "0x1F107ebe12cb4DA2081a4D99e0DDc7727DD40d5d",
+    "registry": "0x3C8F6678b36291DDca275352D7413487C3Db2e20",
+    "forwarder": "0x3F3a82555bf686d8B8836a5Cd92409EF77511fbE"
+  },
+  "mumbai": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562",
+    "registry": "0x3C8F6678b36291DDca275352D7413487C3Db2e20",
+    "forwarder": "0x3F3a82555bf686d8B8836a5Cd92409EF77511fbE",
+    "controlDeployer": "0x1F107ebe12cb4DA2081a4D99e0DDc7727DD40d5d"
+  },
+  "avax": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "avax_testnet": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "fantom": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  },
+  "fantom_testnet": {
+    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+  }
+}
