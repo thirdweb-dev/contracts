@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // CREATE2 -- contract deployment.
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 
 // Access Control
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,11 +12,9 @@ import { IControlDeployer } from "./interfaces/IControlDeployer.sol";
 import { Forwarder } from "./Forwarder.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Registry is Context, Ownable {
+contract Registry is Ownable {
     uint256 public constant MAX_PROVIDER_FEE_BPS = 1000; // 10%
     uint256 public defaultFeeBps = 500; // 5%
-
-    mapping(address => uint256) controlFeeBps;
 
     /// @dev service provider / admin treasury
     address public treasury;
@@ -48,6 +45,8 @@ contract Registry is Context, Ownable {
     event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
     /// @dev Emitted when the protocol provider fees bps for a particular `ProtocolControl` is updated.
     event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
+    /// @dev Emitted when an instance of `ProtocolControl` is deployed.
+    event NewProtocolControl(address indexed deployer, uint indexed version, address indexed controlAddress, address controlDeployer);
 
     constructor(
         address _treasury,
@@ -69,6 +68,8 @@ contract Registry is Context, Ownable {
         address controlAddress = deployer.deployControl(version, caller, uri);
 
         _protocolControls[caller].protocolControlAddress[version] = controlAddress;
+
+        emit NewProtocolControl(caller, version, controlAddress, address(deployer));
     }
 
     /// @dev Returns the latest version of protocol control.

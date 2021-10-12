@@ -3,17 +3,12 @@ pragma solidity ^0.8.0;
 
 // Access Control
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
-// Tokens
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Registry
 import { Registry } from "./Registry.sol";
 import { Royalty } from "./Royalty.sol";
 
 contract ProtocolControl is AccessControlEnumerable {
-    using EnumerableSet for EnumerableSet.AddressSet;
 
     /// @dev MAX_BPS for the contract: 10_000 == 100%
     uint128 public constant MAX_BPS = 10000;
@@ -101,6 +96,7 @@ contract ProtocolControl is AccessControlEnumerable {
         return registryCutBps >= (_registry.getFeeBps(address(this)) - feeBpsTolerance);
     }
 
+    /// @dev Returns the Royalty payment splitter for a particular module.
     function getRoyaltyTreasury(address moduleAddress) external view returns (address) {
         address moduleRoyaltyTreasury = moduleRoyalty[moduleAddress];
         if (moduleRoyaltyTreasury == address(0)) {
@@ -144,6 +140,7 @@ contract ProtocolControl is AccessControlEnumerable {
         _contractURI = _URI;
     }
 
+    /// @dev Lets the admin set a new Forwarder address [NOTE: for off-chain convenience only.]
     function setForwarder(address forwarder) external onlyProtocolAdmin {
         _forwarder = forwarder;
         emit ForwarderUpdated(forwarder);
@@ -165,6 +162,7 @@ contract ProtocolControl is AccessControlEnumerable {
         }
     }
 
+    /// @dev Returns the forwarder address stored on the contract.
     function getForwarder() public view returns (address) {
         if (_forwarder == address(0)) {
             return Registry(registry).forwarder();

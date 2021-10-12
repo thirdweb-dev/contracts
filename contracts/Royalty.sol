@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-
+// Base
 import "./openzeppelin-presets/finance/PaymentSplitter.sol";
+
+// Meta transactions
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import { Registry } from "./Registry.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -14,6 +15,8 @@ import { ProtocolControl } from "./ProtocolControl.sol";
  * and shares that represent the fees.
  */
 contract Royalty is PaymentSplitter, ERC2771Context {
+    
+    /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
     /// @dev Contract level metadata.

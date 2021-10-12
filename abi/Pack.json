@@ -700,6 +700,11 @@
         "type": "tuple"
       },
       {
+        "internalType": "uint256",
+        "name": "packTotalSupply",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "source",
         "type": "address"
@@ -943,7 +948,7 @@
       },
       {
         "internalType": "address",
-        "name": "_from",
+        "name": "",
         "type": "address"
       },
       {
@@ -1353,7 +1358,7 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_URI",
+        "name": "_uri",
         "type": "string"
       }
     ],
