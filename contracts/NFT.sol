@@ -14,7 +14,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981 {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multicall {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 

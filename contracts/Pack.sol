@@ -16,7 +16,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IERC2981 {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 

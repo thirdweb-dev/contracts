@@ -10,7 +10,9 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract Coin is ERC20PresetMinterPauser, ERC2771Context {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
