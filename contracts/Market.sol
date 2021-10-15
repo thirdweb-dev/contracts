@@ -20,7 +20,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Context {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Context, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -103,7 +105,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     constructor(
-        address payable _controlCenter,
+        address _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC2771Context(_trustedForwarder) {

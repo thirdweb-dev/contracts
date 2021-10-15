@@ -18,7 +18,9 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
