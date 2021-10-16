@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-waffle";
 import "hardhat-abi-exporter";
 import "@nomiclabs/hardhat-etherscan";
 import "@typechain/hardhat";
+import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
 
 import { HardhatUserConfig } from "hardhat/config";
@@ -97,6 +98,9 @@ const config: ConfigWithEtherscan = {
   },
   etherscan: {
     apiKey: explorerScanKey,
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
   },
 };
 
