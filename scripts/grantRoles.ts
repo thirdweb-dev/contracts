@@ -9,7 +9,7 @@ async function main() {
 
   console.log("\n");
 
-  const grantTo: string = "0xF73d650e5523914f0915B81df1e3D8091a0D34F5";
+  const grantTo: string = "0xa05271523BD00593eb4CC6DCbDcbd045361a9a03";
 
   // Get signer
   const [deployer] = await ethers.getSigners();
@@ -17,7 +17,8 @@ async function main() {
 
   // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { pack: packAddress, accessNft: accessNftAddress } = curentNetworkAddreses;
+  const packAddress = "0xB350f6b4FD9e2009ad64db4E7a064E00dB82cE67"
+  const accessNftAddress = "0xf1482e0aC5742B0683f51ed8e87bdbFA66f3da3f"
   const txOption = txOptions[networkName as keyof typeof txOptions];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
