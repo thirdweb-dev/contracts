@@ -143,7 +143,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, M
     }
 
     constructor(
-        address payable _controlCenter,
+        address _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {

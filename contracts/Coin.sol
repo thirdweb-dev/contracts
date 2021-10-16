@@ -42,7 +42,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
     event RestrictedTransferUpdated(bool transferable);
 
     constructor(
-        address payable _controlCenter,
+        address _controlCenter,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
