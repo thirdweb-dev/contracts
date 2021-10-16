@@ -89,12 +89,6 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         _;
     }
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
-        _;
-    }
-
     constructor(
         address _controlCenter,
         string memory _name,
@@ -118,18 +112,6 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     /// @dev Revert inherited mint function.
     function mint(address) public pure override {
         revert("NFT: claim instead");
-    }
-
-    function setMaxTotalSupply(uint256 maxSupply) external onlyModuleAdmin {
-        maxTotalSupply = maxSupply;
-
-        emit TotalSupplyUpdated(maxSupply);
-    }
-
-    function setBaseTokenURI(string calldata uri) external onlyModuleAdmin {
-        _baseTokenURI = uri;
-
-        emit BaseTokenURIUpdated(uri);
     }
 
     /// @dev Mints an NFT to `_to` with URI `_uri`
@@ -261,17 +243,16 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit PublicMintConditionUpdated(mintConditions);
     }
 
-    /// @dev get the current active mint condition sorted by last added first
-    /// assumption: the conditions are sorted ascending order by condition start timestamp.
-    /// @return conition index, condition
-    function getLastStartedMintConditionIndex() public view returns (uint256) {
-        require(mintConditions.length > 0, "NFT: no public mint condition");
-        for (uint256 i = mintConditions.length - 1; i >= 0; i--) {
-            if (block.timestamp >= mintConditions[i].startTimestamp) {
-                return i;
-            }
-        }
-        revert("NFT: no active mint condition");
+    function setMaxTotalSupply(uint256 maxSupply) external onlyModuleAdmin {
+        maxTotalSupply = maxSupply;
+
+        emit TotalSupplyUpdated(maxSupply);
+    }
+
+    function setBaseTokenURI(string calldata uri) external onlyModuleAdmin {
+        _baseTokenURI = uri;
+
+        emit BaseTokenURIUpdated(uri);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
@@ -305,6 +286,20 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }
+    }
+
+
+    /// @dev get the current active mint condition sorted by last added first
+    /// assumption: the conditions are sorted ascending order by condition start timestamp. check on insertion.
+    /// @return conition index, condition
+    function getLastStartedMintConditionIndex() public view returns (uint256) {
+        require(mintConditions.length > 0, "NFT: no public mint condition");
+        for (uint256 i = mintConditions.length - 1; i >= 0; i--) {
+            if (block.timestamp >= mintConditions[i].startTimestamp) {
+                return i;
+            }
+        }
+        revert("NFT: no active mint condition");
     }
 
     /// @dev See EIP 2981
