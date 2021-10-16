@@ -13,7 +13,9 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -69,6 +71,8 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 amount
     );
 
+    event RestrictedTransferUpdated(bool transferable);
+
     /// @dev Emitted when the EIP 2981 royalty of the contract is updated.
     event RoyaltyUpdated(uint256 royaltyBps);
 
@@ -84,17 +88,20 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev Access NFT tokenId => final redemption timestamp.
     mapping(uint256 => uint256) public lastTimeToRedeem;
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "AccessNFT: The protocol is paused.");
-        _;
-    }
-
     /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "AccessNFT: only a protocol admin can call this function."
+        );
+        _;
+    }
+
+    /// @dev Checks whether the caller is a module admin.
+    modifier onlyModuleAdmin() {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "AccessNFT: only a module admin can call this function."
         );
         _;
     }
@@ -106,7 +113,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     constructor(
-        address payable _controlCenter,
+        address _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
@@ -171,7 +178,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         string[] calldata _accessNftURIs,
         uint256[] calldata _nftSupplies,
         bytes calldata data
-    ) external onlyUnpausedProtocol onlyMinterRole {
+    ) external whenNotPaused onlyMinterRole {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
             "AccessNFT: Must specify equal number of config values."
@@ -229,7 +236,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets a redeemable token holder to redeem token.
-    function redeemToken(uint256 _tokenId, uint256 _amount) external onlyUnpausedProtocol {
+    function redeemToken(uint256 _tokenId, uint256 _amount) external whenNotPaused {
         // Get redeemer
         address redeemer = _msgSender();
 
@@ -273,14 +280,14 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets the protocol admin set the transferability of Access NFTs.
-    function setAccessNftTransferability(bool _isTransferable) external onlyProtocolAdmin {
+    function setAccessNftTransferability(bool _isTransferable) external onlyModuleAdmin {
         accessNftIsTransferable = _isTransferable;
 
         emit AccessTransferabilityUpdated(_isTransferable);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
@@ -288,14 +295,16 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         emit RoyaltyUpdated(_royaltyBps);
     }
 
+    /// @dev Lets a protocol admin restrict token transfers.
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
+        transfersRestricted = _restrictedTransfer;
+
+        emit RestrictedTransferUpdated(_restrictedTransfer);
+    }
+
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _uri) external onlyProtocolAdmin {
         _contractURI = _uri;
-    }
-
-    /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
-        transfersRestricted = _restrictedTransfer;
     }
 
     /**

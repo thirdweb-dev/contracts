@@ -46,7 +46,12 @@ contract Registry is Ownable {
     /// @dev Emitted when the protocol provider fees bps for a particular `ProtocolControl` is updated.
     event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
     /// @dev Emitted when an instance of `ProtocolControl` is deployed.
-    event NewProtocolControl(address indexed deployer, uint indexed version, address indexed controlAddress, address controlDeployer);
+    event NewProtocolControl(
+        address indexed deployer,
+        uint256 indexed version,
+        address indexed controlAddress,
+        address controlDeployer
+    );
 
     constructor(
         address _treasury,

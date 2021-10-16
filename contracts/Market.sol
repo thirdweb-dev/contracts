@@ -20,7 +20,14 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
-contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Context {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
+contract Market is AccessControlEnumerable, Pausable, IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Context, Multicall {
+    bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -35,6 +42,8 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
     /// @dev The marketplace fee.
     uint128 public marketFeeBps;
+
+    bool public restrictedListerRoleOnly;
 
     /// @dev Token type of the listing.
     enum TokenType {
@@ -74,12 +83,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         Listing listing
     );
     event MarketFeeUpdate(uint128 newFee);
-
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "Market: The pack protocol is paused.");
-        _;
-    }
+    event RestrictedListerRoleUpdated(bool restricted);
 
     /// @dev Check whether the listing exists.
     modifier onlyExistingListing(uint256 _listingId) {
@@ -93,17 +97,33 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         _;
     }
 
+    modifier onlyListerRoleWhenRestricted() {
+        require(
+            !restrictedListerRoleOnly || hasRole(LISTER_ROLE, _msgSender()),
+            "only a lister can call this function."
+        );
+        _;
+    }
+
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Pack: only a protocol admin can call this function."
+            "Market: only a protocol admin can call this function."
+        );
+        _;
+    }
+
+    modifier onlyModuleAdmin() {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "only a module admin can call this function."
         );
         _;
     }
 
     constructor(
-        address payable _controlCenter,
+        address _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC2771Context(_trustedForwarder) {
@@ -112,6 +132,10 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
 
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(LISTER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
     }
 
     /**
@@ -147,7 +171,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControlEnumerable, IERC165) returns (bool) {
         return interfaceId == type(IERC1155Receiver).interfaceId || interfaceId == type(IERC721Receiver).interfaceId;
     }
 
@@ -165,7 +189,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         uint256 _tokensPerBuyer,
         uint256 _secondsUntilStart,
         uint256 _secondsUntilEnd
-    ) external onlyUnpausedProtocol {
+    ) external whenNotPaused onlyListerRoleWhenRestricted {
         require(_quantity > 0, "Market: must list at least one token.");
         require(_tokensPerBuyer <= _quantity, "Market: cannot let buyer buy more than listed quantity.");
 
@@ -221,7 +245,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     /// @notice Lets a seller add tokens to an existing listing.
     function addToListing(uint256 _listingId, uint256 _quantity)
         external
-        onlyUnpausedProtocol
+        whenNotPaused
         onlySeller(_msgSender(), _listingId)
     {
         Listing memory listing = listings[_listingId];
@@ -251,7 +275,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
         uint256 _tokensPerBuyer,
         uint256 _secondsUntilStart,
         uint256 _secondsUntilEnd
-    ) external onlyUnpausedProtocol onlySeller(_msgSender(), _listingId) {
+    ) external whenNotPaused onlySeller(_msgSender(), _listingId) {
         Listing memory listing = listings[_listingId];
 
         require(_tokensPerBuyer <= listing.quantity, "Market: cannot let buyer buy more than listed quantity.");
@@ -272,7 +296,7 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     function buy(uint256 _listingId, uint256 _quantity)
         external
         nonReentrant
-        onlyUnpausedProtocol
+        whenNotPaused
         onlyExistingListing(_listingId)
     {
         // Get listing
@@ -411,9 +435,14 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
     }
 
     /// @dev Lets a protocol admin set market fees.
-    function setMarketFeeBps(uint128 feeBps) external onlyProtocolAdmin {
+    function setMarketFeeBps(uint128 feeBps) external onlyModuleAdmin {
         marketFeeBps = feeBps;
         emit MarketFeeUpdate(feeBps);
+    }
+
+    function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {
+        restrictedListerRoleOnly = restricted;
+        emit RestrictedListerRoleUpdated(restricted);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
@@ -509,5 +538,13 @@ contract Market is IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Co
                 idx += 1;
             }
         }
+    }
+
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
     }
 }

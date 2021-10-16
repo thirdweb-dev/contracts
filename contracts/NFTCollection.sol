@@ -18,7 +18,9 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -63,6 +65,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 shares;
         uint256 underlyingTokenAmount;
     }
+
+    event RestrictedTransferUpdated(bool transferable);
 
     /// @dev Emitted when native ERC 1155 tokens are created.
     event NativeTokens(address indexed creator, uint256[] tokenIds, string[] tokenURIs, uint256[] tokenSupplies);
@@ -115,18 +119,17 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     /// @dev NFT tokenId => state of underlying ERC20 token.
     mapping(uint256 => ERC20Wrapped) public erc20WrappedTokens;
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "NFTCollection: The protocol is paused.");
-        _;
-    }
-
     /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "NFTCollection: only a protocol admin can call this function."
         );
+        _;
+    }
+
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
     }
 
@@ -140,7 +143,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     constructor(
-        address payable _controlCenter,
+        address _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
@@ -164,7 +167,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         string[] calldata _nftURIs,
         uint256[] calldata _nftSupplies,
         bytes memory data
-    ) public onlyUnpausedProtocol onlyMinterRole returns (uint256[] memory nftIds) {
+    ) public whenNotPaused onlyMinterRole returns (uint256[] memory nftIds) {
         require(_nftURIs.length == _nftSupplies.length, "NFTCollection: Must specify equal number of config values.");
         require(_nftURIs.length > 0, "NFTCollection: Must create at least one NFT.");
 
@@ -248,7 +251,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         address _nftContract,
         uint256 _tokenId,
         string calldata _nftURI
-    ) external onlyUnpausedProtocol onlyMinterRole {
+    ) external whenNotPaused onlyMinterRole {
         require(
             IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
             "NFTCollection: Only the owner of the NFT can wrap it."
@@ -307,7 +310,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
         uint256 _tokenAmount,
         uint256 _numOfNftsToMint,
         string calldata _nftURI
-    ) external onlyUnpausedProtocol onlyMinterRole {
+    ) external whenNotPaused onlyMinterRole {
         // Get creator
         address tokenCreator = _msgSender();
 
@@ -370,7 +373,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
      */
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
         require(
             _royaltyBps < controlCenter.MAX_BPS(),
             "NFTCollection: Invalid bps provided; must be less than 10,000."
@@ -387,8 +390,10 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981 {
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
+
+        emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
     /**

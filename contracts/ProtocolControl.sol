@@ -9,7 +9,6 @@ import { Registry } from "./Registry.sol";
 import { Royalty } from "./Royalty.sol";
 
 contract ProtocolControl is AccessControlEnumerable {
-
     /// @dev MAX_BPS for the contract: 10_000 == 100%
     uint128 public constant MAX_BPS = 10000;
 
