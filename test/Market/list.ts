@@ -101,6 +101,26 @@ describe("List token for sale", function () {
       ).to.be.reverted;
     });
 
+    it("Should revert if lister does not have a role", async () => {
+      expect(await market.hasRole(await market.LISTER_ROLE(), creator.address)).to.equal(false);
+      expect(await market.hasRole(await market.DEFAULT_ADMIN_ROLE(), creator.address)).to.equal(false);
+      await market.connect(protocolAdmin).setRestrictedListerRoleOnly(true);
+      await expect(
+        market
+          .connect(creator)
+          .list(
+            accessNft.address,
+            rewardId,
+            coin.address,
+            price,
+            amountOfTokenToList,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
+      ).to.be.reverted;
+    });
+
     it("Should revert if no amount of tokens is listed", async () => {
       await sendGaslessTx(creator, forwarder, relayer, {
         from: creator.address,
@@ -289,6 +309,90 @@ describe("List token for sale", function () {
       expect(listing.currency).to.equal(coin.address);
       expect(listing.pricePerToken).to.equal(price);
       expect(listing.tokenType).to.equal(0); // 0 == ERC1155 i.e. pack / NFTCollection / AccessNFT
+    });
+  });
+
+  describe("Roles", function () {
+    beforeEach(async () => {
+      // Approve Market to transfer tokens
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: accessNft.address,
+        data: accessNft.interface.encodeFunctionData("setApprovalForAll", [market.address, true]),
+      });
+    });
+
+    it("not lister role and not restricted", async () => {
+      await expect(
+        market
+          .connect(creator)
+          .list(
+            accessNft.address,
+            rewardId,
+            coin.address,
+            price,
+            amountOfTokenToList,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
+      ).to.not.reverted;
+    });
+
+    it("not lister role and restricted", async () => {
+      await market.setRestrictedListerRoleOnly(true);
+      await expect(
+        market
+          .connect(creator)
+          .list(
+            accessNft.address,
+            rewardId,
+            coin.address,
+            price,
+            amountOfTokenToList,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
+      ).to.reverted;
+    });
+
+    it("lister role and restricted", async () => {
+      await market.setRestrictedListerRoleOnly(true);
+      await market.grantRole(await market.LISTER_ROLE(), creator.address);
+      await expect(
+        market
+          .connect(creator)
+          .list(
+            accessNft.address,
+            rewardId,
+            coin.address,
+            price,
+            amountOfTokenToList,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
+      ).to.not.reverted;
+    });
+
+    it("lister role and not restricted", async () => {
+      await market.setRestrictedListerRoleOnly(false);
+      await market.grantRole(await market.LISTER_ROLE(), creator.address);
+      await expect(
+        market
+          .connect(creator)
+          .list(
+            accessNft.address,
+            rewardId,
+            coin.address,
+            price,
+            amountOfTokenToList,
+            tokensPerBuyer,
+            openStartAndEnd,
+            openStartAndEnd,
+          ),
+      ).to.not.reverted;
     });
   });
 });

@@ -34,11 +34,12 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
         _;
     }
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "Coin: The protocol is paused.");
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
     }
+
+    event RestrictedTransferUpdated(bool transferable);
 
     constructor(
         address payable _controlCenter,
@@ -67,19 +68,16 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "NFT: Transfers are restricted to TRANSFER_ROLE holders"
+                "Coin: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
-    }
 
-    /// @dev Mints `amount` of coins to `to`. `super.mint` checks for MINTER_ROLE.
-    function mint(address to, uint256 amount) public override onlyUnpausedProtocol {
-        super.mint(to, amount);
+        emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.

@@ -99,11 +99,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     /// @dev Emitted when royalties for pack sales are updated.
     event RoyaltyUpdated(uint256 royaltyBps);
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "Pack: The protocol is paused.");
-        _;
-    }
+    event RestrictedTransferUpdated(bool transferable);
 
     /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
@@ -111,6 +107,11 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
             "Pack: only a protocol admin can call this function."
         );
+        _;
+    }
+
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
     }
 
@@ -182,7 +183,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         uint256[] memory _ids,
         uint256[] memory _values,
         bytes memory _data
-    ) public override onlyUnpausedProtocol returns (bytes4) {
+    ) public override whenNotPaused returns (bytes4) {
         // Get parameters for creating packs.
         (string memory packURI, uint256 secondsUntilOpenStart, uint256 rewardsPerOpen) = abi.decode(
             _data,
@@ -200,7 +201,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
      **/
 
     /// @dev Lets a pack owner request to open a single pack.
-    function openPack(uint256 _packId) external onlyUnpausedProtocol {
+    function openPack(uint256 _packId) external whenNotPaused {
         PackState memory packState = packs[_packId];
 
         require(block.timestamp >= packState.openStart, "Pack: the window to open packs has not started or closed.");
@@ -251,8 +252,19 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         vrfFees = _newFees;
     }
 
+    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+        _contractURI = _uri;
+    }
+
+    /// @dev Lets a protocol admin transfer LINK from the contract.
+    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin {
+        bool success = LINK.transfer(_to, _amount);
+        require(success, "Pack: Failed to transfer LINK.");
+    }
+
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
@@ -260,20 +272,11 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         emit RoyaltyUpdated(_royaltyBps);
     }
 
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
-        _contractURI = _uri;
-    }
-
     /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
-    }
 
-    /// @dev Lets a protocol admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin {
-        bool success = LINK.transfer(_to, _amount);
-        require(success, "Pack: Failed to transfer LINK.");
+        emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
     /**
@@ -289,7 +292,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         uint256[] memory _rewardAmounts,
         uint256 _secondsUntilOpenStart,
         uint256 _rewardsPerOpen
-    ) internal onlyUnpausedProtocol {
+    ) internal whenNotPaused {
         require(
             IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
             "Pack: reward contract does not implement ERC 1155."

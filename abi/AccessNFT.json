@@ -2,7 +2,7 @@
   {
     "inputs": [
       {
-        "internalType": "address payable",
+        "internalType": "address",
         "name": "_controlCenter",
         "type": "address"
       },
@@ -168,6 +168,19 @@
       }
     ],
     "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "transferable",
+        "type": "bool"
+      }
+    ],
+    "name": "RestrictedTransferUpdated",
     "type": "event"
   },
   {

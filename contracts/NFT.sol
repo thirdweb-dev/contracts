@@ -44,6 +44,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     /// @dev Emitted when an NFT is minted;
     event Minted(address indexed creator, address indexed to, uint256 tokenId, string tokenURI);
     event MintedBatch(address indexed creator, address indexed to, uint256[] tokenIds, string[] tokenURI);
+    event RestrictedTransferUpdated(bool transferable);
 
     event RoyaltyUpdated(uint256 royaltyBps);
 
@@ -56,9 +57,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         _;
     }
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyUnpausedProtocol() {
-        require(!controlCenter.systemPaused(), "NFT: The protocol is paused.");
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
     }
 
@@ -84,7 +84,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     }
 
     /// @dev Mints an NFT to `_to` with URI `_uri`
-    function mintNFT(address _to, string calldata _uri) external onlyUnpausedProtocol {
+    function mintNFT(address _to, string calldata _uri) external whenNotPaused {
         require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
 
         // Get tokenId
@@ -103,7 +103,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         emit Minted(_msgSender(), _to, id, _uri);
     }
 
-    function mintNFTBatch(address _to, string[] calldata _uris) external onlyUnpausedProtocol {
+    function mintNFTBatch(address _to, string[] calldata _uris) external whenNotPaused {
         require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
 
         uint256[] memory ids = new uint256[](_uris.length);
@@ -134,7 +134,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyProtocolAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
@@ -153,8 +153,10 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyProtocolAdmin {
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
+
+        emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
     /// @dev Runs on every transfer.

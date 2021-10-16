@@ -115,14 +115,14 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     }
 
     /// @dev Mints an NFT to `_to` with URI `_uri`
-    function lazyMint(string calldata _uri) external {
+    function lazyMint(string calldata _uri) external whenNotPaused {
         require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
         require(nextTokenId + 1 <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
         uri[nextTokenId] = _uri;
         nextTokenId += 1;
     }
 
-    function lazyMintBatch(string[] calldata _uris) external {
+    function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
         require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
         require((nextTokenId + _uris.length) <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
         uint256 id = nextTokenId;
@@ -133,7 +133,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         nextTokenId = id;
     }
 
-    function lazyMintAmount(uint256 amount) external {
+    function lazyMintAmount(uint256 amount) external whenNotPaused {
         require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
         require((nextTokenId + amount) <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
         nextTokenId += amount;
