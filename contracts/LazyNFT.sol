@@ -284,7 +284,6 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         }
     }
 
-
     /// @dev get the current active mint condition sorted by last added first
     /// assumption: the conditions are sorted ascending order by condition start timestamp. check on insertion.
     /// @return conition index, condition

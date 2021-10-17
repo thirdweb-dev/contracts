@@ -99,10 +99,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multi
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            "AccessNFT: only a module admin can call this function."
-        );
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "AccessNFT: only a module admin can call this function.");
         _;
     }
 
