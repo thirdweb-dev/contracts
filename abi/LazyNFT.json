@@ -193,7 +193,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "waitTimestampLimitPerTransaction",
+            "name": "waitTimeSecondsLimitPerTransaction",
             "type": "uint256"
           },
           {
@@ -782,7 +782,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "waitTimestampLimitPerTransaction",
+        "name": "waitTimeSecondsLimitPerTransaction",
         "type": "uint256"
       },
       {
@@ -1113,7 +1113,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "waitTimestampLimitPerTransaction",
+            "name": "waitTimeSecondsLimitPerTransaction",
             "type": "uint256"
           },
           {

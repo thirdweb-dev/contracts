@@ -46,7 +46,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         uint256 maxMintSupply;
         uint256 currentMintSupply;
         uint256 quantityLimitPerTransaction;
-        uint256 waitTimestampLimitPerTransaction;
+        uint256 waitTimeSecondsLimitPerTransaction;
         uint256 pricePerToken;
         address currency;
         bytes32 merkleRoot;
@@ -111,7 +111,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
 
     /// @dev Revert inherited mint function.
     function mint(address) public pure override {
-        revert("NFT: claim instead");
+        revert("NFT: claim");
     }
 
     /// @dev Mints an NFT to `_to` with URI `_uri`
@@ -170,7 +170,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         mintConditions[conditionIndex].currentMintSupply += quantity;
         nextMintTimestampByCondition[_msgSender()][conditionIndex] =
             block.timestamp +
-            currentMintCondition.waitTimestampLimitPerTransaction;
+            currentMintCondition.waitTimeSecondsLimitPerTransaction;
 
         uint256 startMintTokenId = nextMintTokenId;
         for (uint256 i = 0; i < quantity; i++) {
@@ -204,20 +204,16 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
         require(conditions.length > 0, "NFT: needs a list of conditions");
 
-        // NOTE: nextMintTimestampByCondition, does not get reset.
+        // `nextMintTimestampByCondition` does not get reset.
         delete mintConditions;
 
-        // NOTE: make sure the conditions are sorted in ascending order
+        // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp = 0;
         for (uint256 i = 0; i < conditions.length; i++) {
-            uint256 cStartTimestamp = conditions[i].startTimestamp;
-            if (cStartTimestamp == 0) {
-                cStartTimestamp = block.timestamp;
-            }
-
+            // the input of startTimestamp is the number of seconds from now.
             if (lastConditionStartTimestamp != 0) {
                 require(
-                    lastConditionStartTimestamp < cStartTimestamp,
+                    lastConditionStartTimestamp < conditions[i].startTimestamp,
                     "NFT: startTimestamp must be in ascending order"
                 );
             }
@@ -226,18 +222,18 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
 
             mintConditions.push(
                 PublicMintCondition({
-                    startTimestamp: cStartTimestamp,
+                    startTimestamp: block.timestamp + conditions[i].startTimestamp,
                     maxMintSupply: conditions[i].maxMintSupply,
                     currentMintSupply: 0,
                     quantityLimitPerTransaction: conditions[i].quantityLimitPerTransaction,
-                    waitTimestampLimitPerTransaction: conditions[i].waitTimestampLimitPerTransaction,
+                    waitTimeSecondsLimitPerTransaction: conditions[i].waitTimeSecondsLimitPerTransaction,
                     pricePerToken: conditions[i].pricePerToken,
                     currency: conditions[i].currency,
                     merkleRoot: conditions[i].merkleRoot
                 })
             );
 
-            lastConditionStartTimestamp = cStartTimestamp;
+            lastConditionStartTimestamp = conditions[i].startTimestamp;
         }
 
         emit PublicMintConditionUpdated(mintConditions);
