@@ -23,12 +23,12 @@
       },
       {
         "internalType": "string",
-        "name": "_contractURI",
+        "name": "_contractUri",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "_baseTokenURI",
+        "name": "_baseTokenUri",
         "type": "string"
       },
       {
@@ -837,6 +837,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "nextMintTimestampByCondition",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "nextMintTokenId",
     "outputs": [
@@ -1052,7 +1076,7 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "uri",
+        "name": "_uri",
         "type": "string"
       }
     ],
@@ -1316,25 +1340,6 @@
     "name": "unpause",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "uri",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -53,7 +53,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     }
     PublicMintCondition[] public mintConditions;
     // msg.sender address => current condition index => timestamp
-    mapping(address => mapping(uint256 => uint256)) nextMintTimestampByCondition;
+    mapping(address => mapping(uint256 => uint256)) public nextMintTimestampByCondition;
 
     /// @dev Collection level metadata.
     string private _contractURI;
@@ -61,7 +61,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     string private _baseTokenURI;
 
     /// @dev Mapping from tokenId => URI
-    mapping(uint256 => string) public uri;
+    mapping(uint256 => string) private uri;
 
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public royaltyBps;
@@ -94,15 +94,15 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
-        string memory _contractURI,
-        string memory _baseTokenURI,
+        string memory _contractUri,
+        string memory _baseTokenUri,
         uint256 maxSupply
-    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _baseTokenURI) ERC2771Context(_trustedForwarder) {
+    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _baseTokenUri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
         // Set contract URI
-        _contractURI = _contractURI;
+        _contractURI = _contractUri;
 
         maxTotalSupply = maxSupply;
 
@@ -181,7 +181,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit Claimed(_msgSender(), startMintTokenId, quantity, conditionIndex);
     }
 
-    function _payout(address currency, uint256 amount) internal {
+    function _payout(address currency, uint256 amount) private {
         if (currency == address(0)) {
             require(msg.value == amount, "NFT: not enough value");
         } else {
@@ -245,10 +245,10 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit TotalSupplyUpdated(maxSupply);
     }
 
-    function setBaseTokenURI(string calldata uri) external onlyModuleAdmin {
-        _baseTokenURI = uri;
+    function setBaseTokenURI(string calldata _uri) external onlyModuleAdmin {
+        _baseTokenURI = _uri;
 
-        emit BaseTokenURIUpdated(uri);
+        emit BaseTokenURIUpdated(_uri);
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
@@ -332,10 +332,6 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         return "";
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseTokenURI;
-    }
-
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     function contractURI() public view returns (string memory) {
         return _contractURI;
@@ -352,5 +348,9 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
 
     function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _baseTokenURI;
     }
 }
