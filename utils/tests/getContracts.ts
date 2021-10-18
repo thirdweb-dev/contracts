@@ -1,18 +1,23 @@
 import { ethers } from "hardhat";
-import { chainlinkVars } from "../../utils/chainlink";
-import { ContractFactory } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-import { AccessNFT } from "../../typechain/AccessNFT";
-import { Registry } from "../../typechain/Registry";
+// Utils
+import { chainlinkVars } from "../../utils/chainlink";
+
+// Types
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Log } from "@ethersproject/abstract-provider";
+
+// Contract types
+import { Forwarder } from "../../typechain/Forwarder";
 import { ControlDeployer } from "../../typechain/ControlDeployer";
+import { Registry } from "../../typechain/Registry";
+import { ProtocolControl } from "../../typechain/ProtocolControl";
+import { AccessNFT } from "../../typechain/AccessNFT";
 import { NFT } from "../../typechain/NFT";
 import { Coin } from "../../typechain/Coin";
 import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
-import { Forwarder } from "../../typechain/Forwarder";
-import { ProtocolControl } from "../../typechain/ProtocolControl";
-import { Log } from "@ethersproject/abstract-provider";
+
 
 export type Contracts = {
   registry: Registry;
@@ -32,37 +37,37 @@ export async function getContracts(
 ): Promise<Contracts> {
 
   // Deploy Forwarder
-  const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder")
-  const forwarder: Forwarder = (await Forwarder_Factory.connect(protocolProvider).deploy()) as Forwarder;
+  const forwarder: Forwarder = await ethers.getContractFactory("Forwarder").then(f => f.connect(protocolProvider).deploy()) as Forwarder;
 
   // Deploy ControlDeployer
-  const ControlDeployer_Factory: ContractFactory = await ethers.getContractFactory("ControlDeployer");
-  const controlDeployer: ControlDeployer = (await ControlDeployer_Factory.connect(protocolProvider).deploy()) as ControlDeployer;
+  const controlDeployer: ControlDeployer = await ethers.getContractFactory("ControlDeployer").then(f => f.connect(protocolProvider).deploy()) as ControlDeployer;
 
   // Deploy Registry
-  const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
-  const registry: Registry = (await Registry_Factory.connect(protocolProvider).deploy(
-    protocolProvider.address,
-    forwarder.address,
-    controlDeployer.address,
+  const registry: Registry = await ethers.getContractFactory("Registry").then(f => f.connect(protocolProvider).deploy(
+    protocolProvider.address, // Protocol provider treasury.
+    forwarder.address, // Forwarder address.
+    controlDeployer.address, // ControlDeployer address.
   )) as Registry;
 
+  // Grant `REGISTRY_ROLE` in ControlDeployer, to Registry.
   const REGISTRY_ROLE = await controlDeployer.REGISTRY_ROLE();
   await controlDeployer.connect(protocolProvider).grantRole(REGISTRY_ROLE, registry.address);
 
-  // Deploy ProtocolControl via registry.
+  // Deploy ProtocolControl via Registry.
   const protocolControlURI: string = "";
   const deployReceipt = await registry.connect(protocolAdmin).deployProtocol(protocolControlURI).then(tx => tx.wait());
+
+  // Get ProtocolControl address
   const log = deployReceipt.logs.find(x => x.topics.indexOf(registry.interface.getEventTopic("NewProtocolControl")) >= 0);
   const protocolControlAddr: string = registry.interface.parseLog(log as Log).args.controlAddress;
+
+  // Get ProtocolControl contract.
   const protocolControl: ProtocolControl = await ethers.getContractAt("ProtocolControl", protocolControlAddr) as ProtocolControl;
 
   // Deploy Pack
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
   const packContractURI: string = "";
-
-  const Pack_Factory: ContractFactory = await ethers.getContractFactory("Pack");
-  const pack: Pack = (await Pack_Factory.deploy(
+  const pack: Pack = await ethers.getContractFactory("Pack").then(f => f.connect(protocolAdmin).deploy(
     protocolControl.address,
     packContractURI,
     vrfCoordinator,
@@ -74,9 +79,7 @@ export async function getContracts(
 
   // Deploy Market
   const marketContractURI: string = "";
-
-  const Market_Factory: ContractFactory = await ethers.getContractFactory("Market");
-  const market: Market = (await Market_Factory.deploy(
+  const market: Market = await ethers.getContractFactory("Market").then(f => f.connect(protocolAdmin).deploy(
     protocolControl.address,
     forwarder.address,
     marketContractURI,
@@ -84,31 +87,30 @@ export async function getContracts(
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
-
-  const AccessNFT_Factory: ContractFactory = await ethers.getContractFactory("AccessNFT");
-  const accessNft: AccessNFT = (await AccessNFT_Factory.deploy(
+  const accessNft: AccessNFT = await ethers.getContractFactory("AccessNFT").then(f => f.connect(protocolAdmin).deploy(
     protocolControl.address,
     forwarder.address,
     accessNFTContractURI,
-  )) as AccessNFT;
+  )) as AccessNFT
 
   // Get NFT contract
-  const NFT_Factory: ContractFactory = await ethers.getContractFactory("NFT");
-  const nft: NFT = (await NFT_Factory.deploy(
+  const name: string = "name"
+  const symbol: string = "SYMBOL";
+  const baseURI: string = "";
+  const nft: NFT = await ethers.getContractFactory("NFT").then(f => f.connect(protocolAdmin).deploy(
     protocolControl.address,
-    "name",
-    "SYMBOL",
+    name,
+    symbol,
     forwarder.address,
-    "ipfs://base_uri",
+    baseURI,
   )) as NFT;
 
   // Deploy Coin
-  const coinName = "";
-  const coinSymbol = "";
+  const coinName = "name";
+  const coinSymbol = "SYMBOL";
   const coinURI = "";
 
-  const Coin_Factory: ContractFactory = await ethers.getContractFactory("Coin");
-  const coin: Coin = (await Coin_Factory.deploy(
+  const coin: Coin = await ethers.getContractFactory("Coin").then(f => f.connect(protocolAdmin).deploy(
     protocolControl.address,
     coinName,
     coinSymbol,
