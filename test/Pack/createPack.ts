@@ -1,22 +1,23 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Pack } from "../../typechain/Pack";
 import { Forwarder } from "../../typechain/Forwarder";
+
+// Types
 import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
-import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
 describe("Create a pack with rewards", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let relayer: SignerWithAddress;
@@ -36,9 +37,6 @@ describe("Create a pack with rewards", function () {
 
   // Token IDs
   let packId: number;
-
-  // Network
-  const networkName = "rinkeby";
 
   const createPack = async (
     _packCreator: SignerWithAddress,
@@ -68,18 +66,15 @@ describe("Create a pack with rewards", function () {
     );
   };
 
-  before(async () => {
-    // Fork rinkeby for testing
-    await forkFrom(networkName);
-
+  before(async () => {    
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(protocolAdmin, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     pack = contracts.pack;
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
@@ -96,27 +91,25 @@ describe("Create a pack with rewards", function () {
       await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       await expect(
-        accessNft
-          .connect(creator)
-          .createAccessTokens(
-            pack.address,
-            rewardURIs.slice(1),
-            accessURIs,
-            rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-          ),
+        createPack(
+          creator,
+          rewardURIs.slice(1),
+          accessURIs,
+          rewardSupplies,
+          pack.address,
+          encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
+        )
       ).to.be.reverted;
 
       await expect(
-        accessNft
-          .connect(creator)
-          .createAccessTokens(
-            pack.address,
-            rewardURIs,
-            accessURIs.slice(1),
-            rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-          ),
+        createPack(
+          creator,
+          rewardURIs,
+          accessURIs.slice(1),
+          rewardSupplies,
+          pack.address,
+          encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
+        )
       ).to.be.reverted;
     });
 
@@ -127,23 +120,27 @@ describe("Create a pack with rewards", function () {
       await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       await expect(
-        accessNft
-          .connect(creator)
-          .createAccessTokens(pack.address, [], [], [], encodeParams(packURI, openStartAndEnd, rewardsPerOpen)),
+        createPack(
+          creator,
+          [],
+          [],
+          [],
+          pack.address,
+          encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
+        )
       ).to.be.reverted;
     });
 
     it("Should revert if caller does not have MINTER_ROLE", async () => {
       await expect(
-        accessNft
-          .connect(creator)
-          .createAccessTokens(
-            pack.address,
-            rewardURIs,
-            accessURIs,
-            rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-          ),
+        createPack(
+          creator,
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          pack.address,
+          encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
+        )
       ).to.be.reverted;
     });
 
@@ -156,15 +153,14 @@ describe("Create a pack with rewards", function () {
       const invalidRewardsPerOpen = rewardSupplies.reduce((a, b) => a + b) - 1;
 
       await expect(
-        accessNft
-          .connect(creator)
-          .createAccessTokens(
-            pack.address,
-            rewardURIs,
-            accessURIs,
-            rewardSupplies,
-            encodeParams(packURI, openStartAndEnd, invalidRewardsPerOpen),
-          ),
+        createPack(
+          creator,
+          rewardURIs,
+          accessURIs,
+          rewardSupplies,
+          pack.address,
+          encodeParams(packURI, openStartAndEnd, invalidRewardsPerOpen),
+        )
       ).to.be.revertedWith("Pack: invalid number of rewards per open.");
     });
   });
