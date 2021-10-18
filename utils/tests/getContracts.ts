@@ -12,6 +12,7 @@ import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
 import { Forwarder } from "../../typechain/Forwarder";
 import { ProtocolControl } from "../../typechain/ProtocolControl";
+import { Log } from "@ethersproject/abstract-provider";
 
 export type Contracts = {
   registry: Registry;
@@ -24,35 +25,35 @@ export type Contracts = {
   nft: NFT;
 };
 
-export async function getContracts(deployer: SignerWithAddress, networkName: string): Promise<Contracts> {
+export async function getContracts(
+  protocolProvider: SignerWithAddress,
+  protocolAdmin: SignerWithAddress, 
+  networkName: string = "rinkeby"
+): Promise<Contracts> {
+
   // Deploy Forwarder
-  const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder");
-  const forwarder: Forwarder = (await Forwarder_Factory.deploy()) as Forwarder;
+  const Forwarder_Factory: ContractFactory = await ethers.getContractFactory("Forwarder")
+  const forwarder: Forwarder = (await Forwarder_Factory.connect(protocolProvider).deploy()) as Forwarder;
 
-  // Deploy NFTWrapper
+  // Deploy ControlDeployer
   const ControlDeployer_Factory: ContractFactory = await ethers.getContractFactory("ControlDeployer");
-  const controlDeployer: ControlDeployer = (await ControlDeployer_Factory.deploy()) as ControlDeployer;
+  const controlDeployer: ControlDeployer = (await ControlDeployer_Factory.connect(protocolProvider).deploy()) as ControlDeployer;
 
-  // Deploy ProtocolControl
-
-  const admin = deployer.address;
-  const protocolProvider = deployer.address;
-  const providerTreasury = deployer.address;
-  const protocolControlURI: string = "";
-
+  // Deploy Registry
   const Registry_Factory: ContractFactory = await ethers.getContractFactory("Registry");
-  const registry: Registry = (await Registry_Factory.deploy(
-    admin,
+  const registry: Registry = (await Registry_Factory.connect(protocolProvider).deploy(
+    protocolProvider.address,
     forwarder.address,
     controlDeployer.address,
   )) as Registry;
 
-  const ProtocolControl_Factory: ContractFactory = await ethers.getContractFactory("ProtocolControl");
-  const protocolControl: ProtocolControl = (await ProtocolControl_Factory.deploy(
-    registry.address,
-    admin,
-    protocolControlURI,
-  )) as ProtocolControl;
+  // Deploy ProtocolControl via registry.
+  const protocolControlURI: string = "";
+  const deployReceipt = await registry.connect(protocolAdmin).deployProtocol(protocolControlURI).then(tx => tx.wait());
+  const log = deployReceipt.logs.find(x => x.topics.indexOf(registry.interface.getEventTopic("NewProtocolControl")) >= 1);
+  const protocolControlAddr: string = registry.interface.parseLog(log as Log).args.controlAddress;
+
+  const protocolControl: ProtocolControl = await ethers.getContractAt("ProtocolControl", protocolControlAddr) as ProtocolControl;
 
   // Deploy Pack
   const { vrfCoordinator, linkTokenAddress, keyHash, fees } = chainlinkVars[networkName as keyof typeof chainlinkVars];
