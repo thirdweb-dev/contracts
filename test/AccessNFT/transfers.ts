@@ -1,21 +1,22 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Forwarder } from "../../typechain/Forwarder";
+
+// Types
+import { BigNumber, BytesLike } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
-import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
-import { BigNumber, BytesLike } from "ethers";
 
 describe("Token transfers under various conditions", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let fan: SignerWithAddress;
@@ -29,7 +30,6 @@ describe("Token transfers under various conditions", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
-  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Redeem Parameters
@@ -37,21 +37,15 @@ describe("Token transfers under various conditions", function () {
   let rewardId: number = 1;
   let accessId: number = 0;
 
-  // Network
-  const networkName = "rinkeby";
-
-  before(async () => {
-    // Fork rinkeby for testing
-    await forkFrom(networkName);
-
+  before(async () => {    
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, fan, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, fan, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(protocolAdmin, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
 
@@ -112,9 +106,13 @@ describe("Token transfers under various conditions", function () {
       });
 
       await expect(
-        accessNft
-          .connect(creator)
-          .safeTransferFrom(creator.address, fan.address, rewardId, amountToRedeeem, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address, fan.address, rewardId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
+          ])
+        })
       ).to.be.revertedWith("AccessNFT: Transfers are restricted to TRANSFER_ROLE holders");
     });
 
@@ -135,10 +133,16 @@ describe("Token transfers under various conditions", function () {
         data: accessNft.interface.encodeFunctionData("grantRole", [TRANSFER_ROLE, creator.address]),
       });
 
+      
+
       await expect(
-        accessNft
-          .connect(creator)
-          .safeTransferFrom(creator.address, fan.address, rewardId, amountToRedeeem, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address, fan.address, rewardId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
+          ])
+        })
       ).to.not.be.reverted;
     });
   });
@@ -150,9 +154,13 @@ describe("Token transfers under various conditions", function () {
 
     it("Should revert transfer if access rewards are not transferable at contract level", async () => {
       await expect(
-        accessNft
-          .connect(creator)
-          .safeTransferFrom(creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
+          ])
+        })
       ).to.be.revertedWith("AccessNFT: cannot transfer an access NFT that is redeemed");
     });
 
@@ -165,9 +173,13 @@ describe("Token transfers under various conditions", function () {
       });
 
       await expect(
-        accessNft
-          .connect(creator)
-          .safeTransferFrom(creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
+          ])
+        })
       ).to.not.be.reverted;
     });
 
@@ -187,9 +199,13 @@ describe("Token transfers under various conditions", function () {
       });
 
       await expect(
-        accessNft
-          .connect(creator)
-          .safeTransferFrom(creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
+          ])
+        })
       ).to.be.revertedWith("AccessNFT: Transfers are restricted to TRANSFER_ROLE holders");
     });
 
@@ -218,9 +234,13 @@ describe("Token transfers under various conditions", function () {
       });
 
       await expect(
-        accessNft
-          .connect(creator)
-          .safeTransferFrom(creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
+          ])
+        })
       ).to.not.be.reverted;
     });
   });

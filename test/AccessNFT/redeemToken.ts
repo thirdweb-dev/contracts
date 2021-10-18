@@ -1,10 +1,11 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Forwarder } from "../../typechain/Forwarder";
+
+// Types
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BytesLike } from "@ethersproject/bytes";
 import { BigNumber } from "ethers";
@@ -12,12 +13,13 @@ import { BigNumber } from "ethers";
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
-import { forkFrom } from "../../utils/hardhatFork";
+import { forkFrom } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
 describe("Calling 'redeemToken'", function () {
   // Signers
-  let deployer: SignerWithAddress;
+  let protocolProvider: SignerWithAddress;
+  let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let fan: SignerWithAddress;
   let relayer: SignerWithAddress;
@@ -30,35 +32,29 @@ describe("Calling 'redeemToken'", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
-  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Redeem Parameters
   const amountToRedeeem: number = 1;
   let rewardId: number = 1;
   let accessId: number = 0;
-
-  // Network
-  const networkName = "rinkeby";
+  
 
   before(async () => {
-    // Fork rinkeby for testing
-    await forkFrom(networkName);
-
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [deployer, creator, fan, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, fan, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(deployer, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
 
     // Grant Minter role to creator
     const MINTER_ROLE = await accessNft.MINTER_ROLE();
-    await accessNft.connect(deployer).grantRole(MINTER_ROLE, creator.address);
+    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
     // Create access NFTs
     await sendGaslessTx(creator, forwarder, relayer, {
@@ -83,13 +79,25 @@ describe("Calling 'redeemToken'", function () {
         data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
       });
 
-      await expect(accessNft.connect(creator).redeemToken(accessId, 1)).to.be.revertedWith(
+      await expect(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("redeemToken", [accessId, amountToRedeeem]),
+        })
+      ).to.be.revertedWith(
         "AccessNFT: This token is not redeemable for access.",
       );
     });
 
     it("Should revert if caller owns no redeemable token", async () => {
-      await expect(accessNft.connect(fan).redeemToken(rewardId, 1)).to.be.revertedWith(
+      await expect(
+        sendGaslessTx(fan, forwarder, relayer, {
+          from: fan.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
+        })
+      ).to.be.revertedWith(
         "AccessNFT: Cannot redeem more NFTs than owned.",
       );
     });
@@ -108,7 +116,13 @@ describe("Calling 'redeemToken'", function () {
         await ethers.provider.send("evm_mine", []);
       }
 
-      await expect(accessNft.connect(creator).redeemToken(rewardId, 1)).to.be.revertedWith(
+      await expect(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: accessNft.address,
+          data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
+        })
+      ).to.be.revertedWith(
         "AccessNFT: Window to redeem access has closed.",
       );
     });
