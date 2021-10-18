@@ -141,7 +141,7 @@ describe("Royalty", function () {
       const r = await cf.deploy(protocolControl.address, forwarder.address, "", payees, shares);
       expect(r.address).to.not.be.empty;
       expect(protocolControl.setRoyaltyTreasury(r.address)).to.be.revertedWith(
-        "ProtocolControl: provider shares too low",
+        "ProtocolControl: provider shares too low. <DOESNT WORK>",
       );
     });
   });
