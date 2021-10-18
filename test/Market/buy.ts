@@ -115,9 +115,9 @@ describe("List token for sale", function () {
     });
 
     // Set 5% royalty on Access NFT
-    await accessNft.connect(protocolAdmin).setRoyaltyBps(5000);
+    await accessNft.connect(protocolAdmin).setRoyaltyBps(500);
     // Set 5% market fee
-    await market.connect(protocolAdmin).setMarketFeeBps(5000);
+    await market.connect(protocolAdmin).setMarketFeeBps(500);
   });
 
   describe("Revert cases", function () {
