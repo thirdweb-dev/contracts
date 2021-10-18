@@ -47,12 +47,14 @@ export async function getContracts(
     controlDeployer.address,
   )) as Registry;
 
+  const REGISTRY_ROLE = await controlDeployer.REGISTRY_ROLE();
+  await controlDeployer.connect(protocolProvider).grantRole(REGISTRY_ROLE, registry.address);
+
   // Deploy ProtocolControl via registry.
   const protocolControlURI: string = "";
   const deployReceipt = await registry.connect(protocolAdmin).deployProtocol(protocolControlURI).then(tx => tx.wait());
-  const log = deployReceipt.logs.find(x => x.topics.indexOf(registry.interface.getEventTopic("NewProtocolControl")) >= 1);
+  const log = deployReceipt.logs.find(x => x.topics.indexOf(registry.interface.getEventTopic("NewProtocolControl")) >= 0);
   const protocolControlAddr: string = registry.interface.parseLog(log as Log).args.controlAddress;
-
   const protocolControl: ProtocolControl = await ethers.getContractAt("ProtocolControl", protocolControlAddr) as ProtocolControl;
 
   // Deploy Pack
