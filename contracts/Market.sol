@@ -24,7 +24,15 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-contract Market is AccessControlEnumerable, Pausable, IERC1155Receiver, IERC721Receiver, ReentrancyGuard, ERC2771Context, Multicall {
+contract Market is
+    AccessControlEnumerable,
+    Pausable,
+    IERC1155Receiver,
+    IERC721Receiver,
+    ReentrancyGuard,
+    ERC2771Context,
+    Multicall
+{
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
@@ -115,15 +123,12 @@ contract Market is AccessControlEnumerable, Pausable, IERC1155Receiver, IERC721R
     }
 
     modifier onlyModuleAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            "only a module admin can call this function."
-        );
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only a module admin can call this function.");
         _;
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC2771Context(_trustedForwarder) {
@@ -171,7 +176,13 @@ contract Market is AccessControlEnumerable, Pausable, IERC1155Receiver, IERC721R
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControlEnumerable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AccessControlEnumerable, IERC165)
+        returns (bool)
+    {
         return interfaceId == type(IERC1155Receiver).interfaceId || interfaceId == type(IERC721Receiver).interfaceId;
     }
 

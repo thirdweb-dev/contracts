@@ -63,7 +63,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,

@@ -116,7 +116,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         string memory _uri,
         address _vrfCoordinator,
         address _linkToken,

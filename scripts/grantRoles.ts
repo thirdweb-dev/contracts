@@ -9,7 +9,7 @@ async function main() {
 
   console.log("\n");
 
-  const grantTo: string = "0xF73d650e5523914f0915B81df1e3D8091a0D34F5";
+  const grantTo: string = "0xa05271523BD00593eb4CC6DCbDcbd045361a9a03";
 
   // Get signer
   const [deployer] = await ethers.getSigners();
@@ -17,7 +17,8 @@ async function main() {
 
   // Get chain specific values
   const curentNetworkAddreses = addresses[networkName as keyof typeof addresses];
-  const { pack: packAddress, accessNft: accessNftAddress } = curentNetworkAddreses;
+  const packAddress = "0xB350f6b4FD9e2009ad64db4E7a064E00dB82cE67";
+  const accessNftAddress = "0xf1482e0aC5742B0683f51ed8e87bdbFA66f3da3f";
   const txOption = txOptions[networkName as keyof typeof txOptions];
 
   console.log(`Deploying contracts with account: ${await deployer.getAddress()} to ${networkName}`);
@@ -33,19 +34,19 @@ async function main() {
   // Grant roles tx
   const tx1 = await pack.grantRole(MINTER_ROLE, grantTo, txOption);
   console.log("Granting MINTER_ROLE on pack at: ", tx1.hash);
-  await tx1.wait()
+  await tx1.wait();
 
   const tx2 = await pack.grantRole(DEFAULT_ADMIN_ROLE, grantTo, txOption);
   console.log("Granting DEFAULT_ADMIN_ROLE on pack at: ", tx2.hash);
-  await tx2.wait()
+  await tx2.wait();
 
   const tx3 = await accessNft.grantRole(MINTER_ROLE, grantTo, txOption);
   console.log("Granting MINTER_ROLE on accessNft at: ", tx3.hash);
-  await tx3.wait()
+  await tx3.wait();
 
   const tx4 = await accessNft.grantRole(DEFAULT_ADMIN_ROLE, grantTo, txOption);
   console.log("Granting DEFAULT_ADMIN_ROLE on accessNft at: ", tx4.hash);
-  await tx4.wait()
+  await tx4.wait();
 }
 
 main()

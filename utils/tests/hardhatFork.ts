@@ -1,6 +1,6 @@
 // from: https://github.com/ethereumvex/SushiMaker-bridge-exploit/blob/master/utils/utils.js
 import hre from "hardhat";
-import { chainIds } from "./chainIds";
+import { chainIds } from "../chainIds";
 
 const ethers = hre.ethers;
 require("dotenv").config();

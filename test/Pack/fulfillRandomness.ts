@@ -1,11 +1,12 @@
-// Test imports
 import { ethers, network } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Pack } from "../../typechain/Pack";
 import { Forwarder } from "../../typechain/Forwarder";
+
+// Types
 import { BytesLike } from "@ethersproject/bytes";
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -13,13 +14,14 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
-import { forkFrom, impersonate } from "../../utils/hardhatFork";
+import { forkFrom, impersonate } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 import linkTokenABi from "../../abi/LinkTokenInterface.json";
 import { chainlinkVars } from "../../utils/chainlink";
 
 describe("VRF fulfills a randomness request", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let relayer: SignerWithAddress;
@@ -108,7 +110,7 @@ describe("VRF fulfills a randomness request", function () {
 
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, relayer] = signers;
 
     // Impersonate vrf
     vrf = await impersonateChainlinkVRF();
@@ -116,7 +118,7 @@ describe("VRF fulfills a randomness request", function () {
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(protocolAdmin, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin, networkName);
     pack = contracts.pack;
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;

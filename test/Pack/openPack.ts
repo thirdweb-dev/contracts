@@ -1,11 +1,12 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Pack } from "../../typechain/Pack";
 import { Forwarder } from "../../typechain/Forwarder";
+
+// Types
 import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
@@ -13,13 +14,14 @@ import { BigNumber } from "ethers";
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
-import { forkFrom, impersonate } from "../../utils/hardhatFork";
+import { forkFrom, impersonate } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 import linkTokenABi from "../../abi/LinkTokenInterface.json";
 import { chainlinkVars } from "../../utils/chainlink";
 
 describe("Open a pack", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let relayer: SignerWithAddress;
@@ -89,12 +91,12 @@ describe("Open a pack", function () {
 
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(protocolAdmin, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin, networkName);
     pack = contracts.pack;
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
@@ -120,9 +122,13 @@ describe("Open a pack", function () {
         encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
       );
 
-      await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
-        "Pack: Not enough LINK to fulfill randomness request.",
-      );
+      await expect(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: pack.address,
+          data: pack.interface.encodeFunctionData("openPack", [packId]),
+        }),
+      ).to.be.revertedWith("Pack: Not enough LINK to fulfill randomness request.");
     });
 
     it("Should revert if caller has no packs", async () => {
@@ -144,9 +150,13 @@ describe("Open a pack", function () {
       // Fund pack contract with LINK
       await fundPack();
 
-      await expect(pack.connect(protocolAdmin).openPack(packId)).to.be.revertedWith(
-        "Pack: sender owns no packs of the given packId.",
-      );
+      await expect(
+        sendGaslessTx(protocolAdmin, forwarder, relayer, {
+          from: protocolAdmin.address,
+          to: pack.address,
+          data: pack.interface.encodeFunctionData("openPack", [packId]),
+        }),
+      ).to.be.revertedWith("Pack: sender owns no packs of the given packId.");
     });
 
     it("Should revert if caller has an in-flight pack open request for the pack", async () => {
@@ -168,11 +178,19 @@ describe("Open a pack", function () {
       // Fund pack contract with LINK
       await fundPack();
 
-      await pack.connect(creator).openPack(packId);
+      await sendGaslessTx(creator, forwarder, relayer, {
+        from: creator.address,
+        to: pack.address,
+        data: pack.interface.encodeFunctionData("openPack", [packId]),
+      });
 
-      await expect(pack.connect(creator).openPack(packId)).to.be.revertedWith(
-        "Pack: must wait for the pending pack to be opened.",
-      );
+      await expect(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: pack.address,
+          data: pack.interface.encodeFunctionData("openPack", [packId]),
+        }),
+      ).to.be.revertedWith("Pack: must wait for the pending pack to be opened.");
     });
   });
 

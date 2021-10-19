@@ -1,13 +1,14 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Market } from "../../typechain/Market";
 import { Coin } from "../../typechain/Coin";
 import { Forwarder } from "../../typechain/Forwarder";
 import { ProtocolControl } from "../../typechain/ProtocolControl";
+
+// Types
 import { BigNumber } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -15,12 +16,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../utils/tests/params";
-import { forkFrom } from "../../utils/hardhatFork";
+import { forkFrom } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 import { Registry } from "../../typechain/Registry";
 
 describe("List token for sale", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let buyer: SignerWithAddress;
@@ -38,14 +40,10 @@ describe("List token for sale", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
-  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Token IDs
   let rewardId: number = 1;
-
-  // Network
-  const networkName = "rinkeby";
 
   // Market params: list
   const price: BigNumber = getBoundedEtherAmount();
@@ -59,17 +57,14 @@ describe("List token for sale", function () {
   const amountToBuy = getAmountBounded(parseInt(tokensPerBuyer.toString()));
 
   before(async () => {
-    // Fork rinkeby for testing
-    await forkFrom(networkName);
-
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, buyer, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, buyer, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(protocolAdmin, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     market = contracts.market;
     accessNft = contracts.accessNft;
     coin = contracts.coin;
@@ -120,18 +115,22 @@ describe("List token for sale", function () {
     });
 
     // Set 5% royalty on Access NFT
-    await accessNft.connect(protocolAdmin).setRoyaltyBps(5000);
+    await accessNft.connect(protocolAdmin).setRoyaltyBps(500);
     // Set 5% market fee
-    await market.connect(protocolAdmin).setMarketFeeBps(5000);
+    await market.connect(protocolAdmin).setMarketFeeBps(500);
   });
 
   describe("Revert cases", function () {
     it("Should revert if an invalid quantity of tokens is bought", async () => {
       const invalidQuantity: number = 0;
 
-      await expect(market.connect(buyer).buy(listingId, invalidQuantity)).to.be.revertedWith(
-        "Market: must buy an appropriate amount of tokens.",
-      );
+      await expect(
+        sendGaslessTx(buyer, forwarder, relayer, {
+          from: buyer.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("buy", [listingId, invalidQuantity]),
+        }),
+      ).to.be.revertedWith("Market: must buy an appropriate amount of tokens.");
     });
 
     it("Should revert if the sale window is closed", async () => {
@@ -139,19 +138,33 @@ describe("List token for sale", function () {
         await ethers.provider.send("evm_mine", []);
       }
 
-      await expect(market.connect(buyer).buy(listingId, amountToBuy)).to.be.revertedWith(
-        "Market: the sale has either not started or closed.",
-      );
+      await expect(
+        sendGaslessTx(buyer, forwarder, relayer, {
+          from: buyer.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("buy", [listingId, amountToBuy]),
+        }),
+      ).to.be.revertedWith("Market: the sale has either not started or closed.");
     });
 
     it("Should revert if the buyer tries to buy more than the buy limit", async () => {
-      await expect(market.connect(buyer).buy(listingId, tokensPerBuyer.add(1))).to.be.revertedWith(
-        "Market: Cannot buy more from listing than permitted.",
-      );
+      await expect(
+        sendGaslessTx(buyer, forwarder, relayer, {
+          from: buyer.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("buy", [listingId, tokensPerBuyer.add(1)]),
+        }),
+      ).to.be.revertedWith("Market: Cannot buy more from listing than permitted.");
     });
 
     it("Should revert if buyer hasn't allowed Market to transfer price amount of currency", async () => {
-      await expect(market.connect(buyer).buy(listingId, amountToBuy)).to.be.reverted;
+      await expect(
+        sendGaslessTx(buyer, forwarder, relayer, {
+          from: buyer.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("buy", [listingId, amountToBuy]),
+        }),
+      ).to.be.reverted;
     });
   });
 
@@ -224,8 +237,14 @@ describe("List token for sale", function () {
       // Get various fees
       const tokenRoyaltyBps: BigNumber = await accessNft.royaltyBps();
       const marketFeeBps: BigNumber = await market.marketFeeBps();
-      const providerFeeBps: BigNumber = await registry.getFeeBps(protocolControl.address);
       const MAX_BPS = await protocolControl.MAX_BPS();
+
+      // Get stakeholder shares
+      const totalPrice: BigNumber = price.mul(amountToBuy);
+
+      const marketCutBeforeProvider = totalPrice.mul(marketFeeBps).div(MAX_BPS); // Market cut goes to protocol control treasury.
+      const royaltyAmountBeforeProvider: BigNumber = totalPrice.mul(tokenRoyaltyBps).div(MAX_BPS); // Creator shares - gets royalty too
+      const totalRoyaltyTreasuryCut: BigNumber = marketCutBeforeProvider.add(royaltyAmountBeforeProvider); // Provider cut
 
       // Get balances before
       const buyerBalBefore: BigNumber = await coin.balanceOf(buyer.address);
@@ -244,18 +263,6 @@ describe("List token for sale", function () {
       const treasuryBalAfter: BigNumber = await coin.balanceOf(
         await protocolControl.getRoyaltyTreasury(market.address),
       );
-
-      // Get stakeholder shares
-      const totalPrice: BigNumber = price.mul(amountToBuy);
-
-      // Market cut
-      const marketCutBeforeProvider = totalPrice.mul(marketFeeBps).div(MAX_BPS);
-
-      // Creator shares - gets royalty too
-      const royaltyAmountBeforeProvider: BigNumber = totalPrice.mul(tokenRoyaltyBps).div(MAX_BPS);
-
-      // Provider cut
-      const totalRoyaltyTreasuryCut: BigNumber = marketCutBeforeProvider.add(royaltyAmountBeforeProvider);
 
       expect(treasuryBalAfter.sub(treasuryBalBefore)).to.equal(totalRoyaltyTreasuryCut);
       expect(buyerBalBefore.sub(buyerBalAfter)).to.equal(totalPrice);

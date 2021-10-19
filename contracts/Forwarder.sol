@@ -48,11 +48,20 @@ contract Forwarder is EIP712 {
         _nonces[req.from] = req.nonce + 1;
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = req.to.call{ gas: req.gas, value: req.value }(
+        (bool success, bytes memory result) = req.to.call{ gas: req.gas, value: req.value }(
             abi.encodePacked(req.data, req.from)
         );
+
+        if (!success) {
+            // Next 5 lines from https://ethereum.stackexchange.com/a/83577
+            if (result.length < 68) revert("Transaction reverted silently");
+            assembly {
+                result := add(result, 0x04)
+            }
+            revert(abi.decode(result, (string)));
+        }
         // Check gas: https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.gas / 63);
-        return (success, returndata);
+        return (success, result);
     }
 }

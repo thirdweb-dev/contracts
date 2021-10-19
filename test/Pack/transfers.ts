@@ -1,11 +1,12 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Pack } from "../../typechain/Pack";
 import { Forwarder } from "../../typechain/Forwarder";
+
+// Types
 import { BytesLike } from "@ethersproject/bytes";
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -13,13 +14,14 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
-import { forkFrom, impersonate } from "../../utils/hardhatFork";
+import { forkFrom, impersonate } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 import linkTokenABi from "../../abi/LinkTokenInterface.json";
 import { chainlinkVars } from "../../utils/chainlink";
 
 describe("Token transfers under various conditions", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let fan: SignerWithAddress;
@@ -40,10 +42,9 @@ describe("Token transfers under various conditions", function () {
 
   // Token IDs
   let packId: number;
-  let rewardIds: number[];
 
-  // Network
-  const networkName = "rinkeby";
+  // Params
+  const amountToTransfer: number = 1;
 
   const createPack = async (
     _packCreator: SignerWithAddress,
@@ -73,30 +74,15 @@ describe("Token transfers under various conditions", function () {
     );
   };
 
-  // Fund `Pack` with LINK
-  const fundPack = async () => {
-    const { linkTokenAddress } = chainlinkVars[networkName];
-
-    const linkHolderAddress: string = "0xa7a82dd06901f29ab14af63faf3358ad101724a8";
-    await impersonate(linkHolderAddress);
-    const linkHolder: SignerWithAddress = await ethers.getSigner(linkHolderAddress);
-
-    const linkContract = await ethers.getContractAt(linkTokenABi, linkTokenAddress);
-    linkContract.connect(linkHolder).transfer(pack.address, ethers.utils.parseEther("1"));
-  };
-
   before(async () => {
-    // Fork rinkeby for testing
-    await forkFrom(networkName);
-
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, fan, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, fan, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(protocolAdmin, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     pack = contracts.pack;
     accessNft = contracts.accessNft;
     forwarder = contracts.forwarder;
@@ -118,20 +104,6 @@ describe("Token transfers under various conditions", function () {
       pack.address,
       encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
     );
-
-    // Get rewardIds
-    const nextAccessNftId: number = parseInt((await accessNft.nextTokenId()).toString());
-    const expectedRewardIds: number[] = [];
-    for (let val of [...Array(nextAccessNftId).keys()]) {
-      if (val % 2 != 0) {
-        expectedRewardIds.push(val);
-      }
-    }
-
-    rewardIds = expectedRewardIds;
-
-    // Fund pack contract with LINK
-    await fundPack();
   });
 
   describe("Transferring packs", function () {
@@ -147,7 +119,7 @@ describe("Token transfers under various conditions", function () {
           creator.address,
           fan.address,
           packId,
-          1,
+          amountToTransfer,
           ethers.utils.toUtf8Bytes(""),
         ]),
       });
@@ -166,7 +138,17 @@ describe("Token transfers under various conditions", function () {
       });
 
       await expect(
-        pack.connect(creator).safeTransferFrom(creator.address, fan.address, packId, 1, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: pack.address,
+          data: pack.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address,
+            fan.address,
+            packId,
+            amountToTransfer,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.be.revertedWith("Pack: Transfers are restricted to TRANSFER_ROLE holders");
     });
 
@@ -188,7 +170,17 @@ describe("Token transfers under various conditions", function () {
       });
 
       await expect(
-        pack.connect(creator).safeTransferFrom(creator.address, fan.address, packId, 1, ethers.utils.toUtf8Bytes("")),
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: pack.address,
+          data: pack.interface.encodeFunctionData("safeTransferFrom", [
+            creator.address,
+            fan.address,
+            packId,
+            amountToTransfer,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.not.be.reverted;
     });
   });

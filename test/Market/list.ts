@@ -1,24 +1,25 @@
-// Test imports
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Types
+// Contract Types
+import { Forwarder } from "../../typechain/Forwarder";
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Market } from "../../typechain/Market";
 import { Coin } from "../../typechain/Coin";
+
+// Types
 import { BigNumber } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Forwarder } from "../../typechain/Forwarder";
 
 // Test utils
 import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../utils/tests/params";
-import { forkFrom } from "../../utils/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
 describe("List token for sale", function () {
   // Signers
+  let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let creator: SignerWithAddress;
   let relayer: SignerWithAddress;
@@ -33,14 +34,10 @@ describe("List token for sale", function () {
   const rewardURIs: string[] = getURIs();
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
-  const zeroAddress: string = "0x0000000000000000000000000000000000000000";
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Token IDs
   let rewardId: number = 1;
-
-  // Network
-  const networkName = "rinkeby";
 
   // Market params
   const price: BigNumber = getBoundedEtherAmount();
@@ -49,27 +46,24 @@ describe("List token for sale", function () {
   const openStartAndEnd: number = 0;
 
   before(async () => {
-    // Fork rinkeby for testing
-    await forkFrom(networkName);
-
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolAdmin, creator, relayer] = signers;
+    [protocolProvider, protocolAdmin, creator, relayer] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
-    const contracts: Contracts = await getContracts(creator, networkName);
+    const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     market = contracts.market;
     accessNft = contracts.accessNft;
     coin = contracts.coin;
     forwarder = contracts.forwarder;
 
-    // Create access NFTs
-    //
+    // Grant minter role to creator
     const MINTER_ROLE = await accessNft.MINTER_ROLE();
     await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
+    // Create access tokens
     await sendGaslessTx(creator, forwarder, relayer, {
       from: creator.address,
       to: accessNft.address,
@@ -86,9 +80,10 @@ describe("List token for sale", function () {
   describe("Revert", async () => {
     it("Should revert if Market is not approved to transfer listed tokens", async () => {
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -97,7 +92,8 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.be.reverted;
     });
 
@@ -106,9 +102,10 @@ describe("List token for sale", function () {
       expect(await market.hasRole(await market.DEFAULT_ADMIN_ROLE(), creator.address)).to.equal(false);
       await market.connect(protocolAdmin).setRestrictedListerRoleOnly(true);
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -117,7 +114,8 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.be.reverted;
     });
 
@@ -131,9 +129,10 @@ describe("List token for sale", function () {
       const invalidQuantity: number = 0;
 
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -142,7 +141,8 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.be.revertedWith("Market: must list at least one token.");
     });
 
@@ -156,9 +156,10 @@ describe("List token for sale", function () {
       const invalidTokensPerBuyer: BigNumber = amountOfTokenToList.add(1);
 
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -167,7 +168,8 @@ describe("List token for sale", function () {
             invalidTokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.be.revertedWith("Market: cannot let buyer buy more than listed quantity.");
     });
   });
@@ -322,11 +324,12 @@ describe("List token for sale", function () {
       });
     });
 
-    it("not lister role and not restricted", async () => {
+    it("Should not revert if seller does not have lister role and listing is not restricted", async () => {
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -335,16 +338,18 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.not.reverted;
     });
 
-    it("not lister role and restricted", async () => {
+    it("Should revert if seller does not have lister role and listing is restricted", async () => {
       await market.setRestrictedListerRoleOnly(true);
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -353,17 +358,19 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.reverted;
     });
 
-    it("lister role and restricted", async () => {
+    it("Should not revert if seller has lister role and listing is restricted", async () => {
       await market.setRestrictedListerRoleOnly(true);
       await market.grantRole(await market.LISTER_ROLE(), creator.address);
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -372,17 +379,19 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.not.reverted;
     });
 
-    it("lister role and not restricted", async () => {
+    it("Should not revert if seller has lister role and listing is not restricted", async () => {
       await market.setRestrictedListerRoleOnly(false);
       await market.grantRole(await market.LISTER_ROLE(), creator.address);
       await expect(
-        market
-          .connect(creator)
-          .list(
+        sendGaslessTx(creator, forwarder, relayer, {
+          from: creator.address,
+          to: market.address,
+          data: market.interface.encodeFunctionData("list", [
             accessNft.address,
             rewardId,
             coin.address,
@@ -391,7 +400,8 @@ describe("List token for sale", function () {
             tokensPerBuyer,
             openStartAndEnd,
             openStartAndEnd,
-          ),
+          ]),
+        }),
       ).to.not.reverted;
     });
   });

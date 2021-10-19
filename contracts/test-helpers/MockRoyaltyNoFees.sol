@@ -2,19 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/finance/PaymentSplitter.sol";
+import "../openzeppelin-presets/finance/PaymentSplitter.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-import { Registry } from "./Registry.sol";
-import { ProtocolControl } from "./ProtocolControl.sol";
+import { ProtocolControl } from "../ProtocolControl.sol";
 
 /**
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is PaymentSplitter, ERC2771Context {
+contract MockRoyaltyNoFees is PaymentSplitter, ERC2771Context {
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
@@ -46,26 +45,12 @@ contract Royalty is PaymentSplitter, ERC2771Context {
         // Set the protocol's control center.
         controlCenter = ProtocolControl(_controlCenter);
 
-        Registry registry = Registry(controlCenter.registry());
-        uint256 feeBps = registry.getFeeBps(_controlCenter);
-        uint256 totalScaledShares = 0;
-        uint256 totalScaledSharesMinusFee = 0;
-
         // Scaling the share, so we don't lose precision on division
         for (uint256 i = 0; i < payees.length; i++) {
             uint256 scaledShares = shares_[i] * 10000;
-            totalScaledShares += scaledShares;
-
-            uint256 feeFromScaledShares = (scaledShares * feeBps) / 10000;
-            uint256 scaledSharesMinusFee = scaledShares - feeFromScaledShares;
-            totalScaledSharesMinusFee += scaledSharesMinusFee;
-
             // WARNING: Do not call _addPayee outside of this constructor.
-            _addPayee(payees[i], scaledSharesMinusFee);
+            _addPayee(payees[i], scaledShares);
         }
-
-        // WARNING: Do not call _addPayee outside of this constructor.
-        _addPayee(registry.treasury(), totalScaledShares - totalScaledSharesMinusFee);
     }
 
     /// @dev See ERC2771

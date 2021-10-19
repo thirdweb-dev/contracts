@@ -90,7 +90,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
@@ -283,7 +283,6 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
             );
         }
     }
-
 
     /// @dev get the current active mint condition sorted by last added first
     /// assumption: the conditions are sorted ascending order by condition start timestamp. check on insertion.
