@@ -129,10 +129,8 @@ describe("List token for sale", function () {
           from: buyer.address,
           to: market.address,
           data: market.interface.encodeFunctionData("buy", [listingId, invalidQuantity]),
-        })
-      ).to.be.revertedWith(
-        "Market: must buy an appropriate amount of tokens.",
-      );
+        }),
+      ).to.be.revertedWith("Market: must buy an appropriate amount of tokens.");
     });
 
     it("Should revert if the sale window is closed", async () => {
@@ -145,10 +143,8 @@ describe("List token for sale", function () {
           from: buyer.address,
           to: market.address,
           data: market.interface.encodeFunctionData("buy", [listingId, amountToBuy]),
-        })
-      ).to.be.revertedWith(
-        "Market: the sale has either not started or closed.",
-      );
+        }),
+      ).to.be.revertedWith("Market: the sale has either not started or closed.");
     });
 
     it("Should revert if the buyer tries to buy more than the buy limit", async () => {
@@ -157,10 +153,8 @@ describe("List token for sale", function () {
           from: buyer.address,
           to: market.address,
           data: market.interface.encodeFunctionData("buy", [listingId, tokensPerBuyer.add(1)]),
-        })
-      ).to.be.revertedWith(
-        "Market: Cannot buy more from listing than permitted.",
-      );
+        }),
+      ).to.be.revertedWith("Market: Cannot buy more from listing than permitted.");
     });
 
     it("Should revert if buyer hasn't allowed Market to transfer price amount of currency", async () => {
@@ -169,7 +163,7 @@ describe("List token for sale", function () {
           from: buyer.address,
           to: market.address,
           data: market.interface.encodeFunctionData("buy", [listingId, amountToBuy]),
-        })
+        }),
       ).to.be.reverted;
     });
   });

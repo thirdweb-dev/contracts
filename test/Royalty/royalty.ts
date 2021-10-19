@@ -21,7 +21,6 @@ import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts, getAmountBounded, getBoundedEtherAmount } from "../../utils/tests/params";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 
-
 describe("Royalty", function () {
   const MAX_BPS = 10000;
   const SCALE_FACTOR = 10000;
@@ -55,14 +54,14 @@ describe("Royalty", function () {
   const accessURIs = getURIs(rewardURIs.length);
   const rewardSupplies: number[] = getAmounts(rewardURIs.length);
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
-  
+
   // Market parameters
   const price: BigNumber = getBoundedEtherAmount();
   const amountOfTokenToList = getAmountBounded(rewardSupplies[0]);
   const tokensPerBuyer = getAmountBounded(parseInt(amountOfTokenToList.toString()));
   const openStartAndEnd: number = 0;
   const rewardId: number = 1;
-  const listingId: number = 0
+  const listingId: number = 0;
   const amountToBuy: number = 1;
 
   // Test parameters
@@ -99,27 +98,26 @@ describe("Royalty", function () {
     feeTreasury = await registry.treasury();
 
     deployRoyalty = async (payees: string[], shares: BigNumberish[]): Promise<Royalty> =>
-      await RoyaltyFactory.deploy(protocolControl.address, forwarder.address, "", payees, shares) as Royalty;
+      (await RoyaltyFactory.deploy(protocolControl.address, forwarder.address, "", payees, shares)) as Royalty;
   });
 
-  describe("Default state of fees", function() {
+  describe("Default state of fees", function () {
     it("Should initially return default fee bps and treasury", async () => {
       expect(feeBps).to.be.equals(defaultFeeBps);
       expect(feeTreasury).to.be.equals(protocolProvider.address);
     });
-  })
+  });
 
   describe("Default state of Royalty contract", function () {
-
     it("Emits, for each payee, PayeeAdded with payee address and shares on creation", async () => {
       // Set payes and shares
       const payees = [singlePayee];
       const shares = [1];
-      
+
       // Deploy Royalty
       const royaltyContract: Royalty = await deployRoyalty(payees, shares);
       const receipt = await royaltyContract.deployTransaction.wait();
-      
+
       // Get PayeeAdded events emitted.
       const payeeAdded = receipt.logs.map((l: any) => payeeAddedInterface.parseLog(l)).map((l: any) => l.args);
 
@@ -146,12 +144,11 @@ describe("Royalty", function () {
 
       let totalFees = 0;
       for (let i = 0; i < payees.length; i++) {
-
         // Get share split
         const scaledShares = shares[i] * SCALE_FACTOR;
         const scaledSharesFees = (scaledShares * feeBps) / MAX_BPS;
         const scaledSharesMinusFee = scaledShares - scaledSharesFees;
-        
+
         // Update fees
         totalFees += scaledSharesFees;
 
@@ -166,7 +163,6 @@ describe("Royalty", function () {
 
   describe("Set Protocol Control Treasury", function () {
     it("Should allow setting a valid Royalty contract", async () => {
-
       // Set payes and shares
       const payees = multiplePayees;
       const shares = [1, 2, 3];
@@ -175,36 +171,34 @@ describe("Royalty", function () {
       const royaltyContract: Royalty = await deployRoyalty(payees, shares);
 
       expect(royaltyContract.address).to.not.be.empty;
-      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be.reverted;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
     });
 
     it("Should revert if setting an invalid Royalty contract", async () => {
-      
       // Set payes and shares
       const payees = multiplePayees;
       const shares = [1, 2, 3];
 
-      const invalidRoyaltyContract = await ethers.getContractFactory("MockRoyaltyNoFees").then(f => f.connect(protocolAdmin).deploy(
-        protocolControl.address, forwarder.address, "", payees, shares
-      ))
-      
+      const invalidRoyaltyContract = await ethers
+        .getContractFactory("MockRoyaltyNoFees")
+        .then(f => f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, "", payees, shares));
+
       expect(invalidRoyaltyContract.address).to.not.be.empty;
 
-      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(invalidRoyaltyContract.address)).to.be.revertedWith(
-        "ProtocolControl: provider shares too low.",
-      );
+      await expect(
+        protocolControl.connect(protocolAdmin).setRoyaltyTreasury(invalidRoyaltyContract.address),
+      ).to.be.revertedWith("ProtocolControl: provider shares too low.");
     });
   });
 
-  describe("Test payouts on sale in Market", function() {
-
+  describe("Test payouts on sale in Market", function () {
     // Royalty params
     let royaltyContract: Royalty;
     let payees: string[];
     let shares: number[];
 
     beforeEach(async () => {
-
       // Grant Minter role to creator
       const MINTER_ROLE = await accessNft.MINTER_ROLE();
       await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
@@ -251,38 +245,39 @@ describe("Royalty", function () {
       await market.connect(protocolAdmin).setMarketFeeBps(500);
 
       // Deploy Royalty contract
-      payees = [
-        stakeHolder1.address,
-        stakeHolder2.address,
-        stakeHolder3.address
-      ];
+      payees = [stakeHolder1.address, stakeHolder2.address, stakeHolder3.address];
       shares = [1, 2, 3];
-      royaltyContract = await RoyaltyFactory.deploy(protocolControl.address, forwarder.address, "", payees, shares) as Royalty;
+      royaltyContract = (await RoyaltyFactory.deploy(
+        protocolControl.address,
+        forwarder.address,
+        "",
+        payees,
+        shares,
+      )) as Royalty;
 
       // Set Royalty contract
-      await protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)
+      await protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address);
 
       // Mint currency to fan
       await coin.connect(protocolAdmin).mint(fan.address, price.mul(amountToBuy));
 
       // Approve Market to move currency
       await coin.connect(fan).approve(market.address, price.mul(amountToBuy));
-    })
+    });
 
     it("Should distribute the right amount of sale value to the right stakeholders", async () => {
-
       // Get all fees.
       const totalPrice: BigNumber = price.mul(amountToBuy);
-      
+
       const royaltyFeeBps: BigNumber = await accessNft.royaltyBps();
-      const totalRoyalty: BigNumber = (totalPrice.mul(royaltyFeeBps)).div(MAX_BPS);
+      const totalRoyalty: BigNumber = totalPrice.mul(royaltyFeeBps).div(MAX_BPS);
 
       const marketFeeBps: BigNumber = await market.marketFeeBps();
-      const totalMarketFee: BigNumber = (totalPrice.mul(marketFeeBps)).div(MAX_BPS);  
-      
+      const totalMarketFee: BigNumber = totalPrice.mul(marketFeeBps).div(MAX_BPS);
+
       const totalFeesCollected: BigNumber = totalRoyalty.add(totalMarketFee);
       console.log("Total fees collected: ", totalFeesCollected.toString());
-      
+
       // Buy token
       await sendGaslessTx(fan, forwarder, relayer, {
         from: fan.address,
@@ -294,32 +289,34 @@ describe("Royalty", function () {
       expect(await coin.balanceOf(royaltyContract.address)).to.equal(totalFeesCollected);
 
       // Pull shares
-      await royaltyContract.connect(stakeHolder1)["release(address,address)"](coin.address, stakeHolder1.address)
-      await royaltyContract.connect(stakeHolder2)["release(address,address)"](coin.address, stakeHolder2.address)
-      await royaltyContract.connect(stakeHolder3)["release(address,address)"](coin.address, stakeHolder3.address)
-      await royaltyContract.connect(protocolProvider)["release(address,address)"](coin.address, protocolProvider.address)
+      await royaltyContract.connect(stakeHolder1)["release(address,address)"](coin.address, stakeHolder1.address);
+      await royaltyContract.connect(stakeHolder2)["release(address,address)"](coin.address, stakeHolder2.address);
+      await royaltyContract.connect(stakeHolder3)["release(address,address)"](coin.address, stakeHolder3.address);
+      await royaltyContract
+        .connect(protocolProvider)
+        ["release(address,address)"](coin.address, protocolProvider.address);
 
       // Get shares
       const totalShares = await royaltyContract.totalShares();
-      const stakeholder1Shares = await royaltyContract.shares(stakeHolder1.address)
-      const stakeholder2Shares = await royaltyContract.shares(stakeHolder2.address)
-      const stakeholder3Shares = await royaltyContract.shares(stakeHolder3.address)
-      const protocolProviderShares = await royaltyContract.shares(protocolProvider.address)
-      
+      const stakeholder1Shares = await royaltyContract.shares(stakeHolder1.address);
+      const stakeholder2Shares = await royaltyContract.shares(stakeHolder2.address);
+      const stakeholder3Shares = await royaltyContract.shares(stakeHolder3.address);
+      const protocolProviderShares = await royaltyContract.shares(protocolProvider.address);
+
       // Check balances
 
       expect(await coin.balanceOf(stakeHolder1.address)).to.equal(
-        (totalFeesCollected.mul(stakeholder1Shares)).div(totalShares)
-      )
+        totalFeesCollected.mul(stakeholder1Shares).div(totalShares),
+      );
       expect(await coin.balanceOf(stakeHolder2.address)).to.equal(
-        (totalFeesCollected.mul(stakeholder2Shares)).div(totalShares)
-      )
+        totalFeesCollected.mul(stakeholder2Shares).div(totalShares),
+      );
       expect(await coin.balanceOf(stakeHolder3.address)).to.equal(
-        (totalFeesCollected.mul(stakeholder3Shares)).div(totalShares)
-      )
+        totalFeesCollected.mul(stakeholder3Shares).div(totalShares),
+      );
       expect(await coin.balanceOf(protocolProvider.address)).to.equal(
-        (totalFeesCollected.mul(protocolProviderShares)).div(totalShares)
-      )
-    })
-  })
+        totalFeesCollected.mul(protocolProviderShares).div(totalShares),
+      );
+    });
+  });
 });

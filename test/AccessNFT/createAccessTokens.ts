@@ -32,7 +32,6 @@ describe("Calling 'createAccessTokens'", function () {
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   before(async () => {
-
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
     [protocolProvider, protocolAdmin, creator, relayer] = signers;
@@ -62,7 +61,7 @@ describe("Calling 'createAccessTokens'", function () {
             rewardSupplies,
             emptyData,
           ]),
-        })
+        }),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
@@ -76,7 +75,7 @@ describe("Calling 'createAccessTokens'", function () {
             rewardSupplies,
             emptyData,
           ]),
-        })
+        }),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
 
       await expect(
@@ -90,7 +89,7 @@ describe("Calling 'createAccessTokens'", function () {
             rewardSupplies.slice(1),
             emptyData,
           ]),
-        })
+        }),
       ).to.be.revertedWith("AccessNFT: Must specify equal number of config values.");
     });
 
@@ -109,14 +108,8 @@ describe("Calling 'createAccessTokens'", function () {
         sendGaslessTx(creator, forwarder, relayer, {
           from: creator.address,
           to: accessNft.address,
-          data: accessNft.interface.encodeFunctionData("createAccessTokens", [
-            creator.address,
-            [],
-            [],
-            [],
-            emptyData,
-          ]),
-        })
+          data: accessNft.interface.encodeFunctionData("createAccessTokens", [creator.address, [], [], [], emptyData]),
+        }),
       ).to.be.reverted;
     });
   });

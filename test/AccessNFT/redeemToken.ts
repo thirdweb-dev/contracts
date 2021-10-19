@@ -38,7 +38,6 @@ describe("Calling 'redeemToken'", function () {
   const amountToRedeeem: number = 1;
   let rewardId: number = 1;
   let accessId: number = 0;
-  
 
   before(async () => {
     // Get signers
@@ -84,10 +83,8 @@ describe("Calling 'redeemToken'", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("redeemToken", [accessId, amountToRedeeem]),
-        })
-      ).to.be.revertedWith(
-        "AccessNFT: This token is not redeemable for access.",
-      );
+        }),
+      ).to.be.revertedWith("AccessNFT: This token is not redeemable for access.");
     });
 
     it("Should revert if caller owns no redeemable token", async () => {
@@ -96,10 +93,8 @@ describe("Calling 'redeemToken'", function () {
           from: fan.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
-        })
-      ).to.be.revertedWith(
-        "AccessNFT: Cannot redeem more NFTs than owned.",
-      );
+        }),
+      ).to.be.revertedWith("AccessNFT: Cannot redeem more NFTs than owned.");
     });
 
     it("Should revert if the window to redeem access tokens has ended", async () => {
@@ -121,10 +116,8 @@ describe("Calling 'redeemToken'", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("redeemToken", [rewardId, amountToRedeeem]),
-        })
-      ).to.be.revertedWith(
-        "AccessNFT: Window to redeem access has closed.",
-      );
+        }),
+      ).to.be.revertedWith("AccessNFT: Window to redeem access has closed.");
     });
   });
 

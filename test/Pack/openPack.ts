@@ -127,10 +127,8 @@ describe("Open a pack", function () {
           from: creator.address,
           to: pack.address,
           data: pack.interface.encodeFunctionData("openPack", [packId]),
-        })
-      ).to.be.revertedWith(
-        "Pack: Not enough LINK to fulfill randomness request.",
-      );
+        }),
+      ).to.be.revertedWith("Pack: Not enough LINK to fulfill randomness request.");
     });
 
     it("Should revert if caller has no packs", async () => {
@@ -157,10 +155,8 @@ describe("Open a pack", function () {
           from: protocolAdmin.address,
           to: pack.address,
           data: pack.interface.encodeFunctionData("openPack", [packId]),
-        })
-      ).to.be.revertedWith(
-        "Pack: sender owns no packs of the given packId.",
-      );
+        }),
+      ).to.be.revertedWith("Pack: sender owns no packs of the given packId.");
     });
 
     it("Should revert if caller has an in-flight pack open request for the pack", async () => {
@@ -193,10 +189,8 @@ describe("Open a pack", function () {
           from: creator.address,
           to: pack.address,
           data: pack.interface.encodeFunctionData("openPack", [packId]),
-        })
-      ).to.be.revertedWith(
-        "Pack: must wait for the pending pack to be opened.",
-      );
+        }),
+      ).to.be.revertedWith("Pack: must wait for the pending pack to be opened.");
     });
   });
 

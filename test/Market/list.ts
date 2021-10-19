@@ -93,7 +93,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.be.reverted;
     });
 
@@ -115,7 +115,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.be.reverted;
     });
 
@@ -142,7 +142,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.be.revertedWith("Market: must list at least one token.");
     });
 
@@ -169,7 +169,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.be.revertedWith("Market: cannot let buyer buy more than listed quantity.");
     });
   });
@@ -359,7 +359,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.reverted;
     });
 
@@ -380,7 +380,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.not.reverted;
     });
 
@@ -401,7 +401,7 @@ describe("List token for sale", function () {
             openStartAndEnd,
             openStartAndEnd,
           ]),
-        })
+        }),
       ).to.not.reverted;
     });
   });

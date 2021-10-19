@@ -40,7 +40,7 @@ contract ProtocolControl is AccessControlEnumerable {
     event TreasuryUpdated(address _newTreasury);
     event ForwarderUpdated(address _newForwarder);
     event FundsWithdrawn(address indexed to, address indexed currency, uint256 amount, uint256 fee);
-    event EtherReceived(address from, uint amount);
+    event EtherReceived(address from, uint256 amount);
     event RoyaltyTreasuryUpdated(
         address indexed protocolControlAddress,
         address indexed moduleAddress,

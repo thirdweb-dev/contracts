@@ -37,7 +37,7 @@ describe("Token transfers under various conditions", function () {
   let rewardId: number = 1;
   let accessId: number = 0;
 
-  before(async () => {    
+  before(async () => {
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
     [protocolProvider, protocolAdmin, creator, fan, relayer] = signers;
@@ -110,9 +110,13 @@ describe("Token transfers under various conditions", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, rewardId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
-          ])
-        })
+            creator.address,
+            fan.address,
+            rewardId,
+            amountToRedeeem,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.be.revertedWith("AccessNFT: Transfers are restricted to TRANSFER_ROLE holders");
     });
 
@@ -133,16 +137,18 @@ describe("Token transfers under various conditions", function () {
         data: accessNft.interface.encodeFunctionData("grantRole", [TRANSFER_ROLE, creator.address]),
       });
 
-      
-
       await expect(
         sendGaslessTx(creator, forwarder, relayer, {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, rewardId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
-          ])
-        })
+            creator.address,
+            fan.address,
+            rewardId,
+            amountToRedeeem,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.not.be.reverted;
     });
   });
@@ -158,9 +164,13 @@ describe("Token transfers under various conditions", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
-          ])
-        })
+            creator.address,
+            fan.address,
+            accessId,
+            amountToRedeeem,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.be.revertedWith("AccessNFT: cannot transfer an access NFT that is redeemed");
     });
 
@@ -177,9 +187,13 @@ describe("Token transfers under various conditions", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
-          ])
-        })
+            creator.address,
+            fan.address,
+            accessId,
+            amountToRedeeem,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.not.be.reverted;
     });
 
@@ -203,9 +217,13 @@ describe("Token transfers under various conditions", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
-          ])
-        })
+            creator.address,
+            fan.address,
+            accessId,
+            amountToRedeeem,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.be.revertedWith("AccessNFT: Transfers are restricted to TRANSFER_ROLE holders");
     });
 
@@ -238,9 +256,13 @@ describe("Token transfers under various conditions", function () {
           from: creator.address,
           to: accessNft.address,
           data: accessNft.interface.encodeFunctionData("safeTransferFrom", [
-            creator.address, fan.address, accessId, amountToRedeeem, ethers.utils.toUtf8Bytes("")
-          ])
-        })
+            creator.address,
+            fan.address,
+            accessId,
+            amountToRedeeem,
+            ethers.utils.toUtf8Bytes(""),
+          ]),
+        }),
       ).to.not.be.reverted;
     });
   });

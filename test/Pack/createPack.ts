@@ -66,7 +66,7 @@ describe("Create a pack with rewards", function () {
     );
   };
 
-  before(async () => {    
+  before(async () => {
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
     [protocolProvider, protocolAdmin, creator, relayer] = signers;
@@ -98,7 +98,7 @@ describe("Create a pack with rewards", function () {
           rewardSupplies,
           pack.address,
           encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-        )
+        ),
       ).to.be.reverted;
 
       await expect(
@@ -109,7 +109,7 @@ describe("Create a pack with rewards", function () {
           rewardSupplies,
           pack.address,
           encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-        )
+        ),
       ).to.be.reverted;
     });
 
@@ -120,14 +120,7 @@ describe("Create a pack with rewards", function () {
       await pack.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
 
       await expect(
-        createPack(
-          creator,
-          [],
-          [],
-          [],
-          pack.address,
-          encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-        )
+        createPack(creator, [], [], [], pack.address, encodeParams(packURI, openStartAndEnd, rewardsPerOpen)),
       ).to.be.reverted;
     });
 
@@ -140,7 +133,7 @@ describe("Create a pack with rewards", function () {
           rewardSupplies,
           pack.address,
           encodeParams(packURI, openStartAndEnd, rewardsPerOpen),
-        )
+        ),
       ).to.be.reverted;
     });
 
@@ -160,7 +153,7 @@ describe("Create a pack with rewards", function () {
           rewardSupplies,
           pack.address,
           encodeParams(packURI, openStartAndEnd, invalidRewardsPerOpen),
-        )
+        ),
       ).to.be.revertedWith("Pack: invalid number of rewards per open.");
     });
   });

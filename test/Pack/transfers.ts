@@ -148,7 +148,7 @@ describe("Token transfers under various conditions", function () {
             amountToTransfer,
             ethers.utils.toUtf8Bytes(""),
           ]),
-        })
+        }),
       ).to.be.revertedWith("Pack: Transfers are restricted to TRANSFER_ROLE holders");
     });
 
@@ -180,7 +180,7 @@ describe("Token transfers under various conditions", function () {
             amountToTransfer,
             ethers.utils.toUtf8Bytes(""),
           ]),
-        })
+        }),
       ).to.not.be.reverted;
     });
   });
