@@ -66,6 +66,31 @@
         "internalType": "address",
         "name": "controlAddress",
         "type": "address"
+      }
+    ],
+    "name": "MigratedProtocolControl",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "version",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "controlAddress",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -139,6 +164,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_deployer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_protocolControl",
+        "type": "address"
+      }
+    ],
+    "name": "addProtocolControl",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
