@@ -45,6 +45,8 @@ contract Registry is Ownable {
     event DefaultFeeBpsUpdated(uint256 defaultFeeBps);
     /// @dev Emitted when the protocol provider fees bps for a particular `ProtocolControl` is updated.
     event ProtocolControlFeeBpsUpdated(address indexed control, uint256 feeBps);
+    /// @dev Emitted when an instance of `ProtocolControl` is migrated to this registry.
+    event MigratedProtocolControl(address indexed deployer, uint256 indexed version, address indexed controlAddress);
     /// @dev Emitted when an instance of `ProtocolControl` is deployed.
     event NewProtocolControl(
         address indexed deployer,
@@ -85,6 +87,16 @@ contract Registry is Ownable {
     /// @dev Returns the protocol control address for the given version.
     function getProtocolControl(address _deployer, uint256 index) external view returns (address) {
         return _protocolControls[_deployer].protocolControlAddress[index];
+    }
+
+    /// @dev Lets the owner migrate `ProtocolControl` instances from a previous registry.
+    function addProtocolControl(address _deployer, address _protocolControl) external onlyOwner {
+        // Get version for protocolControl
+        uint256 version = getNextVersion(_deployer);
+
+        _protocolControls[_deployer].protocolControlAddress[version] = _protocolControl;
+
+        emit MigratedProtocolControl(_deployer, version, _protocolControl);
     }
 
     /// @dev Sets a new `ProtocolControl` deployer in case `ProtocolControl` is upgraded.
