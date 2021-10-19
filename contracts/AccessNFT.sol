@@ -110,7 +110,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multi
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {

@@ -128,7 +128,7 @@ contract Market is
     }
 
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri
     ) ERC2771Context(_trustedForwarder) {

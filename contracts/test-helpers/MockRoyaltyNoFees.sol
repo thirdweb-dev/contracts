@@ -31,7 +31,7 @@ contract MockRoyaltyNoFees is PaymentSplitter, ERC2771Context {
 
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     constructor(
-        address _controlCenter,
+        address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri,
         address[] memory payees,
