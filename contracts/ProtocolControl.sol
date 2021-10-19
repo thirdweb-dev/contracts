@@ -40,6 +40,7 @@ contract ProtocolControl is AccessControlEnumerable {
     event TreasuryUpdated(address _newTreasury);
     event ForwarderUpdated(address _newForwarder);
     event FundsWithdrawn(address indexed to, address indexed currency, uint256 amount, uint256 fee);
+    event EtherReceived(address from, uint amount);
     event RoyaltyTreasuryUpdated(
         address indexed protocolControlAddress,
         address indexed moduleAddress,
@@ -68,6 +69,11 @@ contract ProtocolControl is AccessControlEnumerable {
         royaltyTreasury = address(this);
         // Set access control roles
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+    }
+
+    /// @dev Lets the contract receive ether.
+    receive() external payable {
+        emit EtherReceived(msg.sender, msg.value);
     }
 
     /// @dev Initialize treasury payment royalty splitting pool
