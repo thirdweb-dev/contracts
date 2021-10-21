@@ -1,6 +1,9 @@
 {
   "mainnet": {
-    "treasury": "0xE00994EBDB59f70350E2cdeb897796F732331562"
+    "treasury": "0x09888aF38E0c153AB3D66CCC5f3FBb7aAB7Db115",
+    "controlDeployer": "0x9559F8A57931b85567350Cb50538ec0fc437F8c9",
+    "registry": "0x902a29f2cfe9f8580ad672AaAD7E917d85ca9a2E",
+    "forwarder": "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81"
   },
   "rinkeby": {
     "treasury": "0x7F610Ac4A50f4464cE51e6Ac33DfeB060B35A460",
