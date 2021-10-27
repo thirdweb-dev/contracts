@@ -94,7 +94,7 @@
   },
   {
     "inputs": [],
-    "name": "PUBLISHER_ROLE",
+    "name": "EDITOR_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -108,17 +108,17 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "uint256",
         "name": "",
-        "type": "bytes32"
+        "type": "uint256"
       }
     ],
     "name": "data",
     "outputs": [
       {
-        "internalType": "string",
+        "internalType": "uint256",
         "name": "",
-        "type": "string"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -286,14 +286,14 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "uint256",
         "name": "_key",
-        "type": "bytes32"
+        "type": "uint256"
       },
       {
-        "internalType": "string",
+        "internalType": "uint256",
         "name": "_value",
-        "type": "string"
+        "type": "uint256"
       }
     ],
     "name": "store",

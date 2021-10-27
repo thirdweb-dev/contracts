@@ -6,16 +6,16 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 contract DataStore is Context, Multicall, AccessControlEnumerable {
-  bytes32 public constant PUBLISHER_ROLE = keccak256("PUBLISHER_ROLE");
+  bytes32 public constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
 
-  mapping(bytes32 => string) public data;
+  mapping(uint256 => uint256) public data;
 
   constructor() {
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    _setupRole(PUBLISHER_ROLE, _msgSender());
+    _setupRole(EDITOR_ROLE, _msgSender());
   }
 
-  function store(bytes32 _key, string memory _value) onlyRole(PUBLISHER_ROLE) external {
+  function store(uint256 _key, uint256 _value) onlyRole(EDITOR_ROLE) external {
     data[_key] = _value;
   }
 }
