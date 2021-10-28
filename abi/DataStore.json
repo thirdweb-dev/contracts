@@ -1,6 +1,22 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "_controlCenterAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_trustedForwarder",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_uri",
+        "type": "string"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -106,19 +122,13 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "data",
+    "inputs": [],
+    "name": "contractURI",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -189,6 +199,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_key",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUint",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -218,6 +247,25 @@
       }
     ],
     "name": "hasRole",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "isTrustedForwarder",
     "outputs": [
       {
         "internalType": "bool",
@@ -286,6 +334,19 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "_URI",
+        "type": "string"
+      }
+    ],
+    "name": "setContractURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_key",
         "type": "uint256"
@@ -296,7 +357,7 @@
         "type": "uint256"
       }
     ],
-    "name": "store",
+    "name": "setUint",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
