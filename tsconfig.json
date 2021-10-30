@@ -6,8 +6,12 @@
     "esModuleInterop": true,
     "outDir": "dist",
     "resolveJsonModule": true,
-    "typeRoots": ["node_modules/@types", "src/typings"]
+    "typeRoots": ["node_modules/@types", "src/typings"],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "downlevelIteration": true,
+		"allowSyntheticDefaultImports": true,
   },
-  "include": ["./scripts", "./test", "./utils", "./tasks"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./typechain/index.ts"]
 }

@@ -12,8 +12,8 @@
     "eth-sig-util": "^3.0.1"
   },
   "source": "typechain/index.ts",
-  "main": "dist/contracts.js",
-  "types": "dist/contracts.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
@@ -30,6 +30,7 @@
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "chai": "^4.2.0",
+    "copyfiles": "^2.4.1",
     "dotenv": "^10.0.0",
     "eslint": "^7.24.0",
     "eslint-config-prettier": "^8.2.0",
@@ -54,8 +55,7 @@
   },
   "files": [
     "contracts/",
-    "dist/",
-    "typechain/"
+    "dist/"
   ],
   "license": "MIT",
   "scripts": {
@@ -82,6 +82,7 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "parcel build"
+    "build:lib": "rm -rf dist/ && tsc && yarn copy-dts",
+    "copy-dts": "copyfiles -u 1 \"typechain/**/*.d.ts\" dist"
   }
 }
