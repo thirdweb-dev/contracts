@@ -1,7 +1,7 @@
 {
   "name": "@3web/contracts",
   "description": "",
-  "version": "1.0.0-dev.1",
+  "version": "1.0.0",
   "dependencies": {
     "@chainlink/contracts": "^0.2.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.4",
