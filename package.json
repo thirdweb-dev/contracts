@@ -81,7 +81,7 @@
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,md,sol,ts}\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
-    "prepublish": "yarn compile && yarn typechain && yarn build:lib",
+    "build": "yarn compile && yarn typechain && yarn build:lib",
     "build:lib": "parcel build"
   }
 }
