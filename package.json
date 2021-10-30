@@ -53,9 +53,9 @@
     "ethers": "^5.4.7"
   },
   "files": [
-    "/contracts/*",
-    "/dist/*",
-    "/typechain/*"
+    "/contracts/**/*",
+    "/dist/**/*",
+    "/typechain/**/*"
   ],
   "license": "MIT",
   "scripts": {
