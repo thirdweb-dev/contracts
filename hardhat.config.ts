@@ -1,14 +1,13 @@
-import "@nomiclabs/hardhat-waffle";
-import "hardhat-abi-exporter";
 import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
-import "hardhat-gas-reporter";
+import dotenv from "dotenv";
+import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
-
+import "hardhat-gas-reporter";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
 
-import dotenv from "dotenv";
 dotenv.config();
 
 const chainIds = {
