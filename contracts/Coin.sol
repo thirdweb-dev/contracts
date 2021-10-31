@@ -1,8 +1,10 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 // Token + Access Control
-import "./openzeppelin-presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -12,7 +14,7 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
+contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -47,7 +49,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
-    ) ERC20PresetMinterPauser(_name, _symbol) ERC2771Context(_trustedForwarder) {
+    ) ERC20PresetMinterPauser(_name, _symbol) ERC20Permit(_name) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -62,7 +64,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall {
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20PresetMinterPauser) {
+    ) internal override(ERC20PresetMinterPauser, ERC20) {
         super._beforeTokenTransfer(from, to, amount);
 
         if (transfersRestricted && from != address(0) && to != address(0)) {
