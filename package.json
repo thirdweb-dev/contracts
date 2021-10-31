@@ -4,36 +4,39 @@
   "version": "0.1.2-0",
   "dependencies": {
     "@chainlink/contracts": "^0.2.2",
-    "@nomiclabs/hardhat-etherscan": "^2.1.4",
-    "@openzeppelin/contracts": "^4.3.2",
-    "defender-autotask-client": "^1.10.0",
-    "defender-relay-client": "^1.11.1",
-    "eth-permit": "^0.1.10",
-    "eth-sig-util": "^3.0.1"
+    "@openzeppelin/contracts": "^4.3.2"
   },
-  "source": "typechain/index.ts",
+  "source": "src/index.ts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "module": "dist/contracts.esm.js",
+  "files": [
+    "contracts/",
+    "src/",
+    "dist/"
+  ],
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.4",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@parcel/packager-ts": "^2.0.0",
-    "@parcel/transformer-typescript-types": "^2.0.0",
-    "@typechain/ethers-v5": "^7.1.2",
-    "@typechain/hardhat": "^2.3.0",
+    "@typechain/ethers-v5": "^8.0.1",
+    "@typechain/hardhat": "^3.0.0",
     "@types/chai": "^4.2.22",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.3",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
     "chai": "^4.2.0",
     "copyfiles": "^2.4.1",
+    "defender-autotask-client": "^1.10.0",
+    "defender-relay-client": "^1.11.1",
     "dotenv": "^10.0.0",
     "eslint": "^7.24.0",
     "eslint-config-prettier": "^8.2.0",
+    "eth-sig-util": "^3.0.1",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.1",
     "fs-extra": "^10.0.0",
@@ -46,17 +49,18 @@
     "parcel": "^2.0.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.18",
-    "ts-node": "^10.2.1",
-    "typechain": "^5.1.2",
-    "typescript": "4.4.3"
+    "ts-node": "^10.4.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.3.1",
+    "typechain": "^6.0.2",
+    "typescript": "^4.4.4"
   },
   "peerDependencies": {
     "ethers": "^5.4.7"
   },
-  "files": [
-    "contracts/",
-    "dist/"
-  ],
+  "resolutions": {
+    "typescript": "^4.4.4"
+  },
   "license": "MIT",
   "scripts": {
     "clean": "hardhat clean",
@@ -82,7 +86,7 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "rm -rf dist/ && tsc && yarn copy-dts",
+    "build:lib": "rm -rf dist/ && tsdx build",
     "copy-dts": "copyfiles -u 1 \"typechain/**/*.d.ts\" dist"
   }
 }
