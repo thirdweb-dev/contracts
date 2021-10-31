@@ -12,12 +12,13 @@
   "module": "dist/contracts.esm.js",
   "files": [
     "contracts/",
-    "src/",
+    "typechain/",
     "dist/"
   ],
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
+    "@ethersproject/providers": "^5.5.0",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.4",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -86,7 +87,7 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "rm -rf dist/ && tsdx build",
+    "build:lib": "rm -rf dist/ && tsdx build --entry typechain/index.ts",
     "copy-dts": "copyfiles -u 1 \"typechain/**/*.d.ts\" dist"
   }
 }
