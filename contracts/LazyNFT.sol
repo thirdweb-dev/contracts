@@ -96,13 +96,13 @@ contract LazyNFT is
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "NFT: only a protocol admin can call this function."
+            "not protocol admin"
         );
         _;
     }
 
     modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin");
         _;
     }
 
@@ -131,8 +131,8 @@ contract LazyNFT is
     }
 
     function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
-        require((nextTokenId + _uris.length) <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
+        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
+        require((nextTokenId + _uris.length) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
         uint256 id = nextTokenId;
         for (uint256 i = 0; i < _uris.length; i++) {
             uri[id] = _uris[i];
@@ -142,8 +142,8 @@ contract LazyNFT is
     }
 
     function lazyMintAmount(uint256 amount) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
-        require((nextTokenId + amount) <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
+        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
+        require((nextTokenId + amount) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
         nextTokenId += amount;
     }
 
@@ -151,24 +151,24 @@ contract LazyNFT is
         uint256 conditionIndex = getLastStartedMintConditionIndex();
         PublicMintCondition memory currentMintCondition = mintConditions[conditionIndex];
 
-        require(quantity > 0, "NFT: quantity cannot be 0");
-        require(nextMintTokenId + quantity <= maxTotalSupply, "NFT: exceeding total max supply limit");
-        require(nextMintTokenId + quantity <= nextTokenId, "NFT: cannot claim unminted token");
-        require(quantity <= currentMintCondition.quantityLimitPerTransaction, "NFT: exceeding supply limit");
+        require(quantity > 0, "quantity cannot be 0");
+        require(nextMintTokenId + quantity <= maxTotalSupply, "exceeding total max supply limit");
+        require(nextMintTokenId + quantity <= nextTokenId, "cannot claim unminted token");
+        require(quantity <= currentMintCondition.quantityLimitPerTransaction, "exceeding tx limit");
         require(
             currentMintCondition.currentMintSupply + quantity <= currentMintCondition.maxMintSupply,
-            "NFT: exceeding max mint supply"
+            "exceeding max mint supply"
         );
 
         uint256 nextMintTimestamp = nextMintTimestampByCondition[_msgSender()][conditionIndex];
         require(
             nextMintTimestamp == 0 || block.timestamp >= nextMintTimestamp,
-            "NFT: cannot mint yet due to time limit"
+            "cannot mint yet"
         );
 
         if (currentMintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
-            require(MerkleProof.verify(proofs, currentMintCondition.merkleRoot, leaf), "NFT: invalid merkle proofs");
+            require(MerkleProof.verify(proofs, currentMintCondition.merkleRoot, leaf), "invalid proofs");
         }
 
         if (currentMintCondition.pricePerToken > 0) {
@@ -176,7 +176,7 @@ contract LazyNFT is
         }
 
         mintConditions[conditionIndex].currentMintSupply += quantity;
-        // OVERFLOW
+        // WARNING OVERFLOW
         nextMintTimestampByCondition[_msgSender()][conditionIndex] =
             block.timestamp +
             currentMintCondition.waitTimeSecondsLimitPerTransaction;
@@ -192,11 +192,11 @@ contract LazyNFT is
 
     function _transferPayment(address currency, uint256 amount) private {
         if (currency == address(0)) {
-            require(msg.value == amount, "NFT: not enough value");
+            require(msg.value == amount, "value != amount");
         } else {
             require(
                 IERC20(currency).transferFrom(_msgSender(), controlCenter.getRoyaltyTreasury(address(this)), amount),
-                "NFT: failed to transfer payment"
+                "failed to transfer payment"
             );
         }
     }
@@ -205,15 +205,15 @@ contract LazyNFT is
         address to = controlCenter.getRoyaltyTreasury(address(this));
         uint256 balance = address(this).balance;
         (bool sent, ) = payable(to).call{ value: balance }("");
-        require(sent, "NFT: failed to withdraw funds");
+        require(sent, "failed to transfer funds");
 
         emit FundsWithdrawn(to, balance);
     }
 
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
-        require(conditions.length > 0, "NFT: needs a list of conditions");
+        require(conditions.length > 0, "needs a list of conditions");
 
-        // `nextMintTimestampByCondition` does not get reset.
+        // NOTE: `nextMintTimestampByCondition` does not get reset.
         delete mintConditions;
 
         // make sure the conditions are sorted in ascending order
@@ -223,11 +223,11 @@ contract LazyNFT is
             if (lastConditionStartTimestamp != 0) {
                 require(
                     lastConditionStartTimestamp < conditions[i].startTimestamp,
-                    "NFT: startTimestamp must be in ascending order"
+                    "startTimestamp must be in ascending order"
                 );
             }
-            require(conditions[i].maxMintSupply > 0, "NFT: max mint supply cannot be 0");
-            require(conditions[i].quantityLimitPerTransaction > 0, "NFT: quantity limit cannot be 0");
+            require(conditions[i].maxMintSupply > 0, "max mint supply cannot be 0");
+            require(conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0");
 
             mintConditions.push(
                 PublicMintCondition({
@@ -262,7 +262,7 @@ contract LazyNFT is
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
+        require(_royaltyBps < controlCenter.MAX_BPS(), "bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -286,7 +286,7 @@ contract LazyNFT is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "NFT: must have pauser role to pause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to pause");
         _pause();
     }
 
@@ -300,7 +300,7 @@ contract LazyNFT is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "NFT: must have pauser role to unpause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to unpause");
         _unpause();
     }
 
@@ -316,7 +316,7 @@ contract LazyNFT is
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "NFT: Transfers are restricted to TRANSFER_ROLE holders"
+                "restricted to TRANSFER_ROLE holders"
             );
         }
     }
@@ -325,13 +325,13 @@ contract LazyNFT is
     /// assumption: the conditions are sorted ascending order by condition start timestamp. check on insertion.
     /// @return conition index, condition
     function getLastStartedMintConditionIndex() public view returns (uint256) {
-        require(mintConditions.length > 0, "NFT: no public mint condition");
+        require(mintConditions.length > 0, "no public mint condition");
         for (uint256 i = mintConditions.length; i > 0; i--) {
             if (block.timestamp >= mintConditions[i - 1].startTimestamp) {
                 return i - 1;
             }
         }
-        revert("NFT: no active mint condition");
+        revert("no active mint condition");
     }
 
     /// @dev See EIP 2981

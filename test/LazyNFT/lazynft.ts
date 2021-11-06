@@ -92,13 +92,6 @@ describe("LazyNFT", function () {
   describe("Mint States", function () {
     const uri_tokens = ["ipfs://token_1", "ipfs://token_2"];
 
-    it("mint single", async () => {
-      await lazynft.lazyMintBatch(uri_tokens);
-      expect(await lazynft.tokenURI(0)).equals(uri_tokens[0]);
-      expect(await lazynft.tokenURI(1)).equals(uri_tokens[1]);
-      expect(await lazynft.nextTokenId()).equals(2);
-    });
-
     it("mint batch", async () => {
       await lazynft.lazyMintBatch(uri_tokens);
       expect(await lazynft.tokenURI(0)).equals(uri_tokens[0]);
@@ -125,10 +118,27 @@ describe("LazyNFT", function () {
     });
   });
 
-  describe("mint conditions: max supply", function () {
+  describe("mint conditions: max mint supply", function () {
     beforeEach(async () => {
       await lazynft.setMaxTotalSupply(100);
       await lazynft.lazyMintAmount(100);
+    });
+
+    it("max mint zero mint supply revert at 0", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 0,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: 10000,
+            waitTimeSecondsLimitPerTransaction: 0,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.be.reverted;
     });
 
     it("max mint supply", async () => {
@@ -170,23 +180,6 @@ describe("LazyNFT", function () {
       await expect(lazynft.claim(1, proofs)).to.be.reverted;
     });
 
-    it("max mint zero mint supply revert", async () => {
-      await expect(
-        lazynft.setPublicMintConditions([
-          {
-            startTimestamp: 0,
-            maxMintSupply: 0,
-            currentMintSupply: 0,
-            quantityLimitPerTransaction: 10000,
-            waitTimeSecondsLimitPerTransaction: 0,
-            pricePerToken: 0,
-            currency: ethers.constants.AddressZero,
-            merkleRoot: ethers.utils.hexZeroPad([0], 32),
-          },
-        ]),
-      ).to.be.reverted;
-    });
-
     it("max mint supply more than total supply", async () => {
       await lazynft.setPublicMintConditions([
         {
@@ -203,7 +196,7 @@ describe("LazyNFT", function () {
     });
   });
 
-  describe("mint conditions: start time", function () {
+  describe("mint conditions: start timestamp", function () {
     beforeEach(async () => {
       await lazynft.setMaxTotalSupply(100);
       await lazynft.lazyMintAmount(100);
@@ -228,9 +221,75 @@ describe("LazyNFT", function () {
       await ethers.provider.send("evm_mine", [now + 120]);
       await expect(lazynft.claim(1, proofs)).to.be.not.reverted;
     });
+  });
 
-    it("multiple stage start timestamp", async () => {
-      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+  describe("mint conditions: quantityLimitPerTransaction", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+    });
+
+    it("reverts when quantity limit is 0", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 1,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: 0,
+            waitTimeSecondsLimitPerTransaction: 0,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.be.revertedWith("quantity limit cannot be 0");
+    });
+
+    it("unlimited buy per transactions", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: ethers.constants.MaxUint256,
+            waitTimeSecondsLimitPerTransaction: 0,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(100, proofs)).to.be.not.reverted;
+    });
+
+    it("single buy per transactions", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: 1,
+            waitTimeSecondsLimitPerTransaction: 0,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(2, proofs)).to.be.revertedWith("exceeding tx limit");
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+    });
+  });
+
+  describe("mint conditions: multi stages", function () {
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
       await lazynft.setPublicMintConditions([
         {
           startTimestamp: 120,
@@ -263,16 +322,38 @@ describe("LazyNFT", function () {
           merkleRoot: ethers.utils.hexZeroPad([0], 32),
         },
       ]);
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("NFT: no active mint condition");
+    });
+
+    it("changes active condition index", async () => {
+      await expect(lazynft.getLastStartedMintConditionIndex()).to.be.revertedWith("no active mint condition");
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
+      expect(await lazynft.getLastStartedMintConditionIndex()).to.be.equal(0);
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
+      expect(await lazynft.getLastStartedMintConditionIndex()).to.be.equal(1);
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
+      expect(await lazynft.getLastStartedMintConditionIndex()).to.be.equal(2);
+    });
+
+    it("stays at the last index", async () => {
+      await expect(lazynft.getLastStartedMintConditionIndex()).to.be.revertedWith("no active mint condition");
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
+      expect(await lazynft.getLastStartedMintConditionIndex()).to.be.equal(0);
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 420420]);
+      expect(await lazynft.getLastStartedMintConditionIndex()).to.be.equal(2);
+    });
+
+    it("multiple stage start timestamp", async () => {
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("no active mint condition");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(1, proofs)).to.be.not.reverted;
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("NFT: exceeding max mint supply");
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceeding max mint supply");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(2, proofs)).to.be.not.reverted;
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("NFT: exceeding max mint supply");
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceeding max mint supply");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(3, proofs)).to.be.not.reverted;
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("NFT: exceeding max mint supply");
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceeding max mint supply");
     });
   });
 });
