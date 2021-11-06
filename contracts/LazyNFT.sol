@@ -2,7 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Token + Access Control
-import "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 // Protocol control center.
@@ -20,11 +25,23 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, ReentrancyGuard, Multicall {
+contract LazyNFT is
+    AccessControlEnumerable,
+    ERC721Enumerable,
+    ERC721Burnable,
+    ERC721Pausable,
+    ERC2771Context,
+    IERC2981,
+    ReentrancyGuard,
+    Multicall
+{
+    using Counters for Counters.Counter;
     using Strings for uint256;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -97,29 +114,20 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         string memory _contractUri,
         string memory _baseTokenUri,
         uint256 maxSupply
-    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _baseTokenUri) ERC2771Context(_trustedForwarder) {
+    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
         // Set contract URI
         _contractURI = _contractUri;
+        _baseTokenURI = _baseTokenUri;
 
         maxTotalSupply = maxSupply;
 
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
-    }
-
-    /// @dev Revert inherited mint function.
-    function mint(address) public pure override {
-        revert("NFT: claim");
-    }
-
-    /// @dev Mints an NFT to `_to` with URI `_uri`
-    function lazyMint(string calldata _uri) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
-        require(nextTokenId + 1 <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
-        uri[nextTokenId] = _uri;
-        nextTokenId += 1;
     }
 
     function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
@@ -164,10 +172,11 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         }
 
         if (currentMintCondition.pricePerToken > 0) {
-            _payout(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
+            _transferPayment(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
         }
 
         mintConditions[conditionIndex].currentMintSupply += quantity;
+        // OVERFLOW
         nextMintTimestampByCondition[_msgSender()][conditionIndex] =
             block.timestamp +
             currentMintCondition.waitTimeSecondsLimitPerTransaction;
@@ -181,7 +190,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit Claimed(_msgSender(), startMintTokenId, quantity, conditionIndex);
     }
 
-    function _payout(address currency, uint256 amount) private {
+    function _transferPayment(address currency, uint256 amount) private {
         if (currency == address(0)) {
             require(msg.value == amount, "NFT: not enough value");
         } else {
@@ -267,12 +276,40 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
+    /**
+     * @dev Pauses all token transfers.
+     *
+     * See {ERC721Pausable} and {Pausable-_pause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function pause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "NFT: must have pauser role to pause");
+        _pause();
+    }
+
+    /**
+     * @dev Unpauses all token transfers.
+     *
+     * See {ERC721Pausable} and {Pausable-_unpause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function unpause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "NFT: must have pauser role to unpause");
+        _unpause();
+    }
+
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721PresetMinterPauserAutoId) {
+    ) internal virtual override(ERC721, ERC721Enumerable, ERC721Pausable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
@@ -289,9 +326,9 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     /// @return conition index, condition
     function getLastStartedMintConditionIndex() public view returns (uint256) {
         require(mintConditions.length > 0, "NFT: no public mint condition");
-        for (uint256 i = mintConditions.length - 1; i >= 0; i--) {
-            if (block.timestamp >= mintConditions[i].startTimestamp) {
-                return i;
+        for (uint256 i = mintConditions.length; i > 0; i--) {
+            if (block.timestamp >= mintConditions[i - 1].startTimestamp) {
+                return i - 1;
             }
         }
         revert("NFT: no active mint condition");
@@ -313,7 +350,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         public
         view
         virtual
-        override(ERC721PresetMinterPauserAutoId, IERC165)
+        override(AccessControlEnumerable, ERC721, ERC721Enumerable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
