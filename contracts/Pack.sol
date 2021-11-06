@@ -123,7 +123,11 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         bytes32 _keyHash,
         uint256 _fees,
         address _trustedForwarder
-    ) ERC1155PresetMinterPauserSupplyHolder(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
+    )
+        ERC1155PresetMinterPauserSupplyHolder(_uri)
+        VRFConsumerBase(_vrfCoordinator, _linkToken)
+        ERC2771Context(_trustedForwarder)
+    {
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
 
