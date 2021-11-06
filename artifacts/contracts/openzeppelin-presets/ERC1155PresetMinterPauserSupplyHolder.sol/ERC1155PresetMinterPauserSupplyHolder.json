@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ERC1155PresetMinterPauser",
-  "sourceName": "contracts/openzeppelin-presets/ERC1155PresetMinterPauser.sol",
+  "contractName": "ERC1155PresetMinterPauserSupplyHolder",
+  "sourceName": "contracts/openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol",
   "abi": [
     {
       "inputs": [
