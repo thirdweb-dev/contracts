@@ -17,11 +17,11 @@ The contracts addresses are the same across all different chains that we support
 
 ## Feedback
 
-If you have any feedback, please reach out to us at support@nftlabs.co.
+If you have any feedback, please reach out to us at support@thirdweb.com.
 
 ## Authors
 
-- [thirdweb](https://github.com/nftlabs)
+- [thirdweb](https://thirdweb.com)
 
 ## License
 
