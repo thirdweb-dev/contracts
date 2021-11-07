@@ -286,6 +286,57 @@ describe("LazyNFT", function () {
     });
   });
 
+  describe("mint conditions: wait time seconds per transactions", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+    });
+
+    it("multiple transactions with wait time", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: ethers.constants.MaxUint256,
+            waitTimeSecondsLimitPerTransaction: 60,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 60]);
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+    });
+
+    it("wait time overflow", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: ethers.constants.MaxUint256,
+            waitTimeSecondsLimitPerTransaction: ethers.constants.MaxUint256,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 3600]);
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+    });
+  });
+
   describe("mint conditions: multi stages", function () {
     beforeEach(async () => {
       await lazynft.setMaxTotalSupply(100);

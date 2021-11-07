@@ -176,10 +176,17 @@ contract LazyNFT is
         }
 
         mintConditions[conditionIndex].currentMintSupply += quantity;
-        // WARNING OVERFLOW
-        nextMintTimestampByCondition[_msgSender()][conditionIndex] =
-            block.timestamp +
-            currentMintCondition.waitTimeSecondsLimitPerTransaction;
+
+        uint256 newNextMintTimestamp = currentMintCondition.waitTimeSecondsLimitPerTransaction;
+        // if it overflow, cap it to max uint256
+        unchecked {
+            newNextMintTimestamp += block.timestamp;
+            if (newNextMintTimestamp < currentMintCondition.waitTimeSecondsLimitPerTransaction) {
+                newNextMintTimestamp = type(uint256).max;
+            }
+        }
+
+        nextMintTimestampByCondition[_msgSender()][conditionIndex] = newNextMintTimestamp;
 
         uint256 startMintTokenId = nextMintTokenId;
         for (uint256 i = 0; i < quantity; i++) {
