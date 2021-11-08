@@ -197,6 +197,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "bytes32",
+            "name": "merkleRoot",
+            "type": "bytes32"
+          },
+          {
             "internalType": "uint256",
             "name": "pricePerToken",
             "type": "uint256"
@@ -205,11 +210,6 @@
             "internalType": "address",
             "name": "currency",
             "type": "address"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "merkleRoot",
-            "type": "bytes32"
           }
         ],
         "indexed": false,
@@ -760,6 +760,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes32",
+        "name": "merkleRoot",
+        "type": "bytes32"
+      },
+      {
         "internalType": "uint256",
         "name": "pricePerToken",
         "type": "uint256"
@@ -768,11 +773,6 @@
         "internalType": "address",
         "name": "currency",
         "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "merkleRoot",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -1115,6 +1115,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "bytes32",
+            "name": "merkleRoot",
+            "type": "bytes32"
+          },
+          {
             "internalType": "uint256",
             "name": "pricePerToken",
             "type": "uint256"
@@ -1123,11 +1128,6 @@
             "internalType": "address",
             "name": "currency",
             "type": "address"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "merkleRoot",
-            "type": "bytes32"
           }
         ],
         "internalType": "struct LazyNFT.PublicMintCondition[]",

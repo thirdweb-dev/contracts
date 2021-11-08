@@ -43,12 +43,6 @@ contract LazyNFT is
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
-
     uint256 public maxTotalSupply;
 
     /// @dev The token id of the NFT to "lazy mint".
@@ -64,13 +58,31 @@ contract LazyNFT is
         uint256 currentMintSupply;
         uint256 quantityLimitPerTransaction;
         uint256 waitTimeSecondsLimitPerTransaction;
+        bytes32 merkleRoot;
         uint256 pricePerToken;
         address currency;
-        bytes32 merkleRoot;
     }
+
     PublicMintCondition[] public mintConditions;
-    // msg.sender address => current condition index => timestamp
+
+    // used for keeping track of when a wallet can claim again depending on
+    // PublicMintCondition.waitTimeSecondsLimitPerTransaction
+    //
+    // msg.sender address => (current condition index + mintTimestampStartIndex) => timestamp
     mapping(address => mapping(uint256 => uint256)) public nextMintTimestampByCondition;
+
+    // used for nextMintTimestampByCondition that's incremented when mintConditions is set
+    // so that when mint conditions is reset, the next mint timestamp is reset too
+    uint256 nextMintTimestampConditionStartIndex;
+
+    /// @dev Pack sale royalties -- see EIP 2981
+    uint256 public royaltyBps;
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public transfersRestricted;
+
+    /// @dev The protocol control center.
+    ProtocolControl internal controlCenter;
 
     /// @dev Collection level metadata.
     string private _contractURI;
@@ -79,9 +91,6 @@ contract LazyNFT is
 
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
-
-    /// @dev Pack sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
 
     /// @dev Emitted when an NFT is minted;
     event Claimed(address indexed to, uint256 startTokenId, uint256 quantity, uint256 mintConditionIndex);
@@ -151,16 +160,17 @@ contract LazyNFT is
         uint256 conditionIndex = getLastStartedMintConditionIndex();
         PublicMintCondition memory currentMintCondition = mintConditions[conditionIndex];
 
-        require(quantity > 0, "quantity cannot be 0");
-        require(nextMintTokenId + quantity <= maxTotalSupply, "exceeding total max supply limit");
+        require(quantity > 0, "need quantity");
+        require(nextMintTokenId + quantity <= maxTotalSupply, "exceed max supply limit");
         require(nextMintTokenId + quantity <= nextTokenId, "cannot claim unminted token");
-        require(quantity <= currentMintCondition.quantityLimitPerTransaction, "exceeding tx limit");
+        require(quantity <= currentMintCondition.quantityLimitPerTransaction, "exceed tx limit");
         require(
             currentMintCondition.currentMintSupply + quantity <= currentMintCondition.maxMintSupply,
-            "exceeding max mint supply"
+            "exceed max mint supply"
         );
 
-        uint256 nextMintTimestamp = nextMintTimestampByCondition[_msgSender()][conditionIndex];
+        uint256 nextMintTimestampConditionIndex = conditionIndex + nextMintTimestampConditionStartIndex;
+        uint256 nextMintTimestamp = nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex];
         require(
             nextMintTimestamp == 0 || block.timestamp >= nextMintTimestamp,
             "cannot mint yet"
@@ -178,7 +188,7 @@ contract LazyNFT is
         mintConditions[conditionIndex].currentMintSupply += quantity;
 
         uint256 newNextMintTimestamp = currentMintCondition.waitTimeSecondsLimitPerTransaction;
-        // if it overflow, cap it to max uint256
+        // if next mint timestamp overflow, cap it to max uint256
         unchecked {
             newNextMintTimestamp += block.timestamp;
             if (newNextMintTimestamp < currentMintCondition.waitTimeSecondsLimitPerTransaction) {
@@ -186,7 +196,7 @@ contract LazyNFT is
             }
         }
 
-        nextMintTimestampByCondition[_msgSender()][conditionIndex] = newNextMintTimestamp;
+        nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex] = newNextMintTimestamp;
 
         uint256 startMintTokenId = nextMintTokenId;
         for (uint256 i = 0; i < quantity; i++) {
@@ -220,8 +230,11 @@ contract LazyNFT is
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
         require(conditions.length > 0, "needs a list of conditions");
 
-        // NOTE: `nextMintTimestampByCondition` does not get reset.
-        delete mintConditions;
+        if (mintConditions.length > 0) {
+            // when mint conditions is reset, the next mint timestamp is reset too
+            nextMintTimestampConditionStartIndex += mintConditions.length;
+            delete mintConditions;
+        }
 
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp = 0;

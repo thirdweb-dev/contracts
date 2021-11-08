@@ -4,6 +4,9 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 chai.use(solidity);
 
+import { MerkleTree } from "merkletreejs";
+import keccak256 from "keccak256";
+
 // Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";
 import { Forwarder } from "../../typechain/Forwarder";
@@ -65,6 +68,10 @@ describe("LazyNFT", function () {
   const listingId: number = 0;
   const amountToBuy: number = 1;
 
+  let leaves: Array<any>;
+  let tree: MerkleTree;
+  let root: string;
+
   before(async () => {
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
@@ -72,6 +79,11 @@ describe("LazyNFT", function () {
 
     // Get contract factory.
     LazyNFTFactory = await ethers.getContractFactory("LazyNFT");
+
+    // merkle roots
+    leaves = [creator.address, fan.address];
+    tree = new MerkleTree(leaves, keccak256, { hashLeaves: true, sortPairs: true });
+    root = tree.getHexRoot();
   });
 
   beforeEach(async () => {
@@ -107,7 +119,7 @@ describe("LazyNFT", function () {
       expect(await lazynft.nextTokenId()).equals(3);
     });
 
-    it("mint single and amount", async () => {
+    it("mint batch and amount", async () => {
       await lazynft.lazyMintAmount(1);
       await lazynft.lazyMintBatch([uri_tokens[1]]);
       await lazynft.lazyMintAmount(1);
@@ -281,7 +293,7 @@ describe("LazyNFT", function () {
         ]),
       ).to.not.be.reverted;
       await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
-      await expect(lazynft.claim(2, proofs)).to.be.revertedWith("exceeding tx limit");
+      await expect(lazynft.claim(2, proofs)).to.be.revertedWith("exceed tx limit");
       await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
     });
   });
@@ -293,7 +305,29 @@ describe("LazyNFT", function () {
       await lazynft.lazyMintAmount(100);
     });
 
-    it("multiple transactions with wait time", async () => {
+    it("multiple claims with no wait time", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: 1,
+            waitTimeSecondsLimitPerTransaction: 0,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 60]);
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+    });
+
+    it("multiple claims with wait time", async () => {
       await expect(
         lazynft.setPublicMintConditions([
           {
@@ -334,6 +368,204 @@ describe("LazyNFT", function () {
       await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 3600]);
       await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+    });
+
+    it("reset mint conditions should reset wait time", async () => {
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: ethers.constants.MaxUint256,
+            waitTimeSecondsLimitPerTransaction: ethers.constants.MaxUint256,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: ethers.constants.MaxUint256,
+            waitTimeSecondsLimitPerTransaction: 0,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(
+        lazynft.setPublicMintConditions([
+          {
+            startTimestamp: 0,
+            maxMintSupply: 100,
+            currentMintSupply: 0,
+            quantityLimitPerTransaction: ethers.constants.MaxUint256,
+            waitTimeSecondsLimitPerTransaction: ethers.constants.MaxUint256,
+            pricePerToken: 0,
+            currency: ethers.constants.AddressZero,
+            merkleRoot: ethers.utils.hexZeroPad([0], 32),
+          },
+        ]),
+      ).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.not.be.reverted;
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("cannot mint yet");
+    });
+  });
+
+  describe("mint conditions: price and currency", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+    });
+
+    it("claim 3 using native token", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      await expect(
+        await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
+      ).to.changeEtherBalances(
+        [creator, lazynft, protocolControl],
+        [price.mul(-1).mul(quantity), price.mul(quantity), 0],
+      );
+    });
+
+    it("claim with incorrect value (buying 3, paying for 1)", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      await expect(lazynft.connect(creator).claim(quantity, proofs, { value: price })).to.be.revertedWith(
+        "value != amount",
+      );
+    });
+
+    it("claim 3 using erc20 token goes to treasury", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: coin.address,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      await expect(coin.mint(creator.address, totalPrice)).to.not.be.reverted;
+      await expect(coin.connect(creator).approve(lazynft.address, totalPrice)).to.not.be.reverted;
+      await expect(() => lazynft.connect(creator).claim(quantity, proofs)).to.changeTokenBalances(
+        coin,
+        [creator, lazynft, protocolControl],
+        [price.mul(-1).mul(quantity), 0, price.mul(quantity)],
+      );
+    });
+  });
+
+  describe("mint conditions: withdraw funds", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+    });
+
+    it("withdraw native tokens", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      await expect(
+        await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
+      ).to.changeEtherBalances(
+        [creator, lazynft, protocolControl],
+        [price.mul(-1).mul(quantity), price.mul(quantity), 0],
+      );
+      await expect(await lazynft.withdrawFunds()).to.changeEtherBalances(
+        [creator, lazynft, protocolControl],
+        [0, price.mul(-1).mul(quantity), price.mul(quantity)],
+      );
+    });
+  });
+
+  describe("mint conditions: merkle roots", function () {
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: 0,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: root,
+        },
+      ]);
+    });
+
+    it("claim with correct proofs", async () => {
+      const proofs: BytesLike[] = tree.getHexProof(keccak256(creator.address));
+      await expect(lazynft.connect(creator).claim(1, proofs)).to.be.not.reverted;
+    });
+
+    it("claim with someone else proofs", async () => {
+      const proofs1: BytesLike[] = tree.getHexProof(keccak256(stakeHolder1.address));
+      await expect(lazynft.connect(creator).claim(1, proofs1)).to.be.revertedWith("invalid proofs");
+      const proofs2: BytesLike[] = tree.getHexProof(keccak256(fan.address));
+      await expect(lazynft.connect(creator).claim(1, proofs2)).to.be.revertedWith("invalid proofs");
+    });
+
+    it("claim with not included proofs", async () => {
+      const proofs: BytesLike[] = tree.getHexProof(keccak256(stakeHolder1.address));
+      await expect(lazynft.connect(stakeHolder1).claim(1, proofs)).to.be.revertedWith("invalid proofs");
     });
   });
 
@@ -398,13 +630,13 @@ describe("LazyNFT", function () {
       await expect(lazynft.claim(1, proofs)).to.be.revertedWith("no active mint condition");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(1, proofs)).to.be.not.reverted;
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceeding max mint supply");
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceed max mint supply");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(2, proofs)).to.be.not.reverted;
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceeding max mint supply");
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceed max mint supply");
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(3, proofs)).to.be.not.reverted;
-      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceeding max mint supply");
+      await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceed max mint supply");
     });
   });
 });
