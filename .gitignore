@@ -25,5 +25,6 @@ yarn-debug.log*
 yarn-error.log*
 *.dbg.json
 
-# Dev notes
+# Dev
+/relayerTest
 /notes.txt
