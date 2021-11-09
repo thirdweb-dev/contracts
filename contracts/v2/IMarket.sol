@@ -15,6 +15,13 @@ interface IMarket {
         Auction
     }
 
+    /// @dev The total info related to an offer on a direct listing.
+    struct Offer {
+        uint256 listingId;
+        uint256 quantityWanted;
+        uint256 offerAmount;
+    }
+
     /// @dev The total info related to a listing.
     struct Listing {
         uint256 listingId;
@@ -24,23 +31,20 @@ interface IMarket {
         uint256 tokenId;
 
         uint256 startTime;
-        uint256 expireTime;
+        uint256 endTime;
 
         uint256 quantity;
         address currency;
-        
-        ListingType listingType;
-        TokenType tokenType;
 
-        // specific: Direct
-        uint256 pricePerToken;
+        uint256 reservePricePerToken;
+        uint256 buyoutPricePerToken;
         uint256 tokensPerBuyer;
 
-        // specific: Auction
-        uint256 reservePrice;
-        uint256 buyoutPrice;
-        uint256 currentBid;
-        uint256 bidder;
+        uint256 currentHighestBid;
+        address bidder;
+        
+        TokenType tokenType;
+        ListingType listingType;
     }
 
     //  =====   Direct listing actions  =====   
@@ -49,25 +53,27 @@ interface IMarket {
     function createListing(
         address _assetContract,
         uint256 _tokenId,
-        address _currency,
-        uint256 _pricePerToken,
-        uint256 _quantity,
+        uint256 _reservePricePerToken,
+        uint256 _buyoutPricePerToken,
         uint256 _tokensPerBuyer,
+        uint256 _quantityToList,
+        address _currencyToAccept,
         uint256 _secondsUntilStartTime,
-        uint256 _secondsUntilEndTIme
+        uint256 _secondsUntilEndTime,
+        ListingType listingType
     ) external;
 
     /// @dev Lets a listing's creator edit the quantity of tokens listed.
     function editListingQuantity(uint256 _listingId, uint256 _quantity) external;
 
     /// @dev Lets a listing's creator edit the listing's parameters.
-    function editListingParametrs(
+    function editListingParametrs(        
         uint256 _listingId,
-        uint256 _pricePerToken,
-        address _currency,
+        uint256 _buyoutPricePerToken,
         uint256 _tokensPerBuyer,
-        uint256 _secondsUntilStart,
-        uint256 _secondsUntilEnd
+        address _currencyToAccept,
+        uint256 _secondsUntilStartTime,
+        uint256 _secondsUntilEndTime
     ) external;
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
@@ -80,26 +86,15 @@ interface IMarket {
         uint256 _totalOfferAmount
     ) external;
 
+    /// @dev Lets an account bid on an existing auction.
+    function bid(uint256 _listingId, uint256 _bidAmount) external;
+
     /// @dev Lets a listing's creator accept an offer for their direct listing.
-    function acceptOffer(uint256 _offerId) external;
-
-    //  ===== Auction actions   =====
-
-    /// @dev Lets a token owner put up their tokens for auction.
-    function createAuction(
-        address _assetContract,
-        uint256 _tokenId,
-        address _currency,        
-        uint256 _quantity,
-        uint256 _reservePrice,
-        uint256 _buyoutPrice,
-        uint256 _secondsUntilStartTime,
-        uint256 _secondsUntilEndTIme
-    ) external;
+    function acceptOffer(uint256 _listingId, address offeror) external;
 
     /// @dev Lets an auction's creator cancel the auction.
     function cancelAuction(uint256 _listingId) external;
 
-    /// @dev Lets an account bid on an existing auction.
-    function createBid(uint256 _listingId, uint256 _bidAmount) external;
+    /// @dev Lets an auction's creator cancel the auction.
+    function closeAuction(uint256 _listingId) external;
 }
