@@ -72,7 +72,7 @@ const config: ConfigWithEtherscan = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.9",
+    version: "0.8.4",
     settings: {
       metadata: {
         // Not including the metadata hash
@@ -84,7 +84,7 @@ const config: ConfigWithEtherscan = {
       optimizer: {
         enabled: true,
         // runs: 800,
-        runs: 700,
+        runs: 400,
       },
     },
   },
