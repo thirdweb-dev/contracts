@@ -103,10 +103,7 @@ contract LazyNFT is
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "not protocol admin"
-        );
+        require(controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()), "not protocol admin");
         _;
     }
 
@@ -171,10 +168,7 @@ contract LazyNFT is
 
         uint256 nextMintTimestampConditionIndex = conditionIndex + nextMintTimestampConditionStartIndex;
         uint256 nextMintTimestamp = nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex];
-        require(
-            nextMintTimestamp == 0 || block.timestamp >= nextMintTimestamp,
-            "cannot mint yet"
-        );
+        require(nextMintTimestamp == 0 || block.timestamp >= nextMintTimestamp, "cannot mint yet");
 
         if (currentMintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
@@ -334,10 +328,7 @@ contract LazyNFT is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(
-                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "restricted to TRANSFER_ROLE holders"
-            );
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
     }
 
