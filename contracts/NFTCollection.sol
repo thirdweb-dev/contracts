@@ -145,7 +145,8 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, M
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
-        string memory _uri
+        string memory _uri,
+        uint256 _royaltyBps
     ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -155,6 +156,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, M
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
+        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -373,7 +375,7 @@ contract NFTCollection is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, M
      */
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(
             _royaltyBps < controlCenter.MAX_BPS(),
             "NFTCollection: Invalid bps provided; must be less than 10,000."

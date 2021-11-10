@@ -130,7 +130,8 @@ contract Market is
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
-        string memory _uri
+        string memory _uri,
+        uint128 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
         // Set contract URI
         _contractURI = _uri;
@@ -141,6 +142,7 @@ contract Market is
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+        setMarketFeeBps(_marketFeeBps);
     }
 
     /**
@@ -446,7 +448,7 @@ contract Market is
     }
 
     /// @dev Lets a protocol admin set market fees.
-    function setMarketFeeBps(uint128 feeBps) external onlyModuleAdmin {
+    function setMarketFeeBps(uint128 feeBps) public onlyModuleAdmin {
         marketFeeBps = feeBps;
         emit MarketFeeUpdate(feeBps);
     }

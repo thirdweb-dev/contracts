@@ -122,7 +122,8 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         address _linkToken,
         bytes32 _keyHash,
         uint256 _fees,
-        address _trustedForwarder
+        address _trustedForwarder,
+        uint256 _royaltyBps
     ) ERC1155PresetMinterPauser(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
@@ -136,6 +137,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
+        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -264,7 +266,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;

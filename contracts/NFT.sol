@@ -67,7 +67,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
-        string memory _uri
+        string memory _uri,
+        uint256 _royaltyBps
     ) ERC721PresetMinterPauserAutoId(_name, _symbol, _uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -76,6 +77,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         _contractURI = _uri;
 
         _setupRole(TRANSFER_ROLE, _msgSender());
+        setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Revert inherited mint function.
@@ -134,7 +136,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;

@@ -15,6 +15,11 @@
         "internalType": "string",
         "name": "_uri",
         "type": "string"
+      },
+      {
+        "internalType": "uint128",
+        "name": "_marketFeeBps",
+        "type": "uint128"
       }
     ],
     "stateMutability": "nonpayable",
