@@ -27,6 +27,8 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
+
+
 contract Market is
     IMarket,
     AccessControlEnumerable,
@@ -53,7 +55,10 @@ contract Market is
     /// @dev The marketplace fee.
     uint128 public marketFeeBps;
 
-    /// @dev ADD COMMENT LATER
+    /// @dev The minimum amount of time left in an auction after a new bid is created
+    uint256 public constant timeBuffer = 15 minutes;
+
+    /// @dev Whether listing is restricted by LISTER_ROLE.
     bool public restrictedListerRoleOnly;
 
     /// @dev listingId => listing info.
@@ -62,47 +67,57 @@ contract Market is
     /// @dev listingId => address => info related to offers on a direct listing.
     mapping(uint => mapping(address => Offer)) public offers;
 
+    /// @dev listingId => current highest bid
+    mapping(uint => Offer) public winningBid;
+
     /// @dev listingId => buyer address => tokens bought
     mapping(uint256 => mapping(address => uint256)) public boughtFromListing;
 
-    /// @dev Emitted when a new listing is created.
-    event NewListing(
-        address indexed assetContract, 
-        address indexed seller, 
-        uint256 indexed listingId, 
-        Listing listing
-    );
-
-    /// @dev Emitted when a listing is updated.
-    event ListingUpdate(
-        address indexed listingCreator, 
-        uint256 indexed listingId, 
-        Listing listing
-    );
-
-    /// @dev Emitted on a sale from a direct listing
-    event NewDirectSale(
-        address indexed assetContract,
-        address indexed seller,
-        uint256 indexed listingId,
-        address buyer,
-        uint256 quantity,
-        Listing listing
-    );
-
     /// @dev Checks whether caller is a listing creator.
-    modifier onlyLister(uint256 _listingId) {
+    modifier onlyListingCreator(uint256 _listingId) {
         require(
             listings[_listingId].tokenOwner == _msgSender(),
             "Market: caller does not the listing creator."
         );
-
         _;
     }
 
     /// @dev Checks whether a listing with ID `_listingId` exists.
     modifier onlyExistingListing(uint256 _listingId) {
         require(_listingId <= totalListings, "Market: listing does not exist.");
+        _;
+    }
+
+    /// @dev Checks whether caller has LISTER_ROLE when `restrictedListerRoleOnly` is active.
+    modifier onlyListerRoleWhenRestricted() {
+        require(
+            !restrictedListerRoleOnly || hasRole(LISTER_ROLE, _msgSender()),
+            "Market: only a lister can call this function."
+        );
+        _;
+    }
+
+    /// @dev Checks whether caller has PAUSER_ROLE.
+    modifier onlyPauser() {
+        require(
+            hasRole(PAUSER_ROLE, _msgSender()),
+            "Market: must have pauser role."
+        );
+        _;
+    }
+
+    /// @dev Checks whether the caller is a protocol admin.
+    modifier onlyProtocolAdmin() {
+        require(
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
+            "Market: only a protocol admin can call this function."
+        );
+        _;
+    }
+
+    /// @dev Checks whether the caller is a module admin.
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Market: only a module admin can call this function.");
         _;
     }
 
@@ -124,64 +139,54 @@ contract Market is
 
     //  =====   External functions  =====
 
-    /// @dev Lets a token owner list tokens for sale: Direct Listing.
+    /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(
-        address _assetContract,
-        uint256 _tokenId,
-        uint256 _reservePricePerToken,
-        uint256 _buyoutPricePerToken,
-        uint256 _tokensPerBuyer,
-        uint256 _quantityToList,
-        address _currencyToAccept,
-        uint256 _secondsUntilStartTime,
-        uint256 _secondsUntilEndTime,
-        ListingType listingType
+        ListingParameters memory _params
     ) 
         external
-        whenNotPaused 
+        override
+        whenNotPaused
+        onlyListerRoleWhenRestricted 
     {
 
         uint256 listingId = nextListingId();
         address tokenOwner = _msgSender();
-        TokenType tokenTypeOfListing = getTokenType(_assetContract);
+        TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
 
         bool isValid;
 
-        if(listingType == ListingType.Direct) {
-            isValid = validateOwnershipAndApproval(tokenOwner, _assetContract, _tokenId, _quantityToList, tokenTypeOfListing);
-        } else if(listingType == ListingType.Auction) {
-            isValid = takeTokensOnList(tokenOwner, _assetContract, _tokenId, _quantityToList, tokenTypeOfListing);
+        if(_params.listingType == ListingType.Direct) {
+            isValid = validateOwnershipAndApproval(tokenOwner, _params.assetContract, _params.tokenId, _params.quantityToList, tokenTypeOfListing);
+        } else if(_params.listingType == ListingType.Auction) {
+            isValid = takeTokensOnList(tokenOwner, _params.assetContract, _params.tokenId, _params.quantityToList, tokenTypeOfListing);
         }
 
-        require(isValid && _quantityToList > 0, "Market: must own and approve to transfer tokens.");
+        require(isValid && _params.quantityToList > 0, "Market: must own and approve to transfer tokens.");
 
         Listing memory newListing = Listing({
             listingId: listingId,
 
             tokenOwner: tokenOwner,
-            assetContract: _assetContract,
-            tokenId: _tokenId,
+            assetContract: _params.assetContract,
+            tokenId: _params.tokenId,
 
-            startTime: block.timestamp + _secondsUntilStartTime,
-            endTime: _secondsUntilEndTime == 0 ? type(uint256).max : block.timestamp + _secondsUntilEndTime,
+            startTime: block.timestamp + _params.secondsUntilStartTime,
+            endTime: _params.secondsUntilEndTime == 0 ? type(uint256).max : block.timestamp + _params.secondsUntilEndTime,
             
-            quantity: getSafeQuantity(tokenTypeOfListing, _quantityToList),
-            currency: _currencyToAccept,
+            quantity: getSafeQuantity(tokenTypeOfListing, _params.quantityToList),
+            currency: _params.currencyToAccept,
 
-            reservePricePerToken: _reservePricePerToken,
-            buyoutPricePerToken: _buyoutPricePerToken,
-            tokensPerBuyer: _tokensPerBuyer == 0 ? _quantityToList : _tokensPerBuyer,
-
-            currentHighestBid: 0,
-            bidder: address(0),
+            reservePricePerToken: _params.reservePricePerToken,
+            buyoutPricePerToken: _params.buyoutPricePerToken,
+            tokensPerBuyer: _params.tokensPerBuyer == 0 ? _params.quantityToList : _params.tokensPerBuyer,            
             
             tokenType: tokenTypeOfListing,
-            listingType: listingType
+            listingType: _params.listingType
         });
 
         listings[listingId] = newListing;
 
-        emit NewListing(_assetContract, _msgSender(), listingId, newListing);
+        emit NewListing(_params.assetContract, _msgSender(), listingId, newListing);
     }
 
     /// @dev Lets a listing's creator edit the quantity of tokens listed.
@@ -190,22 +195,25 @@ contract Market is
         uint256 _newQuantity
     ) 
         external
+        override
         whenNotPaused 
         onlyExistingListing(_listingId)
-        onlyLister(_listingId) 
+        onlyListingCreator(_listingId) 
     {
         Listing memory targetListing = listings[_listingId];
+        uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _newQuantity);
 
-        bool isValid = validateOwnershipAndApproval(
-            targetListing.tokenOwner, 
-            targetListing.assetContract, 
-            targetListing.tokenId, 
-            _newQuantity, 
-            targetListing.tokenType
+        require(
+            validateOwnershipAndApproval(
+                targetListing.tokenOwner, 
+                targetListing.assetContract, 
+                targetListing.tokenId, 
+                safeNewQuantity, 
+                targetListing.tokenType
+            ), 
+            "Market: must own and approve to transfer tokens."
         );
-
-        require(isValid, "Market: must own and approve to transfer tokens.");
-        targetListing.quantity = getSafeQuantity(targetListing.tokenType, _newQuantity);
+        targetListing.quantity = safeNewQuantity;
         listings[_listingId] = targetListing;
 
         emit ListingUpdate(targetListing.tokenOwner, _listingId, targetListing);
@@ -222,9 +230,10 @@ contract Market is
         uint256 _secondsUntilEndTime
     ) 
         external
+        override
         whenNotPaused
         onlyExistingListing(_listingId)
-        onlyLister(_listingId)
+        onlyListingCreator(_listingId)
     {
         Listing memory targetListing = listings[_listingId];
 
@@ -264,6 +273,7 @@ contract Market is
         uint256 _quantityToBuy
     ) 
         external
+        override
         whenNotPaused
         onlyExistingListing(_listingId)
         nonReentrant
@@ -273,17 +283,22 @@ contract Market is
 
         validateDirectListingSale(targetListing, buyer, _quantityToBuy);
 
-        boughtFromListing[_listingId][buyer] += _quantityToBuy;
         targetListing.quantity -= _quantityToBuy;
         listings[_listingId] = targetListing;
+        boughtFromListing[_listingId][buyer] += _quantityToBuy;
 
         // Distribute sale value to stakeholders
         if (targetListing.buyoutPricePerToken > 0) {
-            payoutOnDirectSale(targetListing, _quantityToBuy);
+            payout(
+                buyer, 
+                targetListing.tokenOwner, 
+                targetListing.buyoutPricePerToken * _quantityToBuy,
+                targetListing
+            );
         }
 
         // Transfer tokens being bought to buyer.
-        sendTokens(targetListing, _quantityToBuy);
+        sendTokens(targetListing.tokenOwner, buyer, _quantityToBuy, targetListing);
 
         emit NewDirectSale(
             targetListing.assetContract, 
@@ -293,6 +308,193 @@ contract Market is
             _quantityToBuy, 
             targetListing
         );
+    }
+
+    /// @dev Lets an account bid on an existing auction.
+    function bid(
+        uint256 _listingId, 
+        uint256 _bidAmount
+    )
+        external
+        override
+        whenNotPaused
+        onlyExistingListing(_listingId)
+    {
+        Listing memory targetListing = listings[_listingId];
+        Offer memory currentWinningBid = winningBid[_listingId];
+        address bidder = _msgSender();
+        uint256 endTime = targetListing.endTime;
+
+        require(
+            targetListing.listingType == ListingType.Auction,
+            "Market: can only make bids to auction listings."
+        );
+        require(
+            endTime > block.timestamp && targetListing.startTime < block.timestamp,
+            "Market: can only make bids in auction duration."
+        );
+
+        validateCurrencyBalAndApproval(
+            bidder, 
+            targetListing.currency, 
+            _bidAmount
+        );
+
+        if(_bidAmount > currentWinningBid.offerAmount) {            
+
+            currentWinningBid.offerAmount = _bidAmount;
+            currentWinningBid.offeror = bidder;
+
+            IERC20(targetListing.currency).transferFrom(bidder, address(this), _bidAmount);
+
+            if(endTime - block.timestamp <= timeBuffer) {
+                targetListing.endTime += timeBuffer;
+            }
+
+            listings[_listingId] = targetListing;
+            winningBid[_listingId] = currentWinningBid;
+
+            emit NewBid(_listingId, bidder, currentWinningBid, targetListing);
+        }
+    }
+
+    /// @dev Lets an account offer a price for a given amount of tokens.
+    function offer(
+        uint256 _listingId, 
+        uint256 _quantityWanted, 
+        uint256 _totalOfferAmount
+    ) 
+        external
+        override
+        whenNotPaused
+        onlyExistingListing(_listingId)
+    {
+        address offeror = _msgSender();
+        Listing memory targetListing = listings[_listingId];
+
+        require(
+            targetListing.listingType == ListingType.Direct,
+            "Market: can only make offers to direct listings."
+        );
+
+        validateCurrencyBalAndApproval(
+            offeror, 
+            targetListing.currency, 
+            _totalOfferAmount
+        );
+
+        Offer memory newOffer = Offer({
+            listingId: _listingId,
+            offeror: offeror,
+            quantityWanted: getSafeQuantity(targetListing.tokenType, _quantityWanted),
+            offerAmount: _totalOfferAmount
+        });
+
+        offers[_listingId][offeror] = newOffer;
+
+        emit NewOffer(_listingId, offeror, newOffer, targetListing);
+    }
+
+    /// @dev Lets a listing's creator accept an offer for their direct listing.
+    function acceptOffer(
+        uint256 _listingId, 
+        address offeror
+    ) 
+        external
+        override
+        whenNotPaused
+        onlyListingCreator(_listingId)
+    {
+        Offer memory targetOffer = offers[_listingId][offeror];
+        Listing memory targetListing = listings[_listingId];
+
+        require(
+            validateOwnershipAndApproval(
+                targetListing.tokenOwner, 
+                targetListing.assetContract, 
+                targetListing.tokenId, 
+                targetOffer.quantityWanted, 
+                targetListing.tokenType
+            ), 
+            "Market: must own and approve to transfer tokens."
+        );
+
+        targetListing.quantity -= targetOffer.quantityWanted;
+        listings[_listingId] = targetListing;
+
+        payout(
+            offeror, 
+            targetListing.tokenOwner, 
+            targetOffer.offerAmount * targetOffer.quantityWanted, 
+            targetListing
+        );
+        sendTokens(targetListing.tokenOwner, offeror, targetOffer.quantityWanted, targetListing);
+
+        emit NewDirectSale(
+            targetListing.assetContract, 
+            targetListing.tokenOwner, 
+            _listingId, 
+            offeror, 
+            targetOffer.quantityWanted,
+            targetListing
+        );
+    }
+
+    /// @dev Lets an auction's creator cancel the auction.
+    function cancelAuction(
+        uint256 _listingId
+    )
+        external
+        override
+        whenNotPaused
+        onlyListingCreator(_listingId)
+    {
+        Listing memory targetListing = listings[_listingId];
+
+        require(
+            targetListing.startTime > block.timestamp,
+            "Market: cannot cancel auction after it has started."
+        );
+
+        // Auction is considered canceled if 0 tokens are being auctioned.
+        targetListing.quantity = 0;
+        listings[_listingId] = targetListing;
+
+        sendTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
+
+        emit AuctionCanceled(_listingId, targetListing.tokenOwner, targetListing);
+    }
+
+    /// @dev Lets an auction's creator close the auction.
+    function closeAuction(
+        uint256 _listingId
+    )
+        external
+        override
+        whenNotPaused
+        onlyListingCreator(_listingId)
+    {
+        Listing memory targetListing = listings[_listingId];
+        Offer memory targetBid = winningBid[_listingId];
+
+        require(
+            targetListing.listingType == ListingType.Auction,
+            "Market: listing is not an auction."
+        );
+        require(
+            targetListing.endTime < block.timestamp,
+            "Market: can only close auction after it has ended."
+        );
+
+        payout(
+            address(this), 
+            targetListing.tokenOwner, 
+            targetBid.offerAmount * targetListing.quantity,
+            targetListing
+        );
+        sendTokens(address(this), targetBid.offeror, targetListing.quantity, targetListing);
+
+        emit AuctionClosed(_listingId, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
     }
 
     //  =====   Internal functions  =====
@@ -325,68 +527,63 @@ contract Market is
     }
 
     /// @dev Sends the appropriate kind of token to caller.
-    function sendTokens(Listing memory _listing, uint256 _quantity) internal {
+    function sendTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
             IERC1155(_listing.assetContract).safeTransferFrom(
-                _listing.tokenOwner,
-                _msgSender(),
+                _from,
+                _to,
                 _listing.tokenId,
                 _quantity,
                 ""
             );
         } else if (_listing.tokenType == TokenType.ERC721) {
-            IERC721(_listing.assetContract).safeTransferFrom(_listing.tokenOwner, _msgSender(), _listing.tokenId, "");
+            IERC721(_listing.assetContract).safeTransferFrom(_listing.tokenOwner, _to, _listing.tokenId, "");
         }
     }
 
     /// @dev Payout stakeholders on sale
-    function payoutOnDirectSale(Listing memory _listing, uint256 _quantityBought) internal {
-        
-        uint256 totalPrice = _listing.buyoutPricePerToken * _quantityBought;
+    function payout(
+        address _payer,
+        address _payee,
+        uint256 _totalPayoutAmount,
+        Listing memory _listing
+    ) 
+        internal 
+    {
 
-        require(
-            IERC20(_listing.currency).allowance(_msgSender(), address(this)) >= totalPrice,
-            "Market: must approve Market to transfer price to pay."
-        );
+        bool transferSuccess;
 
         // Collect protocol fee
-        uint256 marketCut = (totalPrice * marketFeeBps) / controlCenter.MAX_BPS();
+        uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / controlCenter.MAX_BPS();
 
-        require(
-            IERC20(_listing.currency).transferFrom(
-                _msgSender(),
-                controlCenter.getRoyaltyTreasury(address(this)),
-                marketCut
-            ),
-            "Market: failed to transfer protocol cut."
+        transferSuccess = IERC20(_listing.currency).transferFrom(
+            _payer,
+            controlCenter.getRoyaltyTreasury(address(this)),
+            marketCut
         );
 
-        uint256 sellerCut = totalPrice - marketCut;
+        uint256 remainder = _totalPayoutAmount - marketCut;
 
         // Distribute royalties
         if (IERC165(_listing.assetContract).supportsInterface(type(IERC2981).interfaceId)) {
             (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(_listing.assetContract).royaltyInfo(
                 _listing.tokenId,
-                totalPrice
+                _totalPayoutAmount
             );
 
             if (royaltyReceiver != address(0) && royaltyAmount > 0) {
-                require(royaltyAmount + marketCut <= totalPrice, "Market: Total market fees exceed the price.");
+                require(royaltyAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
 
-                sellerCut = sellerCut - royaltyAmount;
+                remainder = remainder - royaltyAmount;
 
-                require(
-                    IERC20(_listing.currency).transferFrom(_msgSender(), royaltyReceiver, royaltyAmount),
-                    "Market: failed to transfer creator cut."
-                );
+                transferSuccess = IERC20(_listing.currency).transferFrom(_payer, royaltyReceiver, royaltyAmount);
             }
         }
 
-        // Distribute price to seller
-        require(
-            IERC20(_listing.currency).transferFrom(_msgSender(), _listing.tokenOwner, sellerCut),
-            "Market: failed to transfer seller cut."
-        );
+        // Distribute price to token owner
+        transferSuccess = IERC20(_listing.currency).transferFrom(_payer, _payee, remainder);
+
+        require(transferSuccess, "Market: failed to payout stakeholders.");
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Market to transfer tokens.
@@ -397,7 +594,8 @@ contract Market is
         uint256 _quantity, 
         TokenType _tokenType
     ) 
-        internal 
+        internal
+        view
         returns (bool isValid) 
     {
 
@@ -415,6 +613,22 @@ contract Market is
         }
     }
 
+    /// @dev Validates caller's token balance and approval for Market to transfer tokens.
+    function validateCurrencyBalAndApproval(
+        address _caller, 
+        address _currency,
+        uint256 _balanceToCheck
+    )
+        internal
+        view
+    {
+        require(
+            IERC20(_currency).balanceOf(_caller) >= _balanceToCheck
+                && IERC20(_currency).allowance(_caller, address(this)) >= _balanceToCheck,
+            "Market: must own and approve Market to transfer currency."
+        );
+    }
+
     /// @dev Validates conditions of a direct listing sale.
     function validateDirectListingSale(
         Listing memory _listing, 
@@ -422,7 +636,9 @@ contract Market is
         uint256 _quantityToBuy
     )
         internal
+        view
     {
+        
         require(
             _listing.listingType == ListingType.Direct,
             "Market: can only buy from direct listings."
@@ -447,25 +663,39 @@ contract Market is
                 _listing.quantity, 
                 _listing.tokenType
             ),
-            "Market: must own and approve to transfer tokens."
+            "Market: cannot buy tokens from this listing."
+        );
+        validateCurrencyBalAndApproval(
+            _buyer, 
+            _listing.currency, 
+            _quantityToBuy * _listing.buyoutPricePerToken
         );
     }
 
+    /// @dev Enforces quantity == 1 if tokenType is TokenType.ERC721.
     function getSafeQuantity(
         TokenType _tokenType, 
-        uint256 _quantityToSet
+        uint256 _quantityToCheck
     ) 
-        internal 
+        internal
+        pure
         returns (uint256 safeQuantity) 
     {   
-        if(_quantityToSet == 0) {
+        if(_quantityToCheck == 0) {
             safeQuantity = 0;
         } else {
-            safeQuantity = _tokenType == TokenType.ERC721 ? 1 : _quantityToSet;
+            safeQuantity = _tokenType == TokenType.ERC721 ? 1 : _quantityToCheck;
         }
     }
 
-    function getTokenType(address _assetContract) internal returns (TokenType tokenType) {
+    /// @dev Checks the interface supported by a contract.
+    function getTokenType(
+        address _assetContract
+    ) 
+        internal
+        view
+        returns (TokenType tokenType) 
+    {
         if (IERC165(_assetContract).supportsInterface(type(IERC1155).interfaceId)) {            
             tokenType = TokenType.ERC1155;
         } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
@@ -476,6 +706,7 @@ contract Market is
         }
     }
 
+    /// @dev Returns the next listing Id to use.
     function nextListingId() internal returns (uint256 nextId) {
         nextId = totalListings;
         totalListings += 1;
@@ -487,5 +718,90 @@ contract Market is
 
     function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
+    }
+
+    //  ===== Setter functions  =====
+
+    /// @dev Lets a protocol admin set market fees.
+    function setMarketFeeBps(uint128 feeBps) external onlyModuleAdmin {
+        marketFeeBps = feeBps;
+        emit MarketFeeUpdate(feeBps);
+    }
+
+    /// @dev Lets a module admin restrict listing by LISTER_ROLE.
+    function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {
+        restrictedListerRoleOnly = restricted;
+        emit RestrictedListerRoleUpdated(restricted);
+    }
+
+    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+        _contractURI = _uri;
+    }
+
+    /// @dev Lets an account with PAUSER_ROLE pause or unpause the contract.
+    function setPaused(bool _toPause) external onlyPauser {
+        if(_toPause) {
+            _pause();
+        } else {
+            _unpause();
+        }
+    }
+
+    //  ===== Getter functions  =====
+
+    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
+    }
+
+    /// @notice Returns the listing for the given seller and Listing ID.
+    function getListing(uint256 _listingId) external view returns (Listing memory listing) {
+        listing = listings[_listingId];
+    }
+
+    /**
+     *   ERC 1155 and ERC 721 Receiver functions.
+     **/
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AccessControlEnumerable, IERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IERC1155Receiver).interfaceId 
+            || interfaceId == type(IERC721Receiver).interfaceId
+            || interfaceId == type(IERC2981).interfaceId;
     }
 }
