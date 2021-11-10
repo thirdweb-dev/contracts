@@ -1,6 +1,8 @@
 // Test imports
 import { ethers } from "hardhat";
-import { expect } from "chai";
+import chai, { expect } from "chai";
+import { solidity } from "ethereum-waffle";
+chai.use(solidity);
 
 // Contract Types
 import { AccessNFT } from "../../typechain/AccessNFT";

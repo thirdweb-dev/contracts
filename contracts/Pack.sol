@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
+import "./openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -18,7 +18,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
+contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -123,7 +123,11 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
         bytes32 _keyHash,
         uint256 _fees,
         address _trustedForwarder
-    ) ERC1155PresetMinterPauser(_uri) VRFConsumerBase(_vrfCoordinator, _linkToken) ERC2771Context(_trustedForwarder) {
+    )
+        ERC1155PresetMinterPauserSupplyHolder(_uri)
+        VRFConsumerBase(_vrfCoordinator, _linkToken)
+        ERC2771Context(_trustedForwarder)
+    {
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -418,7 +422,7 @@ contract Pack is ERC1155PresetMinterPauser, VRFConsumerBase, ERC2771Context, IER
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetMinterPauser, IERC165)
+        override(ERC1155PresetMinterPauserSupplyHolder, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;

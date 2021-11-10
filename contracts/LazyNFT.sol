@@ -1,8 +1,13 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 // Token + Access Control
-import "./openzeppelin-presets/ERC721PresetMinterPauserAutoId.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 // Protocol control center.
@@ -20,17 +25,23 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, ReentrancyGuard, Multicall {
+contract LazyNFT is
+    AccessControlEnumerable,
+    ERC721Enumerable,
+    ERC721Burnable,
+    ERC721Pausable,
+    ERC2771Context,
+    IERC2981,
+    ReentrancyGuard,
+    Multicall
+{
+    using Counters for Counters.Counter;
     using Strings for uint256;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-
-    /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     uint256 public maxTotalSupply;
 
@@ -47,13 +58,31 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         uint256 currentMintSupply;
         uint256 quantityLimitPerTransaction;
         uint256 waitTimeSecondsLimitPerTransaction;
+        bytes32 merkleRoot;
         uint256 pricePerToken;
         address currency;
-        bytes32 merkleRoot;
     }
+
     PublicMintCondition[] public mintConditions;
-    // msg.sender address => current condition index => timestamp
+
+    // used for keeping track of when a wallet can claim again depending on
+    // PublicMintCondition.waitTimeSecondsLimitPerTransaction
+    //
+    // msg.sender address => (current condition index + mintTimestampStartIndex) => timestamp
     mapping(address => mapping(uint256 => uint256)) public nextMintTimestampByCondition;
+
+    // used for nextMintTimestampByCondition that's incremented when mintConditions is set
+    // so that when mint conditions is reset, the next mint timestamp is reset too
+    uint256 nextMintTimestampConditionStartIndex;
+
+    /// @dev Pack sale royalties -- see EIP 2981
+    uint256 public royaltyBps;
+
+    /// @dev Whether transfers on tokens are restricted.
+    bool public transfersRestricted;
+
+    /// @dev The protocol control center.
+    ProtocolControl internal controlCenter;
 
     /// @dev Collection level metadata.
     string private _contractURI;
@@ -62,9 +91,6 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
 
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
-
-    /// @dev Pack sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
 
     /// @dev Emitted when an NFT is minted;
     event Claimed(address indexed to, uint256 startTokenId, uint256 quantity, uint256 mintConditionIndex);
@@ -79,13 +105,13 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     modifier onlyProtocolAdmin() {
         require(
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "NFT: only a protocol admin can call this function."
+            "not protocol admin"
         );
         _;
     }
 
     modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin");
         _;
     }
 
@@ -97,34 +123,25 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         string memory _contractUri,
         string memory _baseTokenUri,
         uint256 maxSupply
-    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _baseTokenUri) ERC2771Context(_trustedForwarder) {
+    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
         // Set contract URI
         _contractURI = _contractUri;
+        _baseTokenURI = _baseTokenUri;
 
         maxTotalSupply = maxSupply;
 
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
     }
 
-    /// @dev Revert inherited mint function.
-    function mint(address) public pure override {
-        revert("NFT: claim");
-    }
-
-    /// @dev Mints an NFT to `_to` with URI `_uri`
-    function lazyMint(string calldata _uri) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
-        require(nextTokenId + 1 <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
-        uri[nextTokenId] = _uri;
-        nextTokenId += 1;
-    }
-
     function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
-        require((nextTokenId + _uris.length) <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
+        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
+        require((nextTokenId + _uris.length) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
         uint256 id = nextTokenId;
         for (uint256 i = 0; i < _uris.length; i++) {
             uri[id] = _uris[i];
@@ -134,8 +151,8 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     }
 
     function lazyMintAmount(uint256 amount) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NFT: must have minter role to mint");
-        require((nextTokenId + amount) <= maxTotalSupply, "NFT: cannot mint more than maxTotalSupply");
+        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
+        require((nextTokenId + amount) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
         nextTokenId += amount;
     }
 
@@ -143,34 +160,43 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         uint256 conditionIndex = getLastStartedMintConditionIndex();
         PublicMintCondition memory currentMintCondition = mintConditions[conditionIndex];
 
-        require(quantity > 0, "NFT: quantity cannot be 0");
-        require(nextMintTokenId + quantity <= maxTotalSupply, "NFT: exceeding total max supply limit");
-        require(nextMintTokenId + quantity <= nextTokenId, "NFT: cannot claim unminted token");
-        require(quantity <= currentMintCondition.quantityLimitPerTransaction, "NFT: exceeding supply limit");
+        require(quantity > 0, "need quantity");
+        require(nextMintTokenId + quantity <= maxTotalSupply, "exceed max supply limit");
+        require(nextMintTokenId + quantity <= nextTokenId, "cannot claim unminted token");
+        require(quantity <= currentMintCondition.quantityLimitPerTransaction, "exceed tx limit");
         require(
             currentMintCondition.currentMintSupply + quantity <= currentMintCondition.maxMintSupply,
-            "NFT: exceeding max mint supply"
+            "exceed max mint supply"
         );
 
-        uint256 nextMintTimestamp = nextMintTimestampByCondition[_msgSender()][conditionIndex];
+        uint256 nextMintTimestampConditionIndex = conditionIndex + nextMintTimestampConditionStartIndex;
+        uint256 nextMintTimestamp = nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex];
         require(
             nextMintTimestamp == 0 || block.timestamp >= nextMintTimestamp,
-            "NFT: cannot mint yet due to time limit"
+            "cannot mint yet"
         );
 
         if (currentMintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
-            require(MerkleProof.verify(proofs, currentMintCondition.merkleRoot, leaf), "NFT: invalid merkle proofs");
+            require(MerkleProof.verify(proofs, currentMintCondition.merkleRoot, leaf), "invalid proofs");
         }
 
         if (currentMintCondition.pricePerToken > 0) {
-            _payout(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
+            _transferPayment(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
         }
 
         mintConditions[conditionIndex].currentMintSupply += quantity;
-        nextMintTimestampByCondition[_msgSender()][conditionIndex] =
-            block.timestamp +
-            currentMintCondition.waitTimeSecondsLimitPerTransaction;
+
+        uint256 newNextMintTimestamp = currentMintCondition.waitTimeSecondsLimitPerTransaction;
+        // if next mint timestamp overflow, cap it to max uint256
+        unchecked {
+            newNextMintTimestamp += block.timestamp;
+            if (newNextMintTimestamp < currentMintCondition.waitTimeSecondsLimitPerTransaction) {
+                newNextMintTimestamp = type(uint256).max;
+            }
+        }
+
+        nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex] = newNextMintTimestamp;
 
         uint256 startMintTokenId = nextMintTokenId;
         for (uint256 i = 0; i < quantity; i++) {
@@ -181,13 +207,13 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit Claimed(_msgSender(), startMintTokenId, quantity, conditionIndex);
     }
 
-    function _payout(address currency, uint256 amount) private {
+    function _transferPayment(address currency, uint256 amount) private {
         if (currency == address(0)) {
-            require(msg.value == amount, "NFT: not enough value");
+            require(msg.value == amount, "value != amount");
         } else {
             require(
                 IERC20(currency).transferFrom(_msgSender(), controlCenter.getRoyaltyTreasury(address(this)), amount),
-                "NFT: failed to transfer payment"
+                "failed to transfer payment"
             );
         }
     }
@@ -196,16 +222,19 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         address to = controlCenter.getRoyaltyTreasury(address(this));
         uint256 balance = address(this).balance;
         (bool sent, ) = payable(to).call{ value: balance }("");
-        require(sent, "NFT: failed to withdraw funds");
+        require(sent, "failed to transfer funds");
 
         emit FundsWithdrawn(to, balance);
     }
 
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
-        require(conditions.length > 0, "NFT: needs a list of conditions");
+        require(conditions.length > 0, "needs a list of conditions");
 
-        // `nextMintTimestampByCondition` does not get reset.
-        delete mintConditions;
+        if (mintConditions.length > 0) {
+            // when mint conditions is reset, the next mint timestamp is reset too
+            nextMintTimestampConditionStartIndex += mintConditions.length;
+            delete mintConditions;
+        }
 
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp = 0;
@@ -214,11 +243,11 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
             if (lastConditionStartTimestamp != 0) {
                 require(
                     lastConditionStartTimestamp < conditions[i].startTimestamp,
-                    "NFT: startTimestamp must be in ascending order"
+                    "startTimestamp must be in ascending order"
                 );
             }
-            require(conditions[i].maxMintSupply > 0, "NFT: max mint supply cannot be 0");
-            require(conditions[i].quantityLimitPerTransaction > 0, "NFT: quantity limit cannot be 0");
+            require(conditions[i].maxMintSupply > 0, "max mint supply cannot be 0");
+            require(conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0");
 
             mintConditions.push(
                 PublicMintCondition({
@@ -253,7 +282,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
+        require(_royaltyBps < controlCenter.MAX_BPS(), "bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -267,19 +296,47 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
+    /**
+     * @dev Pauses all token transfers.
+     *
+     * See {ERC721Pausable} and {Pausable-_pause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function pause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to pause");
+        _pause();
+    }
+
+    /**
+     * @dev Unpauses all token transfers.
+     *
+     * See {ERC721Pausable} and {Pausable-_unpause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function unpause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to unpause");
+        _unpause();
+    }
+
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721PresetMinterPauserAutoId) {
+    ) internal virtual override(ERC721, ERC721Enumerable, ERC721Pausable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "NFT: Transfers are restricted to TRANSFER_ROLE holders"
+                "restricted to TRANSFER_ROLE holders"
             );
         }
     }
@@ -288,13 +345,13 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
     /// assumption: the conditions are sorted ascending order by condition start timestamp. check on insertion.
     /// @return conition index, condition
     function getLastStartedMintConditionIndex() public view returns (uint256) {
-        require(mintConditions.length > 0, "NFT: no public mint condition");
-        for (uint256 i = mintConditions.length - 1; i >= 0; i--) {
-            if (block.timestamp >= mintConditions[i].startTimestamp) {
-                return i;
+        require(mintConditions.length > 0, "no public mint condition");
+        for (uint256 i = mintConditions.length; i > 0; i--) {
+            if (block.timestamp >= mintConditions[i - 1].startTimestamp) {
+                return i - 1;
             }
         }
-        revert("NFT: no active mint condition");
+        revert("no active mint condition");
     }
 
     /// @dev See EIP 2981
@@ -313,7 +370,7 @@ contract LazyNFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Re
         public
         view
         virtual
-        override(ERC721PresetMinterPauserAutoId, IERC165)
+        override(AccessControlEnumerable, ERC721, ERC721Enumerable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
