@@ -2,17 +2,20 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-/// @dev Edit: Make ERC-721 and ERC-1155 receiver.
+/**
+ * Changelog:
+ * 1. implements ERC721Holder and ERC1155Holder
+ * 2. implements totalSupply
+ */
+
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-
-/// @dev Edit: Make `hasRole` virtual
-import "./access/AccessControlEnumerable.sol";
 
 /**
  * @dev {ERC1155} token, including:
@@ -28,7 +31,7 @@ import "./access/AccessControlEnumerable.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract ERC1155PresetMinterPauser is
+contract ERC1155PresetMinterPauserSupplyHolder is
     Context,
     AccessControlEnumerable,
     ERC1155Burnable,

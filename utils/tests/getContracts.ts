@@ -17,6 +17,7 @@ import { NFT } from "../../typechain/NFT";
 import { Coin } from "../../typechain/Coin";
 import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
+import { LazyNFT } from "../../typechain/LazyNFT";
 
 export type Contracts = {
   registry: Registry;
@@ -27,6 +28,7 @@ export type Contracts = {
   pack: Pack;
   market: Market;
   nft: NFT;
+  lazynft: LazyNFT;
 };
 
 export async function getContracts(
@@ -114,11 +116,11 @@ export async function getContracts(
   // Get NFT contract
   const name: string = "name";
   const symbol: string = "SYMBOL";
-  const baseURI: string = "";
+  const nftContractURI: string = "";
   const nft: NFT = (await ethers
     .getContractFactory("NFT")
     .then(f =>
-      f.connect(protocolAdmin).deploy(protocolControl.address, name, symbol, forwarder.address, baseURI),
+      f.connect(protocolAdmin).deploy(protocolControl.address, name, symbol, forwarder.address, nftContractURI),
     )) as NFT;
 
   // Deploy Coin
@@ -132,6 +134,18 @@ export async function getContracts(
       f.connect(protocolAdmin).deploy(protocolControl.address, coinName, coinSymbol, forwarder.address, coinURI),
     )) as Coin;
 
+  // Get NFT contract
+  const lazyContractURI: string = "";
+  const lazyBaseURI: string = "ipfs://baseuri/";
+  const lazyMaxSupply = 420;
+  const lazynft: LazyNFT = (await ethers
+    .getContractFactory("LazyNFT")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(protocolControl.address, name, symbol, forwarder.address, lazyContractURI, lazyBaseURI, lazyMaxSupply),
+    )) as LazyNFT;
+
   return {
     registry,
     forwarder,
@@ -141,5 +155,6 @@ export async function getContracts(
     accessNft,
     coin,
     nft,
+    lazynft,
   };
 }

@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/ERC1155PresetMinterPauser.sol";
+import "./openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
 
 // Meta transactions
 import { ERC2771Context } from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -15,7 +15,7 @@ import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multicall {
+contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -114,7 +114,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multi
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    ) ERC1155PresetMinterPauser(_uri) ERC2771Context(_trustedForwarder) {
+    ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -357,7 +357,7 @@ contract AccessNFT is ERC1155PresetMinterPauser, ERC2771Context, IERC2981, Multi
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetMinterPauser, IERC165)
+        override(ERC1155PresetMinterPauserSupplyHolder, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
