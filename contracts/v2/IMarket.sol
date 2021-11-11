@@ -103,6 +103,9 @@ interface IMarket {
     /// @dev Emitted when market fee is updated.
     event MarketFeeUpdate(uint128 newFee);
 
+    /// @dev Emitted when auction buffers are updated
+    event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
+
     /// @dev Emitted when LISTER_ROLE restriction is updated.
     event RestrictedListerRoleUpdated(bool restricted);   
 

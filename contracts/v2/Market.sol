@@ -787,6 +787,17 @@ contract Market is
         emit MarketFeeUpdate(feeBps);
     }
 
+    /// @dev Lets a module admin set auction buffers
+    function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyModuleAdmin {
+        
+        require(_bidBufferBps < controlCenter.MAX_BPS(), "Market: invalid bid buffer BPS.");
+        
+        timeBuffer = _timeBuffer;
+        bidBufferBps = _bidBufferBps;
+
+        emit AuctionBuffersUpdated(_timeBuffer, _bidBufferBps);
+    }
+
     /// @dev Lets a module admin restrict listing by LISTER_ROLE.
     function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {
         restrictedListerRoleOnly = restricted;
