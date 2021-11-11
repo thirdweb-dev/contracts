@@ -94,6 +94,7 @@ export async function getContracts(
           keyHash,
           fees,
           forwarder.address,
+          0,
         ),
     )) as Pack;
 
@@ -102,7 +103,7 @@ export async function getContracts(
   const market: Market = (await ethers
     .getContractFactory("Market")
     .then(f =>
-      f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI),
+      f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI, 0),
     )) as Market;
 
   // Deploy AccessNFT
@@ -110,7 +111,7 @@ export async function getContracts(
   const accessNft: AccessNFT = (await ethers
     .getContractFactory("AccessNFT")
     .then(f =>
-      f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, accessNFTContractURI),
+      f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, accessNFTContractURI, 0),
     )) as AccessNFT;
 
   // Get NFT contract
@@ -120,7 +121,7 @@ export async function getContracts(
   const nft: NFT = (await ethers
     .getContractFactory("NFT")
     .then(f =>
-      f.connect(protocolAdmin).deploy(protocolControl.address, name, symbol, forwarder.address, nftContractURI),
+      f.connect(protocolAdmin).deploy(protocolControl.address, name, symbol, forwarder.address, nftContractURI, 0),
     )) as NFT;
 
   // Deploy Coin
