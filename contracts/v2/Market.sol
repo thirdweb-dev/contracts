@@ -27,8 +27,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-
-
 contract Market is
     IMarket,
     AccessControlEnumerable,
@@ -56,7 +54,13 @@ contract Market is
     uint128 public marketFeeBps;
 
     /// @dev The minimum amount of time left in an auction after a new bid is created
-    uint256 public constant timeBuffer = 15 minutes;
+    uint256 public timeBuffer = 15 minutes;
+
+    /**
+     * @dev The minimum % increase required from the previous winning bid.
+            Compared against controlCenter().MAX_BPS()
+     */
+    uint256 public bidBufferBps = 500;
 
     /// @dev Whether listing is restricted by LISTER_ROLE.
     bool public restrictedListerRoleOnly;
@@ -189,39 +193,10 @@ contract Market is
         emit NewListing(_params.assetContract, _msgSender(), listingId, newListing);
     }
 
-    /// @dev Lets a listing's creator edit the quantity of tokens listed.
-    function editListingQuantity(
-        uint256 _listingId, 
-        uint256 _newQuantity
-    ) 
-        external
-        override
-        whenNotPaused 
-        onlyExistingListing(_listingId)
-        onlyListingCreator(_listingId) 
-    {
-        Listing memory targetListing = listings[_listingId];
-        uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _newQuantity);
-
-        require(
-            validateOwnershipAndApproval(
-                targetListing.tokenOwner, 
-                targetListing.assetContract, 
-                targetListing.tokenId, 
-                safeNewQuantity, 
-                targetListing.tokenType
-            ), 
-            "Market: must own and approve to transfer tokens."
-        );
-        targetListing.quantity = safeNewQuantity;
-        listings[_listingId] = targetListing;
-
-        emit ListingUpdate(targetListing.tokenOwner, _listingId, targetListing);
-    }
-
     /// @dev Lets a listing's creator edit the listing's parameters.
     function editListingParametrs(    
         uint256 _listingId,
+        uint256 _quantityToList,
         uint256 _reservePricePerToken,    
         uint256 _buyoutPricePerToken,
         uint256 _tokensPerBuyer,
@@ -236,6 +211,7 @@ contract Market is
         onlyListingCreator(_listingId)
     {
         Listing memory targetListing = listings[_listingId];
+        uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
 
         targetListing.currency = _currencyToAccept;
         targetListing.startTime = _secondsUntilStartTime == 0
@@ -244,6 +220,20 @@ contract Market is
         targetListing.endTime = _secondsUntilEndTime == 0
             ? targetListing.endTime
             : block.timestamp + _secondsUntilEndTime;
+        
+        if(targetListing.quantity != _quantityToList) {
+            require(
+                validateOwnershipAndApproval(
+                    targetListing.tokenOwner, 
+                    targetListing.assetContract, 
+                    targetListing.tokenId, 
+                    safeNewQuantity, 
+                    targetListing.tokenType
+                ), 
+                "Market: must own and approve to transfer tokens."
+            );
+            targetListing.quantity = safeNewQuantity;
+        }
         
         /**
          * E.g. `_reservePricePerToken` is specific to auctions, whereas
@@ -340,12 +330,17 @@ contract Market is
             _bidAmount
         );
 
-        if(_bidAmount > currentWinningBid.offerAmount) {            
+        if(isNewHighestBid(currentWinningBid.offerAmount, _bidAmount)) {
 
-            currentWinningBid.offerAmount = _bidAmount;
-            currentWinningBid.offeror = bidder;
+            address prevBidder = currentWinningBid.offeror;
+            uint256 prevBidAmount = currentWinningBid.offerAmount;  
 
-            IERC20(targetListing.currency).transferFrom(bidder, address(this), _bidAmount);
+            currentWinningBid = Offer({
+                listingId: _listingId,
+                quantityWanted: targetListing.quantity,
+                offerAmount: _bidAmount,
+                offeror: bidder
+            });
 
             if(endTime - block.timestamp <= timeBuffer) {
                 targetListing.endTime += timeBuffer;
@@ -353,6 +348,9 @@ contract Market is
 
             listings[_listingId] = targetListing;
             winningBid[_listingId] = currentWinningBid;
+
+            handleIncomingBid(targetListing.currency, bidder, _bidAmount);
+            IERC20(targetListing.currency).transferFrom(address(this), prevBidder, prevBidAmount);
 
             emit NewBid(_listingId, bidder, currentWinningBid, targetListing);
         }
@@ -472,11 +470,15 @@ contract Market is
         external
         override
         whenNotPaused
-        onlyListingCreator(_listingId)
     {
         Listing memory targetListing = listings[_listingId];
         Offer memory targetBid = winningBid[_listingId];
+        address closer = _msgSender();
 
+        require(
+            closer == targetListing.tokenOwner || closer == targetBid.offeror,
+            "Market: must be bidder or auction creator."
+        );
         require(
             targetListing.listingType == ListingType.Auction,
             "Market: listing is not an auction."
@@ -486,15 +488,39 @@ contract Market is
             "Market: can only close auction after it has ended."
         );
 
-        payout(
-            address(this), 
-            targetListing.tokenOwner, 
-            targetBid.offerAmount * targetListing.quantity,
-            targetListing
-        );
-        sendTokens(address(this), targetBid.offeror, targetListing.quantity, targetListing);
+        if(_msgSender() == targetListing.tokenOwner) {
+            /**
+             * Prevent re-entrancy by setting bid's offer amount, and listing's quantity to 0 before ERC20 transfer.
+             */
+            uint256 payoutAmount = targetBid.offerAmount * targetListing.quantity;
 
-        emit AuctionClosed(_listingId, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
+            targetListing.quantity = 0;
+            listings[_listingId] = targetListing;
+
+            targetBid.offerAmount = 0;
+            winningBid[_listingId] = targetBid;
+
+            payout(
+                address(this), 
+                targetListing.tokenOwner, 
+                payoutAmount,
+                targetListing
+            );
+        } else if (_msgSender() == targetBid.offeror) {
+            /**
+             * Prevent re-entrancy by setting bid's quantity to 0 before token transfer.
+             */
+            
+            uint256 quantityToSend = targetBid.quantityWanted;
+
+            targetBid.quantityWanted = 0;
+            winningBid[_listingId] = targetBid;
+
+            sendTokens(address(this), targetBid.offeror, quantityToSend, targetListing);
+        }
+        
+
+        emit AuctionClosed(_listingId, closer, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
     }
 
     //  =====   Internal functions  =====
@@ -584,6 +610,39 @@ contract Market is
         transferSuccess = IERC20(_listing.currency).transferFrom(_payer, _payee, remainder);
 
         require(transferSuccess, "Market: failed to payout stakeholders.");
+    }
+
+    /// @dev See https://github.com/ourzora/auction-house/blob/main/contracts/AuctionHouse.sol#L331-L338
+    function handleIncomingBid(
+        address _currency,
+        address _from, 
+        uint256 _amount
+    )
+        internal
+    {
+        address to = address(this);
+
+        uint256 balBefore = IERC20(_currency).balanceOf(to);
+        bool success = IERC20(_currency).transferFrom(_from, to, _amount);
+        uint256 balAfter = IERC20(_currency).balanceOf(to);
+
+        require(
+            success && balAfter == balBefore + _amount,
+            "Market: failed to receive incoming bid."
+        );
+    }
+
+    /// @dev Checks whether an incoming bid should be the new current highest bid.
+    function isNewHighestBid(
+        uint256 _currentBid,
+        uint256 _incomingBid
+    )
+        internal
+        view
+        returns (bool isValidNewBid)
+    {
+        isValidNewBid = _incomingBid >  _currentBid
+            && ((_incomingBid - _currentBid) * controlCenter.MAX_BPS()) / _currentBid >= bidBufferBps;
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Market to transfer tokens.

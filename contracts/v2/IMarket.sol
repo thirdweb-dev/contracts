@@ -98,7 +98,7 @@ interface IMarket {
     event AuctionCanceled(uint256 indexed listingId, address indexed auctionCreator, Listing listing);
 
     /// @dev Emitted when an auction is closed.
-    event AuctionClosed(uint256 indexed listingId, address indexed auctionCreator, address indexed winningBidder, Offer winningBid, Listing listing);
+    event AuctionClosed(uint256 indexed listingId, address indexed closer, address auctionCreator, address winningBidder, Offer winningBid, Listing listing);
 
     /// @dev Emitted when market fee is updated.
     event MarketFeeUpdate(uint128 newFee);
@@ -111,12 +111,10 @@ interface IMarket {
         ListingParameters memory _params
     ) external;
 
-    /// @dev Lets a listing's creator edit the quantity of tokens listed.
-    function editListingQuantity(uint256 _listingId, uint256 _quantity) external;
-
     /// @dev Lets a listing's creator edit the listing's parameters.
     function editListingParametrs(    
         uint256 _listingId,
+        uint256 _quantityToList,
         uint256 _reservePricePerToken,    
         uint256 _buyoutPricePerToken,
         uint256 _tokensPerBuyer,

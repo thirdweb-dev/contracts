@@ -103,11 +103,17 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "closer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "auctionCreator",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "winningBidder",
         "type": "address"
@@ -937,6 +943,11 @@
       },
       {
         "internalType": "uint256",
+        "name": "_quantityToList",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "_reservePricePerToken",
         "type": "uint256"
       },
@@ -967,24 +978,6 @@
       }
     ],
     "name": "editListingParametrs",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_quantity",
-        "type": "uint256"
-      }
-    ],
-    "name": "editListingQuantity",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
