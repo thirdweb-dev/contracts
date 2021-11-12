@@ -298,6 +298,74 @@ describe("Royalty", function () {
     });
   });
 
+  describe("Distribute to all payees", function () {
+    it("distribute native", async () => {
+      const treasury = protocolProvider;
+      const feeBps = await registry.getFeeBps(protocolControl.address);
+      const payees = [stakeHolder1.address, stakeHolder2.address];
+      const shares = [25, 75];
+
+      // Deploy Royalty
+      const royaltyContract: Royalty = await deployRoyalty(payees, shares);
+
+      expect(royaltyContract.address).to.not.be.empty;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
+
+      const price = ethers.utils.parseUnits("1000", "ether");
+      await expect(
+        await protocolAdmin.sendTransaction({
+          to: royaltyContract.address,
+          value: price,
+        }),
+      ).to.changeEtherBalance(royaltyContract, price);
+
+      await expect(await royaltyContract["distribute()"]()).to.changeEtherBalances(
+        [royaltyContract, stakeHolder1, stakeHolder2, protocolProvider],
+        [
+          // 500 because 50% of 1000
+          ethers.utils.parseUnits("-1000", "ether"),
+          ethers.utils.parseUnits("250", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("750", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("50", "ether"),
+        ],
+      );
+    });
+
+    it("distribute erc20", async () => {
+      const treasury = protocolProvider;
+      const feeBps = await registry.getFeeBps(protocolControl.address);
+      const payees = [stakeHolder1.address, stakeHolder2.address];
+      const shares = [25, 75];
+
+      // Deploy Royalty
+      const royaltyContract: Royalty = await deployRoyalty(payees, shares);
+
+      expect(royaltyContract.address).to.not.be.empty;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
+
+      const price = ethers.utils.parseUnits("1000", "ether");
+      await expect(() => coin.connect(protocolAdmin).mint(royaltyContract.address, price)).to.changeTokenBalance(
+        coin,
+        royaltyContract,
+        price,
+      );
+
+      await expect(() => royaltyContract["distribute(address)"](coin.address)).to.changeTokenBalances(
+        coin,
+        [royaltyContract, stakeHolder1, stakeHolder2, protocolProvider],
+        [
+          // 500 because 50% of 1000
+          ethers.utils.parseUnits("-1000", "ether"),
+          ethers.utils.parseUnits("250", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("750", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("50", "ether"),
+        ],
+      );
+    });
+  });
+
   describe("Test payouts on sale in Market", function () {
     // Royalty params
     let royaltyContract: Royalty;
