@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * 2. Change _addPayee(...) visibility to internal. DANGEROUS: Make sure it is not called outside from constructor
  *    initialization.
  * 3. Add distribute(...) to distribute all owed amount to all payees.
+ * 4. Add payeeCount() view to returns the number of payees.
  */
 
 /**
