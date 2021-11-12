@@ -194,6 +194,110 @@ describe("Royalty", function () {
     });
   });
 
+  describe("Fees", function () {
+    it("Correct payouts (50, 50)", async () => {
+      const treasury = protocolProvider;
+      const feeBps = await registry.getFeeBps(protocolControl.address);
+      const payees = [stakeHolder1.address, stakeHolder2.address];
+      const shares = [50, 50];
+
+      // Deploy Royalty
+      const royaltyContract: Royalty = await deployRoyalty(payees, shares);
+
+      expect(royaltyContract.address).to.not.be.empty;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
+
+      const price = ethers.utils.parseUnits("1000", "ether");
+      await expect(
+        await protocolAdmin.sendTransaction({
+          to: royaltyContract.address,
+          value: price,
+        }),
+      ).to.changeEtherBalance(royaltyContract, price);
+
+      // console.log("feeBps", feeBps.toString());
+
+      await expect(await royaltyContract["release(address)"](stakeHolder1.address)).to.changeEtherBalances(
+        [royaltyContract, stakeHolder1],
+        [
+          // 500 because 50% of 1000
+          ethers.utils.parseUnits("-500", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("500", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+        ],
+      );
+
+      await expect(await royaltyContract["release(address)"](stakeHolder2.address)).to.changeEtherBalances(
+        [royaltyContract, stakeHolder2],
+        [
+          // 500 because 50% of 1000
+          ethers.utils.parseUnits("-500", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("500", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+        ],
+      );
+
+      await expect(await royaltyContract["release(address)"](treasury.address)).to.changeEtherBalances(
+        [royaltyContract, treasury],
+        [
+          // 50 because 5% of 1000
+          ethers.utils.parseUnits("-50", "ether"),
+          ethers.utils.parseUnits("50", "ether"),
+        ],
+      );
+    });
+
+    it("Correct payouts (25, 75)", async () => {
+      const treasury = protocolProvider;
+      const feeBps = await registry.getFeeBps(protocolControl.address);
+      const payees = [stakeHolder1.address, stakeHolder2.address];
+      const shares = [25, 75];
+
+      // Deploy Royalty
+      const royaltyContract: Royalty = await deployRoyalty(payees, shares);
+
+      expect(royaltyContract.address).to.not.be.empty;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
+
+      const price = ethers.utils.parseUnits("1000", "ether");
+      await expect(
+        await protocolAdmin.sendTransaction({
+          to: royaltyContract.address,
+          value: price,
+        }),
+      ).to.changeEtherBalance(royaltyContract, price);
+
+      // console.log("feeBps", feeBps.toString());
+
+      await expect(await royaltyContract["release(address)"](stakeHolder1.address)).to.changeEtherBalances(
+        [royaltyContract, stakeHolder1],
+        [
+          // 500 because 50% of 1000
+          ethers.utils.parseUnits("-250", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("250", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+        ],
+      );
+
+      await expect(await royaltyContract["release(address)"](stakeHolder2.address)).to.changeEtherBalances(
+        [royaltyContract, stakeHolder2],
+        [
+          // 500 because 50% of 1000
+          ethers.utils.parseUnits("-750", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+          ethers.utils.parseUnits("750", "ether").mul(BigNumber.from(MAX_BPS).sub(feeBps)).div(MAX_BPS),
+        ],
+      );
+
+      await expect(await royaltyContract["release(address)"](treasury.address)).to.changeEtherBalances(
+        [royaltyContract, treasury],
+        [
+          // 50 because 5% of 1000
+          ethers.utils.parseUnits("-50", "ether"),
+          ethers.utils.parseUnits("50", "ether"),
+        ],
+      );
+    });
+  });
+
   describe("Test payouts on sale in Market", function () {
     // Royalty params
     let royaltyContract: Royalty;

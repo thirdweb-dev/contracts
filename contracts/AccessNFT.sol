@@ -112,7 +112,8 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
-        string memory _uri
+        string memory _uri,
+        uint256 _royaltyBps
     ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -122,6 +123,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
+        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -284,7 +286,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;

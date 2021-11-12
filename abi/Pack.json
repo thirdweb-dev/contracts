@@ -35,6 +35,11 @@
         "internalType": "address",
         "name": "_trustedForwarder",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_royaltyBps",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
