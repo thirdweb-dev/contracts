@@ -366,6 +366,32 @@ describe("Royalty", function () {
     });
   });
 
+  describe("Reentrancy", function () {
+    it("reentrance on distribute", async () => {
+      const mrr = await ethers.getContractFactory("MockRoyaltyReentrantDistribute");
+      const mr = await mrr.deploy();
+
+      const treasury = protocolProvider;
+      const feeBps = await registry.getFeeBps(protocolControl.address);
+      const payees = [mr.address, stakeHolder1.address];
+      const shares = [50, 50];
+
+      // Deploy Royalty
+      const royaltyContract: Royalty = await deployRoyalty(payees, shares);
+
+      expect(mr.address).to.not.be.empty;
+      expect(royaltyContract.address).to.not.be.empty;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
+
+      await expect(await mr.set(royaltyContract.address)).to.not.be.reverted;
+
+      await expect(royaltyContract["release(address)"](mr.address)).to.be.revertedWith(
+        "Address: unable to send value, recipient may have reverted",
+      );
+    });
+  });
+
   describe("Test payouts on sale in Market", function () {
     // Royalty params
     let royaltyContract: Royalty;
