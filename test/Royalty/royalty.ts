@@ -367,6 +367,30 @@ describe("Royalty", function () {
   });
 
   describe("Reentrancy", function () {
+    it("reentrance on release(address)", async () => {
+      const mrr = await ethers.getContractFactory("MockRoyaltyReentrantDistribute");
+      const mr = await mrr.deploy();
+
+      const treasury = protocolProvider;
+      const feeBps = await registry.getFeeBps(protocolControl.address);
+      const payees = [mr.address, stakeHolder1.address];
+      const shares = [50, 50];
+
+      // Deploy Royalty
+      const royaltyContract: Royalty = await deployRoyalty(payees, shares);
+
+      expect(mr.address).to.not.be.empty;
+      expect(royaltyContract.address).to.not.be.empty;
+      await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
+        .reverted;
+
+      await expect(mr.set(royaltyContract.address)).to.not.be.reverted;
+
+      // account is not due because, the contract call distribute again
+      await expect(royaltyContract["release(address)"](mr.address)).to.be.revertedWith(
+        "PaymentSplitter: account is not due payment",
+      );
+    });
     it("reentrance on distribute", async () => {
       const mrr = await ethers.getContractFactory("MockRoyaltyReentrantDistribute");
       const mr = await mrr.deploy();
@@ -384,11 +408,10 @@ describe("Royalty", function () {
       await expect(protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address)).to.not.be
         .reverted;
 
-      await expect(await mr.set(royaltyContract.address)).to.not.be.reverted;
+      await expect(mr.set(royaltyContract.address)).to.not.be.reverted;
 
-      await expect(royaltyContract["release(address)"](mr.address)).to.be.revertedWith(
-        "Address: unable to send value, recipient may have reverted",
-      );
+      // account is not due because, the contract call distribute again
+      await expect(royaltyContract["distribute()"]()).to.be.revertedWith("PaymentSplitter: account is not due payment");
     });
   });
 
