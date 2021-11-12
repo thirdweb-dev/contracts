@@ -13,6 +13,8 @@
   "files": [
     "contracts/",
     "typechain/",
+    "!typechain/Mock*",
+    "!typechain/factories/Mock*",
     "dist/"
   ],
   "devDependencies": {
@@ -66,7 +68,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "clean": "hardhat clean",
+    "clean": "hardhat clean && rm -rf abi/ && rm -rf artifacts/ && rm -rf dist/",
     "compile": "hardhat compile",
     "deploy-accessPacks": "hardhat run scripts/deploy/accessPacks.ts",
     "deploy-registry": "hardhat run scripts/deploy/registry.ts",
@@ -88,8 +90,8 @@
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
-    "build": "yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "rm -rf dist/ && tsdx build --entry typechain/index.ts",
+    "build": "yarn clean && yarn compile && yarn typechain && yarn build:lib",
+    "build:lib": "tsdx build --entry typechain/index.ts",
     "copy-dts": "copyfiles -u 1 \"typechain/**/*.d.ts\" dist"
   }
 }
