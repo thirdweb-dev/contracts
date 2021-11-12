@@ -12,10 +12,13 @@
   "module": "dist/contracts.esm.js",
   "files": [
     "contracts/",
+    "!contracts/test-helpers/",
     "typechain/",
     "!typechain/Mock*",
     "!typechain/factories/Mock*",
-    "dist/"
+    "dist/",
+    "!dist/Mock*",
+    "!dist/factories/Mock*"
   ],
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
