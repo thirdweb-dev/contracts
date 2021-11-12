@@ -13,12 +13,7 @@
   "files": [
     "contracts/",
     "typechain/",
-    "dist/",
-    "!contracts/test-helpers/",
-    "!typechain/Mock*",
-    "!typechain/**/Mock*",
-    "!dist/Mock*",
-    "!dist/**/Mock*"
+    "dist/"
   ],
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
