@@ -83,8 +83,8 @@ const config: ConfigWithEtherscan = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        // runs: 800,
-        runs: 400,
+        runs: 800,
+        // runs: 400,
       },
     },
   },
