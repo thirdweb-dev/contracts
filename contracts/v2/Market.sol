@@ -24,13 +24,11 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { ProtocolControl } from "../ProtocolControl.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 contract Market is
     IMarket,
     AccessControlEnumerable,
-    Pausable,
     IERC1155Receiver,
     IERC721Receiver,
     ReentrancyGuard,
@@ -39,7 +37,6 @@ contract Market is
 {
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
@@ -101,15 +98,6 @@ contract Market is
         _;
     }
 
-    /// @dev Checks whether caller has PAUSER_ROLE.
-    modifier onlyPauser() {
-        require(
-            hasRole(PAUSER_ROLE, _msgSender()),
-            "Market: must have pauser role."
-        );
-        _;
-    }
-
     /// @dev Checks whether the caller is a protocol admin.
     modifier onlyProtocolAdmin() {
         require(
@@ -138,7 +126,6 @@ contract Market is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
     }
 
     //  =====   External functions  =====
@@ -149,7 +136,7 @@ contract Market is
     ) 
         external
         override
-        whenNotPaused
+        
         onlyListerRoleWhenRestricted 
     {
 
@@ -206,7 +193,7 @@ contract Market is
     ) 
         external
         override
-        whenNotPaused
+        
         onlyExistingListing(_listingId)
         onlyListingCreator(_listingId)
     {
@@ -264,7 +251,7 @@ contract Market is
     ) 
         external
         override
-        whenNotPaused
+        
         onlyExistingListing(_listingId)
         nonReentrant
     {
@@ -300,80 +287,28 @@ contract Market is
         );
     }
 
-    /// @dev Lets an account bid on an existing auction.
-    function bid(
-        uint256 _listingId, 
-        uint256 _bidAmount
-    )
-        external
-        override
-        whenNotPaused
-        onlyExistingListing(_listingId)
-    {
-        Listing memory targetListing = listings[_listingId];
-        Offer memory currentWinningBid = winningBid[_listingId];
-        address bidder = _msgSender();
-        uint256 endTime = targetListing.endTime;
-
-        require(
-            targetListing.listingType == ListingType.Auction,
-            "Market: can only make bids to auction listings."
-        );
-        require(
-            endTime > block.timestamp && targetListing.startTime < block.timestamp,
-            "Market: can only make bids in auction duration."
-        );
-
-        validateCurrencyBalAndApproval(
-            bidder, 
-            targetListing.currency, 
-            _bidAmount
-        );
-
-        if(isNewHighestBid(currentWinningBid.offerAmount, _bidAmount)) {
-
-            address prevBidder = currentWinningBid.offeror;
-            uint256 prevBidAmount = currentWinningBid.offerAmount;  
-
-            currentWinningBid = Offer({
-                listingId: _listingId,
-                quantityWanted: targetListing.quantity,
-                offerAmount: _bidAmount,
-                offeror: bidder
-            });
-
-            if(endTime - block.timestamp <= timeBuffer) {
-                targetListing.endTime += timeBuffer;
-            }
-
-            listings[_listingId] = targetListing;
-            winningBid[_listingId] = currentWinningBid;
-
-            handleIncomingBid(targetListing.currency, bidder, _bidAmount);
-            IERC20(targetListing.currency).transferFrom(address(this), prevBidder, prevBidAmount);
-
-            emit NewBid(_listingId, bidder, currentWinningBid, targetListing);
-        }
-    }
-
-    /// @dev Lets an account offer a price for a given amount of tokens.
     function offer(
         uint256 _listingId, 
         uint256 _quantityWanted, 
         uint256 _totalOfferAmount
     ) 
         external
-        override
-        whenNotPaused
+        
         onlyExistingListing(_listingId)
     {
-        address offeror = _msgSender();
         Listing memory targetListing = listings[_listingId];
 
-        require(
-            targetListing.listingType == ListingType.Direct,
-            "Market: can only make offers to direct listings."
-        );
+        if(targetListing.listingType == ListingType.Auction) {
+            require(
+                targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
+                "Market: can only make bids in auction duration."
+            );
+        }
+
+        address offeror = _msgSender();
+        uint256 quantityWanted = targetListing.listingType == ListingType.Auction
+            ? getSafeQuantity(targetListing.tokenType, targetListing.quantity)
+            : getSafeQuantity(targetListing.tokenType, _quantityWanted);
 
         validateCurrencyBalAndApproval(
             offeror, 
@@ -384,13 +319,47 @@ contract Market is
         Offer memory newOffer = Offer({
             listingId: _listingId,
             offeror: offeror,
-            quantityWanted: getSafeQuantity(targetListing.tokenType, _quantityWanted),
+            quantityWanted: quantityWanted,
             offerAmount: _totalOfferAmount
         });
 
         offers[_listingId][offeror] = newOffer;
 
         emit NewOffer(_listingId, offeror, newOffer, targetListing);
+
+        if(targetListing.listingType == ListingType.Auction) {
+            handleBid(targetListing, newOffer);
+        }
+    }
+
+    /// @dev Lets an account bid on an existing auction.
+    function handleBid(
+        Listing memory _targetListing,
+        Offer memory _incomingOffer 
+    )
+        internal
+    {
+        Offer memory currentWinningBid = winningBid[_targetListing.listingId];
+
+        if(isNewHighestBid(currentWinningBid.offerAmount, _incomingOffer.offerAmount)) {
+
+            address prevBidder = currentWinningBid.offeror;
+            uint256 prevBidAmount = currentWinningBid.offerAmount;  
+
+            currentWinningBid = _incomingOffer;
+
+            if(_targetListing.endTime - block.timestamp <= timeBuffer) {
+                _targetListing.endTime += timeBuffer;
+            }
+
+            listings[_targetListing.listingId] = _targetListing;
+            winningBid[_targetListing.listingId] = currentWinningBid;
+
+            handleIncomingBid(_targetListing.currency, _incomingOffer.offeror, _incomingOffer.offerAmount);
+            IERC20(_targetListing.currency).transferFrom(address(this), prevBidder, prevBidAmount);
+
+            emit NewBid(_targetListing.listingId, _incomingOffer.offeror, currentWinningBid, _targetListing);
+        }
     }
 
     /// @dev Lets a listing's creator accept an offer for their direct listing.
@@ -400,7 +369,7 @@ contract Market is
     ) 
         external
         override
-        whenNotPaused
+        
         onlyListingCreator(_listingId)
     {
         Offer memory targetOffer = offers[_listingId][offeror];
@@ -438,42 +407,36 @@ contract Market is
         );
     }
 
-    /// @dev Lets an auction's creator cancel the auction.
-    function cancelAuction(
-        uint256 _listingId
-    )
-        external
-        override
-        whenNotPaused
-        onlyListingCreator(_listingId)
-    {
-        Listing memory targetListing = listings[_listingId];
-
-        require(
-            targetListing.startTime > block.timestamp,
-            "Market: cannot cancel auction after it has started."
-        );
-
-        // Auction is considered canceled if 0 tokens are being auctioned.
-        targetListing.quantity = 0;
-        listings[_listingId] = targetListing;
-
-        sendTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
-
-        emit AuctionCanceled(_listingId, targetListing.tokenOwner, targetListing);
-    }
-
     /// @dev Lets an auction's creator close the auction.
     function closeAuction(
         uint256 _listingId
     )
         external
         override
-        whenNotPaused
+        
     {
         Listing memory targetListing = listings[_listingId];
         Offer memory targetBid = winningBid[_listingId];
+        
         address closer = _msgSender();
+
+        if(targetListing.startTime > block.timestamp) {
+
+            require(
+                listings[_listingId].tokenOwner == closer,
+                "Market: caller does not the listing creator."
+            );
+
+            // Auction is considered canceled if 0 tokens are being auctioned.
+            targetListing.quantity = 0;
+            listings[_listingId] = targetListing;
+
+            sendTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
+
+            emit AuctionCanceled(_listingId, targetListing.tokenOwner, targetListing);
+
+            return;
+        }
 
         require(
             closer == targetListing.tokenOwner || closer == targetBid.offeror,
@@ -807,15 +770,6 @@ contract Market is
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _uri) external onlyProtocolAdmin {
         _contractURI = _uri;
-    }
-
-    /// @dev Lets an account with PAUSER_ROLE pause or unpause the contract.
-    function setPaused(bool _toPause) external onlyPauser {
-        if(_toPause) {
-            _pause();
-        } else {
-            _unpause();
-        }
     }
 
     //  ===== Getter functions  =====

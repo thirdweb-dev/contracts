@@ -129,21 +129,18 @@ interface IMarket {
     /// @dev Lets an account buy a given quantity of tokens from a listing.
     function buy(uint256 _listingId, uint256 _quantity) external;
 
-    /// @dev Lets an account offer a price for a given amount of tokens.
-    function offer(
-        uint256 _listingId, 
-        uint256 _quantityWanted, 
-        uint256 _totalOfferAmount
-    ) external;
+    // /// @dev Lets an account offer a price for a given amount of tokens.
+    // function offer(
+    //     uint256 _listingId, 
+    //     uint256 _quantityWanted, 
+    //     uint256 _totalOfferAmount
+    // ) external;
 
-    /// @dev Lets an account bid on an existing auction.
-    function bid(uint256 _listingId, uint256 _bidAmount) external;
+    // /// @dev Lets an account bid on an existing auction.
+    // function bid(uint256 _listingId, uint256 _bidAmount) external;
 
-    /// @dev Lets a listing's creator accept an offer for their direct listing.
+    // /// @dev Lets a listing's creator accept an offer for their direct listing.
     function acceptOffer(uint256 _listingId, address offeror) external;
-
-    /// @dev Lets an auction's creator cancel the auction.
-    function cancelAuction(uint256 _listingId) external;
 
     /// @dev Lets an auction's creator close the auction.
     function closeAuction(uint256 _listingId) external;

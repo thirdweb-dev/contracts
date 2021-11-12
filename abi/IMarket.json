@@ -835,42 +835,11 @@
       },
       {
         "internalType": "uint256",
-        "name": "_bidAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "bid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "_quantity",
         "type": "uint256"
       }
     ],
     "name": "buy",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      }
-    ],
-    "name": "cancelAuction",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -997,29 +966,6 @@
       }
     ],
     "name": "editListingParametrs",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_quantityWanted",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_totalOfferAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "offer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

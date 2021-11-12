@@ -821,19 +821,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "Paused",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "bool",
         "name": "restricted",
         "type": "bool"
@@ -918,19 +905,6 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "Unpaused",
-    "type": "event"
-  },
-  {
     "inputs": [],
     "name": "DEFAULT_ADMIN_ROLE",
     "outputs": [
@@ -946,19 +920,6 @@
   {
     "inputs": [],
     "name": "LISTER_ROLE",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "PAUSER_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -996,24 +957,6 @@
       }
     ],
     "name": "acceptOffer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_bidAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "bid",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1069,19 +1012,6 @@
       }
     ],
     "name": "buy",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      }
-    ],
-    "name": "cancelAuction",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1720,19 +1650,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "paused",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -1821,19 +1738,6 @@
       }
     ],
     "name": "setMarketFeeBps",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_toPause",
-        "type": "bool"
-      }
-    ],
-    "name": "setPaused",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
