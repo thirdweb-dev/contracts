@@ -144,7 +144,16 @@ export async function getContracts(
     .then(f =>
       f
         .connect(protocolAdmin)
-        .deploy(protocolControl.address, name, symbol, forwarder.address, lazyContractURI, lazyBaseURI, lazyMaxSupply),
+        .deploy(
+          protocolControl.address,
+          name,
+          symbol,
+          forwarder.address,
+          lazyContractURI,
+          lazyBaseURI,
+          lazyMaxSupply,
+          0,
+        ),
     )) as LazyNFT;
 
   return {
