@@ -38,6 +38,8 @@ contract LazyNFT is
     using Counters for Counters.Counter;
     using Strings for uint256;
 
+    uint256 private constant MAX_BPS = 10_000;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -119,7 +121,8 @@ contract LazyNFT is
         address _trustedForwarder,
         string memory _contractUri,
         string memory _baseTokenUri,
-        uint256 maxSupply
+        uint256 _maxSupply,
+        uint256 _royaltyBps
     ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -128,12 +131,14 @@ contract LazyNFT is
         _contractURI = _contractUri;
         _baseTokenURI = _baseTokenUri;
 
-        maxTotalSupply = maxSupply;
+        maxTotalSupply = _maxSupply;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
+
+        setRoyaltyBps(_royaltyBps);
     }
 
     function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
@@ -175,10 +180,6 @@ contract LazyNFT is
             require(MerkleProof.verify(proofs, currentMintCondition.merkleRoot, leaf), "invalid proofs");
         }
 
-        if (currentMintCondition.pricePerToken > 0) {
-            _transferPayment(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
-        }
-
         mintConditions[conditionIndex].currentMintSupply += quantity;
 
         uint256 newNextMintTimestamp = currentMintCondition.waitTimeSecondsLimitPerTransaction;
@@ -191,6 +192,10 @@ contract LazyNFT is
         }
 
         nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex] = newNextMintTimestamp;
+
+        if (currentMintCondition.pricePerToken > 0) {
+            _transferPayment(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
+        }
 
         uint256 startMintTokenId = nextMintTokenId;
         for (uint256 i = 0; i < quantity; i++) {
@@ -275,8 +280,8 @@ contract LazyNFT is
     }
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "bps provided must be less than 10,000");
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -299,7 +304,7 @@ contract LazyNFT is
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function pause() public virtual {
+    function pause() external {
         require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to pause");
         _pause();
     }
@@ -313,7 +318,7 @@ contract LazyNFT is
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function unpause() public virtual {
+    function unpause() external {
         require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to unpause");
         _unpause();
     }
@@ -354,7 +359,7 @@ contract LazyNFT is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -379,7 +384,7 @@ contract LazyNFT is
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
+    function contractURI() external view returns (string memory) {
         return _contractURI;
     }
 

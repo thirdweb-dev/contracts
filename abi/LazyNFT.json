@@ -33,7 +33,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "maxSupply",
+        "name": "_maxSupply",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_royaltyBps",
         "type": "uint256"
       }
     ],
