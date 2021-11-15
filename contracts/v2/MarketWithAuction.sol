@@ -28,7 +28,7 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 // TODO: Variable size optimizations; general gas optimizations.
 
-contract Market is
+contract MarketWithAuction is
     IMarket,
     AccessControlEnumerable,
     IERC1155Receiver,
@@ -106,11 +106,13 @@ contract Market is
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
-        string memory _uri
+        string memory _uri,
+        uint256 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
 
         _contractURI = _uri; // Contract level metadata
         controlCenter = ProtocolControl(_controlCenter); // Top level control center contract.
+        marketFeeBps = uint64(_marketFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
