@@ -101,7 +101,7 @@ interface IMarket {
     event AuctionClosed(uint256 indexed listingId, address indexed closer, address auctionCreator, address winningBidder, Offer winningBid, Listing listing);
 
     /// @dev Emitted when market fee is updated.
-    event MarketFeeUpdate(uint128 newFee);
+    event MarketFeeUpdate(uint64 newFee);
 
     /// @dev Emitted when auction buffers are updated
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
@@ -129,15 +129,12 @@ interface IMarket {
     /// @dev Lets an account buy a given quantity of tokens from a listing.
     function buy(uint256 _listingId, uint256 _quantity) external;
 
-    // /// @dev Lets an account offer a price for a given amount of tokens.
-    // function offer(
-    //     uint256 _listingId, 
-    //     uint256 _quantityWanted, 
-    //     uint256 _totalOfferAmount
-    // ) external;
-
-    // /// @dev Lets an account bid on an existing auction.
-    // function bid(uint256 _listingId, uint256 _bidAmount) external;
+    /// @dev Lets an account offer a price for a given amount of tokens.
+    function offer(
+        uint256 _listingId, 
+        uint256 _quantityWanted, 
+        uint256 _totalOfferAmount
+    ) external;
 
     // /// @dev Lets a listing's creator accept an offer for their direct listing.
     function acceptOffer(uint256 _listingId, address offeror) external;

@@ -339,9 +339,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint128",
+        "internalType": "uint64",
         "name": "newFee",
-        "type": "uint128"
+        "type": "uint64"
       }
     ],
     "name": "MarketFeeUpdate",
@@ -966,6 +966,29 @@
       }
     ],
     "name": "editListingParametrs",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_listingId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_quantityWanted",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalOfferAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "offer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

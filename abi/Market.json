@@ -360,9 +360,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint128",
+        "internalType": "uint64",
         "name": "newFee",
-        "type": "uint128"
+        "type": "uint64"
       }
     ],
     "name": "MarketFeeUpdate",
@@ -932,6 +932,19 @@
   },
   {
     "inputs": [],
+    "name": "MAX_BPS",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "_contractURI",
     "outputs": [
       {
@@ -966,9 +979,9 @@
     "name": "bidBufferBps",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint64",
         "name": "",
-        "type": "uint256"
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -1153,92 +1166,6 @@
     "name": "editListingParametrs",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getListing",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokensPerBuyer",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarket.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarket.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct IMarket.Listing",
-        "name": "listing",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1448,9 +1375,9 @@
     "name": "marketFeeBps",
     "outputs": [
       {
-        "internalType": "uint128",
+        "internalType": "uint64",
         "name": "",
-        "type": "uint128"
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -1732,9 +1659,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint128",
-        "name": "feeBps",
-        "type": "uint128"
+        "internalType": "uint256",
+        "name": "_feeBps",
+        "type": "uint256"
       }
     ],
     "name": "setMarketFeeBps",
@@ -1779,9 +1706,9 @@
     "name": "timeBuffer",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint64",
         "name": "",
-        "type": "uint256"
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
