@@ -17,6 +17,7 @@ import { NFT } from "../../typechain/NFT";
 import { Coin } from "../../typechain/Coin";
 import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
+import { MarketWithAuction } from "../../typechain/MarketWithAuction";
 import { LazyNFT } from "../../typechain/LazyNFT";
 
 export type Contracts = {
@@ -27,6 +28,7 @@ export type Contracts = {
   coin: Coin;
   pack: Pack;
   market: Market;
+  marketv2: MarketWithAuction;
   nft: NFT;
   lazynft: LazyNFT;
 };
@@ -105,6 +107,10 @@ export async function getContracts(
     .then(f =>
       f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI, 0),
     )) as Market;
+  
+  // Deploy Marketv2
+  const marketv2: MarketWithAuction = await ethers.getContractFactory("MarketWithAuction")
+      .then(f => f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI, 0)) as MarketWithAuction;
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
@@ -153,6 +159,7 @@ export async function getContracts(
     protocolControl,
     pack,
     market,
+    marketv2,
     accessNft,
     coin,
     nft,
