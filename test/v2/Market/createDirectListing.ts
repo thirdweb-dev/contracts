@@ -4,8 +4,8 @@ import { expect } from "chai";
 // Contract Types
 import { Forwarder } from "../../../typechain/Forwarder";
 import { AccessNFT } from "../../../typechain/AccessNFT";
-import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
 import { Coin } from "../../../typechain/Coin";
+import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
 
 // Types
 import { BigNumber, BigNumberish } from "ethers";
@@ -40,12 +40,14 @@ describe("List token for sale: Direct Listing", function () {
   let rewardId: number = 1;
 
   // Market params
-  let listingParams: ListingParametersStruct;
   enum ListingType { Direct = 0, Auction = 1 }
-  const price: BigNumber = getBoundedEtherAmount();
-  const amountOfTokenToList = getAmountBounded(rewardSupplies[0]);
-  const tokensPerBuyer = getAmountBounded(parseInt(amountOfTokenToList.toString()));
-  const openStartAndEnd: number = 0;
+  const buyoutPricePerToken: BigNumber = getBoundedEtherAmount();
+  const quantityToList = getAmountBounded(rewardSupplies[0]);
+  const tokensPerBuyer = getAmountBounded(parseInt(quantityToList.toString()));
+  const secondsUntilStartTime: number = 0;
+  const secondsUntilEndTime: number = 0;
+
+  let listingParams: ListingParametersStruct;
 
   before(async () => {
     // Get signers
@@ -82,14 +84,14 @@ describe("List token for sale: Direct Listing", function () {
       assetContract: accessNft.address,
       tokenId: rewardId,
       
-      secondsUntilStartTime: openStartAndEnd,
-      secondsUntilEndTime: openStartAndEnd,
+      secondsUntilStartTime: secondsUntilStartTime,
+      secondsUntilEndTime: secondsUntilEndTime,
 
-      quantityToList: amountOfTokenToList,
+      quantityToList: quantityToList,
       currencyToAccept: coin.address,
 
       reservePricePerToken: 0,
-      buyoutPricePerToken: price,
+      buyoutPricePerToken: buyoutPricePerToken,
       tokensPerBuyer: tokensPerBuyer,
 
       listingType: ListingType.Direct
@@ -151,10 +153,10 @@ describe("List token for sale: Direct Listing", function () {
           
           expect(_listing.endTime).to.be.gt(_listing.startTime);
 
-          expect(_listing.quantity).to.equal(amountOfTokenToList)
+          expect(_listing.quantity).to.equal(quantityToList)
           expect(_listing.currency).to.equal(coin.address);
           expect(_listing.reservePricePerToken).to.equal(0);
-          expect(_listing.buyoutPricePerToken).to.equal(price);
+          expect(_listing.buyoutPricePerToken).to.equal(buyoutPricePerToken);
           expect(_listing.tokensPerBuyer).to.equal(tokensPerBuyer);
           expect(_listing.tokenType).to.equal(0) // 0 == ERC1155
           expect(_listing.listingType).to.equal(ListingType.Direct);
@@ -216,10 +218,10 @@ describe("List token for sale: Direct Listing", function () {
           
       expect(_listing.endTime).to.be.gt(_listing.startTime);
 
-      expect(_listing.quantity).to.equal(amountOfTokenToList)
+      expect(_listing.quantity).to.equal(quantityToList)
       expect(_listing.currency).to.equal(coin.address);
       expect(_listing.reservePricePerToken).to.equal(0);
-      expect(_listing.buyoutPricePerToken).to.equal(price);
+      expect(_listing.buyoutPricePerToken).to.equal(buyoutPricePerToken);
       expect(_listing.tokensPerBuyer).to.equal(tokensPerBuyer);
       expect(_listing.tokenType).to.equal(0) // 0 == ERC1155
       expect(_listing.listingType).to.equal(ListingType.Direct);
