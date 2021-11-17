@@ -648,6 +648,9 @@ contract MarketWithAuction is
             _listing.currency, 
             _quantityToBuy * _listing.buyoutPricePerToken
         );
+
+        // Fails if listing is an auction, since creating an auction requires
+        // escrowing tokens in the Market.
         require(
             validateOwnershipAndApproval(
                 _listing.tokenOwner, 
@@ -659,21 +662,16 @@ contract MarketWithAuction is
             ),
             "Market: cannot buy tokens from this listing."
         );
+        
         require(
-            _listing.listingType == ListingType.Direct,
-            "Market: can only buy from direct listings."
-        );
-        require(
-            _quantityToBuy > 0 && _quantityToBuy <= _listing.quantity, 
+            _quantityToBuy > 0 
+                && _quantityToBuy <= _listing.quantity
+                && _quantityToBuy + boughtFromListing[_listing.listingId][_buyer] <= _listing.tokensPerBuyer,
             "Market: must buy an appropriate amount of tokens."
         );
         require(
             block.timestamp <= _listing.endTime && block.timestamp >= _listing.startTime,
             "Market: the sale has either not started or closed."
-        );
-        require(
-            _quantityToBuy + boughtFromListing[_listing.listingId][_buyer] <= _listing.tokensPerBuyer,
-            "Market: Cannot buy more from listing than permitted."
         );
     }
 
