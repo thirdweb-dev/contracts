@@ -338,14 +338,15 @@ contract MarketWithAuction is
         Listing memory targetListing = listings[_listingId];
 
         require(
-            validateOwnershipAndApproval(
-                targetListing.tokenOwner, 
-                targetListing.assetContract, 
-                targetListing.tokenId, 
-                targetOffer.quantityWanted, 
-                targetListing.tokenType,
-                targetListing.listingType
-            ), 
+            targetListing.listingType == ListingType.Direct
+                && validateOwnershipAndApproval(
+                    targetListing.tokenOwner, 
+                    targetListing.assetContract, 
+                    targetListing.tokenId, 
+                    targetOffer.quantityWanted, 
+                    targetListing.tokenType,
+                    targetListing.listingType
+                ), 
             "Market: must own and approve to transfer tokens."
         );
 
