@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -207,23 +208,16 @@ contract LazyNFT is
     }
 
     function _transferPayment(address currency, uint256 amount) private {
+        address payable recipient = payable(controlCenter.getRoyaltyTreasury(address(this)));
         if (currency == address(0)) {
             require(msg.value == amount, "value != amount");
+            Address.sendValue(recipient, msg.value);
         } else {
             require(
-                IERC20(currency).transferFrom(_msgSender(), controlCenter.getRoyaltyTreasury(address(this)), amount),
+                IERC20(currency).transferFrom(_msgSender(), recipient, amount),
                 "failed to transfer payment"
             );
         }
-    }
-
-    function withdrawFunds() external onlyProtocolAdmin {
-        address to = controlCenter.getRoyaltyTreasury(address(this));
-        uint256 balance = address(this).balance;
-        (bool sent, ) = payable(to).call{ value: balance }("");
-        require(sent, "failed to transfer funds");
-
-        emit FundsWithdrawn(to, balance);
     }
 
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
@@ -348,6 +342,10 @@ contract LazyNFT is
             }
         }
         revert("no active mint condition");
+    }
+
+    function getMintConditionCount() external view returns (uint256) {
+        return mintConditions.length;
     }
 
     /// @dev See EIP 2981

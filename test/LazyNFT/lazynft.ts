@@ -15,6 +15,7 @@ import { ProtocolControl } from "../../typechain/ProtocolControl";
 import { Coin } from "../../typechain/Coin";
 import { Market } from "../../typechain/Market";
 import { LazyNFT } from "../../typechain/LazyNFT";
+import { MockLazyNFTReentrant } from "../../typechain/MockLazyNFTReentrant";
 
 // Types
 import { BytesLike } from "@ethersproject/bytes";
@@ -448,7 +449,7 @@ describe("LazyNFT", function () {
         await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
       ).to.changeEtherBalances(
         [creator, lazynft, protocolControl],
-        [price.mul(-1).mul(quantity), price.mul(quantity), 0],
+        [price.mul(-1).mul(quantity), 0, price.mul(quantity)],
       );
     });
 
@@ -494,41 +495,6 @@ describe("LazyNFT", function () {
         coin,
         [creator, lazynft, protocolControl],
         [price.mul(-1).mul(quantity), 0, price.mul(quantity)],
-      );
-    });
-  });
-
-  describe("mint conditions: withdraw funds", function () {
-    const proofs = [ethers.utils.hexZeroPad([0], 32)];
-    beforeEach(async () => {
-      await lazynft.setMaxTotalSupply(100);
-      await lazynft.lazyMintAmount(100);
-    });
-
-    it("withdraw native tokens", async () => {
-      const price = ethers.utils.parseUnits("10", "ether");
-      await lazynft.setPublicMintConditions([
-        {
-          startTimestamp: 0,
-          maxMintSupply: ethers.constants.MaxUint256,
-          currentMintSupply: 0,
-          quantityLimitPerTransaction: ethers.constants.MaxUint256,
-          waitTimeSecondsLimitPerTransaction: 0,
-          pricePerToken: price,
-          currency: ethers.constants.AddressZero,
-          merkleRoot: ethers.utils.hexZeroPad([0], 32),
-        },
-      ]);
-      const quantity = 3;
-      await expect(
-        await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
-      ).to.changeEtherBalances(
-        [creator, lazynft, protocolControl],
-        [price.mul(-1).mul(quantity), price.mul(quantity), 0],
-      );
-      await expect(await lazynft.withdrawFunds()).to.changeEtherBalances(
-        [creator, lazynft, protocolControl],
-        [0, price.mul(-1).mul(quantity), price.mul(quantity)],
       );
     });
   });
@@ -637,6 +603,38 @@ describe("LazyNFT", function () {
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(3, proofs)).to.be.not.reverted;
       await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceed max mint supply");
+    });
+  });
+
+  let mockLazy: MockLazyNFTReentrant;
+  describe("re-entrancy tests", function () {
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(101);
+      await lazynft.lazyMintAmount(100);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 100,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 10000,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      mockLazy = await (await ethers.getContractFactory("MockLazyNFTReentrant")).deploy(lazynft.address);
+
+      await protocolAdmin.sendTransaction({
+        to: mockLazy.address,
+        value: ethers.utils.parseUnits("15", "ether"),
+      });
+    });
+
+    it("reentrant on onERC721Received", async () => {
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.attack()).to.be.revertedWith("ReentrancyGuard: reentrant call");
     });
   });
 });
