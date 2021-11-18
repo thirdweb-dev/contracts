@@ -499,6 +499,126 @@ describe("LazyNFT", function () {
     });
   });
 
+  describe("sale: primary sale payout", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+
+      await lazynft.setSaleRecipient(stakeHolder3.address);
+    });
+
+    it("claim 3 using native token with no fees", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      await expect(
+        await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
+      ).to.changeEtherBalances(
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [price.mul(-1).mul(quantity), 0, 0, price.mul(quantity)],
+      );
+    });
+
+    it("claim 3 using erc20 token with no fees", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: coin.address,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      await expect(coin.mint(creator.address, totalPrice)).to.not.be.reverted;
+      await expect(coin.connect(creator).approve(lazynft.address, totalPrice)).to.not.be.reverted;
+      await expect(() => lazynft.connect(creator).claim(quantity, proofs)).to.changeTokenBalances(
+        coin,
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [price.mul(-1).mul(quantity), 0, 0, price.mul(quantity)],
+      );
+    });
+  });
+
+  describe("sale: fees", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+
+      await lazynft.setFeeBps(1000); // 10%
+      await lazynft.setSaleRecipient(stakeHolder3.address);
+    });
+
+    it("claim 3 using native token with 10% fees to protocol", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      const fee = totalPrice.mul(BigNumber.from(1000)).div(BigNumber.from(MAX_BPS));
+      await expect(
+        await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
+      ).to.changeEtherBalances(
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [totalPrice.mul(-1), 0, fee, totalPrice.sub(fee)],
+      );
+    });
+
+    it("claim 3 using erc20 token with 10% fees to protocol", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: coin.address,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      const fee = totalPrice.mul(BigNumber.from(1000)).div(BigNumber.from(MAX_BPS));
+      await expect(coin.mint(creator.address, totalPrice)).to.not.be.reverted;
+      await expect(coin.connect(creator).approve(lazynft.address, totalPrice)).to.not.be.reverted;
+      await expect(() => lazynft.connect(creator).claim(quantity, proofs)).to.changeTokenBalances(
+        coin,
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [price.mul(-1).mul(quantity), 0, fee, price.mul(quantity).sub(fee)],
+      );
+    });
+  });
+
   describe("mint conditions: merkle roots", function () {
     beforeEach(async () => {
       await lazynft.setMaxTotalSupply(100);

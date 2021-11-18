@@ -42,6 +42,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "_feeBps",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_saleRecipient",
         "type": "address"
@@ -142,6 +147,19 @@
       }
     ],
     "name": "Claimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "feeBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "FeeUpdated",
     "type": "event"
   },
   {
@@ -411,19 +429,6 @@
   },
   {
     "inputs": [],
-    "name": "PAUSER_ROLE",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "TRANSFER_ROLE",
     "outputs": [
       {
@@ -511,6 +516,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "feeBps",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -904,13 +922,6 @@
   },
   {
     "inputs": [],
-    "name": "pause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "paused",
     "outputs": [
       {
@@ -1104,6 +1115,19 @@
       }
     ],
     "name": "setContractURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_feeBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "setFeeBps",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1356,13 +1380,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "unpause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

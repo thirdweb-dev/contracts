@@ -44,7 +44,6 @@ contract LazyNFT is
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     uint256 public maxTotalSupply;
 
@@ -81,6 +80,8 @@ contract LazyNFT is
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public royaltyBps;
 
+    uint256 public feeBps;
+
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
@@ -105,6 +106,7 @@ contract LazyNFT is
     event BaseTokenURIUpdated(string uri);
     event RestrictedTransferUpdated(bool transferable);
     event RoyaltyUpdated(uint256 royaltyBps);
+    event FeeUpdated(uint256 feeBps);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -126,6 +128,7 @@ contract LazyNFT is
         string memory _baseTokenUri,
         uint256 _maxSupply,
         uint256 _royaltyBps,
+        uint256 _feeBps,
         address _saleRecipient
     ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
@@ -140,15 +143,15 @@ contract LazyNFT is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
 
+        setFeeBps(_feeBps);
         setRoyaltyBps(_royaltyBps);
     }
 
-    function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
-        require((nextTokenId + _uris.length) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
+    function lazyMintBatch(string[] calldata _uris) external {
+        require(hasRole(MINTER_ROLE, _msgSender()), "only minter");
+        require((nextTokenId + _uris.length) <= maxTotalSupply, "exceed maxTotalSupply");
         uint256 id = nextTokenId;
         for (uint256 i = 0; i < _uris.length; i++) {
             uri[id] = _uris[i];
@@ -157,13 +160,13 @@ contract LazyNFT is
         nextTokenId = id;
     }
 
-    function lazyMintAmount(uint256 amount) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
-        require((nextTokenId + amount) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
+    function lazyMintAmount(uint256 amount) external {
+        require(hasRole(MINTER_ROLE, _msgSender()), "only minter");
+        require((nextTokenId + amount) <= maxTotalSupply, "exceed maxTotalSupply");
         nextTokenId += amount;
     }
 
-    function claim(uint256 quantity, bytes32[] calldata proofs) external payable nonReentrant whenNotPaused {
+    function claim(uint256 quantity, bytes32[] calldata proofs) external payable nonReentrant {
         uint256 conditionIndex = getLastStartedMintConditionIndex();
         PublicMintCondition memory currentMintCondition = mintConditions[conditionIndex];
 
@@ -199,7 +202,10 @@ contract LazyNFT is
         nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex] = newNextMintTimestamp;
 
         if (currentMintCondition.pricePerToken > 0) {
-            _transferPayment(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
+            uint256 totalPrice = quantity * currentMintCondition.pricePerToken;
+            uint256 feeCut = (totalPrice * feeBps) / MAX_BPS;
+            uint256 salePrice = totalPrice - feeCut;
+            _transferPaymentWithFee(currentMintCondition.currency, salePrice, feeCut);
         }
 
         uint256 startMintTokenId = nextMintTokenId;
@@ -211,16 +217,30 @@ contract LazyNFT is
         emit Claimed(_msgSender(), startMintTokenId, quantity, conditionIndex);
     }
 
-    function _transferPayment(address currency, uint256 amount) private {
+    function _transferPaymentWithFee(address currency, uint256 saleRecipientAmount, uint256 feeAmount) private {
         address payable recipient = payable(saleRecipient);
+        address payable feeRecipient = payable(controlCenter.getRoyaltyTreasury(address(this)));
+
         if (currency == address(0)) {
-            require(msg.value == amount, "value != amount");
-            Address.sendValue(recipient, msg.value);
+            require(msg.value == saleRecipientAmount + feeAmount, "value != amount");
+
+            Address.sendValue(recipient, saleRecipientAmount);
+
+            if (feeAmount > 0) {
+                Address.sendValue(feeRecipient, feeAmount);
+            }
         } else {
             require(
-                IERC20(currency).transferFrom(_msgSender(), recipient, amount),
+                IERC20(currency).transferFrom(_msgSender(), recipient, saleRecipientAmount),
                 "failed to transfer payment"
             );
+
+            if (feeAmount > 0) {
+                require(
+                    IERC20(currency).transferFrom(_msgSender(), feeRecipient, feeAmount),
+                    "failed to transfer fee"
+                );
+            }
         }
     }
 
@@ -281,9 +301,17 @@ contract LazyNFT is
         emit BaseTokenURIUpdated(_uri);
     }
 
+    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
+        require(_feeBps <= MAX_BPS, "bps <= 10000");
+
+        feeBps = _feeBps;
+
+        emit FeeUpdated(_feeBps);
+    }
+
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps provided must be less than 10,000");
+        require(_royaltyBps <= MAX_BPS, "bps <= 10000");
 
         royaltyBps = _royaltyBps;
 
@@ -295,34 +323,6 @@ contract LazyNFT is
         transfersRestricted = _restrictedTransfer;
 
         emit RestrictedTransferUpdated(_restrictedTransfer);
-    }
-
-    /**
-     * @dev Pauses all token transfers.
-     *
-     * See {ERC721Pausable} and {Pausable-_pause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function pause() external {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to pause");
-        _pause();
-    }
-
-    /**
-     * @dev Unpauses all token transfers.
-     *
-     * See {ERC721Pausable} and {Pausable-_unpause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function unpause() external {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to unpause");
-        _unpause();
     }
 
     /// @dev Runs on every transfer.
