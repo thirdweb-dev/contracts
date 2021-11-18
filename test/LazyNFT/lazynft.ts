@@ -731,6 +731,16 @@ describe("LazyNFT", function () {
     beforeEach(async () => {
       await lazynft.setMaxTotalSupply(101);
       await lazynft.lazyMintAmount(100);
+
+      mockLazy = await (await ethers.getContractFactory("MockLazyNFTReentrant")).deploy(lazynft.address);
+
+      await protocolAdmin.sendTransaction({
+        to: mockLazy.address,
+        value: ethers.utils.parseUnits("15", "ether"),
+      });
+    });
+
+    it("reentrant on onERC721Received no limit", async () => {
       await lazynft.setPublicMintConditions([
         {
           startTimestamp: 0,
@@ -744,17 +754,68 @@ describe("LazyNFT", function () {
         },
       ]);
 
-      mockLazy = await (await ethers.getContractFactory("MockLazyNFTReentrant")).deploy(lazynft.address);
-
-      await protocolAdmin.sendTransaction({
-        to: mockLazy.address,
-        value: ethers.utils.parseUnits("15", "ether"),
-      });
-    });
-
-    it("reentrant on onERC721Received", async () => {
       const proofs = [ethers.utils.hexZeroPad([0], 32)];
       await expect(mockLazy.attack()).to.be.revertedWith("ReentrancyGuard: reentrant call");
+    });
+
+    it("reentrant on receive (malicious sale recipient): max mint supply", async () => {
+      await lazynft.setSaleRecipient(mockLazy.address);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 1,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 10000,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.setAttackOnReceive(true)).to.not.be.reverted;
+      await expect(mockLazy.attack()).to.be.revertedWith("Address: unable to send value, recipient may have reverted");
+    });
+
+    it("reentrant on receive (malicious sale recipient): quantity limit per tx", async () => {
+      await lazynft.setSaleRecipient(mockLazy.address);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 10000,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 1,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.setAttackOnReceive(true)).to.not.be.reverted;
+      await expect(mockLazy.attack()).to.be.revertedWith("Address: unable to send value, recipient may have reverted");
+    });
+
+    it("reentrant on receive (malicious sale recipient): wait time seconds", async () => {
+      await lazynft.setSaleRecipient(mockLazy.address);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 10000,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 10000,
+          waitTimeSecondsLimitPerTransaction: 3600,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.setAttackOnReceive(true)).to.not.be.reverted;
+      await expect(mockLazy.attack()).to.be.revertedWith("Address: unable to send value, recipient may have reverted");
     });
   });
 });
