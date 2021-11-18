@@ -153,6 +153,7 @@ export async function getContracts(
           lazyBaseURI,
           lazyMaxSupply,
           0,
+          protocolControl.address,
         ),
     )) as LazyNFT;
 

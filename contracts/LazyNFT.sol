@@ -87,6 +87,8 @@ contract LazyNFT is
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
+    address public saleRecipient;
+
     /// @dev Collection level metadata.
     string private _contractURI;
 
@@ -123,7 +125,8 @@ contract LazyNFT is
         string memory _contractUri,
         string memory _baseTokenUri,
         uint256 _maxSupply,
-        uint256 _royaltyBps
+        uint256 _royaltyBps,
+        address _saleRecipient
     ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -133,6 +136,7 @@ contract LazyNFT is
         _baseTokenURI = _baseTokenUri;
 
         maxTotalSupply = _maxSupply;
+        saleRecipient = _saleRecipient;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
@@ -208,7 +212,7 @@ contract LazyNFT is
     }
 
     function _transferPayment(address currency, uint256 amount) private {
-        address payable recipient = payable(controlCenter.getRoyaltyTreasury(address(this)));
+        address payable recipient = payable(saleRecipient);
         if (currency == address(0)) {
             require(msg.value == amount, "value != amount");
             Address.sendValue(recipient, msg.value);
@@ -259,6 +263,10 @@ contract LazyNFT is
         }
 
         emit PublicMintConditionUpdated(mintConditions);
+    }
+
+    function setSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        saleRecipient = _saleRecipient;
     }
 
     function setMaxTotalSupply(uint256 maxSupply) external onlyModuleAdmin {

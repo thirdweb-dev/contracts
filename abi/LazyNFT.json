@@ -40,6 +40,11 @@
         "internalType": "uint256",
         "name": "_royaltyBps",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_saleRecipient",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -1047,6 +1052,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "saleRecipient",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1180,6 +1198,19 @@
       }
     ],
     "name": "setRoyaltyBps",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_saleRecipient",
+        "type": "address"
+      }
+    ],
+    "name": "setSaleRecipient",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
