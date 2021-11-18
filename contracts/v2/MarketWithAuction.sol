@@ -288,6 +288,10 @@ contract MarketWithAuction is
 
         if(targetListing.listingType == ListingType.Auction) {
             require(
+                targetListing.reservePricePerToken * targetListing.quantity <= _totalOfferAmount,
+                "Market: must bid at least reserve price."
+            );
+            require(
                 targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
                 "Market: can only make bids in auction duration."
             );
