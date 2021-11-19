@@ -353,23 +353,30 @@ contract MarketWithAuction is
             "Market: must own and approve to transfer tokens."
         );
 
-        targetListing.quantity -= targetOffer.quantityWanted;
+        uint256 quantityWanted = targetOffer.quantityWanted;
+        uint256 offerAmount = targetOffer.offerAmount;
+
+        targetOffer.quantityWanted = 0;
+        targetOffer.offerAmount = 0;
+        offers[_listingId][offeror] = targetOffer;
+
+        targetListing.quantity -= quantityWanted;
         listings[_listingId] = targetListing;
 
         payout(
             offeror, 
             targetListing.tokenOwner, 
-            targetOffer.offerAmount * targetOffer.quantityWanted, 
+            offerAmount * quantityWanted, 
             targetListing
         );
-        sendTokens(targetListing.tokenOwner, offeror, targetOffer.quantityWanted, targetListing);
+        sendTokens(targetListing.tokenOwner, offeror, quantityWanted, targetListing);
 
         emit NewDirectSale(
             targetListing.assetContract, 
             targetListing.tokenOwner, 
             _listingId, 
             offeror, 
-            targetOffer.quantityWanted,
+            quantityWanted,
             targetListing
         );
     }
