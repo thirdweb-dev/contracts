@@ -398,7 +398,7 @@ contract MarketWithAuction is
 
             require(
                 listings[_listingId].tokenOwner == closer,
-                "Market: caller does not the listing creator."
+                "Market: caller is not the listing creator."
             );
 
             // Auction is considered canceled if end time has passed.
