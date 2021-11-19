@@ -139,22 +139,20 @@ export async function getContracts(
   const lazyContractURI: string = "";
   const lazyBaseURI: string = "ipfs://baseuri/";
   const lazyMaxSupply = 420;
-  const lazynft: LazyNFT = (await ethers
-    .getContractFactory("LazyNFT")
-    .then(f =>
-      f
-        .connect(protocolAdmin)
-        .deploy(
-          protocolControl.address,
-          name,
-          symbol,
-          forwarder.address,
-          lazyContractURI,
-          lazyBaseURI,
-          lazyMaxSupply,
-          0,
-        ),
-    )) as LazyNFT;
+  const lazynft: LazyNFT = (await ethers.getContractFactory("LazyNFT").then(f =>
+    f.connect(protocolAdmin).deploy(
+      protocolControl.address,
+      name,
+      symbol,
+      forwarder.address,
+      lazyContractURI,
+      lazyBaseURI,
+      lazyMaxSupply,
+      0, // royalty
+      0, // fee
+      protocolControl.address, // sale recipient
+    ),
+  )) as LazyNFT;
 
   return {
     registry,
