@@ -26,8 +26,6 @@ import { ProtocolControl } from "../ProtocolControl.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-// TODO: Variable size optimizations; general gas optimizations.
-
 contract MarketWithAuction is
     IMarket,
     AccessControlEnumerable,
@@ -284,29 +282,34 @@ contract MarketWithAuction is
         override
         nonReentrant
     {
+        address offeror = _msgSender();
         Listing memory targetListing = listings[_listingId];
+
+        require(
+            targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
+            "Market: can only make offers in listing duration."
+        );
 
         if(targetListing.listingType == ListingType.Auction) {
             require(
                 targetListing.reservePricePerToken * targetListing.quantity <= _totalOfferAmount,
-                "Market: must bid at least reserve price."
+                "Market: must offer at least reserve price."
             );
+        } else if(targetListing.listingType == ListingType.Direct) {
             require(
-                targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
-                "Market: can only make bids in auction duration."
+                targetListing.quantity > 0,
+                "Market: no tokens listed for sale."
+            );
+            validateCurrencyBalAndApproval(
+                offeror, 
+                targetListing.currency, 
+                _totalOfferAmount
             );
         }
 
-        address offeror = _msgSender();
         uint256 quantityWanted = targetListing.listingType == ListingType.Auction
-            ? getSafeQuantity(targetListing.tokenType, targetListing.quantity)
-            : getSafeQuantity(targetListing.tokenType, _quantityWanted);
-
-        validateCurrencyBalAndApproval(
-            offeror, 
-            targetListing.currency, 
-            _totalOfferAmount
-        );
+                    ? getSafeQuantity(targetListing.tokenType, targetListing.quantity)
+                    : getSafeQuantity(targetListing.tokenType, _quantityWanted);
 
         Offer memory newOffer = Offer({
             listingId: _listingId,
@@ -462,39 +465,62 @@ contract MarketWithAuction is
     )
         internal
     {
+        
         Offer memory currentWinningBid = winningBid[_targetListing.listingId];
-
+        
         if(isNewHighestBid(currentWinningBid.offerAmount, _incomingOffer.offerAmount)) {
 
             address prevBidder = currentWinningBid.offeror;
-            uint256 prevBidAmount = currentWinningBid.offerAmount;  
+            uint256 prevBidAmount = currentWinningBid.offerAmount;
 
-            currentWinningBid = _incomingOffer;
-            
-            // Collect incoming bid and payout previous highest bidder.
-            handleIncomingBid(_targetListing.currency, _incomingOffer.offeror, _incomingOffer.offerAmount);
-            IERC20(_targetListing.currency).transferFrom(address(this), prevBidder, prevBidAmount);
+            currentWinningBid.offeror = _incomingOffer.offeror;
+            currentWinningBid.offerAmount = _incomingOffer.offerAmount;
+
+            bool isBuyout = _targetListing.buyoutPricePerToken > 0
+                    && _incomingOffer.offerAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity;
 
             // Close auction and execute sale if there's a buyout amount and incoming offer amount is buyout amount.
-            if(
-                _targetListing.buyoutPricePerToken > 0
-                    && _incomingOffer.offerAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity
-            ) {
-                
-                uint256 quantityToSend = currentWinningBid.quantityWanted;
-                currentWinningBid.quantityWanted = 0;
+            if(isBuyout) {
                 _targetListing.endTime = block.timestamp;
+                currentWinningBid.quantityWanted = 0;
 
-                sendTokens(address(this), currentWinningBid.offeror, quantityToSend, _targetListing);
-            
-            } else if(_targetListing.endTime - block.timestamp <= timeBuffer) {
-                _targetListing.endTime += timeBuffer;
+                winningBid[_targetListing.listingId] = currentWinningBid;
+                listings[_targetListing.listingId] = _targetListing;
+
+                emit AuctionClosed(
+                    _targetListing.listingId, 
+                    _incomingOffer.offeror, 
+                    _targetListing.tokenOwner,
+                    _incomingOffer.offeror, 
+                    _incomingOffer, 
+                    _targetListing
+                );
+
+            } else {
+
+                winningBid[_targetListing.listingId] = _incomingOffer;
+
+                if(_targetListing.endTime - block.timestamp <= timeBuffer) {
+                    _targetListing.endTime += timeBuffer;
+                    listings[_targetListing.listingId] = _targetListing;
+                }
+
+                emit NewBid(_targetListing.listingId, _incomingOffer.offeror, _incomingOffer, _targetListing);
             }
 
-            listings[_targetListing.listingId] = _targetListing;
-            winningBid[_targetListing.listingId] = currentWinningBid;
+            // Collect incoming bid
+            handleIncomingBid(_targetListing.currency, _incomingOffer.offeror, _incomingOffer.offerAmount);
 
-            emit NewBid(_targetListing.listingId, _incomingOffer.offeror, currentWinningBid, _targetListing);
+            // Send auctioned tokens to buyout bidder.
+            if(isBuyout) {
+                sendTokens(address(this), _incomingOffer.offeror, _incomingOffer.quantityWanted, _targetListing);
+            }
+
+            // Payout previous highest bid.
+            if(prevBidder != address(0) && prevBidAmount > 0) {                
+                IERC20(_targetListing.currency).approve(address(this), prevBidAmount);
+                IERC20(_targetListing.currency).transfer(prevBidder, prevBidAmount);
+            }
         }
     }
 
@@ -587,8 +613,11 @@ contract MarketWithAuction is
         view
         returns (bool isValidNewBid)
     {
-        isValidNewBid = _incomingBid >  _currentBid
-            && ((_incomingBid - _currentBid) * MAX_BPS) / _currentBid >= bidBufferBps;
+        isValidNewBid = _currentBid == 0
+            || (
+                _incomingBid >  _currentBid
+                    && ((_incomingBid - _currentBid) * MAX_BPS) / _currentBid >= bidBufferBps
+                );
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Market to transfer tokens.
