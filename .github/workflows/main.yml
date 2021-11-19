@@ -34,4 +34,4 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Run test
-        run: npx hardhat test
+        run: yarn test
