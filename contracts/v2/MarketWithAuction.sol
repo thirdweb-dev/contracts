@@ -431,7 +431,7 @@ contract MarketWithAuction is
             /**
              * Prevent re-entrancy by setting bid's offer amount, and listing's quantity to 0 before ERC20 transfer.
              */
-            uint256 payoutAmount = targetBid.offerAmount * targetListing.quantity;
+            uint256 payoutAmount = targetBid.offerAmount;
 
             targetListing.quantity = 0;
             targetListing.endTime = block.timestamp;
@@ -555,8 +555,11 @@ contract MarketWithAuction is
     ) 
         internal 
     {
-
         bool transferSuccess;
+
+        if(_payer == address(this)) {
+            transferSuccess = IERC20(_listing.currency).approve(_payer, _totalPayoutAmount);
+        }
 
         // Collect protocol fee
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
