@@ -1,0 +1,33 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockRoyaltyReentrantDistribute",
+  "sourceName": "contracts/test-helpers/MockRoyaltyReentrantDistribute.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "_royalty",
+          "type": "address"
+        }
+      ],
+      "name": "set",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610140806100206000396000f3fe6080604052600436106100225760003560e01c80632801617e1461009457600080fd5b3661008f57600080546040805163e4fc6b6d60e01b8152905173ffffffffffffffffffffffffffffffffffffffff9092169263e4fc6b6d9260048084019382900301818387803b15801561007557600080fd5b505af1158015610089573d6000803e3d6000fd5b50505050005b600080fd5b3480156100a057600080fd5b506100f66100af3660046100f8565b600080547fffffffffffffffffffffffff00000000000000000000000000000000000000001673ffffffffffffffffffffffffffffffffffffffff92909216919091179055565b005b600060208284031215610109578081fd5b813573ffffffffffffffffffffffffffffffffffffffff8116811461012c578182fd5b939250505056fea164736f6c6343000804000a",
+  "deployedBytecode": "0x6080604052600436106100225760003560e01c80632801617e1461009457600080fd5b3661008f57600080546040805163e4fc6b6d60e01b8152905173ffffffffffffffffffffffffffffffffffffffff9092169263e4fc6b6d9260048084019382900301818387803b15801561007557600080fd5b505af1158015610089573d6000803e3d6000fd5b50505050005b600080fd5b3480156100a057600080fd5b506100f66100af3660046100f8565b600080547fffffffffffffffffffffffff00000000000000000000000000000000000000001673ffffffffffffffffffffffffffffffffffffffff92909216919091179055565b005b600060208284031215610109578081fd5b813573ffffffffffffffffffffffffffffffffffffffff8116811461012c578182fd5b939250505056fea164736f6c6343000804000a",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

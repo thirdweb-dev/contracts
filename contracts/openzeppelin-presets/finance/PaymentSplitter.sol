@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * 1. Remove add payees and shares in the constructor, so inherited class is responsible for adding.
  * 2. Change _addPayee(...) visibility to internal. DANGEROUS: Make sure it is not called outside from constructor
  *    initialization.
+ * 3. Add distribute(...) to distribute all owed amount to all payees.
+ * 4. Add payeeCount() view to returns the number of payees.
  */
 
 /**
@@ -121,6 +123,13 @@ contract PaymentSplitter is Context {
     }
 
     /**
+     * @dev Getter for getting the number of payee
+     */
+    function payeeCount() public view returns (uint256) {
+        return _payees.length;
+    }
+
+    /**
      * @dev Triggers a transfer to `account` of the amount of Ether they are owed, according to their percentage of the
      * total shares and their previous withdrawals.
      */
@@ -157,6 +166,24 @@ contract PaymentSplitter is Context {
 
         SafeERC20.safeTransfer(token, account, payment);
         emit ERC20PaymentReleased(token, account, payment);
+    }
+
+    /**
+     * @dev Release the owed amount of token to all of the payees.
+     */
+    function distribute() public virtual {
+        for (uint256 i = 0; i < _payees.length; i++) {
+            release(payable(_payees[i]));
+        }
+    }
+
+    /**
+     * @dev Release owed amount of the `token` to all of the payees.
+     */
+    function distribute(IERC20 token) public virtual {
+        for (uint256 i = 0; i < _payees.length; i++) {
+            release(token, _payees[i]);
+        }
     }
 
     /**

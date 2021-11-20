@@ -15,6 +15,7 @@ import { ProtocolControl } from "../../typechain/ProtocolControl";
 import { Coin } from "../../typechain/Coin";
 import { Market } from "../../typechain/Market";
 import { LazyNFT } from "../../typechain/LazyNFT";
+import { MockLazyNFTReentrant } from "../../typechain/MockLazyNFTReentrant";
 
 // Types
 import { BytesLike } from "@ethersproject/bytes";
@@ -448,7 +449,7 @@ describe("LazyNFT", function () {
         await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
       ).to.changeEtherBalances(
         [creator, lazynft, protocolControl],
-        [price.mul(-1).mul(quantity), price.mul(quantity), 0],
+        [price.mul(-1).mul(quantity), 0, price.mul(quantity)],
       );
     });
 
@@ -498,14 +499,16 @@ describe("LazyNFT", function () {
     });
   });
 
-  describe("mint conditions: withdraw funds", function () {
+  describe("sale: primary sale payout", function () {
     const proofs = [ethers.utils.hexZeroPad([0], 32)];
     beforeEach(async () => {
       await lazynft.setMaxTotalSupply(100);
       await lazynft.lazyMintAmount(100);
+
+      await lazynft.setSaleRecipient(stakeHolder3.address);
     });
 
-    it("withdraw native tokens", async () => {
+    it("claim 3 using native token with no fees", async () => {
       const price = ethers.utils.parseUnits("10", "ether");
       await lazynft.setPublicMintConditions([
         {
@@ -523,12 +526,95 @@ describe("LazyNFT", function () {
       await expect(
         await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
       ).to.changeEtherBalances(
-        [creator, lazynft, protocolControl],
-        [price.mul(-1).mul(quantity), price.mul(quantity), 0],
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [price.mul(-1).mul(quantity), 0, 0, price.mul(quantity)],
       );
-      await expect(await lazynft.withdrawFunds()).to.changeEtherBalances(
-        [creator, lazynft, protocolControl],
-        [0, price.mul(-1).mul(quantity), price.mul(quantity)],
+    });
+
+    it("claim 3 using erc20 token with no fees", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: coin.address,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      await expect(coin.mint(creator.address, totalPrice)).to.not.be.reverted;
+      await expect(coin.connect(creator).approve(lazynft.address, totalPrice)).to.not.be.reverted;
+      await expect(() => lazynft.connect(creator).claim(quantity, proofs)).to.changeTokenBalances(
+        coin,
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [price.mul(-1).mul(quantity), 0, 0, price.mul(quantity)],
+      );
+    });
+  });
+
+  describe("sale: fees", function () {
+    const proofs = [ethers.utils.hexZeroPad([0], 32)];
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(100);
+      await lazynft.lazyMintAmount(100);
+
+      await lazynft.setFeeBps(1000); // 10%
+      await lazynft.setSaleRecipient(stakeHolder3.address);
+    });
+
+    it("claim 3 using native token with 10% fees to protocol", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      const fee = totalPrice.mul(BigNumber.from(1000)).div(BigNumber.from(MAX_BPS));
+      await expect(
+        await lazynft.connect(creator).claim(quantity, proofs, { value: price.mul(quantity) }),
+      ).to.changeEtherBalances(
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [totalPrice.mul(-1), 0, fee, totalPrice.sub(fee)],
+      );
+    });
+
+    it("claim 3 using erc20 token with 10% fees to protocol", async () => {
+      const price = ethers.utils.parseUnits("10", "ether");
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: ethers.constants.MaxUint256,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: ethers.constants.MaxUint256,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: price,
+          currency: coin.address,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+      const quantity = 3;
+      const totalPrice = price.mul(quantity);
+      const fee = totalPrice.mul(BigNumber.from(1000)).div(BigNumber.from(MAX_BPS));
+      await expect(coin.mint(creator.address, totalPrice)).to.not.be.reverted;
+      await expect(coin.connect(creator).approve(lazynft.address, totalPrice)).to.not.be.reverted;
+      await expect(() => lazynft.connect(creator).claim(quantity, proofs)).to.changeTokenBalances(
+        coin,
+        [creator, lazynft, protocolControl, stakeHolder3],
+        [price.mul(-1).mul(quantity), 0, fee, price.mul(quantity).sub(fee)],
       );
     });
   });
@@ -637,6 +723,99 @@ describe("LazyNFT", function () {
       await ethers.provider.send("evm_mine", [(await ethers.provider.getBlock("latest")).timestamp + 120]);
       await expect(lazynft.claim(3, proofs)).to.be.not.reverted;
       await expect(lazynft.claim(1, proofs)).to.be.revertedWith("exceed max mint supply");
+    });
+  });
+
+  let mockLazy: MockLazyNFTReentrant;
+  describe("re-entrancy tests", function () {
+    beforeEach(async () => {
+      await lazynft.setMaxTotalSupply(101);
+      await lazynft.lazyMintAmount(100);
+
+      mockLazy = await (await ethers.getContractFactory("MockLazyNFTReentrant")).deploy(lazynft.address);
+
+      await protocolAdmin.sendTransaction({
+        to: mockLazy.address,
+        value: ethers.utils.parseUnits("15", "ether"),
+      });
+    });
+
+    it("reentrant on onERC721Received no limit", async () => {
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 100,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 10000,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.attack()).to.be.revertedWith("ReentrancyGuard: reentrant call");
+    });
+
+    it("reentrant on receive (malicious sale recipient): max mint supply", async () => {
+      await lazynft.setSaleRecipient(mockLazy.address);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 1,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 10000,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.setAttackOnReceive(true)).to.not.be.reverted;
+      await expect(mockLazy.attack()).to.be.revertedWith("Address: unable to send value, recipient may have reverted");
+    });
+
+    it("reentrant on receive (malicious sale recipient): quantity limit per tx", async () => {
+      await lazynft.setSaleRecipient(mockLazy.address);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 10000,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 1,
+          waitTimeSecondsLimitPerTransaction: 0,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.setAttackOnReceive(true)).to.not.be.reverted;
+      await expect(mockLazy.attack()).to.be.revertedWith("Address: unable to send value, recipient may have reverted");
+    });
+
+    it("reentrant on receive (malicious sale recipient): wait time seconds", async () => {
+      await lazynft.setSaleRecipient(mockLazy.address);
+      await lazynft.setPublicMintConditions([
+        {
+          startTimestamp: 0,
+          maxMintSupply: 10000,
+          currentMintSupply: 0,
+          quantityLimitPerTransaction: 10000,
+          waitTimeSecondsLimitPerTransaction: 3600,
+          pricePerToken: ethers.utils.parseUnits("1", "ether"),
+          currency: ethers.constants.AddressZero,
+          merkleRoot: ethers.utils.hexZeroPad([0], 32),
+        },
+      ]);
+
+      const proofs = [ethers.utils.hexZeroPad([0], 32)];
+      await expect(mockLazy.setAttackOnReceive(true)).to.not.be.reverted;
+      await expect(mockLazy.attack()).to.be.revertedWith("Address: unable to send value, recipient may have reverted");
     });
   });
 });

@@ -6,6 +6,7 @@ import "./openzeppelin-presets/finance/PaymentSplitter.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 import { Registry } from "./Registry.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -14,7 +15,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is PaymentSplitter, ERC2771Context {
+contract Royalty is PaymentSplitter, ERC2771Context, Multicall {
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
@@ -65,7 +66,8 @@ contract Royalty is PaymentSplitter, ERC2771Context {
         }
 
         // WARNING: Do not call _addPayee outside of this constructor.
-        _addPayee(registry.treasury(), totalScaledShares - totalScaledSharesMinusFee);
+        uint256 totalFeeShares = totalScaledShares - totalScaledSharesMinusFee;
+        _addPayee(registry.treasury(), totalFeeShares);
     }
 
     /// @dev See ERC2771
