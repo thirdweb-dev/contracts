@@ -63,60 +63,6 @@ contract ERC1155PresetMinterPauserSupplyHolder is
     }
 
     /**
-     * @dev See {ERC1155-_mint}.
-     */
-    function _mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual override {
-        super._mint(account, id, amount, data);
-        _totalSupply[id] += amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_mintBatch}.
-     */
-    function _mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._mintBatch(to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            _totalSupply[ids[i]] += amounts[i];
-        }
-    }
-
-    /**
-     * @dev See {ERC1155-_burn}.
-     */
-    function _burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) internal virtual override {
-        super._burn(account, id, amount);
-        _totalSupply[id] -= amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_burnBatch}.
-     */
-    function _burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual override {
-        super._burnBatch(account, ids, amounts);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            _totalSupply[ids[i]] -= amounts[i];
-        }
-    }
-
-    /**
      * @dev Creates `amount` new tokens for `to`, of token type `id`.
      *
      * See {ERC1155-_mint}.
@@ -191,6 +137,9 @@ contract ERC1155PresetMinterPauserSupplyHolder is
         return super.supportsInterface(interfaceId);
     }
 
+    /**
+     * @dev See {ERC1155-_beforeTokenTransfer}.
+     */
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -200,5 +149,17 @@ contract ERC1155PresetMinterPauserSupplyHolder is
         bytes memory data
     ) internal virtual override(ERC1155, ERC1155Pausable) {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                _totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                _totalSupply[ids[i]] -= amounts[i];
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -38,10 +39,11 @@ contract LazyNFT is
     using Counters for Counters.Counter;
     using Strings for uint256;
 
+    uint256 private constant MAX_BPS = 10_000;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     uint256 public maxTotalSupply;
 
@@ -78,11 +80,15 @@ contract LazyNFT is
     /// @dev Pack sale royalties -- see EIP 2981
     uint256 public royaltyBps;
 
+    uint256 public feeBps;
+
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
+
+    address public saleRecipient;
 
     /// @dev Collection level metadata.
     string private _contractURI;
@@ -100,6 +106,7 @@ contract LazyNFT is
     event BaseTokenURIUpdated(string uri);
     event RestrictedTransferUpdated(bool transferable);
     event RoyaltyUpdated(uint256 royaltyBps);
+    event FeeUpdated(uint256 feeBps);
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -119,7 +126,10 @@ contract LazyNFT is
         address _trustedForwarder,
         string memory _contractUri,
         string memory _baseTokenUri,
-        uint256 maxSupply
+        uint256 _maxSupply,
+        uint256 _royaltyBps,
+        uint256 _feeBps,
+        address _saleRecipient
     ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -128,17 +138,20 @@ contract LazyNFT is
         _contractURI = _contractUri;
         _baseTokenURI = _baseTokenUri;
 
-        maxTotalSupply = maxSupply;
+        maxTotalSupply = _maxSupply;
+        saleRecipient = _saleRecipient;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
+
+        setFeeBps(_feeBps);
+        setRoyaltyBps(_royaltyBps);
     }
 
-    function lazyMintBatch(string[] calldata _uris) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
-        require((nextTokenId + _uris.length) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
+    function lazyMintBatch(string[] calldata _uris) external {
+        require(hasRole(MINTER_ROLE, _msgSender()), "only minter");
+        require((nextTokenId + _uris.length) <= maxTotalSupply, "exceed maxTotalSupply");
         uint256 id = nextTokenId;
         for (uint256 i = 0; i < _uris.length; i++) {
             uri[id] = _uris[i];
@@ -147,13 +160,13 @@ contract LazyNFT is
         nextTokenId = id;
     }
 
-    function lazyMintAmount(uint256 amount) external whenNotPaused {
-        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
-        require((nextTokenId + amount) <= maxTotalSupply, "cannot mint more than maxTotalSupply");
+    function lazyMintAmount(uint256 amount) external {
+        require(hasRole(MINTER_ROLE, _msgSender()), "only minter");
+        require((nextTokenId + amount) <= maxTotalSupply, "exceed maxTotalSupply");
         nextTokenId += amount;
     }
 
-    function claim(uint256 quantity, bytes32[] calldata proofs) external payable nonReentrant whenNotPaused {
+    function claim(uint256 quantity, bytes32[] calldata proofs) external payable nonReentrant {
         uint256 conditionIndex = getLastStartedMintConditionIndex();
         PublicMintCondition memory currentMintCondition = mintConditions[conditionIndex];
 
@@ -175,10 +188,6 @@ contract LazyNFT is
             require(MerkleProof.verify(proofs, currentMintCondition.merkleRoot, leaf), "invalid proofs");
         }
 
-        if (currentMintCondition.pricePerToken > 0) {
-            _transferPayment(currentMintCondition.currency, quantity * currentMintCondition.pricePerToken);
-        }
-
         mintConditions[conditionIndex].currentMintSupply += quantity;
 
         uint256 newNextMintTimestamp = currentMintCondition.waitTimeSecondsLimitPerTransaction;
@@ -192,6 +201,13 @@ contract LazyNFT is
 
         nextMintTimestampByCondition[_msgSender()][nextMintTimestampConditionIndex] = newNextMintTimestamp;
 
+        if (currentMintCondition.pricePerToken > 0) {
+            uint256 totalPrice = quantity * currentMintCondition.pricePerToken;
+            uint256 feeCut = (totalPrice * feeBps) / MAX_BPS;
+            uint256 salePrice = totalPrice - feeCut;
+            _transferPaymentWithFee(currentMintCondition.currency, salePrice, feeCut);
+        }
+
         uint256 startMintTokenId = nextMintTokenId;
         for (uint256 i = 0; i < quantity; i++) {
             _safeMint(_msgSender(), nextMintTokenId);
@@ -201,24 +217,31 @@ contract LazyNFT is
         emit Claimed(_msgSender(), startMintTokenId, quantity, conditionIndex);
     }
 
-    function _transferPayment(address currency, uint256 amount) private {
+    function _transferPaymentWithFee(address currency, uint256 saleRecipientAmount, uint256 feeAmount) private {
+        address payable recipient = payable(saleRecipient);
+        address payable feeRecipient = payable(controlCenter.getRoyaltyTreasury(address(this)));
+
         if (currency == address(0)) {
-            require(msg.value == amount, "value != amount");
+            require(msg.value == saleRecipientAmount + feeAmount, "value != amount");
+
+            Address.sendValue(recipient, saleRecipientAmount);
+
+            if (feeAmount > 0) {
+                Address.sendValue(feeRecipient, feeAmount);
+            }
         } else {
             require(
-                IERC20(currency).transferFrom(_msgSender(), controlCenter.getRoyaltyTreasury(address(this)), amount),
+                IERC20(currency).transferFrom(_msgSender(), recipient, saleRecipientAmount),
                 "failed to transfer payment"
             );
+
+            if (feeAmount > 0) {
+                require(
+                    IERC20(currency).transferFrom(_msgSender(), feeRecipient, feeAmount),
+                    "failed to transfer fee"
+                );
+            }
         }
-    }
-
-    function withdrawFunds() external onlyProtocolAdmin {
-        address to = controlCenter.getRoyaltyTreasury(address(this));
-        uint256 balance = address(this).balance;
-        (bool sent, ) = payable(to).call{ value: balance }("");
-        require(sent, "failed to transfer funds");
-
-        emit FundsWithdrawn(to, balance);
     }
 
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
@@ -262,6 +285,10 @@ contract LazyNFT is
         emit PublicMintConditionUpdated(mintConditions);
     }
 
+    function setSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        saleRecipient = _saleRecipient;
+    }
+
     function setMaxTotalSupply(uint256 maxSupply) external onlyModuleAdmin {
         maxTotalSupply = maxSupply;
 
@@ -274,9 +301,17 @@ contract LazyNFT is
         emit BaseTokenURIUpdated(_uri);
     }
 
+    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
+        require(_feeBps <= MAX_BPS, "bps <= 10000");
+
+        feeBps = _feeBps;
+
+        emit FeeUpdated(_feeBps);
+    }
+
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "bps provided must be less than 10,000");
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "bps <= 10000");
 
         royaltyBps = _royaltyBps;
 
@@ -288,34 +323,6 @@ contract LazyNFT is
         transfersRestricted = _restrictedTransfer;
 
         emit RestrictedTransferUpdated(_restrictedTransfer);
-    }
-
-    /**
-     * @dev Pauses all token transfers.
-     *
-     * See {ERC721Pausable} and {Pausable-_pause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to pause");
-        _pause();
-    }
-
-    /**
-     * @dev Unpauses all token transfers.
-     *
-     * See {ERC721Pausable} and {Pausable-_unpause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role to unpause");
-        _unpause();
     }
 
     /// @dev Runs on every transfer.
@@ -345,6 +352,10 @@ contract LazyNFT is
         revert("no active mint condition");
     }
 
+    function getMintConditionCount() external view returns (uint256) {
+        return mintConditions.length;
+    }
+
     /// @dev See EIP 2981
     function royaltyInfo(uint256, uint256 salePrice)
         external
@@ -354,7 +365,7 @@ contract LazyNFT is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -379,7 +390,7 @@ contract LazyNFT is
     }
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
+    function contractURI() external view returns (string memory) {
         return _contractURI;
     }
 
