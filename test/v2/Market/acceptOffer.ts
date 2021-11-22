@@ -18,7 +18,7 @@ import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../../utils/tests/params";
 import { sendGaslessTx } from "../../../utils/tests/gasless";
 
-describe("Offer: direct listing", function () {
+describe("Accept offer: direct listing", function () {
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
