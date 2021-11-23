@@ -526,11 +526,11 @@ contract MarketWithAuction is
 
             // Payout previous highest bid.
             if(prevBidder != address(0) && prevBidAmount > 0) {                
-                transferCurrency(_targetListing.currency, address(this), prevBidder, prevBidAmount);
+                transferCurrency(_targetListing.currency, address(this), prevBidder, prevBidAmount, false);
             }
 
             // Collect incoming bid
-            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), _incomingOffer.offerAmount);
+            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), _incomingOffer.offerAmount, true);
 
             // Send auctioned tokens to buyout bidder.
             if(isBuyout) {
@@ -559,7 +559,8 @@ contract MarketWithAuction is
         address _currency,
         address _from,
         address _to,
-        uint256 _quantity
+        uint256 _quantity,
+        bool toCheck
     )
         internal
     {
@@ -589,12 +590,12 @@ contract MarketWithAuction is
 
         if(_to == address(this) && _currency == nativeToken) {
             require(
-                success && _quantity == msg.value,
+                (!toCheck || success) && _quantity == msg.value,
                 "Market: failed to send currency."
             );
         } else {
             require(
-                success && balAfter == balBefore + _quantity,
+                (!toCheck || success) && balAfter == balBefore + _quantity,
                 "Market: failed to send currency."
             );
         }
