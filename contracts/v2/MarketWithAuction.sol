@@ -515,18 +515,18 @@ contract MarketWithAuction is
                 emit NewBid(_targetListing.listingId, _incomingOffer.offeror, _incomingOffer, _targetListing);
             }
 
+            // Payout previous highest bid.
+            if(prevBidder != address(0) && prevBidAmount > 0) {                
+                IERC20(_targetListing.currency).approve(address(this), prevBidAmount);
+                IERC20(_targetListing.currency).transfer(prevBidder, prevBidAmount);
+            }
+
             // Collect incoming bid
             handleIncomingBid(_targetListing.currency, _incomingOffer.offeror, _incomingOffer.offerAmount);
 
             // Send auctioned tokens to buyout bidder.
             if(isBuyout) {
                 sendTokens(address(this), _incomingOffer.offeror, _incomingOffer.quantityWanted, _targetListing);
-            }
-
-            // Payout previous highest bid.
-            if(prevBidder != address(0) && prevBidAmount > 0) {                
-                IERC20(_targetListing.currency).approve(address(this), prevBidAmount);
-                IERC20(_targetListing.currency).transfer(prevBidder, prevBidAmount);
             }
         }
     }
