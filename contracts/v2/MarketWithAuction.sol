@@ -50,6 +50,9 @@ contract MarketWithAuction is
     /// @dev Whether listing is restricted by LISTER_ROLE.
     bool public restrictedListerRoleOnly;
 
+    /// @dev The address interpreted as native token of the chain.
+    address public constant nativeToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
 
@@ -261,7 +264,7 @@ contract MarketWithAuction is
         }
 
         // Transfer tokens being bought to buyer.
-        sendTokens(targetListing.tokenOwner, buyer, _quantityToBuy, targetListing);
+        transferListingTokens(targetListing.tokenOwner, buyer, _quantityToBuy, targetListing);
 
         emit NewDirectSale(
             targetListing.assetContract, 
@@ -279,6 +282,7 @@ contract MarketWithAuction is
         uint256 _totalOfferAmount
     ) 
         external
+        payable
         override
         nonReentrant
     {
@@ -369,7 +373,7 @@ contract MarketWithAuction is
             offerAmount * quantityWanted, 
             targetListing
         );
-        sendTokens(targetListing.tokenOwner, offeror, quantityWanted, targetListing);
+        transferListingTokens(targetListing.tokenOwner, offeror, quantityWanted, targetListing);
 
         emit NewDirectSale(
             targetListing.assetContract, 
@@ -407,7 +411,7 @@ contract MarketWithAuction is
             targetListing.endTime = block.timestamp;
             listings[_listingId] = targetListing;
 
-            sendTokens(address(this), targetListing.tokenOwner, quantityToSend, targetListing);
+            transferListingTokens(address(this), targetListing.tokenOwner, quantityToSend, targetListing);
 
             emit AuctionCanceled(_listingId, targetListing.tokenOwner, targetListing);
 
@@ -456,11 +460,16 @@ contract MarketWithAuction is
             targetBid.quantityWanted = 0;
             winningBid[_listingId] = targetBid;
 
-            sendTokens(address(this), targetBid.offeror, quantityToSend, targetListing);
+            transferListingTokens(address(this), targetBid.offeror, quantityToSend, targetListing);
         }
         
 
         emit AuctionClosed(_listingId, closer, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
+    }
+
+    /// @dev Let the contract accept ether
+    receive() external payable {
+        emit EtherReceived(_msgSender(), msg.value);
     }
 
     //  =====   Internal functions  =====
@@ -517,22 +526,21 @@ contract MarketWithAuction is
 
             // Payout previous highest bid.
             if(prevBidder != address(0) && prevBidAmount > 0) {                
-                IERC20(_targetListing.currency).approve(address(this), prevBidAmount);
-                IERC20(_targetListing.currency).transfer(prevBidder, prevBidAmount);
+                transferCurrency(_targetListing.currency, address(this), prevBidder, prevBidAmount);
             }
 
             // Collect incoming bid
-            handleIncomingBid(_targetListing.currency, _incomingOffer.offeror, _incomingOffer.offerAmount);
+            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), _incomingOffer.offerAmount);
 
             // Send auctioned tokens to buyout bidder.
             if(isBuyout) {
-                sendTokens(address(this), _incomingOffer.offeror, _incomingOffer.quantityWanted, _targetListing);
+                transferListingTokens(address(this), _incomingOffer.offeror, _incomingOffer.quantityWanted, _targetListing);
             }
         }
     }
 
-    /// @dev Sends the appropriate kind of token to caller.
-    function sendTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
+    /// @dev Transfers tokens listed for sale in a direct or auction listing.
+    function transferListingTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
             IERC1155(_listing.assetContract).safeTransferFrom(
                 _from,
@@ -543,6 +551,52 @@ contract MarketWithAuction is
             );
         } else if (_listing.tokenType == TokenType.ERC721) {
             IERC721(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, "");
+        }
+    }
+
+    /// @dev Transfers the given amount of currency.
+    function transferCurrency(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _quantity
+    )
+        internal
+    {
+        bool toApproveSelf = _from == address(this);
+        
+        uint256 balBefore;
+        uint256 balAfter;
+        bool success;
+
+        if(_currency == nativeToken) {
+
+            balBefore = _to.balance;
+            (success,) = _to.call{value: _quantity}("");
+            balAfter = _to.balance;
+
+        } else {
+            IERC20 currency = IERC20(_currency);   
+
+            if(toApproveSelf) {
+                currency.approve(_from, _quantity);
+            }
+
+            balBefore = IERC20(_currency).balanceOf(_to);         
+            success = currency.transferFrom(_from, _to, _quantity);
+            balAfter = IERC20(_currency).balanceOf(_to);
+        }
+
+        if(_to == address(this) && _currency == nativeToken) {
+            require(
+                success && _quantity == msg.value,
+                "Market: failed to send currency."
+            );
+        } else {
+            require(
+                success && balAfter == balBefore + _quantity,
+                "Market: failed to send currency."
+            );
         }
     }
 
@@ -592,26 +646,6 @@ contract MarketWithAuction is
         transferSuccess = IERC20(_listing.currency).transferFrom(_payer, _payee, remainder);
 
         require(transferSuccess, "Market: failed to payout stakeholders.");
-    }
-
-    /// @dev See https://github.com/ourzora/auction-house/blob/main/contracts/AuctionHouse.sol#L331-L338
-    function handleIncomingBid(
-        address _currency,
-        address _from, 
-        uint256 _amount
-    )
-        internal
-    {
-        address to = address(this);
-
-        uint256 balBefore = IERC20(_currency).balanceOf(to);
-        bool success = IERC20(_currency).transferFrom(_from, to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(to);
-
-        require(
-            success && balAfter == balBefore + _amount,
-            "Market: failed to receive incoming bid."
-        );
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.

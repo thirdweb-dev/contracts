@@ -107,7 +107,10 @@ interface IMarket {
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
 
     /// @dev Emitted when LISTER_ROLE restriction is updated.
-    event RestrictedListerRoleUpdated(bool restricted);   
+    event RestrictedListerRoleUpdated(bool restricted);
+
+    /// @dev Emitted when contract receives ether.
+    event EtherReceived(address from, uint256 amount);
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing.
     function createListing(
@@ -134,7 +137,7 @@ interface IMarket {
         uint256 _listingId, 
         uint256 _quantityWanted, 
         uint256 _totalOfferAmount
-    ) external;
+    ) external payable;
 
     // /// @dev Lets a listing's creator accept an offer for their direct listing.
     function acceptOffer(uint256 _listingId, address offeror) external;
