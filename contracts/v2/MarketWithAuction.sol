@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Interface
 import { IMarket } from "./IMarket.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
 
 // Tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -52,6 +53,9 @@ contract MarketWithAuction is
 
     /// @dev The address interpreted as native token of the chain.
     address public constant nativeToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The address of the native token wrapper contract.
+    address public immutable nativeTokenWrapper;
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
@@ -107,12 +111,14 @@ contract MarketWithAuction is
     constructor(
         address payable _controlCenter,
         address _trustedForwarder,
+        address _nativeTokenWrapper,
         string memory _uri,
         uint256 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
 
         _contractURI = _uri; // Contract level metadata
         controlCenter = ProtocolControl(_controlCenter); // Top level control center contract.
+        nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -526,11 +532,11 @@ contract MarketWithAuction is
 
             // Payout previous highest bid.
             if(prevBidder != address(0) && prevBidAmount > 0) {                
-                transferCurrency(_targetListing.currency, address(this), prevBidder, prevBidAmount, false);
+                transferCurrency(_targetListing.currency, address(this), prevBidder, prevBidAmount);
             }
 
             // Collect incoming bid
-            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), _incomingOffer.offerAmount, true);
+            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), _incomingOffer.offerAmount);
 
             // Send auctioned tokens to buyout bidder.
             if(isBuyout) {
@@ -554,51 +560,62 @@ contract MarketWithAuction is
         }
     }
 
-    /// @dev Transfers the given amount of currency.
     function transferCurrency(
         address _currency,
         address _from,
         address _to,
-        uint256 _quantity,
-        bool toCheck
+        uint256 _amount
     )
         internal
     {
-        bool toApproveSelf = _from == address(this);
-        
-        uint256 balBefore;
-        uint256 balAfter;
-        bool success;
-
         if(_currency == nativeToken) {
 
-            balBefore = _to.balance;
-            (success,) = _to.call{value: _quantity}("");
-            balAfter = _to.balance;
+            if(_from == address(this)) {
+                IWETH(nativeTokenWrapper).withdraw(_amount);
 
-        } else {
-            IERC20 currency = IERC20(_currency);   
-
-            if(toApproveSelf) {
-                currency.approve(_from, _quantity);
+                if(!safeTransferNativeToken(_to, _amount)) {
+                    IWETH(nativeTokenWrapper).deposit{value: _amount}();
+                    safeTransferERC20(_currency, address(this), _to, _amount);
+                }
+            } else if (_to == address(this)) {
+                require(_amount == msg.value, "Market: native token value does not match bid amount.");
+                IWETH(nativeTokenWrapper).deposit{value: _amount}();
+            } else {
+                if(!safeTransferNativeToken(_to, _amount)) {
+                    IWETH(nativeTokenWrapper).deposit{value: _amount}();
+                    safeTransferERC20(_currency, address(this), _to, _amount);
+                }
             }
-
-            balBefore = IERC20(_currency).balanceOf(_to);         
-            success = currency.transferFrom(_from, _to, _quantity);
-            balAfter = IERC20(_currency).balanceOf(_to);
-        }
-
-        if(_to == address(this) && _currency == nativeToken) {
-            require(
-                (!toCheck || success) && _quantity == msg.value,
-                "Market: failed to send currency."
-            );
         } else {
-            require(
-                (!toCheck || success) && balAfter == balBefore + _quantity,
-                "Market: failed to send currency."
-            );
+            safeTransferERC20(_currency, _from, _to, _amount);
         }
+    }
+
+    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
+    function safeTransferERC20(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    )
+        internal
+    {
+        // TODO: check if it is efficient to perform the approval here.
+        if(_from == address(this)) {
+            IERC20(_currency).approve(address(this), _amount);
+        }
+
+        uint256 balBefore = IERC20(_currency).balanceOf(_to);
+        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
+        uint256 balAfter = IERC20(_currency).balanceOf(_to);
+
+        require(success && balAfter == balBefore + _amount, "Market: failed to transfer currency.");
+    }
+
+    /// @dev Transfers `amount` of native token to `to`.
+    function safeTransferNativeToken(address to, uint256 value) internal returns (bool) {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        return success;
     }
 
     /// @dev Payout stakeholders on sale
@@ -610,20 +627,10 @@ contract MarketWithAuction is
     ) 
         internal 
     {
-        bool transferSuccess;
-
-        if(_payer == address(this)) {
-            transferSuccess = IERC20(_listing.currency).approve(_payer, _totalPayoutAmount);
-        }
-
         // Collect protocol fee
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
 
-        transferSuccess = IERC20(_listing.currency).transferFrom(
-            _payer,
-            controlCenter.getRoyaltyTreasury(address(this)),
-            marketCut
-        );
+        transferCurrency(_listing.currency, _payer, controlCenter.getRoyaltyTreasury(address(this)), marketCut);
 
         uint256 remainder = _totalPayoutAmount - marketCut;
 
@@ -639,14 +646,12 @@ contract MarketWithAuction is
 
                 remainder -= royaltyAmount;
 
-                transferSuccess = IERC20(_listing.currency).transferFrom(_payer, royaltyReceiver, royaltyAmount);
+                transferCurrency(_listing.currency, _payer, royaltyReceiver, royaltyAmount);
             }
         }
 
         // Distribute price to token owner
-        transferSuccess = IERC20(_listing.currency).transferFrom(_payer, _payee, remainder);
-
-        require(transferSuccess, "Market: failed to payout stakeholders.");
+        transferCurrency(_listing.currency, _payer, _payee, remainder);
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.

@@ -12,6 +12,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "_nativeTokenWrapper",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "_uri",
         "type": "string"
@@ -1429,6 +1434,19 @@
   {
     "inputs": [],
     "name": "nativeToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nativeTokenWrapper",
     "outputs": [
       {
         "internalType": "address",
