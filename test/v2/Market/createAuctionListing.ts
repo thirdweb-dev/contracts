@@ -1,99 +1,90 @@
 import { ethers } from "hardhat";
-import { expect } from "chai";
+import { expect, use } from "chai";
+import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { Forwarder } from "../../../typechain/Forwarder";
-import { AccessNFT } from "../../../typechain/AccessNFT";
-import { Coin } from "../../../typechain/Coin";
+import { MockERC1155 } from "../../../typechain/MockERC1155";
 import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
 
 // Types
-import { BigNumberish } from "ethers";
-import { BytesLike } from "@ethersproject/bytes";
+import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts, Contracts } from "../../../utils/tests/getContracts";
-import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../../utils/tests/params";
-import { sendGaslessTx } from "../../../utils/tests/gasless";
+
+use(solidity);
 
 describe("List token for sale: Auction Listing", function () {
+  // Constants
+  const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
-  let creator: SignerWithAddress;
-  let relayer: SignerWithAddress;
+  let lister: SignerWithAddress;
 
   // Contracts
   let marketv2: MarketWithAuction;
-  let accessNft: AccessNFT;
-  let coin: Coin;
-  let forwarder: Forwarder;
+  let mockNft: MockERC1155;
 
-  // Reward parameters
-  const rewardURIs: string[] = getURIs();
-  const accessURIs = getURIs(rewardURIs.length);
-  const rewardSupplies: number[] = getAmounts(rewardURIs.length);
-  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
+  // MockERC1155: `mint` parameters
+  const nftTokenId: BigNumber = BigNumber.from(1);
+  const nftTokenSupply: BigNumber = BigNumber.from(
+    Math.floor((1 + Math.random())) * 100
+  );
 
-  // Token IDs
-  let rewardId: number = 1;
-
-  // Market params
-  enum ListingType { Direct = 0, Auction = 1 }
-  const buyoutPricePerToken: BigNumberish = 0;
-  const reservePricePerToken: BigNumberish = getBoundedEtherAmount();
-  const quantityToList = getAmountBounded(rewardSupplies[0]);
-  const tokensPerBuyer = getAmountBounded(parseInt(quantityToList.toString()));
-  const secondsUntilStartTime: number = 0;
-  const secondsUntilEndTime: number = 0;
-
+  // Market: `createListing` params
+  enum ListingType { Direct, Auction }
+  enum TokenType { ERC1155, ERC721 }
+  let listingId: BigNumber;
   let listingParams: ListingParametersStruct;
+
+  // Semantic helpers
+  const mintNftToLister = async () => await mockNft.connect(protocolAdmin).mint(
+    lister.address,
+    nftTokenId,
+    nftTokenSupply,
+    ethers.utils.toUtf8Bytes("")
+  );
+
+  const approveMarketToTransferTokens = async (toApprove: boolean) => await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
 
   before(async () => {
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolProvider, protocolAdmin, creator, relayer] = signers;
+    [protocolProvider, protocolAdmin, lister] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
+    mockNft = await ethers.getContractFactory("MockERC1155").then(f => f.connect(protocolAdmin).deploy());
     const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     marketv2 = contracts.marketv2;
-    accessNft = contracts.accessNft;
-    coin = contracts.coin;
-    forwarder = contracts.forwarder;
 
-    // Grant minter role to creator
-    const MINTER_ROLE = await accessNft.MINTER_ROLE();
-    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+    // Setup: mint NFT to `lister` for `lister` to list these NFTs for sale.
+    await mintNftToLister();
 
-    // Create access tokens
-    await sendGaslessTx(creator, forwarder, relayer, {
-      from: creator.address,
-      to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
-        creator.address,
-        rewardURIs,
-        accessURIs,
-        rewardSupplies,
-        emptyData,
-      ]),
-    });
+    // Setup: `lister` approves Market to transfer tokens.
+    await approveMarketToTransferTokens(true);
 
+    // Setup: get expected listingId
+    listingId = await marketv2.totalListings();
+
+    // Setup: set default `createListing` paramters.
     listingParams = {
-      assetContract: accessNft.address,
-      tokenId: rewardId,
+      assetContract: mockNft.address,
+      tokenId: nftTokenId,
       
-      secondsUntilStartTime: secondsUntilStartTime,
-      secondsUntilEndTime: secondsUntilEndTime,
+      secondsUntilStartTime: BigNumber.from(100),
+      secondsUntilEndTime: BigNumber.from(1000),
 
-      quantityToList: quantityToList,
-      currencyToAccept: coin.address,
+      quantityToList: nftTokenSupply,
+      currencyToAccept: NATIVE_TOKEN_ADDRESS,
 
-      reservePricePerToken: reservePricePerToken,
-      buyoutPricePerToken: buyoutPricePerToken,
-      tokensPerBuyer: tokensPerBuyer,
+      reservePricePerToken: ethers.utils.parseEther("0.1"),
+      buyoutPricePerToken: ethers.utils.parseEther("0.2"),
+      tokensPerBuyer: BigNumber.from(1),
 
       listingType: ListingType.Auction
     }
@@ -101,136 +92,117 @@ describe("List token for sale: Auction Listing", function () {
 
   describe("Revert cases", function() {
     it("Should revert if listing zero quantity.", async () => {
-
-      const incorrectParams = listingParams;
-      incorrectParams.quantityToList = 0;
+      
+      // Invalid behaviour: listing 0 NFTs for auction.
+      const incorrectParams = {...listingParams, quantityToList: 0 };
 
       await expect(
-        marketv2.connect(creator).createListing(incorrectParams)
+        marketv2.connect(lister).createListing(incorrectParams)
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
     })
 
     it("Should revert if lister has insufficient token balance", async () => {
+
+      // Invalid behaviour: lister does not own the amount of tokens they they want to auction.
       await expect(
-        marketv2.connect(relayer).createListing(listingParams)
+        marketv2.connect(protocolAdmin).createListing(listingParams)
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
     })
 
     it("Should revert if market doesn't have lister's approval to transfer tokens", async () => {
+
+      // Invalid behaviour: `lister` has not approved Market to transfer tokens being listed.
+      await approveMarketToTransferTokens(false);
+
       await expect(
-        marketv2.connect(creator).createListing(listingParams)
+        marketv2.connect(lister).createListing(listingParams)
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
     })
   })
 
   describe("Events", function() {
 
-    beforeEach(async () => {
-      // Approve Market to transfer tokens
-      await accessNft.connect(creator).setApprovalForAll(marketv2.address, true);
-    })
-
     it("Should emit NewListing with all relevant info", async () => {
+    
+      /**
+       * Hardhat increments block timestamp by 1 on every transaction.
+       * So, the timestamp during the `createListing` transaction will be the current timestamp + 1.
+       */
+      const timeStampOnCreateListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
 
-      const expectedListingId: BigNumberish = await marketv2.totalListings();
-      
-      const eventPromise = new Promise((resolve, reject) => {
-        
-        marketv2.on("NewListing", (
-          _assetContract,
-          _seller,
-          _listingId,
-          _listing
-        ) => {
-
-          expect(_assetContract).to.equal(accessNft.address);
-          expect(_seller).to.equal(creator.address);
-          expect(_listingId).to.equal(expectedListingId);
-
-          expect(_listing.listingId).to.equal(expectedListingId);
-          expect(_listing.tokenOwner).to.equal(creator.address);
-          expect(_listing.assetContract).to.equal(accessNft.address);
-          expect(_listing.tokenId).to.equal(rewardId);
-          
-          expect(_listing.endTime).to.be.gt(_listing.startTime);
-
-          expect(_listing.quantity).to.equal(quantityToList)
-          expect(_listing.currency).to.equal(coin.address);
-          expect(_listing.reservePricePerToken).to.equal(reservePricePerToken);
-          expect(_listing.buyoutPricePerToken).to.equal(buyoutPricePerToken);
-          expect(_listing.tokensPerBuyer).to.equal(tokensPerBuyer);
-          expect(_listing.tokenType).to.equal(0) // 0 == ERC1155
-          expect(_listing.listingType).to.equal(ListingType.Auction);
-
-          resolve(null);
+      await expect(
+        marketv2.connect(lister).createListing(listingParams)  
+      ).to.emit(marketv2, "NewListing")
+      .withArgs(
+        mockNft.address,
+        lister.address,
+        listingId,
+        Object.values({
+          listingId: listingId,
+          tokenOwner: lister.address,
+          assetContract: listingParams.assetContract,
+          tokenId: listingParams.tokenId,
+          startTime: timeStampOnCreateListing.add(listingParams.secondsUntilStartTime),
+          endTime: timeStampOnCreateListing.add(listingParams.secondsUntilEndTime),
+          quantity: listingParams.quantityToList,
+          currency: listingParams.currencyToAccept,
+          reservePricePerToken: listingParams.reservePricePerToken,
+          buyoutPricePerToken: listingParams.buyoutPricePerToken,
+          tokensPerBuyer: listingParams.tokensPerBuyer,
+          tokenType: TokenType.ERC1155,
+          listingType: ListingType.Auction
         })
-
-        setTimeout(() => {
-          reject(new Error("Timeout: NewListing"))
-        }, 10000);
-      })
-
-      await marketv2.connect(creator).createListing(listingParams);
-      await eventPromise.catch(e => console.error(e));
+      )
     })
   })
 
   describe("Token balances", function() {
 
-    beforeEach(async () => {
-      // Approve Market to transfer tokens
-      await accessNft.connect(creator).setApprovalForAll(marketv2.address, true);
-    })
-
     it("Should transfer tokens listed from lister to market", async () => {
-      const listerBalBefore: BigNumberish = await accessNft.balanceOf(creator.address, rewardId);
-      const marketBalBefore: BigNumberish = await accessNft.balanceOf(marketv2.address, rewardId);
+      const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
+      const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
 
-      await marketv2.connect(creator).createListing(listingParams);
+      await marketv2.connect(lister).createListing(listingParams);
       
-      const listerBalAfter: BigNumberish = await accessNft.balanceOf(creator.address, rewardId);
-      const marketBalAfter: BigNumberish = await accessNft.balanceOf(marketv2.address, rewardId);
+      const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
+      const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
 
-      expect(listerBalBefore).to.equal(listerBalAfter.add(quantityToList))
-      expect(marketBalAfter).to.equal(marketBalBefore.add(quantityToList))
+      expect(listerBalBefore).to.equal(listerBalAfter.add(listingParams.quantityToList))
+      expect(marketBalAfter).to.equal(marketBalBefore.add(listingParams.quantityToList))
     })
   })
 
   describe("Contract state", function () {
-    
-    beforeEach(async () => {
-      // Approve Market to transfer tokens
-      await accessNft.connect(creator).setApprovalForAll(marketv2.address, true);
-    })
 
     it("Should increment the total listings on the contract", async () => {
-      const totalListingsBefore: BigNumberish = await marketv2.totalListings();
-      await marketv2.connect(creator).createListing(listingParams);
-      const totalListingAfter: BigNumberish = await marketv2.totalListings();
+      const totalListingsBefore: BigNumber = await marketv2.totalListings();
+      await marketv2.connect(lister).createListing(listingParams);
+      const totalListingAfter: BigNumber = await marketv2.totalListings();
 
       expect(totalListingAfter.sub(totalListingsBefore)).to.equal(1)
     })
 
     it("Should store the listing's state", async () => {
-      const listingId: BigNumberish = await marketv2.totalListings();
-      await marketv2.connect(creator).createListing(listingParams);
 
-      const _listing: ListingStruct = await marketv2.listings(listingId);
+      const timeStampOnCreateListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
 
-      expect(_listing.listingId).to.equal(listingId);
-      expect(_listing.tokenOwner).to.equal(creator.address);
-      expect(_listing.assetContract).to.equal(accessNft.address);
-      expect(_listing.tokenId).to.equal(rewardId);
-          
-      expect(_listing.endTime).to.be.gt(_listing.startTime);
+      await marketv2.connect(lister).createListing(listingParams);
 
-      expect(_listing.quantity).to.equal(quantityToList)
-      expect(_listing.currency).to.equal(coin.address);
-      expect(_listing.reservePricePerToken).to.equal(reservePricePerToken);
-      expect(_listing.buyoutPricePerToken).to.equal(buyoutPricePerToken);
-      expect(_listing.tokensPerBuyer).to.equal(tokensPerBuyer);
-      expect(_listing.tokenType).to.equal(0) // 0 == ERC1155
-      expect(_listing.listingType).to.equal(ListingType.Auction);
+      const listing: ListingStruct = await marketv2.listings(listingId);
+
+      expect(listing.listingId).to.equal(listingId);
+      expect(listing.tokenOwner).to.equal(lister.address);
+      expect(listing.assetContract).to.equal(mockNft.address);
+      expect(listing.tokenId).to.equal(listingParams.tokenId);
+      expect(listing.startTime).to.equal(timeStampOnCreateListing.add(listingParams.secondsUntilStartTime))
+      expect(listing.endTime).to.equal(timeStampOnCreateListing.add(listingParams.secondsUntilEndTime))
+      expect(listing.quantity).to.equal(listingParams.quantityToList)
+      expect(listing.currency).to.equal(listingParams.currencyToAccept);
+      expect(listing.reservePricePerToken).to.equal(listingParams.reservePricePerToken);
+      expect(listing.buyoutPricePerToken).to.equal(listingParams.buyoutPricePerToken);
+      expect(listing.tokensPerBuyer).to.equal(listingParams.tokensPerBuyer);
+      expect(listing.tokenType).to.equal(TokenType.ERC1155)
+      expect(listing.listingType).to.equal(ListingType.Auction);
     })
   })
 });

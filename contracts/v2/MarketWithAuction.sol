@@ -712,11 +712,17 @@ contract MarketWithAuction is
         internal
         view
     {
-        require(
-            IERC20(_currency).balanceOf(_caller) >= _balanceToCheck
-                && IERC20(_currency).allowance(_caller, address(this)) >= _balanceToCheck,
-            "Market: must own and approve Market to transfer currency."
-        );
+
+        bool success;
+
+        if(_currency == nativeToken) {
+            success = _caller.balance >= _balanceToCheck;
+        } else {
+            success = IERC20(_currency).balanceOf(_caller) >= _balanceToCheck
+                && IERC20(_currency).allowance(_caller, address(this)) >= _balanceToCheck;
+        }
+
+        require(success, "Market: must own and approve Market to transfer currency.");
     }
 
     /// @dev Validates conditions of a direct listing sale.
