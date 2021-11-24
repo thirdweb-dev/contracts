@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { Forwarder } from "../../../typechain/Forwarder";
 import { AccessNFT } from "../../../typechain/AccessNFT";
 import { Coin } from "../../../typechain/Coin";
+import { WETH9 } from "../../../typechain/WETH9";
 import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
 
 // Types
@@ -27,6 +28,7 @@ describe("Bid: Auction Listing", function () {
 
   // Contracts
   let marketv2: MarketWithAuction;
+  let weth: WETH9
   let accessNft: AccessNFT;
   let coin: Coin;
   let forwarder: Forwarder;
@@ -67,6 +69,7 @@ describe("Bid: Auction Listing", function () {
     accessNft = contracts.accessNft;
     coin = contracts.coin;
     forwarder = contracts.forwarder;
+    weth = contracts.weth;
 
     // Grant minter role to creator
     const MINTER_ROLE = await accessNft.MINTER_ROLE();
@@ -362,7 +365,7 @@ describe("Bid: Auction Listing", function () {
       const offerAmount = reservePricePerToken.mul(quantityToList);
 
       const buyerBalBefore: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalBefore: BigNumber = await ethers.provider.getBalance(marketv2.address);
+      const marketBalBefore: BigNumber = await weth.balanceOf(marketv2.address);
 
       const gasPrice = ethers.utils.parseUnits("1", "gwei");
       const tx = await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount, { value: offerAmount, gasPrice })
@@ -370,7 +373,7 @@ describe("Bid: Auction Listing", function () {
       const gasPaid = gasPrice.mul(gasUsed);
 
       const buyerBalAfter: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalAfter: BigNumber = await ethers.provider.getBalance(marketv2.address);
+      const marketBalAfter: BigNumber = await weth.balanceOf(marketv2.address);
 
       expect(buyerBalAfter).to.equal(buyerBalBefore.sub(offerAmount.add(gasPaid)))
       expect(marketBalAfter).to.equal(marketBalBefore.add(offerAmount));
@@ -382,15 +385,10 @@ describe("Bid: Auction Listing", function () {
         ethers.utils.parseEther("0.1")
       );
       const lowOfferAmount = reservePricePerToken.mul(quantityToList);
-
-      // Mint currency to prevBuyer
-      await coin.connect(protocolAdmin).mint(relayer.address, buyoutPricePerToken.mul(quantityToList));
-      // Approve Market to transfer currency
-      await coin.connect(relayer).approve(marketv2.address, buyoutPricePerToken.mul(quantityToList));
       
       const prevBuyerBalBefore: BigNumber = await ethers.provider.getBalance(relayer.address)
       const buyerBalBefore: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalBefore: BigNumber = await ethers.provider.getBalance(marketv2.address);
+      const marketBalBefore: BigNumber = await weth.balanceOf(marketv2.address);
 
       const gasPrice = ethers.utils.parseUnits("1", "gwei");
       
@@ -404,7 +402,7 @@ describe("Bid: Auction Listing", function () {
       
       const prevBuyerBalAfter: BigNumber = await ethers.provider.getBalance(relayer.address)
       const buyerBalAfter: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalAfter: BigNumber = await ethers.provider.getBalance(marketv2.address);
+      const marketBalAfter: BigNumber = await weth.balanceOf(marketv2.address);
       
       expect(prevBuyerBalAfter).to.equal(prevBuyerBalBefore.sub(gasPaid1))
       expect(buyerBalAfter).to.equal(buyerBalBefore.sub(highOfferAmount.add(gasPaid2)))
