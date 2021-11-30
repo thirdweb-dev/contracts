@@ -85,7 +85,6 @@ describe("Edit listing: direct listing", function () {
 
       reservePricePerToken: ethers.utils.parseEther("0.1"),
       buyoutPricePerToken: ethers.utils.parseEther("0.2"),
-      tokensPerBuyer: BigNumber.from(1),
 
       listingType: ListingType.Direct
     }
@@ -105,7 +104,6 @@ describe("Edit listing: direct listing", function () {
           invalidNewQuantity,
           listingParams.reservePricePerToken,
           listingParams.buyoutPricePerToken,
-          listingParams.tokensPerBuyer,
           listingParams.currencyToAccept,
           listingParams.secondsUntilStartTime,
           listingParams.secondsUntilEndTime
@@ -116,7 +114,6 @@ describe("Edit listing: direct listing", function () {
 
   describe("Events", function() {
     it("Should emit ListingUpdate with new listing info", async () => {
-      const newTokensPerBuyer: BigNumber = (listingParams.tokensPerBuyer as BigNumber).add(1);
       const newSecondsUntilStartTime: BigNumber = BigNumber.from(1000);
       const newSecondsUntilEndTime: BigNumber = BigNumber.from(5000);
 
@@ -128,7 +125,6 @@ describe("Edit listing: direct listing", function () {
           listingParams.quantityToList,
           listingParams.reservePricePerToken,
           listingParams.buyoutPricePerToken,
-          newTokensPerBuyer,
           listingParams.currencyToAccept,
           newSecondsUntilStartTime,
           newSecondsUntilEndTime
@@ -148,7 +144,6 @@ describe("Edit listing: direct listing", function () {
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
           buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokensPerBuyer: newTokensPerBuyer,
           tokenType: TokenType.ERC1155,
           listingType: ListingType.Direct
         })
@@ -167,7 +162,6 @@ describe("Edit listing: direct listing", function () {
         newListingQuantity,
         listingParams.reservePricePerToken,
         listingParams.buyoutPricePerToken,
-        listingParams.tokensPerBuyer,
         listingParams.currencyToAccept,
         listingParams.secondsUntilStartTime,
         listingParams.secondsUntilEndTime
@@ -180,7 +174,6 @@ describe("Edit listing: direct listing", function () {
 
   describe("Contract state", function() {
     it("Should store the edited listing state", async () => {
-      const newTokensPerBuyer: BigNumber = (listingParams.tokensPerBuyer as BigNumber).add(1);
       const newSecondsUntilStartTime: BigNumber = BigNumber.from(1000);
       const newSecondsUntilEndTime: BigNumber = BigNumber.from(6000);
 
@@ -191,7 +184,6 @@ describe("Edit listing: direct listing", function () {
         listingParams.quantityToList,
         listingParams.reservePricePerToken,
         listingParams.buyoutPricePerToken,
-        newTokensPerBuyer,
         listingParams.currencyToAccept,
         newSecondsUntilStartTime,
         newSecondsUntilEndTime
@@ -209,7 +201,6 @@ describe("Edit listing: direct listing", function () {
       expect(listing.currency).to.equal(listingParams.currencyToAccept);
       expect(listing.reservePricePerToken).to.equal(listingParams.reservePricePerToken);
       expect(listing.buyoutPricePerToken).to.equal(listingParams.buyoutPricePerToken);
-      expect(listing.tokensPerBuyer).to.equal(newTokensPerBuyer);
       expect(listing.tokenType).to.equal(TokenType.ERC1155)
       expect(listing.listingType).to.equal(ListingType.Direct);
     })

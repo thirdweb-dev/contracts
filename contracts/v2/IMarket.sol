@@ -36,7 +36,6 @@ interface IMarket {
 
         uint256 reservePricePerToken;
         uint256 buyoutPricePerToken;
-        uint256 tokensPerBuyer;
 
         ListingType listingType;
     }
@@ -57,7 +56,6 @@ interface IMarket {
 
         uint256 reservePricePerToken;
         uint256 buyoutPricePerToken;
-        uint256 tokensPerBuyer;
         
         TokenType tokenType;
         ListingType listingType;
@@ -123,7 +121,6 @@ interface IMarket {
         uint256 _quantityToList,
         uint256 _reservePricePerToken,    
         uint256 _buyoutPricePerToken,
-        uint256 _tokensPerBuyer,
         address _currencyToAccept,
         uint256 _secondsUntilStartTime,
         uint256 _secondsUntilEndTime

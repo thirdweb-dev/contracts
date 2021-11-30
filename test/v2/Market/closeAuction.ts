@@ -46,7 +46,6 @@ describe("Close / Cancel auction", function () {
   const reservePricePerToken: BigNumberish = ethers.utils.parseEther("1");
   const totalQuantityOwned: BigNumberish = rewardSupplies[0]
   const quantityToList = totalQuantityOwned;
-  const tokensPerBuyer = 1;
   const secondsUntilStartTime: number = 100;
   const secondsUntilEndTime: number = 200;
 
@@ -99,7 +98,6 @@ describe("Close / Cancel auction", function () {
 
       reservePricePerToken: reservePricePerToken,
       buyoutPricePerToken: buyoutPricePerToken,
-      tokensPerBuyer: tokensPerBuyer,
 
       listingType: ListingType.Auction
     }
@@ -149,7 +147,6 @@ describe("Close / Cancel auction", function () {
             expect(_listing.currency).to.equal(coin.address);
             expect(_listing.reservePricePerToken).to.equal(reservePricePerToken);
             expect(_listing.buyoutPricePerToken).to.equal(buyoutPricePerToken);
-            expect(_listing.tokensPerBuyer).to.equal(tokensPerBuyer);
             expect(_listing.tokenType).to.equal(0) // 0 == ERC1155
             expect(_listing.listingType).to.equal(ListingType.Auction);
 

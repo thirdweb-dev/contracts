@@ -78,9 +78,6 @@ contract MarketWithAuction is
     /// @dev listingId => current highest bid
     mapping(uint => Offer) public winningBid;
 
-    /// @dev listingId => buyer address => tokens bought
-    mapping(uint256 => mapping(address => uint256)) public boughtFromListing;
-
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
         require(
@@ -167,8 +164,7 @@ contract MarketWithAuction is
             currency: _params.currencyToAccept,
 
             reservePricePerToken: _params.reservePricePerToken,
-            buyoutPricePerToken: _params.buyoutPricePerToken,
-            tokensPerBuyer: _params.tokensPerBuyer == 0 ? _params.quantityToList : _params.tokensPerBuyer,            
+            buyoutPricePerToken: _params.buyoutPricePerToken,  
             
             tokenType: tokenTypeOfListing,
             listingType: _params.listingType
@@ -185,7 +181,6 @@ contract MarketWithAuction is
         uint256 _quantityToList,
         uint256 _reservePricePerToken,    
         uint256 _buyoutPricePerToken,
-        uint256 _tokensPerBuyer,
         address _currencyToAccept,
         uint256 _secondsUntilStartTime,
         uint256 _secondsUntilEndTime
@@ -197,10 +192,7 @@ contract MarketWithAuction is
         Listing memory targetListing = listings[_listingId];
         uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
 
-        /**
-         * E.g. `_reservePricePerToken` is specific to auctions, whereas
-         * e.g. `_tokensPerBuyer` is specific to direct listings.
-         */        
+        // Can only edit auction listing during before it starts.
         if(targetListing.listingType == ListingType.Auction) {
             require(
                 targetListing.startTime < block.timestamp,
@@ -212,7 +204,8 @@ contract MarketWithAuction is
 
         }
 
-        if(targetListing.quantity != _quantityToList) {
+        // Must validate ownership and approval of the new quantity of tokens for diret listing.
+        if(targetListing.listingType == ListingType.Direct && targetListing.quantity != _quantityToList) {
             require(
                 validateOwnershipAndApproval(
                     targetListing.tokenOwner, 
@@ -228,7 +221,6 @@ contract MarketWithAuction is
         }
 
         targetListing.currency = _currencyToAccept;
-        targetListing.tokensPerBuyer = _tokensPerBuyer;
         targetListing.startTime = _secondsUntilStartTime == 0
             ? targetListing.startTime
             : block.timestamp + _secondsUntilStartTime;
@@ -257,7 +249,6 @@ contract MarketWithAuction is
 
         targetListing.quantity -= _quantityToBuy;
         listings[_listingId] = targetListing;
-        boughtFromListing[_listingId][buyer] += _quantityToBuy;
 
         // Distribute sale value to stakeholders
         if (targetListing.buyoutPricePerToken > 0) {
@@ -754,9 +745,7 @@ contract MarketWithAuction is
         );
         
         require(
-            _quantityToBuy > 0 
-                && _quantityToBuy <= _listing.quantity
-                && _quantityToBuy + boughtFromListing[_listing.listingId][_buyer] <= _listing.tokensPerBuyer,
+            _quantityToBuy > 0 && _quantityToBuy <= _listing.quantity,
             "Market: must buy an appropriate amount of tokens."
         );
         require(

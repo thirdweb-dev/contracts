@@ -90,11 +90,6 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
-              "type": "uint256"
-            },
-            {
               "internalType": "enum IMarket.TokenType",
               "name": "tokenType",
               "type": "uint8"
@@ -222,11 +217,6 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
-              "type": "uint256"
-            },
-            {
               "internalType": "enum IMarket.TokenType",
               "name": "tokenType",
               "type": "uint8"
@@ -330,11 +320,6 @@
             {
               "internalType": "uint256",
               "name": "buyoutPricePerToken",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
               "type": "uint256"
             },
             {
@@ -466,11 +451,6 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
-              "type": "uint256"
-            },
-            {
               "internalType": "enum IMarket.TokenType",
               "name": "tokenType",
               "type": "uint8"
@@ -576,11 +556,6 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
-              "type": "uint256"
-            },
-            {
               "internalType": "enum IMarket.TokenType",
               "name": "tokenType",
               "type": "uint8"
@@ -671,11 +646,6 @@
             {
               "internalType": "uint256",
               "name": "buyoutPricePerToken",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
               "type": "uint256"
             },
             {
@@ -791,11 +761,6 @@
             {
               "internalType": "uint256",
               "name": "buyoutPricePerToken",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
               "type": "uint256"
             },
             {
@@ -925,11 +890,6 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "tokensPerBuyer",
-              "type": "uint256"
-            },
-            {
               "internalType": "enum IMarket.ListingType",
               "name": "listingType",
               "type": "uint8"
@@ -965,11 +925,6 @@
         {
           "internalType": "uint256",
           "name": "_buyoutPricePerToken",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_tokensPerBuyer",
           "type": "uint256"
         },
         {

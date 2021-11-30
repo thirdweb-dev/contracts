@@ -84,7 +84,6 @@ describe("List token for sale: Auction Listing", function () {
 
       reservePricePerToken: ethers.utils.parseEther("0.1"),
       buyoutPricePerToken: ethers.utils.parseEther("0.2"),
-      tokensPerBuyer: BigNumber.from(1),
 
       listingType: ListingType.Auction
     }
@@ -148,7 +147,6 @@ describe("List token for sale: Auction Listing", function () {
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
           buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokensPerBuyer: listingParams.tokensPerBuyer,
           tokenType: TokenType.ERC1155,
           listingType: ListingType.Auction
         })
@@ -200,7 +198,6 @@ describe("List token for sale: Auction Listing", function () {
       expect(listing.currency).to.equal(listingParams.currencyToAccept);
       expect(listing.reservePricePerToken).to.equal(listingParams.reservePricePerToken);
       expect(listing.buyoutPricePerToken).to.equal(listingParams.buyoutPricePerToken);
-      expect(listing.tokensPerBuyer).to.equal(listingParams.tokensPerBuyer);
       expect(listing.tokenType).to.equal(TokenType.ERC1155)
       expect(listing.listingType).to.equal(ListingType.Auction);
     })

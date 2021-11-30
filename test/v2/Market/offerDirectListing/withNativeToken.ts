@@ -104,7 +104,6 @@ describe("Offer with native token: direct listing", function () {
 
       reservePricePerToken: ethers.utils.parseEther("0.1"),
       buyoutPricePerToken: ethers.utils.parseEther("0.2"),
-      tokensPerBuyer: BigNumber.from(1),
 
       listingType: ListingType.Direct
     }
@@ -184,7 +183,6 @@ describe("Offer with native token: direct listing", function () {
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
           buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokensPerBuyer: listingParams.tokensPerBuyer,
           tokenType: TokenType.ERC1155,
           listingType: ListingType.Direct
         })

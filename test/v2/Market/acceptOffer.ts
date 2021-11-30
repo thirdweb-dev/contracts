@@ -47,7 +47,6 @@ describe("Accept offer: direct listing", function () {
   const buyoutPricePerToken: BigNumber = ethers.utils.parseEther("2");
   const totalQuantityOwned: BigNumberish = rewardSupplies[0]
   const quantityToList = totalQuantityOwned;
-  const tokensPerBuyer = totalQuantityOwned - 5;
   const secondsUntilStartTime: number = 0;
   const secondsUntilEndTime: number = 0;
 
@@ -105,7 +104,6 @@ describe("Accept offer: direct listing", function () {
 
       reservePricePerToken: 0,
       buyoutPricePerToken: buyoutPricePerToken,
-      tokensPerBuyer: tokensPerBuyer,
 
       listingType: ListingType.Direct
     }

@@ -47,7 +47,6 @@ describe("Buy: direct listing", function () {
   const buyoutPricePerToken: BigNumber = getBoundedEtherAmount();
   const totalQuantityOwned: BigNumberish = rewardSupplies[0]
   const quantityToList = totalQuantityOwned;
-  const tokensPerBuyer = totalQuantityOwned - 5;
   const secondsUntilStartTime: number = 0;
   const secondsUntilEndTime: number = 0;
 
@@ -102,7 +101,6 @@ describe("Buy: direct listing", function () {
 
       reservePricePerToken: 0,
       buyoutPricePerToken: buyoutPricePerToken,
-      tokensPerBuyer: tokensPerBuyer,
 
       listingType: ListingType.Direct
     }
@@ -230,7 +228,6 @@ describe("Buy: direct listing", function () {
         listingParams.quantityToList,
         listingParams.reservePricePerToken,
         listingParams.buyoutPricePerToken,
-        listingParams.tokensPerBuyer,
         listingParams.currencyToAccept,
         listingParams.secondsUntilStartTime,
         newSecondsUntilEnd
@@ -252,23 +249,6 @@ describe("Buy: direct listing", function () {
       await expect(
         marketv2.connect(buyer).buy(listingId, quantityToBuy)
       ).to.be.revertedWith("Market: the sale has either not started or closed.")
-    })
-
-    it("Should revert if buyer tries to buy more tokens than permitted per buyer", async () => {
-      const quantityToBuy: BigNumberish = 1;
-      const totalQty: number = tokensPerBuyer + 1;
-
-      // Mint currency to buyer
-      await coin.connect(protocolAdmin).mint(buyer.address, buyoutPricePerToken.mul(totalQty));
-
-      // Approve Market to transfer currency
-      await coin.connect(buyer).approve(marketv2.address, buyoutPricePerToken.mul(totalQty));
-      
-      await marketv2.connect(buyer).buy(listingId, listingParams.tokensPerBuyer);
-
-      await expect(
-        marketv2.connect(buyer).buy(listingId, quantityToBuy)
-      ).to.be.revertedWith("Market: must buy an appropriate amount of tokens.")
     })
   })
 
@@ -407,18 +387,6 @@ describe("Buy: direct listing", function () {
       const listing = await marketv2.listings(listingId);
 
       expect(listing.quantity).to.equal(quantityToList - quantityToBuy);
-    })
-
-    it("Should update the tokens already bought from the listing by the buyer", async () => {
-      const quantityToBuy: number = 1;
-
-      const boughttBefore: BigNumber = await marketv2.boughtFromListing(listingId, buyer.address);
-    
-      await marketv2.connect(buyer).buy(listingId, quantityToBuy)
-
-      const boughtAfter: BigNumber = await marketv2.boughtFromListing(listingId, buyer.address);
-
-      expect(boughtAfter).to.equal(boughttBefore.add(quantityToBuy))
     })
   })
 });

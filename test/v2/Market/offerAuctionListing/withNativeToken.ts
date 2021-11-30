@@ -107,7 +107,6 @@ describe("Bid with native token: Auction Listing", function () {
 
       reservePricePerToken: ethers.utils.parseEther("0.01"),
       buyoutPricePerToken: ethers.utils.parseEther("0.02"),
-      tokensPerBuyer: BigNumber.from(1),
 
       listingType: ListingType.Auction
     }
@@ -192,7 +191,6 @@ describe("Bid with native token: Auction Listing", function () {
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
           buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokensPerBuyer: listingParams.tokensPerBuyer,
           tokenType: TokenType.ERC1155,
           listingType: ListingType.Auction
         })
@@ -228,7 +226,6 @@ describe("Bid with native token: Auction Listing", function () {
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
           buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokensPerBuyer: listingParams.tokensPerBuyer,
           tokenType: TokenType.ERC1155,
           listingType: ListingType.Auction
         })
@@ -286,7 +283,6 @@ describe("Bid with native token: Auction Listing", function () {
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
           buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokensPerBuyer: listingParams.tokensPerBuyer,
           tokenType: TokenType.ERC1155,
           listingType: ListingType.Auction
         })
