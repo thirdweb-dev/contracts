@@ -41,6 +41,7 @@ describe("Close / Cancel auction", function () {
   let rewardId: number = 1;
 
   // Market params
+  enum TokenType { ERC1155, ERC721 }
   enum ListingType { Direct = 0, Auction = 1 }
   const buyoutPricePerToken: BigNumber = ethers.utils.parseEther("2");
   const reservePricePerToken: BigNumberish = ethers.utils.parseEther("1");
@@ -114,52 +115,43 @@ describe("Close / Cancel auction", function () {
 
   describe("Cancel auction", function() {
     
-    describe("Revert cases", function() {
-      it("Should revert if caller is not auction creator.", async () => {
-        await expect(
-          marketv2.connect(buyer).closeAuction(listingId)
-        ).to.be.revertedWith("Market: caller is not the listing creator.")
-      })
-    })
+    // describe("Revert cases", function() {
+    //   it("Should revert if caller is not auction creator.", async () => {
+    //     await expect(
+    //       marketv2.connect(buyer).closeAuction(listingId)
+    //     ).to.be.revertedWith("Market: caller is not the listing creator.")
+    //   })
+    // })
 
     describe("Events", function() {
       it("Should emit AuctionCanceled with relevant info", async () => {
-        
-        const eventPromise = new Promise((resolve, reject) => {
-          marketv2.on("AuctionCanceled", async (
-            _listingId,
-            _auctionCreator,
-            _listing
-          ) => {
 
-            expect(_listingId).to.equal(listingId)
-            expect(_auctionCreator).to.equal(creator.address);
+        const timeStampOfEnd = (await ethers.provider.getBlock("latest")).timestamp + 1;
+        const listing: ListingStruct = await marketv2.listings(listingId);
 
-            expect(_listing.listingId).to.equal(listingId);
-            expect(_listing.tokenOwner).to.equal(creator.address);
-            expect(_listing.assetContract).to.equal(accessNft.address);
-            expect(_listing.tokenId).to.equal(rewardId);
-            
-            const timeStamp = (await ethers.provider.getBlock("latest")).timestamp
-            expect(_listing.startTime).to.be.gt(timeStamp);
-
-            expect(_listing.quantity).to.equal(0)
-            expect(_listing.currency).to.equal(coin.address);
-            expect(_listing.reservePricePerToken).to.equal(reservePricePerToken);
-            expect(_listing.buyoutPricePerToken).to.equal(buyoutPricePerToken);
-            expect(_listing.tokenType).to.equal(0) // 0 == ERC1155
-            expect(_listing.listingType).to.equal(ListingType.Auction);
-
-            resolve(null);
+        await expect(
+          marketv2.connect(creator).closeAuction(listingId)
+        ).to.emit(marketv2, "AuctionCanceled")
+        .withArgs(
+          ...Object.values({
+            listingId: listingId,
+            auctionCreator: creator.address,
+            listing: Object.values({
+              listingId: listingId,
+              tokenOwner: creator.address,
+              assetContract: listingParams.assetContract,
+              tokenId: listingParams.tokenId,
+              startTime: listing.startTime,
+              endTime: timeStampOfEnd,
+              quantity: 0,
+              currency: listingParams.currencyToAccept,
+              reservePricePerToken: listingParams.reservePricePerToken,
+              buyoutPricePerToken: listingParams.buyoutPricePerToken,
+              tokenType: TokenType.ERC1155,
+              listingType: ListingType.Auction
+            })
           })
-
-          setTimeout(() => {
-            reject(new Error("Timeout: AuctionCanceled"));
-          }, 10000)
-        })
-
-        await marketv2.connect(creator).closeAuction(listingId)
-        await eventPromise.catch(e => console.error(e));
+        )
       })
     })
 
@@ -194,15 +186,15 @@ describe("Close / Cancel auction", function () {
 
   describe("Regular auction closing", function() {
 
+    const quantityWanted: BigNumberish = 1;
+    const offerAmount = reservePricePerToken.mul(quantityToList);
+
     beforeEach(async () => {
 
       // Time travel
       for (let i = 0; i < secondsUntilStartTime; i++) {
         await ethers.provider.send("evm_mine", []);
       }
-
-      const quantityWanted: BigNumberish = 1;
-      const offerAmount = reservePricePerToken.mul(quantityToList);
 
       await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount)
     })
@@ -259,41 +251,79 @@ describe("Close / Cancel auction", function () {
         }
       })
 
-      const getEventPromise = () => {
-        return new Promise((resolve, reject) => {
-          marketv2.on("AuctionClosed", (
-            _listingId,
-            _closer,
-            _auctionCreator,
-            _winningBidder,
-            _winningBid,
-            _listing
-          ) => {
-
-            expect(_listingId).to.equal(listingId)
-            expect(_auctionCreator).to.equal(creator.address)
-            expect(_winningBidder).to.equal(buyer.address)
-            
-            const isValidCloser = _closer == buyer.address || _closer == creator.address
-            expect(isValidCloser).to.equal(true);
-
-            resolve(null);
-          })
-
-          setTimeout(() => {
-            reject(new Error("Timeout: AuctionClosed"))
-          }, 10000);
-        })
-      }
-
       it("Should emit AuctionClosed with relevant closing info: closed by lister", async () => {
-        await marketv2.connect(creator).closeAuction(listingId)
-        await getEventPromise().catch(e => console.error(e))
+
+        const timeStampOfEnd = (await ethers.provider.getBlock("latest")).timestamp + 1;
+        const listing: ListingStruct = await marketv2.listings(listingId);
+
+        await expect(
+          marketv2.connect(creator).closeAuction(listingId)
+        ).to.emit(marketv2, "AuctionClosed")
+        .withArgs(
+          ...Object.values({
+            listingId: listingId,
+            closer: creator.address,
+            auctionCreator: creator.address,
+            winningBidder: buyer.address,
+            winningBid: Object.values({
+              listingId: listingId,
+              offeror: buyer.address,
+              quantityWanted: listingParams.quantityToList,
+              totalOfferAmount: 0
+            }),
+            listing: Object.values({
+              listingId: listingId,
+              tokenOwner: creator.address,
+              assetContract: listingParams.assetContract,
+              tokenId: listingParams.tokenId,
+              startTime: listing.startTime,
+              endTime: timeStampOfEnd,
+              quantity: 0,
+              currency: listingParams.currencyToAccept,
+              reservePricePerToken: listingParams.reservePricePerToken,
+              buyoutPricePerToken: listingParams.buyoutPricePerToken,
+              tokenType: TokenType.ERC1155,
+              listingType: ListingType.Auction
+            })
+          })
+        )
       })
 
       it("Should emit AuctionClosed with relevant closing info: closed by bidder", async () => {
-        await marketv2.connect(buyer).closeAuction(listingId)
-        await getEventPromise().catch(e => console.error(e))
+
+        const listing: ListingStruct = await marketv2.listings(listingId);
+
+        await expect(
+          marketv2.connect(buyer).closeAuction(listingId)
+        ).to.emit(marketv2, "AuctionClosed")
+        .withArgs(
+          ...Object.values({
+            listingId: listingId,
+            closer: buyer.address,
+            auctionCreator: creator.address,
+            winningBidder: buyer.address,
+            winningBid: Object.values({
+              listingId: listingId,
+              offeror: buyer.address,
+              quantityWanted: 0,
+              totalOfferAmount: offerAmount
+            }),
+            listing: Object.values({
+              listingId: listingId,
+              tokenOwner: creator.address,
+              assetContract: listingParams.assetContract,
+              tokenId: listingParams.tokenId,
+              startTime: listing.startTime,
+              endTime: listing.endTime,
+              quantity: listing.quantity,
+              currency: listingParams.currencyToAccept,
+              reservePricePerToken: listingParams.reservePricePerToken,
+              buyoutPricePerToken: listingParams.buyoutPricePerToken,
+              tokenType: TokenType.ERC1155,
+              listingType: ListingType.Auction
+            })
+          })
+        )
       })
     })
 

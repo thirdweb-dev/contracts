@@ -44,6 +44,7 @@ describe("Accept offer: direct listing", function () {
 
   // Market params
   enum ListingType { Direct = 0, Auction = 1 }
+  enum TokenType { ERC1155, ERC721 }
   const buyoutPricePerToken: BigNumber = ethers.utils.parseEther("2");
   const totalQuantityOwned: BigNumberish = rewardSupplies[0]
   const quantityToList = totalQuantityOwned;
@@ -168,33 +169,34 @@ describe("Accept offer: direct listing", function () {
   describe("Events", function() {
     it("Should emit NewDirectSale with relevan sale info", async () => {
 
-      const eventPromise = new Promise((resolve, reject) => {
-        marketv2.on("NewDirectSale", (
-          _assetContract,
-          _seller,
-          _listingId,
-          _buyer,
-          _quantityBought,
-          _listing
-        ) => {
-          expect(_assetContract).to.equal(accessNft.address)
-          expect(_seller).to.equal(creator.address)
-          expect(_listingId).to.equal(listingId)
-          expect(_buyer).to.equal(buyer.address)
-          expect(_quantityBought).to.equal(quantityWanted)
-          expect(_listing.quantity).to.equal(quantityToList - quantityWanted);
+      const listing: ListingStruct = await marketv2.listings(listingId);
 
-          resolve(null);
+      await expect(
+        marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+      ).to.emit(marketv2, "NewDirectSale")
+      .withArgs(
+        ...Object.values({
+          assetContract: accessNft.address,
+          seller: creator.address,
+          listingId: listingId,
+          buyer: buyer.address,
+          quantityBought: quantityWanted,
+          listing: Object.values({
+            listingId: listingId,
+            tokenOwner: creator.address,
+            assetContract: listingParams.assetContract,
+            tokenId: listingParams.tokenId,
+            startTime: listing.startTime,
+            endTime: listing.endTime,
+            quantity: quantityToList - quantityWanted,
+            currency: listingParams.currencyToAccept,
+            reservePricePerToken: listingParams.reservePricePerToken,
+            buyoutPricePerToken: listingParams.buyoutPricePerToken,
+            tokenType: TokenType.ERC1155,
+            listingType: ListingType.Direct
+          })
         })
-
-        setTimeout(() => {
-          reject(new Error("Timeout: NewDirectSale"));
-        }, 10000)
-      })
-
-      await marketv2.connect(creator).acceptOffer(listingId, buyer.address)
-
-      await eventPromise.catch(e => console.error(e));
+      )
     })
   })
 
