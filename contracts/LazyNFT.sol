@@ -245,8 +245,6 @@ contract LazyNFT is
     }
 
     function setPublicMintConditions(PublicMintCondition[] calldata conditions) external onlyModuleAdmin {
-        require(conditions.length > 0, "needs a list of conditions");
-
         if (mintConditions.length > 0) {
             // when mint conditions is reset, the next mint timestamp is reset too
             nextMintTimestampConditionStartIndex += mintConditions.length;
