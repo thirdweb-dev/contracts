@@ -9,7 +9,7 @@ import { ProtocolControl } from "../../../typechain/ProtocolControl";
 import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
 
 // Types
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumber } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -45,17 +45,20 @@ describe("Accept offer: direct listing", function () {
   // Market params
   enum ListingType { Direct = 0, Auction = 1 }
   enum TokenType { ERC1155, ERC721 }
+  const reservePricePerToken: BigNumber = ethers.utils.parseEther("1");
   const buyoutPricePerToken: BigNumber = ethers.utils.parseEther("2");
-  const totalQuantityOwned: BigNumberish = rewardSupplies[0]
-  const quantityToList = totalQuantityOwned;
+  const totalQuantityOwned: BigNumber = BigNumber.from(rewardSupplies[0]);
+  const quantityToList = BigNumber.from(totalQuantityOwned);
   const secondsUntilStartTime: number = 0;
   const secondsUntilEndTime: number = 0;
 
   let listingParams: ListingParametersStruct;
-  let listingId: BigNumberish;
+  let listingId: BigNumber;
 
-  const quantityWanted: BigNumberish = 1;
-  const offerAmount = ethers.utils.parseEther("1");
+  // Market: `offer` params
+  let quantityWanted: BigNumber;
+  let offerPricePerToken: BigNumber;
+  let totalOfferAmount: BigNumber;
 
   before(async () => {
     // Get signers
@@ -103,7 +106,7 @@ describe("Accept offer: direct listing", function () {
       quantityToList: quantityToList,
       currencyToAccept: coin.address,
 
-      reservePricePerToken: 0,
+      reservePricePerToken: reservePricePerToken,
       buyoutPricePerToken: buyoutPricePerToken,
 
       listingType: ListingType.Direct
@@ -112,13 +115,18 @@ describe("Accept offer: direct listing", function () {
     listingId = await marketv2.totalListings();
     await marketv2.connect(creator).createListing(listingParams);
 
+    // Setup: set default `offer` parameters.
+    quantityWanted = BigNumber.from(1);
+    offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
+    totalOfferAmount = quantityWanted.mul(offerPricePerToken)
+
     // Mint currency to buyer
     await coin.connect(protocolAdmin).mint(buyer.address, buyoutPricePerToken.mul(quantityToList));
 
     // Approve Market to transfer currency
     await coin.connect(buyer).approve(marketv2.address, buyoutPricePerToken.mul(quantityToList));
 
-    await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount)
+    await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
   });
 
   describe("Revert cases", function() {
@@ -128,7 +136,7 @@ describe("Accept offer: direct listing", function () {
       const newListingParams = {...listingParams, listingType: ListingType.Auction};
 
       await marketv2.connect(creator).createListing(newListingParams);
-      await marketv2.connect(buyer).offer(newListingId, quantityWanted, offerAmount)
+      await marketv2.connect(buyer).offer(newListingId, quantityWanted, offerPricePerToken)
 
       await expect(
         marketv2.connect(creator).acceptOffer(newListingId, buyer.address)
@@ -160,6 +168,11 @@ describe("Accept offer: direct listing", function () {
       const buyerBal: BigNumber = await coin.balanceOf(buyer.address);
       await coin.connect(buyer).transfer(relayer.address, buyerBal);
 
+      // console.log("buyer bal after: ", (await coin.balanceOf(buyer.address)).toString(), "before", buyerBal.toString())
+
+      expect(await coin.balanceOf(buyer.address)).to.equal(0);
+      // console.log("Buyer addr: ", buyer.address, "Creator addr: ", creator.address)
+
       await expect(
         marketv2.connect(creator).acceptOffer(listingId, buyer.address)
       ).to.be.revertedWith("ERC20: transfer amount exceeds balance")
@@ -188,7 +201,7 @@ describe("Accept offer: direct listing", function () {
             tokenId: listingParams.tokenId,
             startTime: listing.startTime,
             endTime: listing.endTime,
-            quantity: quantityToList - quantityWanted,
+            quantity: quantityToList.sub(quantityWanted),
             currency: listingParams.currencyToAccept,
             reservePricePerToken: listingParams.reservePricePerToken,
             buyoutPricePerToken: listingParams.buyoutPricePerToken,
@@ -210,8 +223,8 @@ describe("Accept offer: direct listing", function () {
       const creatorBalAfter: BigNumber = await coin.balanceOf(creator.address)
       const buyerBalAfter: BigNumber = await coin.balanceOf(buyer.address);
 
-      expect(creatorBalAfter).to.equal(creatorBalBefore.add(offerAmount))
-      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(offerAmount))
+      expect(creatorBalAfter).to.equal(creatorBalBefore.add(totalOfferAmount))
+      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalOfferAmount))
     })
 
     it("Should transfer the given amount listed tokens to offeror", async () => {
@@ -230,7 +243,7 @@ describe("Accept offer: direct listing", function () {
 
   describe("Contract state", function() {
 
-    it("Should uopdate the listing quantity", async () => {
+    it("Should update the listing quantity", async () => {
       const listingQuantityBefore: BigNumber = (await marketv2.listings(listingId)).quantity;
       await marketv2.connect(creator).acceptOffer(listingId, buyer.address)
       const listingQuantityAfter: BigNumber = (await marketv2.listings(listingId)).quantity;
@@ -243,7 +256,7 @@ describe("Accept offer: direct listing", function () {
 
       const offer = await marketv2.offers(listingId, buyer.address);
 
-      expect(offer.offerAmount).to.equal(0);
+      expect(offer.pricePerToken).to.equal(0);
       expect(offer.quantityWanted).to.equal(0);
     })
   })

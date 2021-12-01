@@ -115,13 +115,13 @@ describe("Close / Cancel auction", function () {
 
   describe("Cancel auction", function() {
     
-    // describe("Revert cases", function() {
-    //   it("Should revert if caller is not auction creator.", async () => {
-    //     await expect(
-    //       marketv2.connect(buyer).closeAuction(listingId)
-    //     ).to.be.revertedWith("Market: caller is not the listing creator.")
-    //   })
-    // })
+    describe("Revert cases", function() {
+      it("Should revert if caller is not auction creator.", async () => {
+        await expect(
+          marketv2.connect(buyer).closeAuction(listingId)
+        ).to.be.revertedWith("Market: caller is not the listing creator.")
+      })
+    })
 
     describe("Events", function() {
       it("Should emit AuctionCanceled with relevant info", async () => {
@@ -187,7 +187,8 @@ describe("Close / Cancel auction", function () {
   describe("Regular auction closing", function() {
 
     const quantityWanted: BigNumberish = 1;
-    const offerAmount = reservePricePerToken.mul(quantityToList);
+    const offerPricePerToken: BigNumber = reservePricePerToken;
+    const totalOfferAmount = offerPricePerToken.mul(quantityToList);
 
     beforeEach(async () => {
 
@@ -196,7 +197,7 @@ describe("Close / Cancel auction", function () {
         await ethers.provider.send("evm_mine", []);
       }
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
     })
 
     describe("Revert cases", function() {
@@ -229,16 +230,6 @@ describe("Close / Cancel auction", function () {
 
       beforeEach(async () => {
 
-        // Time travel to auction start
-        for (let i = 0; i < secondsUntilStartTime; i++) {
-          await ethers.provider.send("evm_mine", []);
-        }
-  
-        const quantityWanted: BigNumberish = 1;
-        const offerAmount = reservePricePerToken.mul(quantityToList);
-  
-        await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount)
-
         // Time travel to auction end
         const endTime: BigNumber = (await marketv2.listings(listingId)).endTime;
         while(true) {
@@ -269,7 +260,7 @@ describe("Close / Cancel auction", function () {
               listingId: listingId,
               offeror: buyer.address,
               quantityWanted: listingParams.quantityToList,
-              totalOfferAmount: 0
+              pricePerToken: 0
             }),
             listing: Object.values({
               listingId: listingId,
@@ -306,7 +297,7 @@ describe("Close / Cancel auction", function () {
               listingId: listingId,
               offeror: buyer.address,
               quantityWanted: 0,
-              totalOfferAmount: offerAmount
+              pricePerToken: offerPricePerToken
             }),
             listing: Object.values({
               listingId: listingId,
@@ -329,20 +320,7 @@ describe("Close / Cancel auction", function () {
 
     describe("Balances", function() {
 
-      let quantityWanted: BigNumberish;
-      let offerAmount: BigNumber;
-
       beforeEach(async () => {
-
-        // Time travel to auction start
-        for (let i = 0; i < secondsUntilStartTime; i++) {
-          await ethers.provider.send("evm_mine", []);
-        }
-  
-        quantityWanted = 1;
-        offerAmount = reservePricePerToken.mul(quantityToList);
-  
-        await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount)
 
         // Time travel to auction end
         const endTime: BigNumber = (await marketv2.listings(listingId)).endTime;
@@ -366,8 +344,8 @@ describe("Close / Cancel auction", function () {
         const creatorBalAfter: BigNumber = await coin.balanceOf(creator.address)
         const marketBalAfter: BigNumber = await coin.balanceOf(marketv2.address);
 
-        expect(creatorBalAfter).to.equal(creatorBalBefore.add(offerAmount))
-        expect(marketBalAfter).to.equal(marketBalBefore.sub(offerAmount))
+        expect(creatorBalAfter).to.equal(creatorBalBefore.add(totalOfferAmount))
+        expect(marketBalAfter).to.equal(marketBalBefore.sub(totalOfferAmount))
       })
 
       it("Should transfer auctioned tokens to bidder when called by bidder", async () => {
@@ -417,20 +395,8 @@ describe("Close / Cancel auction", function () {
     })
 
     describe("Contract state", function() {
-      let quantityWanted: BigNumberish;
-      let offerAmount: BigNumber;
 
       beforeEach(async () => {
-
-        // Time travel to auction start
-        for (let i = 0; i < secondsUntilStartTime; i++) {
-          await ethers.provider.send("evm_mine", []);
-        }
-  
-        quantityWanted = 1;
-        offerAmount = reservePricePerToken.mul(quantityToList);
-  
-        await marketv2.connect(buyer).offer(listingId, quantityWanted, offerAmount)
 
         // Time travel to auction end
         const endTime: BigNumber = (await marketv2.listings(listingId)).endTime;
@@ -454,7 +420,7 @@ describe("Close / Cancel auction", function () {
         )
 
         const offer = await marketv2.winningBid(listingId)
-        expect(offer.offerAmount).to.equal(0);
+        expect(offer.pricePerToken).to.equal(0);
       })
 
       it("Should reset the bid's quantity when called by bidder", async () => {

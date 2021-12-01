@@ -182,7 +182,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "offerAmount",
+            "name": "pricePerToken",
             "type": "uint256"
           }
         ],
@@ -416,7 +416,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "offerAmount",
+            "name": "pricePerToken",
             "type": "uint256"
           }
         ],
@@ -729,7 +729,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "offerAmount",
+            "name": "pricePerToken",
             "type": "uint256"
           }
         ],
@@ -1397,7 +1397,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_totalOfferAmount",
+        "name": "_pricePerToken",
         "type": "uint256"
       }
     ],
@@ -1438,7 +1438,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "offerAmount",
+        "name": "pricePerToken",
         "type": "uint256"
       }
     ],
@@ -1735,7 +1735,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "offerAmount",
+        "name": "pricePerToken",
         "type": "uint256"
       }
     ],

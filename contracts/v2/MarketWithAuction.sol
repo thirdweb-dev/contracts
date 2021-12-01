@@ -276,7 +276,7 @@ contract MarketWithAuction is
     function offer(
         uint256 _listingId, 
         uint256 _quantityWanted, 
-        uint256 _totalOfferAmount
+        uint256 _pricePerToken
     ) 
         external
         payable
@@ -293,7 +293,9 @@ contract MarketWithAuction is
 
         if(targetListing.listingType == ListingType.Auction) {
             require(
-                targetListing.reservePricePerToken * targetListing.quantity <= _totalOfferAmount,
+                targetListing.currency == nativeToken 
+                ? targetListing.reservePricePerToken * targetListing.quantity <= msg.value
+                : targetListing.reservePricePerToken * targetListing.quantity <= _pricePerToken * targetListing.quantity,
                 "Market: must offer at least reserve price."
             );
         } else if(targetListing.listingType == ListingType.Direct) {
@@ -304,7 +306,7 @@ contract MarketWithAuction is
             validateCurrencyBalAndApproval(
                 offeror, 
                 targetListing.currency, 
-                _totalOfferAmount
+                _pricePerToken * _quantityWanted
             );
         }
 
@@ -315,8 +317,8 @@ contract MarketWithAuction is
         Offer memory newOffer = Offer({
             listingId: _listingId,
             offeror: offeror,
-            quantityWanted: quantityWanted,
-            offerAmount: _totalOfferAmount
+            quantityWanted: targetListing.listingType == ListingType.Auction ? targetListing.quantity : quantityWanted,
+            pricePerToken: _pricePerToken
         });
 
         offers[_listingId][offeror] = newOffer;
@@ -355,10 +357,10 @@ contract MarketWithAuction is
         );
 
         uint256 quantityWanted = targetOffer.quantityWanted;
-        uint256 offerAmount = targetOffer.offerAmount;
+        uint256 offerAmount = targetOffer.pricePerToken * targetOffer.quantityWanted;
 
         targetOffer.quantityWanted = 0;
-        targetOffer.offerAmount = 0;
+        targetOffer.pricePerToken = 0;
         offers[_listingId][offeror] = targetOffer;
 
         targetListing.quantity -= quantityWanted;
@@ -367,7 +369,7 @@ contract MarketWithAuction is
         payout(
             offeror, 
             targetListing.tokenOwner, 
-            offerAmount * quantityWanted, 
+            offerAmount, 
             targetListing
         );
         transferListingTokens(targetListing.tokenOwner, offeror, quantityWanted, targetListing);
@@ -432,13 +434,13 @@ contract MarketWithAuction is
             /**
              * Prevent re-entrancy by setting bid's offer amount, and listing's quantity to 0 before ERC20 transfer.
              */
-            uint256 payoutAmount = targetBid.offerAmount;
+            uint256 payoutAmount = targetBid.pricePerToken * targetBid.quantityWanted;
 
             targetListing.quantity = 0;
             targetListing.endTime = block.timestamp;
             listings[_listingId] = targetListing;
 
-            targetBid.offerAmount = 0;
+            targetBid.pricePerToken = 0;
             winningBid[_listingId] = targetBid;
 
             payout(
@@ -480,17 +482,19 @@ contract MarketWithAuction is
     {
         
         Offer memory currentWinningBid = winningBid[_targetListing.listingId];
+
+        uint256 currentOfferAmount = currentWinningBid.pricePerToken * currentWinningBid.quantityWanted;
+        uint256 incomingOfferAmount = _incomingOffer.pricePerToken * _incomingOffer.quantityWanted;
         
-        if(isNewHighestBid(currentWinningBid.offerAmount, _incomingOffer.offerAmount)) {
+        if(isNewHighestBid(currentOfferAmount, incomingOfferAmount)) {
 
             address prevBidder = currentWinningBid.offeror;
-            uint256 prevBidAmount = currentWinningBid.offerAmount;
 
             currentWinningBid.offeror = _incomingOffer.offeror;
-            currentWinningBid.offerAmount = _incomingOffer.offerAmount;
+            currentWinningBid.pricePerToken = _incomingOffer.pricePerToken;
 
             bool isBuyout = _targetListing.buyoutPricePerToken > 0
-                    && _incomingOffer.offerAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity;
+                    && incomingOfferAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity;
 
             // Close auction and execute sale if there's a buyout amount and incoming offer amount is buyout amount.
             if(isBuyout) {
@@ -522,12 +526,12 @@ contract MarketWithAuction is
             }
 
             // Payout previous highest bid.
-            if(prevBidder != address(0) && prevBidAmount > 0) {                
-                transferCurrency(_targetListing.currency, address(this), prevBidder, prevBidAmount);
+            if(prevBidder != address(0) && currentOfferAmount > 0) {                
+                transferCurrency(_targetListing.currency, address(this), prevBidder, currentOfferAmount);
             }
 
             // Collect incoming bid
-            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), _incomingOffer.offerAmount);
+            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), incomingOfferAmount);
 
             // Send auctioned tokens to buyout bidder.
             if(isBuyout) {

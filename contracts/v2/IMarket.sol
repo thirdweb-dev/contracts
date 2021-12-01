@@ -20,7 +20,7 @@ interface IMarket {
         uint256 listingId;
         address offeror;
         uint256 quantityWanted;
-        uint256 offerAmount;
+        uint256 pricePerToken;
     }
 
     /// @dev For use in `createListing` as a parameter type.
@@ -133,7 +133,7 @@ interface IMarket {
     function offer(
         uint256 _listingId, 
         uint256 _quantityWanted, 
-        uint256 _totalOfferAmount
+        uint256 _pricePerToken
     ) external payable;
 
     // /// @dev Lets a listing's creator accept an offer for their direct listing.
