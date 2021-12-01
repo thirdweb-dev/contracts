@@ -99,6 +99,8 @@ const config: ConfigWithEtherscan = {
     apiKey: explorerScanKey,
   },
   gasReporter: {
+    coinmarketcap: process.env.REPORT_GAS_COINMARKETCAP_API_KEY,
+    currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,
   },
 };
