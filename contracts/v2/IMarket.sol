@@ -20,6 +20,7 @@ interface IMarket {
         uint256 listingId;
         address offeror;
         uint256 quantityWanted;
+        address currency;
         uint256 pricePerToken;
     }
 
@@ -132,7 +133,8 @@ interface IMarket {
     /// @dev Lets an account offer a price for a given amount of tokens.
     function offer(
         uint256 _listingId, 
-        uint256 _quantityWanted, 
+        uint256 _quantityWanted,
+        address _currency,
         uint256 _pricePerToken
     ) external payable;
 

@@ -47,6 +47,7 @@ describe("Bid with native token: Auction Listing", function () {
   // Market: `offer` params
   let quantityWanted: BigNumber;
   let offerPricePerToken: BigNumber;
+  let currencyForOffer: string;
   let totalOfferAmount: BigNumber;
 
   // Semantic helpers
@@ -118,6 +119,7 @@ describe("Bid with native token: Auction Listing", function () {
     // Setup: set default `offer` parameters.
     quantityWanted = BigNumber.from(1);
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
+    currencyForOffer = listingParams.currencyToAccept;
     totalOfferAmount = offerPricePerToken.mul(listingParams.quantityToList);
   });
   
@@ -131,7 +133,7 @@ describe("Bid with native token: Auction Listing", function () {
       const invalidOfferAmount = (offerPricePerToken.sub(ethers.utils.parseEther("0.005"))).mul(quantityWanted);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: invalidOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: invalidOfferAmount })
       ).to.be.revertedWith("Market: must offer at least reserve price.")
     })
 
@@ -139,20 +141,20 @@ describe("Bid with native token: Auction Listing", function () {
 
       // Invalid behaviour: bid is made outside auction window.
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
 
       await timeTravelToAfterListingWindow(listingId)
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount }),
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }),
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
     })
 
     it("Should revert if offer amount does not match native token sent with transaction.", async () => {
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: 0 })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: 0 })
       ).to.be.reverted;
     })
   })
@@ -168,7 +170,7 @@ describe("Bid with native token: Auction Listing", function () {
       const listing: ListingStruct = await marketv2.listings(listingId);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
       ).to.emit(marketv2, "NewOffer")
       .withArgs(
         listingId,
@@ -177,6 +179,7 @@ describe("Bid with native token: Auction Listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: listingParams.quantityToList,
+          currency: currencyForOffer,
           pricePerToken: offerPricePerToken
         }),
         Object.values({
@@ -203,7 +206,7 @@ describe("Bid with native token: Auction Listing", function () {
       const timeBuffer: BigNumber = await marketv2.timeBuffer();
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount }) 
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }) 
       ).to.emit(marketv2, "NewBid")
       .withArgs(
         listingId,
@@ -212,6 +215,7 @@ describe("Bid with native token: Auction Listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: listingParams.quantityToList,
+          currency: currencyForOffer,
           pricePerToken: offerPricePerToken
         }),
         Object.values({
@@ -237,12 +241,12 @@ describe("Bid with native token: Auction Listing", function () {
         .mul(listingParams.quantityToList)
         .sub(ethers.utils.parseEther("0.001")); // We don't want the auction to close
       
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount })
 
       const lowOfferAmount = totalOfferAmount;
 
       let secondBuyer = protocolAdmin // doesn't matter who
-      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, offerPricePerToken, { value: lowOfferAmount })
+      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: lowOfferAmount })
         .then(tx => tx.wait());
       
       const newBidTopic = marketv2.interface.getEventTopic("NewBid");
@@ -258,7 +262,7 @@ describe("Bid with native token: Auction Listing", function () {
       const timeStampOfBuyout = (await ethers.provider.getBlock("latest")).timestamp + 1;
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
       ).to.emit(marketv2, "AuctionClosed")
       .withArgs(
         listingId,
@@ -269,6 +273,7 @@ describe("Bid with native token: Auction Listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: listingParams.quantityToList,
+          currency: currencyForOffer,
           pricePerToken: listingParams.buyoutPricePerToken
         }),
         Object.values({
@@ -301,7 +306,7 @@ describe("Bid with native token: Auction Listing", function () {
       const marketBalBefore: BigNumber = await weth.balanceOf(marketv2.address);
 
       const gasPrice = ethers.utils.parseUnits("1", "gwei");
-      const tx = await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount, gasPrice })
+      const tx = await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount, gasPrice })
       const gasUsed = (await tx.wait()).gasUsed;
       const gasPaid = gasPrice.mul(gasUsed);
 
@@ -326,8 +331,8 @@ describe("Bid with native token: Auction Listing", function () {
 
       const gasPrice = ethers.utils.parseUnits("1", "gwei");
       
-      const tx1 = await marketv2.connect(prevBuyer).offer(listingId, quantityWanted, offerPricePerToken, { value: lowOfferAmount, gasPrice });
-      const tx2 = await marketv2.connect(buyer).offer(listingId, quantityWanted, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount, gasPrice });
+      const tx1 = await marketv2.connect(prevBuyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: lowOfferAmount, gasPrice });
+      const tx2 = await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount, gasPrice });
 
       const gasUsed1 = (await tx1.wait()).gasUsed;
       const gasUsed2 = (await tx2.wait()).gasUsed;
@@ -352,7 +357,7 @@ describe("Bid with native token: Auction Listing", function () {
       const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId)
       const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
 
       const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId)
       const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
@@ -369,7 +374,7 @@ describe("Bid with native token: Auction Listing", function () {
 
     it("Should store a valid offer regardless", async () => {
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
 
       const offer = await marketv2.offers(listingId, buyer.address);
 
@@ -381,7 +386,7 @@ describe("Bid with native token: Auction Listing", function () {
 
     it("Should store the offer as the winning bid if it is the new highest bid", async () => {      
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
 
       const winningBid = await marketv2.winningBid(listingId);
 
@@ -396,7 +401,7 @@ describe("Bid with native token: Auction Listing", function () {
       const timeBuffer: BigNumber = await marketv2.timeBuffer();
       const endTimeBefore: BigNumber = (await marketv2.listings(listingId)).endTime;
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken, { value: totalOfferAmount });
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount });
 
       const endTimeAfter: BigNumber = (await marketv2.listings(listingId)).endTime;
 
@@ -407,7 +412,7 @@ describe("Bid with native token: Auction Listing", function () {
 
       const buyoutOfferAmount = (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount });
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount });
 
       const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
       const endTimeAfter: BigNumber = (await marketv2.listings(listingId)).endTime;

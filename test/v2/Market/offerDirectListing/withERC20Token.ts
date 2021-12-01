@@ -44,7 +44,7 @@ describe("Offer with ERC20 token: direct listing", function () {
   // Market: `offer` params
   let quantityWanted: BigNumber;
   let offerPricePerToken: BigNumber;
-  let totalOfferAmount: BigNumber;
+  let currencyForOffer: string;
 
   // Semantic helpers
   const mintNftToLister = async () => await mockNft.connect(protocolAdmin).mint(
@@ -123,7 +123,7 @@ describe("Offer with ERC20 token: direct listing", function () {
     // Setup: set default `offer` parameters.
     quantityWanted = BigNumber.from(1);
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
-    totalOfferAmount = offerPricePerToken.mul(quantityWanted)
+    currencyForOffer = listingParams.currencyToAccept;
 
     // Setup: mint some curreny to buyer so they can fulfill the offer made.
     await mintERC20ToBuyer(
@@ -136,13 +136,13 @@ describe("Offer with ERC20 token: direct listing", function () {
     it("Should revert if offer is made outside listing window", async () => {
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
 
       await timeTravelToAfterListingWindow(listingId);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
     })
 
@@ -154,7 +154,7 @@ describe("Offer with ERC20 token: direct listing", function () {
       await erc20Token.connect(buyer).transfer(dummy.address, await erc20Token.balanceOf(buyer.address));
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.revertedWith("Market: must own and approve Market to transfer currency.")
     })
 
@@ -169,7 +169,7 @@ describe("Offer with ERC20 token: direct listing", function () {
       );
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.revertedWith("Market: must own and approve Market to transfer currency.")
     })
   })
@@ -189,7 +189,7 @@ describe("Offer with ERC20 token: direct listing", function () {
       const listing: ListingStruct = await marketv2.listings(listingId);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.emit(marketv2, "NewOffer")
       .withArgs(
         listingId,
@@ -198,6 +198,7 @@ describe("Offer with ERC20 token: direct listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: quantityWanted,
+          currency: currencyForOffer,
           pricePerToken: offerPricePerToken
         }),
         Object.values({
@@ -229,7 +230,7 @@ describe("Offer with ERC20 token: direct listing", function () {
       const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
@@ -243,7 +244,7 @@ describe("Offer with ERC20 token: direct listing", function () {
       const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address);
       const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address);
       const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address);
@@ -261,7 +262,7 @@ describe("Offer with ERC20 token: direct listing", function () {
     
     it("Should store the offer info", async () => {
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       
       const offer = await marketv2.offers(listingId, buyer.address);
 

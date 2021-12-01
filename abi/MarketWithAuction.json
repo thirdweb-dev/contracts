@@ -181,6 +181,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "address",
+            "name": "currency",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "pricePerToken",
             "type": "uint256"
@@ -413,6 +418,11 @@
             "internalType": "uint256",
             "name": "quantityWanted",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "currency",
+            "type": "address"
           },
           {
             "internalType": "uint256",
@@ -726,6 +736,11 @@
             "internalType": "uint256",
             "name": "quantityWanted",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "currency",
+            "type": "address"
           },
           {
             "internalType": "uint256",
@@ -1396,6 +1411,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "_currency",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_pricePerToken",
         "type": "uint256"
@@ -1435,6 +1455,11 @@
         "internalType": "uint256",
         "name": "quantityWanted",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "currency",
+        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -1732,6 +1757,11 @@
         "internalType": "uint256",
         "name": "quantityWanted",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "currency",
+        "type": "address"
       },
       {
         "internalType": "uint256",

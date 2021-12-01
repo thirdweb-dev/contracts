@@ -186,18 +186,24 @@ describe("Close / Cancel auction", function () {
 
   describe("Regular auction closing", function() {
 
-    const quantityWanted: BigNumberish = 1;
-    const offerPricePerToken: BigNumber = reservePricePerToken;
-    const totalOfferAmount = offerPricePerToken.mul(quantityToList);
+    let quantityWanted: BigNumberish;
+    let offerPricePerToken: BigNumber;
+    let currencyForOffer: string;
+    let totalOfferAmount: BigNumber;
 
     beforeEach(async () => {
+
+      quantityWanted = 1;
+      offerPricePerToken = reservePricePerToken;
+      currencyForOffer = listingParams.currencyToAccept;
+      totalOfferAmount = offerPricePerToken.mul(quantityToList);
 
       // Time travel
       for (let i = 0; i < secondsUntilStartTime; i++) {
         await ethers.provider.send("evm_mine", []);
       }
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
     })
 
     describe("Revert cases", function() {
@@ -260,6 +266,7 @@ describe("Close / Cancel auction", function () {
               listingId: listingId,
               offeror: buyer.address,
               quantityWanted: listingParams.quantityToList,
+              currency: currencyForOffer,
               pricePerToken: 0
             }),
             listing: Object.values({
@@ -297,6 +304,7 @@ describe("Close / Cancel auction", function () {
               listingId: listingId,
               offeror: buyer.address,
               quantityWanted: 0,
+              currency: currencyForOffer,
               pricePerToken: offerPricePerToken
             }),
             listing: Object.values({

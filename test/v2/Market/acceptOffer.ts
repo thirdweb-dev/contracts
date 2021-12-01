@@ -58,6 +58,7 @@ describe("Accept offer: direct listing", function () {
   // Market: `offer` params
   let quantityWanted: BigNumber;
   let offerPricePerToken: BigNumber;
+  let currencyForOffer: string;
   let totalOfferAmount: BigNumber;
 
   before(async () => {
@@ -118,6 +119,7 @@ describe("Accept offer: direct listing", function () {
     // Setup: set default `offer` parameters.
     quantityWanted = BigNumber.from(1);
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
+    currencyForOffer = listingParams.currencyToAccept;
     totalOfferAmount = quantityWanted.mul(offerPricePerToken)
 
     // Mint currency to buyer
@@ -126,7 +128,7 @@ describe("Accept offer: direct listing", function () {
     // Approve Market to transfer currency
     await coin.connect(buyer).approve(marketv2.address, buyoutPricePerToken.mul(quantityToList));
 
-    await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+    await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
   });
 
   describe("Revert cases", function() {
@@ -136,7 +138,7 @@ describe("Accept offer: direct listing", function () {
       const newListingParams = {...listingParams, listingType: ListingType.Auction};
 
       await marketv2.connect(creator).createListing(newListingParams);
-      await marketv2.connect(buyer).offer(newListingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(newListingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       await expect(
         marketv2.connect(creator).acceptOffer(newListingId, buyer.address)

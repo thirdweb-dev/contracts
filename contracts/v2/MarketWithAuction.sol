@@ -254,7 +254,8 @@ contract MarketWithAuction is
         if (targetListing.buyoutPricePerToken > 0) {
             payout(
                 buyer, 
-                targetListing.tokenOwner, 
+                targetListing.tokenOwner,
+                targetListing.currency,
                 targetListing.buyoutPricePerToken * _quantityToBuy,
                 targetListing
             );
@@ -275,7 +276,8 @@ contract MarketWithAuction is
 
     function offer(
         uint256 _listingId, 
-        uint256 _quantityWanted, 
+        uint256 _quantityWanted,
+        address _currency,
         uint256 _pricePerToken
     ) 
         external
@@ -291,9 +293,13 @@ contract MarketWithAuction is
             "Market: can only make offers in listing duration."
         );
 
+        (address currencyToUse, uint256 quantityWanted) = targetListing.listingType == ListingType.Auction
+            ? (targetListing.currency, getSafeQuantity(targetListing.tokenType, targetListing.quantity))
+            : (_currency, getSafeQuantity(targetListing.tokenType, _quantityWanted));
+
         if(targetListing.listingType == ListingType.Auction) {
             require(
-                targetListing.currency == nativeToken 
+                currencyToUse == nativeToken 
                 ? targetListing.reservePricePerToken * targetListing.quantity <= msg.value
                 : targetListing.reservePricePerToken * targetListing.quantity <= _pricePerToken * targetListing.quantity,
                 "Market: must offer at least reserve price."
@@ -305,19 +311,16 @@ contract MarketWithAuction is
             );
             validateCurrencyBalAndApproval(
                 offeror, 
-                targetListing.currency, 
+                currencyToUse, 
                 _pricePerToken * _quantityWanted
             );
         }
 
-        uint256 quantityWanted = targetListing.listingType == ListingType.Auction
-                    ? getSafeQuantity(targetListing.tokenType, targetListing.quantity)
-                    : getSafeQuantity(targetListing.tokenType, _quantityWanted);
-
         Offer memory newOffer = Offer({
             listingId: _listingId,
             offeror: offeror,
-            quantityWanted: targetListing.listingType == ListingType.Auction ? targetListing.quantity : quantityWanted,
+            quantityWanted: quantityWanted,
+            currency: currencyToUse,
             pricePerToken: _pricePerToken
         });
 
@@ -368,7 +371,8 @@ contract MarketWithAuction is
 
         payout(
             offeror, 
-            targetListing.tokenOwner, 
+            targetListing.tokenOwner,
+            targetOffer.currency,
             offerAmount, 
             targetListing
         );
@@ -445,7 +449,8 @@ contract MarketWithAuction is
 
             payout(
                 address(this), 
-                targetListing.tokenOwner, 
+                targetListing.tokenOwner,
+                targetListing.currency,
                 payoutAmount,
                 targetListing
             );
@@ -617,6 +622,7 @@ contract MarketWithAuction is
     function payout(
         address _payer,
         address _payee,
+        address _currencyToUse,
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) 
@@ -625,7 +631,7 @@ contract MarketWithAuction is
         // Collect protocol fee
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
 
-        transferCurrency(_listing.currency, _payer, controlCenter.getRoyaltyTreasury(address(this)), marketCut);
+        transferCurrency(_currencyToUse, _payer, controlCenter.getRoyaltyTreasury(address(this)), marketCut);
 
         uint256 remainder = _totalPayoutAmount - marketCut;
 
@@ -637,12 +643,12 @@ contract MarketWithAuction is
             if (royaltyFeeAmount > 0) {
                 require(royaltyFeeAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
                 remainder -= royaltyFeeAmount;
-                transferCurrency(_listing.currency, _payer, royaltyFeeRecipient, royaltyFeeAmount);
+                transferCurrency(_currencyToUse, _payer, royaltyFeeRecipient, royaltyFeeAmount);
             }
         } catch {}
 
         // Distribute price to token owner
-        transferCurrency(_listing.currency, _payer, _payee, remainder);
+        transferCurrency(_currencyToUse, _payer, _payee, remainder);
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.

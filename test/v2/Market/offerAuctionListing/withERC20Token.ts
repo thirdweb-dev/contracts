@@ -44,6 +44,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
   // Market: `offer` params
   let quantityWanted: BigNumber;
   let offerPricePerToken: BigNumber;
+  let currencyForOffer: string;
   let totalOfferAmount: BigNumber;
 
   // Semantic helpers
@@ -123,6 +124,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
     // Setup: set default `offer` parameters.
     quantityWanted = BigNumber.from(1);
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
+    currencyForOffer = listingParams.currencyToAccept;
     totalOfferAmount = offerPricePerToken.mul(listingParams.quantityToList);
 
     // Setup: mint some curreny to buyer so they can fulfill the offer made.
@@ -144,7 +146,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       )
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, invalidOfferPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, invalidOfferPricePerToken)
       ).to.be.revertedWith("Market: must offer at least reserve price.")
     })
 
@@ -152,13 +154,13 @@ describe("Bid with ERC20 token: Auction Listing", function () {
 
       // Invalid behaviour: bid is made outside auction window.
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
 
       await timeTravelToAfterListingWindow(listingId)
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken),
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken),
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
     })
 
@@ -168,7 +170,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       await erc20Token.connect(buyer).transfer(protocolAdmin.address, await erc20Token.balanceOf(buyer.address));
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.reverted;
     })
 
@@ -181,7 +183,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       );
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.reverted;
     })
   })
@@ -197,7 +199,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const listing: ListingStruct = await marketv2.listings(listingId);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.emit(marketv2, "NewOffer")
       .withArgs(
         listingId,
@@ -206,6 +208,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: listingParams.quantityToList,
+          currency: currencyForOffer,
           pricePerToken: offerPricePerToken
         }),
         Object.values({
@@ -232,7 +235,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const timeBuffer: BigNumber = await marketv2.timeBuffer();
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken) 
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken) 
       ).to.emit(marketv2, "NewBid")
       .withArgs(
         listingId,
@@ -241,6 +244,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: listingParams.quantityToList,
+          currency: currencyForOffer,
           pricePerToken: offerPricePerToken
         }),
         Object.values({
@@ -266,12 +270,12 @@ describe("Bid with ERC20 token: Auction Listing", function () {
         .mul(listingParams.quantityToList)
         .sub(ethers.utils.parseEther("0.001")); // We don't want the auction to close
       
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, highOfferAmount.div(listingParams.quantityToList))
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList))
 
       const lowOfferPricePerToken = offerPricePerToken;
 
       let secondBuyer = protocolAdmin // doesn't matter who
-      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, lowOfferPricePerToken)
+      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, currencyForOffer, lowOfferPricePerToken)
         .then(tx => tx.wait());
       
       const newBidTopic = marketv2.interface.getEventTopic("NewBid");
@@ -285,7 +289,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const timeStampOfBuyout = (await ethers.provider.getBlock("latest")).timestamp + 1;
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, listingParams.buyoutPricePerToken)
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken)
       ).to.emit(marketv2, "AuctionClosed")
       .withArgs(
         listingId,
@@ -296,6 +300,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
           listingId: listingId,
           offeror: buyer.address,
           quantityWanted: listingParams.quantityToList,
+          currency: currencyForOffer,
           pricePerToken: listingParams.buyoutPricePerToken
         }),
         Object.values({
@@ -326,7 +331,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address)
       const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address)
       const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
@@ -353,8 +358,8 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address)
       const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-      await marketv2.connect(prevBuyer).offer(listingId, quantityWanted, lowOfferPricePerToken);
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, highOfferAmount.div(listingParams.quantityToList));
+      await marketv2.connect(prevBuyer).offer(listingId, quantityWanted, currencyForOffer, lowOfferPricePerToken);
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList));
 
       const prevBuyerBalAfter: BigNumber = await erc20Token.balanceOf(prevBuyer.address)
       const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address)
@@ -372,7 +377,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId)
       const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, listingParams.buyoutPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken)
 
       const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId)
       const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
@@ -388,7 +393,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
     })
 
     it("Should store a valid offer regardless", async () => {
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const offer = await marketv2.offers(listingId, buyer.address);
 
@@ -399,7 +404,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
     })
 
     it("Should store the offer as the winning bid if it is the new highest bid", async () => {
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken)
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const winningBid = await marketv2.winningBid(listingId);
 
@@ -414,7 +419,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       const timeBuffer: BigNumber = await marketv2.timeBuffer();
       const endTimeBefore: BigNumber = (await marketv2.listings(listingId)).endTime;
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, offerPricePerToken);
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken);
 
       const endTimeAfter: BigNumber = (await marketv2.listings(listingId)).endTime;
 
@@ -423,7 +428,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
 
     it("Should close the auction by updating the listing's end time, if the bid is buyout price", async () => {
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, listingParams.buyoutPricePerToken);
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken);
 
       const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
       const endTimeAfter: BigNumber = (await marketv2.listings(listingId)).endTime;
