@@ -629,21 +629,17 @@ contract MarketWithAuction is
 
         uint256 remainder = _totalPayoutAmount - marketCut;
 
-        // Distribute royalties
-        if (IERC165(_listing.assetContract).supportsInterface(type(IERC2981).interfaceId)) {
-            (address royaltyReceiver, uint256 royaltyAmount) = IERC2981(_listing.assetContract).royaltyInfo(
-                _listing.tokenId,
-                _totalPayoutAmount
-            );
-
-            if (royaltyReceiver != address(0) && royaltyAmount > 0) {
-                require(royaltyAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
-
-                remainder -= royaltyAmount;
-
-                transferCurrency(_listing.currency, _payer, royaltyReceiver, royaltyAmount);
+        // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
+        try IERC2981(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
+            address royaltyFeeRecipient,
+            uint256 royaltyFeeAmount
+        ) {
+            if (royaltyFeeAmount > 0) {
+                require(royaltyFeeAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
+                remainder -= royaltyFeeAmount;
+                transferCurrency(_listing.currency, _payer, royaltyFeeRecipient, royaltyFeeAmount);
             }
-        }
+        } catch {}
 
         // Distribute price to token owner
         transferCurrency(_listing.currency, _payer, _payee, remainder);
