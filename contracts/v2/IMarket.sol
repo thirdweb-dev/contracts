@@ -128,7 +128,7 @@ interface IMarket {
     ) external;
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
-    function buy(uint256 _listingId, uint256 _quantity) external;
+    function buy(uint256 _listingId, uint256 _quantity) external payable;
 
     /// @dev Lets an account offer a price for a given amount of tokens.
     function offer(

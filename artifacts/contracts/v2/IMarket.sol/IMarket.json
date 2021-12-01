@@ -844,7 +844,7 @@
       ],
       "name": "buy",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {

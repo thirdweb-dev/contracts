@@ -237,8 +237,9 @@ contract MarketWithAuction is
     function buy(
         uint256 _listingId, 
         uint256 _quantityToBuy
-    ) 
+    )
         external
+        payable
         override
         nonReentrant
     {
@@ -469,11 +470,6 @@ contract MarketWithAuction is
         
 
         emit AuctionClosed(_listingId, closer, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
-    }
-
-    /// @dev Let the contract accept ether
-    receive() external payable {
-        emit EtherReceived(_msgSender(), msg.value);
     }
 
     //  =====   Internal functions  =====
