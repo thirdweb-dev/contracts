@@ -44,7 +44,7 @@
     "hardhat": "^2.6.5",
     "hardhat-abi-exporter": "^2.3.0",
     "hardhat-contract-sizer": "^2.1.1",
-    "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-gas-reporter": "^1.0.6",
     "husky": "^7.0.2",
     "keccak256": "^1.0.3",
     "merkletreejs": "^0.2.24",
