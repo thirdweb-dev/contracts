@@ -91,8 +91,10 @@ describe("Close / Cancel auction", function () {
       assetContract: accessNft.address,
       tokenId: rewardId,
       
-      secondsUntilStartTime: secondsUntilStartTime,
-      secondsUntilEndTime: secondsUntilEndTime,
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
+      secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: quantityToList,
       currencyToAccept: coin.address,
@@ -127,7 +129,6 @@ describe("Close / Cancel auction", function () {
       it("Should emit AuctionCanceled with relevant info", async () => {
 
         const timeStampOfEnd = (await ethers.provider.getBlock("latest")).timestamp + 1;
-        const listing: ListingStruct = await marketv2.listings(listingId);
 
         await expect(
           marketv2.connect(creator).closeAuction(listingId)
@@ -141,7 +142,7 @@ describe("Close / Cancel auction", function () {
               tokenOwner: creator.address,
               assetContract: listingParams.assetContract,
               tokenId: listingParams.tokenId,
-              startTime: listing.startTime,
+              startTime: listingParams.startTime,
               endTime: timeStampOfEnd,
               quantity: 0,
               currency: listingParams.currencyToAccept,
@@ -199,9 +200,8 @@ describe("Close / Cancel auction", function () {
       totalOfferAmount = offerPricePerToken.mul(quantityToList);
 
       // Time travel
-      for (let i = 0; i < secondsUntilStartTime; i++) {
-        await ethers.provider.send("evm_mine", []);
-      }
+      const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+      await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
 
       await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
     })

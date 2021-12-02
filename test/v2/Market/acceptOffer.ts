@@ -101,8 +101,10 @@ describe("Accept offer: direct listing", function () {
       assetContract: accessNft.address,
       tokenId: rewardId,
       
-      secondsUntilStartTime: secondsUntilStartTime,
-      secondsUntilEndTime: secondsUntilEndTime,
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
+      secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: quantityToList,
       currencyToAccept: coin.address,
@@ -127,6 +129,10 @@ describe("Accept offer: direct listing", function () {
 
     // Approve Market to transfer currency
     await coin.connect(buyer).approve(marketv2.address, buyoutPricePerToken.mul(quantityToList));
+
+    // Time travel
+    const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
 
     await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
   });

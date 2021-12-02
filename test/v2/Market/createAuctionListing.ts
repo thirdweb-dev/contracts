@@ -76,7 +76,9 @@ describe("List token for sale: Auction Listing", function () {
       assetContract: mockNft.address,
       tokenId: nftTokenId,
       
-      secondsUntilStartTime: BigNumber.from(100),
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
       secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,
@@ -127,7 +129,7 @@ describe("List token for sale: Auction Listing", function () {
        * Hardhat increments block timestamp by 1 on every transaction.
        * So, the timestamp during the `createListing` transaction will be the current timestamp + 1.
        */
-      const timeStampOnCreateListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
+      // const timeStampOnCreateListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
 
       await expect(
         marketv2.connect(lister).createListing(listingParams)  
@@ -141,8 +143,8 @@ describe("List token for sale: Auction Listing", function () {
           tokenOwner: lister.address,
           assetContract: listingParams.assetContract,
           tokenId: listingParams.tokenId,
-          startTime: timeStampOnCreateListing.add(listingParams.secondsUntilStartTime),
-          endTime: timeStampOnCreateListing.add(listingParams.secondsUntilEndTime),
+          startTime: listingParams.startTime,
+          endTime: (listingParams.startTime as BigNumber).add(listingParams.secondsUntilEndTime),
           quantity: listingParams.quantityToList,
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
@@ -192,8 +194,8 @@ describe("List token for sale: Auction Listing", function () {
       expect(listing.tokenOwner).to.equal(lister.address);
       expect(listing.assetContract).to.equal(mockNft.address);
       expect(listing.tokenId).to.equal(listingParams.tokenId);
-      expect(listing.startTime).to.equal(timeStampOnCreateListing.add(listingParams.secondsUntilStartTime))
-      expect(listing.endTime).to.equal(timeStampOnCreateListing.add(listingParams.secondsUntilEndTime))
+      expect(listing.startTime).to.equal(listingParams.startTime)
+      expect(listing.endTime).to.equal((listingParams.startTime as BigNumber).add(listingParams.secondsUntilEndTime))
       expect(listing.quantity).to.equal(listingParams.quantityToList)
       expect(listing.currency).to.equal(listingParams.currencyToAccept);
       expect(listing.reservePricePerToken).to.equal(listingParams.reservePricePerToken);

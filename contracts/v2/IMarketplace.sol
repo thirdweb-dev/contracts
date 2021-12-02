@@ -41,7 +41,7 @@ interface IMarketplace {
 
      * @param tokenId The tokenId on `assetContract` of the NFT to list for sale.
 
-     * @param secondsUntilStartTime No. of seconds after which the listing is active. For direct listings:
+     * @param startTime The unix timestamp after which the listing is active. For direct listings:
      *                              'active' means NFTs can be bought from the listing. For auctions,
      *                              'active' means bids can be made in the auction.
 
@@ -70,7 +70,7 @@ interface IMarketplace {
         address assetContract;
         uint256 tokenId;
 
-        uint256 secondsUntilStartTime;
+        uint256 startTime;
         uint256 secondsUntilEndTime;
 
         uint256 quantityToList;
@@ -155,6 +155,9 @@ interface IMarketplace {
     /// @dev Emitted when the LISTER_ROLE restriction is updated.
     event RestrictedListerRoleUpdated(bool restricted);
 
+    /// @dev Emitted when contract receives ether.
+    event EtherReceived(address from, uint256 amount);
+
     /**
      * @notice Lets a token (ERC 721 or ERC 1155) owner list tokens for sale in a direct listing, or an auction.
      * @param _params The initial parameters of the listing to be created.
@@ -188,7 +191,7 @@ interface IMarketplace {
      * @param _currencyToAccept For direct listings: the currency in which a buyer must pay the listing's fixed price
      *                          to buy the NFT(s). For auctions: the currency in which the bidders must make bids.
 
-     * @param _secondsUntilStartTime No. of seconds after which the listing is active. For direct listings:
+     * @param _startTime The unix timestamp after which listing is active. For direct listings:
      *                               'active' means NFTs can be bought from the listing. For auctions,
      *                               'active' means bids can be made in the auction.
 
@@ -202,7 +205,7 @@ interface IMarketplace {
         uint256 _reservePricePerToken,    
         uint256 _buyoutPricePerToken,
         address _currencyToAccept,
-        uint256 _secondsUntilStartTime,
+        uint256 _startTime,
         uint256 _secondsUntilEndTime
     ) external;
 

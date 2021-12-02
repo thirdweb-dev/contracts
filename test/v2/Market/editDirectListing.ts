@@ -77,7 +77,9 @@ describe("Edit listing: direct listing", function () {
       assetContract: mockNft.address,
       tokenId: nftTokenId,
       
-      secondsUntilStartTime: BigNumber.from(100),
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
       secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,
@@ -105,7 +107,7 @@ describe("Edit listing: direct listing", function () {
           listingParams.reservePricePerToken,
           listingParams.buyoutPricePerToken,
           listingParams.currencyToAccept,
-          listingParams.secondsUntilStartTime,
+          listingParams.startTime,
           listingParams.secondsUntilEndTime
         )
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
@@ -114,10 +116,10 @@ describe("Edit listing: direct listing", function () {
 
   describe("Events", function() {
     it("Should emit ListingUpdate with new listing info", async () => {
-      const newSecondsUntilStartTime: BigNumber = BigNumber.from(1000);
+      const newStartTime: BigNumber = (listingParams.startTime as BigNumber).add(100);
       const newSecondsUntilEndTime: BigNumber = BigNumber.from(5000);
 
-      const timeStampOnEditListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
+      // const timeStampOnEditListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
 
       await expect(
         marketv2.connect(lister).editListingParametrs(
@@ -126,7 +128,7 @@ describe("Edit listing: direct listing", function () {
           listingParams.reservePricePerToken,
           listingParams.buyoutPricePerToken,
           listingParams.currencyToAccept,
-          newSecondsUntilStartTime,
+          newStartTime,
           newSecondsUntilEndTime
         )
       ).to.emit(marketv2, "ListingUpdate")
@@ -138,8 +140,8 @@ describe("Edit listing: direct listing", function () {
           tokenOwner: lister.address,
           assetContract: mockNft.address,
           tokenId: listingParams.tokenId,
-          startTime: timeStampOnEditListing.add(newSecondsUntilStartTime),
-          endTime: timeStampOnEditListing.add(newSecondsUntilEndTime),
+          startTime: newStartTime,
+          endTime: newStartTime.add(newSecondsUntilEndTime),
           quantity: listingParams.quantityToList,
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
@@ -163,7 +165,7 @@ describe("Edit listing: direct listing", function () {
         listingParams.reservePricePerToken,
         listingParams.buyoutPricePerToken,
         listingParams.currencyToAccept,
-        listingParams.secondsUntilStartTime,
+        listingParams.startTime,
         listingParams.secondsUntilEndTime
       )
       const balAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId)
@@ -174,7 +176,7 @@ describe("Edit listing: direct listing", function () {
 
   describe("Contract state", function() {
     it("Should store the edited listing state", async () => {
-      const newSecondsUntilStartTime: BigNumber = BigNumber.from(1000);
+      const newStartTime: BigNumber = (listingParams.startTime as BigNumber).add(100);
       const newSecondsUntilEndTime: BigNumber = BigNumber.from(6000);
 
       const timeStampOnEditListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
@@ -185,7 +187,7 @@ describe("Edit listing: direct listing", function () {
         listingParams.reservePricePerToken,
         listingParams.buyoutPricePerToken,
         listingParams.currencyToAccept,
-        newSecondsUntilStartTime,
+        newStartTime,
         newSecondsUntilEndTime
       )
 
@@ -195,8 +197,8 @@ describe("Edit listing: direct listing", function () {
       expect(listing.tokenOwner).to.equal(lister.address);
       expect(listing.assetContract).to.equal(mockNft.address);
       expect(listing.tokenId).to.equal(listingParams.tokenId);    
-      expect(listing.startTime).to.equal(timeStampOnEditListing.add(newSecondsUntilStartTime))
-      expect(listing.endTime).to.equal(timeStampOnEditListing.add(newSecondsUntilEndTime))
+      expect(listing.startTime).to.equal(newStartTime)
+      expect(listing.endTime).to.equal(newStartTime.add(newSecondsUntilEndTime))
       expect(listing.quantity).to.equal(listingParams.quantityToList)
       expect(listing.currency).to.equal(listingParams.currencyToAccept);
       expect(listing.reservePricePerToken).to.equal(listingParams.reservePricePerToken);

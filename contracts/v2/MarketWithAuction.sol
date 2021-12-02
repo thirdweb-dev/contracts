@@ -157,8 +157,8 @@ contract MarketWithAuction is
             assetContract: _params.assetContract,
             tokenId: _params.tokenId,
 
-            startTime: block.timestamp + _params.secondsUntilStartTime,
-            endTime: _params.secondsUntilEndTime == 0 ? type(uint256).max : block.timestamp + _params.secondsUntilEndTime,
+            startTime: _params.startTime < block.timestamp ? block.timestamp : _params.startTime,
+            endTime: _params.secondsUntilEndTime == 0 ? type(uint256).max : _params.startTime + _params.secondsUntilEndTime,
             
             quantity: getSafeQuantity(tokenTypeOfListing, _params.quantityToList),
             currency: _params.currencyToAccept,
@@ -182,7 +182,7 @@ contract MarketWithAuction is
         uint256 _reservePricePerToken,    
         uint256 _buyoutPricePerToken,
         address _currencyToAccept,
-        uint256 _secondsUntilStartTime,
+        uint256 _startTime,
         uint256 _secondsUntilEndTime
     ) 
         external
@@ -223,12 +223,12 @@ contract MarketWithAuction is
         targetListing.reservePricePerToken = _reservePricePerToken;
         targetListing.buyoutPricePerToken = _buyoutPricePerToken;
         targetListing.currency = _currencyToAccept;
-        targetListing.startTime = _secondsUntilStartTime == 0
+        targetListing.startTime = _startTime == 0
             ? targetListing.startTime
-            : block.timestamp + _secondsUntilStartTime;
+            : _startTime;
         targetListing.endTime = _secondsUntilEndTime == 0
             ? targetListing.endTime
-            : block.timestamp + _secondsUntilEndTime;
+            : targetListing.startTime + _secondsUntilEndTime;
 
         listings[_listingId] = targetListing;
 
@@ -472,6 +472,11 @@ contract MarketWithAuction is
         
 
         emit AuctionClosed(_listingId, closer, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
+    }
+
+    /// @dev Let the contract accept ether
+    receive() external payable {
+        emit EtherReceived(_msgSender(), msg.value);
     }
 
     //  =====   Internal functions  =====

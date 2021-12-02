@@ -49,7 +49,7 @@ describe("Buy: direct listing", function () {
   const totalQuantityOwned: BigNumberish = rewardSupplies[0]
   const quantityToList = totalQuantityOwned;
   const secondsUntilStartTime: number = 0;
-  const secondsUntilEndTime: number = 0;
+  const secondsUntilEndTime: number = 100;
 
   let listingParams: ListingParametersStruct;
   let listingId: BigNumberish;
@@ -94,7 +94,9 @@ describe("Buy: direct listing", function () {
       assetContract: accessNft.address,
       tokenId: rewardId,
       
-      secondsUntilStartTime: secondsUntilStartTime,
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
       secondsUntilEndTime: secondsUntilEndTime,
 
       quantityToList: quantityToList,
@@ -222,22 +224,10 @@ describe("Buy: direct listing", function () {
     })
 
     it("Should revert if buyer tries to buy tokens outside the listing's sale window", async () => {
-      const newSecondsUntilEnd = 10;
-
-      await marketv2.connect(creator).editListingParametrs(
-        listingId,
-        listingParams.quantityToList,
-        listingParams.reservePricePerToken,
-        listingParams.buyoutPricePerToken,
-        listingParams.currencyToAccept,
-        listingParams.secondsUntilStartTime,
-        newSecondsUntilEnd
-      );
-
+      
       // Time travel
-      for (let i = 0; i < newSecondsUntilEnd; i++) {
-        await ethers.provider.send("evm_mine", []);
-      }
+      const listingEnd: string = (await marketv2.listings(listingId)).endTime.toString();
+      await ethers.provider.send("evm_mine", [parseInt(listingEnd)]);
 
       const quantityToBuy: BigNumberish = 1;
 
@@ -256,6 +246,11 @@ describe("Buy: direct listing", function () {
   describe("Events", function() {
 
     beforeEach(async () => {
+
+      // Time travel
+      const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+      await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
+
       // Mint currency to buyer
       await coin.connect(protocolAdmin).mint(buyer.address, buyoutPricePerToken.mul(quantityToList));
 
@@ -300,6 +295,11 @@ describe("Buy: direct listing", function () {
   describe("Balances", function() {
 
     beforeEach(async () => {
+
+      // Time travel
+      const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+      await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
+      
       // Mint currency to buyer
       await coin.connect(protocolAdmin).mint(buyer.address, buyoutPricePerToken.mul(quantityToList));
 
@@ -374,6 +374,11 @@ describe("Buy: direct listing", function () {
   describe("Contract state", function() {
 
     beforeEach(async () => {
+
+      // Time travel
+      const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+      await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
+      
       // Mint currency to buyer
       await coin.connect(protocolAdmin).mint(buyer.address, buyoutPricePerToken.mul(quantityToList));
 

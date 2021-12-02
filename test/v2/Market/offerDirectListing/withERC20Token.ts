@@ -65,17 +65,15 @@ describe("Offer with ERC20 token: direct listing", function () {
   const approveMarketToTransferTokens = async (toApprove: boolean) => await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
 
   const timeTravelToListingWindow = async (listingId: BigNumber) => {
-    const listingStartTime: number = (await marketv2.listings(listingId)).startTime.toNumber();
-
-    await ethers.provider.send("evm_setNextBlockTimestamp", [listingStartTime]);
-    await ethers.provider.send("evm_mine", []);
+    // Time travel
+    const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
   }
 
   const timeTravelToAfterListingWindow = async (listingId: BigNumber) => {
-    const listingEndTime: number = (await marketv2.listings(listingId)).endTime.toNumber();
-
-    await ethers.provider.send("evm_setNextBlockTimestamp", [listingEndTime]);
-    await ethers.provider.send("evm_mine", []);
+    // Time travel
+    const listingEnd: string = (await marketv2.listings(listingId)).endTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingEnd)]);
   }
 
   before(async () => {
@@ -105,7 +103,9 @@ describe("Offer with ERC20 token: direct listing", function () {
       assetContract: mockNft.address,
       tokenId: nftTokenId,
       
-      secondsUntilStartTime: BigNumber.from(100),
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
       secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,

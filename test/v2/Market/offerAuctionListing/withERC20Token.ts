@@ -66,17 +66,15 @@ describe("Bid with ERC20 token: Auction Listing", function () {
   const approveMarketToTransferTokens = async (toApprove: boolean) => await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
   
   const timeTravelToListingWindow = async (listingId: BigNumber) => {
-    const listingStartTime: number = (await marketv2.listings(listingId)).startTime.toNumber();
-
-    await ethers.provider.send("evm_setNextBlockTimestamp", [listingStartTime]);
-    await ethers.provider.send("evm_mine", []);
+    // Time travel
+    const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
   }
 
   const timeTravelToAfterListingWindow = async (listingId: BigNumber) => {
-    const listingEndTime: number = (await marketv2.listings(listingId)).endTime.toNumber();
-
-    await ethers.provider.send("evm_setNextBlockTimestamp", [listingEndTime]);
-    await ethers.provider.send("evm_mine", []);
+    // Time travel
+    const listingEnd: string = (await marketv2.listings(listingId)).endTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingEnd)]);
   }
 
   before(async () => {
@@ -106,8 +104,10 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       assetContract: mockNft.address,
       tokenId: nftTokenId,
       
-      secondsUntilStartTime: BigNumber.from(100),
-      secondsUntilEndTime: BigNumber.from(500),
+      startTime: BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      ).add(100),
+      secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,
       currencyToAccept: erc20Token.address,
@@ -232,8 +232,6 @@ describe("Bid with ERC20 token: Auction Listing", function () {
         
       const listing: ListingStruct = await marketv2.listings(listingId);
 
-      const timeBuffer: BigNumber = await marketv2.timeBuffer();
-
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken) 
       ).to.emit(marketv2, "NewBid")
@@ -253,7 +251,7 @@ describe("Bid with ERC20 token: Auction Listing", function () {
           assetContract: listingParams.assetContract,
           tokenId: listingParams.tokenId,
           startTime: listing.startTime,
-          endTime: (listing.endTime as BigNumber).add(timeBuffer),
+          endTime: listing.endTime,
           quantity: listingParams.quantityToList,
           currency: listingParams.currencyToAccept,
           reservePricePerToken: listingParams.reservePricePerToken,
@@ -418,6 +416,8 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       
       const timeBuffer: BigNumber = await marketv2.timeBuffer();
       const endTimeBefore: BigNumber = (await marketv2.listings(listingId)).endTime;
+
+      await ethers.provider.send("evm_mine", [endTimeBefore.sub(timeBuffer).add(1).toNumber()]);
 
       await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken);
 

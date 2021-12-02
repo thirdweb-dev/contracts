@@ -245,6 +245,25 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "EtherReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": true,
           "internalType": "address",
           "name": "listingCreator",
@@ -857,7 +876,7 @@
             },
             {
               "internalType": "uint256",
-              "name": "secondsUntilStartTime",
+              "name": "startTime",
               "type": "uint256"
             },
             {
@@ -930,7 +949,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_secondsUntilStartTime",
+          "name": "_startTime",
           "type": "uint256"
         },
         {
