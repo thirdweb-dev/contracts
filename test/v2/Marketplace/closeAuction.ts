@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Forwarder } from "../../../typechain/Forwarder";
 import { AccessNFT } from "../../../typechain/AccessNFT";
 import { Coin } from "../../../typechain/Coin";
-import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumberish, BigNumber, Signer } from "ethers";
@@ -26,7 +26,7 @@ describe("Close / Cancel auction", function () {
   let relayer: SignerWithAddress;
 
   // Contracts
-  let marketv2: MarketWithAuction;
+  let marketv2: Marketplace;
   let accessNft: AccessNFT;
   let coin: Coin;
   let forwarder: Forwarder;

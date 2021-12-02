@@ -4,7 +4,7 @@ import { solidity } from "ethereum-waffle";
 
 // Contract Types
 import { MockERC1155 } from "../../../typechain/MockERC1155";
-import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
@@ -26,7 +26,7 @@ describe("Edit listing: direct listing", function () {
   let lister: SignerWithAddress;
 
   // Contracts
-  let marketv2: MarketWithAuction;
+  let marketv2: Marketplace;
   let mockNft: MockERC1155;
 
   // MockERC1155: `mint` parameters

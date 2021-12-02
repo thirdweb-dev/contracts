@@ -6,7 +6,7 @@ import { Forwarder } from "../../../typechain/Forwarder";
 import { AccessNFT } from "../../../typechain/AccessNFT";
 import { Coin } from "../../../typechain/Coin";
 import { ProtocolControl } from "../../../typechain/ProtocolControl";
-import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../typechain/MarketWithAuction";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
@@ -27,7 +27,7 @@ describe("Accept offer: direct listing", function () {
   let relayer: SignerWithAddress;
 
   // Contracts
-  let marketv2: MarketWithAuction;
+  let marketv2: Marketplace;
   let protocolControl: ProtocolControl;
   let accessNft: AccessNFT;
   let coin: Coin;

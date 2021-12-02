@@ -4,8 +4,8 @@ import { solidity } from "ethereum-waffle";
 
 // Contract Types
 import { MockERC1155 } from "../../../../typechain/MockERC1155";
-import { WETH9 } from "../../../../typechain/WETH9";
-import { MarketWithAuction, ListingParametersStruct, ListingStruct } from "../../../../typechain/MarketWithAuction";
+import { Coin } from "../../../../typechain/Coin";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
@@ -16,10 +16,7 @@ import { getContracts, Contracts } from "../../../../utils/tests/getContracts";
 
 use(solidity);
 
-describe("Bid with native token: Auction Listing", function () {
-  // Constants
-  const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-
+describe("Bid with ERC20 token: Auction Listing", function () {
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
@@ -28,9 +25,9 @@ describe("Bid with native token: Auction Listing", function () {
   let dummy: SignerWithAddress;
 
   // Contracts
-  let marketv2: MarketWithAuction;
+  let marketv2: Marketplace;
   let mockNft: MockERC1155;
-  let weth: WETH9;
+  let erc20Token: Coin;
 
   // MockERC1155: `mint` parameters
   const nftTokenId: BigNumber = BigNumber.from(1);
@@ -58,6 +55,14 @@ describe("Bid with native token: Auction Listing", function () {
     ethers.utils.toUtf8Bytes("")
   );
 
+  const mintERC20To = async (to: SignerWithAddress, amount: BigNumber) => {
+    // Mint currency to buyer
+    await erc20Token.connect(protocolAdmin).mint(to.address, amount);
+
+    // Approve Market to transfer currency
+    await erc20Token.connect(to).approve(marketv2.address, amount);
+  }
+
   const approveMarketToTransferTokens = async (toApprove: boolean) => await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
   
   const timeTravelToListingWindow = async (listingId: BigNumber) => {
@@ -83,7 +88,7 @@ describe("Bid with native token: Auction Listing", function () {
     mockNft = await ethers.getContractFactory("MockERC1155").then(f => f.connect(protocolAdmin).deploy());
     const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     marketv2 = contracts.marketv2;
-    weth = contracts.weth;
+    erc20Token = contracts.coin;
 
     // Setup: mint NFT to `lister` for `lister` to list these NFTs for sale.
     await mintNftToLister();
@@ -105,7 +110,7 @@ describe("Bid with native token: Auction Listing", function () {
       secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,
-      currencyToAccept: NATIVE_TOKEN_ADDRESS,
+      currencyToAccept: erc20Token.address,
 
       reservePricePerToken: ethers.utils.parseEther("0.01"),
       buyoutPricePerToken: ethers.utils.parseEther("0.02"),
@@ -121,6 +126,12 @@ describe("Bid with native token: Auction Listing", function () {
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
     currencyForOffer = listingParams.currencyToAccept;
     totalOfferAmount = offerPricePerToken.mul(listingParams.quantityToList);
+
+    // Setup: mint some curreny to buyer so they can fulfill the offer made.
+    await mintERC20To(
+      buyer,
+      (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList)
+    )
   });
   
   describe("Revert cases", async () => {
@@ -130,31 +141,49 @@ describe("Bid with native token: Auction Listing", function () {
       await timeTravelToListingWindow(listingId);
       
       // Invalid behaviour: total offer amount is less than reserve price per token * quantity of auctioned item.
-      const invalidOfferAmount = (offerPricePerToken.sub(ethers.utils.parseEther("0.005"))).mul(quantityWanted);
+      const invalidOfferPricePerToken = (listingParams.reservePricePerToken as BigNumber).sub(
+        ethers.utils.parseEther("0.005")
+      )
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: invalidOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, invalidOfferPricePerToken)
       ).to.be.revertedWith("Market: must offer at least reserve price.")
     })
 
-    it("Should revert if bid is made outside the auction window", async () => {
+    it("Should revert if bid is made outside the auction window", async () => {      
 
       // Invalid behaviour: bid is made outside auction window.
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
 
       await timeTravelToAfterListingWindow(listingId)
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }),
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken),
       ).to.be.revertedWith("Market: can only make offers in listing duration.")
     })
 
-    it("Should revert if offer amount does not match native token sent with transaction.", async () => {
+    it("Should revert if buyer does not own the required amount of currency", async () => {
+      
+      // Invalid behaviour: buyer does not own the offer amount
+      await erc20Token.connect(buyer).transfer(protocolAdmin.address, await erc20Token.balanceOf(buyer.address));
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: 0 })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
+      ).to.be.reverted;
+    })
+
+    it("Should revert if buyer has not approved Market to transfer currency", async () => {
+
+      // Invalid behaviour: buyer has not approved Market to transfer currency.
+      await erc20Token.connect(buyer).decreaseAllowance(
+        marketv2.address,
+        await erc20Token.allowance(buyer.address, marketv2.address)
+      );
+
+      await expect(
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.be.reverted;
     })
   })
@@ -170,7 +199,7 @@ describe("Bid with native token: Auction Listing", function () {
       const listing: ListingStruct = await marketv2.listings(listingId);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
       ).to.emit(marketv2, "NewOffer")
       .withArgs(
         listingId,
@@ -200,11 +229,11 @@ describe("Bid with native token: Auction Listing", function () {
     })
 
     it("Should emit NewBid if the incoming bid is the new highest bid, but below buyout price", async () => {
-
+        
       const listing: ListingStruct = await marketv2.listings(listingId);
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }) 
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken) 
       ).to.emit(marketv2, "NewBid")
       .withArgs(
         listingId,
@@ -239,12 +268,12 @@ describe("Bid with native token: Auction Listing", function () {
         .mul(listingParams.quantityToList)
         .sub(ethers.utils.parseEther("0.001")); // We don't want the auction to close
       
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList))
 
-      const lowOfferAmount = totalOfferAmount;
+      const lowOfferPricePerToken = offerPricePerToken;
 
       let secondBuyer = protocolAdmin // doesn't matter who
-      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: lowOfferAmount })
+      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, currencyForOffer, lowOfferPricePerToken)
         .then(tx => tx.wait());
       
       const newBidTopic = marketv2.interface.getEventTopic("NewBid");
@@ -254,13 +283,11 @@ describe("Bid with native token: Auction Listing", function () {
     })
     
     it("Should emit AuctionClosed if bid is greater or equal to buyout price", async () => {
-      
-      const buyoutOfferAmount = (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList);
       const listing: ListingStruct = await marketv2.listings(listingId);
       const timeStampOfBuyout = (await ethers.provider.getBlock("latest")).timestamp + 1;
 
       await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken)
       ).to.emit(marketv2, "AuctionClosed")
       .withArgs(
         listingId,
@@ -299,63 +326,56 @@ describe("Bid with native token: Auction Listing", function () {
     })
     
     it("Should escrow currency in Market if bid is valid", async () => {
+      const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address)
+      const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-      const buyerBalBefore: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalBefore: BigNumber = await weth.balanceOf(marketv2.address);
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
-      const gasPrice = ethers.utils.parseUnits("1", "gwei");
-      const tx = await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount, gasPrice })
-      const gasUsed = (await tx.wait()).gasUsed;
-      const gasPaid = gasPrice.mul(gasUsed);
+      const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address)
+      const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-      const buyerBalAfter: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalAfter: BigNumber = await weth.balanceOf(marketv2.address);
-
-      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalOfferAmount.add(gasPaid)))
+      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalOfferAmount))
       expect(marketBalAfter).to.equal(marketBalBefore.add(totalOfferAmount));
     })
 
     it("Should payout the previous bidder, if new bid is higher than the previous bid", async () => {
-      const highOfferAmount = (offerPricePerToken.mul(listingParams.quantityToList))
-        .add(ethers.utils.parseEther("0.5"));
+      const highOfferAmount = (listingParams.reservePricePerToken as BigNumber)
+        .mul(listingParams.quantityToList)
+        .add(ethers.utils.parseEther("0.01"));
 
-      const lowOfferAmount = totalOfferAmount;
+      const lowOfferPricePerToken = offerPricePerToken;
 
+      // Set up `prevBuyer`
       const prevBuyer = protocolAdmin; // doesn't matter who
+      await mintERC20To(
+        prevBuyer,
+        highOfferAmount
+      )
       
-      const prevBuyerBalBefore: BigNumber = await ethers.provider.getBalance(prevBuyer.address)
-      const buyerBalBefore: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalBefore: BigNumber = await weth.balanceOf(marketv2.address);
+      const prevBuyerBalBefore: BigNumber = await erc20Token.balanceOf(prevBuyer.address)
+      const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address)
+      const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-      const gasPrice = ethers.utils.parseUnits("1", "gwei");
-      
-      const tx1 = await marketv2.connect(prevBuyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: lowOfferAmount, gasPrice });
-      const tx2 = await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount, gasPrice });
+      await marketv2.connect(prevBuyer).offer(listingId, quantityWanted, currencyForOffer, lowOfferPricePerToken);
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList));
 
-      const gasUsed1 = (await tx1.wait()).gasUsed;
-      const gasUsed2 = (await tx2.wait()).gasUsed;
-      const gasPaid1 = gasPrice.mul(gasUsed1);
-      const gasPaid2 = gasPrice.mul(gasUsed2);
+      const prevBuyerBalAfter: BigNumber = await erc20Token.balanceOf(prevBuyer.address)
+      const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address)
+      const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
       
-      const prevBuyerBalAfter: BigNumber = await ethers.provider.getBalance(prevBuyer.address)
-      const buyerBalAfter: BigNumber = await ethers.provider.getBalance(buyer.address)
-      const marketBalAfter: BigNumber = await weth.balanceOf(marketv2.address);
-      
-      expect(prevBuyerBalAfter).to.equal(prevBuyerBalBefore.sub(gasPaid1))
-      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(highOfferAmount.add(gasPaid2)))
+      expect(prevBuyerBalAfter).to.equal(prevBuyerBalBefore)
+      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(highOfferAmount))
       expect(marketBalAfter).to.equal(marketBalBefore.add(highOfferAmount));
     });
 
     it("Should transfer auctioned tokens to bidder if bid is at buyout price.", async () => {
-      
-      const buyoutOfferAmount = (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList);
 
       const auctionQuantity: BigNumber =  (await marketv2.listings(listingId)).quantity;
 
       const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId)
       const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken)
 
       const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId)
       const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
@@ -371,8 +391,7 @@ describe("Bid with native token: Auction Listing", function () {
     })
 
     it("Should store a valid offer regardless", async () => {
-
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const offer = await marketv2.offers(listingId, buyer.address);
 
@@ -382,9 +401,8 @@ describe("Bid with native token: Auction Listing", function () {
       expect(offer.pricePerToken).to.equal(offerPricePerToken);
     })
 
-    it("Should store the offer as the winning bid if it is the new highest bid", async () => {      
-
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
+    it("Should store the offer as the winning bid if it is the new highest bid", async () => {
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       const winningBid = await marketv2.winningBid(listingId);
 
@@ -401,7 +419,7 @@ describe("Bid with native token: Auction Listing", function () {
 
       await ethers.provider.send("evm_mine", [endTimeBefore.sub(timeBuffer).add(1).toNumber()]);
 
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount });
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken);
 
       const endTimeAfter: BigNumber = (await marketv2.listings(listingId)).endTime;
 
@@ -410,9 +428,7 @@ describe("Bid with native token: Auction Listing", function () {
 
     it("Should close the auction by updating the listing's end time, if the bid is buyout price", async () => {
 
-      const buyoutOfferAmount = (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList);
-
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount });
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken);
 
       const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
       const endTimeAfter: BigNumber = (await marketv2.listings(listingId)).endTime;

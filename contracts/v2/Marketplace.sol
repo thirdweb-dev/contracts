@@ -27,7 +27,7 @@ import { ProtocolControl } from "../ProtocolControl.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-contract MarketWithAuction is
+contract Marketplace is
     IMarketplace,
     AccessControlEnumerable,
     IERC1155Receiver,
