@@ -198,14 +198,14 @@ contract MarketWithAuction is
                 targetListing.startTime < block.timestamp,
                 "Market: cannot edit auction after start."
             );
-
-            targetListing.reservePricePerToken = _reservePricePerToken;
-            targetListing.buyoutPricePerToken = _buyoutPricePerToken;
-
         }
 
         // Must validate ownership and approval of the new quantity of tokens for diret listing.
-        if(targetListing.listingType == ListingType.Direct && targetListing.quantity != _quantityToList) {
+        if(targetListing.quantity != safeNewQuantity) {
+
+            if(targetListing.listingType == ListingType.Auction) {
+                transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
+            }
             require(
                 validateOwnershipAndApproval(
                     targetListing.tokenOwner, 
@@ -220,6 +220,8 @@ contract MarketWithAuction is
             targetListing.quantity = safeNewQuantity;
         }
 
+        targetListing.reservePricePerToken = _reservePricePerToken;
+        targetListing.buyoutPricePerToken = _buyoutPricePerToken;
         targetListing.currency = _currencyToAccept;
         targetListing.startTime = _secondsUntilStartTime == 0
             ? targetListing.startTime
@@ -596,7 +598,6 @@ contract MarketWithAuction is
     )
         internal
     {
-        // TODO: check if it is efficient to perform the approval here.
         if(_from == address(this)) {
             IERC20(_currency).approve(address(this), _amount);
         }
