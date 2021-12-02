@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IMarket } from "./IMarket.sol";
+import { IMarketplace } from "./IMarketplace.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
 
 // Tokens
@@ -28,7 +28,7 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 contract MarketWithAuction is
-    IMarket,
+    IMarketplace,
     AccessControlEnumerable,
     IERC1155Receiver,
     IERC721Receiver,

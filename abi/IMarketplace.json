@@ -86,18 +86,18 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
@@ -161,7 +161,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Offer",
+        "internalType": "struct IMarketplace.Offer",
         "name": "winningBid",
         "type": "tuple"
       },
@@ -218,42 +218,23 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
     ],
     "name": "AuctionClosed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "EtherReceived",
     "type": "event"
   },
   {
@@ -324,18 +305,18 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
@@ -400,7 +381,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Offer",
+        "internalType": "struct IMarketplace.Offer",
         "name": "bid",
         "type": "tuple"
       },
@@ -457,18 +438,18 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
@@ -562,18 +543,18 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
@@ -655,18 +636,18 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
@@ -718,7 +699,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Offer",
+        "internalType": "struct IMarketplace.Offer",
         "name": "offer",
         "type": "tuple"
       },
@@ -775,18 +756,18 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.TokenType",
+            "internalType": "enum IMarketplace.TokenType",
             "name": "tokenType",
             "type": "uint8"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
         "indexed": false,
-        "internalType": "struct IMarket.Listing",
+        "internalType": "struct IMarketplace.Listing",
         "name": "listing",
         "type": "tuple"
       }
@@ -816,7 +797,7 @@
       },
       {
         "internalType": "address",
-        "name": "offeror",
+        "name": "_offeror",
         "type": "address"
       }
     ],
@@ -901,12 +882,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IMarket.ListingType",
+            "internalType": "enum IMarketplace.ListingType",
             "name": "listingType",
             "type": "uint8"
           }
         ],
-        "internalType": "struct IMarket.ListingParameters",
+        "internalType": "struct IMarketplace.ListingParameters",
         "name": "_params",
         "type": "tuple"
       }
