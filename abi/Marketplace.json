@@ -1103,49 +1103,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_listingId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_quantityToList",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_reservePricePerToken",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_buyoutPricePerToken",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_currencyToAccept",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_startTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_secondsUntilEndTime",
-        "type": "uint256"
-      }
-    ],
-    "name": "editListingParametrs",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -1731,6 +1688,49 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_listingId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_quantityToList",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_reservePricePerToken",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyoutPricePerToken",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_currencyToAccept",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_secondsUntilEndTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateListing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

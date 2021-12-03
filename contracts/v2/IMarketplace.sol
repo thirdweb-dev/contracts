@@ -199,7 +199,7 @@ interface IMarketplace {
      *                             'inactive' means NFTs cannot be bought from the listing. For auctions,
      *                             'inactive' means bids can no longer be made in the auction.
      */
-    function editListingParametrs(    
+    function updateListing(    
         uint256 _listingId,
         uint256 _quantityToList,
         uint256 _reservePricePerToken,    

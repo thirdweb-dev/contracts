@@ -176,7 +176,7 @@ contract Marketplace is
     }
 
     /// @dev Lets a listing's creator edit the listing's parameters.
-    function editListingParametrs(    
+    function updateListing(    
         uint256 _listingId,
         uint256 _quantityToList,
         uint256 _reservePricePerToken,    
@@ -184,7 +184,7 @@ contract Marketplace is
         address _currencyToAccept,
         uint256 _startTime,
         uint256 _secondsUntilEndTime
-    ) 
+    )
         external
         override
         onlyListingCreator(_listingId)

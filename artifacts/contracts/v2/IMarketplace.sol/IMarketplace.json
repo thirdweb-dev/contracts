@@ -929,6 +929,34 @@
         },
         {
           "internalType": "uint256",
+          "name": "_quantityWanted",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_currency",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_pricePerToken",
+          "type": "uint256"
+        }
+      ],
+      "name": "offer",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
           "name": "_quantityToList",
           "type": "uint256"
         },
@@ -958,37 +986,9 @@
           "type": "uint256"
         }
       ],
-      "name": "editListingParametrs",
+      "name": "updateListing",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_listingId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_quantityWanted",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_currency",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_pricePerToken",
-          "type": "uint256"
-        }
-      ],
-      "name": "offer",
-      "outputs": [],
-      "stateMutability": "payable",
       "type": "function"
     }
   ],
