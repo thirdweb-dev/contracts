@@ -735,12 +735,19 @@ contract Marketplace is
         uint256 _quantityToBuy
     )
         internal
-    {
-        validateCurrencyBalAndApproval(
-            _buyer, 
-            _listing.currency, 
-            _quantityToBuy * _listing.buyoutPricePerToken
-        );
+    {   
+        if(_listing.currency == nativeToken) {
+            require(
+                msg.value == _quantityToBuy * _listing.buyoutPricePerToken,
+                "Market: incorrect native token value sent." 
+            );
+        } else {
+            validateCurrencyBalAndApproval(
+                _buyer, 
+                _listing.currency, 
+                _quantityToBuy * _listing.buyoutPricePerToken
+            );
+        }
 
         // Fails if listing is an auction, since creating an auction requires
         // escrowing tokens in the Market.

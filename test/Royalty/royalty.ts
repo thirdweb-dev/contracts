@@ -210,7 +210,7 @@ describe("Royalty", function () {
 
       const price = ethers.utils.parseUnits("1000", "ether");
       await expect(
-        await protocolAdmin.sendTransaction({
+        await protocolAdmin.({
           to: royaltyContract.address,
           value: price,
         }),
