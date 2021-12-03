@@ -3,20 +3,23 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { MockERC1155 } from "../../../../typechain/MockERC1155";
-import { Coin } from "../../../../typechain/Coin";
-import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../../typechain/Marketplace";
+import { MockERC1155 } from "../../../typechain/MockERC1155";
+import { Coin } from "../../../typechain/Coin";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 
 describe("Offer with ERC20 token: direct listing", function () {
+  // Constants
+  const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
@@ -132,6 +135,15 @@ describe("Offer with ERC20 token: direct listing", function () {
   });
 
   describe("Revert cases", function() {
+
+    it("Should revert if offer is made with native token instead of wrapped native token", async () => {
+
+      await timeTravelToListingWindow(listingId);
+      
+      await expect(
+        marketv2.connect(buyer).offer(listingId, quantityWanted, NATIVE_TOKEN_ADDRESS, offerPricePerToken)
+      ).to.be.revertedWith("Market: must own and approve Market to transfer currency.")
+    })
 
     it("Should revert if offer is made outside listing window", async () => {
 

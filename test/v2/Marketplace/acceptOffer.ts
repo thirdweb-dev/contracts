@@ -1,139 +1,137 @@
 import { ethers } from "hardhat";
-import { expect } from "chai";
+import { expect, use } from "chai";
+import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { Forwarder } from "../../../typechain/Forwarder";
-import { AccessNFT } from "../../../typechain/AccessNFT";
+import { MockERC1155 } from "../../../typechain/MockERC1155";
 import { Coin } from "../../../typechain/Coin";
-import { ProtocolControl } from "../../../typechain/ProtocolControl";
 import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
-import { BytesLike } from "@ethersproject/bytes";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
 import { getContracts, Contracts } from "../../../utils/tests/getContracts";
-import { getURIs, getAmounts, getBoundedEtherAmount, getAmountBounded } from "../../../utils/tests/params";
-import { sendGaslessTx } from "../../../utils/tests/gasless";
+
+use(solidity);
 
 describe("Accept offer: direct listing", function () {
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
-  let creator: SignerWithAddress;
+  let lister: SignerWithAddress;
   let buyer: SignerWithAddress;
-  let relayer: SignerWithAddress;
+  let dummy: SignerWithAddress;
 
   // Contracts
   let marketv2: Marketplace;
-  let protocolControl: ProtocolControl;
-  let accessNft: AccessNFT;
-  let coin: Coin;
-  let forwarder: Forwarder;
+  let mockNft: MockERC1155;
+  let erc20Token: Coin;
 
-  // Reward parameters
-  const rewardURIs: string[] = getURIs();
-  const accessURIs = getURIs(rewardURIs.length);
-  const rewardSupplies: number[] = getAmounts(rewardURIs.length);
-  const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
+  // MockERC1155: `mint` parameters
+  const nftTokenId: BigNumber = BigNumber.from(1);
+  const nftTokenSupply: BigNumber = BigNumber.from(
+    Math.floor((1 + Math.random())) * 100
+  );
 
-  // Token IDs
-  let rewardId: number = 1;
-
-  // Market params
-  enum ListingType { Direct = 0, Auction = 1 }
+  // Market: `createListing` params
+  enum ListingType { Direct, Auction }
   enum TokenType { ERC1155, ERC721 }
-  const reservePricePerToken: BigNumber = ethers.utils.parseEther("1");
-  const buyoutPricePerToken: BigNumber = ethers.utils.parseEther("2");
-  const totalQuantityOwned: BigNumber = BigNumber.from(rewardSupplies[0]);
-  const quantityToList = BigNumber.from(totalQuantityOwned);
-  const secondsUntilStartTime: number = 0;
-  const secondsUntilEndTime: number = 0;
-
-  let listingParams: ListingParametersStruct;
   let listingId: BigNumber;
+  let listingParams: ListingParametersStruct;
 
   // Market: `offer` params
   let quantityWanted: BigNumber;
   let offerPricePerToken: BigNumber;
   let currencyForOffer: string;
-  let totalOfferAmount: BigNumber;
+
+  // Semantic helpers
+  const mintNftToLister = async () => await mockNft.connect(protocolAdmin).mint(
+    lister.address,
+    nftTokenId,
+    nftTokenSupply,
+    ethers.utils.toUtf8Bytes("")
+  );
+
+  const mintERC20ToBuyer = async (amount: BigNumber) => {
+    // Mint currency to buyer
+    await erc20Token.connect(protocolAdmin).mint(buyer.address, amount);
+
+    // Approve Market to transfer currency
+    await erc20Token.connect(buyer).approve(marketv2.address, amount);
+  }
+
+  const approveMarketToTransferTokens = async (toApprove: boolean) => await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
+
+  const timeTravelToListingWindow = async (listingId: BigNumber) => {
+    // Time travel
+    const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
+  }
+
+  const timeTravelToAfterListingWindow = async (listingId: BigNumber) => {
+    // Time travel
+    const listingEnd: string = (await marketv2.listings(listingId)).endTime.toString();
+    await ethers.provider.send("evm_mine", [parseInt(listingEnd)]);
+  }
 
   before(async () => {
     // Get signers
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    [protocolProvider, protocolAdmin, creator, buyer, relayer] = signers;
+    [protocolProvider, protocolAdmin, lister, buyer, dummy] = signers;
   });
 
   beforeEach(async () => {
     // Get contracts
+    mockNft = await ethers.getContractFactory("MockERC1155").then(f => f.connect(protocolAdmin).deploy());
     const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     marketv2 = contracts.marketv2;
-    accessNft = contracts.accessNft;
-    coin = contracts.coin;
-    forwarder = contracts.forwarder;
-    protocolControl = contracts.protocolControl;
+    erc20Token = contracts.coin;
 
-    // Grant minter role to creator
-    const MINTER_ROLE = await accessNft.MINTER_ROLE();
-    await accessNft.connect(protocolAdmin).grantRole(MINTER_ROLE, creator.address);
+    // Setup: mint NFT to `lister` for `lister` to list these NFTs for sale.
+    await mintNftToLister();
 
-    // Create access tokens
-    await sendGaslessTx(creator, forwarder, relayer, {
-      from: creator.address,
-      to: accessNft.address,
-      data: accessNft.interface.encodeFunctionData("createAccessTokens", [
-        creator.address,
-        rewardURIs,
-        accessURIs,
-        rewardSupplies,
-        emptyData,
-      ]),
-    });
+    // Setup: `lister` approves Market to transfer tokens.
+    await approveMarketToTransferTokens(true);
 
-    // Approve Market to transfer tokens
-    await accessNft.connect(creator).setApprovalForAll(marketv2.address, true);
+    // Setup: get expected listingId
+    listingId = await marketv2.totalListings();
 
-    // List tokens for sale: direct listing
+    // Setup: set default `createListing` paramters.
     listingParams = {
-      assetContract: accessNft.address,
-      tokenId: rewardId,
+      assetContract: mockNft.address,
+      tokenId: nftTokenId,
       
       startTime: BigNumber.from(
         (await ethers.provider.getBlock("latest")).timestamp
       ).add(100),
       secondsUntilEndTime: BigNumber.from(1000),
 
-      quantityToList: quantityToList,
-      currencyToAccept: coin.address,
+      quantityToList: nftTokenSupply,
+      currencyToAccept: erc20Token.address,
 
-      reservePricePerToken: reservePricePerToken,
-      buyoutPricePerToken: buyoutPricePerToken,
+      reservePricePerToken: ethers.utils.parseEther("0.1"),
+      buyoutPricePerToken: ethers.utils.parseEther("0.2"),
 
       listingType: ListingType.Direct
     }
 
-    listingId = await marketv2.totalListings();
-    await marketv2.connect(creator).createListing(listingParams);
+    // Setup: `lister` lists nft for sale in a direct listing.
+    await marketv2.connect(lister).createListing(listingParams)
 
     // Setup: set default `offer` parameters.
     quantityWanted = BigNumber.from(1);
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
     currencyForOffer = listingParams.currencyToAccept;
-    totalOfferAmount = quantityWanted.mul(offerPricePerToken)
 
-    // Mint currency to buyer
-    await coin.connect(protocolAdmin).mint(buyer.address, buyoutPricePerToken.mul(quantityToList));
-
-    // Approve Market to transfer currency
-    await coin.connect(buyer).approve(marketv2.address, buyoutPricePerToken.mul(quantityToList));
-
-    // Time travel
-    const listingStart: string = (await marketv2.listings(listingId)).startTime.toString();
-    await ethers.provider.send("evm_mine", [parseInt(listingStart)]);
-
+    // Setup: mint some curreny to buyer so they can fulfill the offer made.
+    await mintERC20ToBuyer(
+      (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList)
+    )
+    
+    // Setup: buyer makes an offer to the direct listing.
+    await timeTravelToListingWindow(listingId);
     await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
   });
 
@@ -143,46 +141,46 @@ describe("Accept offer: direct listing", function () {
       const newListingId = await marketv2.totalListings();
       const newListingParams = {...listingParams, listingType: ListingType.Auction};
 
-      await marketv2.connect(creator).createListing(newListingParams);
+      await marketv2.connect(lister).createListing(newListingParams);
       await marketv2.connect(buyer).offer(newListingId, quantityWanted, currencyForOffer, offerPricePerToken)
 
       await expect(
-        marketv2.connect(creator).acceptOffer(newListingId, buyer.address)
+        marketv2.connect(lister).acceptOffer(newListingId, buyer.address)
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.");
     })
 
     it("Should revert if lister does not own tokens listed", async () => {
       // Transfer away tokens
-      await accessNft.connect(creator).safeTransferFrom(
-        creator.address, relayer.address, rewardId, totalQuantityOwned, ethers.utils.toUtf8Bytes("")
+      await mockNft.connect(lister).safeTransferFrom(
+        lister.address, dummy.address, nftTokenId, await mockNft.balanceOf(lister.address, nftTokenId), ethers.utils.toUtf8Bytes("")
       );
 
       await expect(
-        marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.");
     })
 
     it("Should revert if lister has not approved market to transfer tokens", async () => {
       // Remove transfer approval
-      await accessNft.connect(creator).setApprovalForAll(marketv2.address, false);
+      await mockNft.connect(lister).setApprovalForAll(marketv2.address, false);
 
       await expect(
-        marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
       ).to.be.revertedWith("Market: must own and approve to transfer tokens.");
     })
 
     it("Should revert if offeror's currency balance is less than offer amount", async () => {
       // Transfer away currency
-      const buyerBal: BigNumber = await coin.balanceOf(buyer.address);
-      await coin.connect(buyer).transfer(relayer.address, buyerBal);
+      const buyerBal: BigNumber = await erc20Token.balanceOf(buyer.address);
+      await erc20Token.connect(buyer).transfer(dummy.address, buyerBal);
 
-      // console.log("buyer bal after: ", (await coin.balanceOf(buyer.address)).toString(), "before", buyerBal.toString())
+      // console.log("buyer bal after: ", (await erc20Token.balanceOf(buyer.address)).toString(), "before", buyerBal.toString())
 
-      expect(await coin.balanceOf(buyer.address)).to.equal(0);
-      // console.log("Buyer addr: ", buyer.address, "Creator addr: ", creator.address)
+      expect(await erc20Token.balanceOf(buyer.address)).to.equal(0);
+      // console.log("Buyer addr: ", buyer.address, "lister addr: ", lister.address)
 
       await expect(
-        marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
       ).to.be.revertedWith("ERC20: transfer amount exceeds balance")
     })
   })
@@ -193,23 +191,23 @@ describe("Accept offer: direct listing", function () {
       const listing: ListingStruct = await marketv2.listings(listingId);
 
       await expect(
-        marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
       ).to.emit(marketv2, "NewDirectSale")
       .withArgs(
         ...Object.values({
-          assetContract: accessNft.address,
-          seller: creator.address,
+          assetContract: mockNft.address,
+          seller: lister.address,
           listingId: listingId,
           buyer: buyer.address,
           quantityBought: quantityWanted,
           listing: Object.values({
             listingId: listingId,
-            tokenOwner: creator.address,
+            tokenOwner: lister.address,
             assetContract: listingParams.assetContract,
             tokenId: listingParams.tokenId,
             startTime: listing.startTime,
             endTime: listing.endTime,
-            quantity: quantityToList.sub(quantityWanted),
+            quantity: (listingParams.quantityToList as BigNumber).sub(quantityWanted),
             currency: listingParams.currencyToAccept,
             reservePricePerToken: listingParams.reservePricePerToken,
             buyoutPricePerToken: listingParams.buyoutPricePerToken,
@@ -223,28 +221,28 @@ describe("Accept offer: direct listing", function () {
 
   describe("Balances", function() {
     it("Should payout the lister with the offer amount", async () => {
-      const creatorBalBefore: BigNumber = await coin.balanceOf(creator.address)
-      const buyerBalBefore: BigNumber = await coin.balanceOf(buyer.address);
+      const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address)
+      const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address);
 
-      await marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+      await marketv2.connect(lister).acceptOffer(listingId, buyer.address)
 
-      const creatorBalAfter: BigNumber = await coin.balanceOf(creator.address)
-      const buyerBalAfter: BigNumber = await coin.balanceOf(buyer.address);
+      const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address)
+      const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address);
 
-      expect(creatorBalAfter).to.equal(creatorBalBefore.add(totalOfferAmount))
-      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalOfferAmount))
+      expect(listerBalAfter).to.equal(listerBalBefore.add(offerPricePerToken.mul(quantityWanted)))
+      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(offerPricePerToken.mul(quantityWanted)))
     })
 
     it("Should transfer the given amount listed tokens to offeror", async () => {
-      const creatorBalBefore: BigNumber = await accessNft.balanceOf(creator.address, rewardId)
-      const buyerBalBefore: BigNumber = await accessNft.balanceOf(buyer.address, rewardId);
+      const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId)
+      const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-      await marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+      await marketv2.connect(lister).acceptOffer(listingId, buyer.address)
 
-      const creatorBalAfter: BigNumber = await accessNft.balanceOf(creator.address, rewardId)
-      const buyerBalAfter: BigNumber = await accessNft.balanceOf(buyer.address, rewardId);
+      const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId)
+      const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-      expect(creatorBalAfter).to.equal(creatorBalBefore.sub(quantityWanted))
+      expect(listerBalAfter).to.equal(listerBalBefore.sub(quantityWanted))
       expect(buyerBalAfter).to.equal(buyerBalBefore.add(quantityWanted))
     })
   })
@@ -253,14 +251,14 @@ describe("Accept offer: direct listing", function () {
 
     it("Should update the listing quantity", async () => {
       const listingQuantityBefore: BigNumber = (await marketv2.listings(listingId)).quantity;
-      await marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+      await marketv2.connect(lister).acceptOffer(listingId, buyer.address)
       const listingQuantityAfter: BigNumber = (await marketv2.listings(listingId)).quantity;
 
       expect(listingQuantityAfter).to.equal(listingQuantityBefore.sub(quantityWanted));
     });
 
     it("Should reset the offer made", async () => {
-      await marketv2.connect(creator).acceptOffer(listingId, buyer.address)
+      await marketv2.connect(lister).acceptOffer(listingId, buyer.address)
 
       const offer = await marketv2.offers(listingId, buyer.address);
 

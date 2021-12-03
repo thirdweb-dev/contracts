@@ -298,7 +298,11 @@ contract Marketplace is
 
         (address currencyToUse, uint256 quantityWanted) = targetListing.listingType == ListingType.Auction
             ? (targetListing.currency, getSafeQuantity(targetListing.tokenType, targetListing.quantity))
-            : (_currency, getSafeQuantity(targetListing.tokenType, _quantityWanted));
+            : (
+                _currency == nativeToken ? nativeTokenWrapper : _currency, 
+                getSafeQuantity(targetListing.tokenType, _quantityWanted)
+              )
+            ;
 
         if(targetListing.listingType == ListingType.Auction) {
             require(
