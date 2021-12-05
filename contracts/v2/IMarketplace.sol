@@ -111,40 +111,48 @@ interface IMarketplace {
 
     /// @dev Emitted when a new listing is created.
     event NewListing(
+        uint256 indexed listingId,
         address indexed assetContract, 
         address indexed seller, 
-        uint256 indexed listingId, 
         Listing listing
     );
 
     /// @dev Emitted when the parameters of a listing are updated.
     event ListingUpdate(
-        address indexed listingCreator, 
-        uint256 indexed listingId, 
-        Listing listing
+        uint256 indexed listingId,
+        address indexed listingCreator
     );
 
-    /// @dev Emitted on a sale from a direct listing
-    event NewDirectSale(
+    /**
+     * @dev Emitted when a buyer directly buys from a direct listing, or a seller accepts some
+     *      buyer's offer to their direct listing.
+     */
+    event NewSale(
+        uint256 indexed listingId,
         address indexed assetContract,
         address indexed seller,
-        uint256 indexed listingId,
         address buyer,
-        uint256 quantity,
-        Listing listing
+        uint256 quantityBought,
+        uint256 totalPricePaid
     );
 
-    /// @dev Emitted when a new winning bid is created.
-    event NewBid(uint256 indexed listingId, address indexed bidder, Offer bid, Listing listing);
-
     /// @dev Emitted when (1) a new offer is made to a direct listing, or (2) when a new bid is made in an auction.
-    event NewOffer(uint256 indexed listingId, address indexed offeror, Offer offer, Listing listing);
-
-    /// @dev Emitted when an auction is canceled.
-    event AuctionCanceled(uint256 indexed listingId, address indexed auctionCreator, Listing listing);
+    event NewOffer(
+        uint256 indexed listingId,
+        address indexed offeror,
+        ListingType indexed listingType,
+        uint256 quantityWanted,
+        uint256 totalOfferAmount
+    );
 
     /// @dev Emitted when an auction is closed.
-    event AuctionClosed(uint256 indexed listingId, address indexed closer, address auctionCreator, address winningBidder, Offer winningBid, Listing listing);
+    event AuctionClosed(
+        uint256 indexed listingId, 
+        address indexed closer,
+        bool indexed cancelled,
+        address auctionCreator, 
+        address winningBidder
+    );
 
     /// @dev Emitted when the market fee collected on every sale is updated.
     event MarketFeeUpdate(uint64 newFee);
@@ -153,10 +161,10 @@ interface IMarketplace {
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
 
     /// @dev Emitted when the LISTER_ROLE restriction is updated.
-    event RestrictedListerRoleUpdated(bool restricted);
+    event ListingRestricted(bool restricted);
 
-    /// @dev Emitted when contract receives ether.
-    event EtherReceived(address from, uint256 amount);
+    /// @dev Emitted when contract receives native tokens.
+    event NativeTokensReceived(address from, uint256 amount);
 
     /**
      * @notice Lets a token (ERC 721 or ERC 1155) owner list tokens for sale in a direct listing, or an auction.
@@ -253,6 +261,7 @@ interface IMarketplace {
      * @dev This function is called once by the auction's creator, and once by the auction's winning bidder,
      *      to formally close the auction.
      * @param _listingId The unique ID of the listing (the auction to close).
+     * @param _closeFor For whom the auction is being closed - the auction creator or winning bidder.
      */
-    function closeAuction(uint256 _listingId) external;
+    function closeAuction(uint256 _listingId, address _closeFor) external;
 }

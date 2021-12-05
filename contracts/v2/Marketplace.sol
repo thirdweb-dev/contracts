@@ -172,7 +172,7 @@ contract Marketplace is
 
         listings[listingId] = newListing;
 
-        emit NewListing(_params.assetContract, tokenOwner, listingId, newListing);
+        emit NewListing(listingId, _params.assetContract, tokenOwner, newListing);
     }
 
     /// @dev Lets a listing's creator edit the listing's parameters.
@@ -232,7 +232,7 @@ contract Marketplace is
 
         listings[_listingId] = targetListing;
 
-        emit ListingUpdate(targetListing.tokenOwner, _listingId, targetListing);
+        emit ListingUpdate(_listingId, targetListing.tokenOwner);
     }
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
@@ -267,13 +267,13 @@ contract Marketplace is
         // Transfer tokens being bought to buyer.
         transferListingTokens(targetListing.tokenOwner, buyer, _quantityToBuy, targetListing);
 
-        emit NewDirectSale(
-            targetListing.assetContract, 
-            targetListing.tokenOwner, 
-            targetListing.listingId, 
-            buyer, 
-            _quantityToBuy, 
-            targetListing
+        emit NewSale(
+            _listingId,
+            targetListing.assetContract,
+            targetListing.tokenOwner,
+            buyer,
+            _quantityToBuy,
+            targetListing.buyoutPricePerToken * _quantityToBuy
         );
     }
 
@@ -333,7 +333,7 @@ contract Marketplace is
 
         offers[_listingId][offeror] = newOffer;
 
-        emit NewOffer(_listingId, offeror, newOffer, targetListing);
+        emit NewOffer(_listingId, offeror, targetListing.listingType, newOffer.quantityWanted, newOffer.pricePerToken * newOffer.quantityWanted);
 
         if(targetListing.listingType == ListingType.Auction) {
             handleBid(targetListing, newOffer);
@@ -385,19 +385,20 @@ contract Marketplace is
         );
         transferListingTokens(targetListing.tokenOwner, offeror, quantityWanted, targetListing);
 
-        emit NewDirectSale(
-            targetListing.assetContract, 
-            targetListing.tokenOwner, 
-            _listingId, 
-            offeror, 
+        emit NewSale(
+            _listingId,
+            targetListing.assetContract,
+            targetListing.tokenOwner,
+            offeror,
             quantityWanted,
-            targetListing
+            offerAmount
         );
     }
 
     /// @dev Lets an auction's creator close the auction.
     function closeAuction(
-        uint256 _listingId
+        uint256 _listingId,
+        address _closeFor
     )
         external
         override
@@ -423,15 +424,17 @@ contract Marketplace is
 
             transferListingTokens(address(this), targetListing.tokenOwner, quantityToSend, targetListing);
 
-            emit AuctionCanceled(_listingId, targetListing.tokenOwner, targetListing);
+            emit AuctionClosed(
+                _listingId,
+                closer, 
+                true,
+                targetListing.tokenOwner,
+                address(0)
+            );
 
             return;
         }
 
-        require(
-            closer == targetListing.tokenOwner || closer == targetBid.offeror,
-            "Market: must be bidder or auction creator."
-        );
         require(
             targetListing.listingType == ListingType.Auction,
             "Market: listing is not an auction."
@@ -441,7 +444,7 @@ contract Marketplace is
             "Market: can only close auction after it has ended."
         );
 
-        if(_msgSender() == targetListing.tokenOwner) {
+        if(_closeFor == targetListing.tokenOwner) {
             /**
              * Prevent re-entrancy by setting bid's offer amount, and listing's quantity to 0 before ERC20 transfer.
              */
@@ -461,7 +464,7 @@ contract Marketplace is
                 payoutAmount,
                 targetListing
             );
-        } else if (_msgSender() == targetBid.offeror) {
+        } else if (_closeFor == targetBid.offeror) {
             /**
              * Prevent re-entrancy by setting bid's quantity to 0 before token transfer.
              */
@@ -472,15 +475,16 @@ contract Marketplace is
             winningBid[_listingId] = targetBid;
 
             transferListingTokens(address(this), targetBid.offeror, quantityToSend, targetListing);
+        } else {
+            return;
         }
         
-
-        emit AuctionClosed(_listingId, closer, targetListing.tokenOwner, targetBid.offeror, targetBid, targetListing);
+        emit AuctionClosed(_listingId, closer, false, targetListing.tokenOwner, targetBid.offeror);
     }
 
     /// @dev Let the contract accept ether
     receive() external payable {
-        emit EtherReceived(_msgSender(), msg.value);
+        emit NativeTokensReceived(_msgSender(), msg.value);
     }
 
     //  =====   Internal functions  =====
@@ -517,12 +521,11 @@ contract Marketplace is
                 listings[_targetListing.listingId] = _targetListing;
 
                 emit AuctionClosed(
-                    _targetListing.listingId, 
-                    _incomingOffer.offeror, 
+                    _targetListing.listingId,
+                    _msgSender(),
+                    false, 
                     _targetListing.tokenOwner,
-                    _incomingOffer.offeror, 
-                    _incomingOffer, 
-                    _targetListing
+                    _incomingOffer.offeror
                 );
 
             } else {
@@ -533,8 +536,8 @@ contract Marketplace is
                     _targetListing.endTime += timeBuffer;
                     listings[_targetListing.listingId] = _targetListing;
                 }
-
-                emit NewBid(_targetListing.listingId, _incomingOffer.offeror, _incomingOffer, _targetListing);
+                
+                emit NewOffer(_targetListing.listingId, _incomingOffer.offeror, _targetListing.listingType, _incomingOffer.quantityWanted, _targetListing.buyoutPricePerToken * _targetListing.quantity);
             }
 
             // Payout previous highest bid.
@@ -848,7 +851,7 @@ contract Marketplace is
     /// @dev Lets a module admin restrict listing by LISTER_ROLE.
     function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {
         restrictedListerRoleOnly = restricted;
-        emit RestrictedListerRoleUpdated(restricted);
+        emit ListingRestricted(restricted);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.

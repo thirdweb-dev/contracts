@@ -30,95 +30,14 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "auctionCreator",
-        "type": "address"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarketplace.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarketplace.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Listing",
-        "name": "listing",
-        "type": "tuple"
-      }
-    ],
-    "name": "AuctionCanceled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "closer",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "cancelled",
+        "type": "bool"
       },
       {
         "indexed": false,
@@ -131,107 +50,6 @@
         "internalType": "address",
         "name": "winningBidder",
         "type": "address"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "offeror",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantityWanted",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "pricePerToken",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Offer",
-        "name": "winningBid",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarketplace.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarketplace.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Listing",
-        "name": "listing",
-        "type": "tuple"
       }
     ],
     "name": "AuctionClosed",
@@ -242,18 +60,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        "internalType": "bool",
+        "name": "restricted",
+        "type": "bool"
       }
     ],
-    "name": "EtherReceived",
+    "name": "ListingRestricted",
     "type": "event"
   },
   {
@@ -261,83 +73,15 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "listingCreator",
-        "type": "address"
-      },
-      {
-        "indexed": true,
         "internalType": "uint256",
         "name": "listingId",
         "type": "uint256"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarketplace.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarketplace.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Listing",
-        "name": "listing",
-        "type": "tuple"
+        "indexed": true,
+        "internalType": "address",
+        "name": "listingCreator",
+        "type": "address"
       }
     ],
     "name": "ListingUpdate",
@@ -360,125 +104,30 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
-        "name": "bidder",
+        "name": "from",
         "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "offeror",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantityWanted",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "pricePerToken",
-            "type": "uint256"
-          }
-        ],
         "indexed": false,
-        "internalType": "struct IMarketplace.Offer",
-        "name": "bid",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarketplace.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarketplace.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Listing",
-        "name": "listing",
-        "type": "tuple"
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
-    "name": "NewBid",
+    "name": "NativeTokensReceived",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "listingId",
+        "type": "uint256"
+      },
       {
         "indexed": true,
         "internalType": "address",
@@ -490,117 +139,6 @@
         "internalType": "address",
         "name": "seller",
         "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "buyer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarketplace.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarketplace.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Listing",
-        "name": "listing",
-        "type": "tuple"
-      }
-    ],
-    "name": "NewDirectSale",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
       },
       {
         "components": [
@@ -690,105 +228,22 @@
         "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "offeror",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantityWanted",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "pricePerToken",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct IMarketplace.Offer",
-        "name": "offer",
-        "type": "tuple"
+        "indexed": true,
+        "internalType": "enum IMarketplace.ListingType",
+        "name": "listingType",
+        "type": "uint8"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "listingId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservePricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "buyoutPricePerToken",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum IMarketplace.TokenType",
-            "name": "tokenType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum IMarketplace.ListingType",
-            "name": "listingType",
-            "type": "uint8"
-          }
-        ],
         "indexed": false,
-        "internalType": "struct IMarketplace.Listing",
-        "name": "listing",
-        "type": "tuple"
+        "internalType": "uint256",
+        "name": "quantityWanted",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalOfferAmount",
+        "type": "uint256"
       }
     ],
     "name": "NewOffer",
@@ -798,13 +253,43 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "listingId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
         "indexed": false,
-        "internalType": "bool",
-        "name": "restricted",
-        "type": "bool"
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "quantityBought",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalPricePaid",
+        "type": "uint256"
       }
     ],
-    "name": "RestrictedListerRoleUpdated",
+    "name": "NewSale",
     "type": "event"
   },
   {
@@ -849,6 +334,11 @@
         "internalType": "uint256",
         "name": "_listingId",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_closeFor",
+        "type": "address"
       }
     ],
     "name": "closeAuction",
