@@ -288,55 +288,38 @@ contract Marketplace is
         override
         nonReentrant
     {
-        address offeror = _msgSender();
         Listing memory targetListing = listings[_listingId];
 
         require(
             targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
-            "Market: can only make offers in listing duration."
+            "Market: inactive lisitng."
         );
-
-        (address currencyToUse, uint256 quantityWanted) = targetListing.listingType == ListingType.Auction
-            ? (targetListing.currency, getSafeQuantity(targetListing.tokenType, targetListing.quantity))
-            : (
-                _currency == nativeToken ? nativeTokenWrapper : _currency, 
-                getSafeQuantity(targetListing.tokenType, _quantityWanted)
-              )
-            ;
-
-        if(targetListing.listingType == ListingType.Auction) {
-            require(
-                currencyToUse == nativeToken 
-                ? targetListing.reservePricePerToken * targetListing.quantity <= msg.value
-                : targetListing.reservePricePerToken * targetListing.quantity <= _pricePerToken * targetListing.quantity,
-                "Market: must offer at least reserve price."
-            );
-        } else if(targetListing.listingType == ListingType.Direct) {
-            require(
-                targetListing.quantity > 0,
-                "Market: no tokens listed for sale."
-            );
-            validateCurrencyBalAndApproval(
-                offeror, 
-                currencyToUse, 
-                _pricePerToken * _quantityWanted
-            );
-        }
-
+        
+        // Both - (1) offers to direct listings, and (2) bids to auctions - share the same structure.
         Offer memory newOffer = Offer({
             listingId: _listingId,
-            offeror: offeror,
-            quantityWanted: quantityWanted,
-            currency: currencyToUse,
+            offeror: _msgSender(),
+            quantityWanted: _quantityWanted,
+            currency: _currency,
             pricePerToken: _pricePerToken
         });
 
-        offers[_listingId][offeror] = newOffer;
+        if (targetListing.listingType == ListingType.Auction) {
+            
+            // A bid to an auction must be made in the auction's desired currency.
+            newOffer.currency = targetListing.currency;
+            // A bid must be made for all auction items.
+            newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, targetListing.quantity);
 
-        emit NewOffer(_listingId, offeror, targetListing.listingType, newOffer.quantityWanted, newOffer.pricePerToken * newOffer.quantityWanted);
-
-        if(targetListing.listingType == ListingType.Auction) {
             handleBid(targetListing, newOffer);
+            
+        } else if (targetListing.listingType == ListingType.Direct) {
+            
+            // Offers to direct listings cannot be made directly in native tokens.
+            newOffer.currency = _currency == nativeToken ? nativeTokenWrapper : _currency;
+            newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, _quantityWanted);
+            
+            handleOffer(targetListing, newOffer);
         }
     }
 
@@ -464,22 +447,12 @@ contract Marketplace is
                 payoutAmount,
                 targetListing
             );
+
+            emit AuctionClosed(_listingId, closer, false, targetListing.tokenOwner, targetBid.offeror);
+
         } else if (_closeFor == targetBid.offeror) {
-            /**
-             * Prevent re-entrancy by setting bid's quantity to 0 before token transfer.
-             */
-            
-            uint256 quantityToSend = targetBid.quantityWanted;
-
-            targetBid.quantityWanted = 0;
-            winningBid[_listingId] = targetBid;
-
-            transferListingTokens(address(this), targetBid.offeror, quantityToSend, targetListing);
-        } else {
-            return;
+            _closeAuctionForBidder(targetListing, targetBid);
         }
-        
-        emit AuctionClosed(_listingId, closer, false, targetListing.tokenOwner, targetBid.offeror);
     }
 
     /// @dev Let the contract accept ether
@@ -489,70 +462,101 @@ contract Marketplace is
 
     //  =====   Internal functions  =====
 
+    function handleOffer(
+        Listing memory _targetListing,
+        Offer memory _newOffer
+    ) internal {
+        require(
+                _newOffer.quantityWanted <= _targetListing.quantity && _targetListing.quantity > 0,
+                "Marketplace: insufficient tokens in listing."
+            );
+            
+            require(
+                IERC20(_newOffer.currency).balanceOf(_newOffer.offeror) >= _newOffer.pricePerToken * _newOffer.quantityWanted
+                && IERC20(_newOffer.currency).allowance(_newOffer.offeror, address(this)) >= _newOffer.pricePerToken * _newOffer.quantityWanted,
+                "Marketplace: insufficient currency balance or allowance."
+            );
+
+            offers[_targetListing.listingId][_newOffer.offeror] = _newOffer;
+
+            emit NewOffer(
+                _targetListing.listingId,
+                _newOffer.offeror,
+                _targetListing.listingType,
+                _newOffer.quantityWanted,
+                _newOffer.pricePerToken * _newOffer.quantityWanted
+            );
+    }
+
     /// @dev Processes a bid on an existing auction.
     function handleBid(
         Listing memory _targetListing,
-        Offer memory _incomingOffer 
+        Offer memory _incomingBid 
     )
         internal
     {
-        
+
         Offer memory currentWinningBid = winningBid[_targetListing.listingId];
-
         uint256 currentOfferAmount = currentWinningBid.pricePerToken * currentWinningBid.quantityWanted;
-        uint256 incomingOfferAmount = _incomingOffer.pricePerToken * _incomingOffer.quantityWanted;
-        
-        if(isNewHighestBid(currentOfferAmount, incomingOfferAmount)) {
+        uint256 incomingOfferAmount = _incomingBid.pricePerToken * _incomingBid.quantityWanted;
 
-            address prevBidder = currentWinningBid.offeror;
+        /**
+         *      If there's an exisitng winning bid, incoming bid amount must be bid buffer % greater.
+         *      Else, bid amount must be at least as great as reserve price
+        */
+        require(
+            isNewWinningBid(
+                _targetListing.reservePricePerToken * _targetListing.quantity,
+                currentOfferAmount,
+                incomingOfferAmount
+            ),
+            "Marketplace: not winning bid."
+        );
 
-            currentWinningBid.offeror = _incomingOffer.offeror;
-            currentWinningBid.pricePerToken = _incomingOffer.pricePerToken;
+        // Close auction and execute sale if there's a buyout amount and incoming offer amount is buyout amount.
+        if(
+            _targetListing.buyoutPricePerToken > 0
+                && incomingOfferAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity
+        ) {
+            _closeAuctionForBidder(_targetListing, _incomingBid);
+            transferListingTokens(address(this), _incomingBid.offeror, _incomingBid.quantityWanted, _targetListing);
 
-            bool isBuyout = _targetListing.buyoutPricePerToken > 0
-                    && incomingOfferAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity;
+        } else {
+            
+            // Update the winning bid and listing's end time before external contract calls.
+            winningBid[_targetListing.listingId] = _incomingBid;
 
-            // Close auction and execute sale if there's a buyout amount and incoming offer amount is buyout amount.
-            if(isBuyout) {
-                _targetListing.endTime = block.timestamp;
-                currentWinningBid.quantityWanted = 0;
-
-                winningBid[_targetListing.listingId] = currentWinningBid;
+            if(_targetListing.endTime - block.timestamp <= timeBuffer) {
+                _targetListing.endTime += timeBuffer;
                 listings[_targetListing.listingId] = _targetListing;
-
-                emit AuctionClosed(
-                    _targetListing.listingId,
-                    _msgSender(),
-                    false, 
-                    _targetListing.tokenOwner,
-                    _incomingOffer.offeror
-                );
-
-            } else {
-
-                winningBid[_targetListing.listingId] = _incomingOffer;
-
-                if(_targetListing.endTime - block.timestamp <= timeBuffer) {
-                    _targetListing.endTime += timeBuffer;
-                    listings[_targetListing.listingId] = _targetListing;
-                }
-                
-                emit NewOffer(_targetListing.listingId, _incomingOffer.offeror, _targetListing.listingType, _incomingOffer.quantityWanted, _targetListing.buyoutPricePerToken * _targetListing.quantity);
             }
 
             // Payout previous highest bid.
-            if(prevBidder != address(0) && currentOfferAmount > 0) {                
-                transferCurrency(_targetListing.currency, address(this), prevBidder, currentOfferAmount);
+            if(currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {                
+                transferCurrency(_targetListing.currency, address(this), currentWinningBid.offeror, currentOfferAmount);
             }
 
             // Collect incoming bid
-            transferCurrency(_targetListing.currency, _incomingOffer.offeror, address(this), incomingOfferAmount);
-
-            // Send auctioned tokens to buyout bidder.
-            if(isBuyout) {
-                transferListingTokens(address(this), _incomingOffer.offeror, _incomingOffer.quantityWanted, _targetListing);
-            }
+            transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount);
+                
+            emit NewOffer(_targetListing.listingId, _incomingBid.offeror, _targetListing.listingType, _incomingBid.quantityWanted, _targetListing.buyoutPricePerToken * _targetListing.quantity);
         }
+    }
+
+    function _closeAuctionForBidder(Listing memory _targetListing, Offer memory _winningBid) internal {
+        _targetListing.endTime = block.timestamp;
+        _winningBid.quantityWanted = 0;
+
+        winningBid[_targetListing.listingId] = _winningBid;
+        listings[_targetListing.listingId] = _targetListing;
+
+        emit AuctionClosed(
+            _targetListing.listingId,
+            _msgSender(),
+            false, 
+            _winningBid.offeror,
+            _targetListing.tokenOwner
+        );
     }
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
@@ -661,18 +665,18 @@ contract Marketplace is
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.
-    function isNewHighestBid(
-        uint256 _currentBid,
-        uint256 _incomingBid
-    )
+    function isNewWinningBid(
+        uint256 _reserveAmount,
+        uint256 _currentWinningBidAmount,
+        uint256 _incomingBidAmount)
         internal
         view
         returns (bool isValidNewBid)
     {
-        isValidNewBid = _currentBid == 0
+        isValidNewBid = (_currentWinningBidAmount == 0 && _incomingBidAmount >= _reserveAmount) 
             || (
-                _incomingBid >  _currentBid
-                    && ((_incomingBid - _currentBid) * MAX_BPS) / _currentBid >= bidBufferBps
+                    _incomingBidAmount >  _currentWinningBidAmount
+                        && ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >= bidBufferBps
                 );
     }
 
@@ -709,28 +713,6 @@ contract Marketplace is
         }
     }
 
-    /// @dev Validates caller's token balance and approval for Market to transfer tokens.
-    function validateCurrencyBalAndApproval(
-        address _caller, 
-        address _currency,
-        uint256 _balanceToCheck
-    )
-        internal
-        view
-    {
-
-        bool success;
-
-        if(_currency == nativeToken) {
-            success = _caller.balance >= _balanceToCheck;
-        } else {
-            success = IERC20(_currency).balanceOf(_caller) >= _balanceToCheck
-                && IERC20(_currency).allowance(_caller, address(this)) >= _balanceToCheck;
-        }
-
-        require(success, "Market: must own and approve Market to transfer currency.");
-    }
-
     /// @dev Validates conditions of a direct listing sale.
     function validateDirectListingSale(
         Listing memory _listing, 
@@ -745,10 +727,10 @@ contract Marketplace is
                 "Market: incorrect native token value sent." 
             );
         } else {
-            validateCurrencyBalAndApproval(
-                _buyer, 
-                _listing.currency, 
-                _quantityToBuy * _listing.buyoutPricePerToken
+            require(
+                IERC20(_listing.currency).balanceOf(_buyer) >= _quantityToBuy * _listing.buyoutPricePerToken
+                && IERC20(_listing.currency).allowance(_buyer, address(this)) >= _quantityToBuy * _listing.buyoutPricePerToken,
+                "Marketplace: insufficient currency balance or allowance."
             );
         }
 
