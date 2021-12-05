@@ -201,26 +201,6 @@ contract Marketplace is
             );
         }
 
-        // Must validate ownership and approval of the new quantity of tokens for diret listing.
-        if(targetListing.quantity != safeNewQuantity) {
-
-            if(isAuction) {
-                transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
-            }
-            
-            validateOwnershipAndApproval(
-                targetListing.tokenOwner,
-                targetListing.assetContract, 
-                targetListing.tokenId, 
-                safeNewQuantity, 
-                targetListing.tokenType
-            );
-
-            if(isAuction) {
-                transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
-            }
-        }
-
         listings[_listingId] = Listing({
             listingId: _listingId,
 
@@ -240,6 +220,26 @@ contract Marketplace is
             tokenType: targetListing.tokenType,
             listingType: targetListing.listingType
         });
+
+        // Must validate ownership and approval of the new quantity of tokens for diret listing.
+        if(targetListing.quantity != safeNewQuantity) {
+
+            if(isAuction) {
+                transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
+            }
+            
+            validateOwnershipAndApproval(
+                targetListing.tokenOwner,
+                targetListing.assetContract, 
+                targetListing.tokenId, 
+                safeNewQuantity, 
+                targetListing.tokenType
+            );
+
+            if(isAuction) {
+                transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
+            }
+        }
 
         emit ListingUpdate(_listingId, targetListing.tokenOwner);
     }
