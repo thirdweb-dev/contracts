@@ -137,11 +137,6 @@ contract Marketplace is
         address tokenOwner = _msgSender();
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
 
-        require(
-            _params.quantityToList > 0,
-            "Market: invalid quantity."
-        );
-
         validateOwnershipAndApproval(
             tokenOwner,
             _params.assetContract, 
@@ -710,7 +705,8 @@ contract Marketplace is
             }
         }
 
-        require(isValid, "Marketplace: insufficient NFT balance or approval.");
+        // Check `_quantity > 0` to ensure `_tokenOwner` has a non-zero balance of the concerned tokens.
+        require(isValid && _quantity > 0, "Marketplace: insufficient NFT balance or approval.");
     }
 
     /// @dev Validates conditions of a direct listing sale.
@@ -729,7 +725,7 @@ contract Marketplace is
 
         // Check whether a valid quantity of listed tokens is being bought.
         require(
-            _quantityToBuy > 0 && _listing.quantity > 0 && _quantityToBuy <= _listing.quantity,
+            _listing.quantity > 0 && _quantityToBuy <= _listing.quantity,
             "Market: buying invalid amount of tokens."
         );
 
