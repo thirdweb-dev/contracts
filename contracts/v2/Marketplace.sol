@@ -188,11 +188,11 @@ contract Marketplace is
         Listing memory targetListing = listings[_listingId];
         uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
 
-        // Can only edit auction listing during before it starts.
+        // Can only edit auction listing before it starts.
         if(targetListing.listingType == ListingType.Auction) {
             require(
-                targetListing.startTime < block.timestamp,
-                "Market: cannot edit auction after start."
+                block.timestamp < targetListing.startTime,
+                "Market: auction already started."
             );
         }
 
