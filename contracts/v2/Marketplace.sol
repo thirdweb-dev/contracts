@@ -138,16 +138,17 @@ contract Marketplace is
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
 
         require(
-            _params.quantityToList > 0 
-                && validateOwnershipAndApproval(
-                    tokenOwner,
-                    _params.assetContract, 
-                    _params.tokenId, 
-                    _params.quantityToList, 
-                    tokenTypeOfListing, 
-                    _params.listingType
-                ), 
-            "Market: must own and approve to transfer tokens."
+            _params.quantityToList > 0,
+            "Market: invalid quantity."
+        );
+
+        validateOwnershipAndApproval(
+            tokenOwner,
+            _params.assetContract, 
+            _params.tokenId, 
+            _params.quantityToList, 
+            tokenTypeOfListing, 
+            _params.listingType
         );
 
         Listing memory newListing = Listing({
@@ -206,17 +207,16 @@ contract Marketplace is
             if(targetListing.listingType == ListingType.Auction) {
                 transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
             }
-            require(
-                validateOwnershipAndApproval(
-                    targetListing.tokenOwner, 
-                    targetListing.assetContract, 
-                    targetListing.tokenId, 
-                    safeNewQuantity, 
-                    targetListing.tokenType,
-                    targetListing.listingType
-                ), 
-                "Market: must own and approve to transfer tokens."
+            
+            validateOwnershipAndApproval(
+                targetListing.tokenOwner,
+                targetListing.assetContract, 
+                targetListing.tokenId, 
+                safeNewQuantity, 
+                targetListing.tokenType,
+                targetListing.listingType
             );
+
             targetListing.quantity = safeNewQuantity;
         }
 
@@ -248,32 +248,36 @@ contract Marketplace is
         Listing memory targetListing = listings[_listingId];
         address buyer = _msgSender();
 
-        validateDirectListingSale(targetListing, buyer, _quantityToBuy);
+        executeSale(
+            targetListing, 
+            buyer, 
+            targetListing.currency,
+            targetListing.buyoutPricePerToken * _quantityToBuy, 
+            _quantityToBuy
+        );
+    }
 
-        targetListing.quantity -= _quantityToBuy;
-        listings[_listingId] = targetListing;
+    /// @dev Lets a listing's creator accept an offer for their direct listing.
+    function acceptOffer(
+        uint256 _listingId, 
+        address offeror
+    ) 
+        external
+        override
+        nonReentrant
+        onlyListingCreator(_listingId)
+    {
+        Offer memory targetOffer = offers[_listingId][offeror];
+        Listing memory targetListing = listings[_listingId];
+        
+        delete offers[_listingId][offeror];
 
-        // Distribute sale value to stakeholders
-        if (targetListing.buyoutPricePerToken > 0) {
-            payout(
-                buyer, 
-                targetListing.tokenOwner,
-                targetListing.currency,
-                targetListing.buyoutPricePerToken * _quantityToBuy,
-                targetListing
-            );
-        }
-
-        // Transfer tokens being bought to buyer.
-        transferListingTokens(targetListing.tokenOwner, buyer, _quantityToBuy, targetListing);
-
-        emit NewSale(
-            _listingId,
-            targetListing.assetContract,
-            targetListing.tokenOwner,
-            buyer,
-            _quantityToBuy,
-            targetListing.buyoutPricePerToken * _quantityToBuy
+        executeSale(
+            targetListing,
+            offeror,
+            targetOffer.currency, 
+            targetOffer.pricePerToken * targetOffer.quantityWanted, 
+            targetOffer.quantityWanted
         );
     }
 
@@ -323,58 +327,40 @@ contract Marketplace is
         }
     }
 
-    /// @dev Lets a listing's creator accept an offer for their direct listing.
-    function acceptOffer(
-        uint256 _listingId, 
-        address offeror
-    ) 
-        external
-        override
-        nonReentrant
-        onlyListingCreator(_listingId)
-    {
-        Offer memory targetOffer = offers[_listingId][offeror];
-        Listing memory targetListing = listings[_listingId];
+    function executeSale(
+        Listing memory _targetListing,
+        address _buyer,
+        address _currency,
+        uint256 _currencyAmountToTransfer,
+        uint256 _listingTokenAmountToTransfer
+    ) internal {
 
-        require(
-            targetListing.listingType == ListingType.Direct
-                && validateOwnershipAndApproval(
-                    targetListing.tokenOwner, 
-                    targetListing.assetContract, 
-                    targetListing.tokenId, 
-                    targetOffer.quantityWanted, 
-                    targetListing.tokenType,
-                    targetListing.listingType
-                ), 
-            "Market: must own and approve to transfer tokens."
-        );
+        validateDirectListingSale(_targetListing, _buyer, _listingTokenAmountToTransfer);
 
-        uint256 quantityWanted = targetOffer.quantityWanted;
-        uint256 offerAmount = targetOffer.pricePerToken * targetOffer.quantityWanted;
-
-        targetOffer.quantityWanted = 0;
-        targetOffer.pricePerToken = 0;
-        offers[_listingId][offeror] = targetOffer;
-
-        targetListing.quantity -= quantityWanted;
-        listings[_listingId] = targetListing;
+        _targetListing.quantity -= _listingTokenAmountToTransfer;
+        listings[_targetListing.listingId] = _targetListing;
 
         payout(
-            offeror, 
-            targetListing.tokenOwner,
-            targetOffer.currency,
-            offerAmount, 
-            targetListing
+            _buyer, 
+            _targetListing.tokenOwner,
+            _currency,
+            _currencyAmountToTransfer, 
+            _targetListing
         );
-        transferListingTokens(targetListing.tokenOwner, offeror, quantityWanted, targetListing);
+        transferListingTokens(
+            _targetListing.tokenOwner,
+            _buyer,
+            _listingTokenAmountToTransfer,
+            _targetListing
+        );
 
         emit NewSale(
-            _listingId,
-            targetListing.assetContract,
-            targetListing.tokenOwner,
-            offeror,
-            quantityWanted,
-            offerAmount
+            _targetListing.listingId,
+            _targetListing.assetContract,
+            _targetListing.tokenOwner,
+            _buyer,
+            _listingTokenAmountToTransfer,
+            _currencyAmountToTransfer
         );
     }
 
@@ -467,25 +453,37 @@ contract Marketplace is
         Offer memory _newOffer
     ) internal {
         require(
-                _newOffer.quantityWanted <= _targetListing.quantity && _targetListing.quantity > 0,
-                "Marketplace: insufficient tokens in listing."
-            );
-            
-            require(
-                IERC20(_newOffer.currency).balanceOf(_newOffer.offeror) >= _newOffer.pricePerToken * _newOffer.quantityWanted
-                && IERC20(_newOffer.currency).allowance(_newOffer.offeror, address(this)) >= _newOffer.pricePerToken * _newOffer.quantityWanted,
-                "Marketplace: insufficient currency balance or allowance."
-            );
+            _newOffer.quantityWanted <= _targetListing.quantity && _targetListing.quantity > 0,
+            "Marketplace: insufficient tokens in listing."
+        );
 
-            offers[_targetListing.listingId][_newOffer.offeror] = _newOffer;
+        validateERC20BalAndAllowance(
+            _newOffer.offeror,
+            _newOffer.currency,
+            _newOffer.pricePerToken * _newOffer.quantityWanted
+        );
 
-            emit NewOffer(
-                _targetListing.listingId,
-                _newOffer.offeror,
-                _targetListing.listingType,
-                _newOffer.quantityWanted,
-                _newOffer.pricePerToken * _newOffer.quantityWanted
-            );
+        offers[_targetListing.listingId][_newOffer.offeror] = _newOffer;
+
+        emit NewOffer(
+            _targetListing.listingId,
+            _newOffer.offeror,
+            _targetListing.listingType,
+            _newOffer.quantityWanted,
+            _newOffer.pricePerToken * _newOffer.quantityWanted
+        );
+    }
+
+    function validateERC20BalAndAllowance(
+        address _addrToCheck,
+        address _currency,
+        uint256 _currencyAmountToCheckAgainst
+    ) internal view {
+        require(
+            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst
+                && IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
+            "Marketplace: insufficient currency balance or allowance."
+        );
     }
 
     /// @dev Processes a bid on an existing auction.
@@ -690,9 +688,9 @@ contract Marketplace is
         ListingType _listingType
     ) 
         internal
-        returns (bool isValid) 
     {
         address market = address(this);
+        bool isValid;
 
         if(_tokenType == TokenType.ERC1155) {
             isValid = IERC1155(_assetContract).balanceOf(_tokenOwner, _tokenId) >= _quantity
@@ -711,6 +709,8 @@ contract Marketplace is
                 IERC721(_assetContract).safeTransferFrom(_tokenOwner, market, _tokenId, "");
             }
         }
+
+        require(isValid, "Marketplace: insufficient NFT balance or approval.");
     }
 
     /// @dev Validates conditions of a direct listing sale.
@@ -720,41 +720,49 @@ contract Marketplace is
         uint256 _quantityToBuy
     )
         internal
-    {   
-        if(_listing.currency == nativeToken) {
-            require(
-                msg.value == _quantityToBuy * _listing.buyoutPricePerToken,
-                "Market: incorrect native token value sent." 
-            );
-        } else {
-            require(
-                IERC20(_listing.currency).balanceOf(_buyer) >= _quantityToBuy * _listing.buyoutPricePerToken
-                && IERC20(_listing.currency).allowance(_buyer, address(this)) >= _quantityToBuy * _listing.buyoutPricePerToken,
-                "Marketplace: insufficient currency balance or allowance."
-            );
-        }
+    {
 
-        // Fails if listing is an auction, since creating an auction requires
-        // escrowing tokens in the Market.
         require(
-            validateOwnershipAndApproval(
-                _listing.tokenOwner, 
-                _listing.assetContract, 
-                _listing.tokenId, 
-                _listing.quantity, 
-                _listing.tokenType,
-                _listing.listingType
-            ),
-            "Market: cannot buy tokens from this listing."
+            _listing.listingType == ListingType.Direct,
+            "Marketplace: cannot buy from listing."
         );
-        
+
+        // Check whether a valid quantity of listed tokens is being bought.
         require(
-            _quantityToBuy > 0 && _quantityToBuy <= _listing.quantity,
-            "Market: must buy an appropriate amount of tokens."
+            _quantityToBuy > 0 && _listing.quantity > 0 && _quantityToBuy <= _listing.quantity,
+            "Market: buying invalid amount of tokens."
         );
+
+        // Check if sale is made within the listing window.
         require(
             block.timestamp <= _listing.endTime && block.timestamp >= _listing.startTime,
             "Market: the sale has either not started or closed."
+        );
+
+        // Check: buyer owns and has approved sufficient currency for sale.
+        if(_listing.currency == nativeToken) {
+            require(
+                msg.value == _quantityToBuy * _listing.buyoutPricePerToken,
+                "Marketplace: insufficient currency balance or allowance." 
+            );
+        } else {
+
+            validateERC20BalAndAllowance(
+                _buyer,
+                _listing.currency,
+                _quantityToBuy * _listing.buyoutPricePerToken
+            );
+        }
+
+        // Check if lisitng is a direct listing, and whether token owner owns and has approved
+        // `quantityToBuy` amount of listing tokens from the listing.
+        validateOwnershipAndApproval(
+            _listing.tokenOwner, 
+            _listing.assetContract, 
+            _listing.tokenId, 
+            _quantityToBuy, 
+            _listing.tokenType,
+            _listing.listingType
         );
     }
 
