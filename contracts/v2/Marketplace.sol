@@ -211,21 +211,27 @@ contract Marketplace is
                 targetListing.tokenType,
                 targetListing.listingType
             );
-
-            targetListing.quantity = safeNewQuantity;
         }
 
-        targetListing.reservePricePerToken = _reservePricePerToken;
-        targetListing.buyoutPricePerToken = _buyoutPricePerToken;
-        targetListing.currency = _currencyToAccept;
-        targetListing.startTime = _startTime == 0
-            ? targetListing.startTime
-            : _startTime;
-        targetListing.endTime = _secondsUntilEndTime == 0
-            ? targetListing.endTime
-            : targetListing.startTime + _secondsUntilEndTime;
+        listings[_listingId] = Listing({
+            listingId: _listingId,
 
-        listings[_listingId] = targetListing;
+            tokenOwner: _msgSender(),
+            assetContract: targetListing.assetContract,
+            tokenId: targetListing.tokenId,
+
+            startTime: _startTime == 0 ? targetListing.startTime : _startTime,
+            endTime: _secondsUntilEndTime == 0 ? targetListing.endTime : targetListing.startTime + _secondsUntilEndTime,
+
+            quantity: safeNewQuantity,
+            currency: _currencyToAccept,
+
+            reservePricePerToken: _reservePricePerToken,
+            buyoutPricePerToken: _buyoutPricePerToken,
+            
+            tokenType: targetListing.tokenType,
+            listingType: targetListing.listingType
+        });
 
         emit ListingUpdate(_listingId, targetListing.tokenOwner);
     }
