@@ -134,16 +134,16 @@ contract Marketplace is
     {
         // Get values to populate `Listing`.
         uint256 listingId = nextListingId();
-        address tokenOwner = _msgSender();
+        address tokenOwner = _msgSender();        
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
+        uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
         validateOwnershipAndApproval(
             tokenOwner,
             _params.assetContract, 
             _params.tokenId, 
-            _params.quantityToList, 
-            tokenTypeOfListing, 
-            _params.listingType
+            tokenAmountToList, 
+            tokenTypeOfListing
         );
 
         Listing memory newListing = Listing({
@@ -156,7 +156,7 @@ contract Marketplace is
             startTime: _params.startTime < block.timestamp ? block.timestamp : _params.startTime,
             endTime: _params.secondsUntilEndTime == 0 ? type(uint256).max : _params.startTime + _params.secondsUntilEndTime,
             
-            quantity: getSafeQuantity(tokenTypeOfListing, _params.quantityToList),
+            quantity: tokenAmountToList,
             currency: _params.currencyToAccept,
 
             reservePricePerToken: _params.reservePricePerToken,
@@ -167,6 +167,10 @@ contract Marketplace is
         });
 
         listings[listingId] = newListing;
+
+        if(newListing.listingType == ListingType.Auction) {
+            transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
+        }
 
         emit NewListing(listingId, _params.assetContract, tokenOwner, newListing);
     }
@@ -187,9 +191,10 @@ contract Marketplace is
     {
         Listing memory targetListing = listings[_listingId];
         uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
+        bool isAuction = targetListing.listingType == ListingType.Auction;
 
         // Can only edit auction listing before it starts.
-        if(targetListing.listingType == ListingType.Auction) {
+        if(isAuction) {
             require(
                 block.timestamp < targetListing.startTime,
                 "Market: auction already started."
@@ -199,7 +204,7 @@ contract Marketplace is
         // Must validate ownership and approval of the new quantity of tokens for diret listing.
         if(targetListing.quantity != safeNewQuantity) {
 
-            if(targetListing.listingType == ListingType.Auction) {
+            if(isAuction) {
                 transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
             }
             
@@ -208,9 +213,12 @@ contract Marketplace is
                 targetListing.assetContract, 
                 targetListing.tokenId, 
                 safeNewQuantity, 
-                targetListing.tokenType,
-                targetListing.listingType
+                targetListing.tokenType
             );
+
+            if(isAuction) {
+                transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
+            }
         }
 
         listings[_listingId] = Listing({
@@ -685,30 +693,22 @@ contract Marketplace is
         address _assetContract, 
         uint256 _tokenId, 
         uint256 _quantity, 
-        TokenType _tokenType,
-        ListingType _listingType
+        TokenType _tokenType
     ) 
-        internal
+        internal view
     {
         address market = address(this);
         bool isValid;
 
         if(_tokenType == TokenType.ERC1155) {
             isValid = IERC1155(_assetContract).balanceOf(_tokenOwner, _tokenId) >= _quantity
-                && IERC1155(_assetContract).isApprovedForAll(_tokenOwner, market);
-
-            if(isValid && _listingType == ListingType.Auction) {
-                IERC1155(_assetContract).safeTransferFrom(_tokenOwner, market, _tokenId, _quantity, "");
-            }
+                && IERC1155(_assetContract).isApprovedForAll(_tokenOwner, market);            
         } else if (_tokenType == TokenType.ERC721) {
             isValid = IERC721(_assetContract).ownerOf(_tokenId) == _tokenOwner
                 && (
                     IERC721(_assetContract).getApproved(_tokenId) == market
                         || IERC721(_assetContract).isApprovedForAll(_tokenOwner, market)
                 );
-            if(isValid && _listingType == ListingType.Auction) {
-                IERC721(_assetContract).safeTransferFrom(_tokenOwner, market, _tokenId, "");
-            }
         }
 
         // Check `_quantity > 0` to ensure `_tokenOwner` has a non-zero balance of the concerned tokens.
@@ -763,8 +763,7 @@ contract Marketplace is
             _listing.assetContract, 
             _listing.tokenId, 
             _quantityToBuy, 
-            _listing.tokenType,
-            _listing.listingType
+            _listing.tokenType
         );
     }
 
