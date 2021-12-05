@@ -383,71 +383,78 @@ contract Marketplace is
         nonReentrant
     {
         Listing memory targetListing = listings[_listingId];
-        Offer memory targetBid = winningBid[_listingId];
-        
-        address closer = _msgSender();
-
-        if(targetListing.startTime > block.timestamp) {
-
-            require(
-                listings[_listingId].tokenOwner == closer,
-                "Market: caller is not the listing creator."
-            );
-
-            // Auction is considered canceled if end time has passed.
-            uint256 quantityToSend = targetListing.quantity;
-            targetListing.quantity = 0;
-            targetListing.endTime = block.timestamp;
-            listings[_listingId] = targetListing;
-
-            transferListingTokens(address(this), targetListing.tokenOwner, quantityToSend, targetListing);
-
-            emit AuctionClosed(
-                _listingId,
-                closer, 
-                true,
-                targetListing.tokenOwner,
-                address(0)
-            );
-
-            return;
-        }
 
         require(
             targetListing.listingType == ListingType.Auction,
-            "Market: listing is not an auction."
-        );
-        require(
-            targetListing.endTime < block.timestamp,
-            "Market: can only close auction after it has ended."
+            "Market: listing is not auction."
         );
 
-        if(_closeFor == targetListing.tokenOwner) {
-            /**
-             * Prevent re-entrancy by setting bid's offer amount, and listing's quantity to 0 before ERC20 transfer.
-             */
-            uint256 payoutAmount = targetBid.pricePerToken * targetBid.quantityWanted;
+        Offer memory targetBid = winningBid[_listingId];
 
-            targetListing.quantity = 0;
-            targetListing.endTime = block.timestamp;
-            listings[_listingId] = targetListing;
+        if(targetListing.startTime > block.timestamp) {
+            _cancelAuction(targetListing);
+        } else {
 
-            targetBid.pricePerToken = 0;
-            winningBid[_listingId] = targetBid;
-
-            payout(
-                address(this), 
-                targetListing.tokenOwner,
-                targetListing.currency,
-                payoutAmount,
-                targetListing
+            require(
+                targetListing.endTime < block.timestamp,
+                "Market: can only close auction after it has ended."
             );
 
-            emit AuctionClosed(_listingId, closer, false, targetListing.tokenOwner, targetBid.offeror);
-
-        } else if (_closeFor == targetBid.offeror) {
-            _closeAuctionForBidder(targetListing, targetBid);
+            if(_closeFor == targetListing.tokenOwner) {
+                _closeAuctionForBidder(targetListing, targetBid);
+            } else if (_closeFor == targetBid.offeror) {
+                _closeAuctionForBidder(targetListing, targetBid);
+            }
         }
+    }
+
+    function _cancelAuction(Listing memory _targetListing) internal {
+       require(
+            listings[_targetListing.listingId].tokenOwner == _msgSender(),
+            "Market: caller is not the listing creator."
+        );
+
+        delete listings[_targetListing.listingId];
+
+        transferListingTokens(address(this), _targetListing.tokenOwner, _targetListing.quantity, _targetListing);
+
+        emit AuctionClosed(
+            _targetListing.listingId,
+            _msgSender(), 
+            true,
+            _targetListing.tokenOwner,
+            address(0)
+        );
+    }
+
+    function _closeAuctionForAuctionCreator(Listing memory _targetListing, Offer memory _winningBid) internal {
+       uint256 payoutAmount = _winningBid.pricePerToken * _winningBid.quantityWanted;
+
+        _targetListing.quantity = 0;
+        _targetListing.endTime = block.timestamp;
+        listings[_targetListing.listingId] = _targetListing;
+
+        _winningBid.pricePerToken = 0;
+        winningBid[_targetListing.listingId] = _winningBid;
+
+        payout(address(this), _targetListing.tokenOwner, _targetListing.currency, payoutAmount, _targetListing);
+
+        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _targetListing.tokenOwner, _winningBid.offeror);
+    }
+
+    function _closeAuctionForBidder(Listing memory _targetListing, Offer memory _winningBid) internal {
+
+        uint256 quantityToSend = _winningBid.quantityWanted;
+
+        _targetListing.endTime = block.timestamp;
+        _winningBid.quantityWanted = 0;
+
+        winningBid[_targetListing.listingId] = _winningBid;
+        listings[_targetListing.listingId] = _targetListing;
+
+        transferListingTokens(address(this), _winningBid.offeror, quantityToSend, _targetListing);
+
+        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _winningBid.offeror, _targetListing.tokenOwner);
     }
 
     /// @dev Let the contract accept ether
@@ -526,8 +533,6 @@ contract Marketplace is
                 && incomingOfferAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity
         ) {
             _closeAuctionForBidder(_targetListing, _incomingBid);
-            transferListingTokens(address(this), _incomingBid.offeror, _incomingBid.quantityWanted, _targetListing);
-
         } else {
             
             // Update the winning bid and listing's end time before external contract calls.
@@ -548,22 +553,6 @@ contract Marketplace is
                 
             emit NewOffer(_targetListing.listingId, _incomingBid.offeror, _targetListing.listingType, _incomingBid.quantityWanted, _targetListing.buyoutPricePerToken * _targetListing.quantity);
         }
-    }
-
-    function _closeAuctionForBidder(Listing memory _targetListing, Offer memory _winningBid) internal {
-        _targetListing.endTime = block.timestamp;
-        _winningBid.quantityWanted = 0;
-
-        winningBid[_targetListing.listingId] = _winningBid;
-        listings[_targetListing.listingId] = _targetListing;
-
-        emit AuctionClosed(
-            _targetListing.listingId,
-            _msgSender(),
-            false, 
-            _winningBid.offeror,
-            _targetListing.tokenOwner
-        );
     }
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
