@@ -96,7 +96,7 @@ describe("List token for sale: Auction Listing", function () {
       const incorrectParams = { ...listingParams, quantityToList: 0 };
 
       await expect(marketv2.connect(lister).createListing(incorrectParams)).to.be.revertedWith(
-        "Marketplace: insufficient token balance or approval.",
+        "Marketplace: listing invalid quantity.",
       );
     });
 
