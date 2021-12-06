@@ -21,7 +21,12 @@ contract MockLazyNFTReentrant is IERC721Receiver {
     function attack() external {
         require(address(this).balance >= 15 ether, ">= 15eth");
         bytes32[] memory proofs = new bytes32[](0);
-        Address.functionCallWithValue(address(nft), abi.encodeWithSelector(nft.claim.selector, 1, proofs), 1 ether, "FAILED");
+        Address.functionCallWithValue(
+            address(nft),
+            abi.encodeWithSelector(nft.claim.selector, 1, proofs),
+            1 ether,
+            "FAILED"
+        );
     }
 
     function onERC721Received(
@@ -32,7 +37,12 @@ contract MockLazyNFTReentrant is IERC721Receiver {
     ) public virtual override returns (bytes4) {
         if (!reentrantOnReceive) {
             bytes32[] memory proofs = new bytes32[](0);
-            Address.functionCallWithValue(address(nft), abi.encodeWithSelector(nft.claim.selector, 1, proofs), 1 ether, "FAILED");
+            Address.functionCallWithValue(
+                address(nft),
+                abi.encodeWithSelector(nft.claim.selector, 1, proofs),
+                1 ether,
+                "FAILED"
+            );
         }
         return this.onERC721Received.selector;
     }
@@ -40,7 +50,12 @@ contract MockLazyNFTReentrant is IERC721Receiver {
     receive() external payable {
         if (reentrantOnReceive) {
             bytes32[] memory proofs = new bytes32[](0);
-            Address.functionCallWithValue(address(nft), abi.encodeWithSelector(nft.claim.selector, 1, proofs), 1 ether, "FAILED");
+            Address.functionCallWithValue(
+                address(nft),
+                abi.encodeWithSelector(nft.claim.selector, 1, proofs),
+                1 ether,
+                "FAILED"
+            );
         }
     }
 }

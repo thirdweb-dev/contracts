@@ -110,11 +110,14 @@ export async function getContracts(
     .then(f =>
       f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI, 0),
     )) as Market;
-  
+
   // Deploy WETH and Marketv2
   const weth: WETH9 = await ethers.getContractFactory("WETH9").then(f => f.deploy());
-  const marketv2: Marketplace = await ethers.getContractFactory("Marketplace")
-      .then(f => f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, weth.address, marketContractURI, 0)) as Marketplace;
+  const marketv2: Marketplace = (await ethers
+    .getContractFactory("Marketplace")
+    .then(f =>
+      f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, weth.address, marketContractURI, 0),
+    )) as Marketplace;
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";

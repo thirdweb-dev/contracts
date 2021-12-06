@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IMarketplace {
-
     /// @notice Type of the tokens that can be listed for sale.
     enum TokenType {
         ERC1155,
@@ -69,59 +68,42 @@ interface IMarketplace {
     struct ListingParameters {
         address assetContract;
         uint256 tokenId;
-
         uint256 startTime;
         uint256 secondsUntilEndTime;
-
         uint256 quantityToList;
         address currencyToAccept;
-
         uint256 reservePricePerToken;
         uint256 buyoutPricePerToken;
-
         ListingType listingType;
     }
 
     /**
      * @notice The information related to a listing; either (1) a direct listing, or (2) an auction listing.
-     * 
-     * @dev For direct listings: 
+     *
+     * @dev For direct listings:
      *          (1) `reservePricePerToken` is ignored.
      *          (2) `buyoutPricePerToken` is simply interpreted as 'price per token'.
      */
     struct Listing {
         uint256 listingId;
-
         address tokenOwner;
         address assetContract;
         uint256 tokenId;
-
         uint256 startTime;
         uint256 endTime;
-
         uint256 quantity;
         address currency;
-
         uint256 reservePricePerToken;
         uint256 buyoutPricePerToken;
-        
         TokenType tokenType;
         ListingType listingType;
     }
 
     /// @dev Emitted when a new listing is created.
-    event NewListing(
-        uint256 indexed listingId,
-        address indexed assetContract, 
-        address indexed lister, 
-        Listing listing
-    );
+    event NewListing(uint256 indexed listingId, address indexed assetContract, address indexed lister, Listing listing);
 
     /// @dev Emitted when the parameters of a listing are updated.
-    event ListingUpdate(
-        uint256 indexed listingId,
-        address indexed listingCreator
-    );
+    event ListingUpdate(uint256 indexed listingId, address indexed listingCreator);
 
     /**
      * @dev Emitted when a buyer buys from a direct listing, or a lister accepts some
@@ -148,10 +130,10 @@ interface IMarketplace {
 
     /// @dev Emitted when an auction is closed.
     event AuctionClosed(
-        uint256 indexed listingId, 
+        uint256 indexed listingId,
         address indexed closer,
         bool indexed cancelled,
-        address auctionCreator, 
+        address auctionCreator,
         address winningBidder
     );
 
@@ -206,10 +188,10 @@ interface IMarketplace {
      *                              'inactive' means NFTs cannot be bought from the listing. For auctions,
      *                              'inactive' means bids can no longer be made in the auction.
      */
-    function updateListing(    
+    function updateListing(
         uint256 _listingId,
         uint256 _quantityToList,
-        uint256 _reservePricePerToken,    
+        uint256 _reservePricePerToken,
         uint256 _buyoutPricePerToken,
         address _currencyToAccept,
         uint256 _startTime,
@@ -222,10 +204,10 @@ interface IMarketplace {
      * @param _listingId The unique ID of the direct lisitng to buy from.
      * @param _quantity The amount of NFTs to buy from the direct listing.
      *
-     * @dev A sale will fail to execute if either: 
-     *          (1) buyer does not own or has not approved Marketplace to transfer the appropriate 
-     *              amount of currency (or hasn't sent the appropriate amount of native tokens) 
-     *          
+     * @dev A sale will fail to execute if either:
+     *          (1) buyer does not own or has not approved Marketplace to transfer the appropriate
+     *              amount of currency (or hasn't sent the appropriate amount of native tokens)
+     *
      *          (2) the lister does not own or has removed Markeplace's
      *              approval to transfer the tokens listed for sale.
      */
@@ -242,7 +224,7 @@ interface IMarketplace {
      *
      * @param _quantityWanted   For auction listings: the 'quantity wanted' is the total amount of NFTs
      *                          being auctioned, regardless of the value of `_quantityWanted` passed.
-     *                          For direct listings: `_quantityWanted` is the quantity of NFTs from the 
+     *                          For direct listings: `_quantityWanted` is the quantity of NFTs from the
      *                          listing, for which the offer is being made.
      *
      * @param _currency         For auction listings: the 'currency of the bid' is the currency accepted
@@ -252,7 +234,7 @@ interface IMarketplace {
      * @param _pricePerToken    The offered price per token. The total offer amount is `_quantityWanted * _pricePerToken`.
      */
     function offer(
-        uint256 _listingId, 
+        uint256 _listingId,
         uint256 _quantityWanted,
         address _currency,
         uint256 _pricePerToken
@@ -269,7 +251,7 @@ interface IMarketplace {
      * @notice Lets any account close an auction on behalf of either the (1) auction's creator, or (2) winning bidder.
      *              For (1): The auction creator is sent the the winning bid amount.
      *              For (2): The winning bidder is sent the auctioned NFTs.
-     * 
+     *
      * @param _listingId The unique ID of the listing (the auction to close).
      * @param _closeFor For whom the auction is being closed - the auction creator or winning bidder.
      */

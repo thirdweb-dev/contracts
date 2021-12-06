@@ -6,8 +6,7 @@ import "../Royalty.sol";
 contract MockRoyaltyReentrantDistribute {
     Royalty private royalty;
 
-    constructor() {
-    }
+    constructor() {}
 
     function set(address payable _royalty) external {
         royalty = Royalty(_royalty);

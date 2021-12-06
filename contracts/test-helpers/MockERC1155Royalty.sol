@@ -10,7 +10,6 @@ import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { ProtocolControl } from "../ProtocolControl.sol";
 
 contract MockERC1155Royalty is ERC1155PresetMinterPauser, IERC2981 {
-
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -19,7 +18,7 @@ contract MockERC1155Royalty is ERC1155PresetMinterPauser, IERC2981 {
 
     /// @dev Emitted when the EIP 2981 royalty of the contract is updated.
     event RoyaltyUpdated(uint256 royaltyBps);
-    
+
     constructor(address payable _controlCenter) ERC1155PresetMinterPauser("ipfs://BaseURI") {
         controlCenter = ProtocolControl(_controlCenter);
     }
