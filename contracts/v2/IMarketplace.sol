@@ -113,7 +113,7 @@ interface IMarketplace {
     event NewListing(
         uint256 indexed listingId,
         address indexed assetContract, 
-        address indexed seller, 
+        address indexed lister, 
         Listing listing
     );
 
@@ -130,7 +130,7 @@ interface IMarketplace {
     event NewSale(
         uint256 indexed listingId,
         address indexed assetContract,
-        address indexed seller,
+        address indexed lister,
         address buyer,
         uint256 quantityBought,
         uint256 totalPricePaid
