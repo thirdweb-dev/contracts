@@ -146,7 +146,42 @@ describe("Accept offer: direct listing", function () {
 
       await expect(
         marketv2.connect(lister).acceptOffer(newListingId, buyer.address)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.");
+      ).to.be.revertedWith("Marketplace: cannot buy from listing.");
+    })
+
+    it("Should revert if offer quantity is 0", async () => {
+      const zeroQuantityWanted: BigNumber = BigNumber.from(0);
+      await marketv2.connect(buyer).offer(listingId, zeroQuantityWanted, currencyForOffer, offerPricePerToken)
+
+      await expect(
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
+      ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");      
+    })
+
+    it("Should revert if listing has no tokens left", async () => {
+      const newListingQuantity: BigNumber = BigNumber.from(0);
+      
+      await marketv2.connect(lister).updateListing(
+        listingId,
+        newListingQuantity,
+        listingParams.reservePricePerToken,
+        listingParams.buyoutPricePerToken,
+        listingParams.currencyToAccept,
+        listingParams.startTime,
+        listingParams.secondsUntilEndTime
+      )
+
+      await expect(
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
+      ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");      
+    })
+
+    it("Should revert if listing window has passed", async () => {
+      await timeTravelToAfterListingWindow(listingId);
+
+      await expect(
+        marketv2.connect(lister).acceptOffer(listingId, buyer.address)
+      ).to.be.revertedWith("Marketplace: not within sale window.");      
     })
 
     it("Should revert if lister does not own tokens listed", async () => {
@@ -157,7 +192,7 @@ describe("Accept offer: direct listing", function () {
 
       await expect(
         marketv2.connect(lister).acceptOffer(listingId, buyer.address)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.");
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
     })
 
     it("Should revert if lister has not approved market to transfer tokens", async () => {
@@ -166,7 +201,7 @@ describe("Accept offer: direct listing", function () {
 
       await expect(
         marketv2.connect(lister).acceptOffer(listingId, buyer.address)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.");
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
     })
 
     it("Should revert if offeror's currency balance is less than offer amount", async () => {
@@ -174,46 +209,26 @@ describe("Accept offer: direct listing", function () {
       const buyerBal: BigNumber = await erc20Token.balanceOf(buyer.address);
       await erc20Token.connect(buyer).transfer(dummy.address, buyerBal);
 
-      // console.log("buyer bal after: ", (await erc20Token.balanceOf(buyer.address)).toString(), "before", buyerBal.toString())
-
-      expect(await erc20Token.balanceOf(buyer.address)).to.equal(0);
-      // console.log("Buyer addr: ", buyer.address, "lister addr: ", lister.address)
-
       await expect(
         marketv2.connect(lister).acceptOffer(listingId, buyer.address)
-      ).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+      ).to.be.revertedWith("Marketplace: insufficient currency balance or allowance.")
     })
   })
 
   describe("Events", function() {
-    it("Should emit NewDirectSale with relevan sale info", async () => {
-
-      const listing: ListingStruct = await marketv2.listings(listingId);
+    it("Should emit NewSale with relevan sale info", async () => {
 
       await expect(
         marketv2.connect(lister).acceptOffer(listingId, buyer.address)
-      ).to.emit(marketv2, "NewDirectSale")
+      ).to.emit(marketv2, "NewSale")
       .withArgs(
         ...Object.values({
-          assetContract: mockNft.address,
-          seller: lister.address,
           listingId: listingId,
+          assetContract: mockNft.address,
+          lister: lister.address,          
           buyer: buyer.address,
           quantityBought: quantityWanted,
-          listing: Object.values({
-            listingId: listingId,
-            tokenOwner: lister.address,
-            assetContract: listingParams.assetContract,
-            tokenId: listingParams.tokenId,
-            startTime: listing.startTime,
-            endTime: listing.endTime,
-            quantity: (listingParams.quantityToList as BigNumber).sub(quantityWanted),
-            currency: listingParams.currencyToAccept,
-            reservePricePerToken: listingParams.reservePricePerToken,
-            buyoutPricePerToken: listingParams.buyoutPricePerToken,
-            tokenType: TokenType.ERC1155,
-            listingType: ListingType.Direct
-          })
+          totalOfferAmount: offerPricePerToken.mul(quantityWanted)
         })
       )
     })

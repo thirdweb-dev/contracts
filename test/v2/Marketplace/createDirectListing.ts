@@ -100,7 +100,7 @@ describe("List token for sale: Direct Listing", function () {
 
       await expect(
         marketv2.connect(lister).createListing(incorrectParams)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
 
     it("Should revert if lister does not own the amount of token to list.", async () => {
@@ -108,7 +108,7 @@ describe("List token for sale: Direct Listing", function () {
       // Invalid behaviour: caller does not own the given amount of tokens being listed.
       await expect(
         marketv2.connect(protocolAdmin).createListing(listingParams)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
 
     it("Should revert if market doesn't have lister's approval to transfer tokens", async () => {
@@ -118,7 +118,7 @@ describe("List token for sale: Direct Listing", function () {
 
       await expect(
         marketv2.connect(lister).createListing(listingParams)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
   })
 
@@ -136,9 +136,9 @@ describe("List token for sale: Direct Listing", function () {
         marketv2.connect(lister).createListing(listingParams)
       ).to.emit(marketv2, "NewListing")
       .withArgs(
+        listingId,
         mockNft.address,
         lister.address,
-        listingId,
         Object.values({
           listingId: listingId,
           tokenOwner: lister.address,
@@ -182,7 +182,6 @@ describe("List token for sale: Direct Listing", function () {
 
     it("Should store the listing's state", async () => {
       const listingId: BigNumber = await marketv2.totalListings();
-      const timeStampOnCreateListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
 
       await marketv2.connect(lister).createListing(listingParams);
 

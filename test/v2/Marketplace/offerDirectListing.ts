@@ -142,20 +142,20 @@ describe("Offer with ERC20 token: direct listing", function () {
       
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, NATIVE_TOKEN_ADDRESS, offerPricePerToken)
-      ).to.be.revertedWith("Market: must own and approve Market to transfer currency.")
+      ).to.be.revertedWith("Marketplace: insufficient currency balance or allowance.")
     })
 
     it("Should revert if offer is made outside listing window", async () => {
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
-      ).to.be.revertedWith("Market: can only make offers in listing duration.")
+      ).to.be.revertedWith("Marketplace: inactive lisitng.")
 
       await timeTravelToAfterListingWindow(listingId);
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
-      ).to.be.revertedWith("Market: can only make offers in listing duration.")
+      ).to.be.revertedWith("Marketplace: inactive lisitng.")
     })
 
     it("Should revert if buyer does not own the required amount of currency", async () => {
@@ -167,7 +167,7 @@ describe("Offer with ERC20 token: direct listing", function () {
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
-      ).to.be.revertedWith("Market: must own and approve Market to transfer currency.")
+      ).to.be.revertedWith("Marketplace: insufficient currency balance or allowance.")
     })
 
     it("Should revert if buyer has not approved Market to transfer currency", async () => {
@@ -182,7 +182,38 @@ describe("Offer with ERC20 token: direct listing", function () {
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
-      ).to.be.revertedWith("Market: must own and approve Market to transfer currency.")
+      ).to.be.revertedWith("Marketplace: insufficient currency balance or allowance.")
+    })
+
+    it("Should revert if there are no tokens left in the listing", async () => {
+      const newListingQuantity: BigNumber = BigNumber.from(0);
+      
+      await marketv2.connect(lister).updateListing(
+        listingId,
+        newListingQuantity,
+        listingParams.reservePricePerToken,
+        listingParams.buyoutPricePerToken,
+        listingParams.currencyToAccept,
+        listingParams.startTime,
+        listingParams.secondsUntilEndTime
+      )
+
+      await timeTravelToListingWindow(listingId);
+
+      await expect(
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken)
+      ).to.be.revertedWith("Marketplace: insufficient tokens in listing.")
+    })
+
+    it("Should revert if quantity wanted is greater than amount of tokens listed", async () => {
+
+      await timeTravelToListingWindow(listingId);
+      
+      const invalidQuantityWanted: BigNumber = (listingParams.quantityToList as BigNumber).add(1);
+
+      await expect(
+        marketv2.connect(buyer).offer(listingId, invalidQuantityWanted, currencyForOffer, offerPricePerToken)
+      ).to.be.revertedWith("Marketplace: insufficient tokens in listing.")
     })
   })
 
@@ -206,27 +237,10 @@ describe("Offer with ERC20 token: direct listing", function () {
       .withArgs(
         listingId,
         buyer.address,
-        Object.values({
-          listingId: listingId,
-          offeror: buyer.address,
-          quantityWanted: quantityWanted,
-          currency: currencyForOffer,
-          pricePerToken: offerPricePerToken
-        }),
-        Object.values({
-          listingId: listingId,
-          tokenOwner: lister.address,
-          assetContract: listingParams.assetContract,
-          tokenId: listingParams.tokenId,
-          startTime: listing.startTime,
-          endTime: listing.endTime,
-          quantity: listingParams.quantityToList,
-          currency: listingParams.currencyToAccept,
-          reservePricePerToken: listingParams.reservePricePerToken,
-          buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokenType: TokenType.ERC1155,
-          listingType: ListingType.Direct
-        })
+        listing.listingType,
+        quantityWanted,
+        offerPricePerToken.mul(quantityWanted),
+        currencyForOffer
       )
     })
   })

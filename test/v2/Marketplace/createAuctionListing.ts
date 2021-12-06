@@ -99,7 +99,7 @@ describe("List token for sale: Auction Listing", function () {
 
       await expect(
         marketv2.connect(lister).createListing(incorrectParams)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
 
     it("Should revert if lister has insufficient token balance", async () => {
@@ -107,7 +107,7 @@ describe("List token for sale: Auction Listing", function () {
       // Invalid behaviour: lister does not own the amount of tokens they they want to auction.
       await expect(
         marketv2.connect(protocolAdmin).createListing(listingParams)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
 
     it("Should revert if market doesn't have lister's approval to transfer tokens", async () => {
@@ -117,7 +117,7 @@ describe("List token for sale: Auction Listing", function () {
 
       await expect(
         marketv2.connect(lister).createListing(listingParams)
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
   })
 
@@ -135,9 +135,9 @@ describe("List token for sale: Auction Listing", function () {
         marketv2.connect(lister).createListing(listingParams)  
       ).to.emit(marketv2, "NewListing")
       .withArgs(
-        mockNft.address,
-        lister.address,
         listingId,
+        mockNft.address,
+        lister.address,        
         Object.values({
           listingId: listingId,
           tokenOwner: lister.address,
@@ -183,8 +183,6 @@ describe("List token for sale: Auction Listing", function () {
     })
 
     it("Should store the listing's state", async () => {
-
-      const timeStampOnCreateListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
 
       await marketv2.connect(lister).createListing(listingParams);
 

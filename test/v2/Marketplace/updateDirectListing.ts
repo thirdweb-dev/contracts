@@ -101,7 +101,7 @@ describe("Edit listing: direct listing", function () {
 
       // Invalid behaviour: `lister` lists more NFTs for sale than they own.
       await expect(
-        marketv2.connect(lister).editListingParametrs(
+        marketv2.connect(lister).updateListing(
           listingId,
           invalidNewQuantity,
           listingParams.reservePricePerToken,
@@ -110,7 +110,7 @@ describe("Edit listing: direct listing", function () {
           listingParams.startTime,
           listingParams.secondsUntilEndTime
         )
-      ).to.be.revertedWith("Market: must own and approve to transfer tokens.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.")
     })
   })
 
@@ -119,10 +119,8 @@ describe("Edit listing: direct listing", function () {
       const newStartTime: BigNumber = (listingParams.startTime as BigNumber).add(100);
       const newSecondsUntilEndTime: BigNumber = BigNumber.from(5000);
 
-      // const timeStampOnEditListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
-
       await expect(
-        marketv2.connect(lister).editListingParametrs(
+        marketv2.connect(lister).updateListing(
           listingId,
           listingParams.quantityToList,
           listingParams.reservePricePerToken,
@@ -133,22 +131,8 @@ describe("Edit listing: direct listing", function () {
         )
       ).to.emit(marketv2, "ListingUpdate")
       .withArgs(
-        lister.address,
         listingId,
-        Object.values({
-          listingId: listingId,
-          tokenOwner: lister.address,
-          assetContract: mockNft.address,
-          tokenId: listingParams.tokenId,
-          startTime: newStartTime,
-          endTime: newStartTime.add(newSecondsUntilEndTime),
-          quantity: listingParams.quantityToList,
-          currency: listingParams.currencyToAccept,
-          reservePricePerToken: listingParams.reservePricePerToken,
-          buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokenType: TokenType.ERC1155,
-          listingType: ListingType.Direct
-        })
+        lister.address        
       );
     })
   })
@@ -159,7 +143,7 @@ describe("Edit listing: direct listing", function () {
       const newListingQuantity = (listingParams.quantityToList as BigNumber).sub(1);
       
       const balBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId)
-      await marketv2.connect(lister).editListingParametrs(
+      await marketv2.connect(lister).updateListing(
         listingId,
         newListingQuantity,
         listingParams.reservePricePerToken,
@@ -179,9 +163,7 @@ describe("Edit listing: direct listing", function () {
       const newStartTime: BigNumber = (listingParams.startTime as BigNumber).add(100);
       const newSecondsUntilEndTime: BigNumber = BigNumber.from(6000);
 
-      const timeStampOnEditListing: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp + 1);
-
-      await marketv2.connect(lister).editListingParametrs(
+      await marketv2.connect(lister).updateListing(
         listingId,
         listingParams.quantityToList,
         listingParams.reservePricePerToken,

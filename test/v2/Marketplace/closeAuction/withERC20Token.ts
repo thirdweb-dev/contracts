@@ -139,37 +139,24 @@ describe("Close / Cancel auction: ERC20 token", function () {
     describe("Revert cases", function() {
       it("Should revert if caller is not auction lister.", async () => {
         await expect(
-          marketv2.connect(buyer).closeAuction(listingId)
-        ).to.be.revertedWith("Market: caller is not the listing creator.")
+          marketv2.connect(buyer).closeAuction(listingId, buyer.address)
+        ).to.be.revertedWith("Marketplace: caller is not the listing creator.")
       })
     })
 
     describe("Events", function() {
-      it("Should emit AuctionCanceled with relevant info", async () => {
-
-        const timeStampOfEnd = (await ethers.provider.getBlock("latest")).timestamp + 1;
+      it("Should emit AuctionClosed with relevant info", async () => {
 
         await expect(
-          marketv2.connect(lister).closeAuction(listingId)
-        ).to.emit(marketv2, "AuctionCanceled")
+          marketv2.connect(lister).closeAuction(listingId, lister.address)
+        ).to.emit(marketv2, "AuctionClosed")
         .withArgs(
           ...Object.values({
             listingId: listingId,
-            auctionlister: lister.address,
-            listing: Object.values({
-              listingId: listingId,
-              tokenOwner: lister.address,
-              assetContract: listingParams.assetContract,
-              tokenId: listingParams.tokenId,
-              startTime: listingParams.startTime,
-              endTime: timeStampOfEnd,
-              quantity: 0,
-              currency: listingParams.currencyToAccept,
-              reservePricePerToken: listingParams.reservePricePerToken,
-              buyoutPricePerToken: listingParams.buyoutPricePerToken,
-              tokenType: TokenType.ERC1155,
-              listingType: ListingType.Auction
-            })
+            closer: lister.address,
+            cancelled: true,            
+            auctionCreator: lister.address,
+            winningBidder: ethers.constants.AddressZero            
           })
         )
       })
@@ -181,7 +168,7 @@ describe("Close / Cancel auction: ERC20 token", function () {
         const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId)
         const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId)
         
-        await marketv2.connect(lister).closeAuction(listingId)
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
 
         const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId)
         const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId)
@@ -192,14 +179,14 @@ describe("Close / Cancel auction: ERC20 token", function () {
     })
 
     describe("Contract state", function() {
-      it("Should reset listing end time and quantity", async () => {
-        await marketv2.connect(lister).closeAuction(listingId)
+      it("Should reset listing", async () => {
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
 
         const listing = await marketv2.listings(listingId);
 
+        expect(listing.tokenOwner).to.equal(ethers.constants.AddressZero)
         expect(listing.quantity).to.equal(0)
-        const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
-        expect(listing.endTime).to.equal(timeStamp);
+        expect(listing.endTime).to.equal(0);
       })
     })
   })
@@ -214,12 +201,6 @@ describe("Close / Cancel auction: ERC20 token", function () {
     })
 
     describe("Revert cases", function() {
-      
-      it("Should revert if caller is not auction lister or bidder.", async () => {
-        await expect(
-          marketv2.connect(dummy).closeAuction(listingId)
-        ).to.be.revertedWith("Market: must be bidder or auction creator.")
-      })
 
       it("Should revert if listing is not an auction.", async () => {
         const newListingId = await marketv2.totalListings();
@@ -236,14 +217,14 @@ describe("Close / Cancel auction: ERC20 token", function () {
         await marketv2.connect(lister).createListing(newListingParams);
 
         await expect(
-          marketv2.connect(lister).closeAuction(newListingId)
-        ).to.be.revertedWith("Market: listing is not an auction.");
+          marketv2.connect(lister).closeAuction(newListingId, lister.address)
+        ).to.be.revertedWith("Marketplace: not an auction.");
       })
 
       it("Should revert if the auction duration is not over.", async () => {
         await expect(
-          marketv2.connect(lister).closeAuction(listingId)
-        ).to.be.revertedWith("Market: can only close auction after it has ended.")
+          marketv2.connect(lister).closeAuction(listingId, lister.address)
+        ).to.be.revertedWith("Marketplace: cannot close auction before it has ended.")
       })
     })
 
@@ -252,52 +233,21 @@ describe("Close / Cancel auction: ERC20 token", function () {
       beforeEach(async () => {
 
         // Time travel to auction end
-        const endTime: BigNumber = (await marketv2.listings(listingId)).endTime;
-        while(true) {
-          await ethers.provider.send("evm_mine", []);
-
-          const timeStamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
-          if(endTime.lt(timeStamp)) {
-            break;
-          }
-        }
+        await timeTravelToAfterListingWindow(listingId);
       })
 
       it("Should emit AuctionClosed with relevant closing info: closed by lister", async () => {
 
-        const timeStampOfEnd = (await ethers.provider.getBlock("latest")).timestamp + 1;
-        const listing: ListingStruct = await marketv2.listings(listingId);
-
         await expect(
-          marketv2.connect(lister).closeAuction(listingId)
+          marketv2.connect(lister).closeAuction(listingId, lister.address)
         ).to.emit(marketv2, "AuctionClosed")
         .withArgs(
           ...Object.values({
             listingId: listingId,
             closer: lister.address,
-            auctionlister: lister.address,
-            winningBidder: buyer.address,
-            winningBid: Object.values({
-              listingId: listingId,
-              offeror: buyer.address,
-              quantityWanted: listingParams.quantityToList,
-              currency: currencyForOffer,
-              pricePerToken: 0
-            }),
-            listing: Object.values({
-              listingId: listingId,
-              tokenOwner: lister.address,
-              assetContract: listingParams.assetContract,
-              tokenId: listingParams.tokenId,
-              startTime: listing.startTime,
-              endTime: timeStampOfEnd,
-              quantity: 0,
-              currency: listingParams.currencyToAccept,
-              reservePricePerToken: listingParams.reservePricePerToken,
-              buyoutPricePerToken: listingParams.buyoutPricePerToken,
-              tokenType: TokenType.ERC1155,
-              listingType: ListingType.Auction
-            })
+            cancelled: false,            
+            auctionCreator: lister.address,
+            winningBidder: buyer.address
           })
         )
       })
@@ -307,35 +257,15 @@ describe("Close / Cancel auction: ERC20 token", function () {
         const listing: ListingStruct = await marketv2.listings(listingId);
 
         await expect(
-          marketv2.connect(buyer).closeAuction(listingId)
+          marketv2.connect(buyer).closeAuction(listingId, lister.address)
         ).to.emit(marketv2, "AuctionClosed")
         .withArgs(
           ...Object.values({
             listingId: listingId,
             closer: buyer.address,
-            auctionlister: lister.address,
-            winningBidder: buyer.address,
-            winningBid: Object.values({
-              listingId: listingId,
-              offeror: buyer.address,
-              quantityWanted: 0,
-              currency: currencyForOffer,
-              pricePerToken: offerPricePerToken
-            }),
-            listing: Object.values({
-              listingId: listingId,
-              tokenOwner: lister.address,
-              assetContract: listingParams.assetContract,
-              tokenId: listingParams.tokenId,
-              startTime: listing.startTime,
-              endTime: listing.endTime,
-              quantity: listing.quantity,
-              currency: listingParams.currencyToAccept,
-              reservePricePerToken: listingParams.reservePricePerToken,
-              buyoutPricePerToken: listingParams.buyoutPricePerToken,
-              tokenType: TokenType.ERC1155,
-              listingType: ListingType.Auction
-            })
+            cancelled: false,            
+            auctionCreator: lister.address,
+            winningBidder: buyer.address           
           })
         )
       })
@@ -346,23 +276,15 @@ describe("Close / Cancel auction: ERC20 token", function () {
       beforeEach(async () => {
 
         // Time travel to auction end
-        const endTime: BigNumber = (await marketv2.listings(listingId)).endTime;
-        while(true) {
-          await ethers.provider.send("evm_mine", []);
-
-          const timeStamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
-          if(endTime.lt(timeStamp)) {
-            break;
-          }
-        }
+        await timeTravelToAfterListingWindow(listingId);
       })
       
-      it("Should payout bid to lister when called by lister", async () => {
+      it("Should payout bid to lister when called for lister", async () => {
         
         const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address)
         const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-        await marketv2.connect(lister).closeAuction(listingId)
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
 
         const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address)
         const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
@@ -371,11 +293,11 @@ describe("Close / Cancel auction: ERC20 token", function () {
         expect(marketBalAfter).to.equal(marketBalBefore.sub(totalOfferAmount))
       })
 
-      it("Should transfer auctioned tokens to bidder when called by bidder", async () => {
+      it("Should transfer auctioned tokens to bidder when called for bidder", async () => {
         const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId)
         const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-        await marketv2.connect(buyer).closeAuction(listingId)
+        await marketv2.connect(buyer).closeAuction(listingId, buyer.address)
 
         const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId)
         const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
@@ -385,13 +307,13 @@ describe("Close / Cancel auction: ERC20 token", function () {
       })
 
       it("Should not affect any currency balances on repeat calls by bidder of lister", async () => {
-        await marketv2.connect(lister).closeAuction(listingId)
-        await marketv2.connect(buyer).closeAuction(listingId)
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
+        await marketv2.connect(buyer).closeAuction(listingId, buyer.address)
         
         const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address)
         const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-        await marketv2.connect(lister).closeAuction(listingId)
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
 
         const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address)
         const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
@@ -401,13 +323,13 @@ describe("Close / Cancel auction: ERC20 token", function () {
       })
 
       it("Should not affect any token balances on repeat calls by bidder of lister", async () => {
-        await marketv2.connect(lister).closeAuction(listingId)
-        await marketv2.connect(buyer).closeAuction(listingId)
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
+        await marketv2.connect(buyer).closeAuction(listingId, buyer.address)
         
         const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId)
         const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-        await marketv2.connect(buyer).closeAuction(listingId)
+        await marketv2.connect(buyer).closeAuction(listingId, buyer.address)
 
         const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId)
         const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
@@ -422,19 +344,11 @@ describe("Close / Cancel auction: ERC20 token", function () {
       beforeEach(async () => {
 
         // Time travel to auction end
-        const endTime: BigNumber = (await marketv2.listings(listingId)).endTime;
-        while(true) {
-          await ethers.provider.send("evm_mine", []);
-
-          const timeStamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
-          if(endTime.lt(timeStamp)) {
-            break;
-          }
-        }
+        await timeTravelToAfterListingWindow(listingId)
       })
 
       it("Should reset listing quantity, end time, and offer's offer amount when called by lister", async () => {
-        await marketv2.connect(lister).closeAuction(listingId)
+        await marketv2.connect(lister).closeAuction(listingId, lister.address)
 
         const listing = await marketv2.listings(listingId)
         expect(listing.quantity).to.equal(0)
@@ -447,7 +361,7 @@ describe("Close / Cancel auction: ERC20 token", function () {
       })
 
       it("Should reset the bid's quantity when called by bidder", async () => {
-        await marketv2.connect(buyer).closeAuction(listingId)
+        await marketv2.connect(buyer).closeAuction(listingId, buyer.address)
 
         const offer = await marketv2.winningBid(listingId)
         expect(offer.quantityWanted).to.equal(0);

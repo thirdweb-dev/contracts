@@ -125,30 +125,47 @@ describe("Bid with native token: Auction Listing", function () {
   
   describe("Revert cases", async () => {
 
-    it("Should revert if bid is less than reserve price", async () => {
-
-      await timeTravelToListingWindow(listingId);
-      
-      // Invalid behaviour: total offer amount is less than reserve price per token * quantity of auctioned item.
-      const invalidOfferAmount = (offerPricePerToken.sub(ethers.utils.parseEther("0.005"))).mul(quantityWanted);
-
-      await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: invalidOfferAmount })
-      ).to.be.revertedWith("Market: must offer at least reserve price.")
-    })
-
     it("Should revert if bid is made outside the auction window", async () => {
 
       // Invalid behaviour: bid is made outside auction window.
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
-      ).to.be.revertedWith("Market: can only make offers in listing duration.")
+      ).to.be.revertedWith("Marketplace: inactive lisitng.")
 
       await timeTravelToAfterListingWindow(listingId)
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }),
-      ).to.be.revertedWith("Market: can only make offers in listing duration.")
+      ).to.be.revertedWith("Marketplace: inactive lisitng.")
+    })
+
+    it("Should revert if bid is less than reserve price", async () => {
+
+      await timeTravelToListingWindow(listingId);
+      
+      const invalidOfferPricePerToken = (listingParams.reservePricePerToken as BigNumber).sub(
+        ethers.utils.parseEther("0.005")
+      )
+      const invalidOfferAmount = (invalidOfferPricePerToken).mul(quantityWanted);
+
+      await expect(
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, invalidOfferPricePerToken, { value: invalidOfferAmount })
+      ).to.be.revertedWith("Marketplace: not winning bid.")
+    })
+
+    it("Should revert if bid is not winning bid", async () => {
+      await timeTravelToListingWindow(listingId);
+
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount });
+      
+      const onePercentIncrement: BigNumber = ((offerPricePerToken.mul(quantityWanted)).mul(100)).div(10000)
+      const newPricePerToken: BigNumber = (offerPricePerToken.mul(quantityWanted))
+        .add(onePercentIncrement)
+        .div(quantityWanted)
+
+      await expect(
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, newPricePerToken, { value: newPricePerToken.mul(listingParams.quantityToList)})
+      ).to.be.revertedWith("Marketplace: not winning bid.")
     })
 
     it("Should revert if offer amount does not match native token sent with transaction.", async () => {
@@ -165,7 +182,7 @@ describe("Bid with native token: Auction Listing", function () {
       await timeTravelToListingWindow(listingId);
     })
 
-    it("Should emit NewOffer with relevant offer info", async () => {
+    it("Should emit NewOffer with relevant bid info, if bid is not buyout price", async () => {
 
       const listing: ListingStruct = await marketv2.listings(listingId);
 
@@ -173,91 +190,20 @@ describe("Bid with native token: Auction Listing", function () {
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
       ).to.emit(marketv2, "NewOffer")
       .withArgs(
-        listingId,
-        buyer.address,
-        Object.values({
+        ...Object.values({
           listingId: listingId,
           offeror: buyer.address,
+          listingType: listing.listingType,
           quantityWanted: listingParams.quantityToList,
-          currency: currencyForOffer,
-          pricePerToken: offerPricePerToken
-        }),
-        Object.values({
-          listingId: listingId,
-          tokenOwner: lister.address,
-          assetContract: listingParams.assetContract,
-          tokenId: listingParams.tokenId,
-          startTime: listing.startTime,
-          endTime: listing.endTime,
-          quantity: listingParams.quantityToList,
-          currency: listingParams.currencyToAccept,
-          reservePricePerToken: listingParams.reservePricePerToken,
-          buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokenType: TokenType.ERC1155,
-          listingType: ListingType.Auction
+          totalOfferAmount: offerPricePerToken.mul(listingParams.quantityToList),
+          currency: currencyForOffer,          
         })
       )
-    })
-
-    it("Should emit NewBid if the incoming bid is the new highest bid, but below buyout price", async () => {
-
-      const listing: ListingStruct = await marketv2.listings(listingId);
-
-      await expect(
-        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }) 
-      ).to.emit(marketv2, "NewBid")
-      .withArgs(
-        listingId,
-        buyer.address,
-        Object.values({
-          listingId: listingId,
-          offeror: buyer.address,
-          quantityWanted: listingParams.quantityToList,
-          currency: currencyForOffer,
-          pricePerToken: offerPricePerToken
-        }),
-        Object.values({
-          listingId: listingId,
-          tokenOwner: lister.address,
-          assetContract: listingParams.assetContract,
-          tokenId: listingParams.tokenId,
-          startTime: listing.startTime,
-          endTime: listing.endTime,
-          quantity: listingParams.quantityToList,
-          currency: listingParams.currencyToAccept,
-          reservePricePerToken: listingParams.reservePricePerToken,
-          buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokenType: TokenType.ERC1155,
-          listingType: ListingType.Auction
-        })
-      )
-    })
-
-    it("Should not emit NewBid if incoming bid is not the new highest bid, and is below buyout price", async () => {
-
-      const highOfferAmount = (listingParams.buyoutPricePerToken as BigNumber)
-        .mul(listingParams.quantityToList)
-        .sub(ethers.utils.parseEther("0.001")); // We don't want the auction to close
-      
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, highOfferAmount.div(listingParams.quantityToList), { value: highOfferAmount })
-
-      const lowOfferAmount = totalOfferAmount;
-
-      let secondBuyer = protocolAdmin // doesn't matter who
-      const txReceipt = await marketv2.connect(secondBuyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: lowOfferAmount })
-        .then(tx => tx.wait());
-      
-      const newBidTopic = marketv2.interface.getEventTopic("NewBid");
-      const newBidDNE = !(txReceipt.logs.find(x => x.topics.indexOf(newBidTopic) >= 0));
-
-      expect(newBidDNE).to.equal(true);
     })
     
     it("Should emit AuctionClosed if bid is greater or equal to buyout price", async () => {
       
       const buyoutOfferAmount = (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList);
-      const listing: ListingStruct = await marketv2.listings(listingId);
-      const timeStampOfBuyout = (await ethers.provider.getBlock("latest")).timestamp + 1;
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, { value: buyoutOfferAmount })
@@ -265,29 +211,9 @@ describe("Bid with native token: Auction Listing", function () {
       .withArgs(
         listingId,
         buyer.address,
+        false,
         lister.address,
-        buyer.address,
-        Object.values({
-          listingId: listingId,
-          offeror: buyer.address,
-          quantityWanted: listingParams.quantityToList,
-          currency: currencyForOffer,
-          pricePerToken: listingParams.buyoutPricePerToken
-        }),
-        Object.values({
-          listingId: listingId,
-          tokenOwner: lister.address,
-          assetContract: listingParams.assetContract,
-          tokenId: listingParams.tokenId,
-          startTime: listing.startTime,
-          endTime: timeStampOfBuyout,
-          quantity: listingParams.quantityToList,
-          currency: listingParams.currencyToAccept,
-          reservePricePerToken: listingParams.reservePricePerToken,
-          buyoutPricePerToken: listingParams.buyoutPricePerToken,
-          tokenType: TokenType.ERC1155,
-          listingType: ListingType.Auction
-        })
+        buyer.address
       )
     })
   })
@@ -316,8 +242,9 @@ describe("Bid with native token: Auction Listing", function () {
     })
 
     it("Should payout the previous bidder, if new bid is higher than the previous bid", async () => {
-      const highOfferAmount = (offerPricePerToken.mul(listingParams.quantityToList))
-        .add(ethers.utils.parseEther("0.5"));
+      
+      const fivePercentIncrement: BigNumber = (totalOfferAmount.mul(500)).div(10000)
+      const highOfferAmount = totalOfferAmount.add(fivePercentIncrement)
 
       const lowOfferAmount = totalOfferAmount;
 
@@ -368,18 +295,6 @@ describe("Bid with native token: Auction Listing", function () {
   describe("Contract state", function() {
     beforeEach(async () => {
       await timeTravelToListingWindow(listingId);
-    })
-
-    it("Should store a valid offer regardless", async () => {
-
-      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount })
-
-      const offer = await marketv2.offers(listingId, buyer.address);
-
-      expect(offer.listingId).to.equal(listingId)
-      expect(offer.offeror).to.equal(buyer.address)
-      expect(offer.quantityWanted).to.equal(listingParams.quantityToList)
-      expect(offer.pricePerToken).to.equal(offerPricePerToken);
     })
 
     it("Should store the offer as the winning bid if it is the new highest bid", async () => {      

@@ -123,80 +123,75 @@ describe("Buy: direct listing", function () {
 
   describe("Revert cases", function() {
 
-    it("Should revert if buyer has sent the right amount of native tokens", async () => {      
+    it("Should revert if listing is an auction", async () => {
+      const newListingId = await marketv2.totalListings();
+      const newListingParams = {...listingParams, listingType: ListingType.Auction};
+
+      await marketv2.connect(lister).createListing(newListingParams);
+      
+
       await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted)
-      ).to.be.revertedWith("Market: incorrect native token value sent.")      
+        marketv2.connect(buyer).buy(newListingId, quantityWanted, { value: totalPriceToPay })
+      ).to.be.revertedWith("Marketplace: cannot buy from listing.");
     })
 
-    it("Should revert if lister does not own the tokens listed", async () => {
-      // Lister transfers away all tokens
-      await mockNft.connect(lister).safeTransferFrom(
-        lister.address,
-        dummy.address,
-        nftTokenId,
-        nftTokenSupply,
-        ethers.utils.toUtf8Bytes("")
+    it("Should revert if quantity to buy is 0", async () => {
+      const zeroQuantityWanted: BigNumber = BigNumber.from(0);
+
+      await expect(
+        marketv2.connect(buyer).buy(listingId, zeroQuantityWanted, { value: 0 })
+      ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");      
+    })
+
+    it("Should revert if listing has no tokens left", async () => {
+      const newListingQuantity: BigNumber = BigNumber.from(0);
+      
+      await marketv2.connect(lister).updateListing(
+        listingId,
+        newListingQuantity,
+        listingParams.reservePricePerToken,
+        listingParams.buyoutPricePerToken,
+        listingParams.currencyToAccept,
+        listingParams.startTime,
+        listingParams.secondsUntilEndTime
       )
 
       await expect(
         marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay })
-      ).to.be.revertedWith("Market: cannot buy tokens from this listing.")
+      ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");      
     })
 
-    it("Should revert if lister has removed Market's approval to transfer tokens listed", async () => {
-      // Lister removes Market's approval to transfer tokens
-      await approveMarketToTransferTokens(false)
+    it("Should revert if listing window has passed", async () => {
+      await timeTravelToAfterListingWindow(listingId);
 
       await expect(
         marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay })
-      ).to.be.revertedWith("Market: cannot buy tokens from this listing.")
+      ).to.be.revertedWith("Marketplace: not within sale window.");      
     })
 
-    it("Should revert if the listing is an auction", async () => {
-      const newListingId: BigNumber = await marketv2.totalListings();
-      const newListingParams = listingParams;
+    it("Should revert if lister does not own tokens listed", async () => {
+      // Transfer away tokens
+      await mockNft.connect(lister).safeTransferFrom(
+        lister.address, dummy.address, nftTokenId, await mockNft.balanceOf(lister.address, nftTokenId), ethers.utils.toUtf8Bytes("")
+      );
 
-      newListingParams.listingType = ListingType.Auction;
-
-      await marketv2.connect(lister).createListing(newListingParams)
-
-      await expect(
-        marketv2.connect(buyer).buy(newListingId, quantityWanted, { value: totalPriceToPay })
-      ).to.be.revertedWith("Market: cannot buy tokens from this listing.")      
-    })
-
-    it("Should revert if buyer tries to buy 0 tokens", async () => {
-      const invalidQuantityWanted: BigNumber = BigNumber.from(0);
-
-      // Time travel
       await timeTravelToListingWindow(listingId)
 
       await expect(
-        marketv2.connect(buyer).buy(listingId, invalidQuantityWanted, { value: invalidQuantityWanted.mul(listingParams.buyoutPricePerToken) })
-      ).to.be.revertedWith("Market: must buy an appropriate amount of tokens.") 
+        marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay })
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
     })
 
-    it("Should revert if buyer tries to buy more tokens than listed", async () => {
-
-      const invalidQuantityWanted: BigNumber = (listingParams.quantityToList as BigNumber).add(1);
-
-      // Time travel
-      await timeTravelToListingWindow(listingId)
-
-      await expect(
-        marketv2.connect(buyer).buy(listingId, invalidQuantityWanted, { value: invalidQuantityWanted.mul(listingParams.buyoutPricePerToken) })
-      ).to.be.revertedWith("Market: must buy an appropriate amount of tokens.")
-    })
-
-    it("Should revert if buyer tries to buy tokens outside the listing's sale window", async () => {
+    it("Should revert if lister has not approved market to transfer tokens", async () => {
       
-      // Time travel
-      await timeTravelToAfterListingWindow(listingId)
+      await timeTravelToListingWindow(listingId)
+      
+      // Remove transfer approval
+      await mockNft.connect(lister).setApprovalForAll(marketv2.address, false);
 
       await expect(
         marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay })
-      ).to.be.revertedWith("Market: the sale has either not started or closed.")
+      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
     })
   })
 
@@ -211,32 +206,18 @@ describe("Buy: direct listing", function () {
     it("Should emit NewDirectSale with the sale info", async () => {
 
       const quantityWanted: number = 1;
-      const listing: ListingStruct = await marketv2.listings(listingId);
-
+      
       await expect(
         marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay })
-      ).to.emit(marketv2, "NewDirectSale")
+      ).to.emit(marketv2, "NewSale")
       .withArgs(
         ...Object.values({
-          assetContract: mockNft.address,
-          seller: lister.address,
           listingId: listingId,
+          assetContract: mockNft.address,
+          lister: lister.address,          
           buyer: buyer.address,
           quantityBought: quantityWanted,
-          listing: Object.values({
-            listingId: listingId,
-            tokenOwner: lister.address,
-            assetContract: listingParams.assetContract,
-            tokenId: listingParams.tokenId,
-            startTime: listing.startTime,
-            endTime: listing.endTime,
-            quantity: (listingParams.quantityToList as BigNumber).sub(quantityWanted),
-            currency: listingParams.currencyToAccept,
-            reservePricePerToken: listingParams.reservePricePerToken,
-            buyoutPricePerToken: listingParams.buyoutPricePerToken,
-            tokenType: TokenType.ERC1155,
-            listingType: ListingType.Direct
-          })
+          totalOfferAmount: (listingParams.buyoutPricePerToken as BigNumber).mul(quantityWanted)
         })
       )
     })
