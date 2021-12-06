@@ -138,6 +138,8 @@ contract Marketplace is
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
+        require(tokenAmountToList > 0, "Marketplace: listing invalid quantity.");
+
         validateOwnershipAndApproval(
             tokenOwner,
             _params.assetContract, 
@@ -726,8 +728,7 @@ contract Marketplace is
                 );
         }
 
-        // Check `_quantity > 0` to ensure `_tokenOwner` has a non-zero balance of the concerned tokens.
-        require(isValid && _quantity > 0, "Marketplace: insufficient token balance or approval.");
+        require(isValid, "Marketplace: insufficient token balance or approval.");
     }
 
     /// @dev Validates conditions of a direct listing sale.
