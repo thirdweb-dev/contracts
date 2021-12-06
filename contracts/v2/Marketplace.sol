@@ -75,7 +75,7 @@ contract Marketplace is
     /// @dev listingId => address => info related to offers on a direct listing.
     mapping(uint => mapping(address => Offer)) public offers;
 
-    /// @dev listingId => current highest bid
+    /// @dev listingId => current winning bid in an auction.
     mapping(uint => Offer) public winningBid;
 
     /// @dev Checks whether caller is a listing creator.
@@ -87,7 +87,7 @@ contract Marketplace is
         _;
     }
 
-    /// @dev Checks whether caller has LISTER_ROLE when `restrictedListerRoleOnly` is active.
+    /// @dev Checks whether caller has LISTER_ROLE when `restrictedListerRoleOnly` is true.
     modifier onlyListerRoleWhenRestricted() {
         require(
             !restrictedListerRoleOnly || hasRole(LISTER_ROLE, _msgSender()),
@@ -107,14 +107,14 @@ contract Marketplace is
 
     constructor(
         address payable _controlCenter,
-        address _trustedForwarder,
+        address _trustedForwarder,  // A 'MinimalForwarder' for meta-transactions.
         address _nativeTokenWrapper,
         string memory _uri,
         uint256 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
 
-        _contractURI = _uri; // Contract level metadata
-        controlCenter = ProtocolControl(_controlCenter); // Top level control center contract.
+        _contractURI = _uri;
+        controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
 
@@ -168,6 +168,7 @@ contract Marketplace is
 
         listings[listingId] = newListing;
 
+        // Tokens listed for sale in an auction are escrowed in Marketplace.
         if(newListing.listingType == ListingType.Auction) {
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
@@ -197,7 +198,7 @@ contract Marketplace is
         if(isAuction) {
             require(
                 block.timestamp < targetListing.startTime,
-                "Market: auction already started."
+                "Marketplace: auction already started."
             );
         }
 
@@ -224,20 +225,30 @@ contract Marketplace is
         // Must validate ownership and approval of the new quantity of tokens for diret listing.
         if(targetListing.quantity != safeNewQuantity) {
 
-            if(isAuction) {
-                transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
-            }
-            
-            validateOwnershipAndApproval(
-                targetListing.tokenOwner,
-                targetListing.assetContract, 
-                targetListing.tokenId, 
-                safeNewQuantity, 
-                targetListing.tokenType
-            );
+            // If the new quantity for an auction is `0`, cancel the auction.
+            if(isAuction && safeNewQuantity == 0) {
+                _cancelAuction(targetListing);
+                return;
+            } else {
 
-            if(isAuction) {
-                transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
+                // Transfer all escrowed tokens back to the lister, to be reflected in the lister's
+                // balance for the upcoming ownership and approval check.
+                if(isAuction) {
+                    transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
+                }
+                
+                validateOwnershipAndApproval(
+                    targetListing.tokenOwner,
+                    targetListing.assetContract, 
+                    targetListing.tokenId, 
+                    safeNewQuantity, 
+                    targetListing.tokenType
+                );
+
+                // Escrow the new quantity of tokens to list in the auction.
+                if(isAuction) {
+                    transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
+                }
             }
         }
 
@@ -306,7 +317,7 @@ contract Marketplace is
 
         require(
             targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
-            "Market: inactive lisitng."
+            "Marketplace: inactive lisitng."
         );
         
         // Both - (1) offers to direct listings, and (2) bids to auctions - share the same structure.
@@ -350,7 +361,7 @@ contract Marketplace is
 
         require(
             targetListing.listingType == ListingType.Auction,
-            "Market: listing is not auction."
+            "Marketplace: not an auction."
         );
 
         Offer memory targetBid = winningBid[_listingId];
@@ -361,7 +372,7 @@ contract Marketplace is
 
             require(
                 targetListing.endTime < block.timestamp,
-                "Market: can only close auction after it has ended."
+                "Marketplace: cannot close auction before it has ended."
             );
 
             if(_closeFor == targetListing.tokenOwner) {
@@ -469,7 +480,7 @@ contract Marketplace is
             "Marketplace: not winning bid."
         );
 
-        // Close auction and execute sale if there's a buyout amount and incoming offer amount is buyout amount.
+        // Close auction and execute sale if there's a buyout price and incoming offer amount is buyout price.
         if(
             _targetListing.buyoutPricePerToken > 0
                 && incomingOfferAmount >= _targetListing.buyoutPricePerToken * _targetListing.quantity
@@ -493,7 +504,13 @@ contract Marketplace is
             // Collect incoming bid
             transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount);
                 
-            emit NewOffer(_targetListing.listingId, _incomingBid.offeror, _targetListing.listingType, _incomingBid.quantityWanted, _targetListing.buyoutPricePerToken * _targetListing.quantity);
+            emit NewOffer(
+                _targetListing.listingId,
+                _incomingBid.offeror,
+                _targetListing.listingType,
+                _incomingBid.quantityWanted,
+                _targetListing.buyoutPricePerToken * _targetListing.quantity
+            );
         }
     }
 
@@ -564,6 +581,39 @@ contract Marketplace is
         }
     }
 
+    /// @dev Payout stakeholders on sale
+    function payout(
+        address _payer,
+        address _payee,
+        address _currencyToUse,
+        uint256 _totalPayoutAmount,
+        Listing memory _listing
+    ) 
+        internal 
+    {
+        // Collect protocol fee
+        uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
+
+        transferCurrency(_currencyToUse, _payer, controlCenter.getRoyaltyTreasury(address(this)), marketCut);
+
+        uint256 remainder = _totalPayoutAmount - marketCut;
+
+        // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
+        try IERC2981(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
+            address royaltyFeeRecipient,
+            uint256 royaltyFeeAmount
+        ) {
+            if (royaltyFeeAmount > 0) {
+                require(royaltyFeeAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
+                remainder -= royaltyFeeAmount;
+                transferCurrency(_currencyToUse, _payer, royaltyFeeRecipient, royaltyFeeAmount);
+            }
+        } catch {}
+
+        // Distribute price to token owner
+        transferCurrency(_currencyToUse, _payer, _payee, remainder);
+    }
+
     /// @dev Transfers a given amount of currency.
     function transferCurrency(
         address _currency,
@@ -605,6 +655,7 @@ contract Marketplace is
     )
         internal
     {
+        // Required due to the use of `IERC20.transferFrom`.
         if(_from == address(this)) {
             IERC20(_currency).approve(address(this), _amount);
         }
@@ -617,42 +668,8 @@ contract Marketplace is
     }
 
     /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal returns (bool) {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        return success;
-    }
-
-    /// @dev Payout stakeholders on sale
-    function payout(
-        address _payer,
-        address _payee,
-        address _currencyToUse,
-        uint256 _totalPayoutAmount,
-        Listing memory _listing
-    ) 
-        internal 
-    {
-        // Collect protocol fee
-        uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
-
-        transferCurrency(_currencyToUse, _payer, controlCenter.getRoyaltyTreasury(address(this)), marketCut);
-
-        uint256 remainder = _totalPayoutAmount - marketCut;
-
-        // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
-        try IERC2981(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
-            address royaltyFeeRecipient,
-            uint256 royaltyFeeAmount
-        ) {
-            if (royaltyFeeAmount > 0) {
-                require(royaltyFeeAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
-                remainder -= royaltyFeeAmount;
-                transferCurrency(_currencyToUse, _payer, royaltyFeeRecipient, royaltyFeeAmount);
-            }
-        } catch {}
-
-        // Distribute price to token owner
-        transferCurrency(_currencyToUse, _payer, _payee, remainder);
+    function safeTransferNativeToken(address to, uint256 value) internal returns (bool success) {
+        (success, ) = to.call{value: value}(new bytes(0));
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.
@@ -709,7 +726,7 @@ contract Marketplace is
         }
 
         // Check `_quantity > 0` to ensure `_tokenOwner` has a non-zero balance of the concerned tokens.
-        require(isValid && _quantity > 0, "Marketplace: insufficient NFT balance or approval.");
+        require(isValid && _quantity > 0, "Marketplace: insufficient token balance or approval.");
     }
 
     /// @dev Validates conditions of a direct listing sale.
@@ -728,13 +745,13 @@ contract Marketplace is
 
         // Check whether a valid quantity of listed tokens is being bought.
         require(
-            _listing.quantity > 0 && _quantityToBuy <= _listing.quantity,
+            _listing.quantity > 0 && _quantityToBuy > 0 && _quantityToBuy <= _listing.quantity,
             "Market: buying invalid amount of tokens."
         );
 
         // Check if sale is made within the listing window.
         require(
-            block.timestamp <= _listing.endTime && block.timestamp >= _listing.startTime,
+            block.timestamp < _listing.endTime && block.timestamp > _listing.startTime,
             "Market: the sale has either not started or closed."
         );
 
@@ -753,8 +770,7 @@ contract Marketplace is
             );
         }
 
-        // Check if lisitng is a direct listing, and whether token owner owns and has approved
-        // `quantityToBuy` amount of listing tokens from the listing.
+        // Check iwhether token owner owns and has approved `quantityToBuy` amount of listing tokens from the listing.
         validateOwnershipAndApproval(
             _listing.tokenOwner, 
             _listing.assetContract, 
@@ -780,7 +796,7 @@ contract Marketplace is
         }
     }
 
-    /// @dev Checks the interface supported by a contract.
+    /// @dev Returns the interface supported by a contract.
     function getTokenType(
         address _assetContract
     ) 
@@ -793,7 +809,7 @@ contract Marketplace is
         } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
             tokenType = TokenType.ERC721;
         } else {
-            revert("Market: must implement ERC 1155 or ERC 721.");
+            revert("Marketplace: must implement ERC 1155 or ERC 721.");
         }
     }
 
@@ -816,11 +832,8 @@ contract Marketplace is
     /// @dev Lets a protocol admin set market fees.
     function setMarketFeeBps(uint256 _feeBps) external onlyModuleAdmin {
 
-        require(_feeBps < MAX_BPS, "Market: invalid BPS.");
+        require(_feeBps < MAX_BPS, "Marketplace: invalid BPS.");
 
-        /**
-         *  Gas optimization -- take a uint256 argument.
-         */
         marketFeeBps = uint64(_feeBps);
         emit MarketFeeUpdate(uint64(_feeBps));
     }
@@ -846,7 +859,7 @@ contract Marketplace is
     function setContractURI(string calldata _uri) external {
         require(
             controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Market: only a protocol admin can call this function."
+            "Marketplace: not protocol admin."
         );
 
         _contractURI = _uri;
