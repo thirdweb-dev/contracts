@@ -387,9 +387,7 @@ contract Marketplace is
     }
 
     /// @dev Lets the contract accept ether.
-    receive() external payable {
-        emit NativeTokensReceived(_msgSender(), msg.value);
-    }
+    receive() external payable {}
 
     //  =====   Internal functions  =====
 

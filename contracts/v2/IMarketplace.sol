@@ -164,9 +164,6 @@ interface IMarketplace {
     /// @dev Emitted when the LISTER_ROLE restriction is updated.
     event ListingRestricted(bool restricted);
 
-    /// @dev Emitted when contract receives native tokens.
-    event NativeTokensReceived(address from, uint256 amount);
-
     /**
      * @notice Lets a token (ERC 721 or ERC 1155) owner list tokens for sale in a direct listing, or an auction.
      * @param _params The parameters that govern the listing to be created.
