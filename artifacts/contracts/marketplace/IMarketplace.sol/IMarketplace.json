@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "IMarketplace",
-  "sourceName": "contracts/v2/IMarketplace.sol",
+  "sourceName": "contracts/marketplace/IMarketplace.sol",
   "abi": [
     {
       "anonymous": false,
