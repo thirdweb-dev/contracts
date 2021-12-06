@@ -52,7 +52,7 @@ contract Marketplace is
     bool public restrictedListerRoleOnly;
 
     /// @dev The address interpreted as native token of the chain.
-    address public constant nativeToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
@@ -300,7 +300,7 @@ contract Marketplace is
             handleBid(targetListing, newOffer);
         } else if (targetListing.listingType == ListingType.Direct) {
             // Offers to direct listings cannot be made directly in native tokens.
-            newOffer.currency = _currency == nativeToken ? nativeTokenWrapper : _currency;
+            newOffer.currency = _currency == NATIVE_TOKEN ? nativeTokenWrapper : _currency;
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, _quantityWanted);
 
             handleOffer(targetListing, newOffer);
@@ -549,7 +549,7 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
-        if (_currency == nativeToken) {
+        if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
 
@@ -666,7 +666,7 @@ contract Marketplace is
         );
 
         // Check: buyer owns and has approved sufficient currency for sale.
-        if (_listing.currency == nativeToken) {
+        if (_listing.currency == NATIVE_TOKEN) {
             require(
                 msg.value == _quantityToBuy * _listing.buyoutPricePerToken,
                 "Marketplace: insufficient currency balance or allowance."
