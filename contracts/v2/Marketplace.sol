@@ -379,7 +379,7 @@ contract Marketplace is
             );
 
             if(_closeFor == targetListing.tokenOwner) {
-                _closeAuctionForBidder(targetListing, targetBid);
+                _closeAuctionForAuctionCreator(targetListing, targetBid);
             } else if (_closeFor == targetBid.offeror) {
                 _closeAuctionForBidder(targetListing, targetBid);
             }
