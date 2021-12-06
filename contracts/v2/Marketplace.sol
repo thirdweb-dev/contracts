@@ -46,7 +46,7 @@ contract Marketplace is
     uint256 public totalListings;
 
     /// @dev Collection level metadata.
-    string public _contractURI;
+    string public contractURI;
 
     /// @dev Whether listing is restricted by LISTER_ROLE.
     bool public restrictedListerRoleOnly;
@@ -106,7 +106,7 @@ contract Marketplace is
         string memory _uri,
         uint256 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
-        _contractURI = _uri;
+        contractURI = _uri;
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
@@ -756,14 +756,7 @@ contract Marketplace is
             "Marketplace: not protocol admin."
         );
 
-        _contractURI = _uri;
-    }
-
-    //  ===== Getter functions  =====
-
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
+        contractURI = _uri;
     }
 
     /**
