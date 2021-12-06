@@ -754,7 +754,7 @@ contract Marketplace is
         // Check if sale is made within the listing window.
         require(
             block.timestamp < _listing.endTime && block.timestamp > _listing.startTime,
-            "Marketplace: the sale has either not started or closed."
+            "Marketplace: not within sale window."
         );
 
         // Check: buyer owns and has approved sufficient currency for sale.
