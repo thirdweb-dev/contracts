@@ -513,7 +513,7 @@ contract Marketplace is
                 _incomingBid.offeror,
                 _targetListing.listingType,
                 _incomingBid.quantityWanted,
-                _targetListing.buyoutPricePerToken * _targetListing.quantity,
+                _incomingBid.pricePerToken * _incomingBid.quantityWanted,
                 _incomingBid.currency
             );
         }
@@ -568,7 +568,7 @@ contract Marketplace is
 
         transferListingTokens(address(this), _winningBid.offeror, quantityToSend, _targetListing);
 
-        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _winningBid.offeror, _targetListing.tokenOwner);
+        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _targetListing.tokenOwner, _winningBid.offeror);
     }
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
