@@ -3,16 +3,16 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { MockERC1155 } from "../../../../typechain/MockERC1155";
-import { WETH9 } from "../../../../typechain/WETH9";
-import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../../typechain/Marketplace";
+import { MockERC1155 } from "../../../typechain/MockERC1155";
+import { WETH9 } from "../../../typechain/WETH9";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 
@@ -169,11 +169,9 @@ describe("Bid with native token: Auction Listing", function () {
         .div(quantityWanted);
 
       await expect(
-        marketv2
-          .connect(buyer)
-          .offer(listingId, quantityWanted, currencyForOffer, newPricePerToken, {
-            value: newPricePerToken.mul(listingParams.quantityToList),
-          }),
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, newPricePerToken, {
+          value: newPricePerToken.mul(listingParams.quantityToList),
+        }),
       ).to.be.revertedWith("Marketplace: not winning bid.");
     });
 
@@ -214,11 +212,9 @@ describe("Bid with native token: Auction Listing", function () {
       const buyoutOfferAmount = (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList);
 
       await expect(
-        marketv2
-          .connect(buyer)
-          .offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, {
-            value: buyoutOfferAmount,
-          }),
+        marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, listingParams.buyoutPricePerToken, {
+          value: buyoutOfferAmount,
+        }),
       )
         .to.emit(marketv2, "AuctionClosed")
         .withArgs(listingId, buyer.address, false, lister.address, buyer.address);

@@ -3,19 +3,19 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { MockERC1155 } from "../../../typechain/MockERC1155";
-import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
+import { MockERC1155 } from "../../typechain/MockERC1155";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../utils/tests/getContracts";
 
 use(solidity);
 
-describe("List token for sale: Auction Listing", function () {
+describe("List token for sale: Direct Listing", function () {
   // Constants
   const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -86,13 +86,13 @@ describe("List token for sale: Auction Listing", function () {
       reservePricePerToken: ethers.utils.parseEther("0.1"),
       buyoutPricePerToken: ethers.utils.parseEther("0.2"),
 
-      listingType: ListingType.Auction,
+      listingType: ListingType.Direct,
     };
   });
 
   describe("Revert cases", function () {
     it("Should revert if listing zero quantity.", async () => {
-      // Invalid behaviour: listing 0 NFTs for auction.
+      // Invalid behaviour: listing `0` of the tokens for sale.
       const incorrectParams = { ...listingParams, quantityToList: 0 };
 
       await expect(marketv2.connect(lister).createListing(incorrectParams)).to.be.revertedWith(
@@ -100,15 +100,15 @@ describe("List token for sale: Auction Listing", function () {
       );
     });
 
-    it("Should revert if lister has insufficient token balance", async () => {
-      // Invalid behaviour: lister does not own the amount of tokens they they want to auction.
+    it("Should revert if lister does not own the amount of token to list.", async () => {
+      // Invalid behaviour: caller does not own the given amount of tokens being listed.
       await expect(marketv2.connect(protocolAdmin).createListing(listingParams)).to.be.revertedWith(
         "Marketplace: insufficient token balance or approval.",
       );
     });
 
     it("Should revert if market doesn't have lister's approval to transfer tokens", async () => {
-      // Invalid behaviour: `lister` has not approved Market to transfer tokens being listed.
+      // Invalid behaviour: `lister` does not approve Market to transfer tokens listed.
       await approveMarketToTransferTokens(false);
 
       await expect(marketv2.connect(lister).createListing(listingParams)).to.be.revertedWith(
@@ -143,24 +143,19 @@ describe("List token for sale: Auction Listing", function () {
             reservePricePerToken: listingParams.reservePricePerToken,
             buyoutPricePerToken: listingParams.buyoutPricePerToken,
             tokenType: TokenType.ERC1155,
-            listingType: ListingType.Auction,
+            listingType: ListingType.Direct,
           }),
         );
     });
   });
 
   describe("Token balances", function () {
-    it("Should transfer tokens listed from lister to market", async () => {
-      const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
-      const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
-
+    it("Should not change the lister's token balance", async () => {
+      const balBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       await marketv2.connect(lister).createListing(listingParams);
+      const balAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
 
-      const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
-      const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
-
-      expect(listerBalBefore).to.equal(listerBalAfter.add(listingParams.quantityToList));
-      expect(marketBalAfter).to.equal(marketBalBefore.add(listingParams.quantityToList));
+      expect(balBefore).to.equal(balAfter);
     });
   });
 
@@ -174,6 +169,8 @@ describe("List token for sale: Auction Listing", function () {
     });
 
     it("Should store the listing's state", async () => {
+      const listingId: BigNumber = await marketv2.totalListings();
+
       await marketv2.connect(lister).createListing(listingParams);
 
       const listing: ListingStruct = await marketv2.listings(listingId);
@@ -189,7 +186,7 @@ describe("List token for sale: Auction Listing", function () {
       expect(listing.reservePricePerToken).to.equal(listingParams.reservePricePerToken);
       expect(listing.buyoutPricePerToken).to.equal(listingParams.buyoutPricePerToken);
       expect(listing.tokenType).to.equal(TokenType.ERC1155);
-      expect(listing.listingType).to.equal(ListingType.Auction);
+      expect(listing.listingType).to.equal(ListingType.Direct);
     });
   });
 });

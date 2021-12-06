@@ -3,23 +3,20 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { MockERC1155 } from "../../../../typechain/MockERC1155";
-import { WETH9 } from "../../../../typechain/WETH9";
-import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../../typechain/Marketplace";
+import { MockERC1155 } from "../../../typechain/MockERC1155";
+import { Coin } from "../../../typechain/Coin";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 
-describe("Bid with native token: Auction Listing", function () {
-  // Constants
-  const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-
+describe("Close / Cancel auction: ERC20 token", function () {
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
@@ -30,7 +27,7 @@ describe("Bid with native token: Auction Listing", function () {
   // Contracts
   let marketv2: Marketplace;
   let mockNft: MockERC1155;
-  let weth: WETH9;
+  let erc20Token: Coin;
 
   // MockERC1155: `mint` parameters
   const nftTokenId: BigNumber = BigNumber.from(1);
@@ -58,6 +55,14 @@ describe("Bid with native token: Auction Listing", function () {
   const mintNftToLister = async () =>
     await mockNft.connect(protocolAdmin).mint(lister.address, nftTokenId, nftTokenSupply, ethers.utils.toUtf8Bytes(""));
 
+  const mintERC20To = async (to: SignerWithAddress, amount: BigNumber) => {
+    // Mint currency to buyer
+    await erc20Token.connect(protocolAdmin).mint(to.address, amount);
+
+    // Approve Market to transfer currency
+    await erc20Token.connect(to).approve(marketv2.address, amount);
+  };
+
   const approveMarketToTransferTokens = async (toApprove: boolean) =>
     await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
 
@@ -84,7 +89,7 @@ describe("Bid with native token: Auction Listing", function () {
     mockNft = await ethers.getContractFactory("MockERC1155").then(f => f.connect(protocolAdmin).deploy());
     const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     marketv2 = contracts.marketv2;
-    weth = contracts.weth;
+    erc20Token = contracts.coin;
 
     // Setup: mint NFT to `lister` for `lister` to list these NFTs for sale.
     await mintNftToLister();
@@ -104,7 +109,7 @@ describe("Bid with native token: Auction Listing", function () {
       secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,
-      currencyToAccept: NATIVE_TOKEN_ADDRESS,
+      currencyToAccept: erc20Token.address,
 
       reservePricePerToken: ethers.utils.parseEther("0.01"),
       buyoutPricePerToken: ethers.utils.parseEther("0.02"),
@@ -120,6 +125,9 @@ describe("Bid with native token: Auction Listing", function () {
     offerPricePerToken = listingParams.reservePricePerToken as BigNumber;
     currencyForOffer = listingParams.currencyToAccept;
     totalOfferAmount = offerPricePerToken.mul(listingParams.quantityToList);
+
+    // Setup: mint some curreny to buyer so they can fulfill the offer made.
+    await mintERC20To(buyer, (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
   });
 
   describe("Cancel auction", function () {
@@ -163,7 +171,7 @@ describe("Bid with native token: Auction Listing", function () {
     });
 
     describe("Contract state", function () {
-      it("Should reset listing end time and quantity", async () => {
+      it("Should reset listing", async () => {
         await marketv2.connect(lister).closeAuction(listingId, lister.address);
 
         const listing = await marketv2.listings(listingId);
@@ -180,9 +188,7 @@ describe("Bid with native token: Auction Listing", function () {
       // Time travel
       await timeTravelToListingWindow(listingId);
 
-      await marketv2
-        .connect(buyer)
-        .offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount });
+      await marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken);
     });
 
     describe("Revert cases", function () {
@@ -236,7 +242,9 @@ describe("Bid with native token: Auction Listing", function () {
       });
 
       it("Should emit AuctionClosed with relevant closing info: closed by bidder", async () => {
-        await expect(marketv2.connect(buyer).closeAuction(listingId, buyer.address))
+        const listing: ListingStruct = await marketv2.listings(listingId);
+
+        await expect(marketv2.connect(buyer).closeAuction(listingId, lister.address))
           .to.emit(marketv2, "AuctionClosed")
           .withArgs(
             ...Object.values({
@@ -256,25 +264,20 @@ describe("Bid with native token: Auction Listing", function () {
         await timeTravelToAfterListingWindow(listingId);
       });
 
-      it("Should payout bid to lister when called by lister", async () => {
-        const listerBalBefore: BigNumber = await ethers.provider.getBalance(lister.address);
-        const marketBalBefore: BigNumber = await weth.balanceOf(marketv2.address);
+      it("Should payout bid to lister when called for lister", async () => {
+        const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address);
+        const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-        const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-        const txReceipt = await (
-          await marketv2.connect(lister).closeAuction(listingId, lister.address, { gasPrice })
-        ).wait();
-        const gasUesd: BigNumber = txReceipt.gasUsed;
-        const gasPaid: BigNumber = gasPrice.mul(gasUesd);
+        await marketv2.connect(lister).closeAuction(listingId, lister.address);
 
-        const listerBalAfter: BigNumber = await ethers.provider.getBalance(lister.address);
-        const marketBalAfter: BigNumber = await weth.balanceOf(marketv2.address);
+        const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address);
+        const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-        expect(listerBalAfter).to.equal(listerBalBefore.add(totalOfferAmount.sub(gasPaid)));
+        expect(listerBalAfter).to.equal(listerBalBefore.add(totalOfferAmount));
         expect(marketBalAfter).to.equal(marketBalBefore.sub(totalOfferAmount));
       });
 
-      it("Should transfer auctioned tokens to bidder when called by bidder", async () => {
+      it("Should transfer auctioned tokens to bidder when called for bidder", async () => {
         const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
         const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
@@ -291,20 +294,15 @@ describe("Bid with native token: Auction Listing", function () {
         await marketv2.connect(lister).closeAuction(listingId, lister.address);
         await marketv2.connect(buyer).closeAuction(listingId, buyer.address);
 
-        const listerBalBefore: BigNumber = await ethers.provider.getBalance(lister.address);
-        const marketBalBefore: BigNumber = await ethers.provider.getBalance(marketv2.address);
+        const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address);
+        const marketBalBefore: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-        const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-        const txReceipt = await (
-          await marketv2.connect(lister).closeAuction(listingId, lister.address, { gasPrice })
-        ).wait();
-        const gasUesd: BigNumber = txReceipt.gasUsed;
-        const gasPaid: BigNumber = gasPrice.mul(gasUesd);
+        await marketv2.connect(lister).closeAuction(listingId, lister.address);
 
-        const listerBalAfter: BigNumber = await ethers.provider.getBalance(lister.address);
-        const marketBalAfter: BigNumber = await ethers.provider.getBalance(marketv2.address);
+        const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address);
+        const marketBalAfter: BigNumber = await erc20Token.balanceOf(marketv2.address);
 
-        expect(listerBalAfter).to.equal(listerBalBefore.sub(gasPaid));
+        expect(listerBalAfter).to.equal(listerBalBefore);
         expect(marketBalBefore).to.equal(marketBalAfter);
       });
 

@@ -3,16 +3,16 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { MockERC1155 } from "../../../../typechain/MockERC1155";
-import { Coin } from "../../../../typechain/Coin";
-import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../../typechain/Marketplace";
+import { MockERC1155 } from "../../../typechain/MockERC1155";
+import { Coin } from "../../../typechain/Coin";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 

@@ -3,24 +3,21 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { MockERC1155Royalty } from "../../../../typechain/MockERC1155Royalty";
-import { ProtocolControl } from "../../../../typechain/ProtocolControl";
-import { WETH9 } from "../../../../typechain/WETH9";
-import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../../typechain/Marketplace";
+import { MockERC1155Royalty } from "../../../typechain/MockERC1155Royalty";
+import { Coin } from "../../../typechain/Coin";
+import { ProtocolControl } from "../../../typechain/ProtocolControl";
+import { Marketplace, ListingParametersStruct, ListingStruct } from "../../../typechain/Marketplace";
 
 // Types
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../../utils/tests/getContracts";
+import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 
 describe("Buy: direct listing", function () {
-  // Constants
-  const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
@@ -31,7 +28,7 @@ describe("Buy: direct listing", function () {
   // Contracts
   let marketv2: Marketplace;
   let mockNft: MockERC1155Royalty;
-  let weth: WETH9;
+  let erc20Token: Coin;
   let protocolControl: ProtocolControl;
 
   // MockERC1155: `mint` parameters
@@ -57,6 +54,15 @@ describe("Buy: direct listing", function () {
   // Semantic helpers
   const mintNftToLister = async () =>
     await mockNft.connect(protocolAdmin).mint(lister.address, nftTokenId, nftTokenSupply, ethers.utils.toUtf8Bytes(""));
+
+  const mintERC20ToBuyer = async (amount: BigNumber) => {
+    // Mint currency to buyer
+    await erc20Token.connect(protocolAdmin).mint(buyer.address, amount);
+
+    // Approve Market to transfer currency
+    await erc20Token.connect(buyer).approve(marketv2.address, amount);
+  };
+
   const approveMarketToTransferTokens = async (toApprove: boolean) =>
     await mockNft.connect(lister).setApprovalForAll(marketv2.address, toApprove);
 
@@ -82,8 +88,8 @@ describe("Buy: direct listing", function () {
     // Get contracts
     const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
     marketv2 = contracts.marketv2;
+    erc20Token = contracts.coin;
     protocolControl = contracts.protocolControl;
-    weth = contracts.weth;
     mockNft = await ethers
       .getContractFactory("MockERC1155Royalty")
       .then(f => f.connect(protocolAdmin).deploy(protocolControl.address));
@@ -106,7 +112,7 @@ describe("Buy: direct listing", function () {
       secondsUntilEndTime: BigNumber.from(1000),
 
       quantityToList: nftTokenSupply,
-      currencyToAccept: NATIVE_TOKEN_ADDRESS,
+      currencyToAccept: erc20Token.address,
 
       reservePricePerToken: ethers.utils.parseEther("0.1"),
       buyoutPricePerToken: ethers.utils.parseEther("0.2"),
@@ -129,15 +135,15 @@ describe("Buy: direct listing", function () {
 
       await marketv2.connect(lister).createListing(newListingParams);
 
-      await expect(
-        marketv2.connect(buyer).buy(newListingId, quantityWanted, { value: totalPriceToPay }),
-      ).to.be.revertedWith("Marketplace: cannot buy from listing.");
+      await expect(marketv2.connect(buyer).buy(newListingId, quantityWanted)).to.be.revertedWith(
+        "Marketplace: cannot buy from listing.",
+      );
     });
 
     it("Should revert if quantity to buy is 0", async () => {
       const zeroQuantityWanted: BigNumber = BigNumber.from(0);
 
-      await expect(marketv2.connect(buyer).buy(listingId, zeroQuantityWanted, { value: 0 })).to.be.revertedWith(
+      await expect(marketv2.connect(buyer).buy(listingId, zeroQuantityWanted)).to.be.revertedWith(
         "Marketplace: buying invalid amount of tokens.",
       );
     });
@@ -157,17 +163,17 @@ describe("Buy: direct listing", function () {
           listingParams.secondsUntilEndTime,
         );
 
-      await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay }),
-      ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");
+      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted)).to.be.revertedWith(
+        "Marketplace: buying invalid amount of tokens.",
+      );
     });
 
     it("Should revert if listing window has passed", async () => {
       await timeTravelToAfterListingWindow(listingId);
 
-      await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay }),
-      ).to.be.revertedWith("Marketplace: not within sale window.");
+      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted)).to.be.revertedWith(
+        "Marketplace: not within sale window.",
+      );
     });
 
     it("Should revert if lister does not own tokens listed", async () => {
@@ -184,20 +190,38 @@ describe("Buy: direct listing", function () {
 
       await timeTravelToListingWindow(listingId);
 
-      await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay }),
-      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
+      // Mint currency to buyer
+      await mintERC20ToBuyer((listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
+
+      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted)).to.be.revertedWith(
+        "Marketplace: insufficient token balance or approval.",
+      );
     });
 
     it("Should revert if lister has not approved market to transfer tokens", async () => {
       await timeTravelToListingWindow(listingId);
 
+      // Mint currency to buyer
+      await mintERC20ToBuyer((listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
+
       // Remove transfer approval
       await mockNft.connect(lister).setApprovalForAll(marketv2.address, false);
 
-      await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay }),
-      ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
+      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted)).to.be.revertedWith(
+        "Marketplace: insufficient token balance or approval.",
+      );
+    });
+
+    it("Should revert if buyer's currency balance is less than price to pay", async () => {
+      await timeTravelToListingWindow(listingId);
+
+      // Transfer away currency
+      const buyerBal: BigNumber = await erc20Token.balanceOf(buyer.address);
+      await erc20Token.connect(buyer).transfer(dummy.address, buyerBal);
+
+      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted)).to.be.revertedWith(
+        "Marketplace: insufficient currency balance or allowance.",
+      );
     });
   });
 
@@ -205,12 +229,15 @@ describe("Buy: direct listing", function () {
     beforeEach(async () => {
       // Time travel
       await timeTravelToListingWindow(listingId);
+
+      // Mint currency to buyer
+      await mintERC20ToBuyer((listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
     });
 
-    it("Should emit NewDirectSale with the sale info", async () => {
+    it("Should emit NewSale with the sale info", async () => {
       const quantityWanted: number = 1;
 
-      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay }))
+      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted))
         .to.emit(marketv2, "NewSale")
         .withArgs(
           ...Object.values({
@@ -229,6 +256,9 @@ describe("Buy: direct listing", function () {
     beforeEach(async () => {
       // Time travel
       await timeTravelToListingWindow(listingId);
+
+      // Mint currency to buyer
+      await mintERC20ToBuyer((listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
     });
 
     it("Should transfer tokens bought from lister to buyer", async () => {
@@ -237,7 +267,7 @@ describe("Buy: direct listing", function () {
       const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-      await marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay });
+      await marketv2.connect(buyer).buy(listingId, quantityWanted);
 
       const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
@@ -248,21 +278,16 @@ describe("Buy: direct listing", function () {
 
     it("Should transfer currency from buyer to lister", async () => {
       // No fees or royalty set up.
-      const listerBalBefore: BigNumber = await ethers.provider.getBalance(lister.address);
-      const buyerBalBefore: BigNumber = await ethers.provider.getBalance(buyer.address);
+      const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address);
+      const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address);
 
-      const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-      const txReceipt = await (
-        await marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay, gasPrice })
-      ).wait();
-      const gasUesd: BigNumber = txReceipt.gasUsed;
-      const gasPaid: BigNumber = gasPrice.mul(gasUesd);
+      await marketv2.connect(buyer).buy(listingId, quantityWanted);
 
-      const listerBalAfter: BigNumber = await ethers.provider.getBalance(lister.address);
-      const buyerBalAfter: BigNumber = await ethers.provider.getBalance(buyer.address);
+      const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address);
+      const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address);
 
       expect(listerBalAfter).to.equal(listerBalBefore.add(totalPriceToPay));
-      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalPriceToPay.add(gasPaid)));
+      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalPriceToPay));
     });
 
     it("Should distribute sale value to the relevant stake holders", async () => {
@@ -276,24 +301,19 @@ describe("Buy: direct listing", function () {
       const marketCut: BigNumber = totalPriceToPay.mul(500).div(10000);
       const tokenRoyalty: BigNumber = totalPriceToPay.mul(500).div(10000);
 
-      const royaltyTreasuryBefore: BigNumber = await ethers.provider.getBalance(royaltyTreasury);
-      const listerBalBefore: BigNumber = await ethers.provider.getBalance(lister.address);
-      const buyerBalBefore: BigNumber = await ethers.provider.getBalance(buyer.address);
+      const royaltyTreasuryBefore: BigNumber = await erc20Token.balanceOf(royaltyTreasury);
+      const listerBalBefore: BigNumber = await erc20Token.balanceOf(lister.address);
+      const buyerBalBefore: BigNumber = await erc20Token.balanceOf(buyer.address);
 
-      const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-      const txReceipt = await (
-        await marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay, gasPrice })
-      ).wait();
-      const gasUesd: BigNumber = txReceipt.gasUsed;
-      const gasPaid: BigNumber = gasPrice.mul(gasUesd);
+      await marketv2.connect(buyer).buy(listingId, quantityWanted);
 
-      const royaltyTreasuryAfter: BigNumber = await ethers.provider.getBalance(royaltyTreasury);
-      const listerBalAfter: BigNumber = await ethers.provider.getBalance(lister.address);
-      const buyerBalAfter: BigNumber = await ethers.provider.getBalance(buyer.address);
+      const royaltyTreasuryAfter: BigNumber = await erc20Token.balanceOf(royaltyTreasury);
+      const listerBalAfter: BigNumber = await erc20Token.balanceOf(lister.address);
+      const buyerBalAfter: BigNumber = await erc20Token.balanceOf(buyer.address);
 
       expect(royaltyTreasuryAfter).to.equal(royaltyTreasuryBefore.add(marketCut.add(tokenRoyalty)));
       expect(listerBalAfter).to.equal(listerBalBefore.add(totalPriceToPay.sub(marketCut.add(tokenRoyalty))));
-      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalPriceToPay.add(gasPaid)));
+      expect(buyerBalAfter).to.equal(buyerBalBefore.sub(totalPriceToPay));
     });
   });
 
@@ -301,12 +321,15 @@ describe("Buy: direct listing", function () {
     beforeEach(async () => {
       // Time travel
       await timeTravelToListingWindow(listingId);
+
+      // Mint currency to buyer
+      await mintERC20ToBuyer((listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
     });
 
     it("Should decrease the quantity available in the listing", async () => {
       const quantityWanted: number = 1;
 
-      await marketv2.connect(buyer).buy(listingId, quantityWanted, { value: totalPriceToPay });
+      await marketv2.connect(buyer).buy(listingId, quantityWanted);
 
       const listing = await marketv2.listings(listingId);
 
