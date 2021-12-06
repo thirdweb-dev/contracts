@@ -21,6 +21,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
 contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
+    uint128 private constant MAX_BPS = 10_000;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -377,7 +379,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(
-            _royaltyBps < controlCenter.MAX_BPS(),
+            _royaltyBps <= MAX_BPS,
             "NFTCollection: Invalid bps provided; must be less than 10,000."
         );
 
@@ -455,7 +457,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     /// @dev See EIP 1155

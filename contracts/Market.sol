@@ -36,6 +36,8 @@ contract Market is
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
+    uint128 private constant MAX_BPS = 10_000;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -408,7 +410,7 @@ contract Market is
         );
 
         // Collect protocol fee if any
-        uint256 marketCut = (totalPrice * marketFeeBps) / controlCenter.MAX_BPS();
+        uint256 marketCut = (totalPrice * marketFeeBps) / MAX_BPS;
 
         require(
             IERC20(listing.currency).transferFrom(
@@ -449,6 +451,8 @@ contract Market is
 
     /// @dev Lets a protocol admin set market fees.
     function setMarketFeeBps(uint128 feeBps) public onlyModuleAdmin {
+        require(feeBps <= MAX_BPS, "bps provided must be less than 10,000");
+
         marketFeeBps = feeBps;
         emit MarketFeeUpdate(feeBps);
     }

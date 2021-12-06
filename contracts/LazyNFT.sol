@@ -39,7 +39,7 @@ contract LazyNFT is
     using Counters for Counters.Counter;
     using Strings for uint256;
 
-    uint256 private constant MAX_BPS = 10_000;
+    uint128 private constant MAX_BPS = 10_000;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");

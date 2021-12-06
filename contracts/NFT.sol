@@ -20,6 +20,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
+    uint128 private constant MAX_BPS = 10_000;
+
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
@@ -137,7 +139,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "NFT: Bps provided must be less than 10,000");
+        require(_royaltyBps <= MAX_BPS, "NFT: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -187,7 +189,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
