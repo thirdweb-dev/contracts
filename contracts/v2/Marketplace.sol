@@ -82,7 +82,7 @@ contract Marketplace is
     modifier onlyListingCreator(uint256 _listingId) {
         require(
             listings[_listingId].tokenOwner == _msgSender(),
-            "Market: caller is not listing creator."
+            "Marketplace: caller is not listing creator."
         );
         _;
     }
@@ -91,7 +91,7 @@ contract Marketplace is
     modifier onlyListerRoleWhenRestricted() {
         require(
             !restrictedListerRoleOnly || hasRole(LISTER_ROLE, _msgSender()),
-            "Market: caller does not have LISTER_ROLE."
+            "Marketplace: caller does not have LISTER_ROLE."
         );
         _;
     }
@@ -100,7 +100,7 @@ contract Marketplace is
     modifier onlyModuleAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 
-            "Market: not a module admin."
+            "Marketplace: not a module admin."
         );
         _;
     }
@@ -519,7 +519,7 @@ contract Marketplace is
     function _cancelAuction(Listing memory _targetListing) internal {
        require(
             listings[_targetListing.listingId].tokenOwner == _msgSender(),
-            "Market: caller is not the listing creator."
+            "Marketplace: caller is not the listing creator."
         );
 
         delete listings[_targetListing.listingId];
@@ -605,7 +605,7 @@ contract Marketplace is
             uint256 royaltyFeeAmount
         ) {
             if (royaltyFeeAmount > 0) {
-                require(royaltyFeeAmount + marketCut <= _totalPayoutAmount, "Market: Total market fees exceed the price.");
+                require(royaltyFeeAmount + marketCut <= _totalPayoutAmount, "Marketplace: Total market fees exceed the price.");
                 remainder -= royaltyFeeAmount;
                 transferCurrency(_currencyToUse, _payer, royaltyFeeRecipient, royaltyFeeAmount);
             }
@@ -634,7 +634,7 @@ contract Marketplace is
                     safeTransferERC20(_currency, address(this), _to, _amount);
                 }
             } else if (_to == address(this)) {
-                require(_amount == msg.value, "Market: native token value does not match bid amount.");
+                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{value: _amount}();
             } else {
                 if(!safeTransferNativeToken(_to, _amount)) {
@@ -665,7 +665,7 @@ contract Marketplace is
         bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
-        require(success && balAfter == balBefore + _amount, "Market: failed to transfer currency.");
+        require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
     }
 
     /// @dev Transfers `amount` of native token to `to`.
@@ -747,13 +747,13 @@ contract Marketplace is
         // Check whether a valid quantity of listed tokens is being bought.
         require(
             _listing.quantity > 0 && _quantityToBuy > 0 && _quantityToBuy <= _listing.quantity,
-            "Market: buying invalid amount of tokens."
+            "Marketplace: buying invalid amount of tokens."
         );
 
         // Check if sale is made within the listing window.
         require(
             block.timestamp < _listing.endTime && block.timestamp > _listing.startTime,
-            "Market: the sale has either not started or closed."
+            "Marketplace: the sale has either not started or closed."
         );
 
         // Check: buyer owns and has approved sufficient currency for sale.
@@ -842,7 +842,7 @@ contract Marketplace is
     /// @dev Lets a module admin set auction buffers
     function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyModuleAdmin {
         
-        require(_bidBufferBps < MAX_BPS, "Market: invalid BPS.");
+        require(_bidBufferBps < MAX_BPS, "Marketplace: invalid BPS.");
         
         timeBuffer = uint64(_timeBuffer);
         bidBufferBps = uint64(_bidBufferBps);
