@@ -217,7 +217,11 @@ contract LazyNFT is
         emit Claimed(_msgSender(), startMintTokenId, quantity, conditionIndex);
     }
 
-    function _transferPaymentWithFee(address currency, uint256 saleRecipientAmount, uint256 feeAmount) private {
+    function _transferPaymentWithFee(
+        address currency,
+        uint256 saleRecipientAmount,
+        uint256 feeAmount
+    ) private {
         address payable recipient = payable(saleRecipient);
         address payable feeRecipient = payable(controlCenter.getRoyaltyTreasury(address(this)));
 
@@ -236,10 +240,7 @@ contract LazyNFT is
             );
 
             if (feeAmount > 0) {
-                require(
-                    IERC20(currency).transferFrom(_msgSender(), feeRecipient, feeAmount),
-                    "failed to transfer fee"
-                );
+                require(IERC20(currency).transferFrom(_msgSender(), feeRecipient, feeAmount), "failed to transfer fee");
             }
         }
     }

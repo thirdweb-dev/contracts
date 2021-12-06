@@ -9,6 +9,7 @@ import { Log } from "@ethersproject/abstract-provider";
 
 // Contract types
 import { Forwarder } from "../../typechain/Forwarder";
+import { WETH9 } from "../../typechain/WETH9";
 import { ControlDeployer } from "../../typechain/ControlDeployer";
 import { Registry } from "../../typechain/Registry";
 import { ProtocolControl } from "../../typechain/ProtocolControl";
@@ -17,7 +18,9 @@ import { NFT } from "../../typechain/NFT";
 import { Coin } from "../../typechain/Coin";
 import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
+import { Marketplace } from "../../typechain/Marketplace";
 import { LazyNFT } from "../../typechain/LazyNFT";
+import { Contract } from "@ethersproject/contracts";
 
 export type Contracts = {
   registry: Registry;
@@ -27,8 +30,10 @@ export type Contracts = {
   coin: Coin;
   pack: Pack;
   market: Market;
+  marketv2: Marketplace;
   nft: NFT;
   lazynft: LazyNFT;
+  weth: WETH9;
 };
 
 export async function getContracts(
@@ -106,6 +111,14 @@ export async function getContracts(
       f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI, 0),
     )) as Market;
 
+  // Deploy WETH and Marketv2
+  const weth: WETH9 = await ethers.getContractFactory("WETH9").then(f => f.deploy());
+  const marketv2: Marketplace = (await ethers
+    .getContractFactory("Marketplace")
+    .then(f =>
+      f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, weth.address, marketContractURI, 0),
+    )) as Marketplace;
+
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
   const accessNft: AccessNFT = (await ethers
@@ -156,10 +169,12 @@ export async function getContracts(
 
   return {
     registry,
+    weth,
     forwarder,
     protocolControl,
     pack,
     market,
+    marketv2,
     accessNft,
     coin,
     nft,

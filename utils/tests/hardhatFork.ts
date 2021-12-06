@@ -12,7 +12,9 @@ export const forkFrom = async (network: keyof typeof chainIds) => {
 
   let nodeUrl: string =
     chainIds[network] == 137 || chainIds[network] == 80001
-      ? `https://polygon-${network}.g.alchemy.com/v2/${alchemyKey}`
+      ? network == "polygon"
+        ? `https://polygon-mainnet.g.alchemy.com/v2/${alchemyKey}`
+        : `https://polygon-mumbai.g.alchemy.com/v2/${alchemyKey}`
       : `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
 
   await hre.network.provider.request({

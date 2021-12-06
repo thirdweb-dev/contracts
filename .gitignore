@@ -25,5 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 *.dbg.json
 
-# Dev notes
+# Dev
+/relayerTest
+./contracts/v2/Market.sol
 /notes.txt
