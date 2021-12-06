@@ -202,6 +202,7 @@ contract Marketplace is
             );
         }
 
+        uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;
         listings[_listingId] = Listing({
             listingId: _listingId,
 
@@ -209,8 +210,8 @@ contract Marketplace is
             assetContract: targetListing.assetContract,
             tokenId: targetListing.tokenId,
 
-            startTime: _startTime == 0 ? targetListing.startTime : _startTime,
-            endTime: _secondsUntilEndTime == 0 ? targetListing.endTime : targetListing.startTime + _secondsUntilEndTime,
+            startTime: newStartTime,
+            endTime: _secondsUntilEndTime == 0 ? targetListing.endTime : newStartTime + _secondsUntilEndTime,
 
             quantity: safeNewQuantity,
             currency: _currencyToAccept,

@@ -141,7 +141,7 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "seller",
+          "name": "lister",
           "type": "address"
         },
         {
@@ -271,7 +271,7 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "seller",
+          "name": "lister",
           "type": "address"
         },
         {
