@@ -19,6 +19,8 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
 contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
+    uint128 private constant MAX_BPS = 10_000;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -271,7 +273,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps < controlCenter.MAX_BPS(), "Pack: Bps provided must be less than 10,000");
+        require(_royaltyBps <= MAX_BPS, "Pack: Bps provided must be less than 10,000");
 
         royaltyBps = _royaltyBps;
 
@@ -439,7 +441,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / controlCenter.MAX_BPS();
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     /// @dev See EIP 1155
