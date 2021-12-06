@@ -142,7 +142,8 @@ interface IMarketplace {
         address indexed offeror,
         ListingType indexed listingType,
         uint256 quantityWanted,
-        uint256 totalOfferAmount
+        uint256 totalOfferAmount,
+        address currency
     );
 
     /// @dev Emitted when an auction is closed.

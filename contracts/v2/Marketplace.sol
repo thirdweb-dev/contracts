@@ -454,7 +454,8 @@ contract Marketplace is
             _newOffer.offeror,
             _targetListing.listingType,
             _newOffer.quantityWanted,
-            _newOffer.pricePerToken * _newOffer.quantityWanted
+            _newOffer.pricePerToken * _newOffer.quantityWanted,
+            _newOffer.currency
         );
     }
 
@@ -512,7 +513,8 @@ contract Marketplace is
                 _incomingBid.offeror,
                 _targetListing.listingType,
                 _incomingBid.quantityWanted,
-                _targetListing.buyoutPricePerToken * _targetListing.quantity
+                _targetListing.buyoutPricePerToken * _targetListing.quantity,
+                _incomingBid.currency
             );
         }
     }

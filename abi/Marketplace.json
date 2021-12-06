@@ -275,6 +275,12 @@
         "internalType": "uint256",
         "name": "totalOfferAmount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "currency",
+        "type": "address"
       }
     ],
     "name": "NewOffer",
