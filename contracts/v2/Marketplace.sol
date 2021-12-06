@@ -686,11 +686,12 @@ contract Marketplace is
         view
         returns (bool isValidNewBid)
     {
-        isValidNewBid = (_currentWinningBidAmount == 0 && _incomingBidAmount >= _reserveAmount) 
-            || (
-                    _incomingBidAmount >  _currentWinningBidAmount
-                        && ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >= bidBufferBps
-                );
+        isValidNewBid = _currentWinningBidAmount == 0
+            ? _incomingBidAmount >= _reserveAmount
+            : (
+                _incomingBidAmount >  _currentWinningBidAmount
+                    && ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >= bidBufferBps
+            );
     }
 
     /// @dev Validates that `_addrToCheck` owns and has approved markeplace to transfer the appropriate amount of currency
