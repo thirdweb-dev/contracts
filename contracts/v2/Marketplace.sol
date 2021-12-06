@@ -133,7 +133,7 @@ contract Marketplace is
         onlyListerRoleWhenRestricted 
     {
         // Get values to populate `Listing`.
-        uint256 listingId = nextListingId();
+        uint256 listingId = getNextListingId();
         address tokenOwner = _msgSender();        
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
@@ -290,6 +290,7 @@ contract Marketplace is
         );
     }
 
+    /// @dev Lets an account (1) make an offer to a direct listing, or (2) make a bid in an auction.
     function offer(
         uint256 _listingId, 
         uint256 _quantityWanted,
@@ -336,6 +337,49 @@ contract Marketplace is
         }
     }
 
+    /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
+    function closeAuction(
+        uint256 _listingId,
+        address _closeFor
+    )
+        external
+        override
+        nonReentrant
+    {
+        Listing memory targetListing = listings[_listingId];
+
+        require(
+            targetListing.listingType == ListingType.Auction,
+            "Market: listing is not auction."
+        );
+
+        Offer memory targetBid = winningBid[_listingId];
+
+        if(targetListing.startTime > block.timestamp) {
+            _cancelAuction(targetListing);
+        } else {
+
+            require(
+                targetListing.endTime < block.timestamp,
+                "Market: can only close auction after it has ended."
+            );
+
+            if(_closeFor == targetListing.tokenOwner) {
+                _closeAuctionForBidder(targetListing, targetBid);
+            } else if (_closeFor == targetBid.offeror) {
+                _closeAuctionForBidder(targetListing, targetBid);
+            }
+        }
+    }
+
+    /// @dev Lets the contract accept ether.
+    receive() external payable {
+        emit NativeTokensReceived(_msgSender(), msg.value);
+    }
+
+    //  =====   Internal functions  =====
+
+    /// @dev Performs a direct listing sale.
     function executeSale(
         Listing memory _targetListing,
         address _buyer,
@@ -373,97 +417,7 @@ contract Marketplace is
         );
     }
 
-    /// @dev Lets an auction's creator close the auction.
-    function closeAuction(
-        uint256 _listingId,
-        address _closeFor
-    )
-        external
-        override
-        nonReentrant
-    {
-        Listing memory targetListing = listings[_listingId];
-
-        require(
-            targetListing.listingType == ListingType.Auction,
-            "Market: listing is not auction."
-        );
-
-        Offer memory targetBid = winningBid[_listingId];
-
-        if(targetListing.startTime > block.timestamp) {
-            _cancelAuction(targetListing);
-        } else {
-
-            require(
-                targetListing.endTime < block.timestamp,
-                "Market: can only close auction after it has ended."
-            );
-
-            if(_closeFor == targetListing.tokenOwner) {
-                _closeAuctionForBidder(targetListing, targetBid);
-            } else if (_closeFor == targetBid.offeror) {
-                _closeAuctionForBidder(targetListing, targetBid);
-            }
-        }
-    }
-
-    function _cancelAuction(Listing memory _targetListing) internal {
-       require(
-            listings[_targetListing.listingId].tokenOwner == _msgSender(),
-            "Market: caller is not the listing creator."
-        );
-
-        delete listings[_targetListing.listingId];
-
-        transferListingTokens(address(this), _targetListing.tokenOwner, _targetListing.quantity, _targetListing);
-
-        emit AuctionClosed(
-            _targetListing.listingId,
-            _msgSender(), 
-            true,
-            _targetListing.tokenOwner,
-            address(0)
-        );
-    }
-
-    function _closeAuctionForAuctionCreator(Listing memory _targetListing, Offer memory _winningBid) internal {
-       uint256 payoutAmount = _winningBid.pricePerToken * _winningBid.quantityWanted;
-
-        _targetListing.quantity = 0;
-        _targetListing.endTime = block.timestamp;
-        listings[_targetListing.listingId] = _targetListing;
-
-        _winningBid.pricePerToken = 0;
-        winningBid[_targetListing.listingId] = _winningBid;
-
-        payout(address(this), _targetListing.tokenOwner, _targetListing.currency, payoutAmount, _targetListing);
-
-        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _targetListing.tokenOwner, _winningBid.offeror);
-    }
-
-    function _closeAuctionForBidder(Listing memory _targetListing, Offer memory _winningBid) internal {
-
-        uint256 quantityToSend = _winningBid.quantityWanted;
-
-        _targetListing.endTime = block.timestamp;
-        _winningBid.quantityWanted = 0;
-
-        winningBid[_targetListing.listingId] = _winningBid;
-        listings[_targetListing.listingId] = _targetListing;
-
-        transferListingTokens(address(this), _winningBid.offeror, quantityToSend, _targetListing);
-
-        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _winningBid.offeror, _targetListing.tokenOwner);
-    }
-
-    /// @dev Let the contract accept ether
-    receive() external payable {
-        emit NativeTokensReceived(_msgSender(), msg.value);
-    }
-
-    //  =====   Internal functions  =====
-
+    /// @dev Processes a new offer to a direct listing.
     function handleOffer(
         Listing memory _targetListing,
         Offer memory _newOffer
@@ -490,19 +444,7 @@ contract Marketplace is
         );
     }
 
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst
-                && IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "Marketplace: insufficient currency balance or allowance."
-        );
-    }
-
-    /// @dev Processes a bid on an existing auction.
+    /// @dev Processes an incoming bid in an auction.
     function handleBid(
         Listing memory _targetListing,
         Offer memory _incomingBid 
@@ -555,6 +497,58 @@ contract Marketplace is
         }
     }
 
+    /// @dev Cancels an auction.
+    function _cancelAuction(Listing memory _targetListing) internal {
+       require(
+            listings[_targetListing.listingId].tokenOwner == _msgSender(),
+            "Market: caller is not the listing creator."
+        );
+
+        delete listings[_targetListing.listingId];
+
+        transferListingTokens(address(this), _targetListing.tokenOwner, _targetListing.quantity, _targetListing);
+
+        emit AuctionClosed(
+            _targetListing.listingId,
+            _msgSender(), 
+            true,
+            _targetListing.tokenOwner,
+            address(0)
+        );
+    }
+
+    /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
+    function _closeAuctionForAuctionCreator(Listing memory _targetListing, Offer memory _winningBid) internal {
+       uint256 payoutAmount = _winningBid.pricePerToken * _winningBid.quantityWanted;
+
+        _targetListing.quantity = 0;
+        _targetListing.endTime = block.timestamp;
+        listings[_targetListing.listingId] = _targetListing;
+
+        _winningBid.pricePerToken = 0;
+        winningBid[_targetListing.listingId] = _winningBid;
+
+        payout(address(this), _targetListing.tokenOwner, _targetListing.currency, payoutAmount, _targetListing);
+
+        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _targetListing.tokenOwner, _winningBid.offeror);
+    }
+
+    /// @dev Closes an auction for the winning bidder; distributes auction items to the winning bidder.
+    function _closeAuctionForBidder(Listing memory _targetListing, Offer memory _winningBid) internal {
+
+        uint256 quantityToSend = _winningBid.quantityWanted;
+
+        _targetListing.endTime = block.timestamp;
+        _winningBid.quantityWanted = 0;
+
+        winningBid[_targetListing.listingId] = _winningBid;
+        listings[_targetListing.listingId] = _targetListing;
+
+        transferListingTokens(address(this), _winningBid.offeror, quantityToSend, _targetListing);
+
+        emit AuctionClosed(_targetListing.listingId, _msgSender(), false, _winningBid.offeror, _targetListing.tokenOwner);
+    }
+
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
     function transferListingTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
@@ -570,6 +564,7 @@ contract Marketplace is
         }
     }
 
+    /// @dev Transfers a given amount of currency.
     function transferCurrency(
         address _currency,
         address _from,
@@ -674,6 +669,19 @@ contract Marketplace is
                     _incomingBidAmount >  _currentWinningBidAmount
                         && ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >= bidBufferBps
                 );
+    }
+
+    /// @dev Validates that `_addrToCheck` owns and has approved markeplace to transfer the appropriate amount of currency
+    function validateERC20BalAndAllowance(
+        address _addrToCheck,
+        address _currency,
+        uint256 _currencyAmountToCheckAgainst
+    ) internal view {
+        require(
+            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst
+                && IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
+            "Marketplace: insufficient currency balance or allowance."
+        );
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Market to transfer tokens.
@@ -790,7 +798,7 @@ contract Marketplace is
     }
 
     /// @dev Returns the next listing Id to use.
-    function nextListingId() internal returns (uint256 nextId) {
+    function getNextListingId() internal returns (uint256 nextId) {
         nextId = totalListings;
         totalListings += 1;
     }
