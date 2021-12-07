@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.0;
+
+/**
+ *  `LazyMintERC1155` is an ERC 1155 contract. It takes in a basee URI in its
+ *  constructor (e.g. "ipsf://Qmece.../"), and the URI for each token of ID
+ *  `tokenId` is baseURI + `${tokenId}` (e.g. "ipsf://Qmece.../1").
+ *
+ *  For each token with a unique ID, the module admin (account with `DEFAULT_ADMIN ROLE`)
+ *  can create mint conditions with non-overlapping time windows, and accounts can claim
+ *  the NFTs, in a given time window, according to that time window's mint conditions.
+ */
+
+interface ILazyMintERC1155 {
+
+    /**
+     *  @notice The mint conditions for a given tokenId x time window.
+     *
+     *  @param startTimestamp The unix timestamp after which the mint conditions last.
+     *                        The same mint conditions last until the `startTimestamp`
+     *                        of the next mint condition.
+     *
+     *  @param maxMintSupply The maximum number of tokens of the same `tokenId` that can
+     *                       be claimed under the mint condition.
+     *
+     *  @param currentMintSupply At any given point, the number of tokens of the same `tokenId`
+     *                           that have been claimed.
+     *
+     *  @param quantityLimitPerTransaction The maximum number of tokens a single account can
+     *                                     claim in a single transaction.
+     *
+     *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait
+     *                                        after claiming tokens, to be able to claim again.
+     *
+     *  @param merkleRoot Only accounts whose address is a leaf of `merkleRoot` can claim tokens
+     *                    under the mint condition.
+     *
+     *  @param pricePerToken The price per token that can be claimed.
+     *
+     *  @param currency The currency in which `pricePerToken` must be paid.
+     */
+    struct MintCondition {
+        uint256 startTimestamp;
+        uint256 maxMintSupply;
+        uint256 currentMintSupply;
+        uint256 quantityLimitPerTransaction;
+        uint256 waitTimeInSecondsBetweenClaims;
+        bytes32 merkleRoot;
+        uint256 pricePerToken;
+        address currency;
+    }
+
+    /**
+     *  @notice The set of all mint conditions for a given tokenId.
+     *
+     *  @dev In the contract, we use this in a mapping: tokenId => mint conditions i.e.
+     *       mapping(uint256 => PublicMintConditions) public mintConditions;
+     *
+     *  @param nextConditionIndex The uid for each mint condition. Incremented
+     *                            by one every time a mint condition is created.
+     *
+     *  @param mintConditionAtIndex The mint conditions at a given uid. Mint conditions
+     *                              are ordered in an ascending order by their `startTimestamp`.
+     *
+     *  @param nextValidTimestampForClaim Account => uid for a mint condition => timestamp after
+     *                                    which the account can claim tokens again.
+     */
+    struct PublicMintConditions {
+        uint256 nextConditionIndex;
+
+        mapping(uint256 => MintCondition) mintConditionAtIndex;
+        mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
+    }
+
+    /// @dev The next token ID of the NFT to "lazy mint".
+    function nextTokenIdToMint() external returns (uint256);
+
+    /**
+     *  @notice At any given moment, returns the uid for the active mint condition for a given tokenId.
+     *
+     *  @param _tokenId The tokenId for which we return the uid for the active mint condition.
+     *  @return The uid for the active mint condition for a given tokenId.
+     */
+    function getLastStartedMintConditionIndex(uint256 _tokenId) external view returns (uint256);
+
+    /**
+     *  @notice Lets an account with `MINTER_ROLE` override the baseURI convention and assign custom
+     *          URIs to tokens with ID from `nextTokenIdToMint` to `nextTokenIdToMint + _uris.length - 1`;
+     *
+     *  @param _uris The URIs to assign to `_uris.length` upcoming tokenIds. For `i < _uris.length`, the 
+     *               URI for tokenId `nextTokenIdToMint + i` is set as `_uris[i]`.
+     */
+    function assignURIs(string[] calldata _uris) external;
+
+    /**
+     *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 
+     *          to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
+     *
+     *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
+     */
+    function lazyMint(uint256 _amount) external;
+
+    /**
+     *  @notice Lets an account claim a given quantity of tokens, of a single tokenId.
+     *
+     *  @param _tokenId The unique ID of the token to claim.
+     *  @param _quantity The quantity of tokens to claim.
+     *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
+     *                 of the mint conditions that apply.
+     */
+    function claim(uint256 _tokenId, uint256 _quantity, bytes32[] calldata _proofs) external payable;
+
+    /**
+     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set mint conditions for a given token ID.
+     *
+     *  @param _tokenId The token ID for which to set mint conditions.
+     *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
+     */
+    function setPublicMintConditions(uint256 _tokenId, MintCondition[] calldata _conditions) external;
+}
