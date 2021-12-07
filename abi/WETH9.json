@@ -1,23 +1,28 @@
 [
   {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
         "indexed": true,
         "internalType": "address",
-        "name": "src",
+        "name": "owner",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "guy",
+        "name": "spender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wad",
+        "name": "value",
         "type": "uint256"
       }
     ],
@@ -30,13 +35,13 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "dst",
+        "name": "sender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wad",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -49,19 +54,19 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "src",
+        "name": "from",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "dst",
+        "name": "to",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wad",
+        "name": "value",
         "type": "uint256"
       }
     ],
@@ -74,13 +79,13 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "src",
+        "name": "sender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wad",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -91,12 +96,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "owner",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "",
+        "name": "spender",
         "type": "address"
       }
     ],
@@ -115,12 +120,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "guy",
+        "name": "spender",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "wad",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -139,7 +144,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "account",
         "type": "address"
       }
     ],
@@ -168,10 +173,58 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "subtractedValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "decreaseAllowance",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "deposit",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "addedValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "increaseAllowance",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -217,12 +270,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "dst",
+        "name": "recipient",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "wad",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -241,17 +294,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "src",
+        "name": "sender",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "dst",
+        "name": "recipient",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "wad",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -270,7 +323,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wad",
+        "name": "amount",
         "type": "uint256"
       }
     ],
