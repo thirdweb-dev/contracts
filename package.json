@@ -73,6 +73,6 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn clean && yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "tsdx build --entry typechain/index.ts"
+    "build:lib": "tsdx build --entry typechain/index.ts --tsconfig tsconfig.build.json"
   }
 }
