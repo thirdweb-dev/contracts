@@ -33,6 +33,9 @@ jobs:
       - name: Run build
         run: yarn build
 
+      - name: Run size-contract
+        run: npx hardhat size-contracts
+
       # Runs a set of commands using the runners shell
       - name: Run test
         env:
