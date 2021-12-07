@@ -1,7 +1,6 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
-  "include": ["typechain", "./scripts", "./test"],
-  "files": ["./hardhat.config.ts"],
+  "include": ["typechain"],
   "compilerOptions": {
     "module": "esnext",
     "lib": ["esnext"],
@@ -11,8 +10,7 @@
     // output .js.map sourcemap files for consumers
     "sourceMap": true,
     // match output dir to input dir. e.g. dist/index instead of dist/src/index
-    "rootDir": "./",
-    "baseUrl": "./",
+    "rootDir": "./typechain",
     // stricter type-checking for stronger correctness. Recommended by TS
     "strict": true,
     // linter checks for common issues

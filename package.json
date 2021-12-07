@@ -2,6 +2,7 @@
   "name": "@3rdweb/contracts",
   "description": "",
   "version": "1.13.1",
+  "license": "Apache-2.0",
   "dependencies": {
     "@chainlink/contracts": "^0.2.2",
     "@openzeppelin/contracts": "^4.3.3"
@@ -64,32 +65,14 @@
   "resolutions": {
     "typescript": "^4.4.4"
   },
-  "license": "MIT",
   "scripts": {
     "clean": "hardhat clean && rm -rf abi/ && rm -rf artifacts/ && rm -rf dist/ && rm -rf typechain/",
     "compile": "hardhat compile",
-    "deploy-accessPacks": "hardhat run scripts/deploy/accessPacks.ts",
-    "deploy-registry": "hardhat run scripts/deploy/registry.ts",
-    "deploy-protocolControl": "hardhat run scripts/deploy/protocolControl.ts",
-    "deploy-rewards": "hardhat run scripts/deploy/rewards.ts",
-    "deploy-pack": "hardhat run scripts/deploy/pack.ts",
-    "deploy-market": "hardhat run scripts/deploy/market.ts",
-    "deploy-forwarder": "hardhat run scripts/deploy/forwarder.ts",
-    "createPackAtomic": "hardhat run scripts/txs/createPackAtomic.ts",
-    "openPack": "hardhat run scripts/txs/openPack.ts",
-    "verify-accessPacks": "hardhat run tasks/verify/accessPacks.ts",
-    "verify-registry": "hardhat run tasks/verify/registry.ts",
-    "verify-protocol": "hardhat run tasks/verify/protocol.ts",
-    "verify-pack": "hardhat run tasks/verify/pack.ts",
-    "verify-market": "hardhat run tasks/verify/market.ts",
-    "verify-rewards": "hardhat run tasks/verify/rewards.ts",
-    "verify-forwarder": "hardhat run tasks/verify/forwarder.ts",
     "prettier": "prettier --config .prettierrc --write \"**/*.{js,json,sol,ts}\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn clean && yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "tsdx build --entry typechain/index.ts",
-    "copy-dts": "copyfiles -u 1 \"typechain/**/*.d.ts\" dist"
+    "build:lib": "tsdx build --entry typechain/index.ts --tsconfig tsconfig.build.json"
   }
 }
