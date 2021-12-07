@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "MockLazyNFTReentrant",
-  "sourceName": "contracts/test-helpers/MockLazyNFTReentrant.sol",
+  "sourceName": "contracts/mock/MockLazyNFTReentrant.sol",
   "abi": [
     {
       "inputs": [

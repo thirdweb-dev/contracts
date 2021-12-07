@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "MintableERC20Permit",
-  "sourceName": "contracts/test-helpers/MintableERC20Permit.sol",
+  "sourceName": "contracts/mock/MintableERC20Permit.sol",
   "abi": [
     {
       "inputs": [],

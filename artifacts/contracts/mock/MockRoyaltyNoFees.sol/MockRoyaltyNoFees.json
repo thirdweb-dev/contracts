@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "MockRoyaltyNoFees",
-  "sourceName": "contracts/test-helpers/MockRoyaltyNoFees.sol",
+  "sourceName": "contracts/mock/MockRoyaltyNoFees.sol",
   "abi": [
     {
       "inputs": [

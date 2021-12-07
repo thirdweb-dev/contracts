@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "MockERC1155",
-  "sourceName": "contracts/test-helpers/MockERC1155.sol",
+  "sourceName": "contracts/mock/MockERC1155.sol",
   "abi": [
     {
       "inputs": [],

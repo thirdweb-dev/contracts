@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "WETH9",
-  "sourceName": "contracts/test-helpers/WETH9.sol",
+  "sourceName": "contracts/mock/WETH9.sol",
   "abi": [
     {
       "anonymous": false,

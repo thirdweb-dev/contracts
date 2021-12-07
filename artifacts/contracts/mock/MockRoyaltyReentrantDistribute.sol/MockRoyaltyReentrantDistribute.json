@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "MockRoyaltyReentrantDistribute",
-  "sourceName": "contracts/test-helpers/MockRoyaltyReentrantDistribute.sol",
+  "sourceName": "contracts/mock/MockRoyaltyReentrantDistribute.sol",
   "abi": [
     {
       "inputs": [],
