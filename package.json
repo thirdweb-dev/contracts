@@ -14,7 +14,9 @@
   "files": [
     "contracts/",
     "typechain/",
-    "dist/"
+    "dist/",
+    "!contracts/mocks",
+    "!contracts/**/*.md"
   ],
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.1.0",
