@@ -1,1 +1,3 @@
 node_modules/
+# contracts[><]*.md
+contracts/marketplace/marketplace.md
