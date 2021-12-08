@@ -72,6 +72,24 @@ interface ILazyMintERC1155 {
         mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
     }
 
+    /// @dev Emitted when tokens are lazy minted.
+    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId);
+
+    /// @dev Emitted when tokens are claimed.
+    event ClaimedTokens(uint256 indexed mintConditionIndex, uint256 indexed tokenId, address indexed claimer, uint256 quantityClaimed);
+
+    /// @dev Emitted when new mint conditions are set for a token.
+    event NewMintConditions(uint256 indexed tokenId, MintCondition[] mintConditions);
+
+    /// @dev Emitted when a new sale recipient is set.
+    event NewSaleRecipient(address indexed recipient);
+
+    /// @dev Emitted when the royalty fee bps is updated
+    event RoyaltyUpdated(uint256 newRoyaltyBps);
+
+    /// @dev Emitted when transfers are set as restricted / not-restricted.
+    event TransfersRestricted(bool restricted);
+
     /// @dev The next token ID of the NFT to "lazy mint".
     function nextTokenIdToMint() external returns (uint256);
 
@@ -81,7 +99,7 @@ interface ILazyMintERC1155 {
      *  @param _tokenId The tokenId for which we return the uid for the active mint condition.
      *  @return The uid for the active mint condition for a given tokenId.
      */
-    function getLastStartedMintConditionIndex(uint256 _tokenId) external view returns (uint256);
+    function getIndexOfActiveCondition(uint256 _tokenId) external view returns (uint256);
 
     /**
      *  @notice Lets an account with `MINTER_ROLE` override the baseURI convention and assign custom
@@ -90,7 +108,7 @@ interface ILazyMintERC1155 {
      *  @param _uris The URIs to assign to `_uris.length` upcoming tokenIds. For `i < _uris.length`, the 
      *               URI for tokenId `nextTokenIdToMint + i` is set as `_uris[i]`.
      */
-    function assignURIs(string[] calldata _uris) external;
+    function lazyMintWithURIs(string[] calldata _uris) external;
 
     /**
      *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 

@@ -1,93 +1,168 @@
-/**
-        IGNORE THIS CONTRACT FOR NOW. THIS IS JUST FOR REFERENCE.
- */
-
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
+
+// Interface
+import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-// Access control + Security
+// Protocol control center.
+import { ProtocolControl } from "../ProtocolControl.sol";
+
+// Royalties
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+
+// Access Control + security
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
+// Utils
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract LazyMintERC1155 is ERC1155, Pausable, ERC2771Context, AccessControlEnumerable, ReentrancyGuard {
+// Helper interfaces
+import { IWETH } from "../interfaces/IWETH.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+
+contract LazyMintERC1155 is
+
+    ILazyMintERC1155,
+    ERC1155,
+    ERC2771Context,
+    IERC2981,    
+    AccessControlEnumerable,
+    Pausable,
+    ReentrancyGuard,    
+    Multicall    
+
+{
+    using Strings for uint256;
+
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    /// @dev The address interpreted as native token of the chain.
+    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The address of the native token wrapper contract.
+    address public immutable nativeTokenWrapper;
+
+    /// @dev The adress that receives all primary sales value.
+    address public saleRecipient;
 
     /// @dev The next token ID of the NFT to "lazy mint".
     uint256 public nextTokenIdToMint;
 
-    /// @dev The next token ID of the already NFT that can be claimed.
-    uint256 public nextTokenIdToClaim;
+    /// @dev Contract interprets 10_000 as 100%.
+    uint128 private constant MAX_BPS = 10_000;
 
-    struct MintCondition {
-        uint256 startTimestamp;
-        uint256 maxMintSupply;
-        uint256 currentMintSupply;
-        uint256 quantityLimitPerTransaction;
-        uint256 waitTimeSecondsLimitPerTransaction;
-        bytes32 merkleRoot;
-        uint256 pricePerToken;
-        address currency;
-    }
+    /// @dev The % of secondary sales collected as royalties. See EIP 2981.
+    uint128 public royaltyBps;
 
-    struct PublicMintConditions {
-        uint256 nextConditionIndex;
+    /// @dev Whether transfers on tokens are restricted.
+    bool public transfersRestricted;
 
-        mapping(uint256 => MintCondition) mintConditionAtIndex;
-        mapping(uint256 => uint256) nextValidTimestampForClaim;
-    }
+    /// @dev Contract level metadata.
+    string public contractURI;
 
-    mapping(uint256 => string) public altURI;
-    mapping(uint256 => uint256) public totalSupply;
-    mapping(uint256 => PublicMintConditions) public mintConditions;
+    /// @dev The protocol control center.
+    ProtocolControl internal controlCenter;
     
-    modifier onlyMinter() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "only minter");
+    /// @dev Token ID => URI that overrides `baseURI + tokenId` convention.
+    mapping(uint256 => string) public altURI;
+    /// @dev Token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public totalSupply;
+    /// @dev Token ID => puclic mint conditions for tokens with that ID.
+    mapping(uint256 => PublicMintConditions) public mintConditions;
+
+    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE on the protocol control center.
+    modifier onlyProtocolAdmin() {
+        require(
+            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()), 
+            "LazyMintERC1155: not protocol admin."
+        );
         _;
     }
 
+    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
     modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "LazyMintERC1155: not module admin.");
+        _;
+    }
+
+    /// @dev Checks whether caller has MINTER_ROLE.
+    modifier onlyMinter() {
+        require(hasRole(MINTER_ROLE, _msgSender()), "LazyMintERC1155: not minter.");
         _;
     }
 
     constructor(
         string memory _baseURI,
-        address _trustedForwarder
+        string memory _contractURI,
+        address _trustedForwarder,
+        address _nativeTokenWrapper,
+        address _saleRecipient
     ) 
         ERC1155(_baseURI)
         ERC2771Context(_trustedForwarder)
-    {}
+    {
+        nativeTokenWrapper = _nativeTokenWrapper;
+        saleRecipient = _saleRecipient;
+        contractURI = _contractURI;
+
+        address deployer = _msgSender();
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+        _setupRole(MINTER_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
+    }
 
     ///     =====   Public functions  =====
 
-    function getLastStartedMintConditionIndex() public view returns (uint256) {
+    /// @dev Returns the URI for a given tokenId.
+    function uri(uint256 _tokenId) public view override returns (string memory) {
+        string memory baseURI = super.uri(_tokenId);
 
-        uint256 nextConditionIndex = mintConditions.nextConditionIndex;
+        if (bytes(altURI[_tokenId]).length > 0) {
+            return altURI[_tokenId];
+        }
+        if (bytes(baseURI).length > 0) {
+            return string(abi.encodePacked(baseURI, _tokenId.toString()));
+        }
+        return "";
+    }
 
-        require(nextConditionIndex > 0, "no public mint condition");
+    /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
+    function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
+
+        uint256 nextConditionIndex = mintConditions[_tokenId].nextConditionIndex;
+
+        require(nextConditionIndex > 0, "LazyMintERC1155: no public mint condition.");
 
         for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
-            if (block.timestamp >= mintConditions.mintConditionAtIndex[i - 1].startTimestamp) {
+            if (block.timestamp >= mintConditions[_tokenId].mintConditionAtIndex[i - 1].startTimestamp) {
                 return i - 1;
             }
         }
 
-        revert("no active mint condition");
+        revert("LazyMintERC1155: no active mint condition.");
     }
 
     ///     =====   External functions  =====
 
-    function assignURIs(string[] calldata _uris) external onlyMinter {
+    /**
+     *  @dev Lets an account with `MINTER_ROLE` override the baseURI convention and assign custom
+     *       URIs to tokens with ID from `nextTokenIdToMint` to `nextTokenIdToMint + _uris.length - 1`;     
+     */
+    function lazyMintWithURIs(string[] calldata _uris) external onlyMinter {
                 
         uint256 id = nextTokenIdToMint;
         for (uint256 i = 0; i < _uris.length; i++) {
@@ -96,64 +171,262 @@ contract LazyMintERC1155 is ERC1155, Pausable, ERC2771Context, AccessControlEnum
         }
 
         nextTokenIdToMint = id;
-        // TODO: emit event.
-    }
-
-    function lazyMint(uint256 _amount) external onlyMinter {
-        nextTokenIdToMint += _amount;
-        // TODO: emit event.
-    }
-
-    function claim(uint256 _tokenId, uint256 quantity, bytes32[] calldata proofs) external payable nonReentrant {
         
-        // Get the claim conditions.        
+        emit LazyMintedTokens(id - _uris.length , id - 1);
+    }
 
-        // Verify claim validity. If not valid, revert.      
+    /**
+     *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 
+     *       to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
+     */
+    function lazyMint(uint256 _amount) external onlyMinter {
+        uint256 startId = nextTokenIdToMint;
+        nextTokenIdToMint += _amount;
+        
+        emit LazyMintedTokens(startId , startId + _amount - 1);
+    }
+    
+    /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
+    function claim(
+        uint256 _tokenId,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) 
+        external
+        payable
+        nonReentrant 
+        whenNotPaused
+    {
+        // Get the claim conditions.
+        uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
+        MintCondition memory mintCondition = mintConditions[_tokenId].mintConditionAtIndex[activeConditionIndex];
 
-        // If there's a price, collect price.       
+        // Verify claim validity. If not valid, revert.
+        verifyClaimIsValid(
+            _tokenId,
+            _quantity,
+            _proofs,
+            activeConditionIndex,
+            mintCondition
+        );
+
+        // If there's a price, collect price.
+        collectClaimPrice(mintCondition, _quantity);
 
         // Mint the relevant tokens to claimer.
+        _mint(_msgSender(), _tokenId, _quantity, "");
         
-        // Emit event.
+        emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _quantity);
     }
 
-    function setPublicMintConditions(MintCondition[] calldata conditions) external onlyModuleAdmin {
-
+    /// @dev Lets a module admin set mint conditions for a given tokenId.
+    function setPublicMintConditions(
+        uint256 _tokenId, 
+        MintCondition[] calldata _conditions
+    ) 
+        external
+        onlyModuleAdmin 
+    {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp = 0;
 
-        for (uint256 i = 0; i < conditions.length; i++) {
-            // the input of startTimestamp is the number of seconds from now.
-            if (lastConditionStartTimestamp != 0) {
-                require(
-                    lastConditionStartTimestamp < conditions[i].startTimestamp,
-                    "startTimestamp must be in ascending order"
-                );
-            }
-            require(conditions[i].maxMintSupply > 0, "max mint supply cannot be 0");
-            require(conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0");
+        for (uint256 i = 0; i < _conditions.length; i++) {
+            
+            require(
+                lastConditionStartTimestamp == 0 
+                    || lastConditionStartTimestamp < _conditions[i].startTimestamp,
+                "startTimestamp must be in ascending order"
+            );
+            require(_conditions[i].maxMintSupply > 0, "max mint supply cannot be 0");
+            require(_conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0");
 
-            mintConditions.mintConditionAtIndex[i] = MintCondition({
-                startTimestamp: block.timestamp + conditions[i].startTimestamp,
-                maxMintSupply: conditions[i].maxMintSupply,
+            mintConditions[_tokenId].mintConditionAtIndex[i] = MintCondition({
+                startTimestamp: _conditions[i].startTimestamp,
+                maxMintSupply: _conditions[i].maxMintSupply,
                 currentMintSupply: 0,
-                quantityLimitPerTransaction: conditions[i].quantityLimitPerTransaction,
-                waitTimeSecondsLimitPerTransaction: conditions[i].waitTimeSecondsLimitPerTransaction,
-                pricePerToken: conditions[i].pricePerToken,
-                currency: conditions[i].currency,
-                merkleRoot: conditions[i].merkleRoot
+                quantityLimitPerTransaction: _conditions[i].quantityLimitPerTransaction,
+                waitTimeInSecondsBetweenClaims: _conditions[i].waitTimeInSecondsBetweenClaims,
+                pricePerToken: _conditions[i].pricePerToken,
+                currency: _conditions[i].currency,
+                merkleRoot: _conditions[i].merkleRoot
             });
 
-
-            lastConditionStartTimestamp = conditions[i].startTimestamp;
+            lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }
 
-        // TODO: emit event.
+        emit NewMintConditions(_tokenId, _conditions);
+    }
+
+    /// @dev See EIP 2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = controlCenter.getRoyaltyTreasury(address(this));
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+    }
+
+    //      =====   Setter functions  =====
+
+    /// @dev Lets a module admin set the recipient of all primary sales.
+    function setSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        saleRecipient = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient);
+    }
+
+    /// @dev Lets a module admin pause or unpause the contract.
+    function setPaused(bool _toPause) external onlyModuleAdmin {
+        if(_toPause) {
+            _pause();
+        } else {
+            _unpause();
+        }
+    }
+
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "bps <= 10000");
+
+        royaltyBps = uint128(_royaltyBps);
+
+        emit RoyaltyUpdated(_royaltyBps);
+    }
+
+    /// @dev Lets a module admin restrict token transfers.
+    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
+        transfersRestricted = _restrictedTransfer;
+
+        emit TransfersRestricted(_restrictedTransfer);
+    }
+    
+     /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+        contractURI = _uri;
+    }
+
+    //      =====   Internal functions  =====
+
+    /// @dev Checks whether a request to claim tokens obeys the active mint condition.
+    function verifyClaimIsValid(
+        uint256 _tokenId, 
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _conditionIndex,
+        MintCondition memory _mintCondition
+    )
+        internal
+        view
+    {
+        require(
+            _quantity > 0 
+                && _quantity <= _mintCondition.quantityLimitPerTransaction, 
+            "LazyMintERC1155: invalid quantity claimed."
+        );
+        require(
+            _tokenId < nextTokenIdToMint, 
+            "cannot claim unminted token"
+        );
+        require(
+            _mintCondition.currentMintSupply + _quantity <= _mintCondition.maxMintSupply,
+            "exceed max mint supply"
+        );
+
+        uint256 validTimestampForClaim = mintConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_conditionIndex];
+        require(
+            validTimestampForClaim == 0 
+                || block.timestamp >= validTimestampForClaim, 
+                "cannot mint yet"
+        );
+
+        if (_mintCondition.merkleRoot != bytes32(0)) {
+            bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
+            require(
+                MerkleProof.verify(_proofs, _mintCondition.merkleRoot, leaf), 
+                "invalid proofs"
+            );
+        }
+    }
+
+    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    function collectClaimPrice(
+        MintCondition memory _mintCondition,
+        uint256 _quantityToClaim
+    )
+        internal
+    {
+        if (_mintCondition.pricePerToken <= 0) {
+            return;    
+        }
+
+        uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
+        transferCurrency(
+            _mintCondition.currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice
+        );
+    }
+
+    /// @dev Transfers a given amount of currency.
+    function transferCurrency(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        if (_currency == NATIVE_TOKEN) {
+            if (_from == address(this)) {
+                IWETH(nativeTokenWrapper).withdraw(_amount);
+
+                if (!safeTransferNativeToken(_to, _amount)) {
+                    IWETH(nativeTokenWrapper).deposit{ value: _amount }();
+                    safeTransferERC20(_currency, address(this), _to, _amount);
+                }
+            } else if (_to == address(this)) {
+                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
+                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
+            } else {
+                if (!safeTransferNativeToken(_to, _amount)) {
+                    IWETH(nativeTokenWrapper).deposit{ value: _amount }();
+                    safeTransferERC20(_currency, address(this), _to, _amount);
+                }
+            }
+        } else {
+            safeTransferERC20(_currency, _from, _to, _amount);
+        }
+    }
+
+    /// @dev Transfers `amount` of native token to `to`.
+    function safeTransferNativeToken(address to, uint256 value) internal returns (bool success) {
+        (success, ) = to.call{ value: value }(new bytes(0));
+    }
+
+    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
+    function safeTransferERC20(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        // Required due to the use of `IERC20.transferFrom`.
+        if (_from == address(this)) {
+            IERC20(_currency).approve(address(this), _amount);
+        }
+
+        uint256 balBefore = IERC20(_currency).balanceOf(_to);
+        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
+        uint256 balAfter = IERC20(_currency).balanceOf(_to);
+
+        require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
     }
 
     
     ///     =====   ERC 1155 functions  =====
 
+    /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
     function burn(
         address account,
         uint256 id,
@@ -167,6 +440,7 @@ contract LazyMintERC1155 is ERC1155, Pausable, ERC2771Context, AccessControlEnum
         _burn(account, id, value);
     }
 
+    /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
     function burnBatch(
         address account,
         uint256[] memory ids,
@@ -178,60 +452,6 @@ contract LazyMintERC1155 is ERC1155, Pausable, ERC2771Context, AccessControlEnum
         );
 
         _burnBatch(account, ids, values);
-    }
-
-    /**
-     * @dev See {ERC1155-_mint}.
-     */
-    function _mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual override {
-        super._mint(account, id, amount, data);
-        totalSupply[id] += amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_mintBatch}.
-     */
-    function _mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._mintBatch(to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            totalSupply[ids[i]] += amounts[i];
-        }
-    }
-
-    /**
-     * @dev See {ERC1155-_burn}.
-     */
-    function _burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) internal virtual override {
-        super._burn(account, id, amount);
-        totalSupply[id] -= amount;
-    }
-
-    /**
-     * @dev See {ERC1155-_burnBatch}.
-     */
-    function _burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual override {
-        super._burnBatch(account, ids, amounts);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            totalSupply[ids[i]] -= amounts[i];
-        }
     }
 
     /**
@@ -250,6 +470,11 @@ contract LazyMintERC1155 is ERC1155, Pausable, ERC2771Context, AccessControlEnum
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        // if transfer is restricted on the contract, we still want to allow burning and minting
+        if (transfersRestricted && from != address(0) && to != address(0)) {
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
+        }
         
         require(!paused(), "ERC1155Pausable: token transfer while paused");
 
@@ -266,7 +491,19 @@ contract LazyMintERC1155 is ERC1155, Pausable, ERC2771Context, AccessControlEnum
         }
     }
 
-    ///     ===== Low level overrides   =====
+    ///     =====   Low level overrides  =====
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155, AccessControlEnumerable, IERC165)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId;
+    }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
