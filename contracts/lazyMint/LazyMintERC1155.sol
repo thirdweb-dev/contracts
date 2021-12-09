@@ -206,7 +206,7 @@ contract LazyMintERC1155 is
         collectClaimPrice(mintCondition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        _mint(_msgSender(), _tokenId, _quantity, "");
+        transferClaimedTokens(activeConditionIndex, _tokenId, _quantity);
         
         emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _quantity);
     }
@@ -386,6 +386,18 @@ contract LazyMintERC1155 is
             recipient == address(0) ? defaultSaleRecipient : recipient,
             totalPrice - fees
         );
+    }
+
+    /// @dev Transfers the tokens being claimed.
+    function transferClaimedTokens(
+        uint256 _mintConditionIndex,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    )
+        internal
+    {
+        _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
+        mintConditions[_tokenId].mintConditionAtIndex[_mintConditionIndex].currentMintSupply += _quantityBeingClaimed;
     }
 
     /// @dev Transfers a given amount of currency.
