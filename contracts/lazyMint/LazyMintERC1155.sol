@@ -57,16 +57,19 @@ contract LazyMintERC1155 is
     address public immutable nativeTokenWrapper;
 
     /// @dev The adress that receives all primary sales value.
-    address public saleRecipient;
+    address public defaultSaleRecipient;
 
     /// @dev The next token ID of the NFT to "lazy mint".
     uint256 public nextTokenIdToMint;
 
     /// @dev Contract interprets 10_000 as 100%.
-    uint128 private constant MAX_BPS = 10_000;
+    uint64 private constant MAX_BPS = 10_000;
 
     /// @dev The % of secondary sales collected as royalties. See EIP 2981.
-    uint128 public royaltyBps;
+    uint64 public royaltyBps;
+
+    /// @dev The % of primary sales collected by the contract as fees.
+    uint120 public feeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -81,8 +84,10 @@ contract LazyMintERC1155 is
     mapping(uint256 => string) public altURI;
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
-    /// @dev Token ID => puclic mint conditions for tokens with that ID.
+    /// @dev Token ID => public mint conditions for tokens with that ID.
     mapping(uint256 => PublicMintConditions) public mintConditions;
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public saleRecipient;
 
     /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE on the protocol control center.
     modifier onlyProtocolAdmin() {
@@ -116,7 +121,7 @@ contract LazyMintERC1155 is
         ERC2771Context(_trustedForwarder)
     {
         nativeTokenWrapper = _nativeTokenWrapper;
-        saleRecipient = _saleRecipient;
+        defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
 
         address deployer = _msgSender();
@@ -211,7 +216,7 @@ contract LazyMintERC1155 is
         );
 
         // If there's a price, collect price.
-        collectClaimPrice(mintCondition, _quantity);
+        collectClaimPrice(mintCondition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
         _mint(_msgSender(), _tokenId, _quantity, "");
@@ -271,10 +276,16 @@ contract LazyMintERC1155 is
 
     //      =====   Setter functions  =====
 
-    /// @dev Lets a module admin set the recipient of all primary sales.
-    function setSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
-        saleRecipient = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient);
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        defaultSaleRecipient = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient, 0, true);
+    }
+
+    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
+    function setDefaultSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient, _tokenId, false);
     }
 
     /// @dev Lets a module admin pause or unpause the contract.
@@ -290,9 +301,18 @@ contract LazyMintERC1155 is
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "bps <= 10000");
 
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint64(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyBps);
+    }
+
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
+        require(_feeBps <= MAX_BPS, "bps <= 10000");
+
+        feeBps = uint120(_feeBps);
+
+        emit PrimarySalesFeeUpdates(_feeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -353,7 +373,8 @@ contract LazyMintERC1155 is
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectClaimPrice(
         MintCondition memory _mintCondition,
-        uint256 _quantityToClaim
+        uint256 _quantityToClaim,
+        uint256 _tokenId
     )
         internal
     {
@@ -362,11 +383,21 @@ contract LazyMintERC1155 is
         }
 
         uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
+        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+
         transferCurrency(
             _mintCondition.currency,
             _msgSender(),
-            saleRecipient,
-            totalPrice
+            controlCenter.getRoyaltyTreasury(address(this)),
+            fees
+        );
+        
+        address recipient = saleRecipient[_tokenId];
+        transferCurrency(
+            _mintCondition.currency,
+            _msgSender(),
+            recipient == address(0) ? defaultSaleRecipient : recipient,
+            totalPrice - fees
         );
     }
 
@@ -386,7 +417,7 @@ contract LazyMintERC1155 is
                     safeTransferERC20(_currency, address(this), _to, _amount);
                 }
             } else if (_to == address(this)) {
-                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
+                require(_amount == msg.value, "LazyMintERC1155: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
             } else {
                 if (!safeTransferNativeToken(_to, _amount)) {
@@ -420,7 +451,7 @@ contract LazyMintERC1155 is
         bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
-        require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
+        require(success && balAfter == balBefore + _amount, "LazyMintERC1155: failed to transfer currency.");
     }
 
     

@@ -82,10 +82,13 @@ interface ILazyMintERC1155 {
     event NewMintConditions(uint256 indexed tokenId, MintCondition[] mintConditions);
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient);
+    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
 
     /// @dev Emitted when the royalty fee bps is updated
     event RoyaltyUpdated(uint256 newRoyaltyBps);
+
+    /// @dev Emitted when fee on primary sales is updated.
+    event PrimarySalesFeeUpdates(uint256 newFeeBps);
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
