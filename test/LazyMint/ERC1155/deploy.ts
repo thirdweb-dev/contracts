@@ -25,7 +25,6 @@ describe("Initial state of LazyMintERC1155 on deployment", function() {
   let lazyMintERC1155: LazyMintERC1155;
 
   // Deployment params
-  const baseURI: string = "ipfs://baseURI/";
   const contractURI: string = "ipfs://contractURI/";
   let trustedForwarderAddr: string;
   let nativeTokenWrapperAddr: string;
@@ -43,7 +42,6 @@ describe("Initial state of LazyMintERC1155 on deployment", function() {
 
     lazyMintERC1155 = await ethers.getContractFactory("LazyMintERC1155")
       .then(f => f.connect(protocolAdmin).deploy(
-        baseURI,
         contractURI,
         trustedForwarderAddr,
         nativeTokenWrapperAddr,
@@ -65,12 +63,5 @@ describe("Initial state of LazyMintERC1155 on deployment", function() {
     expect(await lazyMintERC1155.nativeTokenWrapper()).to.equal(nativeTokenWrapperAddr);
     expect(await lazyMintERC1155.defaultSaleRecipient()).to.equal(defaultSaleRecipient.address);
     expect(await lazyMintERC1155.contractURI()).to.equal(contractURI);
-  })
-
-  it("Should return the URI for any token in the baseURI + tokenId convention", async () => {
-    const randomTokenId: BigNumber = BigNumber.from(Math.floor(Math.random() * 100));
-    const expectedURI: string = baseURI + randomTokenId.toString();
-    
-    expect(await lazyMintERC1155.uri(randomTokenId)).to.equal(expectedURI)
   })
 })
