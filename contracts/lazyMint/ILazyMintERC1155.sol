@@ -73,7 +73,7 @@ interface ILazyMintERC1155 {
     }
 
     /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId);
+    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(uint256 indexed mintConditionIndex, uint256 indexed tokenId, address indexed claimer, uint256 quantityClaimed);
@@ -105,21 +105,12 @@ interface ILazyMintERC1155 {
     function getIndexOfActiveCondition(uint256 _tokenId) external view returns (uint256);
 
     /**
-     *  @notice Lets an account with `MINTER_ROLE` override the baseURI convention and assign custom
-     *          URIs to tokens with ID from `nextTokenIdToMint` to `nextTokenIdToMint + _uris.length - 1`;
-     *
-     *  @param _uris The URIs to assign to `_uris.length` upcoming tokenIds. For `i < _uris.length`, the 
-     *               URI for tokenId `nextTokenIdToMint + i` is set as `_uris[i]`.
-     */
-    function lazyMintWithURIs(string[] calldata _uris) external;
-
-    /**
      *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 
      *          to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      *
      *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
      */
-    function lazyMint(uint256 _amount) external;
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
 
     /**
      *  @notice Lets an account claim a given quantity of tokens, of a single tokenId.

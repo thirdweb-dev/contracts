@@ -123,7 +123,6 @@ export async function getContracts(
     )) as Marketplace;
   
   // Deploy LazyMintERC1155
-  const baseURI: string = "ipfs://baseURI/";
   const contractURI: string = "ipfs://contractURI/";
   const trustedForwarderAddr: string = forwarder.address
   const nativeTokenWrapperAddr: string = weth.address
@@ -131,7 +130,6 @@ export async function getContracts(
 
   const lazyMintERC1155: LazyMintERC1155 = await ethers.getContractFactory("LazyMintERC1155")
       .then(f => f.connect(protocolAdmin).deploy(
-        baseURI,
         contractURI,
         trustedForwarderAddr,
         nativeTokenWrapperAddr,

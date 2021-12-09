@@ -79,9 +79,11 @@ contract LazyMintERC1155 is
 
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
+
+    uint[] private baseURIIndices;
     
-    /// @dev Token ID => URI that overrides `baseURI + tokenId` convention.
-    mapping(uint256 => string) public altURI;
+    /// @dev End token Id => URI that overrides `baseURI + tokenId` convention.
+    mapping(uint256 => string) private baseURI;
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
     /// @dev Token ID => public mint conditions for tokens with that ID.
@@ -111,13 +113,12 @@ contract LazyMintERC1155 is
     }
 
     constructor(
-        string memory _baseURI,
         string memory _contractURI,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient
     ) 
-        ERC1155(_baseURI)
+        ERC1155("")
         ERC2771Context(_trustedForwarder)
     {
         nativeTokenWrapper = _nativeTokenWrapper;
@@ -133,15 +134,14 @@ contract LazyMintERC1155 is
     ///     =====   Public functions  =====
 
     /// @dev Returns the URI for a given tokenId.
-    function uri(uint256 _tokenId) public view override returns (string memory) {
-        string memory baseURI = super.uri(_tokenId);
+    function uri(uint256 _tokenId) public view override returns (string memory _tokenURI) {
 
-        if (bytes(altURI[_tokenId]).length > 0) {
-            return altURI[_tokenId];
+        for(uint256 i = 0; i < baseURIIndices.length; i += 1) {
+            if(_tokenId < baseURIIndices[i]) {
+                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+            }
         }
-        if (bytes(baseURI).length > 0) {
-            return string(abi.encodePacked(baseURI, _tokenId.toString()));
-        }
+        
         return "";
     }
 
@@ -164,31 +164,18 @@ contract LazyMintERC1155 is
     ///     =====   External functions  =====
 
     /**
-     *  @dev Lets an account with `MINTER_ROLE` override the baseURI convention and assign custom
-     *       URIs to tokens with ID from `nextTokenIdToMint` to `nextTokenIdToMint + _uris.length - 1`;     
-     */
-    function lazyMintWithURIs(string[] calldata _uris) external onlyMinter {
-                
-        uint256 id = nextTokenIdToMint;
-        for (uint256 i = 0; i < _uris.length; i++) {
-            altURI[id] = _uris[i];
-            id += 1;
-        }
-
-        nextTokenIdToMint = id;
-        
-        emit LazyMintedTokens(id - _uris.length , id - 1);
-    }
-
-    /**
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 
      *       to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      */
-    function lazyMint(uint256 _amount) external onlyMinter {
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyMinter {
         uint256 startId = nextTokenIdToMint;
-        nextTokenIdToMint += _amount;
+        uint256 baseURIIndex = startId + _amount;
+
+        nextTokenIdToMint = baseURIIndex;
+        baseURI[baseURIIndex] = _baseURIForTokens;
+        baseURIIndices.push(baseURIIndex);
         
-        emit LazyMintedTokens(startId , startId + _amount - 1);
+        emit LazyMintedTokens(startId , startId + _amount - 1, _baseURIForTokens);
     }
     
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
