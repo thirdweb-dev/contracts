@@ -221,6 +221,7 @@ contract LazyMintERC1155 is
     {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp = 0;
+        uint256 indexForCondition = mintConditions[_tokenId].nextConditionIndex;
 
         for (uint256 i = 0; i < _conditions.length; i++) {
             
@@ -232,7 +233,7 @@ contract LazyMintERC1155 is
             require(_conditions[i].maxMintSupply > 0, "max mint supply cannot be 0");
             require(_conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0");
 
-            mintConditions[_tokenId].mintConditionAtIndex[i] = MintCondition({
+            mintConditions[_tokenId].mintConditionAtIndex[indexForCondition] = MintCondition({
                 startTimestamp: _conditions[i].startTimestamp,
                 maxMintSupply: _conditions[i].maxMintSupply,
                 currentMintSupply: 0,
@@ -243,8 +244,11 @@ contract LazyMintERC1155 is
                 merkleRoot: _conditions[i].merkleRoot
             });
 
+            indexForCondition += 1;
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }
+
+        mintConditions[_tokenId].nextConditionIndex = indexForCondition;
 
         emit NewMintConditions(_tokenId, _conditions);
     }
