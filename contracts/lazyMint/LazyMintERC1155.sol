@@ -190,7 +190,7 @@ contract LazyMintERC1155 is
         collectClaimPrice(mintCondition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(activeConditionIndex, _tokenId, _quantity);
+        transferClaimedTokens(mintCondition, activeConditionIndex, _tokenId, _quantity);
         
         emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _quantity);
     }
@@ -434,6 +434,7 @@ contract LazyMintERC1155 is
 
     /// @dev Transfers the tokens being claimed.
     function transferClaimedTokens(
+        MintCondition memory _mintCondition,
         uint256 _mintConditionIndex,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed
@@ -441,7 +442,11 @@ contract LazyMintERC1155 is
         internal
     {
         _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
+
+        // Update the supply minted under mint condition.
         mintConditions[_tokenId].mintConditionAtIndex[_mintConditionIndex].currentMintSupply += _quantityBeingClaimed;
+        // Update the claimer's next valid timestamp to mint
+        mintConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] = block.timestamp + _mintCondition.waitTimeInSecondsBetweenClaims;
     }
 
     /// @dev Transfers a given amount of currency.
