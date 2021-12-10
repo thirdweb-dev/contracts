@@ -305,15 +305,16 @@ contract LazyMintERC1155 is
     //      =====   Getter functions  =====
 
     /// @dev Returns the current active mint condition for a given tokenId.
-    function getActiveMintCondition(
-        uint256 _tokenId
+    function getTimesForNextValidClaim(
+        uint256 _tokenId,
+        uint256 _index,
+        address _claimer
     )
         external
         view
-        returns (MintCondition memory mintCondition)
+        returns (uint256)
     {
-        uint256 conditionIndex = getIndexOfActiveCondition(_tokenId);
-        mintCondition = mintConditions[_tokenId].mintConditionAtIndex[conditionIndex];
+        return mintConditions[_tokenId].nextValidTimestampForClaim[_claimer][_index];
     }
 
     /// @dev Returns the  mint condition for a given tokenId, at the given index.
