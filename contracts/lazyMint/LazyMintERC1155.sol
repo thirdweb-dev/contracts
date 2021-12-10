@@ -145,22 +145,6 @@ contract LazyMintERC1155 is
         return "";
     }
 
-    /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
-    function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
-
-        uint256 nextConditionIndex = mintConditions[_tokenId].nextConditionIndex;
-
-        require(nextConditionIndex > 0, "LazyMintERC1155: no public mint condition.");
-
-        for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
-            if (block.timestamp >= mintConditions[_tokenId].mintConditionAtIndex[i - 1].startTimestamp) {
-                return i - 1;
-            }
-        }
-
-        revert("LazyMintERC1155: no active mint condition.");
-    }
-
     ///     =====   External functions  =====
 
     /**
@@ -228,10 +212,10 @@ contract LazyMintERC1155 is
             require(
                 lastConditionStartTimestamp == 0 
                     || lastConditionStartTimestamp < _conditions[i].startTimestamp,
-                "startTimestamp must be in ascending order"
+                "LazyMintERC1155: startTimestamp must be in ascending order"
             );
-            require(_conditions[i].maxMintSupply > 0, "max mint supply cannot be 0");
-            require(_conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0");
+            require(_conditions[i].maxMintSupply > 0, "LazyMintERC1155: max mint supply cannot be 0");
+            require(_conditions[i].quantityLimitPerTransaction > 0, "LazyMintERC1155: quantity limit cannot be 0");
 
             mintConditions[_tokenId].mintConditionAtIndex[indexForCondition] = MintCondition({
                 startTimestamp: _conditions[i].startTimestamp,
@@ -318,7 +302,49 @@ contract LazyMintERC1155 is
         contractURI = _uri;
     }
 
+    //      =====   Getter functions  =====
+
+    /// @dev Returns the current active mint condition for a given tokenId.
+    function getActiveMintCondition(
+        uint256 _tokenId
+    )
+        external
+        view
+        returns (MintCondition memory mintCondition)
+    {
+        uint256 conditionIndex = getIndexOfActiveCondition(_tokenId);
+        mintCondition = mintConditions[_tokenId].mintConditionAtIndex[conditionIndex];
+    }
+
+    /// @dev Returns the  mint condition for a given tokenId, at the given index.
+    function getMintConditionAtIndex(
+        uint256 _tokenId,
+        uint256 _index
+    )
+        external
+        view
+        returns (MintCondition memory mintCondition)
+    {
+        mintCondition = mintConditions[_tokenId].mintConditionAtIndex[_index];
+    }
+
     //      =====   Internal functions  =====
+
+    /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
+    function getIndexOfActiveCondition(uint256 _tokenId) internal view returns (uint256) {
+
+        uint256 nextConditionIndex = mintConditions[_tokenId].nextConditionIndex;
+
+        require(nextConditionIndex > 0, "LazyMintERC1155: no public mint condition.");
+
+        for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
+            if (block.timestamp >= mintConditions[_tokenId].mintConditionAtIndex[i - 1].startTimestamp) {
+                return i - 1;
+            }
+        }
+
+        revert("LazyMintERC1155: no active mint condition.");
+    }
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaimIsValid(

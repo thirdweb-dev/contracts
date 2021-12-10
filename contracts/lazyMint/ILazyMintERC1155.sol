@@ -97,14 +97,6 @@ interface ILazyMintERC1155 {
     function nextTokenIdToMint() external returns (uint256);
 
     /**
-     *  @notice At any given moment, returns the uid for the active mint condition for a given tokenId.
-     *
-     *  @param _tokenId The tokenId for which we return the uid for the active mint condition.
-     *  @return The uid for the active mint condition for a given tokenId.
-     */
-    function getIndexOfActiveCondition(uint256 _tokenId) external view returns (uint256);
-
-    /**
      *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 
      *          to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      *
