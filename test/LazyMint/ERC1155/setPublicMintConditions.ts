@@ -16,7 +16,7 @@ import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 
-describe("Test: lazy mint tokens", function() {
+describe("Test: set public mint conditions", function() {
 
   // Constants
   const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";

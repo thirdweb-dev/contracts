@@ -17,10 +17,8 @@ import keccak256 from "keccak256"
 
 use(solidity);
 
-describe("Test: lazy mint tokens", function() {
-  // Constants
-  const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-    
+describe("Test: claim lazy minted tokens with erc20 tokens", function() {
+  
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;

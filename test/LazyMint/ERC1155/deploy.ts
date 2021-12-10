@@ -27,6 +27,7 @@ describe("Initial state of LazyMintERC1155 on deployment", function() {
   // Deployment params
   const contractURI: string = "ipfs://contractURI/";
   let trustedForwarderAddr: string;
+  let protocolControlAddr: string;
   let nativeTokenWrapperAddr: string;
 
 
@@ -38,11 +39,13 @@ describe("Initial state of LazyMintERC1155 on deployment", function() {
     const contracts: Contracts = await getContracts(protocolProvider, protocolAdmin);
 
     trustedForwarderAddr = contracts.forwarder.address;
+    protocolControlAddr = contracts.protocolControl.address;
     nativeTokenWrapperAddr = contracts.weth.address;
 
     lazyMintERC1155 = await ethers.getContractFactory("LazyMintERC1155")
       .then(f => f.connect(protocolAdmin).deploy(
         contractURI,
+        protocolControlAddr,
         trustedForwarderAddr,
         nativeTokenWrapperAddr,
         defaultSaleRecipient.address

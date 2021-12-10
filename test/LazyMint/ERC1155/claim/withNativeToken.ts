@@ -16,7 +16,7 @@ import keccak256 from "keccak256"
 
 use(solidity);
 
-describe("Test: lazy mint tokens", function() {
+describe("Test: claim lazy minted tokens with native tokens", function() {
   // Constants
   const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
     
