@@ -186,7 +186,7 @@ contract LazyMintERC1155 is
             mintCondition
         );
 
-        // If there's a price, collect price.
+        // If there's a price, collect price.        
         collectClaimPrice(mintCondition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
@@ -403,6 +403,19 @@ contract LazyMintERC1155 is
         uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
         uint256 fees = (totalPrice * feeBps) / MAX_BPS;
 
+        if(_mintCondition.currency == NATIVE_TOKEN) {
+            require(
+                msg.value == totalPrice,
+                "LazyMintERC1155: must send total price."
+            );
+        } else {
+            validateERC20BalAndAllowance(
+                _msgSender(), 
+                _mintCondition.currency,
+                totalPrice
+            );
+        }
+
         transferCurrency(
             _mintCondition.currency,
             _msgSender(),
@@ -458,6 +471,19 @@ contract LazyMintERC1155 is
         } else {
             safeTransferERC20(_currency, _from, _to, _amount);
         }
+    }
+
+    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
+    function validateERC20BalAndAllowance(
+        address _addrToCheck,
+        address _currency,
+        uint256 _currencyAmountToCheckAgainst
+    ) internal view {
+        require(
+            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
+                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
+            "Marketplace: insufficient currency balance or allowance."
+        );
     }
 
     /// @dev Transfers `amount` of native token to `to`.
