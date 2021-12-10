@@ -114,6 +114,7 @@ contract LazyMintERC1155 is
 
     constructor(
         string memory _contractURI,
+        address payable _controlCenter,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient
@@ -121,6 +122,8 @@ contract LazyMintERC1155 is
         ERC1155("")
         ERC2771Context(_trustedForwarder)
     {
+        
+        controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
@@ -362,11 +365,7 @@ contract LazyMintERC1155 is
             _quantity > 0 
                 && _quantity <= _mintCondition.quantityLimitPerTransaction, 
             "LazyMintERC1155: invalid quantity claimed."
-        );
-        require(
-            _tokenId < nextTokenIdToMint, 
-            "LazyMintERC1155: cannot claim unminted token."
-        );
+        );        
         require(
             _mintCondition.currentMintSupply + _quantity <= _mintCondition.maxMintSupply,
             "LazyMintERC1155: exceed max mint supply."
