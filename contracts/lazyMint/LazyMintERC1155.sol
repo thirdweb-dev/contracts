@@ -257,7 +257,7 @@ contract LazyMintERC1155 is
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         defaultSaleRecipient = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient, 0, true);
+        emit NewSaleRecipient(_saleRecipient, type(uint256).max, true);
     }
 
     /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
