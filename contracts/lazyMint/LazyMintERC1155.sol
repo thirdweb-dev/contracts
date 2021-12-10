@@ -492,7 +492,7 @@ contract LazyMintERC1155 is
 
     /// @dev Transfers `amount` of native token to `to`.
     function safeTransferNativeToken(address to, uint256 value) internal returns (bool success) {
-        (success, ) = to.call{ value: value }(new bytes(0));
+        (success, ) = to.call{ value: value }("");
     }
 
     /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
