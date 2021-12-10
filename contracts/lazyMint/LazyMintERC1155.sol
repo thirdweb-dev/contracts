@@ -212,10 +212,10 @@ contract LazyMintERC1155 is
             require(
                 lastConditionStartTimestamp == 0 
                     || lastConditionStartTimestamp < _conditions[i].startTimestamp,
-                "LazyMintERC1155: startTimestamp must be in ascending order"
+                "LazyMintERC1155: startTimestamp must be in ascending order."
             );
-            require(_conditions[i].maxMintSupply > 0, "LazyMintERC1155: max mint supply cannot be 0");
-            require(_conditions[i].quantityLimitPerTransaction > 0, "LazyMintERC1155: quantity limit cannot be 0");
+            require(_conditions[i].maxMintSupply > 0, "LazyMintERC1155: max mint supply cannot be 0.");
+            require(_conditions[i].quantityLimitPerTransaction > 0, "LazyMintERC1155: quantity limit cannot be 0.");
 
             mintConditions[_tokenId].mintConditionAtIndex[indexForCondition] = MintCondition({
                 startTimestamp: _conditions[i].startTimestamp,
@@ -274,7 +274,7 @@ contract LazyMintERC1155 is
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000");
+        require(_royaltyBps <= MAX_BPS, "LazyMintERC1155: bps <= 10000.");
 
         royaltyBps = uint64(_royaltyBps);
 
@@ -283,7 +283,7 @@ contract LazyMintERC1155 is
 
     /// @dev Lets a module admin update the fees on primary sales.
     function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
-        require(_feeBps <= MAX_BPS, "bps <= 10000");
+        require(_feeBps <= MAX_BPS, "LazyMintERC1155: bps <= 10000.");
 
         feeBps = uint120(_feeBps);
 
@@ -365,25 +365,25 @@ contract LazyMintERC1155 is
         );
         require(
             _tokenId < nextTokenIdToMint, 
-            "cannot claim unminted token"
+            "LazyMintERC1155: cannot claim unminted token."
         );
         require(
             _mintCondition.currentMintSupply + _quantity <= _mintCondition.maxMintSupply,
-            "exceed max mint supply"
+            "LazyMintERC1155: exceed max mint supply."
         );
 
         uint256 validTimestampForClaim = mintConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_conditionIndex];
         require(
             validTimestampForClaim == 0 
                 || block.timestamp >= validTimestampForClaim, 
-                "cannot mint yet"
+                "LazyMintERC1155: cannot claim yet."
         );
 
         if (_mintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
             require(
                 MerkleProof.verify(_proofs, _mintCondition.merkleRoot, leaf), 
-                "invalid proofs"
+                "LazyMintERC1155: not in whitelist."
             );
         }
     }
@@ -487,7 +487,7 @@ contract LazyMintERC1155 is
         require(
             IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
                 IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "Marketplace: insufficient currency balance or allowance."
+            "LazyMintERC1155: insufficient currency balance or allowance."
         );
     }
 
@@ -526,7 +526,7 @@ contract LazyMintERC1155 is
     ) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
-            "ERC1155: caller is not owner nor approved"
+            "ERC1155: caller is not owner nor approved."
         );
 
         _burn(account, id, value);
@@ -540,7 +540,7 @@ contract LazyMintERC1155 is
     ) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
-            "ERC1155: caller is not owner nor approved"
+            "ERC1155: caller is not owner nor approved."
         );
 
         _burnBatch(account, ids, values);
@@ -565,10 +565,10 @@ contract LazyMintERC1155 is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "LazyMintERC1155: restricted to TRANSFER_ROLE holders.");
         }
         
-        require(!paused(), "ERC1155Pausable: token transfer while paused");
+        require(!paused(), "ERC1155Pausable: token transfer while paused.");
 
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
