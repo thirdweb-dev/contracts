@@ -81,7 +81,7 @@ describe("Test: set public mint conditions", function() {
 
       await expect(
         lazyMintERC1155.connect(protocolAdmin).setPublicMintConditions(tokenId, mintConditions)
-      ).to.be.revertedWith("LazyMintERC1155: startTimestamp must be in ascending order")
+      ).to.be.revertedWith("startTimestamp must be in ascending order")
     })
     
     it("Should revert if max mint supply is zero", async () => {
@@ -89,7 +89,7 @@ describe("Test: set public mint conditions", function() {
 
       await expect(
         lazyMintERC1155.connect(protocolAdmin).setPublicMintConditions(tokenId, mintConditions)
-      ).to.be.revertedWith("LazyMintERC1155: max mint supply cannot be 0")
+      ).to.be.revertedWith("max mint supply cannot be 0")
     })
 
     it("Should revert if quantity limit per claim transaction is zero", async () => {
@@ -97,7 +97,7 @@ describe("Test: set public mint conditions", function() {
 
       await expect(
         lazyMintERC1155.connect(protocolAdmin).setPublicMintConditions(tokenId, mintConditions)
-      ).to.be.revertedWith("LazyMintERC1155: quantity limit cannot be 0")
+      ).to.be.revertedWith("quantity limit cannot be 0")
     })
   })
 

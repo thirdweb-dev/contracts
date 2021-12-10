@@ -112,7 +112,7 @@ describe("Test: claim lazy minted tokens with native tokens", function() {
       const invalidQty: BigNumber = BigNumber.from(0);
       await expect(
         lazyMintERC1155.connect(claimer).claim(tokenId, invalidQty, proof, { value: totalPrice })
-      ).to.be.revertedWith("LazyMintERC1155: invalid quantity claimed.")
+      ).to.be.revertedWith("invalid quantity claimed.")
     })
 
     it("Should revert if quantity wanted is greater than limit per transaction", async () => {      
@@ -120,7 +120,7 @@ describe("Test: claim lazy minted tokens with native tokens", function() {
 
       await expect(
         lazyMintERC1155.connect(claimer).claim(tokenId, invalidQty, proof, { value: totalPrice })
-      ).to.be.revertedWith("LazyMintERC1155: invalid quantity claimed.")
+      ).to.be.revertedWith("invalid quantity claimed.")
     })
 
     it("Should revert if tokenId provided is unminted", async () => {      
@@ -128,7 +128,7 @@ describe("Test: claim lazy minted tokens with native tokens", function() {
       
       await expect(
         lazyMintERC1155.connect(claimer).claim(invalidTokenId, quantityToClaim, proof, { value: totalPrice })
-      ).to.be.revertedWith("LazyMintERC1155: no public mint condition.")
+      ).to.be.revertedWith("no public mint condition.")
     })
 
     it("Should revert if quantity wanted + current mint supply exceeds max mint supply", async () => {      
@@ -140,7 +140,7 @@ describe("Test: claim lazy minted tokens with native tokens", function() {
         if((currentMintSupply.add(quantityToClaim)).gt(maxMintSupply)) {
           await expect(
             lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof, { value: totalPrice })
-          ).to.be.revertedWith("LazyMintERC1155: exceed max mint supply.")
+          ).to.be.revertedWith("exceed max mint supply.")
         }
 
         await lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof, { value: totalPrice })
@@ -156,19 +156,19 @@ describe("Test: claim lazy minted tokens with native tokens", function() {
 
       await expect(
         lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof, { value: totalPrice })
-      ).to.be.revertedWith("LazyMintERC1155: cannot claim yet.")
+      ).to.be.revertedWith("cannot claim yet.")
     })
 
     it("Should revert if claimer is not in the whitelist", async () => {
       await expect(
         lazyMintERC1155.connect(protocolAdmin).claim(tokenId, quantityToClaim, proof, { value: totalPrice })
-      ).to.be.revertedWith("LazyMintERC1155: not in whitelist.")
+      ).to.be.revertedWith("not in whitelist.")
     })
 
     it("Should revert if caller has not sent enough native token", async () => {
       await expect(
         lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof)
-      ).to.be.revertedWith("LazyMintERC1155: must send total price.")
+      ).to.be.revertedWith("must send total price.")
     })
   })
   
