@@ -439,13 +439,13 @@ contract LazyMintERC1155 is
         uint256 _quantityBeingClaimed
     )
         internal
-    {
-        _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
-
+    {        
         // Update the supply minted under mint condition.
         mintConditions[_tokenId].mintConditionAtIndex[_mintConditionIndex].currentMintSupply += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint
         mintConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] = block.timestamp + _mintCondition.waitTimeInSecondsBetweenClaims;
+
+        _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
     }
 
     /// @dev Transfers a given amount of currency.
