@@ -8,7 +8,7 @@ import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 // Protocol control center.
-import { ProtocolControl } from "../ProtocolControl.sol";
+import { ProtocolControl } from "../../ProtocolControl.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
@@ -27,7 +27,7 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 // Helper interfaces
-import { IWETH } from "../interfaces/IWETH.sol";
+import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
