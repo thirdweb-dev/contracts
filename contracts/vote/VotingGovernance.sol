@@ -16,6 +16,8 @@ contract VotingGovernor is
     GovernorVotesQuorumFraction,
     ERC2771Context
 {
+    string public contractURI;
+
     constructor(
         string memory _name,
         ERC20Votes _token,
@@ -31,7 +33,13 @@ contract VotingGovernor is
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(_initialVoteQuorumFraction)
         ERC2771Context(_trustedForwarder)
-    {}
+    {
+        contractURI = _uri;
+    }
+
+    function setContractURI(string calldata _URI) external onlyGovernance {
+        contractURI = _URI;
+    }
 
     function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
         return super.votingDelay();
