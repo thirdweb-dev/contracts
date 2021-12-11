@@ -20,10 +20,10 @@ interface ILazyMintERC1155 {
      *                        The same mint conditions last until the `startTimestamp`
      *                        of the next mint condition.
      *
-     *  @param maxMintSupply The maximum number of tokens of the same `tokenId` that can
-     *                       be claimed under the mint condition.
+     *  @param maxClaimableSupply The maximum number of tokens of the same `tokenId` that can
+     *                            be claimed under the mint condition.
      *
-     *  @param currentMintSupply At any given point, the number of tokens of the same `tokenId`
+     *  @param supplyClaimed At any given point, the number of tokens of the same `tokenId`
      *                           that have been claimed.
      *
      *  @param quantityLimitPerTransaction The maximum number of tokens a single account can
@@ -39,10 +39,10 @@ interface ILazyMintERC1155 {
      *
      *  @param currency The currency in which `pricePerToken` must be paid.
      */
-    struct MintCondition {
+    struct ClaimCondition {
         uint256 startTimestamp;
-        uint256 maxMintSupply;
-        uint256 currentMintSupply;
+        uint256 maxClaimableSupply;
+        uint256 supplyClaimed;
         uint256 quantityLimitPerTransaction;
         uint256 waitTimeInSecondsBetweenClaims;
         bytes32 merkleRoot;
@@ -65,10 +65,10 @@ interface ILazyMintERC1155 {
      *  @param nextValidTimestampForClaim Account => uid for a mint condition => timestamp after
      *                                    which the account can claim tokens again.
      */
-    struct PublicMintConditions {
+    struct ClaimConditions {
         uint256 nextConditionIndex;
 
-        mapping(uint256 => MintCondition) mintConditionAtIndex;
+        mapping(uint256 => ClaimCondition) claimConditionAtIndex;
         mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
     }
 
@@ -76,10 +76,10 @@ interface ILazyMintERC1155 {
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(uint256 indexed mintConditionIndex, uint256 indexed tokenId, address indexed claimer, uint256 quantityClaimed);
+    event ClaimedTokens(uint256 indexed claimConditionIndex, uint256 indexed tokenId, address indexed claimer, uint256 quantityClaimed);
 
     /// @dev Emitted when new mint conditions are set for a token.
-    event NewMintConditions(uint256 indexed tokenId, MintCondition[] mintConditions);
+    event NewClaimConditions(uint256 indexed tokenId, ClaimCondition[] claimConditions);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
@@ -120,5 +120,5 @@ interface ILazyMintERC1155 {
      *  @param _tokenId The token ID for which to set mint conditions.
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
      */
-    function setPublicMintConditions(uint256 _tokenId, MintCondition[] calldata _conditions) external;
+    function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external;
 }

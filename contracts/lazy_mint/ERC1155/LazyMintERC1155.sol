@@ -86,8 +86,8 @@ contract LazyMintERC1155 is
     mapping(uint256 => string) private baseURI;
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
-    /// @dev Token ID => public mint conditions for tokens with that ID.
-    mapping(uint256 => PublicMintConditions) public mintConditions;
+    /// @dev Token ID => public claim conditions for tokens with that ID.
+    mapping(uint256 => ClaimConditions) public claimConditions;
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
 
@@ -178,7 +178,7 @@ contract LazyMintERC1155 is
     {
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
-        MintCondition memory mintCondition = mintConditions[_tokenId].mintConditionAtIndex[activeConditionIndex];
+        ClaimCondition memory condition = claimConditions[_tokenId].claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
         verifyClaimIsValid(
@@ -186,29 +186,29 @@ contract LazyMintERC1155 is
             _quantity,
             _proofs,
             activeConditionIndex,
-            mintCondition
+            condition
         );
 
         // If there's a price, collect price.        
-        collectClaimPrice(mintCondition, _quantity, _tokenId);
+        collectClaimPrice(condition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(mintCondition, activeConditionIndex, _tokenId, _quantity);
+        transferClaimedTokens(condition, activeConditionIndex, _tokenId, _quantity);
         
         emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _quantity);
     }
 
     /// @dev Lets a module admin set mint conditions for a given tokenId.
-    function setPublicMintConditions(
+    function setClaimConditions(
         uint256 _tokenId, 
-        MintCondition[] calldata _conditions
+        ClaimCondition[] calldata _conditions
     ) 
         external
         onlyModuleAdmin 
     {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp = 0;
-        uint256 indexForCondition = mintConditions[_tokenId].nextConditionIndex;
+        uint256 indexForCondition = claimConditions[_tokenId].nextConditionIndex;
 
         for (uint256 i = 0; i < _conditions.length; i++) {
             
@@ -217,13 +217,13 @@ contract LazyMintERC1155 is
                     || lastConditionStartTimestamp < _conditions[i].startTimestamp,
                 "startTimestamp must be in ascending order."
             );
-            require(_conditions[i].maxMintSupply > 0, "max mint supply cannot be 0.");
+            require(_conditions[i].maxClaimableSupply > 0, "max mint supply cannot be 0.");
             require(_conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0.");
 
-            mintConditions[_tokenId].mintConditionAtIndex[indexForCondition] = MintCondition({
+            claimConditions[_tokenId].claimConditionAtIndex[indexForCondition] = ClaimCondition({
                 startTimestamp: _conditions[i].startTimestamp,
-                maxMintSupply: _conditions[i].maxMintSupply,
-                currentMintSupply: 0,
+                maxClaimableSupply: _conditions[i].maxClaimableSupply,
+                supplyClaimed: 0,
                 quantityLimitPerTransaction: _conditions[i].quantityLimitPerTransaction,
                 waitTimeInSecondsBetweenClaims: _conditions[i].waitTimeInSecondsBetweenClaims,
                 pricePerToken: _conditions[i].pricePerToken,
@@ -235,9 +235,9 @@ contract LazyMintERC1155 is
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }
 
-        mintConditions[_tokenId].nextConditionIndex = indexForCondition;
+        claimConditions[_tokenId].nextConditionIndex = indexForCondition;
 
-        emit NewMintConditions(_tokenId, _conditions);
+        emit NewClaimConditions(_tokenId, _conditions);
     }
 
     /// @dev See EIP 2981
@@ -317,19 +317,19 @@ contract LazyMintERC1155 is
         view
         returns (uint256)
     {
-        return mintConditions[_tokenId].nextValidTimestampForClaim[_claimer][_index];
+        return claimConditions[_tokenId].nextValidTimestampForClaim[_claimer][_index];
     }
 
     /// @dev Returns the  mint condition for a given tokenId, at the given index.
-    function getMintConditionAtIndex(
+    function getClaimConditionAtIndex(
         uint256 _tokenId,
         uint256 _index
     )
         external
         view
-        returns (MintCondition memory mintCondition)
+        returns (ClaimCondition memory mintCondition)
     {
-        mintCondition = mintConditions[_tokenId].mintConditionAtIndex[_index];
+        mintCondition = claimConditions[_tokenId].claimConditionAtIndex[_index];
     }
 
     //      =====   Internal functions  =====
@@ -337,12 +337,12 @@ contract LazyMintERC1155 is
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
     function getIndexOfActiveCondition(uint256 _tokenId) internal view returns (uint256) {
 
-        uint256 nextConditionIndex = mintConditions[_tokenId].nextConditionIndex;
+        uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
 
         require(nextConditionIndex > 0, "no public mint condition.");
 
         for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
-            if (block.timestamp >= mintConditions[_tokenId].mintConditionAtIndex[i - 1].startTimestamp) {
+            if (block.timestamp >= claimConditions[_tokenId].claimConditionAtIndex[i - 1].startTimestamp) {
                 return i - 1;
             }
         }
@@ -356,7 +356,7 @@ contract LazyMintERC1155 is
         uint256 _quantity,
         bytes32[] calldata _proofs,
         uint256 _conditionIndex,
-        MintCondition memory _mintCondition
+        ClaimCondition memory _mintCondition
     )
         internal
         view
@@ -367,11 +367,11 @@ contract LazyMintERC1155 is
             "invalid quantity claimed."
         );        
         require(
-            _mintCondition.currentMintSupply + _quantity <= _mintCondition.maxMintSupply,
+            _mintCondition.supplyClaimed + _quantity <= _mintCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
 
-        uint256 validTimestampForClaim = mintConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_conditionIndex];
+        uint256 validTimestampForClaim = claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_conditionIndex];
         require(
             validTimestampForClaim == 0 
                 || block.timestamp >= validTimestampForClaim, 
@@ -389,7 +389,7 @@ contract LazyMintERC1155 is
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectClaimPrice(
-        MintCondition memory _mintCondition,
+        ClaimCondition memory _mintCondition,
         uint256 _quantityToClaim,
         uint256 _tokenId
     )
@@ -433,7 +433,7 @@ contract LazyMintERC1155 is
 
     /// @dev Transfers the tokens being claimed.
     function transferClaimedTokens(
-        MintCondition memory _mintCondition,
+        ClaimCondition memory _mintCondition,
         uint256 _mintConditionIndex,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed
@@ -441,9 +441,9 @@ contract LazyMintERC1155 is
         internal
     {        
         // Update the supply minted under mint condition.
-        mintConditions[_tokenId].mintConditionAtIndex[_mintConditionIndex].currentMintSupply += _quantityBeingClaimed;
+        claimConditions[_tokenId].claimConditionAtIndex[_mintConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint
-        mintConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] = block.timestamp + _mintCondition.waitTimeInSecondsBetweenClaims;
+        claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] = block.timestamp + _mintCondition.waitTimeInSecondsBetweenClaims;
 
         _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
     }

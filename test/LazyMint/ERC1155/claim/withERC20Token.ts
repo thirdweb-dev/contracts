@@ -3,7 +3,7 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { LazyMintERC1155, MintConditionStruct } from "typechain/LazyMintERC1155";
+import { LazyMintERC1155, ClaimConditionStruct } from "typechain/LazyMintERC1155";
 import { Coin } from "typechain/Coin";
 
 // Types
@@ -34,7 +34,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
 
   // Setting mint conditions default params
   const tokenId: BigNumber = BigNumber.from(0);
-  let mintConditions: MintConditionStruct[];
+  let mintConditions: ClaimConditionStruct[];
 
   // Claim params
   let proof: BytesLike[];
@@ -49,7 +49,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
 
   const timeTravelToMintCondition = async (_tokenId: BigNumber, _conditionIndex: BigNumber) => {
     // Time travel
-    const travelTo: string = (await lazyMintERC1155.getMintConditionAtIndex(_tokenId, _conditionIndex)).startTimestamp.toString();
+    const travelTo: string = (await lazyMintERC1155.getClaimConditionAtIndex(_tokenId, _conditionIndex)).startTimestamp.toString();
     await ethers.provider.send("evm_mine", [parseInt(travelTo)]);
   };
 
@@ -80,13 +80,13 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
     const whitelist = tree.getRoot();    
 
     // Set mint conditions
-    const templateMintCondition: MintConditionStruct = {
+    const templateMintCondition: ClaimConditionStruct = {
       
       startTimestamp: BigNumber.from(
           (await ethers.provider.getBlock("latest")).timestamp
         ).add(100),
-      maxMintSupply: BigNumber.from(15),
-      currentMintSupply: BigNumber.from(0),
+      maxClaimableSupply: BigNumber.from(15),
+      supplyClaimed: BigNumber.from(0),
       quantityLimitPerTransaction: BigNumber.from(5),
       waitTimeInSecondsBetweenClaims: BigNumber.from(5),
       merkleRoot: whitelist,
@@ -109,7 +109,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
     totalPrice = quantityToClaim.mul(mintConditions[0].pricePerToken);
 
     // Set mint conditions
-    await lazyMintERC1155.connect(protocolAdmin).setPublicMintConditions(tokenId, mintConditions)
+    await lazyMintERC1155.connect(protocolAdmin).setClaimConditions(tokenId, mintConditions)
 
     // Travel to mint condition start
     targetMintConditionIndex = BigNumber.from(0);
@@ -145,14 +145,14 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
     })
 
     it("Should revert if quantity wanted + current mint supply exceeds max mint supply", async () => {      
-      let currentMintSupply: BigNumber = BigNumber.from(0);
-      const maxMintSupply: BigNumber = mintConditions[0].maxMintSupply as BigNumber;
+      let supplyClaimed: BigNumber = BigNumber.from(0);
+      const maxClaimableSupply: BigNumber = mintConditions[0].maxClaimableSupply as BigNumber;
 
       await erc20Token.connect(claimer).approve(lazyMintERC1155.address, ethers.constants.MaxUint256)
 
-      while(currentMintSupply.lt(maxMintSupply)) {
+      while(supplyClaimed.lt(maxClaimableSupply)) {
 
-        if((currentMintSupply.add(quantityToClaim)).gt(maxMintSupply)) {
+        if((supplyClaimed.add(quantityToClaim)).gt(maxClaimableSupply)) {
           await expect(
             lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof)
           ).to.be.revertedWith("exceed max mint supply.")
@@ -162,7 +162,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
         const nextValidTimestampForClaim: BigNumber = await lazyMintERC1155.getTimesForNextValidClaim(tokenId, targetMintConditionIndex, claimer.address)
         await ethers.provider.send("evm_mine", [nextValidTimestampForClaim.toNumber()]);
 
-        currentMintSupply = currentMintSupply.add(quantityToClaim);
+        supplyClaimed = supplyClaimed.add(quantityToClaim);
       }
     })
 
@@ -257,14 +257,14 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function() {
 
   describe("Contract state", function() {
     it("Should update the supply minted during the claim condition", async () => {
-      const currenMintSupplyBefore = (await lazyMintERC1155.getMintConditionAtIndex(tokenId, targetMintConditionIndex)).currentMintSupply;
+      const currenMintSupplyBefore = (await lazyMintERC1155.getClaimConditionAtIndex(tokenId, targetMintConditionIndex)).supplyClaimed;
       await lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof);
-      const currenMintSupplyAfter = (await lazyMintERC1155.getMintConditionAtIndex(tokenId, targetMintConditionIndex)).currentMintSupply;
+      const currenMintSupplyAfter = (await lazyMintERC1155.getClaimConditionAtIndex(tokenId, targetMintConditionIndex)).supplyClaimed;
 
       expect(currenMintSupplyAfter).to.equal(currenMintSupplyBefore.add(quantityToClaim));
     })
     it("Should update the next valid timestamp for claim, for the claimer", async () => {
-      const waitBetweenClaims: BigNumber = (await lazyMintERC1155.getMintConditionAtIndex(tokenId, targetMintConditionIndex)).waitTimeInSecondsBetweenClaims;
+      const waitBetweenClaims: BigNumber = (await lazyMintERC1155.getClaimConditionAtIndex(tokenId, targetMintConditionIndex)).waitTimeInSecondsBetweenClaims;
       await lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof);
 
       const currentTimestamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
