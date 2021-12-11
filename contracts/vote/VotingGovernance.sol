@@ -37,8 +37,8 @@ contract VotingGovernor is
         contractURI = _uri;
     }
 
-    function setContractURI(string calldata _URI) external onlyGovernance {
-        contractURI = _URI;
+    function setContractURI(string calldata uri) external onlyGovernance {
+        contractURI = uri;
     }
 
     function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
