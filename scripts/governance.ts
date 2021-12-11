@@ -19,7 +19,7 @@ async function main() {
 
   const CoinFactory = await ethers.getContractFactory("Coin");
   const VotingGovernorFactory = await ethers.getContractFactory("VotingGovernor");
-  const TimelockControllerFactory = await ethers.getContractFactory("TimelockController");
+  //const TimelockControllerFactory = await ethers.getContractFactory("TimelockController");
 
   const controlAddress = ethers.constants.AddressZero;
   const forwarderAddress = ethers.constants.AddressZero;
@@ -28,7 +28,7 @@ async function main() {
   const coin = await CoinFactory.deploy(controlAddress, "DAO20", "DAO20", forwarderAddress, uri);
   const proposers = [ethers.constants.AddressZero];
   const executors = [ethers.constants.AddressZero];
-  const timelock = await TimelockControllerFactory.deploy(0, proposers, executors);
+  //const timelock = await TimelockControllerFactory.deploy(0, proposers, executors);
 
   const initialVotingDelay = "0";
   const initialVotingPeriod = "1"; // 1800 blocks * 2 second block time =  60 minutes
@@ -88,6 +88,8 @@ async function main() {
   const porposalStates2 = await Promise.all(proposalIds.map(pId => governor.state(pId)));
   const proposalVotes2 = await Promise.all(proposalIds.map(pId => governor.proposalVotes(pId)));
   console.log(proposalIds2[0].toString(), porposalStates2[0], proposalVotes2[0]);
+
+  //console.log(await governor.queryFilter(governor.filters.ProposalCreated()));
 
   ////// Execute on a Proposal
   await governor.execute(targets, values, calldatas, ethers.utils.id(description));
