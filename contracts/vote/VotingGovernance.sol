@@ -22,13 +22,14 @@ contract VotingGovernor is
         uint256 _initialVotingDelay,
         uint256 _initialVotingPeriod,
         uint256 _initialProposalThreshold,
+        uint256 _initialVoteQuorumFraction,
         address _trustedForwarder,
         string memory _uri
     )
         Governor(_name)
         GovernorSettings(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold)
         GovernorVotes(_token)
-        GovernorVotesQuorumFraction(4)
+        GovernorVotesQuorumFraction(_initialVoteQuorumFraction)
         ERC2771Context(_trustedForwarder)
     {}
 
