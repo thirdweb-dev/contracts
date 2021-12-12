@@ -12,7 +12,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMintERC1155 {
-
     /**
      *  @notice The mint conditions for a given tokenId x time window.
      *
@@ -67,7 +66,6 @@ interface ILazyMintERC1155 {
      */
     struct ClaimConditions {
         uint256 nextConditionIndex;
-
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;
         mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
     }
@@ -76,7 +74,12 @@ interface ILazyMintERC1155 {
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(uint256 indexed claimConditionIndex, uint256 indexed tokenId, address indexed claimer, uint256 quantityClaimed);
+    event ClaimedTokens(
+        uint256 indexed claimConditionIndex,
+        uint256 indexed tokenId,
+        address indexed claimer,
+        uint256 quantityClaimed
+    );
 
     /// @dev Emitted when new mint conditions are set for a token.
     event NewClaimConditions(uint256 indexed tokenId, ClaimCondition[] claimConditions);
@@ -97,7 +100,7 @@ interface ILazyMintERC1155 {
     function nextTokenIdToMint() external returns (uint256);
 
     /**
-     *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint` 
+     *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
      *          to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      *
      *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
@@ -112,7 +115,11 @@ interface ILazyMintERC1155 {
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(uint256 _tokenId, uint256 _quantity, bytes32[] calldata _proofs) external payable;
+    function claim(
+        uint256 _tokenId,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external payable;
 
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set mint conditions for a given token ID.

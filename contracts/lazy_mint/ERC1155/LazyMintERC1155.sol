@@ -520,4 +520,3 @@ contract LazyMintERC1155 is
         return ERC2771Context._msgData();
     }
 }
-

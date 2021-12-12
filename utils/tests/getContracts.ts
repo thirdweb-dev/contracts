@@ -114,28 +114,33 @@ export async function getContracts(
 
   // Deploy WETH
   const weth: WETH9 = await ethers.getContractFactory("WETH9").then(f => f.deploy());
-  
+
   // Deploy Marketplace
   const marketv2: Marketplace = (await ethers
     .getContractFactory("Marketplace")
     .then(f =>
       f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, weth.address, marketContractURI, 0),
     )) as Marketplace;
-  
+
   // Deploy LazyMintERC1155
   const contractURI: string = "ipfs://contractURI/";
-  const trustedForwarderAddr: string = forwarder.address
-  const nativeTokenWrapperAddr: string = weth.address
+  const trustedForwarderAddr: string = forwarder.address;
+  const nativeTokenWrapperAddr: string = weth.address;
   const defaultSaleRecipient: string = protocolAdmin.address;
 
-  const lazyMintERC1155: LazyMintERC1155 = await ethers.getContractFactory("LazyMintERC1155")
-      .then(f => f.connect(protocolAdmin).deploy(
-        contractURI,
-        protocolControl.address,
-        trustedForwarderAddr,
-        nativeTokenWrapperAddr,
-        defaultSaleRecipient
-      )) as LazyMintERC1155;
+  const lazyMintERC1155: LazyMintERC1155 = (await ethers
+    .getContractFactory("LazyMintERC1155")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(
+          contractURI,
+          protocolControl.address,
+          trustedForwarderAddr,
+          nativeTokenWrapperAddr,
+          defaultSaleRecipient,
+        ),
+    )) as LazyMintERC1155;
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
@@ -197,6 +202,6 @@ export async function getContracts(
     coin,
     nft,
     lazynft,
-    lazyMintERC1155
+    lazyMintERC1155,
   };
 }

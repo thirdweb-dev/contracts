@@ -378,10 +378,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(
-            _royaltyBps <= MAX_BPS,
-            "NFTCollection: Invalid bps provided; must be less than 10,000."
-        );
+        require(_royaltyBps <= MAX_BPS, "NFTCollection: Invalid bps provided; must be less than 10,000.");
 
         royaltyBps = _royaltyBps;
 
