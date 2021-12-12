@@ -177,8 +177,8 @@ contract LazyMintERC1155 is
     /// @dev Lets a module admin set mint conditions for a given tokenId.
     function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
         // make sure the conditions are sorted in ascending order
-        uint256 lastConditionStartTimestamp = 0;
-        uint256 indexForCondition = claimConditions[_tokenId].nextConditionIndex;
+        uint256 lastConditionStartTimestamp;
+        uint256 indexForCondition;
 
         for (uint256 i = 0; i < _conditions.length; i++) {
             require(
@@ -204,6 +204,7 @@ contract LazyMintERC1155 is
         }
 
         claimConditions[_tokenId].nextConditionIndex = indexForCondition;
+        claimConditions[_tokenId].totalConditionsTillDate += indexForCondition;
 
         emit NewClaimConditions(_tokenId, _conditions);
     }
@@ -272,7 +273,8 @@ contract LazyMintERC1155 is
         uint256 _index,
         address _claimer
     ) external view returns (uint256) {
-        return claimConditions[_tokenId].nextValidTimestampForClaim[_claimer][_index];
+        uint256 timestampIndex = _index + claimConditions[_tokenId].totalConditionsTillDate;
+        return claimConditions[_tokenId].nextValidTimestampForClaim[_claimer][timestampIndex];
     }
 
     /// @dev Returns the  mint condition for a given tokenId, at the given index.
@@ -315,8 +317,9 @@ contract LazyMintERC1155 is
             "exceed max mint supply."
         );
 
+        uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].totalConditionsTillDate;
         uint256 validTimestampForClaim = claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][
-            _conditionIndex
+            timestampIndex
         ];
         require(validTimestampForClaim == 0 || block.timestamp >= validTimestampForClaim, "cannot claim yet.");
 
@@ -366,6 +369,7 @@ contract LazyMintERC1155 is
         // Update the supply minted under mint condition.
         claimConditions[_tokenId].claimConditionAtIndex[_mintConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
+        uint256 timestampIndex = _mintConditionIndex + claimConditions[_tokenId].totalConditionsTillDate;
         uint256 newNextMintTimestamp = _mintCondition.waitTimeInSecondsBetweenClaims;        
         unchecked {
             newNextMintTimestamp += block.timestamp;
@@ -373,7 +377,7 @@ contract LazyMintERC1155 is
                 newNextMintTimestamp = type(uint256).max;
             }
         }
-        claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] = newNextMintTimestamp;
+        claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][timestampIndex] = newNextMintTimestamp;
 
         _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
     }
