@@ -365,10 +365,15 @@ contract LazyMintERC1155 is
     ) internal {
         // Update the supply minted under mint condition.
         claimConditions[_tokenId].claimConditionAtIndex[_mintConditionIndex].supplyClaimed += _quantityBeingClaimed;
-        // Update the claimer's next valid timestamp to mint
-        claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] =
-            block.timestamp +
-            _mintCondition.waitTimeInSecondsBetweenClaims;
+        // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
+        uint256 newNextMintTimestamp = _mintCondition.waitTimeInSecondsBetweenClaims;        
+        unchecked {
+            newNextMintTimestamp += block.timestamp;
+            if (newNextMintTimestamp < _mintCondition.waitTimeInSecondsBetweenClaims) {
+                newNextMintTimestamp = type(uint256).max;
+            }
+        }
+        claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][_mintConditionIndex] = newNextMintTimestamp;
 
         _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
     }
