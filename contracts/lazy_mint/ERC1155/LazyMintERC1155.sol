@@ -135,6 +135,21 @@ contract LazyMintERC1155 is
         return "";
     }
 
+    /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
+    function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
+        uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
+
+        require(nextConditionIndex > 0, "no public mint condition.");
+
+        for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
+            if (block.timestamp >= claimConditions[_tokenId].claimConditionAtIndex[i - 1].startTimestamp) {
+                return i - 1;
+            }
+        }
+
+        revert("no active mint condition.");
+    }
+
     ///     =====   External functions  =====
 
     /**
@@ -286,22 +301,7 @@ contract LazyMintERC1155 is
         mintCondition = claimConditions[_tokenId].claimConditionAtIndex[_index];
     }
 
-    //      =====   Internal functions  =====
-
-    /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
-    function getIndexOfActiveCondition(uint256 _tokenId) internal view returns (uint256) {
-        uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
-
-        require(nextConditionIndex > 0, "no public mint condition.");
-
-        for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
-            if (block.timestamp >= claimConditions[_tokenId].claimConditionAtIndex[i - 1].startTimestamp) {
-                return i - 1;
-            }
-        }
-
-        revert("no active mint condition.");
-    }
+    //      =====   Internal functions  =====    
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaimIsValid(
