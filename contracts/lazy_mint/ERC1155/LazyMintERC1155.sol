@@ -383,19 +383,12 @@ contract LazyMintERC1155 is
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
-
-                if (!safeTransferNativeToken(_to, _amount)) {
-                    IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-                    safeTransferERC20(_currency, address(this), _to, _amount);
-                }
+                safeTransferNativeToken(_to, _amount);
             } else if (_to == address(this)) {
                 require(_amount == msg.value, "native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
             } else {
-                if (!safeTransferNativeToken(_to, _amount)) {
-                    IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-                    safeTransferERC20(_currency, address(this), _to, _amount);
-                }
+                safeTransferNativeToken(_to, _amount);
             }
         } else {
             safeTransferERC20(_currency, _from, _to, _amount);
@@ -416,8 +409,12 @@ contract LazyMintERC1155 is
     }
 
     /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal returns (bool success) {
-        (success, ) = to.call{ value: value }("");
+    function safeTransferNativeToken(address to, uint256 value) internal {
+        (bool success, ) = to.call{ value: value }("");
+        if (!success) {
+            IWETH(nativeTokenWrapper).deposit{ value: value }();
+            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
+        }
     }
 
     /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
@@ -427,11 +424,6 @@ contract LazyMintERC1155 is
         address _to,
         uint256 _amount
     ) internal {
-        // Required due to the use of `IERC20.transferFrom`.
-        if (_from == address(this)) {
-            IERC20(_currency).approve(address(this), _amount);
-        }
-
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
