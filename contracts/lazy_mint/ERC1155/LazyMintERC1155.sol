@@ -135,6 +135,11 @@ contract LazyMintERC1155 is
         return "";
     }
 
+    /// @dev Returns the URI for a given tokenId.
+    function tokenURI(uint256 _tokenId) public view returns (string memory _tokenURI) {        
+        return uri(_tokenId);
+    }
+
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
     function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
         uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
