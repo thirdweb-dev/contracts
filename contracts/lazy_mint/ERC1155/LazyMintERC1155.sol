@@ -223,6 +223,13 @@ contract LazyMintERC1155 is
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }
 
+        uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
+        if(indexForCondition < nextConditionIndex) {
+            for(uint256 j = indexForCondition; j < nextConditionIndex; j += 1) {
+                delete claimConditions[_tokenId].claimConditionAtIndex[j];
+            }
+        }
+
         claimConditions[_tokenId].nextConditionIndex = indexForCondition;
         claimConditions[_tokenId].timstampLimitIndex += indexForCondition;
 
