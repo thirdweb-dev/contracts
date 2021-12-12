@@ -274,7 +274,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
       const expectedNextValidTimestamp: BigNumber = currentTimestamp.add(waitBetweenClaims);
 
       expect(
-        await lazyMintERC1155.getTimesForNextValidClaim(tokenId, targetMintConditionIndex, claimer.address),
+        await lazyMintERC1155.getTimestampForNextValidClaim(tokenId, targetMintConditionIndex, claimer.address),
       ).to.equal(expectedNextValidTimestamp);
     });
   });
