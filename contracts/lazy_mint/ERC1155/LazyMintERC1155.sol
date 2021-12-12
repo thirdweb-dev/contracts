@@ -224,7 +224,7 @@ contract LazyMintERC1155 is
         }
 
         claimConditions[_tokenId].nextConditionIndex = indexForCondition;
-        claimConditions[_tokenId].totalConditionsTillDate += indexForCondition;
+        claimConditions[_tokenId].timstampLimitIndex += indexForCondition;
 
         emit NewClaimConditions(_tokenId, _conditions);
     }
@@ -293,7 +293,7 @@ contract LazyMintERC1155 is
         uint256 _index,
         address _claimer
     ) external view returns (uint256) {
-        uint256 timestampIndex = _index + claimConditions[_tokenId].totalConditionsTillDate;
+        uint256 timestampIndex = _index + claimConditions[_tokenId].timstampLimitIndex;
         return claimConditions[_tokenId].nextValidTimestampForClaim[_claimer][timestampIndex];
     }
 
@@ -322,7 +322,7 @@ contract LazyMintERC1155 is
             "exceed max mint supply."
         );
 
-        uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].totalConditionsTillDate;
+        uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         uint256 validTimestampForClaim = claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][
             timestampIndex
         ];
@@ -374,7 +374,7 @@ contract LazyMintERC1155 is
         // Update the supply minted under mint condition.
         claimConditions[_tokenId].claimConditionAtIndex[_mintConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
-        uint256 timestampIndex = _mintConditionIndex + claimConditions[_tokenId].totalConditionsTillDate;
+        uint256 timestampIndex = _mintConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         uint256 newNextMintTimestamp = _mintCondition.waitTimeInSecondsBetweenClaims;        
         unchecked {
             newNextMintTimestamp += block.timestamp;

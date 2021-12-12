@@ -66,7 +66,7 @@ interface ILazyMintERC1155 {
      */
     struct ClaimConditions {
         uint256 nextConditionIndex;
-        uint256 totalConditionsTillDate;
+        uint256 timstampLimitIndex;
 
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;
         mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
