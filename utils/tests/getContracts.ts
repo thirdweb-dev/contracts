@@ -4,6 +4,7 @@ import { ethers } from "hardhat";
 import { chainlinkVars } from "../../utils/chainlink";
 
 // Types
+import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Log } from "@ethersproject/abstract-provider";
 
