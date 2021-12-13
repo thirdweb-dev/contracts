@@ -28,6 +28,8 @@ describe("Initial state of LazyMintERC1155 on deployment", function () {
   let trustedForwarderAddr: string;
   let protocolControlAddr: string;
   let nativeTokenWrapperAddr: string;
+  const royaltyBps: BigNumber = BigNumber.from(0);
+  const feeBps: BigNumber = BigNumber.from(0);
 
   before(async () => {
     [protocolProvider, protocolAdmin, defaultSaleRecipient] = await ethers.getSigners();
@@ -51,6 +53,8 @@ describe("Initial state of LazyMintERC1155 on deployment", function () {
             trustedForwarderAddr,
             nativeTokenWrapperAddr,
             defaultSaleRecipient.address,
+            royaltyBps,
+            feeBps
           ),
       );
   });

@@ -109,12 +109,16 @@ contract LazyMintERC1155 is
         address payable _controlCenter,
         address _trustedForwarder,
         address _nativeTokenWrapper,
-        address _saleRecipient
+        address _saleRecipient,
+        uint128 _royaltyBps,
+        uint128 _feeBps
     ) ERC1155("") ERC2771Context(_trustedForwarder) {
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
+        royaltyBps = uint64(_royaltyBps);
+        feeBps = uint120(_feeBps);
 
         address deployer = _msgSender();
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);

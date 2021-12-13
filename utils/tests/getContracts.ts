@@ -127,6 +127,8 @@ export async function getContracts(
   const trustedForwarderAddr: string = forwarder.address;
   const nativeTokenWrapperAddr: string = weth.address;
   const defaultSaleRecipient: string = protocolAdmin.address;
+  const royaltyBps: BigNumber = BigNumber.from(0);
+  const feeBps: BigNumber = BigNumber.from(0);
 
   const lazyMintERC1155: LazyMintERC1155 = (await ethers
     .getContractFactory("LazyMintERC1155")
@@ -139,6 +141,8 @@ export async function getContracts(
           trustedForwarderAddr,
           nativeTokenWrapperAddr,
           defaultSaleRecipient,
+          royaltyBps,
+          feeBps
         ),
     )) as LazyMintERC1155;
 
