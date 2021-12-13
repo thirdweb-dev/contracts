@@ -55,17 +55,17 @@ interface ILazyMintERC1155 {
      *  @dev In the contract, we use this in a mapping: tokenId => mint conditions i.e.
      *       mapping(uint256 => PublicMintConditions) public mintConditions;
      *
-     *  @param nextConditionIndex The uid for each mint condition. Incremented
+     *  @param totalConditionCount The uid for each mint condition. Incremented
      *                            by one every time a mint condition is created.
      *
-     *  @param mintConditionAtIndex The mint conditions at a given uid. Mint conditions
+     *  @param claimConditionAtIndex The mint conditions at a given uid. Mint conditions
      *                              are ordered in an ascending order by their `startTimestamp`.
      *
      *  @param nextValidTimestampForClaim Account => uid for a mint condition => timestamp after
      *                                    which the account can claim tokens again.
      */
     struct ClaimConditions {
-        uint256 nextConditionIndex;
+        uint256 totalConditionCount;
         uint256 timstampLimitIndex;
 
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;

@@ -142,7 +142,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
         }
 
         await lazyMintERC1155.connect(claimer).claim(tokenId, quantityToClaim, proof, { value: totalPrice });
-        const nextValidTimestampForClaim: BigNumber = await lazyMintERC1155.getTimesForNextValidClaim(
+        const nextValidTimestampForClaim: BigNumber = await lazyMintERC1155.getTimestampForNextValidClaim(
           tokenId,
           targetMintConditionIndex,
           claimer.address,

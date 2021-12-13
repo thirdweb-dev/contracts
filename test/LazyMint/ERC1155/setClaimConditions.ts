@@ -105,17 +105,17 @@ describe("Test: set public mint conditions", function () {
 
   describe("Contract state", function () {
     it("Should increment the condition index to use for future mint conditions", async () => {
-      const indexBefore: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).nextConditionIndex; // returns `nextConditionIndex` from `PublicclaimConditions`
+      const indexBefore: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).totalConditionCount; // returns `totalConditionCount` from `PublicclaimConditions`
       await lazyMintERC1155.connect(protocolAdmin).setClaimConditions(tokenId, claimConditions);
-      const indexAfter: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).nextConditionIndex; // returns `nextConditionIndex` from `PublicclaimConditions`
+      const indexAfter: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).totalConditionCount; // returns `totalConditionCount` from `PublicclaimConditions`
 
       expect(indexAfter).to.equal(indexBefore.add(claimConditions.length));
     });
 
     it("Should store each mint condition at the right index", async () => {
-      const indexBefore: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).nextConditionIndex; // returns `nextConditionIndex` from `PublicclaimConditions`
+      const indexBefore: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).totalConditionCount; // returns `totalConditionCount` from `PublicclaimConditions`
       await lazyMintERC1155.connect(protocolAdmin).setClaimConditions(tokenId, claimConditions);
-      const nextIndex: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).nextConditionIndex; // returns `nextConditionIndex` from `PublicclaimConditions`
+      const nextIndex: BigNumber = (await lazyMintERC1155.claimConditions(tokenId)).totalConditionCount; // returns `totalConditionCount` from `PublicclaimConditions`
 
       for (let i = indexBefore.toNumber(); i < nextIndex.toNumber(); i += 1) {
         const condition: ClaimConditionStruct = await lazyMintERC1155.getClaimConditionAtIndex(tokenId, i);

@@ -146,11 +146,11 @@ contract LazyMintERC1155 is
 
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
     function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
-        uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
+        uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
 
-        require(nextConditionIndex > 0, "no public mint condition.");
+        require(totalConditionCount > 0, "no public mint condition.");
 
-        for (uint256 i = nextConditionIndex; i > 0; i -= 1) {
+        for (uint256 i = totalConditionCount; i > 0; i -= 1) {
             if (block.timestamp >= claimConditions[_tokenId].claimConditionAtIndex[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -227,14 +227,14 @@ contract LazyMintERC1155 is
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }
 
-        uint256 nextConditionIndex = claimConditions[_tokenId].nextConditionIndex;
-        if(indexForCondition < nextConditionIndex) {
-            for(uint256 j = indexForCondition; j < nextConditionIndex; j += 1) {
+        uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
+        if(indexForCondition < totalConditionCount) {
+            for(uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
                 delete claimConditions[_tokenId].claimConditionAtIndex[j];
             }
         }
 
-        claimConditions[_tokenId].nextConditionIndex = indexForCondition;
+        claimConditions[_tokenId].totalConditionCount = indexForCondition;
         claimConditions[_tokenId].timstampLimitIndex += indexForCondition;
 
         emit NewClaimConditions(_tokenId, _conditions);
