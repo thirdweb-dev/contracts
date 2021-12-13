@@ -552,19 +552,12 @@ contract Marketplace is
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
-
-                if (!safeTransferNativeToken(_to, _amount)) {
-                    IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-                    safeTransferERC20(_currency, address(this), _to, _amount);
-                }
+                safeTransferNativeToken(_to, _amount);                
             } else if (_to == address(this)) {
                 require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
             } else {
-                if (!safeTransferNativeToken(_to, _amount)) {
-                    IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-                    safeTransferERC20(_currency, address(this), _to, _amount);
-                }
+                safeTransferNativeToken(_to, _amount);
             }
         } else {
             safeTransferERC20(_currency, _from, _to, _amount);
@@ -591,8 +584,12 @@ contract Marketplace is
     }
 
     /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal returns (bool success) {
-        (success, ) = to.call{ value: value }(new bytes(0));
+    function safeTransferNativeToken(address to, uint256 value) internal {
+        (bool success, ) = to.call{ value: value }("");
+        if (!success) {
+            IWETH(nativeTokenWrapper).deposit{ value: value }();
+            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
+        }
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.
