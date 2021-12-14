@@ -83,34 +83,8 @@ contract VotingGovernor is
         contractURI = uri;
     }
 
-    function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
-        return super.votingDelay();
-    }
-
-    function votingPeriod() public view override(IGovernor, GovernorSettings) returns (uint256) {
-        return super.votingPeriod();
-    }
-
-    function quorum(uint256 blockNumber)
-        public
-        view
-        override(IGovernor, GovernorVotesQuorumFraction)
-        returns (uint256)
-    {
-        return super.quorum(blockNumber);
-    }
-
-    function getVotes(address account, uint256 blockNumber)
-        public
-        view
-        override(IGovernor, GovernorVotes)
-        returns (uint256)
-    {
-        return super.getVotes(account, blockNumber);
-    }
-
     function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
-        return super.proposalThreshold();
+        return GovernorSettings.proposalThreshold();
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
