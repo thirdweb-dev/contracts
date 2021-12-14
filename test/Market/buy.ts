@@ -22,7 +22,7 @@ import { forkFrom } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
 import { Registry } from "../../typechain/Registry";
 
-describe("List token for sale", function () {
+describe("List token for sale.", function () {
   // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
