@@ -17,6 +17,21 @@ contract VotingGovernor is
     ERC2771Context
 {
     string public contractURI;
+    uint256 public proposalIndex;
+
+    struct Proposal {
+        uint256 proposalId;
+        address proposer;
+        address[] targets;
+        uint256[] values;
+        string[] signatures;
+        bytes[] calldatas;
+        uint256 startBlock;
+        uint256 endBlock;
+        string description;
+    }
+
+    mapping(uint256 => Proposal) public proposals;
 
     constructor(
         string memory _name,
@@ -35,6 +50,33 @@ contract VotingGovernor is
         ERC2771Context(_trustedForwarder)
     {
         contractURI = _uri;
+    }
+
+    /**
+     * @dev See {IGovernor-propose}.
+     */
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public virtual override returns (uint256 proposalId) {
+        
+        proposalId = super.propose(targets, values, calldatas, description);
+
+        proposals[proposalIndex] = Proposal({
+            proposalId: proposalId,
+            proposer: _msgSender(),
+            targets: targets,
+            values: values,
+            signatures: new string[](targets.length),
+            calldatas: calldatas,
+            startBlock: proposalSnapshot(proposalId),
+            endBlock: proposalDeadline(proposalId),
+            description: description
+        });
+
+        proposalIndex += 1;
     }
 
     function setContractURI(string calldata uri) external onlyGovernance {
