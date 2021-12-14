@@ -4,6 +4,7 @@ import { ethers } from "hardhat";
 import { chainlinkVars } from "../../utils/chainlink";
 
 // Types
+import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Log } from "@ethersproject/abstract-provider";
 
@@ -20,7 +21,7 @@ import { Pack } from "../../typechain/Pack";
 import { Market } from "../../typechain/Market";
 import { Marketplace } from "../../typechain/Marketplace";
 import { LazyNFT } from "../../typechain/LazyNFT";
-import { Contract } from "@ethersproject/contracts";
+import { LazyMintERC1155 } from "typechain/LazyMintERC1155";
 
 export type Contracts = {
   registry: Registry;
@@ -34,6 +35,7 @@ export type Contracts = {
   nft: NFT;
   lazynft: LazyNFT;
   weth: WETH9;
+  lazyMintERC1155: LazyMintERC1155;
 };
 
 export async function getContracts(
@@ -111,13 +113,39 @@ export async function getContracts(
       f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, marketContractURI, 0),
     )) as Market;
 
-  // Deploy WETH and Marketv2
+  // Deploy WETH
   const weth: WETH9 = await ethers.getContractFactory("WETH9").then(f => f.deploy());
+
+  // Deploy Marketplace
   const marketv2: Marketplace = (await ethers
     .getContractFactory("Marketplace")
     .then(f =>
       f.connect(protocolAdmin).deploy(protocolControl.address, forwarder.address, weth.address, marketContractURI, 0),
     )) as Marketplace;
+
+  // Deploy LazyMintERC1155
+  const contractURI: string = "ipfs://contractURI/";
+  const trustedForwarderAddr: string = forwarder.address;
+  const nativeTokenWrapperAddr: string = weth.address;
+  const defaultSaleRecipient: string = protocolAdmin.address;
+  const royaltyBps: BigNumber = BigNumber.from(0);
+  const feeBps: BigNumber = BigNumber.from(0);
+
+  const lazyMintERC1155: LazyMintERC1155 = (await ethers
+    .getContractFactory("LazyMintERC1155")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(
+          contractURI,
+          protocolControl.address,
+          trustedForwarderAddr,
+          nativeTokenWrapperAddr,
+          defaultSaleRecipient,
+          royaltyBps,
+          feeBps
+        ),
+    )) as LazyMintERC1155;
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
@@ -179,5 +207,6 @@ export async function getContracts(
     coin,
     nft,
     lazynft,
+    lazyMintERC1155,
   };
 }
