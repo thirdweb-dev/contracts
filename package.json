@@ -3,10 +3,7 @@
   "description": "",
   "version": "1.15.1-0",
   "license": "Apache-2.0",
-  "dependencies": {
-    "@chainlink/contracts": "^0.3.0",
-    "@openzeppelin/contracts": "^4.3.3"
-  },
+  "dependencies": {},
   "source": "src/index.ts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,6 +16,8 @@
     "!contracts/**/*.md"
   ],
   "devDependencies": {
+    "@openzeppelin/contracts": "^4.3.3",
+    "@chainlink/contracts": "^0.3.0",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
     "@ethersproject/providers": "^5.5.0",
