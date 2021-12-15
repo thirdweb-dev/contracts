@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 contract VotingGovernor is
     Governor,
@@ -14,6 +16,8 @@ contract VotingGovernor is
     GovernorCountingSimple,
     GovernorVotes,
     GovernorVotesQuorumFraction,
+    ERC721Holder,
+    ERC1155Holder,
     ERC2771Context
 {
     string public contractURI;
@@ -31,7 +35,10 @@ contract VotingGovernor is
         string description;
     }
 
+    /// @dev proposal index => Proposal
     mapping(uint256 => Proposal) public proposals;
+    /// @dev proposal ID => proposal index
+    mapping(uint256 => uint256) public indexForProposal;
 
     constructor(
         string memory _name,
@@ -95,6 +102,18 @@ contract VotingGovernor is
 
     function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
         return GovernorSettings.proposalThreshold();
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155Receiver, Governor)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
