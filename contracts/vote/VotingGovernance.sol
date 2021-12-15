@@ -79,6 +79,16 @@ contract VotingGovernor is
         proposalIndex += 1;
     }
 
+    /// @dev Returns all proposals made.
+    function getAllProposals() external view returns (Proposal[] memory allProposals) {
+        uint256 nextProposalIndex = proposalIndex;
+
+        allProposals = new Proposal[](nextProposalIndex);
+        for(uint i = 0; i < nextProposalIndex; i += 1) {
+            allProposals[i] = proposals[i];
+        }
+    }
+
     function setContractURI(string calldata uri) external onlyGovernance {
         contractURI = uri;
     }
