@@ -4,7 +4,7 @@
   "version": "1.15.0",
   "license": "Apache-2.0",
   "dependencies": {
-    "@chainlink/contracts": "^0.2.2",
+    "@chainlink/contracts": "^0.3.0",
     "@openzeppelin/contracts": "^4.3.3"
   },
   "source": "src/index.ts",
@@ -30,7 +30,7 @@
     "@types/chai": "^4.2.22",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.0.0",
-    "@types/node": "^16.10.3",
+    "@types/node": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^5.2.0",
     "@typescript-eslint/parser": "^5.2.0",
     "chai": "^4.2.0",
