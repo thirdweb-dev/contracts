@@ -34,15 +34,6 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Coin: only a protocol admin can call this function."
-        );
-        _;
-    }
-
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
@@ -151,7 +142,7 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         contractURI = _URI;
     }
 

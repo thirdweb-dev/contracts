@@ -115,15 +115,6 @@ contract Market is
         _;
     }
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Market: only a protocol admin can call this function."
-        );
-        _;
-    }
-
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only a module admin can call this function.");
         _;
@@ -463,7 +454,7 @@ contract Market is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 

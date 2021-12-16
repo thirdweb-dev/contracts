@@ -8,6 +8,8 @@ import "./openzeppelin-presets/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
 import { Registry } from "./Registry.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
@@ -15,19 +17,15 @@ import { ProtocolControl } from "./ProtocolControl.sol";
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is PaymentSplitter, ERC2771Context, Multicall {
+contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Multicall {
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
     /// @dev Contract level metadata.
     string private _contractURI;
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Royalty: only a protocol admin can call this function."
-        );
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
     }
 
@@ -68,6 +66,8 @@ contract Royalty is PaymentSplitter, ERC2771Context, Multicall {
         // WARNING: Do not call _addPayee outside of this constructor.
         uint256 totalFeeShares = totalScaledShares - totalScaledSharesMinusFee;
         _addPayee(registry.treasury(), totalFeeShares);
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev See ERC2771
@@ -81,7 +81,7 @@ contract Royalty is PaymentSplitter, ERC2771Context, Multicall {
     }
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 

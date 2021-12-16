@@ -90,15 +90,6 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     /// @dev Access NFT tokenId => final redemption timestamp.
     mapping(uint256 => uint256) public lastTimeToRedeem;
 
-    /// @dev Checks whether the caller is a protocol admin.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "AccessNFT: only a protocol admin can call this function."
-        );
-        _;
-    }
-
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "AccessNFT: only a module admin can call this function.");
@@ -304,7 +295,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
         _contractURI = _uri;
     }
 
