@@ -121,7 +121,16 @@ describe("Royalty", function () {
       const receipt = await royaltyContract.deployTransaction.wait();
 
       // Get PayeeAdded events emitted.
-      const payeeAdded = receipt.logs.map((l: any) => payeeAddedInterface.parseLog(l)).map((l: any) => l.args);
+      const payeeAdded = receipt.logs
+        .map((l: any) => {
+          try {
+            return payeeAddedInterface.parseLog(l);
+          } catch (e) {
+            return "";
+          }
+        })
+        .filter(e => !!e)
+        .map((l: any) => l.args);
 
       expect(payeeAdded.length).to.be.equals(payees.length + 1); // All payess + registry treasury.
       expect(payeeAdded[0].account).to.be.equals(payees[0]);
