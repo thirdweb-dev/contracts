@@ -108,12 +108,6 @@ contract LazyNFT is
     event RoyaltyUpdated(uint256 royaltyBps);
     event FeeUpdated(uint256 feeBps);
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin() {
-        require(controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()), "not protocol admin");
-        _;
-    }
-
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin");
         _;
@@ -394,7 +388,7 @@ contract LazyNFT is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 

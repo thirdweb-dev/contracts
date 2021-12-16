@@ -103,15 +103,6 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
 
     event RestrictedTransferUpdated(bool transferable);
 
-    /// @dev Checks whether the caller is a protocol admin.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Pack: only a protocol admin can call this function."
-        );
-        _;
-    }
-
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
@@ -256,17 +247,17 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
      */
 
     /// @dev Lets a protocol admin change the Chainlink VRF fee.
-    function setChainlinkFees(uint256 _newFees) external onlyProtocolAdmin {
+    function setChainlinkFees(uint256 _newFees) external onlyModuleAdmin {
         vrfFees = _newFees;
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyProtocolAdmin {
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
         _contractURI = _uri;
     }
 
     /// @dev Lets a protocol admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external onlyProtocolAdmin {
+    function transferLink(address _to, uint256 _amount) external onlyModuleAdmin {
         bool success = LINK.transfer(_to, _amount);
         require(success, "Pack: Failed to transfer LINK.");
     }

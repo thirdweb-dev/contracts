@@ -121,15 +121,6 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
     /// @dev NFT tokenId => state of underlying ERC20 token.
     mapping(uint256 => ERC20Wrapped) public erc20WrappedTokens;
 
-    /// @dev Checks whether the caller is a protocol admin.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "NFTCollection: only a protocol admin can call this function."
-        );
-        _;
-    }
-
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
@@ -386,7 +377,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 

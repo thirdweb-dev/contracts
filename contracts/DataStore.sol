@@ -16,11 +16,8 @@ contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Contex
 
     mapping(uint256 => uint256) private _data;
 
-    modifier onlyProtocolAdmin() {
-        require(
-            _controlCenter.hasRole(_controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Royalty: only a protocol admin can call this function."
-        );
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
     }
 
@@ -54,7 +51,7 @@ contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Contex
     }
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 
