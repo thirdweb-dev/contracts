@@ -3,8 +3,12 @@ pragma solidity ^0.8.0;
 
 // Token + Access Control
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -14,7 +18,10 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit {
+contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausable, ERC2771Context, Multicall {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -24,8 +31,8 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
-    /// @dev Collection level metadata.
-    string public _contractURI;
+    /// @dev Returns the URI for the storefront-level metadata of the contract.
+    string public contractURI;
 
     /// @dev Checks whether the protocol is paused.
     modifier onlyProtocolAdmin() {
@@ -49,14 +56,25 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
-    ) ERC20PresetMinterPauser(_name, _symbol) ERC20Permit(_name) ERC2771Context(_trustedForwarder) {
+    ) ERC20(_name, _symbol) ERC20Permit(_name) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
         // Set contract URI
-        _contractURI = _uri;
+        contractURI = _uri;
 
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
     }
 
     /// @dev Runs on every transfer.
@@ -64,7 +82,7 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20PresetMinterPauser, ERC20) {
+    ) internal override(ERC20, ERC20Pausable) {
         super._beforeTokenTransfer(from, to, amount);
 
         if (transfersRestricted && from != address(0) && to != address(0)) {
@@ -75,6 +93,56 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit
         }
     }
 
+    function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Votes) {
+        super._mint(account, amount);
+    }
+
+    function _burn(address account, uint256 amount) internal virtual override(ERC20, ERC20Votes) {
+        super._burn(account, amount);
+    }
+
+    /**
+     * @dev Creates `amount` new tokens for `to`.
+     *
+     * See {ERC20-_mint}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `MINTER_ROLE`.
+     */
+    function mint(address to, uint256 amount) public virtual {
+        require(hasRole(MINTER_ROLE, _msgSender()), "Coin: must have minter role to mint");
+        _mint(to, amount);
+    }
+
+    /**
+     * @dev Pauses all token transfers.
+     *
+     * See {ERC20Pausable} and {Pausable-_pause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function pause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "Coin: must have pauser role to pause");
+        _pause();
+    }
+
+    /**
+     * @dev Unpauses all token transfers.
+     *
+     * See {ERC20Pausable} and {Pausable-_unpause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function unpause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "Coin: must have pauser role to unpause");
+        _unpause();
+    }
+
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
@@ -82,14 +150,9 @@ contract Coin is ERC20PresetMinterPauser, ERC2771Context, Multicall, ERC20Permit
         emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
-    }
-
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
-        _contractURI = _URI;
+        contractURI = _URI;
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
