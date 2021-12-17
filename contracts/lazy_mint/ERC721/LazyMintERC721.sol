@@ -195,11 +195,37 @@ contract LazyMintERC721 is
         emit ClaimedTokens(activeConditionIndex, _msgSender(), _quantity);
     }
 
+    function updateClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
+        overwriteClaimConditions(_conditions);
+        emit NewClaimConditions(_conditions);
+    }
+
     /// @dev Lets a module admin set mint conditions for a given tokenId.
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _overwriteTimestampRestriction) external onlyModuleAdmin {
+    function setClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
+        uint256 numOfConditionsSet = overwriteClaimConditions(_conditions);
+        overwriteTimestampRestriction(numOfConditionsSet);      
+
+        emit NewClaimConditions(_conditions);
+    }
+
+    /// @dev See EIP 2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = controlCenter.getRoyaltyTreasury(address(this));
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+    }
+
+    //      =====   Internal functions  ===== 
+
+    /// @dev Overwrites the current claim conditions with new claim conditions
+    function overwriteClaimConditions(ClaimCondition[] calldata _conditions) internal returns (uint256 indexForCondition) {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp;
-        uint256 indexForCondition;
 
         for (uint256 i = 0; i < _conditions.length; i++) {
             require(
@@ -231,28 +257,15 @@ contract LazyMintERC721 is
             }
         }
 
-        if(_overwriteTimestampRestriction) {
-            claimConditions.timstampLimitIndex += indexForCondition;
-        }
-
-        claimConditions.totalConditionCount = indexForCondition;        
+        claimConditions.totalConditionCount = indexForCondition;
 
         emit NewClaimConditions(_conditions);
     }
-
-    /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+    
+    /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
+    function overwriteTimestampRestriction(uint256 _factor) internal {
+        claimConditions.timstampLimitIndex += _factor;
     }
-
-    //      =====   Internal functions  =====    
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaimIsValid(
@@ -269,8 +282,16 @@ contract LazyMintERC721 is
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex];
+        
+        uint256 nextValidTimestampForClaim;
+        unchecked {
+            nextValidTimestampForClaim = timestampOfLastClaim + _claimCondition.waitTimeInSecondsBetweenClaims;
+            if(nextValidTimestampForClaim < timestampOfLastClaim) {
+                nextValidTimestampForClaim = type(uint256).max;
+            }
+        }
         require(
-            timestampOfLastClaim == 0 || block.timestamp >= timestampOfLastClaim + _claimCondition.waitTimeInSecondsBetweenClaims, 
+            timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, 
             "cannot claim yet."
         );
 
@@ -431,10 +452,17 @@ contract LazyMintERC721 is
     function getTimestampForNextValidClaim(
         uint256 _index,
         address _claimer
-    ) external view returns (uint256) {
+    ) external view returns (uint256 nextValidTimestampForClaim) {
+        
         uint256 timestampIndex = _index + claimConditions.timstampLimitIndex;
-        return claimConditions.timestampOfLastClaim[_claimer][timestampIndex] 
-            + claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
+
+        unchecked {
+            nextValidTimestampForClaim = timestampOfLastClaim + claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+            if(nextValidTimestampForClaim < timestampOfLastClaim) {
+                nextValidTimestampForClaim = type(uint256).max;
+            }
+        }
     }
 
     /// @dev Returns the  mint condition for a given tokenId, at the given index.

@@ -123,5 +123,5 @@ interface ILazyMintERC721 {
      *
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
      */
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _overwriteTimestampRestriction) external;
+    function setClaimConditions(ClaimCondition[] calldata _conditions) external;
 }
