@@ -196,7 +196,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets a module admin set mint conditions for a given tokenId.
-    function setClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
+    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _overwriteTimestampRestriction) external onlyModuleAdmin {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp;
         uint256 indexForCondition;
@@ -231,8 +231,11 @@ contract LazyMintERC721 is
             }
         }
 
-        claimConditions.totalConditionCount = indexForCondition;
-        claimConditions.timstampLimitIndex += indexForCondition;
+        if(_overwriteTimestampRestriction) {
+            claimConditions.timstampLimitIndex += indexForCondition;
+        }
+
+        claimConditions.totalConditionCount = indexForCondition;        
 
         emit NewClaimConditions(_conditions);
     }
