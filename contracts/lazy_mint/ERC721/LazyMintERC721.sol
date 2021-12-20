@@ -82,7 +82,7 @@ contract LazyMintERC721 is
 
     /// @dev End token Id => URI that overrides `baseURI + tokenId` convention.
     mapping(uint256 => string) private baseURI;
-    
+
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
@@ -138,7 +138,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view override returns (string memory _tokenURI) {        
+    function tokenURI(uint256 _tokenId) public view override returns (string memory _tokenURI) {
         return uri(_tokenId);
     }
 
@@ -175,10 +175,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
-    function claim(
-        uint256 _quantity,
-        bytes32[] calldata _proofs
-    ) external payable nonReentrant {
+    function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition();
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
@@ -203,7 +200,7 @@ contract LazyMintERC721 is
     /// @dev Lets a module admin set mint conditions for a given tokenId.
     function setClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
         uint256 numOfConditionsSet = overwriteClaimConditions(_conditions);
-        overwriteTimestampRestriction(numOfConditionsSet);      
+        overwriteTimestampRestriction(numOfConditionsSet);
 
         emit NewClaimConditions(_conditions);
     }
@@ -220,10 +217,13 @@ contract LazyMintERC721 is
         royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
-    //      =====   Internal functions  ===== 
+    //      =====   Internal functions  =====
 
     /// @dev Overwrites the current claim conditions with new claim conditions
-    function overwriteClaimConditions(ClaimCondition[] calldata _conditions) internal returns (uint256 indexForCondition) {
+    function overwriteClaimConditions(ClaimCondition[] calldata _conditions)
+        internal
+        returns (uint256 indexForCondition)
+    {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp;
 
@@ -251,8 +251,8 @@ contract LazyMintERC721 is
         }
 
         uint256 totalConditionCount = claimConditions.totalConditionCount;
-        if(indexForCondition < totalConditionCount) {
-            for(uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
+        if (indexForCondition < totalConditionCount) {
+            for (uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
                 delete claimConditions.claimConditionAtIndex[j];
             }
         }
@@ -261,7 +261,7 @@ contract LazyMintERC721 is
 
         emit NewClaimConditions(_conditions);
     }
-    
+
     /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
     function overwriteTimestampRestriction(uint256 _factor) internal {
         claimConditions.timstampLimitIndex += _factor;
@@ -282,18 +282,15 @@ contract LazyMintERC721 is
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex];
-        
+
         uint256 nextValidTimestampForClaim;
         unchecked {
             nextValidTimestampForClaim = timestampOfLastClaim + _claimCondition.waitTimeInSecondsBetweenClaims;
-            if(nextValidTimestampForClaim < timestampOfLastClaim) {
+            if (nextValidTimestampForClaim < timestampOfLastClaim) {
                 nextValidTimestampForClaim = type(uint256).max;
             }
         }
-        require(
-            timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, 
-            "cannot claim yet."
-        );
+        require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
@@ -302,10 +299,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectClaimPrice(
-        ClaimCondition memory _claimCondition,
-        uint256 _quantityToClaim
-    ) internal {
+    function collectClaimPrice(ClaimCondition memory _claimCondition, uint256 _quantityToClaim) internal {
         if (_claimCondition.pricePerToken <= 0) {
             return;
         }
@@ -321,28 +315,20 @@ contract LazyMintERC721 is
 
         transferCurrency(_claimCondition.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
 
-        transferCurrency(
-            _claimCondition.currency,
-            _msgSender(),
-            defaultSaleRecipient,
-            totalPrice - fees
-        );
+        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(
-        uint256 _claimConditionIndex,
-        uint256 _quantityBeingClaimed
-    ) internal {
+    function transferClaimedTokens(uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
-        uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;                
+        uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
         claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
-        for(uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
+        for (uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
             _mint(_msgSender(), tokenIdToClaim);
             tokenIdToClaim += 1;
         }
@@ -449,28 +435,26 @@ contract LazyMintERC721 is
     //      =====   Getter functions  =====
 
     /// @dev Returns the current active mint condition for a given tokenId.
-    function getTimestampForNextValidClaim(
-        uint256 _index,
-        address _claimer
-    ) external view returns (uint256 nextValidTimestampForClaim) {
-        
+    function getTimestampForNextValidClaim(uint256 _index, address _claimer)
+        external
+        view
+        returns (uint256 nextValidTimestampForClaim)
+    {
         uint256 timestampIndex = _index + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
 
         unchecked {
-            nextValidTimestampForClaim = timestampOfLastClaim + claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
-            if(nextValidTimestampForClaim < timestampOfLastClaim) {
+            nextValidTimestampForClaim =
+                timestampOfLastClaim +
+                claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+            if (nextValidTimestampForClaim < timestampOfLastClaim) {
                 nextValidTimestampForClaim = type(uint256).max;
             }
         }
     }
 
     /// @dev Returns the  mint condition for a given tokenId, at the given index.
-    function getClaimConditionAtIndex(uint256 _index)
-        external
-        view
-        returns (ClaimCondition memory mintCondition)
-    {
+    function getClaimConditionAtIndex(uint256 _index) external view returns (ClaimCondition memory mintCondition) {
         mintCondition = claimConditions.claimConditionAtIndex[_index];
     }
 
@@ -488,7 +472,7 @@ contract LazyMintERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override (ERC721) {
+    ) internal virtual override(ERC721) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting

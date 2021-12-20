@@ -140,7 +140,7 @@ contract LazyMintERC1155 is
     }
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view returns (string memory _tokenURI) {        
+    function tokenURI(uint256 _tokenId) public view returns (string memory _tokenURI) {
         return uri(_tokenId);
     }
 
@@ -228,8 +228,8 @@ contract LazyMintERC1155 is
         }
 
         uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
-        if(indexForCondition < totalConditionCount) {
-            for(uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
+        if (indexForCondition < totalConditionCount) {
+            for (uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
                 delete claimConditions[_tokenId].claimConditionAtIndex[j];
             }
         }
@@ -317,7 +317,7 @@ contract LazyMintERC1155 is
         mintCondition = claimConditions[_tokenId].claimConditionAtIndex[_index];
     }
 
-    //      =====   Internal functions  =====    
+    //      =====   Internal functions  =====
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaimIsValid(
@@ -386,7 +386,7 @@ contract LazyMintERC1155 is
         claimConditions[_tokenId].claimConditionAtIndex[_mintConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
         uint256 timestampIndex = _mintConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        uint256 newNextMintTimestamp = _mintCondition.waitTimeInSecondsBetweenClaims;        
+        uint256 newNextMintTimestamp = _mintCondition.waitTimeInSecondsBetweenClaims;
         unchecked {
             newNextMintTimestamp += block.timestamp;
             if (newNextMintTimestamp < _mintCondition.waitTimeInSecondsBetweenClaims) {

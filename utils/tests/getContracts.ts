@@ -143,7 +143,7 @@ export async function getContracts(
           nativeTokenWrapperAddr,
           defaultSaleRecipient,
           royaltyBps,
-          feeBps
+          feeBps,
         ),
     )) as LazyMintERC1155;
 

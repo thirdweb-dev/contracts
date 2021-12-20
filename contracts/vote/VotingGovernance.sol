@@ -68,7 +68,6 @@ contract VotingGovernor is
         bytes[] memory calldatas,
         string memory description
     ) public virtual override returns (uint256 proposalId) {
-        
         proposalId = super.propose(targets, values, calldatas, description);
 
         proposals[proposalIndex] = Proposal({
@@ -91,7 +90,7 @@ contract VotingGovernor is
         uint256 nextProposalIndex = proposalIndex;
 
         allProposals = new Proposal[](nextProposalIndex);
-        for(uint i = 0; i < nextProposalIndex; i += 1) {
+        for (uint256 i = 0; i < nextProposalIndex; i += 1) {
             allProposals[i] = proposals[i];
         }
     }
@@ -104,12 +103,7 @@ contract VotingGovernor is
         return GovernorSettings.proposalThreshold();
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155Receiver, Governor)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155Receiver, Governor) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||

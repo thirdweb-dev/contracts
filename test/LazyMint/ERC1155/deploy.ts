@@ -54,7 +54,7 @@ describe("Initial state of LazyMintERC1155 on deployment", function () {
             nativeTokenWrapperAddr,
             defaultSaleRecipient.address,
             royaltyBps,
-            feeBps
+            feeBps,
           ),
       );
   });
