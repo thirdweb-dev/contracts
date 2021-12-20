@@ -251,8 +251,6 @@ contract LazyMintERC721 is
         }
 
         claimConditions.totalConditionCount = indexForCondition;
-
-        emit NewClaimConditions(_conditions);
     }
 
     /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
