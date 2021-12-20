@@ -49,8 +49,8 @@ describe("List token for sale.", function () {
 
   // Market params: list
   const price: BigNumber = getBoundedEtherAmount();
-  const amountOfTokenToList = getAmountBounded(rewardSupplies[0]);
-  const tokensPerBuyer = getAmountBounded(parseInt(amountOfTokenToList.toString()));
+  const amountOfTokenToList: BigNumber = BigNumber.from(rewardSupplies[0]);
+  const tokensPerBuyer: BigNumber = BigNumber.from(1);
   const secondsUntilStart: number = 0;
   const secondsUntilEnd: number = 500;
 
