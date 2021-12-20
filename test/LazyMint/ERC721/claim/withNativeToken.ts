@@ -48,9 +48,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
 
   const timeTravelToMintCondition = async (_conditionIndex: BigNumber) => {
     // Time travel
-    const travelTo: string = (
-      await lazyMintERC721.getClaimConditionAtIndex(_conditionIndex)
-    ).startTimestamp.toString();
+    const travelTo: string = (await lazyMintERC721.getClaimConditionAtIndex(_conditionIndex)).startTimestamp.toString();
     await ethers.provider.send("evm_mine", [parseInt(travelTo)]);
   };
 
@@ -108,17 +106,17 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
   describe("Revert cases", function () {
     it("Should revert if quantity wanted is zero", async () => {
       const invalidQty: BigNumber = BigNumber.from(0);
-      await expect(
-        lazyMintERC721.connect(claimer).claim(invalidQty, proof, { value: totalPrice }),
-      ).to.be.revertedWith("invalid quantity claimed.");
+      await expect(lazyMintERC721.connect(claimer).claim(invalidQty, proof, { value: totalPrice })).to.be.revertedWith(
+        "invalid quantity claimed.",
+      );
     });
 
     it("Should revert if quantity wanted is greater than limit per transaction", async () => {
       const invalidQty: BigNumber = (mintConditions[0].quantityLimitPerTransaction as BigNumber).add(1);
 
-      await expect(
-        lazyMintERC721.connect(claimer).claim(invalidQty, proof, { value: totalPrice }),
-      ).to.be.revertedWith("invalid quantity claimed.");
+      await expect(lazyMintERC721.connect(claimer).claim(invalidQty, proof, { value: totalPrice })).to.be.revertedWith(
+        "invalid quantity claimed.",
+      );
     });
 
     it("Should revert if quantity wanted + current mint supply exceeds max mint supply", async () => {
@@ -126,9 +124,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       const maxClaimableSupply: BigNumber = mintConditions[0].maxClaimableSupply as BigNumber;
 
       while (supplyClaimed.lt(maxClaimableSupply)) {
-
         if (supplyClaimed.add(quantityToClaim).gt(maxClaimableSupply)) {
-
           await expect(
             lazyMintERC721.connect(claimer).claim(quantityToClaim, proof, { value: totalPrice }),
           ).to.be.revertedWith("exceed max mint supply.");
@@ -137,12 +133,12 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
         }
 
         await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof, { value: totalPrice });
-        
+
         const nextValidTimestampForClaim: BigNumber = await lazyMintERC721.getTimestampForNextValidClaim(
           targetMintConditionIndex,
           claimer.address,
         );
-        
+
         await ethers.provider.send("evm_mine", [nextValidTimestampForClaim.toNumber()]);
 
         supplyClaimed = supplyClaimed.add(quantityToClaim);
@@ -197,9 +193,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       const claimerBalBefore: BigNumber = await ethers.provider.getBalance(claimer.address);
 
       const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-      const tx = await lazyMintERC721
-        .connect(claimer)
-        .claim(quantityToClaim, proof, { value: totalPrice, gasPrice });
+      const tx = await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof, { value: totalPrice, gasPrice });
       const gasUsed: BigNumber = (await tx.wait()).gasUsed;
       const gasPaid: BigNumber = gasPrice.mul(gasUsed);
 
@@ -244,17 +238,16 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       expect(currenMintSupplyAfter).to.equal(currenMintSupplyBefore.add(quantityToClaim));
     });
     it("Should update the next valid timestamp for claim, for the claimer", async () => {
-      const waitBetweenClaims: BigNumber = (
-        await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex)
-      ).waitTimeInSecondsBetweenClaims;
+      const waitBetweenClaims: BigNumber = (await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex))
+        .waitTimeInSecondsBetweenClaims;
       await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof, { value: totalPrice });
 
       const currentTimestamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
       const expectedNextValidTimestamp: BigNumber = currentTimestamp.add(waitBetweenClaims);
 
-      expect(
-        await lazyMintERC721.getTimestampForNextValidClaim(targetMintConditionIndex, claimer.address),
-      ).to.equal(expectedNextValidTimestamp);
+      expect(await lazyMintERC721.getTimestampForNextValidClaim(targetMintConditionIndex, claimer.address)).to.equal(
+        expectedNextValidTimestamp,
+      );
     });
   });
 });

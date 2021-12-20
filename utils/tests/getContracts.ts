@@ -148,9 +148,9 @@ export async function getContracts(
           feeBps,
         ),
     )) as LazyMintERC1155;
-  
+
   // Deploy LazyMintERC721
-  const name_lazyMintERC721: string = "LazyMintERC721"
+  const name_lazyMintERC721: string = "LazyMintERC721";
   const symbol_lazyMintERC721: string = "LAZY";
 
   const lazyMintERC721: LazyMintERC721 = (await ethers
@@ -232,6 +232,6 @@ export async function getContracts(
     nft,
     lazynft,
     lazyMintERC1155,
-    lazyMintERC721
+    lazyMintERC721,
   };
 }

@@ -10,7 +10,7 @@ import { BigNumber, BytesLike } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Test utils
-import { getContracts, Contracts } from "../../../utils/tests/getContracts"
+import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 
 use(solidity);
 
@@ -24,7 +24,7 @@ describe("Initial state of LazyMintERC721 on deployment", function () {
   let lazyMintERC721: LazyMintERC721;
 
   // Deployment params
-  const name: string = "Name"
+  const name: string = "Name";
   const symbol: string = "LAZY";
   const contractURI: string = "ipfs://contractURI/";
   let trustedForwarderAddr: string;

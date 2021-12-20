@@ -71,25 +71,25 @@ describe("Test: claim conditions", function () {
       claimConditions[0] = claimConditions[claimConditions.length - 1];
       claimConditions[claimConditions.length - 1] = temp;
 
-      await expect(
-        lazyMintERC721.connect(protocolAdmin).setClaimConditions(claimConditions),
-      ).to.be.revertedWith("startTimestamp must be in ascending order");
+      await expect(lazyMintERC721.connect(protocolAdmin).setClaimConditions(claimConditions)).to.be.revertedWith(
+        "startTimestamp must be in ascending order",
+      );
     });
 
     it("Should revert if max mint supply is zero", async () => {
       claimConditions[0].maxClaimableSupply = 0;
 
-      await expect(
-        lazyMintERC721.connect(protocolAdmin).setClaimConditions(claimConditions),
-      ).to.be.revertedWith("max mint supply cannot be 0");
+      await expect(lazyMintERC721.connect(protocolAdmin).setClaimConditions(claimConditions)).to.be.revertedWith(
+        "max mint supply cannot be 0",
+      );
     });
 
     it("Should revert if quantity limit per claim transaction is zero", async () => {
       claimConditions[0].quantityLimitPerTransaction = 0;
 
-      await expect(
-        lazyMintERC721.connect(protocolAdmin).setClaimConditions(claimConditions),
-      ).to.be.revertedWith("quantity limit cannot be 0");
+      await expect(lazyMintERC721.connect(protocolAdmin).setClaimConditions(claimConditions)).to.be.revertedWith(
+        "quantity limit cannot be 0",
+      );
     });
   });
 

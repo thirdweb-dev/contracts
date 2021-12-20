@@ -38,9 +38,9 @@ describe("Test: lazy mint tokens", function () {
 
   describe("Revert cases", function () {
     it("Should revert if caller does not have minter role", async () => {
-      await expect(
-        lazyMintERC721.connect(defaultSaleRecipient).lazyMint(amountToLazyMint, baseURI),
-      ).to.be.revertedWith("not minter.");
+      await expect(lazyMintERC721.connect(defaultSaleRecipient).lazyMint(amountToLazyMint, baseURI)).to.be.revertedWith(
+        "not minter.",
+      );
     });
   });
 

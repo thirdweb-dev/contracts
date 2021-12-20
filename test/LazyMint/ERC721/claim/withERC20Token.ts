@@ -48,9 +48,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
 
   const timeTravelToMintCondition = async (_conditionIndex: BigNumber) => {
     // Time travel
-    const travelTo: string = (
-      await lazyMintERC721.getClaimConditionAtIndex(_conditionIndex)
-    ).startTimestamp.toString();
+    const travelTo: string = (await lazyMintERC721.getClaimConditionAtIndex(_conditionIndex)).startTimestamp.toString();
     await ethers.provider.send("evm_mine", [parseInt(travelTo)]);
   };
 
@@ -255,17 +253,16 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
       expect(currenMintSupplyAfter).to.equal(currenMintSupplyBefore.add(quantityToClaim));
     });
     it("Should update the next valid timestamp for claim, for the claimer", async () => {
-      const waitBetweenClaims: BigNumber = (
-        await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex)
-      ).waitTimeInSecondsBetweenClaims;
+      const waitBetweenClaims: BigNumber = (await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex))
+        .waitTimeInSecondsBetweenClaims;
       await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
 
       const currentTimestamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
       const expectedNextValidTimestamp: BigNumber = currentTimestamp.add(waitBetweenClaims);
 
-      expect(
-        await lazyMintERC721.getTimestampForNextValidClaim(targetMintConditionIndex, claimer.address),
-      ).to.equal(expectedNextValidTimestamp);
+      expect(await lazyMintERC721.getTimestampForNextValidClaim(targetMintConditionIndex, claimer.address)).to.equal(
+        expectedNextValidTimestamp,
+      );
     });
   });
 });
