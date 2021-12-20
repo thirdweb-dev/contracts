@@ -6,6 +6,7 @@ import { ILazyMintERC721 } from "./ILazyMintERC721.sol";
 
 // Token
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "../../ProtocolControl.sol";
@@ -31,7 +32,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LazyMintERC721 is
     ILazyMintERC721,
-    ERC721,
+    ERC721Enumerable,
     ERC2771Context,
     IERC2981,
     AccessControlEnumerable,
@@ -472,7 +473,7 @@ contract LazyMintERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721) {
+    ) internal virtual override(ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
@@ -485,7 +486,7 @@ contract LazyMintERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721, IERC165)
+        override(AccessControlEnumerable, ERC721Enumerable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
