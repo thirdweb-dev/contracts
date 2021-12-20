@@ -281,14 +281,7 @@ contract LazyMintERC721 is
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex];
-
-        uint256 nextValidTimestampForClaim;
-        unchecked {
-            nextValidTimestampForClaim = timestampOfLastClaim + _claimCondition.waitTimeInSecondsBetweenClaims;
-            if (nextValidTimestampForClaim < timestampOfLastClaim) {
-                nextValidTimestampForClaim = type(uint256).max;
-            }
-        }
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(timestampIndex, _msgSender());
         require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
@@ -439,7 +432,7 @@ contract LazyMintERC721 is
 
     /// @dev Returns the current active mint condition for a given tokenId.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)
-        external
+        public
         view
         returns (uint256 nextValidTimestampForClaim)
     {
@@ -450,6 +443,7 @@ contract LazyMintERC721 is
             nextValidTimestampForClaim =
                 timestampOfLastClaim +
                 claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+
             if (nextValidTimestampForClaim < timestampOfLastClaim) {
                 nextValidTimestampForClaim = type(uint256).max;
             }
