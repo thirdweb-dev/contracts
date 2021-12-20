@@ -111,8 +111,6 @@ contract LazyMintERC721 is
     ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
-
-        controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
@@ -201,7 +199,7 @@ contract LazyMintERC721 is
     /// @dev Lets a module admin set mint conditions for a given tokenId.
     function setClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
         uint256 numOfConditionsSet = overwriteClaimConditions(_conditions);
-        overwriteTimestampRestriction(numOfConditionsSet);
+        resetTimestampRestriction(numOfConditionsSet);
 
         emit NewClaimConditions(_conditions);
     }
@@ -264,7 +262,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
-    function overwriteTimestampRestriction(uint256 _factor) internal {
+    function resetTimestampRestriction(uint256 _factor) internal {
         claimConditions.timstampLimitIndex += _factor;
     }
 
