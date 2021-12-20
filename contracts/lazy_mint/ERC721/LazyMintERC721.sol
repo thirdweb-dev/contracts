@@ -191,14 +191,15 @@ contract LazyMintERC721 is
         emit ClaimedTokens(activeConditionIndex, _msgSender(), _quantity);
     }
 
+    /// @dev Lets a module admin update mint conditions without resetting the restrictions.
     function updateClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
-        overwriteClaimConditions(_conditions);
+        resetClaimConditions(_conditions);
         emit NewClaimConditions(_conditions);
     }
 
-    /// @dev Lets a module admin set mint conditions for a given tokenId.
+    /// @dev Lets a module admin set mint conditions.
     function setClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
-        uint256 numOfConditionsSet = overwriteClaimConditions(_conditions);
+        uint256 numOfConditionsSet = resetClaimConditions(_conditions);
         resetTimestampRestriction(numOfConditionsSet);
 
         emit NewClaimConditions(_conditions);
@@ -219,10 +220,7 @@ contract LazyMintERC721 is
     //      =====   Internal functions  =====
 
     /// @dev Overwrites the current claim conditions with new claim conditions
-    function overwriteClaimConditions(ClaimCondition[] calldata _conditions)
-        internal
-        returns (uint256 indexForCondition)
-    {
+    function resetClaimConditions(ClaimCondition[] calldata _conditions) internal returns (uint256 indexForCondition) {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp;
 
