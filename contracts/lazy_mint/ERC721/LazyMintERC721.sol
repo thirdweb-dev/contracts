@@ -299,7 +299,7 @@ contract LazyMintERC721 is
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectClaimPrice(ClaimCondition memory _claimCondition, uint256 _quantityToClaim) internal {
-        if (_claimCondition.pricePerToken <= 0) {
+        if (_claimCondition.pricePerToken == 0) {
             return;
         }
 
@@ -342,6 +342,10 @@ contract LazyMintERC721 is
         address _to,
         uint256 _amount
     ) internal {
+        if (_amount == 0) {
+            return;
+        }
+
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
