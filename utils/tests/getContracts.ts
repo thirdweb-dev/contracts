@@ -22,6 +22,7 @@ import { Market } from "../../typechain/Market";
 import { Marketplace } from "../../typechain/Marketplace";
 import { LazyNFT } from "../../typechain/LazyNFT";
 import { LazyMintERC1155 } from "typechain/LazyMintERC1155";
+import { LazyMintERC721 } from "typechain/LazyMintERC721";
 
 export type Contracts = {
   registry: Registry;
@@ -36,6 +37,7 @@ export type Contracts = {
   lazynft: LazyNFT;
   weth: WETH9;
   lazyMintERC1155: LazyMintERC1155;
+  lazyMintERC721: LazyMintERC721;
 };
 
 export async function getContracts(
@@ -143,9 +145,31 @@ export async function getContracts(
           nativeTokenWrapperAddr,
           defaultSaleRecipient,
           royaltyBps,
-          feeBps
+          feeBps,
         ),
     )) as LazyMintERC1155;
+
+  // Deploy LazyMintERC721
+  const name_lazyMintERC721: string = "LazyMintERC721";
+  const symbol_lazyMintERC721: string = "LAZY";
+
+  const lazyMintERC721: LazyMintERC721 = (await ethers
+    .getContractFactory("LazyMintERC721")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(
+          name_lazyMintERC721,
+          symbol_lazyMintERC721,
+          contractURI,
+          protocolControl.address,
+          trustedForwarderAddr,
+          nativeTokenWrapperAddr,
+          defaultSaleRecipient,
+          royaltyBps,
+          feeBps,
+        ),
+    )) as LazyMintERC721;
 
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
@@ -208,5 +232,6 @@ export async function getContracts(
     nft,
     lazynft,
     lazyMintERC1155,
+    lazyMintERC721,
   };
 }

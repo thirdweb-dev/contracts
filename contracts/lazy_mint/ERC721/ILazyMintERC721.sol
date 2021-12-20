@@ -2,28 +2,27 @@
 pragma solidity ^0.8.0;
 
 /**
- *  `LazyMintERC1155` is an ERC 1155 contract. It takes in a base URI in its
- *  constructor (e.g. "ipsf://Qmece.../"), and the URI for each token of ID
- *  `tokenId` is baseURI + `${tokenId}` (e.g. "ipsf://Qmece.../1").
+ *  `LazyMintERC721` is an ERC 721 contract. It takes in a base URI for every
+ *  `n` tokens lazy minted at once. The URI for each of the `n` tokens lazy minted
+ *  is the provided baseURI + `${tokenId}` (e.g. "ipsf://Qmece.../1").
  *
- *  For each token with a unique ID, the module admin (account with `DEFAULT_ADMIN ROLE`)
- *  can create mint conditions with non-overlapping time windows, and accounts can claim
- *  the NFTs, in a given time window, according to that time window's mint conditions.
+ *  The module admin (account with `DEFAULT_ADMIN ROLE`) can create claim conditions
+ *  with non-overlapping time windows, and accounts can claim the NFTs, in a given time
+ *  window, according to that time window's claim conditions.
  */
 
-interface ILazyMintERC1155 {
+interface ILazyMintERC721 {
     /**
-     *  @notice The mint conditions for a given tokenId x time window.
+     *  @notice The claim conditions for a given tokenId x time window.
      *
-     *  @param startTimestamp The unix timestamp after which the mint conditions last.
-     *                        The same mint conditions last until the `startTimestamp`
-     *                        of the next mint condition.
+     *  @param startTimestamp The unix timestamp after which the claim condition starts.
+     *                        The same claim condition lasts until the `startTimestamp`
+     *                        of the next claim condition.
      *
-     *  @param maxClaimableSupply The maximum number of tokens of the same `tokenId` that can
-     *                            be claimed under the mint condition.
+     *  @param maxClaimableSupply The maximum number of tokens that can
+     *                            be claimed under the claim condition.
      *
-     *  @param supplyClaimed At any given point, the number of tokens of the same `tokenId`
-     *                           that have been claimed.
+     *  @param supplyClaimed At any given point, the number of tokens that have been claimed.
      *
      *  @param quantityLimitPerTransaction The maximum number of tokens a single account can
      *                                     claim in a single transaction.
@@ -31,8 +30,8 @@ interface ILazyMintERC1155 {
      *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait
      *                                        after claiming tokens, to be able to claim again.
      *
-     *  @param merkleRoot Only accounts whose address is a leaf of `merkleRoot` can claim tokens
-     *                    under the mint condition.
+     *  @param merkleRoot Only accounts whitelisted by `merkleRoot` can claim tokens
+     *                    under the claim condition.
      *
      *  @param pricePerToken The price per token that can be claimed.
      *
@@ -50,43 +49,37 @@ interface ILazyMintERC1155 {
     }
 
     /**
-     *  @notice The set of all mint conditions for a given tokenId.
+     *  @notice The set of all claim conditions at any given moment.
      *
-     *  @dev In the contract, we use this in a mapping: tokenId => mint conditions i.e.
-     *       mapping(uint256 => PublicMintConditions) public mintConditions;
+     *  @dev In the contract, this is used as a standalone struct.
      *
-     *  @param totalConditionCount The uid for each mint condition. Incremented
-     *                            by one every time a mint condition is created.
+     *  @param totalConditionCount The uid for each claim condition. Incremented
+     *                            by one every time a claim condition is created.
      *
-     *  @param claimConditionAtIndex The mint conditions at a given uid. Mint conditions
+     *  @param claimConditionAtIndex The claim conditions at a given uid. Claim conditions
      *                              are ordered in an ascending order by their `startTimestamp`.
      *
-     *  @param nextValidTimestampForClaim Account => uid for a mint condition => timestamp after
+     *  @param nextValidTimestampForClaim Account => uid for a claim condition => timestamp after
      *                                    which the account can claim tokens again.
      */
     struct ClaimConditions {
         uint256 totalConditionCount;
         uint256 timstampLimitIndex;
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;
-        mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
+        mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
     /// @dev Emitted when tokens are lazy minted.
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(
-        uint256 indexed claimConditionIndex,
-        uint256 indexed tokenId,
-        address indexed claimer,
-        uint256 quantityClaimed
-    );
+    event ClaimedTokens(uint256 indexed claimConditionIndex, address indexed claimer, uint256 quantityClaimed);
 
     /// @dev Emitted when new mint conditions are set for a token.
-    event NewClaimConditions(uint256 indexed tokenId, ClaimCondition[] claimConditions);
+    event NewClaimConditions(ClaimCondition[] claimConditions);
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
+    event NewSaleRecipient(address indexed recipient);
 
     /// @dev Emitted when the royalty fee bps is updated
     event RoyaltyUpdated(uint256 newRoyaltyBps);
@@ -109,24 +102,18 @@ interface ILazyMintERC1155 {
     function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
 
     /**
-     *  @notice Lets an account claim a given quantity of tokens, of a single tokenId.
+     *  @notice Lets an account claim a given quantity of tokens.
      *
-     *  @param _tokenId The unique ID of the token to claim.
      *  @param _quantity The quantity of tokens to claim.
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(
-        uint256 _tokenId,
-        uint256 _quantity,
-        bytes32[] calldata _proofs
-    ) external payable;
+    function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable;
 
     /**
-     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set mint conditions for a given token ID.
+     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param _tokenId The token ID for which to set mint conditions.
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
      */
-    function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external;
+    function setClaimConditions(ClaimCondition[] calldata _conditions) external;
 }
