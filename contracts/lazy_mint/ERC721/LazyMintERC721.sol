@@ -275,7 +275,7 @@ contract LazyMintERC721 is
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex];
-        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(timestampIndex, _msgSender());
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _msgSender());
         require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
