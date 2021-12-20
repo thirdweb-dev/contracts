@@ -126,7 +126,7 @@ contract LazyMintERC721 is
     ///     =====   Public functions  =====
 
     /// @dev Returns the URI for a given tokenId.
-    function uri(uint256 _tokenId) public view returns (string memory _tokenURI) {
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
                 return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
@@ -134,11 +134,6 @@ contract LazyMintERC721 is
         }
 
         return "";
-    }
-
-    /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view override returns (string memory _tokenURI) {
-        return uri(_tokenId);
     }
 
     /// @dev At any given moment, returns the uid for the active claim condition.
@@ -194,6 +189,7 @@ contract LazyMintERC721 is
     /// @dev Lets a module admin update mint conditions without resetting the restrictions.
     function updateClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
         resetClaimConditions(_conditions);
+
         emit NewClaimConditions(_conditions);
     }
 
