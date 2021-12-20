@@ -47,7 +47,7 @@ contract LazyMintERC721 is
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev The address interpreted as native token of the chain.
-    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
