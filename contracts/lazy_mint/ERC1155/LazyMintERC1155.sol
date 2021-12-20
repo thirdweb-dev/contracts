@@ -193,7 +193,7 @@ contract LazyMintERC1155 is
         collectClaimPrice(condition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(condition, activeConditionIndex, _tokenId, _quantity);
+        transferClaimedTokens(activeConditionIndex, _tokenId, _quantity);
 
         emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _quantity);
     }
@@ -303,9 +303,19 @@ contract LazyMintERC1155 is
         uint256 _tokenId,
         uint256 _index,
         address _claimer
-    ) external view returns (uint256) {
+    ) public view returns (uint256 nextValidTimestampForClaim) {
         uint256 timestampIndex = _index + claimConditions[_tokenId].timstampLimitIndex;
-        return claimConditions[_tokenId].nextValidTimestampForClaim[_claimer][timestampIndex];
+        uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex];
+
+        unchecked {
+            nextValidTimestampForClaim =
+                timestampOfLastClaim +
+                claimConditions[_tokenId].claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+
+            if (nextValidTimestampForClaim < timestampOfLastClaim) {
+                nextValidTimestampForClaim = type(uint256).max;
+            }
+        }
     }
 
     /// @dev Returns the  mint condition for a given tokenId, at the given index.
@@ -334,10 +344,9 @@ contract LazyMintERC1155 is
         );
 
         uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        uint256 validTimestampForClaim = claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][
-            timestampIndex
-        ];
-        require(validTimestampForClaim == 0 || block.timestamp >= validTimestampForClaim, "cannot claim yet.");
+        uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex];
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_tokenId, _conditionIndex, _msgSender());
+        require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_mintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
@@ -377,23 +386,15 @@ contract LazyMintERC1155 is
 
     /// @dev Transfers the tokens being claimed.
     function transferClaimedTokens(
-        ClaimCondition memory _mintCondition,
-        uint256 _mintConditionIndex,
+        uint256 _claimConditionIndex,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed
     ) internal {
         // Update the supply minted under mint condition.
-        claimConditions[_tokenId].claimConditionAtIndex[_mintConditionIndex].supplyClaimed += _quantityBeingClaimed;
+        claimConditions[_tokenId].claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
-        uint256 timestampIndex = _mintConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        uint256 newNextMintTimestamp = _mintCondition.waitTimeInSecondsBetweenClaims;        
-        unchecked {
-            newNextMintTimestamp += block.timestamp;
-            if (newNextMintTimestamp < _mintCondition.waitTimeInSecondsBetweenClaims) {
-                newNextMintTimestamp = type(uint256).max;
-            }
-        }
-        claimConditions[_tokenId].nextValidTimestampForClaim[_msgSender()][timestampIndex] = newNextMintTimestamp;
+        uint256 timestampIndex = _claimConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
+        claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
         _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
     }

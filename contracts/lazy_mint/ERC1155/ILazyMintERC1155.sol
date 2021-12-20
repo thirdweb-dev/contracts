@@ -69,7 +69,7 @@ interface ILazyMintERC1155 {
         uint256 timstampLimitIndex;
 
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;
-        mapping(address => mapping(uint256 => uint256)) nextValidTimestampForClaim;
+        mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
     /// @dev Emitted when tokens are lazy minted.
