@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ISignatureMint } from "./ISignatureMint.sol";
+import { ISignatureMint721 } from "./ISignatureMint721.sol";
 
 // Token
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 // Protocol control center.
-import { ProtocolControl } from "../ProtocolControl.sol";
+import { ProtocolControl } from "../../ProtocolControl.sol";
 
 // Signature utils
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -30,7 +30,7 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 
 contract SignatureMint is
     
-    ISignatureMint,
+    ISignatureMint721,
     ERC721Enumerable,
     EIP712,
     AccessControlEnumerable,

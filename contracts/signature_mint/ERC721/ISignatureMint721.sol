@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
  *  `SignatureMint` is an ERC 721 contract. It lets anyone mint NFTs by producing a mint request
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
-interface ISignatureMint {
+interface ISignatureMint721 {
     
     /**
      *  @notice The body of a request to mint NFTs.
