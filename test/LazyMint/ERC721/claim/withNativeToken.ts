@@ -174,6 +174,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
           ...Object.values({
             mintConditionIndex: targetMintConditionIndex,
             claimer: claimer.address,
+            startTokenId: 0,
             quantityClaimed: quantityToClaim,
           }),
         );

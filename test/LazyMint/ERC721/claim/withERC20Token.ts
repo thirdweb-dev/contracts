@@ -194,6 +194,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
           ...Object.values({
             mintConditionIndex: targetMintConditionIndex,
             claimer: claimer.address,
+            startTokenId: 0,
             quantityClaimed: quantityToClaim,
           }),
         );

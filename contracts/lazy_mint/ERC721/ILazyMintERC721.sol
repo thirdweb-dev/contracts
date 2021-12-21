@@ -73,7 +73,12 @@ interface ILazyMintERC721 {
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(uint256 indexed claimConditionIndex, address indexed claimer, uint256 quantityClaimed);
+    event ClaimedTokens(
+        uint256 indexed claimConditionIndex,
+        address indexed claimer,
+        uint256 startTokenId,
+        uint256 quantityClaimed
+    );
 
     /// @dev Emitted when new mint conditions are set for a token.
     event NewClaimConditions(ClaimCondition[] claimConditions);
