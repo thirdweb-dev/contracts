@@ -44,7 +44,7 @@ contract SignatureMint is
     using Strings for uint256;
 
     bytes32 private constant TYPEHASH =
-        keccak256("MintRequest(address to,string baseURI,uint256 amountToMint,uint256 validityStartTimestamp,uint256 validityEndTimestamp,bytes uid)");
+        keccak256("MintRequest(address to,string baseURI,uint256 amountToMint,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes uid)");
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -121,7 +121,7 @@ contract SignatureMint is
         returns (bool)
     {
         address signer = _hashTypedDataV4(
-            keccak256(abi.encode(TYPEHASH, req.to, req.amountToMint, req.validityStartTimestamp, req.validityEndTimestamp, keccak256(req.uid)))
+            keccak256(abi.encode(TYPEHASH, req.to, req.amountToMint, req.pricePerToken, req.amountToMint, req.validityStartTimestamp, req.validityEndTimestamp, keccak256(req.uid)))
         ).recover(signature);
 
         return !minted[req.uid] && hasRole(MINTER_ROLE, signer);

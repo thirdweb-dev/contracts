@@ -21,6 +21,8 @@ interface ISignatureMint721 {
         address to;
         string baseURI;
         uint256 amountToMint;
+        uint256 pricePerToken;
+        address currency;
         uint128 validityStartTimestamp;
         uint128 validityEndTimestamp;
         bytes uid;
