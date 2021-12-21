@@ -168,6 +168,8 @@ contract SignatureMint is
         collectPrice(_req);
 
         nextTokenIdToMint = mintTokens(_req.to, tokenIdToMint, _req.amountToMint);
+
+        emit TokensMinted(_req, _signature, _msgSender());
     }
 
     /// @dev See EIP 2981
@@ -187,7 +189,7 @@ contract SignatureMint is
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         defaultSaleRecipient = _saleRecipient;
-        // emit NewSaleRecipient(_saleRecipient);
+        emit NewSaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
@@ -196,7 +198,7 @@ contract SignatureMint is
 
         royaltyBps = uint64(_royaltyBps);
 
-        // emit RoyaltyUpdated(_royaltyBps);
+        emit RoyaltyUpdated(_royaltyBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -205,14 +207,14 @@ contract SignatureMint is
 
         feeBps = uint120(_feeBps);
 
-        // emit PrimarySalesFeeUpdates(_feeBps);
+        emit PrimarySalesFeeUpdates(_feeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
 
-        // emit TransfersRestricted(_restrictedTransfer);
+        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.

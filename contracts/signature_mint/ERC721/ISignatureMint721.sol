@@ -28,6 +28,21 @@ interface ISignatureMint721 {
         bytes uid;
     }
 
+    /// @dev Emitted when tokens are minted.
+    event TokensMinted(MintRequest mintRequest, bytes signature, address indexed submittedBy);
+
+    /// @dev Emitted when a new sale recipient is set.
+    event NewSaleRecipient(address indexed recipient);
+
+    /// @dev Emitted when the royalty fee bps is updated
+    event RoyaltyUpdated(uint256 newRoyaltyBps);
+
+    /// @dev Emitted when fee on primary sales is updated.
+    event PrimarySalesFeeUpdates(uint256 newFeeBps);
+
+    /// @dev Emitted when transfers are set as restricted / not-restricted.
+    event TransfersRestricted(bool restricted);
+
     /**
      *  @notice Verifies that a mint request is signed by an account holding
      *         MINTER_ROLE (at the time of the function call).
