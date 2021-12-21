@@ -28,6 +28,10 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
+// Helper interfaces
+import { IWETH } from "../../interfaces/IWETH.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 contract SignatureMint is
     
     ISignatureMint721,
@@ -50,6 +54,15 @@ contract SignatureMint is
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The address of the native token wrapper contract.
+    address public immutable nativeTokenWrapper;
+
+    /// @dev The adress that receives all primary sales value.
+    address public defaultSaleRecipient;
 
     /// @dev The token ID of the next token to mint.
     uint256 public nextTokenIdToMint;
@@ -91,6 +104,8 @@ contract SignatureMint is
         string memory _contractURI,
         address payable _controlCenter,
         address _trustedForwarder,
+        address _nativeTokenWrapper,
+        address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
     ) 
@@ -100,6 +115,8 @@ contract SignatureMint is
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
+        nativeTokenWrapper = _nativeTokenWrapper;
+        defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
         royaltyBps = uint64(_royaltyBps);
         feeBps = uint120(_feeBps);
@@ -140,13 +157,15 @@ contract SignatureMint is
 
     ///     =====   External functions  =====
 
-    function mint(MintRequest calldata _req, bytes calldata _signature) external {
+    function mint(MintRequest calldata _req, bytes calldata _signature) external payable {
 
         verifyRequest(_req, _signature);
         
         uint256 tokenIdToMint = nextTokenIdToMint;
 
         assignURI(tokenIdToMint, _req.amountToMint, _req.baseURI);
+
+        collectPrice(_req);
 
         nextTokenIdToMint = mintTokens(_req.to, tokenIdToMint, _req.amountToMint);
     }
@@ -164,6 +183,12 @@ contract SignatureMint is
     }
 
     //      =====   Setter functions  =====
+
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        defaultSaleRecipient = _saleRecipient;
+        // emit NewSaleRecipient(_saleRecipient);
+    }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
@@ -231,6 +256,88 @@ contract SignatureMint is
             _mint(_receiver, nextIdToMint);
             nextIdToMint += 1;
         }
+    }
+
+    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    function collectPrice(MintRequest memory _req) internal {
+        if (_req.pricePerToken == 0) {
+            return;
+        }
+
+        uint256 totalPrice = _req.amountToMint * _req.pricePerToken;
+        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+
+        if (_req.currency == NATIVE_TOKEN) {
+            require(msg.value == totalPrice, "must send total price.");
+        } else {
+            validateERC20BalAndAllowance(_msgSender(), _req.currency, totalPrice);
+        }
+
+        transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
+
+        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+    }
+
+    /// @dev Transfers a given amount of currency.
+    function transferCurrency(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        if (_amount == 0) {
+            return;
+        }
+
+        if (_currency == NATIVE_TOKEN) {
+            if (_from == address(this)) {
+                IWETH(nativeTokenWrapper).withdraw(_amount);
+                safeTransferNativeToken(_to, _amount);
+            } else if (_to == address(this)) {
+                require(_amount == msg.value, "native token value does not match bid amount.");
+                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
+            } else {
+                safeTransferNativeToken(_to, _amount);
+            }
+        } else {
+            safeTransferERC20(_currency, _from, _to, _amount);
+        }
+    }
+
+    /// @dev Transfers `amount` of native token to `to`.
+    function safeTransferNativeToken(address to, uint256 value) internal {
+        (bool success, ) = to.call{ value: value }("");
+        if (!success) {
+            IWETH(nativeTokenWrapper).deposit{ value: value }();
+            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
+        }
+    }
+
+    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
+    function safeTransferERC20(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        uint256 balBefore = IERC20(_currency).balanceOf(_to);
+        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
+        uint256 balAfter = IERC20(_currency).balanceOf(_to);
+
+        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
+    }
+
+    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
+    function validateERC20BalAndAllowance(
+        address _addrToCheck,
+        address _currency,
+        uint256 _currencyAmountToCheckAgainst
+    ) internal view {
+        require(
+            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
+                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
+            "insufficient currency balance or allowance."
+        );
     }
 
     ///     =====   Low-level overrides  =====
