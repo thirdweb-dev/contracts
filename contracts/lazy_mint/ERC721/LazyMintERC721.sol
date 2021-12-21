@@ -170,6 +170,8 @@ contract LazyMintERC721 is
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
     function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
+        uint256 tokenIdToClaim = nextTokenIdToClaim;
+
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition();
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
@@ -183,7 +185,7 @@ contract LazyMintERC721 is
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(activeConditionIndex, _quantity);
 
-        emit ClaimedTokens(activeConditionIndex, _msgSender(), _quantity);
+        emit ClaimedTokens(activeConditionIndex, _msgSender(), tokenIdToClaim, _quantity);
     }
 
     /// @dev Lets a module admin update mint conditions without resetting the restrictions.
