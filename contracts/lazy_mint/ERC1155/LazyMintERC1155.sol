@@ -205,7 +205,6 @@ contract LazyMintERC1155 is
         emit NewClaimConditions(_tokenId, _conditions);
     }
 
-
     /// @dev Lets a module admin set mint conditions.
     function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
         uint256 numOfConditionsSet = resetClaimConditions(_tokenId, _conditions);
@@ -304,7 +303,10 @@ contract LazyMintERC1155 is
     //      =====   Internal functions  =====
 
     /// @dev Lets a module admin set mint conditions for a given tokenId.
-    function resetClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) internal returns(uint256 indexForCondition) {
+    function resetClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions)
+        internal
+        returns (uint256 indexForCondition)
+    {
         // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp;
 
@@ -332,8 +334,8 @@ contract LazyMintERC1155 is
         }
 
         uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
-        if(indexForCondition < totalConditionCount) {
-            for(uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
+        if (indexForCondition < totalConditionCount) {
+            for (uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
                 delete claimConditions[_tokenId].claimConditionAtIndex[j];
             }
         }
@@ -345,7 +347,6 @@ contract LazyMintERC1155 is
     function resetTimestampRestriction(uint256 _tokenId, uint256 _factor) internal {
         claimConditions[_tokenId].timstampLimitIndex += _factor;
     }
-
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaimIsValid(
