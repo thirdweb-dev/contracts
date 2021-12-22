@@ -549,6 +549,10 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
+        if (_amount == 0 || _from == _to) {
+            return;
+        }
+
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
