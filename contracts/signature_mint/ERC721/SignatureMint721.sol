@@ -124,6 +124,7 @@ contract SignatureMint721 is
         address deployer = _msgSender();
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
     }
 
     ///     =====   Public functions  =====
