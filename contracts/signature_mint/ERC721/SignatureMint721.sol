@@ -110,7 +110,7 @@ contract SignatureMint721 is
         uint128 _feeBps
     ) 
         ERC721(_name, _symbol) 
-        EIP712(_name, "1")
+        EIP712("SignatureMint721", "1")
         ERC2771Context(_trustedForwarder)
     {
         // Set the protocol control center
