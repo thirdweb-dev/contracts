@@ -32,8 +32,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "hardhat/console.sol";
-
 contract SignatureMint721 is
     
     ISignatureMint721,
