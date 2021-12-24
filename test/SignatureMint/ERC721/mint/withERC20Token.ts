@@ -182,5 +182,13 @@ describe("Mint tokens with a valid mint request", function () {
 
       expect(await sigMint721.verify(mintRequest, signature)).to.equal(false)
     })
+
+    it("Should return the URI for a token in the intended baseURI + tokenId format", async () => {
+      const tokenIdToCheck: BigNumber = await sigMint721.nextTokenIdToMint();
+      await sigMint721.connect(requestor).mint(mintRequest, signature)
+
+      const uriForToken: string = await sigMint721.tokenURI(tokenIdToCheck);
+      expect(uriForToken).to.equal(mintRequest.baseURI + tokenIdToCheck.toString());
+    })
   })
 })
