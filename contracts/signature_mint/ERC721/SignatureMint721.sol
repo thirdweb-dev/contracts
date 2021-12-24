@@ -32,6 +32,8 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract SignatureMint721 is
     
     ISignatureMint721,
@@ -131,18 +133,14 @@ contract SignatureMint721 is
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(
-        MintRequest calldata req,
-        bytes calldata signature
+        MintRequest calldata _req,
+        bytes calldata _signature
     )
         public
         view 
         returns (bool)
     {
-        address signer = _hashTypedDataV4(
-            keccak256(abi.encode(TYPEHASH, req.to, req.amountToMint, req.pricePerToken, req.amountToMint, req.validityStartTimestamp, req.validityEndTimestamp, keccak256(req.uid)))
-        ).recover(signature);
-
-        return !minted[req.uid] && hasRole(MINTER_ROLE, signer);
+        return !minted[_req.uid] && hasRole(MINTER_ROLE, recoverAddress(_req, _signature));
     }
 
     /// @dev Returns the URI for a given tokenId.
@@ -225,6 +223,24 @@ contract SignatureMint721 is
 
     ///     =====   Internal functions  =====
 
+    /// @dev Returns the address of the signer of the mint request.
+    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+        return _hashTypedDataV4(
+            keccak256(abi.encode(
+                TYPEHASH, 
+                _req.to, 
+                keccak256(bytes(_req.baseURI)), 
+                _req.amountToMint, 
+                _req.pricePerToken, 
+                _req.currency, 
+                _req.validityStartTimestamp, 
+                _req.validityEndTimestamp, 
+                keccak256(_req.uid)
+            ))
+        ).recover(_signature);
+    }
+
+    /// @dev Verifies that a mint request is valid.
     function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal {
         require(
             verify(_req, _signature),
@@ -240,6 +256,7 @@ contract SignatureMint721 is
         minted[_req.uid] = true;
     }
 
+    /// @dev Assigns URIs to the NFTs being minted upon a mint request.
     function assignURI(
         uint256 _startTokenIdToMint,
         uint256 _amountToMint,
@@ -252,6 +269,7 @@ contract SignatureMint721 is
         baseURIIndices.push(baseURIIndex);
     }
 
+    /// @dev Mints a given amount of NFTs to the recipient in a mint request.
     function mintTokens(address _receiver, uint256 _startTokenIdToMint, uint256 _amountToMint) internal returns(uint256 nextIdToMint) {
         nextIdToMint = _startTokenIdToMint;
 
