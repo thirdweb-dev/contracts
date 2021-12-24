@@ -244,7 +244,7 @@ contract SignatureMint721 is
     function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal {
         require(
             verify(_req, _signature),
-            "not signed off by minter"
+            "invalid signature"
         );
 
         require(
