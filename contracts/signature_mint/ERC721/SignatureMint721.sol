@@ -93,6 +93,7 @@ contract SignatureMint721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes => bool) private minted;
 
+    /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
@@ -154,6 +155,7 @@ contract SignatureMint721 is
 
     ///     =====   External functions  =====
 
+    /// @dev Mints an NFT according to the provided mint request.
     function mint(MintRequest calldata _req, bytes calldata _signature) external payable {
 
         verifyRequest(_req, _signature);
