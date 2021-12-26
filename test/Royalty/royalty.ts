@@ -100,7 +100,7 @@ describe("Royalty", function () {
     feeTreasury = await registry.treasury();
 
     deployRoyalty = async (payees: string[], shares: BigNumberish[]): Promise<Royalty> =>
-      (await RoyaltyFactory.deploy(protocolControl.address, forwarder.address, "", payees, shares)) as Royalty;
+      (await RoyaltyFactory.deploy(registry.address, forwarder.address, "", payees, shares)) as Royalty;
   });
 
   describe("Default state of fees", function () {
@@ -480,7 +480,7 @@ describe("Royalty", function () {
       payees = [stakeHolder1.address, stakeHolder2.address, stakeHolder3.address];
       shares = [1, 2, 3];
       royaltyContract = (await RoyaltyFactory.deploy(
-        protocolControl.address,
+        registry.address,
         forwarder.address,
         "",
         payees,
@@ -488,7 +488,8 @@ describe("Royalty", function () {
       )) as Royalty;
 
       // Set Royalty contract
-      await protocolControl.connect(protocolAdmin).setRoyaltyTreasury(royaltyContract.address);
+      await accessNft.connect(protocolAdmin).setRoyaltyRecipient(royaltyContract.address);
+      await market.connect(protocolAdmin).setMarketFeeRecipient(royaltyContract.address);
 
       // Mint currency to fan
       await coin.connect(protocolAdmin).mint(fan.address, price.mul(amountToBuy));
