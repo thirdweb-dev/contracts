@@ -21,9 +21,6 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "../ProtocolControl.sol";
-
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
@@ -39,9 +36,6 @@ contract Marketplace is
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
 
-    /// @dev Top level control center contract.
-    ProtocolControl internal controlCenter;
-
     /// @dev Total number of listings on market.
     uint256 public totalListings;
 
@@ -56,6 +50,9 @@ contract Marketplace is
 
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
+
+    /// @dev The address of which the marketplace fee goes to.
+    address public feeReceiver;
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
@@ -100,14 +97,14 @@ contract Marketplace is
     }
 
     constructor(
-        address payable _controlCenter,
-        address _trustedForwarder, // A 'MinimalForwarder' for meta-transactions.
+        address _feeReceiver,
+        address _trustedForwarder,
         address _nativeTokenWrapper,
         string memory _uri,
         uint256 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
+        feeReceiver = _feeReceiver;
         contractURI = _uri;
-        controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
 
@@ -526,7 +523,7 @@ contract Marketplace is
         // Collect protocol fee
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
 
-        transferCurrency(_currencyToUse, _payer, controlCenter.getRoyaltyTreasury(address(this)), marketCut);
+        transferCurrency(_currencyToUse, _payer, feeReceiver, marketCut);
 
         uint256 remainder = _totalPayoutAmount - marketCut;
 
@@ -756,12 +753,7 @@ contract Marketplace is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Marketplace: not protocol admin."
-        );
-
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
     }
 
@@ -808,6 +800,6 @@ contract Marketplace is
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
-            interfaceId == type(IERC2981).interfaceId;
+            super.supportsInterface(interfaceId);
     }
 }

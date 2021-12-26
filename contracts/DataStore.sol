@@ -6,13 +6,10 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-import { ProtocolControl } from "./ProtocolControl.sol";
-
 contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Context {
     bytes32 public constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
 
-    string private _contractURI;
-    ProtocolControl private _controlCenter;
+    string private contractURI;
 
     mapping(uint256 => uint256) private _data;
 
@@ -21,13 +18,8 @@ contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Contex
         _;
     }
 
-    constructor(
-        address payable _controlCenterAddress,
-        address _trustedForwarder,
-        string memory _uri
-    ) ERC2771Context(_trustedForwarder) {
-        _controlCenter = ProtocolControl(_controlCenterAddress);
-        _contractURI = _uri;
+    constructor(address _trustedForwarder, string memory _uri) ERC2771Context(_trustedForwarder) {
+        contractURI = _uri;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(EDITOR_ROLE, _msgSender());
     }
@@ -52,11 +44,6 @@ contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Contex
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        _contractURI = _URI;
-    }
-
-    /// @dev Returns the URI for the contract-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
+        contractURI = _URI;
     }
 }

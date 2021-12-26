@@ -11,10 +11,7 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 // Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-
-// Protocol control center.
-import { ProtocolControl } from "./ProtocolControl.sol";
+import "./royalty/RoyaltyReceiver.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
@@ -22,20 +19,21 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
+contract Pack is
+    ERC1155PresetMinterPauserSupplyHolder,
+    VRFConsumerBase,
+    ERC2771Context,
+    IERC2981,
+    Multicall,
+    RoyaltyReceiver
+{
     uint128 private constant MAX_BPS = 10_000;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
-
-    /// @dev NFT sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
     string public contractURI;
@@ -105,9 +103,6 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         uint256[] rewardIds
     );
 
-    /// @dev Emitted when royalties for pack sales are updated.
-    event RoyaltyUpdated(uint256 royaltyBps);
-
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
 
@@ -120,7 +115,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     }
 
     constructor(
-        address payable _controlCenter,
+        address _royaltyReceiver,
         string memory _uri,
         address _vrfCoordinator,
         address _linkToken,
@@ -132,10 +127,8 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         ERC1155PresetMinterPauserSupplyHolder(_uri)
         VRFConsumerBase(_vrfCoordinator, _linkToken)
         ERC2771Context(_trustedForwarder)
+        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
     {
-        // Set the protocol control center.
-        controlCenter = ProtocolControl(_controlCenter);
-
         // Set Chainlink vars.
         vrfKeyHash = _keyHash;
         vrfFees = _fees;
@@ -146,7 +139,6 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
-        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -296,11 +288,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
 
     /// @dev Lets a module admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "Pack: Bps provided must be less than 10,000");
-
-        royaltyBps = _royaltyBps;
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -449,22 +437,10 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetMinterPauserSupplyHolder, IERC165)
+        override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
-    }
-
-    /// @dev See EIP 2918
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        return super.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

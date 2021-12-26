@@ -37,6 +37,7 @@ contract VotingGovernor is
 
     /// @dev proposal index => Proposal
     mapping(uint256 => Proposal) public proposals;
+
     /// @dev proposal ID => proposal index
     mapping(uint256 => uint256) public indexForProposal;
 

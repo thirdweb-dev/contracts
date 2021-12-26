@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
 
 // Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "./royalty/RoyaltyReceiver.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multicall {
+contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multicall, RoyaltyReceiver {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -28,9 +28,6 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     /// @dev The token Id of the NFT to mint.
     uint256 public nextTokenId;
@@ -44,14 +41,10 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     /// @dev Mapping from tokenId => creator
     mapping(uint256 => address) public creator;
 
-    /// @dev Pack sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
-
     /// @dev Emitted when an NFT is minted;
     event Minted(address indexed creator, address indexed to, uint256 tokenId, string tokenURI);
     event MintedBatch(address indexed creator, address indexed to, uint256[] tokenIds, string[] tokenURI);
     event RestrictedTransferUpdated(bool transferable);
-    event RoyaltyUpdated(uint256 royaltyBps);
     event NewOwner(address prevOwner, address newOwner);
 
     modifier onlyModuleAdmin() {
@@ -60,23 +53,23 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     }
 
     constructor(
-        address payable _controlCenter,
+        address _royaltyReceiver,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _uri) ERC2771Context(_trustedForwarder) {
-        // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
-
+    )
+        ERC721PresetMinterPauserAutoId(_name, _symbol, _uri)
+        ERC2771Context(_trustedForwarder)
+        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
+    {
         // Set contract URI
         _contractURI = _uri;
 
         // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
-        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -143,21 +136,17 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "NFT: Bps provided must be less than 10,000");
-
-        royaltyBps = _royaltyBps;
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC721PresetMinterPauserAutoId, IERC165)
+        override(ERC721PresetMinterPauserAutoId, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId);
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -182,18 +171,6 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
                 "NFT: Transfers are restricted to TRANSFER_ROLE holders"
             );
         }
-    }
-
-    /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {

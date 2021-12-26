@@ -10,9 +10,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "./ProtocolControl.sol";
-
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
@@ -28,9 +25,6 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
-
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
 
@@ -42,15 +36,11 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
     event RestrictedTransferUpdated(bool transferable);
 
     constructor(
-        address payable _controlCenter,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
     ) ERC20(_name, _symbol) ERC20Permit(_name) ERC2771Context(_trustedForwarder) {
-        // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
-
         // Set contract URI
         contractURI = _uri;
 

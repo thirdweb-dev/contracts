@@ -4,15 +4,12 @@ pragma solidity ^0.8.0;
 // Interface
 import { ILazyMintERC721 } from "./ILazyMintERC721.sol";
 
+// Royalties
+import "../../royalty/RoyaltyReceiver.sol";
+
 // Token
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-
-// Protocol control center.
-import { ProtocolControl } from "../../ProtocolControl.sol";
-
-// Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -34,10 +31,10 @@ contract LazyMintERC721 is
     ILazyMintERC721,
     ERC721Enumerable,
     ERC2771Context,
-    IERC2981,
     AccessControlEnumerable,
     ReentrancyGuard,
-    Multicall
+    Multicall,
+    RoyaltyReceiver
 {
     using Strings for uint256;
 
@@ -67,9 +64,6 @@ contract LazyMintERC721 is
     /// @dev Contract interprets 10_000 as 100%.
     uint64 private constant MAX_BPS = 10_000;
 
-    /// @dev The % of secondary sales collected as royalties. See EIP 2981.
-    uint64 public royaltyBps;
-
     /// @dev The % of primary sales collected by the contract as fees.
     uint120 public feeBps;
 
@@ -78,9 +72,6 @@ contract LazyMintERC721 is
 
     /// @dev Contract level metadata.
     string public contractURI;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     uint256[] private baseURIIndices;
 
@@ -105,19 +96,17 @@ contract LazyMintERC721 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address payable _controlCenter,
+        address _royaltyReceiver,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
+    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
         // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        royaltyBps = uint64(_royaltyBps);
         feeBps = uint120(_feeBps);
 
         address deployer = _msgSender();
@@ -214,18 +203,6 @@ contract LazyMintERC721 is
         emit NewClaimConditions(_conditions);
     }
 
-    /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
-    }
-
     //      =====   Internal functions  =====
 
     /// @dev Overwrites the current claim conditions with new claim conditions
@@ -310,7 +287,8 @@ contract LazyMintERC721 is
             validateERC20BalAndAllowance(_msgSender(), _claimCondition.currency, totalPrice);
         }
 
-        transferCurrency(_claimCondition.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
+        // claiming occur on non-existent tokens, so royalty goes to royalty recipient of token max uint256
+        transferCurrency(_claimCondition.currency, _msgSender(), getTokenRoyaltyRecipient(type(uint256).max), fees);
 
         transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
     }
@@ -410,11 +388,7 @@ contract LazyMintERC721 is
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000.");
-
-        royaltyBps = uint64(_royaltyBps);
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -501,10 +475,10 @@ contract LazyMintERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721Enumerable, IERC165)
+        override(AccessControlEnumerable, ERC721Enumerable, RoyaltyReceiver)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

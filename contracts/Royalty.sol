@@ -11,18 +11,14 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 import { Registry } from "./Registry.sol";
-import { ProtocolControl } from "./ProtocolControl.sol";
 
 /**
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
 contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Multicall {
-    /// @dev The protocol control center.
-    ProtocolControl private controlCenter;
-
-    /// @dev Contract level metadata.
-    string private _contractURI;
+    /// @dev the URI for the contract-level metadata of the contract.
+    string public contractURI;
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
@@ -31,7 +27,7 @@ contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mu
 
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     constructor(
-        address payable _controlCenter,
+        Registry _registry,
         address _trustedForwarder,
         string memory _uri,
         address[] memory payees,
@@ -41,12 +37,9 @@ contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mu
         require(payees.length > 0, "Royalty: no payees provided.");
 
         // Set contract metadata
-        _contractURI = _uri;
-        // Set the protocol's control center.
-        controlCenter = ProtocolControl(_controlCenter);
+        contractURI = _uri;
 
-        Registry registry = Registry(controlCenter.registry());
-        uint256 feeBps = registry.getFeeBps(_controlCenter);
+        uint256 feeBps = _registry.getFeeBps(_msgSender());
         uint256 totalScaledShares = 0;
         uint256 totalScaledSharesMinusFee = 0;
 
@@ -65,7 +58,7 @@ contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mu
 
         // WARNING: Do not call _addPayee outside of this constructor.
         uint256 totalFeeShares = totalScaledShares - totalScaledSharesMinusFee;
-        _addPayee(registry.treasury(), totalFeeShares);
+        _addPayee(_registry.treasury(), totalFeeShares);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -82,11 +75,6 @@ contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mu
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        _contractURI = _URI;
-    }
-
-    /// @dev Returns the URI for the contract-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
+        contractURI = _URI;
     }
 }

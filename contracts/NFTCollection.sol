@@ -12,29 +12,21 @@ import "@openzeppelin/contracts/interfaces/IERC165.sol";
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "./ProtocolControl.sol";
-
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "./royalty/RoyaltyReceiver.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
+contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall, RoyaltyReceiver {
     uint128 private constant MAX_BPS = 10_000;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
-
-    /// @dev NFT sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
     string public _contractURI;
@@ -113,9 +105,6 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         uint256 sharesRedeemed
     );
 
-    /// @dev Emitted when the EIP 2981 royalty of the contract is updated.
-    event RoyaltyUpdated(uint256 royaltyBps);
-
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
 
@@ -143,21 +132,21 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
     }
 
     constructor(
-        address payable _controlCenter,
+        address _royaltyReceiver,
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
-        // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
-
+    )
+        ERC1155PresetMinterPauserSupplyHolder(_uri)
+        ERC2771Context(_trustedForwarder)
+        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
+    {
         // Set contract URI
         _contractURI = _uri;
 
         // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
-        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -387,11 +376,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "NFTCollection: Invalid bps provided; must be less than 10,000.");
-
-        royaltyBps = _royaltyBps;
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -457,22 +442,10 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         public
         view
         virtual
-        override(ERC1155PresetMinterPauserSupplyHolder, IERC165)
+        override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
-    }
-
-    /// @dev See EIP 2918
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        return super.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

@@ -86,9 +86,6 @@ interface ILazyMintERC721 {
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
 
-    /// @dev Emitted when the royalty fee bps is updated
-    event RoyaltyUpdated(uint256 newRoyaltyBps);
-
     /// @dev Emitted when fee on primary sales is updated.
     event PrimarySalesFeeUpdates(uint256 newFeeBps);
 

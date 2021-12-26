@@ -17,9 +17,6 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "./ProtocolControl.sol";
-
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
@@ -38,8 +35,8 @@ contract Market is
 
     uint128 private constant MAX_BPS = 10_000;
 
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
+    /// @dev The address of which the marketplace fee goes to.
+    address internal feeReceiver;
 
     // See EIP 2981
     bytes4 private constant _INTERFACE_ID_ERC2981 = type(IERC2981).interfaceId;
@@ -121,16 +118,14 @@ contract Market is
     }
 
     constructor(
-        address payable _controlCenter,
+        address _feeReceiver,
         address _trustedForwarder,
         string memory _uri,
         uint128 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
+        feeReceiver = _feeReceiver;
         // Set contract URI
         _contractURI = _uri;
-
-        // Set the protocol control center.
-        controlCenter = ProtocolControl(_controlCenter);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
@@ -267,7 +262,7 @@ contract Market is
             "Market: must approve the market to transfer tokens being added."
         );
 
-        // Transfer tokens being listed to Pack Protocol's asset manager.
+        // Transfer tokens being listed to the contract's asset manager.
         IERC1155(listing.assetContract).safeTransferFrom(_msgSender(), address(this), listing.tokenId, _quantity, "");
 
         emit ListingUpdate(_msgSender(), _listingId, listing);
@@ -404,11 +399,7 @@ contract Market is
         uint256 marketCut = (totalPrice * marketFeeBps) / MAX_BPS;
 
         require(
-            IERC20(listing.currency).transferFrom(
-                _msgSender(),
-                controlCenter.getRoyaltyTreasury(address(this)),
-                marketCut
-            ),
+            IERC20(listing.currency).transferFrom(_msgSender(), feeReceiver, marketCut),
             "Market: failed to transfer protocol cut."
         );
 

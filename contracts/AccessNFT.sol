@@ -7,19 +7,13 @@ import "./openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
 // Meta transactions
 import { ERC2771Context } from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "./ProtocolControl.sol";
-
 // Royalties
-import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "./royalty/RoyaltyReceiver.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
+contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall, RoyaltyReceiver {
     uint128 private constant MAX_BPS = 10_000;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -27,11 +21,8 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
 
-    /// @dev NFT sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
-
-    /// @dev Collection level metadata.
-    string public _contractURI;
+    /// @dev the URI for the storefront-level metadata of the contract.
+    string public contractURI;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -78,9 +69,6 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
 
     event RestrictedTransferUpdated(bool transferable);
 
-    /// @dev Emitted when the EIP 2981 royalty of the contract is updated.
-    event RoyaltyUpdated(uint256 royaltyBps);
-
     /// @dev Emitted when the last time to redeem an Access NFT is updated.
     event LastRedeemTimeUpdated(uint256 accessNftId, address creator, uint256 lastTimeToRedeem);
 
@@ -109,21 +97,21 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     }
 
     constructor(
-        address payable _controlCenter,
+        address _royaltyReceiver,
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
-        // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
-
+    )
+        ERC1155PresetMinterPauserSupplyHolder(_uri)
+        ERC2771Context(_trustedForwarder)
+        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
+    {
         // Set contract URI
-        _contractURI = _uri;
+        contractURI = _uri;
 
         // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
-        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -294,11 +282,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
 
     /// @dev Lets a protocol admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "NFT: Bps provided must be less than 10,000");
-
-        royaltyBps = _royaltyBps;
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -319,7 +303,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
-        _contractURI = _uri;
+        contractURI = _uri;
     }
 
     /**
@@ -373,22 +357,10 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetMinterPauserSupplyHolder, IERC165)
+        override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
-    }
-
-    /// @dev See EIP 2918
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        return super.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155
@@ -404,10 +376,5 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     /// @dev Returns whether a token represent is redeemable.
     function isRedeemable(uint256 _nftId) public view returns (bool) {
         return tokenState[_nftId].isRedeemable;
-    }
-
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
     }
 }

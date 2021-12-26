@@ -4,14 +4,11 @@ pragma solidity ^0.8.0;
 // Interface
 import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
 
+// Royalties
+import "../../royalty/RoyaltyReceiver.sol";
+
 // Token
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-
-// Protocol control center.
-import { ProtocolControl } from "../../ProtocolControl.sol";
-
-// Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -33,10 +30,10 @@ contract LazyMintERC1155 is
     ILazyMintERC1155,
     ERC1155,
     ERC2771Context,
-    IERC2981,
     AccessControlEnumerable,
     ReentrancyGuard,
-    Multicall
+    Multicall,
+    RoyaltyReceiver
 {
     using Strings for uint256;
 
@@ -63,9 +60,6 @@ contract LazyMintERC1155 is
     /// @dev Contract interprets 10_000 as 100%.
     uint64 private constant MAX_BPS = 10_000;
 
-    /// @dev The % of secondary sales collected as royalties. See EIP 2981.
-    uint64 public royaltyBps;
-
     /// @dev The % of primary sales collected by the contract as fees.
     uint120 public feeBps;
 
@@ -74,9 +68,6 @@ contract LazyMintERC1155 is
 
     /// @dev Contract level metadata.
     string public contractURI;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     uint256[] private baseURIIndices;
 
@@ -88,12 +79,6 @@ contract LazyMintERC1155 is
     mapping(uint256 => ClaimConditions) public claimConditions;
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
-
-    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE on the protocol control center.
-    modifier onlyProtocolAdmin() {
-        require(controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()), "not protocol admin.");
-        _;
-    }
 
     /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
     modifier onlyModuleAdmin() {
@@ -109,18 +94,16 @@ contract LazyMintERC1155 is
 
     constructor(
         string memory _contractURI,
-        address payable _controlCenter,
+        address _royaltyReceiver,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC1155("") ERC2771Context(_trustedForwarder) {
-        controlCenter = ProtocolControl(_controlCenter);
+    ) ERC1155("") ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        royaltyBps = uint64(_royaltyBps);
         feeBps = uint120(_feeBps);
 
         address deployer = _msgSender();
@@ -224,18 +207,6 @@ contract LazyMintERC1155 is
         emit NewClaimConditions(_tokenId, _conditions);
     }
 
-    /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
-    }
-
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
@@ -252,11 +223,7 @@ contract LazyMintERC1155 is
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000.");
-
-        royaltyBps = uint64(_royaltyBps);
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -412,7 +379,7 @@ contract LazyMintERC1155 is
             validateERC20BalAndAllowance(_msgSender(), _mintCondition.currency, totalPrice);
         }
 
-        transferCurrency(_mintCondition.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
+        transferCurrency(_mintCondition.currency, _msgSender(), getTokenRoyaltyRecipient(_tokenId), fees);
 
         address recipient = saleRecipient[_tokenId];
         transferCurrency(
@@ -572,10 +539,10 @@ contract LazyMintERC1155 is
         public
         view
         virtual
-        override(ERC1155, AccessControlEnumerable, IERC165)
+        override(ERC1155, AccessControlEnumerable, RoyaltyReceiver)
         returns (bool)
     {
-        return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

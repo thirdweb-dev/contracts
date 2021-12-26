@@ -11,11 +11,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "./ProtocolControl.sol";
-
 // Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "./royalty/RoyaltyReceiver.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -32,7 +29,7 @@ contract LazyNFT is
     ERC721Burnable,
     ERC721Pausable,
     ERC2771Context,
-    IERC2981,
+    RoyaltyReceiver,
     ReentrancyGuard,
     Multicall
 {
@@ -80,16 +77,10 @@ contract LazyNFT is
     // so that when mint conditions is reset, the next mint timestamp is reset too
     uint256 nextMintTimestampConditionStartIndex;
 
-    /// @dev Pack sale royalties -- see EIP 2981
-    uint256 public royaltyBps;
-
     uint256 public feeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     address public saleRecipient;
 
@@ -108,7 +99,6 @@ contract LazyNFT is
     event TotalSupplyUpdated(uint256 supply);
     event BaseTokenURIUpdated(string uri);
     event RestrictedTransferUpdated(bool transferable);
-    event RoyaltyUpdated(uint256 royaltyBps);
     event FeeUpdated(uint256 feeBps);
     event NewOwner(address prevOwner, address newOwner);
 
@@ -118,7 +108,7 @@ contract LazyNFT is
     }
 
     constructor(
-        address payable _controlCenter,
+        address _royaltyReceiver,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
@@ -128,10 +118,7 @@ contract LazyNFT is
         uint256 _royaltyBps,
         uint256 _feeBps,
         address _saleRecipient
-    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
-        // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
-
+    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
         // Set contract URI
         _contractURI = _contractUri;
         _baseTokenURI = _baseTokenUri;
@@ -146,7 +133,6 @@ contract LazyNFT is
         _setupRole(TRANSFER_ROLE, _msgSender());
 
         setFeeBps(_feeBps);
-        setRoyaltyBps(_royaltyBps);
     }
 
     /**
@@ -230,7 +216,8 @@ contract LazyNFT is
         uint256 feeAmount
     ) private {
         address payable recipient = payable(saleRecipient);
-        address payable feeRecipient = payable(controlCenter.getRoyaltyTreasury(address(this)));
+        // claiming occur on non-existent tokens, so royalty goes to royalty recipient of token max uint256
+        address payable feeRecipient = payable(getTokenRoyaltyRecipient(type(uint256).max));
 
         if (currency == address(0)) {
             require(msg.value == saleRecipientAmount + feeAmount, "value != amount");
@@ -315,16 +302,12 @@ contract LazyNFT is
         emit FeeUpdated(_feeBps);
     }
 
-    /// @dev Lets a protocol admin update the royalties paid on pack sales.
+    /// @dev Lets a module admin update the royalties paid on nft sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000");
-
-        royaltyBps = _royaltyBps;
-
-        emit RoyaltyUpdated(_royaltyBps);
+        _setRoyaltyBps(_royaltyBps);
     }
 
-    /// @dev Lets a protocol admin restrict token transfers.
+    /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
 
@@ -362,26 +345,14 @@ contract LazyNFT is
         return mintConditions.length;
     }
 
-    /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
-    }
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721, ERC721Enumerable, IERC165)
+        override(AccessControlEnumerable, ERC721, ERC721Enumerable, RoyaltyReceiver)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
