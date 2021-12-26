@@ -220,9 +220,7 @@ export async function getContracts(
 
   const coin: Coin = (await ethers
     .getContractFactory("Coin")
-    .then(f =>
-      f.connect(protocolAdmin).deploy(protocolControl.address, coinName, coinSymbol, forwarder.address, coinURI),
-    )) as Coin;
+    .then(f => f.connect(protocolAdmin).deploy(coinName, coinSymbol, forwarder.address, coinURI))) as Coin;
 
   // Get NFT contract
   const lazyContractURI: string = "";
