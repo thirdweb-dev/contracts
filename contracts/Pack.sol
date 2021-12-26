@@ -440,7 +440,9 @@ contract Pack is
         override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            ERC1155PresetMinterPauserSupplyHolder.supportsInterface(interfaceId) ||
+            RoyaltyReceiver.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

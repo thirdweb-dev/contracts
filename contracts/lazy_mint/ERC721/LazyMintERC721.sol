@@ -478,7 +478,10 @@ contract LazyMintERC721 is
         override(AccessControlEnumerable, ERC721Enumerable, RoyaltyReceiver)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            AccessControlEnumerable.supportsInterface(interfaceId) ||
+            ERC721Enumerable.supportsInterface(interfaceId) ||
+            RoyaltyReceiver.supportsInterface(interfaceId);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

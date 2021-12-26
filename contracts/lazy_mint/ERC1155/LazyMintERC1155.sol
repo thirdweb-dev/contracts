@@ -542,7 +542,10 @@ contract LazyMintERC1155 is
         override(ERC1155, AccessControlEnumerable, RoyaltyReceiver)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            ERC1155.supportsInterface(interfaceId) ||
+            AccessControlEnumerable.supportsInterface(interfaceId) ||
+            RoyaltyReceiver.supportsInterface(interfaceId);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

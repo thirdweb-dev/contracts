@@ -146,7 +146,9 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         override(ERC721PresetMinterPauserAutoId, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            ERC721PresetMinterPauserAutoId.supportsInterface(interfaceId) ||
+            RoyaltyReceiver.supportsInterface(interfaceId);
     }
 
     /// @dev Lets a protocol admin restrict token transfers.

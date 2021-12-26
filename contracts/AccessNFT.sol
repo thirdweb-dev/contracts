@@ -360,7 +360,10 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            ERC1155PresetMinterPauserSupplyHolder.supportsInterface(interfaceId) ||
+            RoyaltyReceiver.supportsInterface(interfaceId) ||
+            super.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

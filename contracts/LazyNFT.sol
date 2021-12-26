@@ -352,7 +352,11 @@ contract LazyNFT is
         override(AccessControlEnumerable, ERC721, ERC721Enumerable, RoyaltyReceiver)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            AccessControlEnumerable.supportsInterface(interfaceId) ||
+            ERC721.supportsInterface(interfaceId) ||
+            ERC721Enumerable.supportsInterface(interfaceId) ||
+            RoyaltyReceiver.supportsInterface(interfaceId);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
