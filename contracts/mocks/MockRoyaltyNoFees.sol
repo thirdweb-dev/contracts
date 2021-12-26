@@ -7,31 +7,17 @@ import "../openzeppelin-presets/finance/PaymentSplitter.sol";
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-import { ProtocolControl } from "../ProtocolControl.sol";
-
 /**
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
 contract MockRoyaltyNoFees is PaymentSplitter, ERC2771Context {
-    /// @dev The protocol control center.
-    ProtocolControl private controlCenter;
-
     /// @dev Contract level metadata.
     string private _contractURI;
 
-    /// @dev Checks whether the protocol is paused.
-    modifier onlyProtocolAdmin() {
-        require(
-            controlCenter.hasRole(controlCenter.DEFAULT_ADMIN_ROLE(), _msgSender()),
-            "Royalty: only a protocol admin can call this function."
-        );
-        _;
-    }
-
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     constructor(
-        address payable _controlCenter,
+        address _registry,
         address _trustedForwarder,
         string memory _uri,
         address[] memory payees,
@@ -42,8 +28,6 @@ contract MockRoyaltyNoFees is PaymentSplitter, ERC2771Context {
 
         // Set contract metadata
         _contractURI = _uri;
-        // Set the protocol's control center.
-        controlCenter = ProtocolControl(_controlCenter);
 
         // Scaling the share, so we don't lose precision on division
         for (uint256 i = 0; i < payees.length; i++) {
@@ -64,7 +48,7 @@ contract MockRoyaltyNoFees is PaymentSplitter, ERC2771Context {
     }
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyProtocolAdmin {
+    function setContractURI(string calldata _URI) external {
         _contractURI = _URI;
     }
 
