@@ -291,7 +291,12 @@ contract Pack is
         _setRoyaltyBps(_royaltyBps);
     }
 
-    /// @dev Lets a module admin restrict token transfers.
+    /// @dev Lets a module admin set the royalty recipient.
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
+    }
+
+    /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
 

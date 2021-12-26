@@ -285,6 +285,11 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         _setRoyaltyBps(_royaltyBps);
     }
 
+    /// @dev Lets a module admin set the royalty recipient.
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
+    }
+
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;

@@ -36,7 +36,7 @@ contract Market is
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev The address of which the marketplace fee goes to.
-    address internal feeReceiver;
+    address public marketFeeRecipient;
 
     // See EIP 2981
     bytes4 private constant _INTERFACE_ID_ERC2981 = type(IERC2981).interfaceId;
@@ -118,12 +118,12 @@ contract Market is
     }
 
     constructor(
-        address _feeReceiver,
+        address _feeRecipient,
         address _trustedForwarder,
         string memory _uri,
         uint128 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
-        feeReceiver = _feeReceiver;
+        marketFeeRecipient = _feeRecipient;
         // Set contract URI
         _contractURI = _uri;
 
@@ -399,7 +399,7 @@ contract Market is
         uint256 marketCut = (totalPrice * marketFeeBps) / MAX_BPS;
 
         require(
-            IERC20(listing.currency).transferFrom(_msgSender(), feeReceiver, marketCut),
+            IERC20(listing.currency).transferFrom(_msgSender(), marketFeeRecipient, marketCut),
             "Market: failed to transfer protocol cut."
         );
 
@@ -437,6 +437,11 @@ contract Market is
 
         marketFeeBps = feeBps;
         emit MarketFeeUpdate(feeBps);
+    }
+
+    /// @dev Lets a module admin set market fee recipient.
+    function setMarketFeeRecipient(address recipient) external onlyModuleAdmin {
+        marketFeeRecipient = recipient;
     }
 
     function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {

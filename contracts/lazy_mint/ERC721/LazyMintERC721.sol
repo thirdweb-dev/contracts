@@ -391,6 +391,11 @@ contract LazyMintERC721 is
         _setRoyaltyBps(_royaltyBps);
     }
 
+    /// @dev Lets a module admin set the royalty recipient.
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
+    }
+
     /// @dev Lets a module admin update the fees on primary sales.
     function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
         require(_feeBps <= MAX_BPS, "bps <= 10000.");

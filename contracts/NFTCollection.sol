@@ -379,6 +379,11 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         _setRoyaltyBps(_royaltyBps);
     }
 
+    /// @dev Lets a module admin set the royalty recipient.
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
+    }
+
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyModuleAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");

@@ -52,7 +52,7 @@ contract Marketplace is
     address public immutable nativeTokenWrapper;
 
     /// @dev The address of which the marketplace fee goes to.
-    address public feeReceiver;
+    address public marketFeeRecipient;
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
@@ -97,16 +97,16 @@ contract Marketplace is
     }
 
     constructor(
-        address _feeReceiver,
+        address _feeRecipient,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         string memory _uri,
         uint256 _marketFeeBps
     ) ERC2771Context(_trustedForwarder) {
-        feeReceiver = _feeReceiver;
         contractURI = _uri;
         nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
+        marketFeeRecipient = _feeRecipient;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
@@ -523,7 +523,7 @@ contract Marketplace is
         // Collect protocol fee
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
 
-        transferCurrency(_currencyToUse, _payer, feeReceiver, marketCut);
+        transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut);
 
         uint256 remainder = _totalPayoutAmount - marketCut;
 
@@ -728,12 +728,17 @@ contract Marketplace is
 
     //  ===== Setter functions  =====
 
-    /// @dev Lets a protocol admin set market fees.
+    /// @dev Lets a module admin set market fees.
     function setMarketFeeBps(uint256 _feeBps) external onlyModuleAdmin {
         require(_feeBps < MAX_BPS, "Marketplace: invalid BPS.");
 
         marketFeeBps = uint64(_feeBps);
         emit MarketFeeUpdate(uint64(_feeBps));
+    }
+
+    /// @dev Lets a module admin set market fee recipient.
+    function setMarketFeeRecipient(address recipient) external onlyModuleAdmin {
+        marketFeeRecipient = recipient;
     }
 
     /// @dev Lets a module admin set auction buffers

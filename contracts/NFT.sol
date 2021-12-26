@@ -139,6 +139,11 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         _setRoyaltyBps(_royaltyBps);
     }
 
+    /// @dev Lets a module admin set the royalty recipient.
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
