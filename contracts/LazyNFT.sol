@@ -216,8 +216,7 @@ contract LazyNFT is
         uint256 feeAmount
     ) private {
         address payable recipient = payable(saleRecipient);
-        // claiming occur on non-existent tokens, so royalty goes to royalty recipient of token max uint256
-        address payable feeRecipient = payable(getTokenRoyaltyRecipient(type(uint256).max));
+        address payable feeRecipient = payable(royaltyReceipient);
 
         if (currency == address(0)) {
             require(msg.value == saleRecipientAmount + feeAmount, "value != amount");

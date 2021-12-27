@@ -384,7 +384,7 @@ contract LazyMintERC1155 is
             validateERC20BalAndAllowance(_msgSender(), _mintCondition.currency, totalPrice);
         }
 
-        transferCurrency(_mintCondition.currency, _msgSender(), getTokenRoyaltyRecipient(_tokenId), fees);
+        transferCurrency(_mintCondition.currency, _msgSender(), royaltyReceipient, fees);
 
         address recipient = saleRecipient[_tokenId];
         transferCurrency(

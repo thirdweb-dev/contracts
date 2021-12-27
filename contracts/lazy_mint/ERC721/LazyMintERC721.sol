@@ -287,8 +287,7 @@ contract LazyMintERC721 is
             validateERC20BalAndAllowance(_msgSender(), _claimCondition.currency, totalPrice);
         }
 
-        // claiming occur on non-existent tokens, so royalty goes to royalty recipient of token max uint256
-        transferCurrency(_claimCondition.currency, _msgSender(), getTokenRoyaltyRecipient(type(uint256).max), fees);
+        transferCurrency(_claimCondition.currency, _msgSender(), royaltyReceipient, fees);
 
         transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
     }
