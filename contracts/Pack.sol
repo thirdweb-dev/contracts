@@ -16,7 +16,11 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
+// Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
+
+// Helper interfaces
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
     uint128 private constant MAX_BPS = 10_000;
@@ -257,10 +261,10 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         contractURI = _uri;
     }
 
-    /// @dev Lets a module admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external onlyModuleAdmin {
-        bool success = LINK.transfer(_to, _amount);
-        require(success, "Pack: Failed to transfer LINK.");
+    /// @dev Lets a module admin transfer ERC20 from the contract.
+    function transferERC20(address _currency, address _to, uint256 _amount) external onlyModuleAdmin {        
+        bool success = IERC20(_currency).transfer(_to, _amount);
+        require(success, "failed to transfer currency.");
     }
 
     /// @dev Lets a module admin update the royalties paid on pack sales.
