@@ -31,7 +31,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
-    string public _contractURI;
+    string public contractURI;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -131,7 +131,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         vrfFees = _fees;
 
         // Set contract URI
-        _contractURI = _uri;
+        contractURI = _uri;
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
@@ -252,9 +252,9 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         vrfFees = _newFees;
     }
 
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    /// @dev Lets a module admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
-        _contractURI = _uri;
+        contractURI = _uri;
     }
 
     /// @dev Lets a module admin transfer LINK from the contract.
@@ -454,11 +454,6 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Returns a pack for the given pack tokenId
     function getPack(uint256 _packId) external view returns (PackState memory pack) {
         pack = packs[_packId];
-    }
-
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
     }
 
     /// @dev Returns a pack with its underlying rewards
