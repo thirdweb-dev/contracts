@@ -101,7 +101,8 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Emitted when royalties for pack sales are updated.
     event RoyaltyUpdated(uint256 royaltyBps);
 
-    event RestrictedTransferUpdated(bool transferable);
+    /// @dev Emitted when transfers are set as restricted / not-restricted.
+    event TransfersRestricted(bool restricted);
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
@@ -275,7 +276,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
 
-        emit RestrictedTransferUpdated(_restrictedTransfer);
+        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /**
