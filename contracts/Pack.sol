@@ -246,7 +246,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
      *      External: setter functions
      */
 
-    /// @dev Lets a protocol admin change the Chainlink VRF fee.
+    /// @dev Lets a module admin change the Chainlink VRF fee.
     function setChainlinkFees(uint256 _newFees) external onlyModuleAdmin {
         vrfFees = _newFees;
     }
@@ -256,13 +256,13 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         _contractURI = _uri;
     }
 
-    /// @dev Lets a protocol admin transfer LINK from the contract.
+    /// @dev Lets a module admin transfer LINK from the contract.
     function transferLink(address _to, uint256 _amount) external onlyModuleAdmin {
         bool success = LINK.transfer(_to, _amount);
         require(success, "Pack: Failed to transfer LINK.");
     }
 
-    /// @dev Lets a protocol admin update the royalties paid on pack sales.
+    /// @dev Lets a module admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "Pack: Bps provided must be less than 10,000");
 
@@ -271,7 +271,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         emit RoyaltyUpdated(_royaltyBps);
     }
 
-    /// @dev Lets a protocol admin restrict token transfers.
+    /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
 
