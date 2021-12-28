@@ -341,7 +341,7 @@ contract Marketplace is
         uint256 _currencyAmountToTransfer,
         uint256 _listingTokenAmountToTransfer
     ) internal {
-        validateDirectListingSale(_targetListing, _buyer, _listingTokenAmountToTransfer);
+        validateDirectListingSale(_targetListing, _buyer, _listingTokenAmountToTransfer, _currencyAmountToTransfer);
 
         _targetListing.quantity -= _listingTokenAmountToTransfer;
         listings[_targetListing.listingId] = _targetListing;
@@ -549,6 +549,10 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
+        if (_amount == 0 || _from == _to) {
+            return;
+        }
+
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
@@ -646,7 +650,8 @@ contract Marketplace is
     function validateDirectListingSale(
         Listing memory _listing,
         address _buyer,
-        uint256 _quantityToBuy
+        uint256 _quantityToBuy,
+        uint256 settledTotalPrice
     ) internal {
         require(_listing.listingType == ListingType.Direct, "Marketplace: cannot buy from listing.");
 
@@ -665,11 +670,11 @@ contract Marketplace is
         // Check: buyer owns and has approved sufficient currency for sale.
         if (_listing.currency == NATIVE_TOKEN) {
             require(
-                msg.value == _quantityToBuy * _listing.buyoutPricePerToken,
+                msg.value == settledTotalPrice,
                 "Marketplace: insufficient currency balance or allowance."
             );
         } else {
-            validateERC20BalAndAllowance(_buyer, _listing.currency, _quantityToBuy * _listing.buyoutPricePerToken);
+            validateERC20BalAndAllowance(_buyer, _listing.currency, settledTotalPrice);
         }
 
         // Check iwhether token owner owns and has approved `quantityToBuy` amount of listing tokens from the listing.
