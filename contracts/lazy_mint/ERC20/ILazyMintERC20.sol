@@ -67,9 +67,6 @@ interface ILazyMintERC20 {
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
-    /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(address to, uint256 amount);
-
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
         uint256 indexed claimConditionIndex,

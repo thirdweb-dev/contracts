@@ -15,8 +15,12 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
@@ -24,11 +28,14 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
+    /// @dev Contract interprets 10_000 as 100%.
+    uint128 private constant MAX_BPS = 10_000;
+
     /// @dev The % of secondary sales collected as royalties. See EIP 2981.
-    uint128 public royaltyBps;
+    uint64 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public feeBps;
+    uint64 public feeBps;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
@@ -55,8 +62,8 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         // Set the protocol control center        
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
-        royaltyBps = _royaltyBps;
-        feeBps = _feeBps;
+        royaltyBps = uint64(_royaltyBps);
+        feeBps = uint64(_feeBps);
     }
 
     //      =====   Public functions  =====
@@ -78,7 +85,24 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
 
     //      =====   External functions  =====
 
-    function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable {}
+    /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
+    function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
+
+        // Get the claim conditions.
+        uint256 activeConditionIndex = getIndexOfActiveCondition();
+        ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
+
+        // Verify claim validity. If not valid, revert.
+        verifyClaimIsValid(_quantity, _proofs, activeConditionIndex, condition);
+
+        // If there's a price, collect price.
+        collectClaimPrice(condition, _quantity);
+
+        // Mint the relevant tokens to claimer.
+        transferClaimedTokens(activeConditionIndex, _quantity);
+
+        emit ClaimedTokens(activeConditionIndex, _msgSender(), _quantity);
+    }
 
     /// @dev Lets a module admin update mint conditions without resetting the restrictions.
     function updateClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
@@ -93,6 +117,32 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         resetTimestampRestriction(numOfConditionsSet);
 
         emit NewClaimConditions(_conditions);
+    }
+
+    //      =====   Setter functions  =====
+
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        defaultSaleRecipient = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient);
+    }
+
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "bps <= 10000.");
+
+        royaltyBps = uint64(_royaltyBps);
+
+        emit RoyaltyUpdated(_royaltyBps);
+    }
+
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
+        require(_feeBps <= MAX_BPS, "bps <= 10000.");
+
+        feeBps = uint64(_feeBps);
+
+        emit PrimarySalesFeeUpdates(_feeBps);
     }
 
     //      =====   Getter functions  =====
@@ -163,5 +213,121 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
     function resetTimestampRestriction(uint256 _factor) internal {
         claimConditions.timstampLimitIndex += _factor;
+    }
+
+    /// @dev Checks whether a request to claim tokens obeys the active mint condition.
+    function verifyClaimIsValid(
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _conditionIndex,
+        ClaimCondition memory _claimCondition
+    ) internal view {
+        require(
+            _quantity > 0 && _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
+            "invalid quantity claimed."
+        );
+
+        uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
+        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex];
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _msgSender());
+        require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
+
+        if (_claimCondition.merkleRoot != bytes32(0)) {
+            bytes32 leaf = keccak256(abi.encodePacked(_msgSender(), _quantity));
+            require(MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
+        }
+    }
+
+    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    function collectClaimPrice(ClaimCondition memory _claimCondition, uint256 _quantityToClaim) internal {
+        if (_claimCondition.pricePerToken == 0) {
+            return;
+        }
+
+        uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
+        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+
+        if (_claimCondition.currency == NATIVE_TOKEN) {
+            require(msg.value == totalPrice, "must send total price.");
+        } else {
+            validateERC20BalAndAllowance(_msgSender(), _claimCondition.currency, totalPrice);
+        }
+
+        transferCurrency(_claimCondition.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
+
+        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+    }
+
+    /// @dev Transfers the tokens being claimed.
+    function transferClaimedTokens(uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
+        // Update the supply minted under mint condition.
+        claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
+        // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
+        uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
+        claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
+
+        _mint(_msgSender(), _quantityBeingClaimed);
+    }
+
+    /// @dev Transfers a given amount of currency.
+    function transferCurrency(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        if (_amount == 0 || _from == _to) {
+            return;
+        }
+
+        if (_currency == NATIVE_TOKEN) {
+            if (_from == address(this)) {
+                IWETH(nativeTokenWrapper).withdraw(_amount);
+                safeTransferNativeToken(_to, _amount);
+            } else if (_to == address(this)) {
+                require(_amount == msg.value, "native token value does not match bid amount.");
+                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
+            } else {
+                safeTransferNativeToken(_to, _amount);
+            }
+        } else {
+            safeTransferERC20(_currency, _from, _to, _amount);
+        }
+    }
+
+    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
+    function validateERC20BalAndAllowance(
+        address _addrToCheck,
+        address _currency,
+        uint256 _currencyAmountToCheckAgainst
+    ) internal view {
+        require(
+            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
+                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
+            "insufficient currency balance or allowance."
+        );
+    }
+
+    /// @dev Transfers `amount` of native token to `to`.
+    function safeTransferNativeToken(address to, uint256 value) internal {
+        (bool success, ) = to.call{ value: value }("");
+        if (!success) {
+            IWETH(nativeTokenWrapper).deposit{ value: value }();
+            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
+        }
+    }
+
+    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
+    function safeTransferERC20(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        uint256 balBefore = IERC20(_currency).balanceOf(_to);
+        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
+        uint256 balAfter = IERC20(_currency).balanceOf(_to);
+
+        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
     }
 }

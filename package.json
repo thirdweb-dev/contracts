@@ -3,7 +3,9 @@
   "description": "",
   "version": "1.17.2",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "ethers": "^5.5.2"
+  },
   "source": "src/index.ts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +18,6 @@
     "!contracts/**/*.md"
   ],
   "devDependencies": {
-    "@openzeppelin/contracts": "^4.3.3",
     "@chainlink/contracts": "^0.3.0",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
@@ -24,6 +25,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.3",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^4.3.3",
     "@typechain/ethers-v5": "^8.0.5",
     "@typechain/hardhat": "^3.0.0",
     "@types/chai": "^4.3.0",
@@ -41,7 +43,6 @@
     "eslint-config-prettier": "^8.2.0",
     "eth-sig-util": "^3.0.1",
     "ethereum-waffle": "^3.4.0",
-    "ethers": "^5.5.2",
     "fs-extra": "^10.0.0",
     "hardhat": "^2.7.0",
     "hardhat-abi-exporter": "^2.3.0",
@@ -60,9 +61,7 @@
     "typechain": "^6.0.5",
     "typescript": "^4.5.2"
   },
-  "peerDependencies": {
-    "ethers": "^5.4.7"
-  },
+  "peerDependencies": {},
   "resolutions": {
     "typescript": "^4.4.4"
   },
