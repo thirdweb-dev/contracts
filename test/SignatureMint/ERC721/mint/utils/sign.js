@@ -15,7 +15,7 @@ const MintRequest = [
   { name: "currency", type: "address" },
   { name: "validityStartTimestamp", type: "uint128" },
   { name: "validityEndTimestamp", type: "uint128" },
-  { name: "uid", type: "bytes" },
+  { name: "uid", type: "bytes32" },
 ];
 
 function getMetaTxTypeData(chainId, verifyingContract) {

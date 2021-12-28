@@ -27,7 +27,7 @@ interface ISignatureMint721 {
         address currency;
         uint128 validityStartTimestamp;
         uint128 validityEndTimestamp;
-        bytes uid;
+        bytes32 uid;
     }
 
     /// @dev Emitted when tokens are minted.

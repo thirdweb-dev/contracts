@@ -48,7 +48,7 @@ contract SignatureMint721 is
     using Strings for uint256;
 
     bytes32 private constant TYPEHASH =
-        keccak256("MintRequest(address to,string baseURI,uint256 amountToMint,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes uid)");
+        keccak256("MintRequest(address to,string baseURI,uint256 amountToMint,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)");
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -91,7 +91,7 @@ contract SignatureMint721 is
     mapping(uint256 => string) public baseURI;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
-    mapping(bytes => bool) private minted;
+    mapping(bytes32 => bool) private minted;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -235,7 +235,7 @@ contract SignatureMint721 is
                 _req.currency, 
                 _req.validityStartTimestamp, 
                 _req.validityEndTimestamp, 
-                keccak256(_req.uid)
+                _req.uid
             ))
         ).recover(_signature);
     }
