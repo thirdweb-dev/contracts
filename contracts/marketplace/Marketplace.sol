@@ -315,14 +315,21 @@ contract Marketplace is
 
         Offer memory targetBid = winningBid[_listingId];
 
-        if (targetListing.startTime > block.timestamp) {
+        // Cancel auction if (1) auction hasn't started, or (2) auction ended without any bids.
+        bool toCancel = (targetListing.startTime > block.timestamp)
+            || (targetListing.endTime < block.timestamp && targetBid.offeror == address(0));
+        
+        if (toCancel) {
             _cancelAuction(targetListing);
         } else {
             require(targetListing.endTime < block.timestamp, "Marketplace: cannot close auction before it has ended.");
 
+            // No `else if` to let auction close in 1 tx when targetListing.tokenOwner == targetBid.offeror.
             if (_closeFor == targetListing.tokenOwner) {
                 _closeAuctionForAuctionCreator(targetListing, targetBid);
-            } else if (_closeFor == targetBid.offeror) {
+            }
+                
+            if (_closeFor == targetBid.offeror) {
                 _closeAuctionForBidder(targetListing, targetBid);
             }
         }

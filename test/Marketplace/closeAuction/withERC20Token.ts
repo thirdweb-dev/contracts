@@ -130,7 +130,66 @@ describe("Close / Cancel auction: ERC20 token", function () {
     await mintERC20To(buyer, (listingParams.buyoutPricePerToken as BigNumber).mul(listingParams.quantityToList));
   });
 
-  describe("Cancel auction", function () {
+  describe("Cancel auction: before auction starts", function () {
+    describe("Revert cases", function () {
+      it("Should revert if caller is not auction lister.", async () => {
+        await expect(marketv2.connect(buyer).closeAuction(listingId, buyer.address)).to.be.revertedWith(
+          "Marketplace: caller is not the listing creator.",
+        );
+      });
+    });
+
+    describe("Events", function () {
+      it("Should emit AuctionClosed with relevant info", async () => {
+        await expect(marketv2.connect(lister).closeAuction(listingId, lister.address))
+          .to.emit(marketv2, "AuctionClosed")
+          .withArgs(
+            ...Object.values({
+              listingId: listingId,
+              closer: lister.address,
+              cancelled: true,
+              auctionCreator: lister.address,
+              winningBidder: ethers.constants.AddressZero,
+            }),
+          );
+      });
+    });
+
+    describe("Balances", function () {
+      it("Should transfer back tokens to auction lister", async () => {
+        const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
+        const marketBalBefore: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
+
+        await marketv2.connect(lister).closeAuction(listingId, lister.address);
+
+        const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
+        const marketBalAfter: BigNumber = await mockNft.balanceOf(marketv2.address, nftTokenId);
+
+        expect(listerBalAfter).to.equal(listerBalBefore.add(listingParams.quantityToList));
+        expect(marketBalAfter).to.equal(marketBalBefore.sub(listingParams.quantityToList));
+      });
+    });
+
+    describe("Contract state", function () {
+      it("Should reset listing", async () => {
+        await marketv2.connect(lister).closeAuction(listingId, lister.address);
+
+        const listing = await marketv2.listings(listingId);
+
+        expect(listing.tokenOwner).to.equal(ethers.constants.AddressZero);
+        expect(listing.quantity).to.equal(0);
+        expect(listing.endTime).to.equal(0);
+      });
+    });
+  });
+
+  describe("Cancel auction: auction ends without bids", function () {
+
+    beforeEach(async () => {
+      // Time travel
+      await timeTravelToAfterListingWindow(listingId);
+    });
+    
     describe("Revert cases", function () {
       it("Should revert if caller is not auction lister.", async () => {
         await expect(marketv2.connect(buyer).closeAuction(listingId, buyer.address)).to.be.revertedWith(
