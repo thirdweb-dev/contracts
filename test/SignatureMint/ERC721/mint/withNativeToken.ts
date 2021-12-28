@@ -98,7 +98,7 @@ describe("Mint tokens with a valid mint request", function () {
 
   describe("Events", function() {
 
-    it("Should emit TokensMinted with the mint request, signature, and the requestor's address", async () => {
+    it("Should emit TokensMinted with the mint request, signature, and the requestor's address.", async () => {
       await expect(
         sigMint721.connect(requestor).mint(mintRequest, signature, { value: totalPrice })
       ).to.emit(sigMint721, "TokensMinted")
