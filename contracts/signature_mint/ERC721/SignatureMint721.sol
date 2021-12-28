@@ -156,7 +156,7 @@ contract SignatureMint721 is
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mint(MintRequest calldata _req, bytes calldata _signature) external payable {
+    function mint(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
 
         verifyRequest(_req, _signature);
         
