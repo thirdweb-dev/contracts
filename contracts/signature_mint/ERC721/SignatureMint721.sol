@@ -306,7 +306,7 @@ contract SignatureMint721 is
         address _to,
         uint256 _amount
     ) internal {
-        if (_amount == 0) {
+        if (_amount == 0 || _from == _to) {
             return;
         }
 
