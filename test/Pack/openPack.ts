@@ -16,7 +16,7 @@ import { getContracts, Contracts } from "../../utils/tests/getContracts";
 import { getURIs, getAmounts } from "../../utils/tests/params";
 import { forkFrom, impersonate } from "../../utils/tests/hardhatFork";
 import { sendGaslessTx } from "../../utils/tests/gasless";
-import linkTokenABi from "../../abi/LinkTokenInterface.json";
+import linkTokenABi from "@chainlink/contracts/abi/v0.8/LinkTokenInterface.json";
 import { chainlinkVars } from "../../utils/chainlink";
 
 describe("Open a pack", function () {
