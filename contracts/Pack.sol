@@ -16,7 +16,11 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Protocol control center.
 import { ProtocolControl } from "./ProtocolControl.sol";
 
+// Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
+
+// Helper interfaces
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
     uint128 private constant MAX_BPS = 10_000;
@@ -31,7 +35,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     uint256 public royaltyBps;
 
     /// @dev Collection level metadata.
-    string public _contractURI;
+    string public contractURI;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -101,7 +105,8 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Emitted when royalties for pack sales are updated.
     event RoyaltyUpdated(uint256 royaltyBps);
 
-    event RestrictedTransferUpdated(bool transferable);
+    /// @dev Emitted when transfers are set as restricted / not-restricted.
+    event TransfersRestricted(bool restricted);
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
@@ -130,7 +135,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         vrfFees = _fees;
 
         // Set contract URI
-        _contractURI = _uri;
+        contractURI = _uri;
 
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
@@ -246,23 +251,23 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
      *      External: setter functions
      */
 
-    /// @dev Lets a protocol admin change the Chainlink VRF fee.
+    /// @dev Lets a module admin change the Chainlink VRF fee.
     function setChainlinkFees(uint256 _newFees) external onlyModuleAdmin {
         vrfFees = _newFees;
     }
 
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    /// @dev Lets a module admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
-        _contractURI = _uri;
+        contractURI = _uri;
     }
 
-    /// @dev Lets a protocol admin transfer LINK from the contract.
-    function transferLink(address _to, uint256 _amount) external onlyModuleAdmin {
-        bool success = LINK.transfer(_to, _amount);
-        require(success, "Pack: Failed to transfer LINK.");
+    /// @dev Lets a module admin transfer ERC20 from the contract.
+    function transferERC20(address _currency, address _to, uint256 _amount) external onlyModuleAdmin {        
+        bool success = IERC20(_currency).transfer(_to, _amount);
+        require(success, "failed to transfer currency.");
     }
 
-    /// @dev Lets a protocol admin update the royalties paid on pack sales.
+    /// @dev Lets a module admin update the royalties paid on pack sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "Pack: Bps provided must be less than 10,000");
 
@@ -271,11 +276,11 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         emit RoyaltyUpdated(_royaltyBps);
     }
 
-    /// @dev Lets a protocol admin restrict token transfers.
+    /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         transfersRestricted = _restrictedTransfer;
 
-        emit RestrictedTransferUpdated(_restrictedTransfer);
+        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /**
@@ -453,11 +458,6 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Returns a pack for the given pack tokenId
     function getPack(uint256 _packId) external view returns (PackState memory pack) {
         pack = packs[_packId];
-    }
-
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
     }
 
     /// @dev Returns a pack with its underlying rewards
