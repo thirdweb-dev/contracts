@@ -7,15 +7,25 @@ require("dotenv").config();
 
 const defaultForkBlock = 9414004; // randomly set
 
-export const forkFrom = async (network: keyof typeof chainIds) => {
+export const forkFrom = async (network: string, forkBlock?: number) => {
   let alchemyKey: string = process.env.ALCHEMY_KEY || "";
 
-  let nodeUrl: string =
-    chainIds[network] == 137 || chainIds[network] == 80001
-      ? network == "polygon"
-        ? `https://polygon-mainnet.g.alchemy.com/v2/${alchemyKey}`
-        : `https://polygon-mumbai.g.alchemy.com/v2/${alchemyKey}`
+  const polygonNetworkName = network === "polygon" ? "mainnet" : "mumbai";
+
+  let nodeUrl =
+    chainIds[network as keyof typeof chainIds] == 137 || chainIds[network as keyof typeof chainIds] == 80001
+      ? `https://polygon-${polygonNetworkName}.g.alchemy.com/v2/${alchemyKey}`
       : `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
+
+  if (network === "avax") {
+    nodeUrl = "https://api.avax.network/ext/bc/C/rpc";
+  } else if (network === "avax_testnet") {
+    nodeUrl = "https://api.avax-test.network/ext/bc/C/rpc";
+  } else if (network === "fantom") {
+    nodeUrl = "https://rpc.ftm.tools";
+  } else if (network === "fantom_testnet") {
+    nodeUrl = "https://rpc.testnet.fantom.network";
+  }
 
   await hre.network.provider.request({
     method: "hardhat_reset",
@@ -23,7 +33,7 @@ export const forkFrom = async (network: keyof typeof chainIds) => {
       {
         forking: {
           jsonRpcUrl: nodeUrl,
-          blockNumber: defaultForkBlock,
+          blockNumber: forkBlock || defaultForkBlock,
         },
       },
     ],
