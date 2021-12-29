@@ -10,7 +10,7 @@ import { ControlDeployer, Forwarder, ProtocolControl, Registry } from "typechain
 use(solidity);
 
 /**
- * We deply 2 clones of ProtocolControl, each having a different deployer. Both clones
+ * We deploy 2 clones of ProtocolControl, each having a different deployer. Both clones
  * implement the logic in ProtocolControl, but have different states.
  */
 
