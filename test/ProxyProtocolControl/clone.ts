@@ -107,4 +107,23 @@ describe("Deploy proxies for ProtocolControl using ControlDeployer", function() 
     expect(await clone_2.hasRole(DEFAULT_ADMIN_ROLE, protocolAdmin_2.address)).to.equal(true)
     expect(await clone_2.hasRole(DEFAULT_ADMIN_ROLE, protocolAdmin_1.address)).to.equal(false)
   })
+
+  it("Should prevent initializing a clone after deployment", async () => {
+    await expect(
+      clone_1.connect(protocolProvider).initialize(
+        registry.address,
+        protocolProvider.address,
+        clone_1_URI
+      )
+    ).to.be.revertedWith("Initializable: contract is already initialized")
+
+    await expect(
+      clone_2.connect(protocolProvider).initialize(
+        registry.address,
+        protocolProvider.address,
+        clone_1_URI
+      )
+    ).to.be.revertedWith("Initializable: contract is already initialized")
+
+  })
 })
