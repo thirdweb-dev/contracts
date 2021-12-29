@@ -178,8 +178,7 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
         Registry _registry = Registry(registry);
         IERC20 _currency = IERC20(currency);
         address registryTreasury = _registry.treasury();
-        uint256 registryTreasuryFee = 0;
-        uint256 amount = 0;
+        uint256 amount;
 
         if (currency == address(0)) {
             amount = address(this).balance;
@@ -187,8 +186,8 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
             amount = _currency.balanceOf(address(this));
         }
 
-        registryTreasuryFee = (amount * _registry.getFeeBps(address(this))) / MAX_BPS;
-        amount = amount - registryTreasuryFee;
+        uint256 registryTreasuryFee = (amount * _registry.getFeeBps(address(this))) / MAX_BPS;
+        amount -= registryTreasuryFee;
 
         bool transferSuccess;
 
