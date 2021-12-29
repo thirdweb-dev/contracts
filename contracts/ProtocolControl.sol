@@ -191,21 +191,22 @@ contract ProtocolControl is AccessControlEnumerable {
         registryTreasuryFee = (amount * _registry.getFeeBps(address(this))) / MAX_BPS;
         amount = amount - registryTreasuryFee;
 
-        if (currency == address(0)) {
-            (bool sent, ) = payable(to).call{ value: amount }("");
-            require(sent, "failed to withdraw funds");
+        bool transferSuccess;
 
-            (bool sentRegistry, ) = payable(registryTreasury).call{ value: registryTreasuryFee }("");
-            require(sentRegistry, "failed to withdraw funds to registry");
+        if (currency == address(0)) {
+            (transferSuccess, ) = payable(to).call{ value: amount }("");
+            require(transferSuccess, "failed to withdraw funds");
+
+            (transferSuccess, ) = payable(registryTreasury).call{ value: registryTreasuryFee }("");
+            require(transferSuccess, "failed to withdraw funds to registry");
 
             emit FundsWithdrawn(to, currency, amount, registryTreasuryFee);
         } else {
-            require(_currency.transferFrom(_msgSender(), to, amount), "failed to transfer payment");
+            transferSuccess = _currency.transfer(to, amount);
+            require(transferSuccess, "failed to transfer payment");
 
-            require(
-                _currency.transferFrom(_msgSender(), registryTreasury, registryTreasuryFee),
-                "failed to transfer payment to registry"
-            );
+            transferSuccess = _currency.transfer(registryTreasury, registryTreasuryFee);
+            require(transferSuccess, "failed to transfer payment to registry");
 
             emit FundsWithdrawn(to, currency, amount, registryTreasuryFee);
         }
