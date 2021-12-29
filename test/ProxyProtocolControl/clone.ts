@@ -131,8 +131,9 @@ describe("Deploy proxies for ProtocolControl using ControlDeployer", function() 
 
   describe("Test the withdrawal of funds from the clones", function() {
     
-    // This works too: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-    const NATIVE_TOKEN_ADDRESS: string = ethers.constants.AddressZero;
+    // This works with: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" and address(0);
+    // const NATIVE_TOKEN_ADDRESS: string = ethers.constants.AddressZero;
+    const NATIVE_TOKEN_ADDRESS: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
     // Additional signers
     let erc20Signer: SignerWithAddress;
