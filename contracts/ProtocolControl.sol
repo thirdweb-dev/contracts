@@ -16,6 +16,9 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
     /// @dev MAX_BPS for the contract: 10_000 == 100%
     uint256 public constant MAX_BPS = 10000;
 
+    /// @dev The address interpreted as native token of the chain.
+    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     /// @dev Module ID => Module address.
     mapping(bytes32 => address) public modules;
 
@@ -180,7 +183,9 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
         address registryTreasury = _registry.treasury();
         uint256 amount;
 
-        if (currency == address(0)) {
+        bool isNativeToken = _isNativeToken(address(_currency));
+
+        if (isNativeToken) {
             amount = address(this).balance;
         } else {
             amount = _currency.balanceOf(address(this));
@@ -191,7 +196,7 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
 
         bool transferSuccess;
 
-        if (currency == address(0)) {
+        if (isNativeToken) {
             (transferSuccess, ) = payable(to).call{ value: amount }("");
             require(transferSuccess, "failed to withdraw funds");
 
@@ -208,5 +213,10 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
 
             emit FundsWithdrawn(to, currency, amount, registryTreasuryFee);
         }
+    }
+
+    /// @dev Checks whether an address is to be interpreted as the native token
+    function _isNativeToken(address _toCheck) internal pure returns (bool) {
+        return _toCheck == NATIVE_TOKEN || _toCheck == address(0);
     }
 }
