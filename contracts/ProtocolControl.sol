@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
     /// @dev MAX_BPS for the contract: 10_000 == 100%
-    uint128 public constant MAX_BPS = 10000;
+    uint256 public constant MAX_BPS = 10000;
 
     /// @dev Module ID => Module address.
     mapping(bytes32 => address) public modules;
