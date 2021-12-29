@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 // Access Control
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 // Registry
 import { Registry } from "./Registry.sol";
@@ -10,7 +12,7 @@ import { Royalty } from "./Royalty.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ProtocolControl is AccessControlEnumerable {
+contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
     /// @dev MAX_BPS for the contract: 10_000 == 100%
     uint128 public constant MAX_BPS = 10000;
 
@@ -33,7 +35,7 @@ contract ProtocolControl is AccessControlEnumerable {
     address private _forwarder;
 
     /// @dev Contract level metadata.
-    string private _contractURI;
+    string public contractURI;
 
     /// @dev Events.
     event ModuleUpdated(bytes32 indexed moduleId, address indexed module);
@@ -56,13 +58,15 @@ contract ProtocolControl is AccessControlEnumerable {
         _;
     }
 
-    constructor(
+    constructor() initializer {}
+
+    function initialize(
         address _registry,
         address _admin,
         string memory _uri
-    ) {
+    ) external initializer {
         // Set contract URI
-        _contractURI = _uri;
+        contractURI = _uri;
         // Set top level ap registry
         registry = _registry;
         // Set default royalty treasury address
@@ -142,18 +146,13 @@ contract ProtocolControl is AccessControlEnumerable {
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
-        _contractURI = _URI;
+        contractURI = _URI;
     }
 
     /// @dev Lets the admin set a new Forwarder address [NOTE: for off-chain convenience only.]
     function setForwarder(address forwarder) external onlyProtocolAdmin {
         _forwarder = forwarder;
         emit ForwarderUpdated(forwarder);
-    }
-
-    /// @dev Returns the URI for the contract-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
     }
 
     /// @dev Returns all addresses for a module type
