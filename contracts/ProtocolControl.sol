@@ -177,6 +177,7 @@ contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
         return _forwarder;
     }
 
+    /// @dev Lets a protocol admin withdraw tokens from this contract.
     function withdrawFunds(address to, address currency) external onlyProtocolAdmin {
         Registry _registry = Registry(registry);
         IERC20 _currency = IERC20(currency);
