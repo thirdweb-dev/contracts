@@ -582,13 +582,10 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
-        // Required due to the use of `IERC20.transferFrom`.
-        if (_from == address(this)) {
-            IERC20(_currency).approve(address(this), _amount);
-        }
-
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
+        bool success = _from == address(this)
+            ? IERC20(_currency).transfer(_to, _amount)
+            : IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
         require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
