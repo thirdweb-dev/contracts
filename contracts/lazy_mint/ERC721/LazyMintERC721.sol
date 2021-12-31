@@ -329,7 +329,7 @@ contract LazyMintERC721 is
         address _to,
         uint256 _amount
     ) internal {
-        if (_amount == 0 || _from == _to) {
+        if (_amount == 0) {
             return;
         }
 
@@ -377,6 +377,9 @@ contract LazyMintERC721 is
         address _to,
         uint256 _amount
     ) internal {
+        if(_from == _to) {
+            return;
+        }
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = _from == address(this)
             ? IERC20(_currency).transfer(_to, _amount)
