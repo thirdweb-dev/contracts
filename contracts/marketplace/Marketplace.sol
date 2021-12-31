@@ -460,7 +460,7 @@ contract Marketplace is
 
     /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
     function _closeAuctionForAuctionCreator(Listing memory _targetListing, Offer memory _winningBid) internal {
-        uint256 payoutAmount = _winningBid.pricePerToken * _winningBid.quantityWanted;
+        uint256 payoutAmount = _winningBid.pricePerToken * _targetListing.quantity;
 
         _targetListing.quantity = 0;
         _targetListing.endTime = block.timestamp;
