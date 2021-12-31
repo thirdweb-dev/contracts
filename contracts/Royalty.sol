@@ -4,20 +4,23 @@ pragma solidity ^0.8.0;
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitter.sol";
 
-// Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
-
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-
 import { Registry } from "./Registry.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
+
+// Meta transactions
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+
+// Security
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
+// Utils
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 /**
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Multicall {
+contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerable, ERC2771ContextUpgradeable, Multicall {
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
@@ -30,13 +33,22 @@ contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mu
     }
 
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
-    constructor(
+    constructor() initializer {}
+
+    /// @dev Performs the job of the constructor.
+    function initialize (
         address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri,
         address[] memory payees,
         uint256[] memory shares_
-    ) PaymentSplitter() ERC2771Context(_trustedForwarder) {
+    )
+        external
+        initializer
+    {
+        // Initialize ERC2771 Context
+        __ERC2771Context_init(_trustedForwarder);
+
         require(payees.length == shares_.length, "Royalty: unequal number of payees and shares provided.");
         require(payees.length > 0, "Royalty: no payees provided.");
 
@@ -71,13 +83,13 @@ contract Royalty is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mu
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
