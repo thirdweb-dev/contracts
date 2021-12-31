@@ -20,7 +20,6 @@ describe("Deploy proxies for Royalty module", function() {
   let protocolAdmin_2: SignerWithAddress;
 
   // Contracts
-  let registry: Registry;
   let controlCenter: ProtocolControl;
   let royaltyContract: Royalty;
   let proxyForRoyalty: Royalty;
@@ -35,17 +34,12 @@ describe("Deploy proxies for Royalty module", function() {
     return _shares.map(val => val * 10_000);
   }
 
-  function sharesPostFee(_shares: number[], _feeBps: number): number[] {
-    return _shares.map(val => val - (val * _feeBps) / 10_000);
-  }
-
   before(async () => {
     // Get signers
     [protocolProvider, protocolAdmin_dummy, protocolAdmin_1, protocolAdmin_2] = await ethers.getSigners();
 
     // Get initialize params
     const contracts = await getContracts(protocolProvider, protocolAdmin_dummy);
-    registry = contracts.registry;
     controlCenter = contracts.protocolControl;
     trustedForwarderAddr = contracts.forwarder.address;
     uri = "ipfs://"
@@ -71,10 +65,8 @@ describe("Deploy proxies for Royalty module", function() {
     expect(await proxyForRoyalty.contractURI()).to.equal(uri);
     expect(await proxyForRoyalty.totalShares()).to.equal(scaleShares(shares).reduce((a,b) => a+b));
 
-    const sharesAfterFee: number[] = sharesPostFee(scaleShares(shares), (await registry.getFeeBps(controlCenter.address)).toNumber()) 
-
     for(let i = 0; i < payees.length; i += 1) {
-      expect(await proxyForRoyalty.shares(payees[i])).to.equal(sharesAfterFee[i]);
+      expect(await proxyForRoyalty.shares(payees[i])).to.equal(scaleShares(shares)[i]);
     }
   })
 
