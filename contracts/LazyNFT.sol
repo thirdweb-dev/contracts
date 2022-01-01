@@ -142,6 +142,7 @@ contract LazyNFT is
         maxTotalSupply = _maxSupply;
         saleRecipient = _saleRecipient;
 
+        // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());

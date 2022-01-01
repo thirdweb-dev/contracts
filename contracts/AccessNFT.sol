@@ -123,7 +123,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         // Set contract URI
         _contractURI = _uri;
 
-        // Grant TRANSFER_ROLE to deployer.
+        // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);

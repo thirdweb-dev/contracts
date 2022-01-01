@@ -76,6 +76,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         // Set contract URI
         _contractURI = _uri;
 
+        // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);

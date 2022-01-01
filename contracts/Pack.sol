@@ -143,11 +143,10 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         // Set contract URI
         contractURI = _uri;
 
-        // Grant TRANSFER_ROLE to deployer.
+        // Grant ownership and setup roles
+        _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);
-
-        _owner = _msgSender();
     }
 
     /**
