@@ -184,12 +184,11 @@ describe("Close / Cancel auction: ERC20 token", function () {
   });
 
   describe("Cancel auction: auction ends without bids", function () {
-
     beforeEach(async () => {
       // Time travel
       await timeTravelToAfterListingWindow(listingId);
     });
-    
+
     describe("Revert cases", function () {
       it("Should revert if caller is not auction lister.", async () => {
         await expect(marketv2.connect(buyer).closeAuction(listingId, buyer.address)).to.be.revertedWith(

@@ -52,6 +52,9 @@ contract LazyMintERC721 is
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
@@ -118,12 +121,20 @@ contract LazyMintERC721 is
         feeBps = uint120(_feeBps);
 
         address deployer = _msgSender();
+        _owner = deployer;
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
         _setupRole(TRANSFER_ROLE, deployer);
     }
 
     ///     =====   Public functions  =====
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
+    }
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -377,7 +388,7 @@ contract LazyMintERC721 is
         address _to,
         uint256 _amount
     ) internal {
-        if(_from == _to) {
+        if (_from == _to) {
             return;
         }
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
@@ -420,6 +431,15 @@ contract LazyMintERC721 is
         transfersRestricted = _restrictedTransfer;
 
         emit TransfersRestricted(_restrictedTransfer);
+    }
+
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.

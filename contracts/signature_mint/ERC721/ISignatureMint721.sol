@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
 interface ISignatureMint721 {
-    
     /**
      *  @notice The body of a request to mint NFTs.
      *
@@ -44,6 +43,9 @@ interface ISignatureMint721 {
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
+
+    /// @dev Emitted when a new Owner is set.
+    event NewOwner(address prevOwner, address newOwner);
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding
