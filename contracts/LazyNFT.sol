@@ -44,7 +44,7 @@ contract LazyNFT is
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -128,10 +128,7 @@ contract LazyNFT is
         uint256 _royaltyBps,
         uint256 _feeBps,
         address _saleRecipient
-    )
-        ERC721(_name, _symbol)
-        ERC2771Context(_trustedForwarder) 
-    {
+    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -156,9 +153,7 @@ contract LazyNFT is
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
-            ? _owner
-            : address(0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     function lazyMintBatch(string[] calldata _uris) external {

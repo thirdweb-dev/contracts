@@ -115,10 +115,7 @@ contract LazyMintERC1155 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    )
-        ERC1155("")
-        ERC2771Context(_trustedForwarder)
-    {
+    ) ERC1155("") ERC2771Context(_trustedForwarder) {
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
@@ -139,9 +136,7 @@ contract LazyMintERC1155 is
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
-            ? _owner
-            : address(0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /// @dev Returns the URI for a given tokenId.
@@ -453,7 +448,7 @@ contract LazyMintERC1155 is
         if (_amount == 0) {
             return;
         }
-        
+
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 IWETH(nativeTokenWrapper).withdraw(_amount);
@@ -498,7 +493,7 @@ contract LazyMintERC1155 is
         address _to,
         uint256 _amount
     ) internal {
-        if(_from == _to) {
+        if (_from == _to) {
             return;
         }
         uint256 balBefore = IERC20(_currency).balanceOf(_to);

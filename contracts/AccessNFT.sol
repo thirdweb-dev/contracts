@@ -113,10 +113,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    )
-        ERC1155PresetMinterPauserSupplyHolder(_uri)
-        ERC2771Context(_trustedForwarder)
-    {
+    ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -132,14 +129,12 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     /**
      *      Public functions
      */
-    
+
     /**
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
-            ? _owner
-            : address(0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /// @dev See {ERC1155Minter}.

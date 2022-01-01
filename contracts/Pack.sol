@@ -157,9 +157,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
-            ? _owner
-            : address(0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /**
@@ -282,12 +280,16 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {       
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
     }
 
     /// @dev Lets a module admin transfer ERC20 from the contract.
-    function transferERC20(address _currency, address _to, uint256 _amount) external onlyModuleAdmin {        
+    function transferERC20(
+        address _currency,
+        address _to,
+        uint256 _amount
+    ) external onlyModuleAdmin {
         bool success = IERC20(_currency).transfer(_to, _amount);
         require(success, "failed to transfer currency.");
     }

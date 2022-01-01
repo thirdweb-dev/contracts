@@ -316,9 +316,9 @@ contract Marketplace is
         Offer memory targetBid = winningBid[_listingId];
 
         // Cancel auction if (1) auction hasn't started, or (2) auction ended without any bids.
-        bool toCancel = (targetListing.startTime > block.timestamp)
-            || (targetListing.endTime < block.timestamp && targetBid.offeror == address(0));
-        
+        bool toCancel = (targetListing.startTime > block.timestamp) ||
+            (targetListing.endTime < block.timestamp && targetBid.offeror == address(0));
+
         if (toCancel) {
             _cancelAuction(targetListing);
         } else {
@@ -328,7 +328,7 @@ contract Marketplace is
             if (_closeFor == targetListing.tokenOwner) {
                 _closeAuctionForAuctionCreator(targetListing, targetBid);
             }
-                
+
             if (_closeFor == targetBid.offeror) {
                 _closeAuctionForBidder(targetListing, targetBid);
             }
@@ -582,7 +582,7 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
-        if(_from == _to) {
+        if (_from == _to) {
             return;
         }
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
@@ -676,10 +676,7 @@ contract Marketplace is
 
         // Check: buyer owns and has approved sufficient currency for sale.
         if (_listing.currency == NATIVE_TOKEN) {
-            require(
-                msg.value == settledTotalPrice,
-                "Marketplace: insufficient currency balance or allowance."
-            );
+            require(msg.value == settledTotalPrice, "Marketplace: insufficient currency balance or allowance.");
         } else {
             validateERC20BalAndAllowance(_buyer, _listing.currency, settledTotalPrice);
         }

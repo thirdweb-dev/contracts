@@ -13,10 +13,9 @@ import { Royalty } from "./Royalty.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
-
     /// @dev Contract version
     string public constant version = "1";
-    
+
     /// @dev MAX_BPS for the contract: 10_000 == 100%
     uint256 public constant MAX_BPS = 10000;
 

@@ -66,10 +66,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    )
-        ERC721PresetMinterPauserAutoId(_name, _symbol, _uri) 
-        ERC2771Context(_trustedForwarder) 
-    {
+    ) ERC721PresetMinterPauserAutoId(_name, _symbol, _uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -86,9 +83,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
-            ? _owner
-            : address(0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /// @dev Revert inherited mint function.

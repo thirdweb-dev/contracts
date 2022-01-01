@@ -176,7 +176,6 @@ describe("Bid with native token: Auction Listing", function () {
   });
 
   describe("Cancel auction: auction ends without bids", function () {
-
     beforeEach(async () => {
       // Time travel
       await timeTravelToAfterListingWindow(listingId);

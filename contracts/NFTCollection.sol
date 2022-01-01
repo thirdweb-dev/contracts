@@ -147,10 +147,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    ) 
-        ERC1155PresetMinterPauserSupplyHolder(_uri) 
-        ERC2771Context(_trustedForwarder) 
-    {
+    ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -160,13 +157,13 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         // Grant ownership and setup roles
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
-        setRoyaltyBps(_royaltyBps);        
+        setRoyaltyBps(_royaltyBps);
     }
 
     /**
      *      Public functions
      */
-    
+
     /**
      * @dev Returns the address of the current owner.
      */
@@ -174,9 +171,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
-            ? _owner
-            : address(0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /// @notice Create native ERC 1155 NFTs.
