@@ -30,10 +30,10 @@ describe("Token transfers under various conditions", function () {
   let forwarder: Forwarder;
 
   // Reward parameters
-  const [packURI]: string[] = getURIs(1);
-  const rewardURIs: string[] = getURIs();
-  const accessURIs = getURIs(rewardURIs.length);
-  const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const [packURI]: string[] = ["ipfs://1"];
+  const rewardURIs: string[] = ["ipfs://1", "ipfs://2", "ipfs://3"];
+  const accessURIs = ["ipfs://4", "ipfs://5", "ipfs://6"];
+  const rewardSupplies: number[] = [100, 200, 300];
   const openStartAndEnd: number = 0;
   const rewardsPerOpen: number = 1;
 

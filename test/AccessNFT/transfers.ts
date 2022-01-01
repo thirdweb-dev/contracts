@@ -27,9 +27,9 @@ describe("Token transfers under various conditions", function () {
   let forwarder: Forwarder;
 
   // Reward parameters
-  const rewardURIs: string[] = getURIs();
-  const accessURIs = getURIs(rewardURIs.length);
-  const rewardSupplies: number[] = getAmounts(rewardURIs.length);
+  const rewardURIs: string[] = ["ipfs://1", "ipfs://2", "ipfs://3"];
+  const accessURIs = ["ipfs://4", "ipfs://5", "ipfs://6"];
+  const rewardSupplies: number[] = [100, 200, 300];
   const emptyData: BytesLike = ethers.utils.toUtf8Bytes("");
 
   // Redeem Parameters
