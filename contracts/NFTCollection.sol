@@ -20,9 +20,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFTCollection is Ownable, ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
+contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev The protocol control center.
@@ -145,7 +144,6 @@ contract NFTCollection is Ownable, ERC1155PresetMinterPauserSupplyHolder, ERC277
     ) 
         ERC1155PresetMinterPauserSupplyHolder(_uri) 
         ERC2771Context(_trustedForwarder) 
-        Ownable()
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -161,6 +159,13 @@ contract NFTCollection is Ownable, ERC1155PresetMinterPauserSupplyHolder, ERC277
     /**
      *      Public functions
      */
+    
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+    }    
 
     /// @notice Create native ERC 1155 NFTs.
     function createNativeTokens(
@@ -383,11 +388,7 @@ contract NFTCollection is Ownable, ERC1155PresetMinterPauserSupplyHolder, ERC277
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
-            "only module admin or owner"
-        );
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 

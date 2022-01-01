@@ -18,12 +18,11 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Pack is Ownable, ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
+contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev The protocol control center.
@@ -127,7 +126,6 @@ contract Pack is Ownable, ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase
         ERC1155PresetMinterPauserSupplyHolder(_uri)
         VRFConsumerBase(_vrfCoordinator, _linkToken)
         ERC2771Context(_trustedForwarder)
-        Ownable()
     {
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);
@@ -147,6 +145,13 @@ contract Pack is Ownable, ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase
     /**
      *      Public functions
      */
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+    }    
 
     /**
      * @dev See {ERC1155-_mint}.
@@ -259,11 +264,7 @@ contract Pack is Ownable, ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
-            "only module admin or owner"
-        );
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {       
         contractURI = _uri;
     }
 

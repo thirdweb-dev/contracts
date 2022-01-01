@@ -16,7 +16,6 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Royalties
@@ -35,7 +34,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SignatureMint721 is
     ISignatureMint721,
-    Ownable,
     ERC721Enumerable,
     EIP712,
     AccessControlEnumerable,
@@ -114,7 +112,6 @@ contract SignatureMint721 is
         ERC721(_name, _symbol) 
         EIP712("SignatureMint721", "1")
         ERC2771Context(_trustedForwarder)
-        Ownable()
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -131,6 +128,13 @@ contract SignatureMint721 is
     }
 
     ///     =====   Public functions  =====
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+    }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(
@@ -219,11 +223,7 @@ contract SignatureMint721 is
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
-            "only module admin or owner"
-        );
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
     }
 

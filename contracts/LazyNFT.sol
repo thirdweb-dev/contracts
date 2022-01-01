@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -28,7 +27,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract LazyNFT is
-    Ownable,
     AccessControlEnumerable,
     ERC721Enumerable,
     ERC721Burnable,
@@ -129,7 +127,6 @@ contract LazyNFT is
     )
         ERC721(_name, _symbol)
         ERC2771Context(_trustedForwarder) 
-        Ownable()
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -147,6 +144,13 @@ contract LazyNFT is
 
         setFeeBps(_feeBps);
         setRoyaltyBps(_royaltyBps);
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
     }
 
     function lazyMintBatch(string[] calldata _uris) external {
@@ -394,11 +398,7 @@ contract LazyNFT is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
-            "only module admin or owner"
-        );
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 

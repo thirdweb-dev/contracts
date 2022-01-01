@@ -17,7 +17,6 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Access Control + security
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -33,7 +32,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LazyMintERC721 is
     ILazyMintERC721,
-    Ownable,
     ERC721Enumerable,
     ERC2771Context,
     IERC2981,
@@ -113,7 +111,6 @@ contract LazyMintERC721 is
     )
         ERC721(_name, _symbol)
         ERC2771Context(_trustedForwarder)
-        Ownable()
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -130,6 +127,13 @@ contract LazyMintERC721 is
     }
 
     ///     =====   Public functions  =====
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+    }
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -429,11 +433,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
-            "only module admin or owner"
-        );
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
     }
 

@@ -16,9 +16,8 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFT is Ownable, ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multicall {
+contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multicall {
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -67,7 +66,6 @@ contract NFT is Ownable, ERC721PresetMinterPauserAutoId, ERC2771Context, IERC298
     )
         ERC721PresetMinterPauserAutoId(_name, _symbol, _uri) 
         ERC2771Context(_trustedForwarder) 
-        Ownable()
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
@@ -77,6 +75,13 @@ contract NFT is Ownable, ERC721PresetMinterPauserAutoId, ERC2771Context, IERC298
 
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
     }
 
     /// @dev Revert inherited mint function.
@@ -199,11 +204,7 @@ contract NFT is Ownable, ERC721PresetMinterPauserAutoId, ERC2771Context, IERC298
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
-            "only module admin or owner"
-        );
+    function setContractURI(string calldata _URI) external onlyModuleAdmin {
         _contractURI = _URI;
     }
 
