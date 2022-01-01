@@ -394,7 +394,11 @@ contract LazyNFT is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyModuleAdmin {
+    function setContractURI(string calldata _URI) external {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
+            "only module admin or owner"
+        );
         _contractURI = _URI;
     }
 

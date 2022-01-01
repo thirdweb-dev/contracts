@@ -219,7 +219,11 @@ contract SignatureMint721 is
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || _msgSender() == owner(),
+            "only module admin or owner"
+        );
         contractURI = _uri;
     }
 
