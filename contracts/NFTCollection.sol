@@ -400,7 +400,7 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         emit RoyaltyUpdated(_royaltyBps);
     }
 
-    /// @dev Lets a module admin set the URI for contract-level metadata.
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyModuleAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
