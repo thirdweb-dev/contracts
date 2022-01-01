@@ -11,7 +11,7 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Security
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerable, ERC2771ContextUpgradeable, Multicall {
+contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerableUpgradeable, ERC2771ContextUpgradeable, Multicall {
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
@@ -46,8 +46,9 @@ contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerable, ERC
         external
         initializer
     {
-        // Initialize ERC2771 Context
+        // Initialize ERC2771 Context, AccessControlEnumerable`
         __ERC2771Context_init(_trustedForwarder);
+        __AccessControlEnumerable_init();
 
         require(payees.length == shares_.length, "Royalty: unequal number of payees and shares provided.");
         require(payees.length > 0, "Royalty: no payees provided.");
@@ -67,12 +68,12 @@ contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerable, ERC
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender() internal view virtual override(ContextUpgradeable, Context, ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData() internal view virtual override(ContextUpgradeable, Context, ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 
