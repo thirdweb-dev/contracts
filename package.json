@@ -1,7 +1,7 @@
 {
   "name": "@3rdweb/contracts",
   "description": "",
-  "version": "1.18.1",
+  "version": "1.18.2",
   "license": "Apache-2.0",
   "dependencies": {},
   "source": "src/index.ts",
