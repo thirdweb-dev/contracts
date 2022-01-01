@@ -26,6 +26,9 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
@@ -48,8 +51,8 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     event Minted(address indexed creator, address indexed to, uint256 tokenId, string tokenURI);
     event MintedBatch(address indexed creator, address indexed to, uint256[] tokenIds, string[] tokenURI);
     event RestrictedTransferUpdated(bool transferable);
-
     event RoyaltyUpdated(uint256 royaltyBps);
+    event NewOwner(address prevOwner, address newOwner);
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
@@ -73,6 +76,7 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
         // Set contract URI
         _contractURI = _uri;
 
+        _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);
     }
@@ -81,7 +85,9 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
+            ? _owner
+            : address(0);
     }
 
     /// @dev Revert inherited mint function.
@@ -201,6 +207,15 @@ contract NFT is ERC721PresetMinterPauserAutoId, ERC2771Context, IERC2981, Multic
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     function contractURI() public view returns (string memory) {
         return _contractURI;
+    }
+
+    /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.

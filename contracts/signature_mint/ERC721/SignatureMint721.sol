@@ -60,6 +60,9 @@ contract SignatureMint721 is
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
@@ -122,6 +125,7 @@ contract SignatureMint721 is
         feeBps = uint120(_feeBps);
 
         address deployer = _msgSender();
+        _owner = deployer;
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
         _setupRole(TRANSFER_ROLE, deployer);
@@ -133,7 +137,9 @@ contract SignatureMint721 is
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
+            ? _owner
+            : address(0);
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
@@ -220,6 +226,15 @@ contract SignatureMint721 is
         transfersRestricted = _restrictedTransfer;
 
         emit TransfersRestricted(_restrictedTransfer);
+    }
+
+    /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.

@@ -28,6 +28,9 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
 
@@ -108,6 +111,9 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
 
+    /// @dev Emitted when a new Owner is set.
+    event NewOwner(address prevOwner, address newOwner);
+
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
@@ -140,6 +146,8 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         // Grant TRANSFER_ROLE to deployer.
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);
+
+        _owner = _msgSender();
     }
 
     /**
@@ -150,8 +158,10 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
-    }    
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
+            ? _owner
+            : address(0);
+    }
 
     /**
      * @dev See {ERC1155-_mint}.
@@ -261,6 +271,15 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Lets a module admin change the Chainlink VRF fee.
     function setChainlinkFees(uint256 _newFees) external onlyModuleAdmin {
         vrfFees = _newFees;
+    }
+
+    /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.

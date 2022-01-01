@@ -21,6 +21,9 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
 
@@ -84,6 +87,9 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     /// @dev Emitted when the transferability of Access NFTs is changed.
     event AccessTransferabilityUpdated(bool isTransferable);
 
+    /// @dev Emitted when a new Owner is set.
+    event NewOwner(address prevOwner, address newOwner);
+
     /// @dev NFT tokenId => token state.
     mapping(uint256 => TokenState) public tokenState;
 
@@ -118,6 +124,7 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         _contractURI = _uri;
 
         // Grant TRANSFER_ROLE to deployer.
+        _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);
     }
@@ -130,7 +137,9 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address) {
-        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner)
+            ? _owner
+            : address(0);
     }
 
     /// @dev See {ERC1155Minter}.
@@ -302,6 +311,15 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         transfersRestricted = _restrictedTransfer;
 
         emit RestrictedTransferUpdated(_restrictedTransfer);
+    }
+
+    /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
