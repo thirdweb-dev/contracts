@@ -18,11 +18,12 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
+contract Pack is Ownable, ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771Context, IERC2981, Multicall {
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev The protocol control center.
@@ -126,6 +127,7 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         ERC1155PresetMinterPauserSupplyHolder(_uri)
         VRFConsumerBase(_vrfCoordinator, _linkToken)
         ERC2771Context(_trustedForwarder)
+        Ownable()
     {
         // Set the protocol control center.
         controlCenter = ProtocolControl(_controlCenter);

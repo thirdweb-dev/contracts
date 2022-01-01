@@ -14,8 +14,9 @@ import { ProtocolControl } from "./ProtocolControl.sol";
 import { IERC2981 } from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
+contract AccessNFT is Ownable, ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall {
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev The protocol control center.
@@ -107,7 +108,11 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    ) ERC1155PresetMinterPauserSupplyHolder(_uri) ERC2771Context(_trustedForwarder) {
+    )
+        ERC1155PresetMinterPauserSupplyHolder(_uri)
+        ERC2771Context(_trustedForwarder)
+        Ownable()
+    {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 

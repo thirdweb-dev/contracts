@@ -16,6 +16,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Access Control + security
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -31,6 +32,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LazyMintERC1155 is
     ILazyMintERC1155,
+    Ownable,
     ERC1155,
     ERC2771Context,
     IERC2981,
@@ -112,7 +114,11 @@ contract LazyMintERC1155 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC1155("") ERC2771Context(_trustedForwarder) {
+    )
+        ERC1155("")
+        ERC2771Context(_trustedForwarder)
+        Ownable()
+    {
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;

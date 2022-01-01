@@ -16,6 +16,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Royalties
@@ -33,8 +34,8 @@ import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SignatureMint721 is
-    
     ISignatureMint721,
+    Ownable,
     ERC721Enumerable,
     EIP712,
     AccessControlEnumerable,
@@ -113,6 +114,7 @@ contract SignatureMint721 is
         ERC721(_name, _symbol) 
         EIP712("SignatureMint721", "1")
         ERC2771Context(_trustedForwarder)
+        Ownable()
     {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);

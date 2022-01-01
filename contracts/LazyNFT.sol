@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -27,6 +28,7 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract LazyNFT is
+    Ownable,
     AccessControlEnumerable,
     ERC721Enumerable,
     ERC721Burnable,
@@ -124,7 +126,11 @@ contract LazyNFT is
         uint256 _royaltyBps,
         uint256 _feeBps,
         address _saleRecipient
-    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) {
+    )
+        ERC721(_name, _symbol)
+        ERC2771Context(_trustedForwarder) 
+        Ownable()
+    {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
 
