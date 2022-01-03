@@ -10,8 +10,7 @@ interface ISignatureMint721 {
      *  @notice The body of a request to mint NFTs.
      *
      *  @param to The receiver of the NFTs to mint.
-     *  @param baseURI The base URI to assign to the NFTs to mint.
-     *  @param pricePerToken The price per NFT to mint.
+     *  @param price Price to pay for minting with the signature.
      *  @param currency The currency in which the price per token must be paid.
      *  @param validityStartTimestamp The unix timestamp after which the request is valid.
      *  @param validityEndTimestamp The unix timestamp after which the request expires.
@@ -20,7 +19,7 @@ interface ISignatureMint721 {
     struct MintRequest {
         address to;
         string uri;
-        uint256 pricePerToken;
+        uint256 price;
         address currency;
         uint128 validityStartTimestamp;
         uint128 validityEndTimestamp;
