@@ -27,7 +27,7 @@ interface ISignatureMint721 {
     }
 
     /// @dev Emitted when tokens are minted.
-    event TokensMinted(MintRequest mintRequest, bytes signature, address indexed requestor);
+    event TokensMinted(MintRequest mintRequest, bytes signature, address indexed requestor, uint256 indexed tokenIdMinted);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
