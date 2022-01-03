@@ -32,8 +32,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "hardhat/console.sol";
-
 contract SignatureMint721 is
     ISignatureMint721,
     ERC721Enumerable,
@@ -154,8 +152,6 @@ contract SignatureMint721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                console.log("TokenId", _tokenId);
-                console.log("Shift", shiftForBaseURI[baseURI[baseURIIndices[i]]]);
                 uint256 toAppend = _tokenId - shiftForBaseURI[baseURI[baseURIIndices[i]]];
                 return string(abi.encodePacked(baseURI[baseURIIndices[i]], toAppend.toString()));
             }
