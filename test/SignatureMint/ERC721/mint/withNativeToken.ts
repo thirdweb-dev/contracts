@@ -173,6 +173,17 @@ describe("Mint tokens with a valid mint request", function () {
 
       const uriForToken: string = await sigMint721.tokenURI(tokenIdToCheck);
       expect(uriForToken).to.equal(mintRequest.baseURI + tokenIdToCheck.toString());
+
+      // Generate another mint request. For the URI of the first new tokenId minted, should return `baseURI/0`
+      const anotherMintReq = { ...mintRequest, baseURI: "ipfs://test_2/", uid: ethers.utils.keccak256(ethers.utils.toUtf8Bytes("Another string UID")), }
+      const signatureResult = await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, anotherMintReq);
+      const signatureForAnotherMint = signatureResult.signature;
+
+      const tokenIdToCheck_2: BigNumber = await sigMint721.nextTokenIdToMint();
+      await sigMint721.connect(requestor).mint(anotherMintReq, signatureForAnotherMint, { value: totalPrice });
+
+      const uriForToken_2: string = await sigMint721.tokenURI(tokenIdToCheck_2);
+      expect(uriForToken_2).to.equal(anotherMintReq.baseURI + '0');
     });
   });
 });

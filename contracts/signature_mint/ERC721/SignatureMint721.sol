@@ -32,6 +32,8 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract SignatureMint721 is
     ISignatureMint721,
     ERC721Enumerable,
@@ -93,6 +95,12 @@ contract SignatureMint721 is
     /// @dev Mapping from end-tokenId => baseURI.
     mapping(uint256 => string) public baseURI;
 
+    /**
+     * @dev Mapping from baseURI => amount to subtract from tokenId to get `i` where URI for tokenId
+     *      is equal to `baseURI/i`.
+     */
+    mapping(string => uint256) private shiftForBaseURI;
+
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
@@ -146,7 +154,10 @@ contract SignatureMint721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                console.log("TokenId", _tokenId);
+                console.log("Shift", shiftForBaseURI[baseURI[baseURIIndices[i]]]);
+                uint256 toAppend = _tokenId - shiftForBaseURI[baseURI[baseURIIndices[i]]];
+                return string(abi.encodePacked(baseURI[baseURIIndices[i]], toAppend.toString()));
             }
         }
 
@@ -271,6 +282,7 @@ contract SignatureMint721 is
     ) internal {
         uint256 baseURIIndex = _startTokenIdToMint + _amountToMint;
         baseURI[baseURIIndex] = _baseURI;
+        shiftForBaseURI[_baseURI] = _startTokenIdToMint;
         baseURIIndices.push(baseURIIndex);
     }
 
