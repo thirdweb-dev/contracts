@@ -144,9 +144,14 @@ contract SignatureMint721 is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        uint256 shift = 0;
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                if (i > 0) {
+                    shift = baseURIIndices[i - 1];
+                }
+                uint256 toAppend = _tokenId - shift;
+                return string(abi.encodePacked(baseURI[baseURIIndices[i]], toAppend.toString()));
             }
         }
 
