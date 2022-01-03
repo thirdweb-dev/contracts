@@ -264,8 +264,6 @@ contract SignatureMint721 is
 
         if (_req.currency == NATIVE_TOKEN) {
             require(msg.value == _req.price, "must send total price.");
-        } else {
-            validateERC20BalAndAllowance(_msgSender(), _req.currency, _req.price);
         }
 
         transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
@@ -325,19 +323,6 @@ contract SignatureMint721 is
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
         require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
-    }
-
-    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient currency balance or allowance."
-        );
     }
 
     ///     =====   Low-level overrides  =====
