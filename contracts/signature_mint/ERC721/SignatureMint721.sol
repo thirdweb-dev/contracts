@@ -96,7 +96,7 @@ contract SignatureMint721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    mapping(uint256 => string) public uri;
+    mapping(uint256 => string) private uri;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
