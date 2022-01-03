@@ -93,12 +93,6 @@ contract SignatureMint721 is
     /// @dev Mapping from end-tokenId => baseURI.
     mapping(uint256 => string) public baseURI;
 
-    /**
-     * @dev Mapping from baseURI => amount to subtract from tokenId to get `i` where URI for tokenId
-     *      is equal to `baseURI/i`.
-     */
-    mapping(string => uint256) private shiftForBaseURI;
-
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
@@ -150,9 +144,13 @@ contract SignatureMint721 is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        uint256 shift = 0;
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                uint256 toAppend = _tokenId - shiftForBaseURI[baseURI[baseURIIndices[i]]];
+                if (i > 0) {
+                    shift = baseURIIndices[i - 1];
+                }
+                uint256 toAppend = _tokenId - shift;
                 return string(abi.encodePacked(baseURI[baseURIIndices[i]], toAppend.toString()));
             }
         }
@@ -278,7 +276,6 @@ contract SignatureMint721 is
     ) internal {
         uint256 baseURIIndex = _startTokenIdToMint + _amountToMint;
         baseURI[baseURIIndex] = _baseURI;
-        shiftForBaseURI[_baseURI] = _startTokenIdToMint;
         baseURIIndices.push(baseURIIndex);
     }
 
