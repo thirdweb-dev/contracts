@@ -47,7 +47,7 @@ contract SignatureMint721 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,string baseURI,uint256 amountToMint,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -96,6 +96,8 @@ contract SignatureMint721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
+    mapping(uint256 => string) public uri;
+
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
@@ -142,20 +144,9 @@ contract SignatureMint721 is
         return !minted[_req.uid] && hasRole(MINTER_ROLE, recoverAddress(_req, _signature));
     }
 
-    /// @dev Returns the URI for a given tokenId.
+    /// @dev Returns the URI for a tokenId
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint256 shift = 0;
-        for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
-            if (_tokenId < baseURIIndices[i]) {
-                if (i > 0) {
-                    shift = baseURIIndices[i - 1];
-                }
-                uint256 toAppend = _tokenId - shift;
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], toAppend.toString()));
-            }
-        }
-
-        return "";
+        return uri[_tokenId];
     }
 
     ///     =====   External functions  =====
@@ -165,14 +156,15 @@ contract SignatureMint721 is
         verifyRequest(_req, _signature);
 
         uint256 tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
 
-        assignURI(tokenIdToMint, _req.amountToMint, _req.baseURI);
+        uri[tokenIdToMint] = _req.uri;
 
         collectPrice(_req);
 
-        nextTokenIdToMint = mintTokens(_req.to, tokenIdToMint, _req.amountToMint);
+        _mint(_req.to, tokenIdToMint);
 
-        emit TokensMinted(_req, _signature, _msgSender());
+        emit TokensMinted(_req, _signature, _msgSender(), tokenIdToMint);
     }
 
     /// @dev See EIP 2981
@@ -244,9 +236,8 @@ contract SignatureMint721 is
                     abi.encode(
                         TYPEHASH,
                         _req.to,
-                        keccak256(bytes(_req.baseURI)),
-                        _req.amountToMint,
-                        _req.pricePerToken,
+                        keccak256(bytes(_req.uri)),
+                        _req.price,
                         _req.currency,
                         _req.validityStartTimestamp,
                         _req.validityEndTimestamp,
@@ -268,49 +259,23 @@ contract SignatureMint721 is
         minted[_req.uid] = true;
     }
 
-    /// @dev Assigns URIs to the NFTs being minted upon a mint request.
-    function assignURI(
-        uint256 _startTokenIdToMint,
-        uint256 _amountToMint,
-        string memory _baseURI
-    ) internal {
-        uint256 baseURIIndex = _startTokenIdToMint + _amountToMint;
-        baseURI[baseURIIndex] = _baseURI;
-        baseURIIndices.push(baseURIIndex);
-    }
-
-    /// @dev Mints a given amount of NFTs to the recipient in a mint request.
-    function mintTokens(
-        address _receiver,
-        uint256 _startTokenIdToMint,
-        uint256 _amountToMint
-    ) internal returns (uint256 nextIdToMint) {
-        nextIdToMint = _startTokenIdToMint;
-
-        for (uint256 i = 0; i < _amountToMint; i += 1) {
-            _mint(_receiver, nextIdToMint);
-            nextIdToMint += 1;
-        }
-    }
-
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(MintRequest memory _req) internal {
-        if (_req.pricePerToken == 0) {
+        if (_req.price == 0) {
             return;
         }
 
-        uint256 totalPrice = _req.amountToMint * _req.pricePerToken;
-        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+        uint256 fees = (_req.price * feeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
+            require(msg.value == _req.price, "must send total price.");
         } else {
-            validateERC20BalAndAllowance(_msgSender(), _req.currency, totalPrice);
+            validateERC20BalAndAllowance(_msgSender(), _req.currency, _req.price);
         }
 
         transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
 
-        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, _req.price - fees);
     }
 
     /// @dev Transfers a given amount of currency.
