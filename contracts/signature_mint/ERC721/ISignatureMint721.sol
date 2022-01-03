@@ -19,7 +19,7 @@ interface ISignatureMint721 {
      */
     struct MintRequest {
         address to;
-        string baseURI;
+        string uri;
         uint256 pricePerToken;
         address currency;
         uint128 validityStartTimestamp;
