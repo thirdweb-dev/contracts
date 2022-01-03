@@ -88,11 +88,6 @@ contract SignatureMint721 is
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
-    uint256[] private baseURIIndices;
-
-    /// @dev Mapping from end-tokenId => baseURI.
-    mapping(uint256 => string) public baseURI;
-
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
