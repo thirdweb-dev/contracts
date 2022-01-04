@@ -108,7 +108,7 @@ describe("Mint tokens with a valid mint request", function () {
         .decreaseAllowance(sigMint721.address, await erc20Token.allowance(requestor.address, sigMint721.address));
 
       await expect(sigMint721.connect(requestor).mint(mintRequest, signature, { value: 0 })).to.be.revertedWith(
-        "insufficient currency balance or allowance.",
+        "ERC20: transfer amount exceeds allowance",
       );
     });
   });
