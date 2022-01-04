@@ -46,9 +46,8 @@ describe("Mint tokens with a valid mint request", function () {
 
     mintRequest = {
       to: requestor.address,
-      baseURI: "ipfs://test/",
-      amountToMint: BigNumber.from(5).toString(),
-      pricePerToken: ethers.utils.parseEther("0.1").toString(),
+      uri: "ipfs://test/",
+      price: ethers.utils.parseEther("0.1").toString(),
       currency: NATIVE_TOKEN_ADDRESS,
       validityStartTimestamp: validityStartTimestamp.toString(),
       validityEndTimestamp: validityEndTimestamp.toString(),
@@ -58,7 +57,7 @@ describe("Mint tokens with a valid mint request", function () {
     const signatureResult = await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, mintRequest);
     signature = signatureResult.signature;
 
-    totalPrice = BigNumber.from(mintRequest.pricePerToken).mul(BigNumber.from(mintRequest.amountToMint));
+    totalPrice = BigNumber.from(mintRequest.price);
   });
 
   describe("Revert cases", function () {
@@ -102,15 +101,17 @@ describe("Mint tokens with a valid mint request", function () {
 
   describe("Events", function () {
     it("Should emit TokensMinted with the mint request, signature, and the requestor's address.", async () => {
+
+      const tokenIdThatWillBeMinted: BigNumber = await sigMint721.nextTokenIdToMint();
+
       await expect(sigMint721.connect(requestor).mint(mintRequest, signature, { value: totalPrice }))
         .to.emit(sigMint721, "TokensMinted")
         .withArgs(
           ...Object.values({
             mintRequest: Object.values({
               to: mintRequest.to,
-              baseURI: mintRequest.baseURI,
-              amountToMint: mintRequest.amountToMint,
-              pricePerToken: mintRequest.pricePerToken,
+              uri: mintRequest.uri,
+              price: mintRequest.price,
               currency: mintRequest.currency,
               validityStartTimestamp: mintRequest.validityStartTimestamp,
               validityEndTimestamp: mintRequest.validityEndTimestamp,
@@ -118,6 +119,7 @@ describe("Mint tokens with a valid mint request", function () {
             }),
             signature: signature,
             requestor: requestor.address,
+            tokenIdMinted: tokenIdThatWillBeMinted
           }),
         );
     });
@@ -158,7 +160,7 @@ describe("Mint tokens with a valid mint request", function () {
       await sigMint721.connect(requestor).mint(mintRequest, signature, { value: totalPrice });
       const tokenIdToBeMintedAfter: number = (await sigMint721.nextTokenIdToMint()).toNumber();
 
-      expect(tokenIdToBeMintedAfter).to.equal(BigNumber.from(mintRequest.amountToMint).add(tokenIdToBeMintedBefore));
+      expect(tokenIdToBeMintedAfter).to.equal(tokenIdToBeMintedBefore + 1);
     });
 
     it("Should mark the mint request as already used", async () => {
@@ -172,18 +174,7 @@ describe("Mint tokens with a valid mint request", function () {
       await sigMint721.connect(requestor).mint(mintRequest, signature, { value: totalPrice });
 
       const uriForToken: string = await sigMint721.tokenURI(tokenIdToCheck);
-      expect(uriForToken).to.equal(mintRequest.baseURI + tokenIdToCheck.toString());
-
-      // Generate another mint request. For the URI of the first new tokenId minted, should return `baseURI/0`
-      const anotherMintReq = { ...mintRequest, baseURI: "ipfs://test_2/", uid: ethers.utils.keccak256(ethers.utils.toUtf8Bytes("Another string UID")), }
-      const signatureResult = await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, anotherMintReq);
-      const signatureForAnotherMint = signatureResult.signature;
-
-      const tokenIdToCheck_2: BigNumber = await sigMint721.nextTokenIdToMint();
-      await sigMint721.connect(requestor).mint(anotherMintReq, signatureForAnotherMint, { value: totalPrice });
-
-      const uriForToken_2: string = await sigMint721.tokenURI(tokenIdToCheck_2);
-      expect(uriForToken_2).to.equal(anotherMintReq.baseURI + '0');
+      expect(uriForToken).to.equal(mintRequest.uri);
     });
   });
 });
