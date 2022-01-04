@@ -52,10 +52,8 @@ contract Royalty is
         external
         initializer
     {
-        // Initialize __PaymentSplitter_init, ERC2771 Context, AccessControlEnumerable`
-        __PaymentSplitter_init();
+        // Initialize ERC2771 Context
         __ERC2771Context_init(_trustedForwarder);
-        __AccessControlEnumerable_init();
 
         require(payees.length == shares_.length, "Royalty: unequal number of payees and shares provided.");
         require(payees.length > 0, "Royalty: no payees provided.");
