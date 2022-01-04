@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/finance/PaymentSplitter.sol";
+import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
 
 import { Registry } from "./Registry.sol";
 import { ProtocolControl } from "./ProtocolControl.sol";
@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerableUpgradeable, ERC2771ContextUpgradeable, Multicall {
+contract Royalty is Initializable, PaymentSplitterUpgradeable, AccessControlEnumerableUpgradeable, ERC2771ContextUpgradeable, Multicall {
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
@@ -46,7 +46,8 @@ contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerableUpgra
         external
         initializer
     {
-        // Initialize ERC2771 Context, AccessControlEnumerable`
+        // Initialize __PaymentSplitter_init, ERC2771 Context, AccessControlEnumerable`
+        __PaymentSplitter_init();
         __ERC2771Context_init(_trustedForwarder);
         __AccessControlEnumerable_init();
 
@@ -68,12 +69,12 @@ contract Royalty is Initializable, PaymentSplitter, AccessControlEnumerableUpgra
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, Context, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData() internal view virtual override(ContextUpgradeable, Context, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 
