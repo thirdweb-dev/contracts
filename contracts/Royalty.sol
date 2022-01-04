@@ -14,13 +14,19 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 /**
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is Initializable, PaymentSplitterUpgradeable, AccessControlEnumerableUpgradeable, ERC2771ContextUpgradeable, Multicall {
+contract Royalty is 
+    Initializable,
+    PaymentSplitterUpgradeable,
+    AccessControlEnumerableUpgradeable,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable
+{
     /// @dev The protocol control center.
     ProtocolControl private controlCenter;
 
