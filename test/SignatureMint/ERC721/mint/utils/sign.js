@@ -9,9 +9,8 @@ const EIP712Domain = [
 
 const MintRequest = [
   { name: "to", type: "address" },
-  { name: "baseURI", type: "string" },
-  { name: "amountToMint", type: "uint256" },
-  { name: "pricePerToken", type: "uint256" },
+  { name: "uri", type: "string" },
+  { name: "price", type: "uint256" },
   { name: "currency", type: "address" },
   { name: "validityStartTimestamp", type: "uint128" },
   { name: "validityEndTimestamp", type: "uint128" },

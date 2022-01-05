@@ -33,7 +33,6 @@ import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SignatureMint721 is
-    
     ISignatureMint721,
     ERC721Enumerable,
     EIP712,
@@ -42,13 +41,14 @@ contract SignatureMint721 is
     IERC2981,
     ReentrancyGuard,
     Multicall
-
 {
     using ECDSA for bytes32;
     using Strings for uint256;
 
     bytes32 private constant TYPEHASH =
-        keccak256("MintRequest(address to,string baseURI,uint256 amountToMint,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)");
+        keccak256(
+            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -60,6 +60,9 @@ contract SignatureMint721 is
 
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
+
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
 
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
@@ -81,24 +84,21 @@ contract SignatureMint721 is
 
     /// @dev Contract level metadata.
     string public contractURI;
-    
+
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
-    uint256[] private baseURIIndices;
-    
-    /// @dev Mapping from end-tokenId => baseURI.
-    mapping(uint256 => string) public baseURI;
-
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
+
+    mapping(uint256 => string) private uri;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
     }
-    
+
     constructor(
         string memory _name,
         string memory _symbol,
@@ -109,11 +109,7 @@ contract SignatureMint721 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) 
-        ERC721(_name, _symbol) 
-        EIP712("SignatureMint721", "1")
-        ERC2771Context(_trustedForwarder)
-    {
+    ) ERC721(_name, _symbol) EIP712("SignatureMint721", "1") ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
@@ -123,6 +119,7 @@ contract SignatureMint721 is
         feeBps = uint120(_feeBps);
 
         address deployer = _msgSender();
+        _owner = deployer;
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
         _setupRole(TRANSFER_ROLE, deployer);
@@ -130,45 +127,39 @@ contract SignatureMint721 is
 
     ///     =====   Public functions  =====
 
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
+    }
+
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    )
-        public
-        view 
-        returns (bool)
-    {
+    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool) {
         return !minted[_req.uid] && hasRole(MINTER_ROLE, recoverAddress(_req, _signature));
     }
 
-    /// @dev Returns the URI for a given tokenId.
+    /// @dev Returns the URI for a tokenId
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
-            if (_tokenId < baseURIIndices[i]) {
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
-            }
-        }
-
-        return "";
+        return uri[_tokenId];
     }
 
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
     function mint(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
-
         verifyRequest(_req, _signature);
-        
-        uint256 tokenIdToMint = nextTokenIdToMint;
 
-        assignURI(tokenIdToMint, _req.amountToMint, _req.baseURI);
+        uint256 tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
+        uri[tokenIdToMint] = _req.uri;
 
         collectPrice(_req);
 
-        nextTokenIdToMint = mintTokens(_req.to, tokenIdToMint, _req.amountToMint);
+        _mint(_req.to, tokenIdToMint);
 
-        emit TokensMinted(_req, _signature, _msgSender());
+        emit TokensMinted(_req, _signature, _msgSender(), tokenIdToMint);
     }
 
     /// @dev See EIP 2981
@@ -216,6 +207,15 @@ contract SignatureMint721 is
         emit TransfersRestricted(_restrictedTransfer);
     }
 
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
+    }
+
     /// @dev Lets a module admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
@@ -225,78 +225,50 @@ contract SignatureMint721 is
 
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return _hashTypedDataV4(
-            keccak256(abi.encode(
-                TYPEHASH, 
-                _req.to, 
-                keccak256(bytes(_req.baseURI)), 
-                _req.amountToMint, 
-                _req.pricePerToken, 
-                _req.currency, 
-                _req.validityStartTimestamp, 
-                _req.validityEndTimestamp, 
-                _req.uid
-            ))
-        ).recover(_signature);
+        return
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        TYPEHASH,
+                        _req.to,
+                        keccak256(bytes(_req.uri)),
+                        _req.price,
+                        _req.currency,
+                        _req.validityStartTimestamp,
+                        _req.validityEndTimestamp,
+                        _req.uid
+                    )
+                )
+            ).recover(_signature);
     }
 
     /// @dev Verifies that a mint request is valid.
     function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal {
-        require(
-            verify(_req, _signature),
-            "invalid signature"
-        );
+        require(verify(_req, _signature), "invalid signature");
 
         require(
-            _req.validityStartTimestamp <= block.timestamp
-                && _req.validityEndTimestamp >= block.timestamp,
+            _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
 
         minted[_req.uid] = true;
     }
 
-    /// @dev Assigns URIs to the NFTs being minted upon a mint request.
-    function assignURI(
-        uint256 _startTokenIdToMint,
-        uint256 _amountToMint,
-        string memory _baseURI
-    ) 
-        internal 
-    {
-        uint256 baseURIIndex = _startTokenIdToMint + _amountToMint;
-        baseURI[baseURIIndex] = _baseURI;
-        baseURIIndices.push(baseURIIndex);
-    }
-
-    /// @dev Mints a given amount of NFTs to the recipient in a mint request.
-    function mintTokens(address _receiver, uint256 _startTokenIdToMint, uint256 _amountToMint) internal returns(uint256 nextIdToMint) {
-        nextIdToMint = _startTokenIdToMint;
-
-        for(uint256 i = 0; i < _amountToMint; i += 1) {
-            _mint(_receiver, nextIdToMint);
-            nextIdToMint += 1;
-        }
-    }
-
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(MintRequest memory _req) internal {
-        if (_req.pricePerToken == 0) {
+        if (_req.price == 0) {
             return;
         }
 
-        uint256 totalPrice = _req.amountToMint * _req.pricePerToken;
-        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+        uint256 fees = (_req.price * feeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
-        } else {
-            validateERC20BalAndAllowance(_msgSender(), _req.currency, totalPrice);
+            require(msg.value == _req.price, "must send total price.");
         }
 
         transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
 
-        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, _req.price - fees);
     }
 
     /// @dev Transfers a given amount of currency.
@@ -306,7 +278,7 @@ contract SignatureMint721 is
         address _to,
         uint256 _amount
     ) internal {
-        if (_amount == 0 || _from == _to) {
+        if (_amount == 0) {
             return;
         }
 
@@ -341,6 +313,9 @@ contract SignatureMint721 is
         address _to,
         uint256 _amount
     ) internal {
+        if (_from == _to) {
+            return;
+        }
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = _from == address(this)
             ? IERC20(_currency).transfer(_to, _amount)
@@ -348,19 +323,6 @@ contract SignatureMint721 is
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
         require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
-    }
-
-    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient currency balance or allowance."
-        );
     }
 
     ///     =====   Low-level overrides  =====

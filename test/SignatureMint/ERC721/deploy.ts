@@ -15,7 +15,7 @@ import { getContracts, Contracts } from "../../../utils/tests/getContracts";
 use(solidity);
 
 describe("Initial state of LazyMintERC721 on deployment", function () {
-// Signers
+  // Signers
   let protocolProvider: SignerWithAddress;
   let protocolAdmin: SignerWithAddress;
   let defaultSaleRecipient: SignerWithAddress;
@@ -44,7 +44,7 @@ describe("Initial state of LazyMintERC721 on deployment", function () {
     protocolControlAddr = contracts.protocolControl.address;
     nativeTokenWrapperAddr = contracts.weth.address;
 
-    sigMint721 = await ethers
+    sigMint721 = (await ethers
       .getContractFactory("SignatureMint721")
       .then(f =>
         f
@@ -60,7 +60,7 @@ describe("Initial state of LazyMintERC721 on deployment", function () {
             royaltyBps,
             feeBps,
           ),
-      ) as SignatureMint721;
+      )) as SignatureMint721;
   });
 
   it("Should grant all relevant roles to contract deployer", async () => {
@@ -78,4 +78,4 @@ describe("Initial state of LazyMintERC721 on deployment", function () {
     expect(await sigMint721.defaultSaleRecipient()).to.equal(defaultSaleRecipient.address);
     expect(await sigMint721.contractURI()).to.equal(contractURI);
   });
-})
+});

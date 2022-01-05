@@ -45,6 +45,9 @@ contract LazyNFT is
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     uint256 public maxTotalSupply;
 
     /// @dev The token id of the NFT to "lazy mint".
@@ -107,6 +110,7 @@ contract LazyNFT is
     event RestrictedTransferUpdated(bool transferable);
     event RoyaltyUpdated(uint256 royaltyBps);
     event FeeUpdated(uint256 feeBps);
+    event NewOwner(address prevOwner, address newOwner);
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin");
@@ -135,12 +139,21 @@ contract LazyNFT is
         maxTotalSupply = _maxSupply;
         saleRecipient = _saleRecipient;
 
+        // Grant ownership and setup roles
+        _owner = _msgSender();
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());
 
         setFeeBps(_feeBps);
         setRoyaltyBps(_royaltyBps);
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     function lazyMintBatch(string[] calldata _uris) external {
@@ -385,6 +398,15 @@ contract LazyNFT is
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     function contractURI() external view returns (string memory) {
         return _contractURI;
+    }
+
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
