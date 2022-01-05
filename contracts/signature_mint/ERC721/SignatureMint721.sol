@@ -151,15 +151,9 @@ contract SignatureMint721 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri) public onlyMinter returns (uint256 tokenIdToMint) {
-        tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
-
-        uri[tokenIdToMint] = _uri;
-
-        _mint(_to, tokenIdToMint);
-
-        emit TokenMinted(_to, tokenIdToMint, _uri);
+    function mintTo(address _to, string calldata _uri) external onlyMinter returns (uint256) {
+        // `_mintTo` is re-used. `mintTo` just adds a minter role check.
+        return _mintTo(_to, _uri);
     }
 
     ///     =====   External functions  =====
@@ -176,7 +170,7 @@ contract SignatureMint721 is
     {
         address signer = verifyRequest(_req, _signature);
 
-        tokenIdMinted = mintTo(_req.to, _req.uri);
+        tokenIdMinted = _mintTo(_req.to, _req.uri);
 
         collectPrice(_req);
 
@@ -243,6 +237,18 @@ contract SignatureMint721 is
     }
 
     ///     =====   Internal functions  =====
+
+    /// @dev Mints an NFT to `to`
+    function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
+        tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
+        uri[tokenIdToMint] = _uri;
+
+        _mint(_to, tokenIdToMint);
+
+        emit TokenMinted(_to, tokenIdToMint, _uri);
+    }
 
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {

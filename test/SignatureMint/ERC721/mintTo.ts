@@ -50,10 +50,9 @@ describe("Mint tokens with a valid mint request", function () {
       
       await expect(
         sigMint721.connect(protocolAdmin).mintTo(nftReceiver.address, uri)
-      ).to.emit(sigMint721, "TokensMintedByMinter")
+      ).to.emit(sigMint721, "TokenMinted")
       .withArgs(
         ...Object.values({
-          minter: protocolAdmin.address,
           mintedTo: nftReceiver.address,
           tokenIdMinted: tokenIdToBeMinted,
           uri: uri
