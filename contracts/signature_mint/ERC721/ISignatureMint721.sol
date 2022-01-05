@@ -54,9 +54,9 @@ interface ISignatureMint721 {
      *  @param req The mint request.
      *  @param signature The signature produced by an account signing the mint request.
      *
-     *  @return Result of verification and the recovered address.
+     *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature) external view returns (bool, address);
+    function verify(MintRequest calldata req, bytes calldata signature) external view returns (bool success, address signer);
 
     /**
      *  @notice Lets an account with MINTER_ROLE mint an NFT.
