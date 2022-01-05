@@ -140,8 +140,9 @@ contract SignatureMint721 is
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool) {
-        return !minted[_req.uid] && hasRole(MINTER_ROLE, recoverAddress(_req, _signature));
+    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool, address) {
+        address signer = recoverAddress(_req, _signature);
+        return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
     }
 
     /// @dev Returns the URI for a tokenId
@@ -150,22 +151,36 @@ contract SignatureMint721 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri) public onlyMinter {
-        uint256 tokenIdMinted = _mintTo(_to, _uri);
-        emit TokensMintedByMinter(_msgSender(), _to, tokenIdMinted, _uri);
+    function mintTo(address _to, string calldata _uri) public onlyMinter returns (uint256 tokenIdToMint) {
+        tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
+        uri[tokenIdToMint] = _uri;
+
+        _mint(_to, tokenIdToMint);
+
+        emit TokenMinted(_to, tokenIdToMint, _uri);
     }
 
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mint(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
-        verifyRequest(_req, _signature);
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    )
+        external
+        payable
+        nonReentrant 
+        returns (uint256 tokenIdMinted) 
+    {
+        address signer = verifyRequest(_req, _signature);
 
-        uint256 tokenIdMinted = _mintTo(_req.to, _req.uri);
+        tokenIdMinted = mintTo(_req.to, _req.uri);
 
         collectPrice(_req);
 
-        emit TokensMinted(_req, _signature, _msgSender(), tokenIdMinted);
+        emit MintWithSignature(signer, _req.to, tokenIdMinted, _req);
     }
 
     /// @dev See EIP 2981
@@ -229,16 +244,6 @@ contract SignatureMint721 is
 
     ///     =====   Internal functions  =====
 
-    /// @dev Mints an NFT to `_to`
-    function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
-        tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
-
-        uri[tokenIdToMint] = _uri;
-
-        _mint(_to, tokenIdToMint);
-    }
-
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
         return
@@ -259,8 +264,9 @@ contract SignatureMint721 is
     }
 
     /// @dev Verifies that a mint request is valid.
-    function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal {
-        require(verify(_req, _signature), "invalid signature");
+    function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address) {
+        (bool success, address signer) = verify(_req, _signature);
+        require(success, "invalid signature");
 
         require(
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
@@ -268,6 +274,8 @@ contract SignatureMint721 is
         );
 
         minted[_req.uid] = true;
+
+        return signer;
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
