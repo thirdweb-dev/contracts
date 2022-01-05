@@ -26,8 +26,11 @@ interface ISignatureMint721 {
         bytes32 uid;
     }
 
+    /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
+    event TokenMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);
+
     /// @dev Emitted when tokens are minted.
-    event TokensMinted(MintRequest mintRequest, bytes signature, address indexed requestor, uint256 indexed tokenIdMinted);
+    event MintWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, MintRequest mintRequest);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
@@ -50,8 +53,20 @@ interface ISignatureMint721 {
      *
      *  @param req The mint request.
      *  @param signature The signature produced by an account signing the mint request.
+     *
+     *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature) external view returns (bool);
+    function verify(MintRequest calldata req, bytes calldata signature) external view returns (bool success, address signer);
+
+    /**
+     *  @notice Lets an account with MINTER_ROLE mint an NFT.
+     *
+     *  @param to The address to mint the NFT to.
+     *  @param uri The URI to assign to the NFT.
+     *
+     *  @return tokenId of the NFT minted.
+     */
+    function mintTo(address to, string calldata uri) external returns (uint256);
 
     /**
      *  @notice Mints an NFT according to the provided mint request.
@@ -59,5 +74,5 @@ interface ISignatureMint721 {
      *  @param req The mint request.
      *  @param signature he signature produced by an account signing the mint request.
      */
-    function mint(MintRequest calldata req, bytes calldata signature) external payable;
+    function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable returns (uint256);
 }
