@@ -98,7 +98,12 @@ contract SignatureMint721 is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
     }
-
+    
+    /// @dev Checks whether the caller has MINTER_ROLE.
+    modifier onlyMinter() {
+        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
+        _;
+    }
     constructor(
         string memory _name,
         string memory _symbol,
@@ -144,22 +149,23 @@ contract SignatureMint721 is
         return uri[_tokenId];
     }
 
+    /// @dev Lets an account with MINTER_ROLE mint an NFT.
+    function mintTo(address _to, string calldata _uri) public onlyMinter {
+        uint256 tokenIdMinted = _mintTo(_to, _uri);
+        emit TokensMintedByMinter(_msgSender(), _to, tokenIdMinted, _uri);
+    }
+
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
     function mint(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         verifyRequest(_req, _signature);
 
-        uint256 tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
-
-        uri[tokenIdToMint] = _req.uri;
+        uint256 tokenIdMinted = _mintTo(_req.to, _req.uri);
 
         collectPrice(_req);
 
-        _mint(_req.to, tokenIdToMint);
-
-        emit TokensMinted(_req, _signature, _msgSender(), tokenIdToMint);
+        emit TokensMinted(_req, _signature, _msgSender(), tokenIdMinted);
     }
 
     /// @dev See EIP 2981
@@ -222,6 +228,16 @@ contract SignatureMint721 is
     }
 
     ///     =====   Internal functions  =====
+
+    /// @dev Mints an NFT to `_to`
+    function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
+        tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
+        uri[tokenIdToMint] = _uri;
+
+        _mint(_to, tokenIdToMint);
+    }
 
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {

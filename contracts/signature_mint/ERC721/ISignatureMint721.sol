@@ -26,6 +26,9 @@ interface ISignatureMint721 {
         bytes32 uid;
     }
 
+    /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
+    event TokensMintedByMinter(address indexed minter, address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);
+
     /// @dev Emitted when tokens are minted.
     event TokensMinted(MintRequest mintRequest, bytes signature, address indexed requestor, uint256 indexed tokenIdMinted);
 
@@ -52,6 +55,14 @@ interface ISignatureMint721 {
      *  @param signature The signature produced by an account signing the mint request.
      */
     function verify(MintRequest calldata req, bytes calldata signature) external view returns (bool);
+
+    /**
+     *  @notice Lets an account with MINTER_ROLE mint an NFT.
+     *
+     *  @param to The address to mint the NFT to.
+     *  @param uri The URI to assign to the NFT.
+     */
+    function mintTo(address to, string calldata uri) external;
 
     /**
      *  @notice Mints an NFT according to the provided mint request.
