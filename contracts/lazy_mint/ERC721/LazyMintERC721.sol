@@ -103,7 +103,6 @@ contract LazyMintERC721 is
         uint128 _royaltyBps,
         uint128 _feeBps
     ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
-        // Set the protocol control center
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;

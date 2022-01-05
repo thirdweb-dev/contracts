@@ -7,9 +7,6 @@ import { ISignatureMint721 } from "./ISignatureMint721.sol";
 // Token
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-// Protocol control center.
-import { ProtocolControl } from "../../ProtocolControl.sol";
-
 // Signature utils
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
@@ -19,6 +16,7 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Royalties
+import { RoyaltyReceiver } from "../../royalty/RoyaltyReceiver.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Meta transactions
@@ -38,7 +36,7 @@ contract SignatureMint721 is
     EIP712,
     AccessControlEnumerable,
     ERC2771Context,
-    IERC2981,
+    RoyaltyReceiver,
     ReentrancyGuard,
     Multicall
 {
@@ -73,9 +71,6 @@ contract SignatureMint721 is
     /// @dev Contract interprets 10_000 as 100%.
     uint64 private constant MAX_BPS = 10_000;
 
-    /// @dev The % of secondary sales collected as royalties. See EIP 2981.
-    uint64 public royaltyBps;
-
     /// @dev The % of primary sales collected by the contract as fees.
     uint120 public feeBps;
 
@@ -84,9 +79,6 @@ contract SignatureMint721 is
 
     /// @dev Contract level metadata.
     string public contractURI;
-
-    /// @dev The protocol control center.
-    ProtocolControl internal controlCenter;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
@@ -100,18 +92,17 @@ contract SignatureMint721 is
     }
 
     constructor(
+        address _royaltyReceiver,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address payable _controlCenter,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC721(_name, _symbol) EIP712("SignatureMint721", "1") ERC2771Context(_trustedForwarder) {
+    ) ERC721(_name, _symbol) EIP712("SignatureMint721", "1") ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
         // Set the protocol control center
-        controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
@@ -160,18 +151,6 @@ contract SignatureMint721 is
         _mint(_req.to, tokenIdToMint);
 
         emit TokensMinted(_req, _signature, _msgSender(), tokenIdToMint);
-    }
-
-    /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     //      =====   Setter functions  =====
@@ -266,7 +245,7 @@ contract SignatureMint721 is
             require(msg.value == _req.price, "must send total price.");
         }
 
-        transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
+        transferCurrency(_req.currency, _msgSender(), payable(royaltyReceipient), fees);
 
         transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, _req.price - fees);
     }
@@ -352,7 +331,7 @@ contract SignatureMint721 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721Enumerable, IERC165)
+        override(AccessControlEnumerable, ERC721Enumerable, RoyaltyReceiver)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
