@@ -8,6 +8,7 @@ async function verify() {
       "LazyMintERC721",
       "LazyMintERC1155",
       "VotingGovernor",
+      "SignatureMint721",
       "Marketplace",
       "LazyNFT",
       "NFT",
@@ -32,7 +33,7 @@ async function verify() {
         console.log("invalid artifacts", type);
         continue;
       }
-      const { bytecode, deployedBytecode } = await hre.artifacts.readArtifact(type);
+      const { bytecode } = await hre.artifacts.readArtifact(type);
 
       // make sure that deployed bytecode matches with contract bytecode
       if (txdata.indexOf(bytecode) === -1) {
