@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Upgradeability
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+
 // Access
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 // Utils
 import { IThirdwebModule } from "./IThirdwebModule.sol";
 
-contract ThirdwebFees is Initializable, OwnableUpgradeable {
+contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     /// @dev Max bps in the thirdweb system
     uint128 constant public MAX_BPS = 10_000;
@@ -105,4 +108,8 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable {
         feeRecipientByModuleInstance[_moduleInstance] = _recipient;
         emit RecipientForModuleInstance(_recipient, _moduleInstance);
     }
+
+    /// @dev Runs on every upgrade.
+    // TODO: define restrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {}
 }
