@@ -3,9 +3,7 @@
   "description": "",
   "version": "1.21.1",
   "license": "Apache-2.0",
-  "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^4.4.1"
-  },
+  "dependencies": {},
   "source": "src/index.ts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,6 +16,7 @@
     "!contracts/**/*.md"
   ],
   "devDependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.4.1",
     "@chainlink/contracts": "^0.3.0",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
