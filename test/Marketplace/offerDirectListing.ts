@@ -143,13 +143,13 @@ describe("Offer with ERC20 token: direct listing", function () {
     it("Should revert if offer is made outside listing window", async () => {
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken),
-      ).to.be.revertedWith("Marketplace: inactive lisitng.");
+      ).to.be.revertedWith("Marketplace: inactive listing.");
 
       await timeTravelToAfterListingWindow(listingId);
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken),
-      ).to.be.revertedWith("Marketplace: inactive lisitng.");
+      ).to.be.revertedWith("Marketplace: inactive listing.");
     });
 
     it("Should revert if buyer does not own the required amount of currency", async () => {

@@ -135,13 +135,13 @@ describe("Bid with ERC20 token: Auction Listing", function () {
       // Invalid behaviour: bid is made outside auction window.
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken),
-      ).to.be.revertedWith("Marketplace: inactive lisitng.");
+      ).to.be.revertedWith("Marketplace: inactive listing.");
 
       await timeTravelToAfterListingWindow(listingId);
 
       await expect(
         marketv2.connect(buyer).offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken),
-      ).to.be.revertedWith("Marketplace: inactive lisitng.");
+      ).to.be.revertedWith("Marketplace: inactive listing.");
     });
 
     it("Should revert if bid is less than reserve price", async () => {

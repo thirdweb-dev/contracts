@@ -129,7 +129,7 @@ describe("Bid with native token: Auction Listing", function () {
         marketv2
           .connect(buyer)
           .offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }),
-      ).to.be.revertedWith("Marketplace: inactive lisitng.");
+      ).to.be.revertedWith("Marketplace: inactive listing.");
 
       await timeTravelToAfterListingWindow(listingId);
 
@@ -137,7 +137,7 @@ describe("Bid with native token: Auction Listing", function () {
         marketv2
           .connect(buyer)
           .offer(listingId, quantityWanted, currencyForOffer, offerPricePerToken, { value: totalOfferAmount }),
-      ).to.be.revertedWith("Marketplace: inactive lisitng.");
+      ).to.be.revertedWith("Marketplace: inactive listing.");
     });
 
     it("Should revert if bid is less than reserve price", async () => {
