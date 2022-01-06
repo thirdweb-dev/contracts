@@ -562,12 +562,15 @@ contract Marketplace is
 
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
+                // withdraw from weth then transfer withdrawn native token to recipient
                 IWETH(nativeTokenWrapper).withdraw(_amount);
                 safeTransferNativeToken(_to, _amount);
             } else if (_to == address(this)) {
+                // store native currency in weth
                 require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
             } else {
+                // passthrough for native token transfer from buyer to the seller
                 safeTransferNativeToken(_to, _amount);
             }
         } else {
