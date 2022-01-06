@@ -39,11 +39,11 @@ contract Splits is
         address[] memory payees,
         uint256[] memory shares_
     ) external initializer {
-        // Initialize inherited contracts: most derived -> most base
-        __PaymentSplitter_init();
-        __AccessControlEnumerable_init();
+        // Initialize inherited contracts: most base -> most derived
+        __Multicall_init();
         __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();        
+        __AccessControlEnumerable_init();
+        __PaymentSplitter_init();
 
         require(payees.length == shares_.length, "unequal number of payees and shares provided.");
         require(payees.length > 0, "no payees provided.");
