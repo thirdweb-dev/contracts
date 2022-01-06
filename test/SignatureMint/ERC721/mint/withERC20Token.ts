@@ -66,7 +66,7 @@ describe("Mint tokens with a valid mint request", function () {
     const signatureResult = await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, mintRequest);
     signature = signatureResult.signature;
 
-    totalPrice = BigNumber.from(mintRequest.price)
+    totalPrice = BigNumber.from(mintRequest.price);
 
     // Mint erc20 tokens to requestor
     await mintERC20To(requestor, ethers.utils.parseEther("100"));
@@ -85,7 +85,9 @@ describe("Mint tokens with a valid mint request", function () {
     it("Should revert if the same mint request is used more than once", async () => {
       await sigMint721.connect(requestor).mintWithSignature(mintRequest, signature);
 
-      await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature)).to.be.revertedWith("invalid signature");
+      await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature)).to.be.revertedWith(
+        "invalid signature",
+      );
     });
 
     it("Should revert if the mint request has expired", async () => {
@@ -97,9 +99,9 @@ describe("Mint tokens with a valid mint request", function () {
         await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, expiredMintRequest)
       ).signature;
 
-      await expect(sigMint721.connect(requestor).mintWithSignature(expiredMintRequest, signatureOfExpiredReq)).to.be.revertedWith(
-        "request expired",
-      );
+      await expect(
+        sigMint721.connect(requestor).mintWithSignature(expiredMintRequest, signatureOfExpiredReq),
+      ).to.be.revertedWith("request expired");
     });
 
     it("Should revert if the requestor has approved the total price of the NFTs to mint", async () => {
@@ -107,38 +109,35 @@ describe("Mint tokens with a valid mint request", function () {
         .connect(requestor)
         .decreaseAllowance(sigMint721.address, await erc20Token.allowance(requestor.address, sigMint721.address));
 
-      await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: 0 })).to.be.revertedWith(
-        "ERC20: transfer amount exceeds allowance",
-      );
+      await expect(
+        sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: 0 }),
+      ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
     });
   });
 
   describe("Events", function () {
-
     it("Should emit TokenMinted", async () => {
       const tokenIdToBeMinted = await sigMint721.nextTokenIdToMint();
-      
-      await expect(
-        sigMint721.connect(requestor).mintWithSignature(mintRequest, signature)
-      ).to.emit(sigMint721, "TokenMinted")
-      .withArgs(
-        ...Object.values({
-          mintedTo: requestor.address,
-          tokenIdMinted: tokenIdToBeMinted,
-          uri: mintRequest.uri
-        })
-      )
-    })
+
+      await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature))
+        .to.emit(sigMint721, "TokenMinted")
+        .withArgs(
+          ...Object.values({
+            mintedTo: requestor.address,
+            tokenIdMinted: tokenIdToBeMinted,
+            uri: mintRequest.uri,
+          }),
+        );
+    });
 
     it("Should emit MintWithSignature.", async () => {
-
       const tokenIdThatWillBeMinted: BigNumber = await sigMint721.nextTokenIdToMint();
 
       await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice }))
         .to.emit(sigMint721, "MintWithSignature")
         .withArgs(
           ...Object.values({
-            signer: protocolAdmin.address,            
+            signer: protocolAdmin.address,
             mintedTo: requestor.address,
             tokenIdMinted: tokenIdThatWillBeMinted,
             mintRequest: Object.values({
@@ -207,7 +206,7 @@ describe("Mint tokens with a valid mint request", function () {
     it("Should mark the mint request as already used", async () => {
       await sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice });
 
-      const [success,] = await sigMint721.verify(mintRequest, signature)
+      const [success] = await sigMint721.verify(mintRequest, signature);
 
       expect(success).to.equal(false);
     });

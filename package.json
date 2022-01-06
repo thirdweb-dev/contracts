@@ -16,6 +16,7 @@
     "!contracts/**/*.md"
   ],
   "devDependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.4.1",
     "@chainlink/contracts": "^0.3.0",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
