@@ -137,13 +137,14 @@ contract Marketplace is
             tokenTypeOfListing
         );
 
+        uint256 startTime = _params.startTime < block.timestamp ? block.timestamp : _params.startTime;
         Listing memory newListing = Listing({
             listingId: listingId,
             tokenOwner: tokenOwner,
             assetContract: _params.assetContract,
             tokenId: _params.tokenId,
-            startTime: _params.startTime < block.timestamp ? block.timestamp : _params.startTime,
-            endTime: _params.startTime + _params.secondsUntilEndTime,
+            startTime: startTime,
+            endTime: startTime + _params.secondsUntilEndTime,
             quantity: tokenAmountToList,
             currency: _params.currencyToAccept,
             reservePricePerToken: _params.reservePricePerToken,
