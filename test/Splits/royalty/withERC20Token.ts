@@ -3,7 +3,7 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Types
-import { ProtocolControl, Registry, Royalty } from "typechain";
+import { ProtocolControl, Registry, Splits, Coin } from "typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Helpers
@@ -25,8 +25,9 @@ describe("Test royalty functionality", function () {
   // Contracts
   let registry: Registry;
   let controlCenter: ProtocolControl;
-  let royaltyContract: Royalty;
-  let proxyForRoyalty: Royalty;
+  let royaltyContract: Splits;
+  let proxyForRoyalty: Splits;
+  let erc20Token: Coin;
 
   // Initialization params
   let trustedForwarderAddr: string;
@@ -38,12 +39,18 @@ describe("Test royalty functionality", function () {
     return _shares.map(val => val * 10_000);
   }
 
+  const mintERC20To = async (to: string, amount: BigNumber) => {
+    // Mint currency to buyer
+    await erc20Token.connect(royalty_admin).mint(to, amount);
+  };
+
   before(async () => {
     // Get signers
     [protocolProvider, royalty_admin, shareHolder_1, shareHolder_2, registryFeeRecipient] = await ethers.getSigners();
 
     // Get initialize params
     const contracts = await getContracts(protocolProvider, royalty_admin);
+    erc20Token = contracts.coin;
     registry = contracts.registry;
     controlCenter = contracts.protocolControl;
     trustedForwarderAddr = contracts.forwarder.address;
@@ -52,7 +59,7 @@ describe("Test royalty functionality", function () {
     shares = [2000, 4000, 4000];
 
     // Deploy Royalty implementation
-    royaltyContract = await ethers.getContractFactory("Royalty").then(f => f.deploy());
+    royaltyContract = await ethers.getContractFactory("Splits").then(f => f.deploy());
   });
   describe("Test: Royalty contract functionality", function () {
     beforeEach(async () => {
@@ -64,7 +71,6 @@ describe("Test royalty functionality", function () {
             .deploy(
               royaltyContract.address,
               royaltyContract.interface.encodeFunctionData("initialize", [
-                controlCenter.address,
                 trustedForwarderAddr,
                 uri,
                 payees.map(signer => signer.address),
@@ -73,13 +79,10 @@ describe("Test royalty functionality", function () {
             ),
         );
 
-      proxyForRoyalty = (await ethers.getContractAt("Royalty", thirdwebProxy.address)) as Royalty;
+      proxyForRoyalty = (await ethers.getContractAt("Splits", thirdwebProxy.address)) as Splits;
 
-      // Send 100 ether to contract
-      await protocolProvider.sendTransaction({
-        to: proxyForRoyalty.address,
-        value: ethers.utils.parseEther("100"),
-      });
+      // Send 100_000 tokens to contract
+      await mintERC20To(proxyForRoyalty.address, ethers.utils.parseEther("100000"));
     });
 
     it("Should be initialized with the right shares for respective shareholders", async () => {
@@ -89,7 +92,7 @@ describe("Test royalty functionality", function () {
     });
 
     it("Should release the appropriate share of the contract balance to shareholders", async () => {
-      const totalMoneyInContract: BigNumber = await ethers.provider.getBalance(proxyForRoyalty.address);
+      const totalMoneyInContract: BigNumber = await erc20Token.balanceOf(proxyForRoyalty.address);
       const totalSharesScaled = shares.reduce((a, b) => a + b) * FACTOR;
 
       for (let i = 0; i < payees.length; i += 1) {
@@ -97,9 +100,11 @@ describe("Test royalty functionality", function () {
 
         const shareholderPayout = totalMoneyInContract.mul(shareholderShares).div(totalSharesScaled);
 
-        const shareholderBalBefore: BigNumber = await ethers.provider.getBalance(payees[i].address);
-        await proxyForRoyalty.connect(protocolProvider)["release(address)"](payees[i].address);
-        const shareholderBalAfter: BigNumber = await ethers.provider.getBalance(payees[i].address);
+        const shareholderBalBefore: BigNumber = await erc20Token.balanceOf(payees[i].address);
+        await proxyForRoyalty
+          .connect(protocolProvider)
+          ["release(address,address)"](erc20Token.address, payees[i].address);
+        const shareholderBalAfter: BigNumber = await erc20Token.balanceOf(payees[i].address);
 
         expect(shareholderBalAfter).to.equal(shareholderBalBefore.add(shareholderPayout));
       }
@@ -109,31 +114,36 @@ describe("Test royalty functionality", function () {
       const non_shareholder = protocolProvider;
 
       await expect(
-        proxyForRoyalty.connect(non_shareholder)["release(address)"](non_shareholder.address),
+        proxyForRoyalty
+          .connect(non_shareholder)
+          ["release(address,address)"](erc20Token.address, non_shareholder.address),
       ).to.be.revertedWith("aymentSplitter: account has no shares");
     });
 
     it("Should revert if a shareholder is not due any payement", async () => {
       const payee = payees[0];
 
-      await proxyForRoyalty.connect(payee)["release(address)"](payee.address);
-      await expect(proxyForRoyalty.connect(payee)["release(address)"](payee.address)).to.be.revertedWith(
-        "PaymentSplitter: account is not due payment",
-      );
+      await proxyForRoyalty.connect(payee)["release(address,address)"](erc20Token.address, payee.address);
+      await expect(
+        proxyForRoyalty.connect(payee)["release(address,address)"](erc20Token.address, payee.address),
+      ).to.be.revertedWith("PaymentSplitter: account is not due payment");
     });
 
     it("Should emit PaymentReleased with the release info for each shareholder", async () => {
-      const totalMoneyInContract: BigNumber = await ethers.provider.getBalance(proxyForRoyalty.address);
+      const totalMoneyInContract: BigNumber = await erc20Token.balanceOf(proxyForRoyalty.address);
       const totalSharesScaled = shares.reduce((a, b) => a + b) * FACTOR;
 
       for (let i = 0; i < payees.length; i += 1) {
         const shareholderShares = await proxyForRoyalty.shares(payees[i].address);
         const shareholderPayout = totalMoneyInContract.mul(shareholderShares).div(totalSharesScaled);
 
-        await expect(proxyForRoyalty.connect(protocolProvider)["release(address)"](payees[i].address))
-          .to.emit(proxyForRoyalty, "PaymentReleased")
+        await expect(
+          proxyForRoyalty.connect(protocolProvider)["release(address,address)"](erc20Token.address, payees[i].address),
+        )
+          .to.emit(proxyForRoyalty, "ERC20PaymentReleased")
           .withArgs(
             ...Object.values({
+              token: erc20Token.address,
               account: payees[i].address,
               payment: shareholderPayout,
             }),
@@ -173,7 +183,6 @@ describe("Test royalty functionality", function () {
             .deploy(
               royaltyContract.address,
               royaltyContract.interface.encodeFunctionData("initialize", [
-                controlCenter.address,
                 trustedForwarderAddr,
                 uri,
                 payeesWithFeeRecipient.map(signer => signer.address),
@@ -182,7 +191,7 @@ describe("Test royalty functionality", function () {
             ),
         );
 
-      proxyForRoyalty = (await ethers.getContractAt("Royalty", thirdwebProxy.address)) as Royalty;
+      proxyForRoyalty = (await ethers.getContractAt("Splits", thirdwebProxy.address)) as Splits;
 
       // Send 100 ether to contract
       await protocolProvider.sendTransaction({

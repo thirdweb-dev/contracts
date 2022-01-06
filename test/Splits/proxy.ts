@@ -3,7 +3,7 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Types
-import { ProtocolControl, Registry, Royalty } from "typechain";
+import { ProtocolControl, Registry, Royalty, Splits } from "typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // Helpers
@@ -20,8 +20,8 @@ describe("Deploy proxies for Royalty module", function () {
 
   // Contracts
   let controlCenter: ProtocolControl;
-  let royaltyContract: Royalty;
-  let proxyForRoyalty: Royalty;
+  let royaltyContract: Splits;
+  let proxyForRoyalty: Splits;
 
   // Initialization params
   let trustedForwarderAddr: string;
@@ -46,7 +46,7 @@ describe("Deploy proxies for Royalty module", function () {
     shares = [20, 40, 40];
 
     // Deploy Royalty implementation
-    royaltyContract = await ethers.getContractFactory("Royalty").then(f => f.deploy());
+    royaltyContract = await ethers.getContractFactory("Splits").then(f => f.deploy());
   });
 
   beforeEach(async () => {
@@ -55,17 +55,11 @@ describe("Deploy proxies for Royalty module", function () {
       .then(f =>
         f.deploy(
           royaltyContract.address,
-          royaltyContract.interface.encodeFunctionData("initialize", [
-            controlCenter.address,
-            trustedForwarderAddr,
-            uri,
-            payees,
-            shares,
-          ]),
+          royaltyContract.interface.encodeFunctionData("initialize", [trustedForwarderAddr, uri, payees, shares]),
         ),
       );
 
-    proxyForRoyalty = (await ethers.getContractAt("Royalty", thirdwebProxy.address)) as Royalty;
+    proxyForRoyalty = (await ethers.getContractAt("Splits", thirdwebProxy.address)) as Splits;
   });
 
   it("Should initialize the proxied royalty contract", async () => {
@@ -78,8 +72,8 @@ describe("Deploy proxies for Royalty module", function () {
   });
 
   it("Should revert on trying to re-initialize contract via proxy", async () => {
-    await expect(
-      proxyForRoyalty.initialize(controlCenter.address, trustedForwarderAddr, uri, payees, shares),
-    ).to.be.revertedWith("Initializable: contract is already initialized");
+    await expect(proxyForRoyalty.initialize(trustedForwarderAddr, uri, payees, shares)).to.be.revertedWith(
+      "Initializable: contract is already initialized",
+    );
   });
 });

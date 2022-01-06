@@ -3,14 +3,9 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
-
-// Meta transactions
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
-
-// Security
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-
-// Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 contract Splits is
@@ -40,8 +35,8 @@ contract Splits is
     ) external initializer {
         // Initialize ERC2771 Context
         __ERC2771Context_init(_trustedForwarder);
-        __PaymentSplitter_init();
         __AccessControlEnumerable_init();
+        __PaymentSplitter_init();
 
         require(payees.length == shares_.length, "Royalty: unequal number of payees and shares provided.");
         require(payees.length > 0, "Royalty: no payees provided.");
