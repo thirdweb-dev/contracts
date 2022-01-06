@@ -5,36 +5,42 @@ pragma solidity ^0.8.0;
 import { ILazyMintERC721 } from "./ILazyMintERC721.sol";
 
 // Royalties
-import "../../royalty/RoyaltyReceiver.sol";
+import "../../royalty/RoyaltyReceiverUpgradeable.sol";
 
 // Token
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import { ERC721EnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
 // Access Control + security
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import { MulticallUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// Upgradeability
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+
 contract LazyMintERC721 is
     ILazyMintERC721,
-    ERC721Enumerable,
-    ERC2771Context,
-    AccessControlEnumerable,
-    ReentrancyGuard,
-    Multicall,
-    RoyaltyReceiver
+    UUPSUpgradeable,
+    Initializable,
+    MulticallUpgradeable,
+    ReentrancyGuardUpgradeable,
+    RoyaltyReceiverUpgradeable,
+    ERC2771ContextUpgradeable,
+    AccessControlEnumerableUpgradeable,
+    ERC721EnumerableUpgradeable
 {
     using Strings for uint256;
 
@@ -92,29 +98,6 @@ contract LazyMintERC721 is
         _;
     }
 
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        string memory _contractURI,
-        address _royaltyReceiver,
-        address _trustedForwarder,
-        address _nativeTokenWrapper,
-        address _saleRecipient,
-        uint128 _royaltyBps,
-        uint128 _feeBps
-    ) ERC721(_name, _symbol) ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
-        nativeTokenWrapper = _nativeTokenWrapper;
-        defaultSaleRecipient = _saleRecipient;
-        contractURI = _contractURI;
-        feeBps = uint120(_feeBps);
-
-        address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
-    }
-
     ///     =====   Public functions  =====
 
     /**
@@ -151,6 +134,42 @@ contract LazyMintERC721 is
     }
 
     ///     =====   External functions  =====
+
+    /// @dev Initiliazes the contract, like a constructor.s
+    function initialize(
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        address _royaltyReceiver,
+        address _trustedForwarder,
+        address _nativeTokenWrapper,
+        address _saleRecipient,
+        uint128 _royaltyBps,
+        uint128 _feeBps
+    )
+        external
+        initializer
+    {
+        // Initialize inherited contracts, most base-like -> most derived.
+        __Multicall_init();
+        __ReentrancyGuard_init();
+        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __ERC2771Context_init(_trustedForwarder);
+        __AccessControlEnumerable_init();
+        __ERC721Enumerable_init();
+
+        // Initialize this contract's state.
+        nativeTokenWrapper = _nativeTokenWrapper;
+        defaultSaleRecipient = _saleRecipient;
+        contractURI = _contractURI;
+        feeBps = uint120(_feeBps);
+
+        address deployer = _msgSender();
+        _owner = deployer;
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+        _setupRole(MINTER_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
+    }
 
     /**
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
@@ -203,6 +222,11 @@ contract LazyMintERC721 is
     }
 
     //      =====   Internal functions  =====
+
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+    }
 
     /// @dev Overwrites the current claim conditions with new claim conditions
     function resetClaimConditions(ClaimCondition[] calldata _conditions) internal returns (uint256 indexForCondition) {
@@ -465,7 +489,7 @@ contract LazyMintERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721Enumerable) {
+    ) internal virtual override(ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
@@ -478,20 +502,20 @@ contract LazyMintERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721Enumerable, RoyaltyReceiver)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, RoyaltyReceiverUpgradeable)
         returns (bool)
     {
         return
-            AccessControlEnumerable.supportsInterface(interfaceId) ||
-            ERC721Enumerable.supportsInterface(interfaceId) ||
-            RoyaltyReceiver.supportsInterface(interfaceId);
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
+            ERC721EnumerableUpgradeable.supportsInterface(interfaceId) ||
+            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId);
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
