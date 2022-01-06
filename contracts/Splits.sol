@@ -38,8 +38,8 @@ contract Splits is
         __AccessControlEnumerable_init();
         __PaymentSplitter_init();
 
-        require(payees.length == shares_.length, "Royalty: unequal number of payees and shares provided.");
-        require(payees.length > 0, "Royalty: no payees provided.");
+        require(payees.length == shares_.length, "unequal number of payees and shares provided.");
+        require(payees.length > 0, "no payees provided.");
 
         // Set contract metadata
         contractURI = _uri;
