@@ -119,6 +119,8 @@ contract Marketplace is
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(ListingParameters memory _params) external override onlyListerRoleWhenRestricted {
+        require(_params.secondsUntilEndTime > 0, "Marketplace: secondsUntilEndTime must be greater than 0.");
+
         // Get values to populate `Listing`.
         uint256 listingId = getNextListingId();
         address tokenOwner = _msgSender();
@@ -135,15 +137,14 @@ contract Marketplace is
             tokenTypeOfListing
         );
 
+        uint256 startTime = _params.startTime < block.timestamp ? block.timestamp : _params.startTime;
         Listing memory newListing = Listing({
             listingId: listingId,
             tokenOwner: tokenOwner,
             assetContract: _params.assetContract,
             tokenId: _params.tokenId,
-            startTime: _params.startTime < block.timestamp ? block.timestamp : _params.startTime,
-            endTime: _params.secondsUntilEndTime == 0
-                ? type(uint256).max
-                : _params.startTime + _params.secondsUntilEndTime,
+            startTime: startTime,
+            endTime: startTime + _params.secondsUntilEndTime,
             quantity: tokenAmountToList,
             currency: _params.currencyToAccept,
             reservePricePerToken: _params.reservePricePerToken,
@@ -279,7 +280,7 @@ contract Marketplace is
 
         require(
             targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
-            "Marketplace: inactive lisitng."
+            "Marketplace: inactive listing."
         );
 
         // Both - (1) offers to direct listings, and (2) bids to auctions - share the same structure.
@@ -315,9 +316,8 @@ contract Marketplace is
 
         Offer memory targetBid = winningBid[_listingId];
 
-        // Cancel auction if (1) auction hasn't started, or (2) auction ended without any bids.
-        bool toCancel = (targetListing.startTime > block.timestamp) ||
-            (targetListing.endTime < block.timestamp && targetBid.offeror == address(0));
+        // Cancel auction if (1) auction hasn't started, or (2) auction doesn't have any bids.
+        bool toCancel = targetListing.startTime > block.timestamp || targetBid.offeror == address(0);
 
         if (toCancel) {
             _cancelAuction(targetListing);
@@ -562,12 +562,15 @@ contract Marketplace is
 
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
+                // withdraw from weth then transfer withdrawn native token to recipient
                 IWETH(nativeTokenWrapper).withdraw(_amount);
                 safeTransferNativeToken(_to, _amount);
             } else if (_to == address(this)) {
+                // store native currency in weth
                 require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
             } else {
+                // passthrough for native token transfer from buyer to the seller
                 safeTransferNativeToken(_to, _amount);
             }
         } else {
