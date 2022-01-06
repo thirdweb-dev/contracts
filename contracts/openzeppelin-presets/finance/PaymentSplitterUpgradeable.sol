@@ -216,5 +216,6 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         _totalShares = _totalShares + shares_;
         emit PayeeAdded(account, shares_);
     }
+
     uint256[43] private __gap;
 }

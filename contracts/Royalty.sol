@@ -20,7 +20,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
  * Royalty automatically adds protocol provider (the registry) of protocol control to the payees
  * and shares that represent the fees.
  */
-contract Royalty is 
+contract Royalty is
     Initializable,
     PaymentSplitterUpgradeable,
     AccessControlEnumerableUpgradeable,
@@ -42,16 +42,13 @@ contract Royalty is
     constructor() initializer {}
 
     /// @dev Performs the job of the constructor.
-    function initialize (
+    function initialize(
         address payable _controlCenter,
         address _trustedForwarder,
         string memory _uri,
         address[] memory payees,
         uint256[] memory shares_
-    )
-        external
-        initializer
-    {
+    ) external initializer {
         // Initialize ERC2771 Context
         __ERC2771Context_init(_trustedForwarder);
 
@@ -73,12 +70,24 @@ contract Royalty is
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 

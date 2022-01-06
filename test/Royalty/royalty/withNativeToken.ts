@@ -12,8 +12,7 @@ import { BigNumber } from "ethers";
 
 use(solidity);
 
-describe("Test royalty functionality", function() {
-
+describe("Test royalty functionality", function () {
   const FACTOR: number = 10_000;
 
   // Signers
@@ -41,69 +40,62 @@ describe("Test royalty functionality", function() {
 
   before(async () => {
     // Get signers
-    [
-      protocolProvider,
-      royalty_admin,
-      shareHolder_1,
-      shareHolder_2,
-      registryFeeRecipient,
-    ] = await ethers.getSigners();
+    [protocolProvider, royalty_admin, shareHolder_1, shareHolder_2, registryFeeRecipient] = await ethers.getSigners();
 
     // Get initialize params
     const contracts = await getContracts(protocolProvider, royalty_admin);
     registry = contracts.registry;
     controlCenter = contracts.protocolControl;
     trustedForwarderAddr = contracts.forwarder.address;
-    uri = "ipfs://"
-    payees = [royalty_admin, shareHolder_1, shareHolder_2]
+    uri = "ipfs://";
+    payees = [royalty_admin, shareHolder_1, shareHolder_2];
     shares = [2000, 4000, 4000];
 
     // Deploy Royalty implementation
     royaltyContract = await ethers.getContractFactory("Royalty").then(f => f.deploy());
-  })
-  describe("Test: Royalty contract functionality", function() {
-
+  });
+  describe("Test: Royalty contract functionality", function () {
     beforeEach(async () => {
-      const thirdwebProxy = await ethers.getContractFactory("ThirdwebProxy")
-        .then(f => f.connect(royalty_admin).deploy(
-          royaltyContract.address,
-          royaltyContract.interface.encodeFunctionData(
-            "initialize",
-            [
-              controlCenter.address,
-              trustedForwarderAddr,
-              uri,
-              payees.map(signer => signer.address),
-              shares
-            ]
-          )
-        )
-      );
-  
-      proxyForRoyalty = await ethers.getContractAt("Royalty", thirdwebProxy.address) as Royalty;
-  
+      const thirdwebProxy = await ethers
+        .getContractFactory("ThirdwebProxy")
+        .then(f =>
+          f
+            .connect(royalty_admin)
+            .deploy(
+              royaltyContract.address,
+              royaltyContract.interface.encodeFunctionData("initialize", [
+                controlCenter.address,
+                trustedForwarderAddr,
+                uri,
+                payees.map(signer => signer.address),
+                shares,
+              ]),
+            ),
+        );
+
+      proxyForRoyalty = (await ethers.getContractAt("Royalty", thirdwebProxy.address)) as Royalty;
+
       // Send 100 ether to contract
       await protocolProvider.sendTransaction({
         to: proxyForRoyalty.address,
-        value: ethers.utils.parseEther("100")
+        value: ethers.utils.parseEther("100"),
       });
-    })
+    });
 
-    
     it("Should be initialized with the right shares for respective shareholders", async () => {
-      for(let i = 0; i < payees.length; i += 1) {
+      for (let i = 0; i < payees.length; i += 1) {
         expect(await proxyForRoyalty.shares(payees[i].address)).to.equal(scaleShares(shares)[i]);
       }
-    })
+    });
 
     it("Should release the appropriate share of the contract balance to shareholders", async () => {
       const totalMoneyInContract: BigNumber = await ethers.provider.getBalance(proxyForRoyalty.address);
-      const totalSharesScaled = shares.reduce((a,b) => a+b) * FACTOR;
+      const totalSharesScaled = shares.reduce((a, b) => a + b) * FACTOR;
 
-      for(let i = 0; i < payees.length; i += 1) {
-        const shareholderShares = await proxyForRoyalty.shares(payees[i].address)
+      for (let i = 0; i < payees.length; i += 1) {
+        const shareholderShares = await proxyForRoyalty.shares(payees[i].address);
 
-        const shareholderPayout = (totalMoneyInContract.mul(shareholderShares)).div(totalSharesScaled)
+        const shareholderPayout = totalMoneyInContract.mul(shareholderShares).div(totalSharesScaled);
 
         const shareholderBalBefore: BigNumber = await ethers.provider.getBalance(payees[i].address);
         await proxyForRoyalty.connect(protocolProvider)["release(address)"](payees[i].address);
@@ -117,48 +109,45 @@ describe("Test royalty functionality", function() {
       const non_shareholder = protocolProvider;
 
       await expect(
-        proxyForRoyalty.connect(non_shareholder)["release(address)"](non_shareholder.address)
-      ).to.be.revertedWith("aymentSplitter: account has no shares")
+        proxyForRoyalty.connect(non_shareholder)["release(address)"](non_shareholder.address),
+      ).to.be.revertedWith("aymentSplitter: account has no shares");
     });
 
     it("Should revert if a shareholder is not due any payement", async () => {
       const payee = payees[0];
-      
+
       await proxyForRoyalty.connect(payee)["release(address)"](payee.address);
-      await expect(
-        proxyForRoyalty.connect(payee)["release(address)"](payee.address)
-      ).to.be.revertedWith("PaymentSplitter: account is not due payment")
+      await expect(proxyForRoyalty.connect(payee)["release(address)"](payee.address)).to.be.revertedWith(
+        "PaymentSplitter: account is not due payment",
+      );
     });
 
     it("Should emit PaymentReleased with the release info for each shareholder", async () => {
       const totalMoneyInContract: BigNumber = await ethers.provider.getBalance(proxyForRoyalty.address);
-      const totalSharesScaled = shares.reduce((a,b) => a+b) * FACTOR;
+      const totalSharesScaled = shares.reduce((a, b) => a + b) * FACTOR;
 
-      for(let i = 0; i < payees.length; i += 1) {
-        const shareholderShares = await proxyForRoyalty.shares(payees[i].address)
-        const shareholderPayout = (totalMoneyInContract.mul(shareholderShares)).div(totalSharesScaled)
+      for (let i = 0; i < payees.length; i += 1) {
+        const shareholderShares = await proxyForRoyalty.shares(payees[i].address);
+        const shareholderPayout = totalMoneyInContract.mul(shareholderShares).div(totalSharesScaled);
 
-        await expect(
-          proxyForRoyalty.connect(protocolProvider)["release(address)"](payees[i].address)
-        ).to.emit(proxyForRoyalty, "PaymentReleased")
-        .withArgs(
-          ...Object.values({
-            account: payees[i].address,
-            payment: shareholderPayout
-          })
-        );
+        await expect(proxyForRoyalty.connect(protocolProvider)["release(address)"](payees[i].address))
+          .to.emit(proxyForRoyalty, "PaymentReleased")
+          .withArgs(
+            ...Object.values({
+              account: payees[i].address,
+              payment: shareholderPayout,
+            }),
+          );
       }
-    })
-  })
+    });
+  });
 
-  describe("Test: Add registry treasury as shareholder, and set royalty contract as royalty treasury on ProtocolControl", function() {
-
+  describe("Test: Add registry treasury as shareholder, and set royalty contract as royalty treasury on ProtocolControl", function () {
     let payeesWithFeeRecipient: SignerWithAddress[] = [];
     let sharesAdjustedForFee: BigNumber[] = [];
     let feeBps: BigNumber;
 
     beforeEach(async () => {
-
       // Get fee bps:
       feeBps = await registry.getFeeBps(controlCenter.address);
 
@@ -167,51 +156,52 @@ describe("Test royalty functionality", function() {
       payeesWithFeeRecipient = payees.concat([registryFeeRecipient]);
 
       // Adjust shares for fee.
-      sharesAdjustedForFee = []
+      sharesAdjustedForFee = [];
       let feeShares: BigNumber = BigNumber.from(0);
-      for(let i = 0; i < shares.length; i += 1) {
-        const feeCut = (feeBps.mul(shares[i])).div(FACTOR);
+      for (let i = 0; i < shares.length; i += 1) {
+        const feeCut = feeBps.mul(shares[i]).div(FACTOR);
         sharesAdjustedForFee.push(BigNumber.from(shares[i]).sub(feeCut));
         feeShares = feeShares.add(feeCut);
       }
       sharesAdjustedForFee.push(feeShares);
 
-      const thirdwebProxy = await ethers.getContractFactory("ThirdwebProxy")
-        .then(f => f.connect(royalty_admin).deploy(
-          royaltyContract.address,
-          royaltyContract.interface.encodeFunctionData(
-            "initialize",
-            [
-              controlCenter.address,
-              trustedForwarderAddr,
-              uri,
-              payeesWithFeeRecipient.map(signer => signer.address),
-              sharesAdjustedForFee
-            ]
-          )
-        )
-      );
-  
-      proxyForRoyalty = await ethers.getContractAt("Royalty", thirdwebProxy.address) as Royalty;
-  
+      const thirdwebProxy = await ethers
+        .getContractFactory("ThirdwebProxy")
+        .then(f =>
+          f
+            .connect(royalty_admin)
+            .deploy(
+              royaltyContract.address,
+              royaltyContract.interface.encodeFunctionData("initialize", [
+                controlCenter.address,
+                trustedForwarderAddr,
+                uri,
+                payeesWithFeeRecipient.map(signer => signer.address),
+                sharesAdjustedForFee,
+              ]),
+            ),
+        );
+
+      proxyForRoyalty = (await ethers.getContractAt("Royalty", thirdwebProxy.address)) as Royalty;
+
       // Send 100 ether to contract
       await protocolProvider.sendTransaction({
         to: proxyForRoyalty.address,
-        value: ethers.utils.parseEther("100")
+        value: ethers.utils.parseEther("100"),
       });
-    })
+    });
 
     it("Should set the right shares for shareholders, taking fee into account", async () => {
-      const scaledSharesAdjustedForFees = scaleShares(sharesAdjustedForFee.map(x => x.toNumber()))
-      for(let i = 0; i < payeesWithFeeRecipient.length; i += 1) {
-        expect(await proxyForRoyalty.shares(payeesWithFeeRecipient[i].address)).to.equal(scaledSharesAdjustedForFees[i]);
+      const scaledSharesAdjustedForFees = scaleShares(sharesAdjustedForFee.map(x => x.toNumber()));
+      for (let i = 0; i < payeesWithFeeRecipient.length; i += 1) {
+        expect(await proxyForRoyalty.shares(payeesWithFeeRecipient[i].address)).to.equal(
+          scaledSharesAdjustedForFees[i],
+        );
       }
     });
 
     it("Should successfully set royalty contract as royalty treasury on ProtocolControl", async () => {
-      await expect(
-        controlCenter.connect(royalty_admin).setRoyaltyTreasury(proxyForRoyalty.address)
-      ).to.not.be.reverted;
-    })
-  })
-})
+      await expect(controlCenter.connect(royalty_admin).setRoyaltyTreasury(proxyForRoyalty.address)).to.not.be.reverted;
+    });
+  });
+});

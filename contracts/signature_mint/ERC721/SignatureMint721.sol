@@ -98,12 +98,13 @@ contract SignatureMint721 is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
     }
-    
+
     /// @dev Checks whether the caller has MINTER_ROLE.
     modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _;
     }
+
     constructor(
         string memory _name,
         string memory _symbol,
@@ -159,14 +160,11 @@ contract SignatureMint721 is
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    )
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
-        nonReentrant 
-        returns (uint256 tokenIdMinted) 
+        nonReentrant
+        returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
 
