@@ -30,7 +30,12 @@ interface ISignatureMint721 {
     event TokenMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);
 
     /// @dev Emitted when tokens are minted.
-    event MintWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, MintRequest mintRequest);
+    event MintWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        MintRequest mintRequest
+    );
 
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
@@ -56,7 +61,10 @@ interface ISignatureMint721 {
      *
      *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature) external view returns (bool success, address signer);
+    function verify(MintRequest calldata req, bytes calldata signature)
+        external
+        view
+        returns (bool success, address signer);
 
     /**
      *  @notice Lets an account with MINTER_ROLE mint an NFT.

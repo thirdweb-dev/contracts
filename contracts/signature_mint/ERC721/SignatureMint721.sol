@@ -163,12 +163,13 @@ contract SignatureMint721 is
         returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
+        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
-        tokenIdMinted = _mintTo(_req.to, _req.uri);
+        tokenIdMinted = _mintTo(receiver, _req.uri);
 
         collectPrice(_req);
 
-        emit MintWithSignature(signer, _req.to, tokenIdMinted, _req);
+        emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
     }
 
     //      =====   Setter functions  =====

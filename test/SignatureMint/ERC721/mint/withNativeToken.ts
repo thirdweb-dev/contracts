@@ -88,43 +88,42 @@ describe("Mint tokens with a valid mint request", function () {
       ).signature;
 
       await expect(
-        sigMint721.connect(requestor).mintWithSignature(expiredMintRequest, signatureOfExpiredReq, { value: totalPrice }),
+        sigMint721
+          .connect(requestor)
+          .mintWithSignature(expiredMintRequest, signatureOfExpiredReq, { value: totalPrice }),
       ).to.be.revertedWith("request expired");
     });
 
     it("Should revert if the requestor has not sent the total price of the NFTs to mint", async () => {
-      await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: 0 })).to.be.revertedWith(
-        "must send total price.",
-      );
+      await expect(
+        sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: 0 }),
+      ).to.be.revertedWith("must send total price.");
     });
   });
 
   describe("Events", function () {
-
     it("Should emit TokenMinted", async () => {
       const tokenIdToBeMinted = await sigMint721.nextTokenIdToMint();
-      
-      await expect(
-        sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice })
-      ).to.emit(sigMint721, "TokenMinted")
-      .withArgs(
-        ...Object.values({
-          mintedTo: requestor.address,
-          tokenIdMinted: tokenIdToBeMinted,
-          uri: mintRequest.uri
-        })
-      )
-    })
+
+      await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice }))
+        .to.emit(sigMint721, "TokenMinted")
+        .withArgs(
+          ...Object.values({
+            mintedTo: requestor.address,
+            tokenIdMinted: tokenIdToBeMinted,
+            uri: mintRequest.uri,
+          }),
+        );
+    });
 
     it("Should emit MintWithSignature.", async () => {
-
       const tokenIdThatWillBeMinted: BigNumber = await sigMint721.nextTokenIdToMint();
 
       await expect(sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice }))
         .to.emit(sigMint721, "MintWithSignature")
         .withArgs(
           ...Object.values({
-            signer: protocolAdmin.address,            
+            signer: protocolAdmin.address,
             mintedTo: requestor.address,
             tokenIdMinted: tokenIdThatWillBeMinted,
             mintRequest: Object.values({
@@ -142,7 +141,7 @@ describe("Mint tokens with a valid mint request", function () {
   });
 
   describe("Balances", function () {
-    it("Should increase the requestor's NFT balance by the `amountToMint` specified in the mint request", async () => {
+    it("Should increase the requestor's NFT balance by 1", async () => {
       const tokenIdToBeMintedBefore: number = (await sigMint721.nextTokenIdToMint()).toNumber();
       await sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice });
       const tokenIdToBeMintedAfter: number = (await sigMint721.nextTokenIdToMint()).toNumber();
@@ -152,6 +151,19 @@ describe("Mint tokens with a valid mint request", function () {
       }
     });
 
+    it("Should increase the caller's NFT balance by 1, if mint request does not specify a recipient", async () => {
+      const specialMintRequest = { ...mintRequest, to: ethers.constants.AddressZero }
+      const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, specialMintRequest)).signature;
+
+      const tokenIdToBeMintedBefore: number = (await sigMint721.nextTokenIdToMint()).toNumber();
+      await sigMint721.connect(requestor).mintWithSignature(specialMintRequest, signatureToUse, { value: totalPrice });
+      const tokenIdToBeMintedAfter: number = (await sigMint721.nextTokenIdToMint()).toNumber();
+
+      for (let i = tokenIdToBeMintedBefore; i < tokenIdToBeMintedAfter; i += 1) {
+        expect(await sigMint721.ownerOf(i)).to.equal(requestor.address);
+      }
+    })
+
     it("Should distribute the price of the NFTs minted with a mint request from the requestor to the sale recipient", async () => {
       const saleRecipientAddr: string = await sigMint721.defaultSaleRecipient();
 
@@ -159,7 +171,9 @@ describe("Mint tokens with a valid mint request", function () {
       const saleRecipientBalBefore: BigNumber = await ethers.provider.getBalance(saleRecipientAddr);
 
       const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-      const tx = await sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice, gasPrice });
+      const tx = await sigMint721
+        .connect(requestor)
+        .mintWithSignature(mintRequest, signature, { value: totalPrice, gasPrice });
       const gasUsed: BigNumber = (await tx.wait()).gasUsed;
 
       const requestorBalAfter: BigNumber = await ethers.provider.getBalance(requestor.address);
@@ -182,7 +196,7 @@ describe("Mint tokens with a valid mint request", function () {
     it("Should mark the mint request as already used", async () => {
       await sigMint721.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice });
 
-      const [success,] = await sigMint721.verify(mintRequest, signature)
+      const [success] = await sigMint721.verify(mintRequest, signature);
 
       expect(success).to.equal(false);
     });
