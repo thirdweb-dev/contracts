@@ -16,10 +16,10 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 contract Splits is
     Initializable,
-    PaymentSplitterUpgradeable,
-    AccessControlEnumerableUpgradeable,
+    MulticallUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable
+    AccessControlEnumerableUpgradeable,
+    PaymentSplitterUpgradeable
 {
     /// @dev Contract level metadata.
     string public contractURI;
