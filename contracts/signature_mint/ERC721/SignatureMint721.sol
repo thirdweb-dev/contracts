@@ -90,12 +90,13 @@ contract SignatureMint721 is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
     }
-    
+
     /// @dev Checks whether the caller has MINTER_ROLE.
     modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _;
     }
+
     constructor(
         address _royaltyReceiver,
         string memory _name,
@@ -106,7 +107,12 @@ contract SignatureMint721 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC721(_name, _symbol) EIP712("SignatureMint721", "1") ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
+    )
+        ERC721(_name, _symbol)
+        EIP712("SignatureMint721", "1")
+        ERC2771Context(_trustedForwarder)
+        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
+    {
         // Set the protocol control center
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
@@ -150,14 +156,11 @@ contract SignatureMint721 is
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    )
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
-        nonReentrant 
-        returns (uint256 tokenIdMinted) 
+        nonReentrant
+        returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
 
