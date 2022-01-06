@@ -16,10 +16,10 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 contract Splits is
     Initializable,
-    PaymentSplitterUpgradeable,
-    AccessControlEnumerableUpgradeable,
+    MulticallUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable
+    AccessControlEnumerableUpgradeable,
+    PaymentSplitterUpgradeable
 {
     /// @dev Contract level metadata.
     string public contractURI;
@@ -39,7 +39,8 @@ contract Splits is
         address[] memory payees,
         uint256[] memory shares_
     ) external initializer {
-        // Initialize ERC2771 Context
+        // Initialize inherited contracts: most base -> most derived
+        __Multicall_init();
         __ERC2771Context_init(_trustedForwarder);
         __AccessControlEnumerable_init();
         __PaymentSplitter_init();
