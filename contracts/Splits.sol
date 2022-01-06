@@ -16,7 +16,7 @@ contract Splits is
     MulticallUpgradeable
 {
     /// @dev Contract level metadata.
-    string private _contractURI;
+    string public contractURI;
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
@@ -42,7 +42,7 @@ contract Splits is
         require(payees.length > 0, "Royalty: no payees provided.");
 
         // Set contract metadata
-        _contractURI = _uri;
+        contractURI = _uri;
 
         // Scaling the share, so we don't lose precision on division
         for (uint256 i = 0; i < payees.length; i++) {
@@ -77,11 +77,6 @@ contract Splits is
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
-        _contractURI = _uri;
-    }
-
-    /// @dev Returns the URI for the contract-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
+        contractURI = _uri;
     }
 }
