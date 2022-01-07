@@ -5,37 +5,44 @@ pragma solidity ^0.8.0;
 import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
 
 // Royalties
-import "../../royalty/RoyaltyReceiver.sol";
+import "../../royalty/RoyaltyReceiverUpgradeable.sol";
 
 // Token
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
 // Access Control + security
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
+import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 contract LazyMintERC1155 is
+    Initializable,
     ILazyMintERC1155,
-    ERC1155,
-    ERC2771Context,
-    AccessControlEnumerable,
-    ReentrancyGuard,
-    Multicall,
-    RoyaltyReceiver
+    ReentrancyGuardUpgradeable,
+    RoyaltyReceiverUpgradeable,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    UUPSUpgradeable,
+    AccessControlEnumerableUpgradeable,
+    ERC1155Upgradeable
 {
-    using Strings for uint256;
+    using StringsUpgradeable for uint256;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -46,7 +53,7 @@ contract LazyMintERC1155 is
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
-    address public immutable nativeTokenWrapper;
+    address public nativeTokenWrapper;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -92,7 +99,8 @@ contract LazyMintERC1155 is
         _;
     }
 
-    constructor(
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
         string memory _contractURI,
         address _royaltyReceiver,
         address _trustedForwarder,
@@ -100,7 +108,17 @@ contract LazyMintERC1155 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC1155("") ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps)) {
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.        
+        __ReentrancyGuard_init();
+        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __UUPSUpgradeable_init();
+        __AccessControlEnumerable_init();
+        __ERC1155_init("");
+
+        // Initialize this contract's state.
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
@@ -294,6 +312,11 @@ contract LazyMintERC1155 is
 
     //      =====   Internal functions  =====
 
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+    }
+
     /// @dev Lets a module admin set mint conditions for a given tokenId.
     function resetClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions)
         internal
@@ -361,7 +384,7 @@ contract LazyMintERC1155 is
 
         if (_mintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
-            require(MerkleProof.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
+            require(MerkleProofUpgradeable.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
 
@@ -544,20 +567,20 @@ contract LazyMintERC1155 is
         public
         view
         virtual
-        override(ERC1155, AccessControlEnumerable, RoyaltyReceiver)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, RoyaltyReceiverUpgradeable)
         returns (bool)
     {
         return
-            ERC1155.supportsInterface(interfaceId) ||
-            AccessControlEnumerable.supportsInterface(interfaceId) ||
-            RoyaltyReceiver.supportsInterface(interfaceId);
+            ERC1155Upgradeable.supportsInterface(interfaceId) ||
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
+            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId);
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
