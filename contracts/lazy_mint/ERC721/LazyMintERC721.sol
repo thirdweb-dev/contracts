@@ -98,7 +98,7 @@ contract LazyMintERC721 is
         _;
     }
 
-    /// @dev Initiliazes the contract, like a constructor.s
+    /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _name,
         string memory _symbol,
