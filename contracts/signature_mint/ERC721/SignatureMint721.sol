@@ -5,43 +5,50 @@ pragma solidity ^0.8.0;
 import { ISignatureMint721 } from "./ISignatureMint721.sol";
 
 // Token
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import { ERC721EnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
 // Signature utils
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 // Access Control + security
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Royalties
-import { RoyaltyReceiver } from "../../royalty/RoyaltyReceiver.sol";
+import { RoyaltyReceiverUpgradeable } from "../../royalty/RoyaltyReceiverUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 contract SignatureMint721 is
+    Initializable,
     ISignatureMint721,
-    ERC721Enumerable,
-    EIP712,
-    AccessControlEnumerable,
-    ERC2771Context,
-    RoyaltyReceiver,
-    ReentrancyGuard,
-    Multicall
+    ReentrancyGuardUpgradeable,
+    RoyaltyReceiverUpgradeable,
+    EIP712Upgradeable,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    UUPSUpgradeable,
+    AccessControlEnumerableUpgradeable,
+    ERC721EnumerableUpgradeable
 {
-    using ECDSA for bytes32;
-    using Strings for uint256;
+    using ECDSAUpgradeable for bytes32;
+    using StringsUpgradeable for uint256;
 
     bytes32 private constant TYPEHASH =
         keccak256(
@@ -57,7 +64,7 @@ contract SignatureMint721 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
-    address public immutable nativeTokenWrapper;
+    address public nativeTokenWrapper;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -97,7 +104,8 @@ contract SignatureMint721 is
         _;
     }
 
-    constructor(
+    /// @dev Initiliazes the contract, like a constructor.
+    function intialize(
         address _royaltyReceiver,
         string memory _name,
         string memory _symbol,
@@ -107,13 +115,20 @@ contract SignatureMint721 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    )
-        ERC721(_name, _symbol)
-        EIP712("SignatureMint721", "1")
-        ERC2771Context(_trustedForwarder)
-        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
-    {
-        // Set the protocol control center
+    ) external initializer {
+
+        // Initialize inherited contracts, most base-like -> most derived.        
+        __ReentrancyGuard_init();
+        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __EIP712_init("SignatureMint721", "1");
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __UUPSUpgradeable_init();
+        __AccessControlEnumerable_init();
+        __ERC721_init(_name, _symbol);
+        __ERC721Enumerable_init();   
+
+        // Initialize this contract's state.
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
@@ -220,6 +235,11 @@ contract SignatureMint721 is
     }
 
     ///     =====   Internal functions  =====
+
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+    }
 
     /// @dev Mints an NFT to `to`
     function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
@@ -352,7 +372,7 @@ contract SignatureMint721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721Enumerable) {
+    ) internal virtual override(ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
@@ -365,17 +385,17 @@ contract SignatureMint721 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721Enumerable, RoyaltyReceiver)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, RoyaltyReceiverUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
