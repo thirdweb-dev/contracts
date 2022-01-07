@@ -37,10 +37,10 @@ contract LazyMintERC721 is
     ReentrancyGuardUpgradeable,
     RoyaltyReceiverUpgradeable,
     ERC2771ContextUpgradeable,
-    AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable,
     MulticallUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    AccessControlEnumerableUpgradeable,
+    ERC721EnumerableUpgradeable
 {
     using StringsUpgradeable for uint256;
 
@@ -110,15 +110,15 @@ contract LazyMintERC721 is
         uint128 _royaltyBps,
         uint128 _feeBps
     ) external initializer {
-        // Initialize inherited contracts, most base-like -> most derived.
-        __Multicall_init();
+        // Initialize inherited contracts, most base-like -> most derived.        
         __ReentrancyGuard_init();
         __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __UUPSUpgradeable_init();
         __AccessControlEnumerable_init();
         __ERC721_init(_name, _symbol);
-        __ERC721Enumerable_init();
-        __UUPSUpgradeable_init();
+        __ERC721Enumerable_init();        
 
         // Initialize this contract's state.
         nativeTokenWrapper = _nativeTokenWrapper;
