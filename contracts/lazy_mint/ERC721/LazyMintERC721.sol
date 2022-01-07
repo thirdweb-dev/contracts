@@ -20,7 +20,7 @@ import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/m
 // Utils
 import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import { MulticallUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -153,7 +153,9 @@ contract LazyMintERC721 is
         __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC2771Context_init(_trustedForwarder);
         __AccessControlEnumerable_init();
+        __ERC721_init(_name, _symbol);
         __ERC721Enumerable_init();
+        __UUPSUpgradeable_init();
 
         // Initialize this contract's state.
         nativeTokenWrapper = _nativeTokenWrapper;
