@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Utils
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract RoyaltyReceiverUpgradeable is IERC2981, Initializable {
     /// @dev The recipient of who gets the royalty.
@@ -19,6 +19,10 @@ contract RoyaltyReceiverUpgradeable is IERC2981, Initializable {
 
     /// @dev Initializes the contract, like a constructor.
     function __RoyaltyReceiver_init(address _receiver, uint96 _royaltyBps) internal onlyInitializing {
+        __RoyaltyReceiver_init_unchained(_receiver, _royaltyBps);
+    }
+
+    function __RoyaltyReceiver_init_unchained(address _receiver, uint96 _royaltyBps) internal onlyInitializing {
         royaltyReceipient = _receiver;
         royaltyBps = _royaltyBps;
     }

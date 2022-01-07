@@ -19,30 +19,30 @@ import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/m
 
 // Utils
 import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import { MulticallUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Upgradeability
-import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract LazyMintERC721 is
-    ILazyMintERC721,
-    UUPSUpgradeable,
     Initializable,
-    MulticallUpgradeable,
+    ILazyMintERC721,
     ReentrancyGuardUpgradeable,
     RoyaltyReceiverUpgradeable,
     ERC2771ContextUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+    MulticallUpgradeable,
+    UUPSUpgradeable
 {
-    using Strings for uint256;
+    using StringsUpgradeable for uint256;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -53,7 +53,7 @@ contract LazyMintERC721 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
-    address public immutable nativeTokenWrapper;
+    address public nativeTokenWrapper;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -146,10 +146,7 @@ contract LazyMintERC721 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    )
-        external
-        initializer
-    {
+    ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __Multicall_init();
         __ReentrancyGuard_init();
@@ -291,7 +288,7 @@ contract LazyMintERC721 is
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
-            require(MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
+            require(MerkleProofUpgradeable.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
 
@@ -511,11 +508,23 @@ contract LazyMintERC721 is
             RoyaltyReceiverUpgradeable.supportsInterface(interfaceId);
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }
