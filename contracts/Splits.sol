@@ -2,22 +2,27 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
+import { PaymentSplitterUpgradeable } from "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
 
 // Meta-tx
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Access
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Utils
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract Splits is
     Initializable,
     MulticallUpgradeable,
     ERC2771ContextUpgradeable,
+    UUPSUpgradeable,
     AccessControlEnumerableUpgradeable,
     PaymentSplitterUpgradeable
 {
@@ -42,6 +47,7 @@ contract Splits is
         // Initialize inherited contracts: most base -> most derived
         __Multicall_init();
         __ERC2771Context_init(_trustedForwarder);
+        __UUPSUpgradeable_init();
         __AccessControlEnumerable_init();
         __PaymentSplitter_init();
 
@@ -58,6 +64,11 @@ contract Splits is
         }
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
     }
 
     /// @dev See ERC2771
