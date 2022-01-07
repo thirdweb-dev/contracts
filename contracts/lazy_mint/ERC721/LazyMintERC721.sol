@@ -98,6 +98,41 @@ contract LazyMintERC721 is
         _;
     }
 
+    /// @dev Initiliazes the contract, like a constructor.s
+    function initialize(
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        address _royaltyReceiver,
+        address _trustedForwarder,
+        address _nativeTokenWrapper,
+        address _saleRecipient,
+        uint128 _royaltyBps,
+        uint128 _feeBps
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
+        __Multicall_init();
+        __ReentrancyGuard_init();
+        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __ERC2771Context_init(_trustedForwarder);
+        __AccessControlEnumerable_init();
+        __ERC721_init(_name, _symbol);
+        __ERC721Enumerable_init();
+        __UUPSUpgradeable_init();
+
+        // Initialize this contract's state.
+        nativeTokenWrapper = _nativeTokenWrapper;
+        defaultSaleRecipient = _saleRecipient;
+        contractURI = _contractURI;
+        feeBps = uint120(_feeBps);
+
+        address deployer = _msgSender();
+        _owner = deployer;
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+        _setupRole(MINTER_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
+    }
+
     ///     =====   Public functions  =====
 
     /**
@@ -134,41 +169,6 @@ contract LazyMintERC721 is
     }
 
     ///     =====   External functions  =====
-
-    /// @dev Initiliazes the contract, like a constructor.s
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        string memory _contractURI,
-        address _royaltyReceiver,
-        address _trustedForwarder,
-        address _nativeTokenWrapper,
-        address _saleRecipient,
-        uint128 _royaltyBps,
-        uint128 _feeBps
-    ) external initializer {
-        // Initialize inherited contracts, most base-like -> most derived.
-        __Multicall_init();
-        __ReentrancyGuard_init();
-        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
-        __ERC2771Context_init(_trustedForwarder);
-        __AccessControlEnumerable_init();
-        __ERC721_init(_name, _symbol);
-        __ERC721Enumerable_init();
-        __UUPSUpgradeable_init();
-
-        // Initialize this contract's state.
-        nativeTokenWrapper = _nativeTokenWrapper;
-        defaultSaleRecipient = _saleRecipient;
-        contractURI = _contractURI;
-        feeBps = uint120(_feeBps);
-
-        address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
-    }
 
     /**
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
