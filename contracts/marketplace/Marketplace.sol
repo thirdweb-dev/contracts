@@ -12,26 +12,35 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-// Security
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// Access + Security
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+// Utils
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { MulticallUpgradeable } from "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 
 contract Marketplace is
+    Initializable,
     IMarketplace,
-    AccessControlEnumerable,
     IERC1155Receiver,
     IERC721Receiver,
-    ReentrancyGuard,
-    ERC2771Context,
-    Multicall
+    ReentrancyGuardUpgradeable,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    UUPSUpgradeable,
+    AccessControlEnumerableUpgradeable
 {
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
@@ -49,7 +58,7 @@ contract Marketplace is
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
-    address public immutable nativeTokenWrapper;
+    address public nativeTokenWrapper;
 
     /// @dev The address of which the marketplace fee goes to.
     address public marketFeeRecipient;
@@ -95,14 +104,23 @@ contract Marketplace is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Marketplace: not a module admin.");
         _;
     }
-
-    constructor(
+    
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
         address _feeRecipient,
         address _trustedForwarder,
         address _nativeTokenWrapper,
         string memory _uri,
         uint256 _marketFeeBps
-    ) ERC2771Context(_trustedForwarder) {
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
+        __ReentrancyGuard_init();
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __UUPSUpgradeable_init();
+        __AccessControlEnumerable_init();
+
+        // Initialize this contract's state.
         contractURI = _uri;
         nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
@@ -336,6 +354,11 @@ contract Marketplace is
     receive() external payable {}
 
     //  =====   Internal functions  =====
+
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+    }
 
     /// @dev Performs a direct listing sale.
     function executeSale(
@@ -721,12 +744,12 @@ contract Marketplace is
         totalListings += 1;
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     //  ===== Setter functions  =====
@@ -802,7 +825,7 @@ contract Marketplace is
         public
         view
         virtual
-        override(AccessControlEnumerable, IERC165)
+        override(AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return
