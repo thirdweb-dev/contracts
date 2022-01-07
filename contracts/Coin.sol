@@ -1,21 +1,35 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-// Token + Access Control
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+// Token
+import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import { ERC20PausableUpgradeable } from  "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
+import { ERC20VotesUpgradeable, ERC20PermitUpgradeable, ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+// Security
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
+// Utils
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausable, ERC2771Context, Multicall {
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+contract Coin is
+    Initializable,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    UUPSUpgradeable,
+    ERC20BurnableUpgradeable,
+    ERC20PausableUpgradeable,    
+    ERC20VotesUpgradeable,
+    AccessControlEnumerableUpgradeable
+{
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
@@ -35,13 +49,24 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
 
     event RestrictedTransferUpdated(bool transferable);
 
-    constructor(
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
-    ) ERC20(_name, _symbol) ERC20Permit(_name) ERC2771Context(_trustedForwarder) {
-        // Set contract URI
+    ) external  initializer {
+        // Initialize inherited contracts, most base-like -> most derived.        
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __UUPSUpgradeable_init();
+        __ERC20Permit_init(_name);
+        __ERC20_init(_name, _symbol);
+        __ERC20Burnable_init();
+        __ERC20Pausable_init();
+        __AccessControlEnumerable_init();
+
+        // Initialize this contract's state.
         contractURI = _uri;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -54,7 +79,7 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
         address from,
         address to,
         uint256 amount
-    ) internal virtual override(ERC20, ERC20Votes) {
+    ) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         super._afterTokenTransfer(from, to, amount);
     }
 
@@ -63,7 +88,7 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20, ERC20Pausable) {
+    ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
         if (transfersRestricted && from != address(0) && to != address(0)) {
@@ -74,11 +99,11 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
         }
     }
 
-    function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Votes) {
+    function _mint(address account, uint256 amount) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         super._mint(account, amount);
     }
 
-    function _burn(address account, uint256 amount) internal virtual override(ERC20, ERC20Votes) {
+    function _burn(address account, uint256 amount) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         super._burn(account, amount);
     }
 
@@ -136,11 +161,16 @@ contract Coin is AccessControlEnumerable, ERC20Votes, ERC20Burnable, ERC20Pausab
         contractURI = _URI;
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
