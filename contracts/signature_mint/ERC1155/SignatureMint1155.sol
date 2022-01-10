@@ -113,7 +113,7 @@ contract SignatureMint1155 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC1155("") EIP712("SignatureMint721", "1") ERC2771Context(_trustedForwarder) {
+    ) ERC1155("") EIP712("SignatureMint1155", "1") ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;

@@ -26,7 +26,7 @@ function getMetaTxTypeData(chainId, verifyingContract) {
       MintRequest,
     },
     domain: {
-      name: "SignatureMint721", // Hardcoded in the contract constructor
+      name: "SignatureMint1155", // Hardcoded in the contract constructor
       version: "1", // Hardcoded in the contract constructor
       chainId,
       verifyingContract,
