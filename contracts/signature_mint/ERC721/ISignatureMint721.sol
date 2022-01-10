@@ -10,6 +10,7 @@ interface ISignatureMint721 {
      *  @notice The body of a request to mint NFTs.
      *
      *  @param to The receiver of the NFTs to mint.
+     * @param uri The URI of the NFT to mint.
      *  @param price Price to pay for minting with the signature.
      *  @param currency The currency in which the price per token must be paid.
      *  @param validityStartTimestamp The unix timestamp after which the request is valid.
