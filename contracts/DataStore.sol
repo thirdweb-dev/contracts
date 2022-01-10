@@ -1,12 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Context {
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+contract DataStore is
+    Initializable,
+    ContextUpgradeable,
+    MulticallUpgradeable,
+    ERC2771ContextUpgradeable,
+    UUPSUpgradeable,
+    AccessControlEnumerableUpgradeable 
+{
     bytes32 public constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
 
     string private contractURI;
@@ -18,10 +29,24 @@ contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Contex
         _;
     }
 
-    constructor(address _trustedForwarder, string memory _uri) ERC2771Context(_trustedForwarder) {
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(address _trustedForwarder, string memory _uri) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
+        __Context_init();
+        __Multicall_init();
+        __ERC2771Context_init(_trustedForwarder);
+        __UUPSUpgradeable_init();
+        __AccessControlEnumerable_init();
+
+        // Initialize this contract's state.
         contractURI = _uri;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(EDITOR_ROLE, _msgSender());
+    }
+
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
     }
 
     function getUint(uint256 _key) external view returns (uint256 value) {
@@ -33,13 +58,13 @@ contract DataStore is Context, Multicall, AccessControlEnumerable, ERC2771Contex
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
