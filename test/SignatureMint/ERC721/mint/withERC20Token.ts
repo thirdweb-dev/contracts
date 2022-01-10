@@ -104,7 +104,7 @@ describe("Mint tokens with a valid mint request", function () {
       ).to.be.revertedWith("request expired");
     });
 
-    it("Should revert if the requestor has approved the total price of the NFTs to mint", async () => {
+    it("Should revert if the requestor has not approved the total price of the NFTs to mint", async () => {
       await erc20Token
         .connect(requestor)
         .decreaseAllowance(sigMint721.address, await erc20Token.allowance(requestor.address, sigMint721.address));
