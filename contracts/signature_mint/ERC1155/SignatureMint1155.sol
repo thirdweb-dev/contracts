@@ -167,7 +167,6 @@ contract SignatureMint1155 is
         external
         payable
         nonReentrant
-        returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
@@ -176,7 +175,7 @@ contract SignatureMint1155 is
 
         collectPrice(_req);
 
-        emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
+        emit MintWithSignature(signer, receiver, _req.tokenId, _req);
     }
 
     /// @dev See EIP 2981

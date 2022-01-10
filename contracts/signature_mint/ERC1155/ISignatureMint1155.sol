@@ -86,5 +86,5 @@ interface ISignatureMint1155 {
      *  @param req The mint request.
      *  @param signature he signature produced by an account signing the mint request.
      */
-    function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable returns (uint256);
+    function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable;
 }
