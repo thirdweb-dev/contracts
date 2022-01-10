@@ -88,7 +88,7 @@ contract SignatureMint1155 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    mapping(uint256 => string) private uriForId;
+    mapping(uint256 => string) private _tokenURI;
 
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
@@ -146,12 +146,12 @@ contract SignatureMint1155 is
 
     /// @dev Returns the URI for a tokenId
     function tokenURI(uint256 _tokenId) public view returns (string memory) {
-        return uriForId[_tokenId];
+        return _tokenURI[_tokenId];
     }
 
     /// @dev Returns the URI for a tokenId
     function uri(uint256 _tokenId) public view override returns (string memory) {
-        return uriForId[_tokenId];
+        return _tokenURI[_tokenId];
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
@@ -242,13 +242,13 @@ contract SignatureMint1155 is
     /// @dev Mints an NFT to `to`
     function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
         
-        if(bytes(uriForId[_tokenId]).length == 0) {
-            uriForId[_tokenId] = _uri;
+        if(bytes(_tokenURI[_tokenId]).length == 0) {
+            _tokenURI[_tokenId] = _uri;
         }
 
         _mint(_to, _tokenId, _amount, "");
 
-        emit TokenMinted(_to, _tokenId, uriForId[_tokenId], _amount);
+        emit TokenMinted(_to, _tokenId, _tokenURI[_tokenId], _amount);
     }
 
     /// @dev Returns the address of the signer of the mint request.
