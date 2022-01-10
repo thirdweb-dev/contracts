@@ -2,17 +2,31 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
+import { ERC1155PresetUpgradeable } from "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 
 // Meta transactions
-import { ERC2771Context } from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
-import "./royalty/RoyaltyReceiver.sol";
+import "./royalty/RoyaltyReceiverUpgradeable.sol";
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
+// Utils
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall, RoyaltyReceiver {
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+contract AccessNFT is
+    IERC2981,
+    Initializable,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    UUPSUpgradeable,
+    RoyaltyReceiverUpgradeable,
+    ERC1155PresetUpgradeable
+{
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
@@ -96,20 +110,22 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
         _;
     }
 
-    constructor(
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
         address _royaltyReceiver,
         address _trustedForwarder,
         string memory _uri,
         uint256 _royaltyBps
-    )
-        ERC1155PresetMinterPauserSupplyHolder(_uri)
-        ERC2771Context(_trustedForwarder)
-        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
-    {
-        // Set contract URI
-        contractURI = _uri;
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __UUPSUpgradeable_init();
+        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __ERC1155Preset_init(_uri);
 
-        // Grant ownership and setup roles
+        // Initialize this contract's state.
+        contractURI = _uri;
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
     }
@@ -315,6 +331,11 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
      *      Internal functions.
      */
 
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+    }
+
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
         address operator,
@@ -345,13 +366,13 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     }
 
     /// @dev See EIP-2771
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See EIP-2771
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     /**
@@ -362,12 +383,12 @@ contract AccessNFT is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IER
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
+        override(ERC1155PresetUpgradeable, RoyaltyReceiverUpgradeable, IERC165)
         returns (bool)
     {
         return
-            ERC1155PresetMinterPauserSupplyHolder.supportsInterface(interfaceId) ||
-            RoyaltyReceiver.supportsInterface(interfaceId) ||
+            ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
+            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId) ||
             super.supportsInterface(interfaceId);
     }
 
