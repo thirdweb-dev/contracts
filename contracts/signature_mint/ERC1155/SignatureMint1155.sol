@@ -61,6 +61,9 @@ contract SignatureMint1155 is
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
 
+    /// @dev The next token ID of the NFT to mint.
+    uint256 public nextTokenIdToMint;
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -155,9 +158,13 @@ contract SignatureMint1155 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) external onlyMinter {
+    function mintTo(address _to, string calldata _uri, uint256 _amount) external onlyMinter {
+
+        uint256 tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
-        _mintTo(_to, _uri, _tokenId, _amount);
+        _mintTo(_to, _uri, tokenIdToMint, _amount);
     }
 
     ///     =====   External functions  =====
@@ -171,11 +178,20 @@ contract SignatureMint1155 is
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
-        _mintTo(receiver, _req.uri, _req.tokenId, _req.quantity);
+        uint256 tokenIdToMint;
+        if(_req.tokenId == type(uint).max) {
+            tokenIdToMint = nextTokenIdToMint;
+            nextTokenIdToMint += 1;
+        } else {
+            require(_req.tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _req.tokenId;
+        }
+
+        _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
         collectPrice(_req);
 
-        emit MintWithSignature(signer, receiver, _req.tokenId, _req);
+        emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /// @dev See EIP 2981
