@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 // Royalties
-import "./royalty/RoyaltyReceiver.sol";
+import "../royalty/RoyaltyReceiver.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";

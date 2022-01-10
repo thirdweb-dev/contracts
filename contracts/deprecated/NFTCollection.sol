@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
+import "../openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
 
 // Token interfaces
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "./royalty/RoyaltyReceiver.sol";
+import "../royalty/RoyaltyReceiver.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
