@@ -1,24 +1,36 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/governance/Governor.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import { GovernorUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
+import { GovernorSettingsUpgradeable } from  "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
+import { GovernorCountingSimpleUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
+import { GovernorVotesUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
+import { GovernorVotesQuorumFractionUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC721HolderUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+import { ERC1155HolderUpgradeable, ERC1155ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import { ERC20VotesUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+
+// Helper interfaces
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+
+// Upgradeability
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract VotingGovernor is
-    Governor,
-    GovernorSettings,
-    GovernorCountingSimple,
-    GovernorVotes,
-    GovernorVotesQuorumFraction,
-    ERC721Holder,
-    ERC1155Holder,
-    ERC2771Context
+    Initializable,
+    ERC2771ContextUpgradeable,
+    UUPSUpgradeable,
+    ERC721HolderUpgradeable,
+    ERC1155HolderUpgradeable,
+    GovernorUpgradeable,
+    GovernorSettingsUpgradeable,
+    GovernorCountingSimpleUpgradeable,
+    GovernorVotesUpgradeable,
+    GovernorVotesQuorumFractionUpgradeable
 {
     string public contractURI;
     uint256 public proposalIndex;
@@ -41,22 +53,29 @@ contract VotingGovernor is
     /// @dev proposal ID => proposal index
     mapping(uint256 => uint256) public indexForProposal;
 
-    constructor(
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
         string memory _name,
-        ERC20Votes _token,
+        ERC20VotesUpgradeable _token,
         uint256 _initialVotingDelay,
         uint256 _initialVotingPeriod,
         uint256 _initialProposalThreshold,
         uint256 _initialVoteQuorumFraction,
         address _trustedForwarder,
         string memory _uri
-    )
-        Governor(_name)
-        GovernorSettings(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold)
-        GovernorVotes(_token)
-        GovernorVotesQuorumFraction(_initialVoteQuorumFraction)
-        ERC2771Context(_trustedForwarder)
-    {
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.        
+        __ERC2771Context_init(_trustedForwarder);
+        __UUPSUpgradeable_init();
+        __ERC721Holder_init();
+        __ERC1155Holder_init();
+        __Governor_init(_name);
+        __GovernorSettings_init(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold);
+        __GovernorCountingSimple_init();
+        __GovernorVotes_init(_token);
+        __GovernorVotesQuorumFraction_init(_initialVoteQuorumFraction);
+
+        // Initialize this contract's state.
         contractURI = _uri;
     }
 
@@ -100,22 +119,27 @@ contract VotingGovernor is
         contractURI = uri;
     }
 
-    function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
-        return GovernorSettings.proposalThreshold();
+    function proposalThreshold() public view override(GovernorUpgradeable, GovernorSettingsUpgradeable) returns (uint256) {
+        return GovernorSettingsUpgradeable.proposalThreshold();
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155Receiver, Governor) returns (bool) {
+    /// @dev Sets retrictions on upgrades.
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(_msgSender() == _executor(), "Governor: onlyGovernance");
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155ReceiverUpgradeable, GovernorUpgradeable) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
