@@ -67,9 +67,6 @@ contract SignatureMint1155 is
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
-    /// @dev The token ID of the next token to mint.
-    uint256 public nextTokenIdToMint;
-
     /// @dev Contract interprets 10_000 as 100%.
     uint64 private constant MAX_BPS = 10_000;
 
