@@ -147,6 +147,33 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
 
     //      =====   Getter functions  =====
 
+    /// @dev Returns whether an address has claimed tokens during a claim condition.
+    function canClaim(
+        address _claimer,
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _conditionIndex
+    ) external view returns (bool) {
+        
+        ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
+
+        bool success1 = _quantity > 0 && _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply;
+
+        uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
+        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _claimer);
+
+        bool success2 = timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim;
+
+        bool success3;
+        if (_claimCondition.merkleRoot != bytes32(0)) {
+            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _quantity));
+            success3 = MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf);
+        }
+
+        return success1 && success2 && success3;
+    }
+
     /// @dev Returns the current active mint condition for a given tokenId.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)
         public
