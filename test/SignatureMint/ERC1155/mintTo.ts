@@ -42,6 +42,12 @@ describe("Tokens minted regularly by minter", function () {
         "not minter.",
       );
     });
+
+    it("Should revert if minter tries to mint with empty uri", async () => {
+      await expect(sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, "", quantityToMint)).to.be.revertedWith(
+        "empty uri.",
+      );
+    })
   });
 
   describe("Events", function () {

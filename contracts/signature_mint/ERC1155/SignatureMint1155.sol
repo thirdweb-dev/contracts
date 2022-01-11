@@ -268,6 +268,7 @@ contract SignatureMint1155 is
     function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
         
         if(bytes(_tokenURI[_tokenId]).length == 0) {
+            require(bytes(_uri).length > 0, "empty uri.");
             _tokenURI[_tokenId] = _uri;
         }
 
