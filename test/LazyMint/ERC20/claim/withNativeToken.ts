@@ -62,7 +62,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
     totalPrice = quantityToClaim.mul(ethers.utils.parseEther("0.1"));
 
     // Generate a merkle root for whitelisting
-    const leaves = [claimer.address].map(x => keccak256(ethers.utils.solidityPack(["address", "uint256"], [claimer.address, quantityToClaim])));
+    const leaves = [claimer.address].map(x =>
+      keccak256(ethers.utils.solidityPack(["address", "uint256"], [claimer.address, quantityToClaim])),
+    );
     const tree = new MerkleTree(leaves, keccak256);
     const whitelist = tree.getRoot();
     proof = tree.getProof(claimer.address);
@@ -70,7 +72,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
     // Set mint conditions
     const templateMintCondition: ClaimConditionStruct = {
       startTimestamp: BigNumber.from((await ethers.provider.getBlock("latest")).timestamp).add(100),
-      maxClaimableSupply: BigNumber.from(15),
+      maxClaimableSupply: BigNumber.from(25),
       supplyClaimed: BigNumber.from(0),
       waitTimeInSecondsBetweenClaims: BigNumber.from(100),
       merkleRoot: whitelist,
@@ -87,12 +89,8 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
         };
       });
 
-      console.log("1")
-
     // Set mint conditions
     await lazyMintERC20.connect(protocolAdmin).setClaimConditions(mintConditions);
-
-    console.log("2")
 
     // Travel to mint condition start
     targetMintConditionIndex = BigNumber.from(0);
