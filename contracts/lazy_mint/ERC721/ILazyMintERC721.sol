@@ -76,6 +76,7 @@ interface ILazyMintERC721 {
     event ClaimedTokens(
         uint256 indexed claimConditionIndex,
         address indexed claimer,
+        address indexed receiver,
         uint256 startTokenId,
         uint256 quantityClaimed
     );
@@ -112,11 +113,12 @@ interface ILazyMintERC721 {
     /**
      *  @notice Lets an account claim a given quantity of tokens.
      *
+     *  @param receiver The receiver of the NFTs to claim.
      *  @param _quantity The quantity of tokens to claim.
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable;
+    function claim(address receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable;
 
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.

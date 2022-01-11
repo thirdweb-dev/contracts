@@ -118,7 +118,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
   describe("Revert cases", function () {
     it("Should revert if quantity wanted is zero", async () => {
       const invalidQty: BigNumber = BigNumber.from(0);
-      await expect(lazyMintERC721.connect(claimer).claim(invalidQty, proof)).to.be.revertedWith(
+      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, invalidQty, proof)).to.be.revertedWith(
         "invalid quantity claimed.",
       );
     });
@@ -126,7 +126,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     it("Should revert if quantity wanted is greater than limit per transaction", async () => {
       const invalidQty: BigNumber = (mintConditions[0].quantityLimitPerTransaction as BigNumber).add(1);
 
-      await expect(lazyMintERC721.connect(claimer).claim(invalidQty, proof)).to.be.revertedWith(
+      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, invalidQty, proof)).to.be.revertedWith(
         "invalid quantity claimed.",
       );
     });
@@ -139,12 +139,12 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
 
       while (supplyClaimed.lt(maxClaimableSupply)) {
         if (supplyClaimed.add(quantityToClaim).gt(maxClaimableSupply)) {
-          await expect(lazyMintERC721.connect(claimer).claim(quantityToClaim, proof)).to.be.revertedWith(
+          await expect(lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof)).to.be.revertedWith(
             "exceed max mint supply.",
           );
         }
 
-        await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+        await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
         const nextValidTimestampForClaim: BigNumber = await lazyMintERC721.getTimestampForNextValidClaim(
           targetMintConditionIndex,
           claimer.address,
@@ -156,15 +156,15 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     });
 
     it("Should revert if claimer claims before valid timestamp for transaction", async () => {
-      await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+      await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
 
-      await expect(lazyMintERC721.connect(claimer).claim(quantityToClaim, proof)).to.be.revertedWith(
+      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof)).to.be.revertedWith(
         "cannot claim yet.",
       );
     });
 
     it("Should revert if claimer is not in the whitelist", async () => {
-      await expect(lazyMintERC721.connect(protocolAdmin).claim(quantityToClaim, proof)).to.be.revertedWith(
+      await expect(lazyMintERC721.connect(protocolAdmin).claim(protocolAdmin.address, quantityToClaim, proof)).to.be.revertedWith(
         "not in whitelist.",
       );
     });
@@ -175,7 +175,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
         .connect(claimer)
         .decreaseAllowance(lazyMintERC721.address, await erc20Token.balanceOf(claimer.address));
 
-      await expect(lazyMintERC721.connect(claimer).claim(quantityToClaim, proof)).to.be.revertedWith(
+      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof)).to.be.revertedWith(
         "insufficient currency balance or allowance.",
       );
     });
@@ -188,12 +188,13 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     });
 
     it("Should emit ClaimedTokens", async () => {
-      await expect(lazyMintERC721.connect(claimer).claim(quantityToClaim, proof))
+      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof))
         .to.emit(lazyMintERC721, "ClaimedTokens")
         .withArgs(
           ...Object.values({
             mintConditionIndex: targetMintConditionIndex,
             claimer: claimer.address,
+            receiver: claimer.address,
             startTokenId: 0,
             quantityClaimed: quantityToClaim,
           }),
@@ -204,7 +205,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
   describe("Balances", function () {
     it("Should increase the claimer's balance of the tokens claimed", async () => {
       const claimerBalBefore: BigNumber = await lazyMintERC721.balanceOf(claimer.address);
-      await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+      await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
       const claimerBalAfter: BigNumber = await lazyMintERC721.balanceOf(claimer.address);
 
       expect(claimerBalAfter).to.equal(claimerBalBefore.add(quantityToClaim));
@@ -212,7 +213,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
 
     it("Should decrease the currency balance of the claimer", async () => {
       const claimerBalBefore: BigNumber = await erc20Token.balanceOf(claimer.address);
-      await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+      await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
       const claimerBalAfter: BigNumber = await erc20Token.balanceOf(claimer.address);
 
       expect(claimerBalAfter).to.equal(claimerBalBefore.sub(totalPrice));
@@ -233,7 +234,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
       const feeRecipientBalBefore: BigNumber = await erc20Token.balanceOf(feeRecipient);
       const remainderRecipientBalBefore: BigNumber = await erc20Token.balanceOf(remainderRecipient);
 
-      await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+      await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
 
       const feeRecipientBalAfter: BigNumber = await erc20Token.balanceOf(feeRecipient);
       const remainderRecipientBalAfter: BigNumber = await erc20Token.balanceOf(remainderRecipient);
@@ -247,7 +248,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     it("Should update the supply minted during the claim condition", async () => {
       const currenMintSupplyBefore = (await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex))
         .supplyClaimed;
-      await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+      await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
       const currenMintSupplyAfter = (await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex))
         .supplyClaimed;
 
@@ -256,7 +257,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     it("Should update the next valid timestamp for claim, for the claimer", async () => {
       const waitBetweenClaims: BigNumber = (await lazyMintERC721.getClaimConditionAtIndex(targetMintConditionIndex))
         .waitTimeInSecondsBetweenClaims;
-      await lazyMintERC721.connect(claimer).claim(quantityToClaim, proof);
+      await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
 
       const currentTimestamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
       const expectedNextValidTimestamp: BigNumber = currentTimestamp.add(waitBetweenClaims);
