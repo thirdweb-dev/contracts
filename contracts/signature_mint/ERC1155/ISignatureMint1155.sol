@@ -43,7 +43,10 @@ interface ISignatureMint1155 {
     );
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient);
+    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
+
+    /// @dev Emitted when a new sale recipient is set.
+    event NewDefaultSaleRecipient(address indexed recipient);
 
     /// @dev Emitted when the royalty fee bps is updated
     event RoyaltyUpdated(uint256 newRoyaltyBps);

@@ -96,6 +96,9 @@ contract SignatureMint1155 is
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
 
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public saleRecipient;
+
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
@@ -189,7 +192,7 @@ contract SignatureMint1155 is
 
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
-        collectPrice(_req);
+        collectPrice(_req, tokenIdToMint);
 
         emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
@@ -208,10 +211,16 @@ contract SignatureMint1155 is
 
     //      =====   Setter functions  =====
 
+    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
+    function setSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient, _tokenId, false);
+    }
+
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         defaultSaleRecipient = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient);
+        emit NewDefaultSaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
@@ -304,7 +313,7 @@ contract SignatureMint1155 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req) internal {
+    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
         if (_req.pricePerToken == 0) {
             return;
         }
@@ -316,9 +325,11 @@ contract SignatureMint1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
+        address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
+
         transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
 
-        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+        transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - fees);
     }
 
     /// @dev Transfers a given amount of currency.
