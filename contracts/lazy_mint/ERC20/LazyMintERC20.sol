@@ -86,22 +86,22 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     //      =====   External functions  =====
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
-    function claim(uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
+    function claim(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
 
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition();
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_quantity, _proofs, activeConditionIndex);
+        verifyClaim(_receiver, _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(activeConditionIndex, _quantity);
+        transferClaimedTokens(_receiver, activeConditionIndex, _quantity);
 
-        emit ClaimedTokens(activeConditionIndex, _msgSender(), _quantity);
+        emit ClaimedTokens(activeConditionIndex, _msgSender(), _receiver, _quantity);
     }
 
     /// @dev Lets a module admin update mint conditions without resetting the restrictions.
@@ -217,6 +217,7 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaim(
+        address _claimer,
         uint256 _quantity,
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
@@ -230,12 +231,12 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         );
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
-        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex];
-        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _msgSender());
+        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _claimer);
         require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
-            bytes32 leaf = keccak256(abi.encodePacked(_msgSender(), _quantity));
+            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _quantity));
             require(MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
@@ -261,14 +262,14 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
+    function transferClaimedTokens(address _to, uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
         uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
         claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
-        _mint(_msgSender(), _quantityBeingClaimed);
+        _mint(_to, _quantityBeingClaimed);
     }
 
     /// @dev Transfers a given amount of currency.
