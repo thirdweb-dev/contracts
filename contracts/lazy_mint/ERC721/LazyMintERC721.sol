@@ -177,7 +177,7 @@ contract LazyMintERC721 is
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaimIsValid(_quantity, _proofs, activeConditionIndex, condition);
+        verifyClaim(_quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity);
@@ -261,12 +261,14 @@ contract LazyMintERC721 is
     }
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
-    function verifyClaimIsValid(
+    function verifyClaim(
         uint256 _quantity,
         bytes32[] calldata _proofs,
-        uint256 _conditionIndex,
-        ClaimCondition memory _claimCondition
-    ) internal view {
+        uint256 _conditionIndex
+    ) public view {
+
+        ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
+
         require(_quantity > 0 && _quantity <= _claimCondition.quantityLimitPerTransaction, "invalid quantity claimed.");
         require(
             _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
