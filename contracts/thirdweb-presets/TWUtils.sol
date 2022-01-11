@@ -7,18 +7,20 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract ThirdwebUtils is 
+contract TWUtils is 
     Initializable,
     ReentrancyGuardUpgradeable,
     MulticallUpgradeable,
     ERC2771ContextUpgradeable
 {
 
-    function __ThirdwebUtils_init(address _trustedForwarder) internal onlyInitializing {
+    function __TWUtils_init(address _trustedForwarder) internal onlyInitializing {
         __ReentrancyGuard_init();
         __Multicall_init();
         __ERC2771Context_init(_trustedForwarder);
+
+        __TWUtils_init_unchained();
     }
 
-    function __ThirdwebUtils_init_unchained() internal onlyInitializing {}
+    function __TWUtils_init_unchained() internal onlyInitializing {}
 }
