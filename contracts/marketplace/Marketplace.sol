@@ -119,6 +119,8 @@ contract Marketplace is
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(ListingParameters memory _params) external override onlyListerRoleWhenRestricted {
+        require(_params.secondsUntilEndTime > 0, "Marketplace: secondsUntilEndTime must be greater than 0.");
+
         // Get values to populate `Listing`.
         uint256 listingId = getNextListingId();
         address tokenOwner = _msgSender();
@@ -135,15 +137,14 @@ contract Marketplace is
             tokenTypeOfListing
         );
 
+        uint256 startTime = _params.startTime < block.timestamp ? block.timestamp : _params.startTime;
         Listing memory newListing = Listing({
             listingId: listingId,
             tokenOwner: tokenOwner,
             assetContract: _params.assetContract,
             tokenId: _params.tokenId,
-            startTime: _params.startTime < block.timestamp ? block.timestamp : _params.startTime,
-            endTime: _params.secondsUntilEndTime == 0
-                ? type(uint256).max
-                : _params.startTime + _params.secondsUntilEndTime,
+            startTime: startTime,
+            endTime: startTime + _params.secondsUntilEndTime,
             quantity: tokenAmountToList,
             currency: _params.currencyToAccept,
             reservePricePerToken: _params.reservePricePerToken,
@@ -279,7 +280,7 @@ contract Marketplace is
 
         require(
             targetListing.endTime > block.timestamp && targetListing.startTime < block.timestamp,
-            "Marketplace: inactive lisitng."
+            "Marketplace: inactive listing."
         );
 
         // Both - (1) offers to direct listings, and (2) bids to auctions - share the same structure.
@@ -315,10 +316,9 @@ contract Marketplace is
 
         Offer memory targetBid = winningBid[_listingId];
 
-        // Cancel auction if (1) auction hasn't started, or (2) auction ended without any bids.
-        bool toCancel = (targetListing.startTime > block.timestamp)
-            || (targetListing.endTime < block.timestamp && targetBid.offeror == address(0));
-        
+        // Cancel auction if (1) auction hasn't started, or (2) auction doesn't have any bids.
+        bool toCancel = targetListing.startTime > block.timestamp || targetBid.offeror == address(0);
+
         if (toCancel) {
             _cancelAuction(targetListing);
         } else {
@@ -328,7 +328,7 @@ contract Marketplace is
             if (_closeFor == targetListing.tokenOwner) {
                 _closeAuctionForAuctionCreator(targetListing, targetBid);
             }
-                
+
             if (_closeFor == targetBid.offeror) {
                 _closeAuctionForBidder(targetListing, targetBid);
             }
@@ -460,7 +460,7 @@ contract Marketplace is
 
     /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
     function _closeAuctionForAuctionCreator(Listing memory _targetListing, Offer memory _winningBid) internal {
-        uint256 payoutAmount = _winningBid.pricePerToken * _winningBid.quantityWanted;
+        uint256 payoutAmount = _winningBid.pricePerToken * _targetListing.quantity;
 
         _targetListing.quantity = 0;
         _targetListing.endTime = block.timestamp;
@@ -556,18 +556,21 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
-        if (_amount == 0 || _from == _to) {
+        if (_amount == 0) {
             return;
         }
 
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
+                // withdraw from weth then transfer withdrawn native token to recipient
                 IWETH(nativeTokenWrapper).withdraw(_amount);
                 safeTransferNativeToken(_to, _amount);
             } else if (_to == address(this)) {
+                // store native currency in weth
                 require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
             } else {
+                // passthrough for native token transfer from buyer to the seller
                 safeTransferNativeToken(_to, _amount);
             }
         } else {
@@ -582,13 +585,13 @@ contract Marketplace is
         address _to,
         uint256 _amount
     ) internal {
-        // Required due to the use of `IERC20.transferFrom`.
-        if (_from == address(this)) {
-            IERC20(_currency).approve(address(this), _amount);
+        if (_from == _to) {
+            return;
         }
-
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
+        bool success = _from == address(this)
+            ? IERC20(_currency).transfer(_to, _amount)
+            : IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
         require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
@@ -676,10 +679,7 @@ contract Marketplace is
 
         // Check: buyer owns and has approved sufficient currency for sale.
         if (_listing.currency == NATIVE_TOKEN) {
-            require(
-                msg.value == settledTotalPrice,
-                "Marketplace: insufficient currency balance or allowance."
-            );
+            require(msg.value == settledTotalPrice, "Marketplace: insufficient currency balance or allowance.");
         } else {
             validateERC20BalAndAllowance(_buyer, _listing.currency, settledTotalPrice);
         }

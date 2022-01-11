@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ISignatureMint721 } from "./ISignatureMint721.sol";
+import { ISignatureMint1155 } from "./ISignatureMint1155.sol";
 
 // Token
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 // Protocol control center.
 import { ProtocolControl } from "../../ProtocolControl.sol";
@@ -32,9 +32,9 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract SignatureMint721 is
-    ISignatureMint721,
-    ERC721Enumerable,
+contract SignatureMint1155 is
+    ISignatureMint1155,
+    ERC1155,
     EIP712,
     AccessControlEnumerable,
     ERC2771Context,
@@ -47,7 +47,7 @@ contract SignatureMint721 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -61,14 +61,14 @@ contract SignatureMint721 is
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
 
+    /// @dev The next token ID of the NFT to mint.
+    uint256 public nextTokenIdToMint;
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
-
-    /// @dev The token ID of the next token to mint.
-    uint256 public nextTokenIdToMint;
 
     /// @dev Contract interprets 10_000 as 100%.
     uint64 private constant MAX_BPS = 10_000;
@@ -91,7 +91,13 @@ contract SignatureMint721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    mapping(uint256 => string) private uri;
+    mapping(uint256 => string) private _tokenURI;
+
+    /// @dev Token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public totalSupply;
+
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public saleRecipient;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -106,8 +112,6 @@ contract SignatureMint721 is
     }
 
     constructor(
-        string memory _name,
-        string memory _symbol,
         string memory _contractURI,
         address payable _controlCenter,
         address _trustedForwarder,
@@ -115,7 +119,7 @@ contract SignatureMint721 is
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) ERC721(_name, _symbol) EIP712("SignatureMint721", "1") ERC2771Context(_trustedForwarder) {
+    ) ERC1155("") EIP712("SignatureMint1155", "1") ERC2771Context(_trustedForwarder) {
         // Set the protocol control center
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
@@ -147,14 +151,23 @@ contract SignatureMint721 is
     }
 
     /// @dev Returns the URI for a tokenId
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return uri[_tokenId];
+    function tokenURI(uint256 _tokenId) public view returns (string memory) {
+        return _tokenURI[_tokenId];
+    }
+
+    /// @dev Returns the URI for a tokenId
+    function uri(uint256 _tokenId) public view override returns (string memory) {
+        return _tokenURI[_tokenId];
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri) external onlyMinter returns (uint256) {
+    function mintTo(address _to, string calldata _uri, uint256 _amount) external onlyMinter {
+
+        uint256 tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
-        return _mintTo(_to, _uri);
+        _mintTo(_to, _uri, tokenIdToMint, _amount);
     }
 
     ///     =====   External functions  =====
@@ -164,16 +177,24 @@ contract SignatureMint721 is
         external
         payable
         nonReentrant
-        returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
-        tokenIdMinted = _mintTo(receiver, _req.uri);
+        uint256 tokenIdToMint;
+        if(_req.tokenId == type(uint).max) {
+            tokenIdToMint = nextTokenIdToMint;
+            nextTokenIdToMint += 1;
+        } else {
+            require(_req.tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _req.tokenId;
+        }
 
-        collectPrice(_req);
+        _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
-        emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
+        collectPrice(_req, tokenIdToMint);
+
+        emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /// @dev See EIP 2981
@@ -190,10 +211,16 @@ contract SignatureMint721 is
 
     //      =====   Setter functions  =====
 
+    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
+    function setSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient, _tokenId, false);
+    }
+
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         defaultSaleRecipient = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient);
+        emit NewDefaultSaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
@@ -238,15 +265,16 @@ contract SignatureMint721 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
-        tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+    function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
+        
+        if(bytes(_tokenURI[_tokenId]).length == 0) {
+            require(bytes(_uri).length > 0, "empty uri.");
+            _tokenURI[_tokenId] = _uri;
+        }
 
-        uri[tokenIdToMint] = _uri;
+        _mint(_to, _tokenId, _amount, "");
 
-        _mint(_to, tokenIdToMint);
-
-        emit TokenMinted(_to, tokenIdToMint, _uri);
+        emit TokenMinted(_to, _tokenId, _tokenURI[_tokenId], _amount);
     }
 
     /// @dev Returns the address of the signer of the mint request.
@@ -257,8 +285,10 @@ contract SignatureMint721 is
                     abi.encode(
                         TYPEHASH,
                         _req.to,
+                        _req.tokenId,
                         keccak256(bytes(_req.uri)),
-                        _req.price,
+                        _req.quantity,
+                        _req.pricePerToken,
                         _req.currency,
                         _req.validityStartTimestamp,
                         _req.validityEndTimestamp,
@@ -284,20 +314,23 @@ contract SignatureMint721 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req) internal {
-        if (_req.price == 0) {
+    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
+        if (_req.pricePerToken == 0) {
             return;
         }
 
-        uint256 fees = (_req.price * feeBps) / MAX_BPS;
+        uint256 totalPrice = _req.pricePerToken * _req.quantity;
+        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == _req.price, "must send total price.");
+            require(msg.value == totalPrice, "must send total price.");
         }
+
+        address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
 
         transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
 
-        transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, _req.price - fees);
+        transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - fees);
     }
 
     /// @dev Transfers a given amount of currency.
@@ -356,24 +389,62 @@ contract SignatureMint721 is
 
     ///     =====   Low-level overrides  =====
 
-    /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burn(uint256 tokenId) public virtual {
-        //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
-        _burn(tokenId);
+    /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
+    function burn(
+        address account,
+        uint256 id,
+        uint256 value
+    ) public virtual {
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved."
+        );
+
+        _burn(account, id, value);
     }
 
-    /// @dev See {ERC721-_beforeTokenTransfer}.
+    /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
+    function burnBatch(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory values
+    ) public virtual {
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved."
+        );
+
+        _burnBatch(account, ids, values);
+    }
+
+    /**
+     * @dev See {ERC1155-_beforeTokenTransfer}.
+     */
     function _beforeTokenTransfer(
+        address operator,
         address from,
         address to,
-        uint256 tokenId
-    ) internal virtual override(ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
+        }
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] -= amounts[i];
+            }
         }
     }
 
@@ -381,10 +452,10 @@ contract SignatureMint721 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC721Enumerable, IERC165)
+        override(AccessControlEnumerable, ERC1155, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC2981).interfaceId;
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

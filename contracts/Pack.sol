@@ -28,6 +28,9 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
 
@@ -108,6 +111,9 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
 
+    /// @dev Emitted when a new Owner is set.
+    event NewOwner(address prevOwner, address newOwner);
+
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
         _;
@@ -137,7 +143,8 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         // Set contract URI
         contractURI = _uri;
 
-        // Grant TRANSFER_ROLE to deployer.
+        // Grant ownership and setup roles
+        _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
         setRoyaltyBps(_royaltyBps);
     }
@@ -145,6 +152,13 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
     /**
      *      Public functions
      */
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
+    }
 
     /**
      * @dev See {ERC1155-_mint}.
@@ -256,13 +270,26 @@ contract Pack is ERC1155PresetMinterPauserSupplyHolder, VRFConsumerBase, ERC2771
         vrfFees = _newFees;
     }
 
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
+    }
+
     /// @dev Lets a module admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
     }
 
     /// @dev Lets a module admin transfer ERC20 from the contract.
-    function transferERC20(address _currency, address _to, uint256 _amount) external onlyModuleAdmin {        
+    function transferERC20(
+        address _currency,
+        address _to,
+        uint256 _amount
+    ) external onlyModuleAdmin {
         bool success = IERC20(_currency).transfer(_to, _amount);
         require(success, "failed to transfer currency.");
     }

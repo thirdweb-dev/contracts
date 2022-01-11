@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 // Access Control
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 // Registry
 import { Registry } from "./Registry.sol";
@@ -10,9 +12,15 @@ import { Royalty } from "./Royalty.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ProtocolControl is AccessControlEnumerable {
+contract ProtocolControl is AccessControlEnumerable, Multicall, Initializable {
+    /// @dev Contract version
+    string public constant version = "1";
+
     /// @dev MAX_BPS for the contract: 10_000 == 100%
-    uint128 public constant MAX_BPS = 10000;
+    uint256 public constant MAX_BPS = 10000;
+
+    /// @dev The address interpreted as native token of the chain.
+    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev Module ID => Module address.
     mapping(bytes32 => address) public modules;
@@ -33,7 +41,7 @@ contract ProtocolControl is AccessControlEnumerable {
     address private _forwarder;
 
     /// @dev Contract level metadata.
-    string private _contractURI;
+    string public contractURI;
 
     /// @dev Events.
     event ModuleUpdated(bytes32 indexed moduleId, address indexed module);
@@ -56,13 +64,15 @@ contract ProtocolControl is AccessControlEnumerable {
         _;
     }
 
-    constructor(
+    constructor() initializer {}
+
+    function initialize(
         address _registry,
         address _admin,
         string memory _uri
-    ) {
+    ) external initializer {
         // Set contract URI
-        _contractURI = _uri;
+        contractURI = _uri;
         // Set top level ap registry
         registry = _registry;
         // Set default royalty treasury address
@@ -142,18 +152,13 @@ contract ProtocolControl is AccessControlEnumerable {
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyProtocolAdmin {
-        _contractURI = _URI;
+        contractURI = _URI;
     }
 
     /// @dev Lets the admin set a new Forwarder address [NOTE: for off-chain convenience only.]
     function setForwarder(address forwarder) external onlyProtocolAdmin {
         _forwarder = forwarder;
         emit ForwarderUpdated(forwarder);
-    }
-
-    /// @dev Returns the URI for the contract-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
     }
 
     /// @dev Returns all addresses for a module type
@@ -175,39 +180,47 @@ contract ProtocolControl is AccessControlEnumerable {
         return _forwarder;
     }
 
+    /// @dev Lets a protocol admin withdraw tokens from this contract.
     function withdrawFunds(address to, address currency) external onlyProtocolAdmin {
         Registry _registry = Registry(registry);
         IERC20 _currency = IERC20(currency);
         address registryTreasury = _registry.treasury();
-        uint256 registryTreasuryFee = 0;
-        uint256 amount = 0;
+        uint256 amount;
 
-        if (currency == address(0)) {
+        bool isNativeToken = _isNativeToken(address(_currency));
+
+        if (isNativeToken) {
             amount = address(this).balance;
         } else {
             amount = _currency.balanceOf(address(this));
         }
 
-        registryTreasuryFee = (amount * _registry.getFeeBps(address(this))) / MAX_BPS;
-        amount = amount - registryTreasuryFee;
+        uint256 registryTreasuryFee = (amount * _registry.getFeeBps(address(this))) / MAX_BPS;
+        amount -= registryTreasuryFee;
 
-        if (currency == address(0)) {
-            (bool sent, ) = payable(to).call{ value: amount }("");
-            require(sent, "failed to withdraw funds");
+        bool transferSuccess;
 
-            (bool sentRegistry, ) = payable(registryTreasury).call{ value: registryTreasuryFee }("");
-            require(sentRegistry, "failed to withdraw funds to registry");
+        if (isNativeToken) {
+            (transferSuccess, ) = payable(to).call{ value: amount }("");
+            require(transferSuccess, "failed to withdraw funds");
+
+            (transferSuccess, ) = payable(registryTreasury).call{ value: registryTreasuryFee }("");
+            require(transferSuccess, "failed to withdraw funds to registry");
 
             emit FundsWithdrawn(to, currency, amount, registryTreasuryFee);
         } else {
-            require(_currency.transferFrom(_msgSender(), to, amount), "failed to transfer payment");
+            transferSuccess = _currency.transfer(to, amount);
+            require(transferSuccess, "failed to transfer payment");
 
-            require(
-                _currency.transferFrom(_msgSender(), registryTreasury, registryTreasuryFee),
-                "failed to transfer payment to registry"
-            );
+            transferSuccess = _currency.transfer(registryTreasury, registryTreasuryFee);
+            require(transferSuccess, "failed to transfer payment to registry");
 
             emit FundsWithdrawn(to, currency, amount, registryTreasuryFee);
         }
+    }
+
+    /// @dev Checks whether an address is to be interpreted as the native token
+    function _isNativeToken(address _toCheck) internal pure returns (bool) {
+        return _toCheck == NATIVE_TOKEN || _toCheck == address(0);
     }
 }

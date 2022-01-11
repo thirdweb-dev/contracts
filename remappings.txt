@@ -1,0 +1,2 @@
+@openzeppelin=node_modules/@openzeppelin
+@chainlink/contracts=node_modules/@chainlink/contracts

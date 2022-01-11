@@ -9,8 +9,10 @@ const EIP712Domain = [
 
 const MintRequest = [
   { name: "to", type: "address" },
+  { name: "tokenId", type: "uint256" },
   { name: "uri", type: "string" },
-  { name: "price", type: "uint256" },
+  { name: "quantity", type: "uint256" },
+  { name: "pricePerToken", type: "uint256" },
   { name: "currency", type: "address" },
   { name: "validityStartTimestamp", type: "uint128" },
   { name: "validityEndTimestamp", type: "uint128" },
@@ -24,7 +26,7 @@ function getMetaTxTypeData(chainId, verifyingContract) {
       MintRequest,
     },
     domain: {
-      name: "SignatureMint721", // Hardcoded in the contract constructor
+      name: "SignatureMint1155", // Hardcoded in the contract constructor
       version: "1", // Hardcoded in the contract constructor
       chainId,
       verifyingContract,

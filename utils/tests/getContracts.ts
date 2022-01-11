@@ -25,6 +25,7 @@ import { LazyMintERC1155 } from "typechain/LazyMintERC1155";
 import { LazyMintERC721 } from "typechain/LazyMintERC721";
 import { LazyMintERC20 } from "typechain/LazyMintERC20";
 import { SignatureMint721 } from "typechain/SignatureMint721";
+import { SignatureMint1155 } from "typechain/SignatureMint1155";
 
 export type Contracts = {
   registry: Registry;
@@ -42,6 +43,7 @@ export type Contracts = {
   lazyMintERC721: LazyMintERC721;
   lazyMintERC20: LazyMintERC20;
   sigMint721: SignatureMint721;
+  sigMint1155: SignatureMint1155;
 };
 
 export async function getContracts(
@@ -202,24 +204,41 @@ export async function getContracts(
   const name_sigMint721: string = "SignatureMint721";
   const symbol_sigMint721: string = "SIGMINT";
 
-  const sigMint721: SignatureMint721 = await ethers
-      .getContractFactory("SignatureMint721")
-      .then(f =>
-        f
-          .connect(protocolAdmin)
-          .deploy(
-            name_sigMint721,
-            symbol_sigMint721,
-            contractURI,
-            protocolControl.address,
-            trustedForwarderAddr,
-            nativeTokenWrapperAddr,
-            defaultSaleRecipient,
-            royaltyBps,
-            feeBps,
-          ),
-      ) as SignatureMint721;
+  const sigMint721: SignatureMint721 = (await ethers
+    .getContractFactory("SignatureMint721")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(
+          name_sigMint721,
+          symbol_sigMint721,
+          contractURI,
+          protocolControl.address,
+          trustedForwarderAddr,
+          nativeTokenWrapperAddr,
+          defaultSaleRecipient,
+          royaltyBps,
+          feeBps,
+        ),
+    )) as SignatureMint721;
   
+  // Deploy SignatureMint1155
+  const sigMint1155: SignatureMint1155 = (await ethers
+    .getContractFactory("SignatureMint1155")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(          
+          contractURI,
+          protocolControl.address,
+          trustedForwarderAddr,
+          nativeTokenWrapperAddr,
+          defaultSaleRecipient,
+          royaltyBps,
+          feeBps,
+        ),
+    )) as SignatureMint1155;
+
   // Deploy AccessNFT
   const accessNFTContractURI: string = "";
   const accessNft: AccessNFT = (await ethers
@@ -284,5 +303,6 @@ export async function getContracts(
     lazyMintERC721,
     lazyMintERC20,
     sigMint721,
+    sigMint1155
   };
 }
