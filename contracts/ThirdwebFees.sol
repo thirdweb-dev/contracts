@@ -75,6 +75,21 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
     }
 
+    /// @dev Returns the fee recipient for a module address
+    function getFeeRecipient(address _module) external view returns (address) {
+        bytes32 moduleType = IThirdwebModule(_module).moduleType();
+        
+        if (feeRecipientByModuleInstance[_module] != address(0)) {
+            return feeRecipientByModuleInstance[_module];
+        
+        } else if (feeRecipientByModuleType[moduleType] != address(0)) {
+            return feeRecipientByModuleType[moduleType];
+        
+        } else {
+            return defaultFeeRecipient;
+        }
+    }
+
     /// @dev Initializes contract state.
     function initialize(uint256 _defaultFeeBps, address _defaultFeeRecipient) external initializer {
         
