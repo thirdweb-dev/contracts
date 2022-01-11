@@ -23,6 +23,7 @@ import { Marketplace } from "../../typechain/Marketplace";
 import { LazyNFT } from "../../typechain/LazyNFT";
 import { LazyMintERC1155 } from "typechain/LazyMintERC1155";
 import { LazyMintERC721 } from "typechain/LazyMintERC721";
+import { LazyMintERC20 } from "typechain/LazyMintERC20";
 import { SignatureMint721 } from "typechain/SignatureMint721";
 import { SignatureMint1155 } from "typechain/SignatureMint1155";
 
@@ -40,6 +41,7 @@ export type Contracts = {
   weth: WETH9;
   lazyMintERC1155: LazyMintERC1155;
   lazyMintERC721: LazyMintERC721;
+  lazyMintERC20: LazyMintERC20;
   sigMint721: SignatureMint721;
   sigMint1155: SignatureMint1155;
 };
@@ -175,6 +177,29 @@ export async function getContracts(
         ),
     )) as LazyMintERC721;
 
+  // Deploy LazyMintERC20
+
+  const name_lazyMintERC20: string = "Lazy token";
+  const symbol_lazyMintERC20: string = "LAZY";
+
+  const lazyMintERC20: LazyMintERC20 = (await ethers
+    .getContractFactory("LazyMintERC20")
+    .then(f =>
+      f
+        .connect(protocolAdmin)
+        .deploy(
+          name_lazyMintERC20,
+          symbol_lazyMintERC20,
+          contractURI,
+          protocolControl.address,
+          trustedForwarderAddr,
+          nativeTokenWrapperAddr,
+          defaultSaleRecipient,
+          royaltyBps,
+          feeBps,
+        ),
+    )) as LazyMintERC20;
+
   // Deploy SignatureMint721
   const name_sigMint721: string = "SignatureMint721";
   const symbol_sigMint721: string = "SIGMINT";
@@ -196,14 +221,14 @@ export async function getContracts(
           feeBps,
         ),
     )) as SignatureMint721;
-  
+
   // Deploy SignatureMint1155
   const sigMint1155: SignatureMint1155 = (await ethers
     .getContractFactory("SignatureMint1155")
     .then(f =>
       f
         .connect(protocolAdmin)
-        .deploy(          
+        .deploy(
           contractURI,
           protocolControl.address,
           trustedForwarderAddr,
@@ -276,7 +301,8 @@ export async function getContracts(
     lazynft,
     lazyMintERC1155,
     lazyMintERC721,
+    lazyMintERC20,
     sigMint721,
-    sigMint1155
+    sigMint1155,
   };
 }
