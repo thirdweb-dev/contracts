@@ -79,6 +79,7 @@ interface ILazyMintERC1155 {
         uint256 indexed claimConditionIndex,
         uint256 indexed tokenId,
         address indexed claimer,
+        address receiver,
         uint256 quantityClaimed
     );
 
@@ -120,6 +121,7 @@ interface ILazyMintERC1155 {
      *                 of the mint conditions that apply.
      */
     function claim(
+        address _receiver,
         uint256 _tokenId,
         uint256 _quantity,
         bytes32[] calldata _proofs

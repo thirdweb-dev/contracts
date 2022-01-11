@@ -189,6 +189,7 @@ contract LazyMintERC1155 is
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
     function claim(
+        address _receiver,
         uint256 _tokenId,
         uint256 _quantity,
         bytes32[] calldata _proofs
@@ -198,15 +199,15 @@ contract LazyMintERC1155 is
         ClaimCondition memory condition = claimConditions[_tokenId].claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_tokenId, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_receiver, _tokenId, _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(activeConditionIndex, _tokenId, _quantity);
+        transferClaimedTokens(_receiver, activeConditionIndex, _tokenId, _quantity);
 
-        emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _quantity);
+        emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _receiver, _quantity);
     }
 
     // @dev Lets a module admin update mint conditions without resetting the restrictions.
@@ -370,6 +371,7 @@ contract LazyMintERC1155 is
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaim(
+        address _claimer,
         uint256 _tokenId,
         uint256 _quantity,
         bytes32[] calldata _proofs,
@@ -385,12 +387,12 @@ contract LazyMintERC1155 is
         );
 
         uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex];
-        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_tokenId, _conditionIndex, _msgSender());
+        uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex];
+        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer);
         require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_mintCondition.merkleRoot != bytes32(0)) {
-            bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
+            bytes32 leaf = keccak256(abi.encodePacked(_claimer));
             require(MerkleProof.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
@@ -427,6 +429,7 @@ contract LazyMintERC1155 is
 
     /// @dev Transfers the tokens being claimed.
     function transferClaimedTokens(
+        address _to,
         uint256 _claimConditionIndex,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed
@@ -437,7 +440,7 @@ contract LazyMintERC1155 is
         uint256 timestampIndex = _claimConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
-        _mint(_msgSender(), _tokenId, _quantityBeingClaimed, "");
+        _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
     /// @dev Transfers a given amount of currency.
