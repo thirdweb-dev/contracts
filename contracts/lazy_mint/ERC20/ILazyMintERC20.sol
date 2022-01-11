@@ -2,16 +2,15 @@
 pragma solidity ^0.8.0;
 
 /**
- *  `LazyMintERC721` is an ERC 721 contract. It takes in a base URI for every
- *  `n` tokens lazy minted at once. The URI for each of the `n` tokens lazy minted
- *  is the provided baseURI + `${tokenId}` (e.g. "ipsf://Qmece.../1").
+ *  `LazyMintERC20` is an ERC 20 contract.
  *
  *  The module admin (account with `DEFAULT_ADMIN ROLE`) can create claim conditions
- *  with non-overlapping time windows, and accounts can claim the NFTs, in a given time
+ *  with non-overlapping time windows, and accounts can claim the tokens, in a given time
  *  window, according to that time window's claim conditions.
  */
 
-interface ILazyMintERC721 {
+interface ILazyMintERC20 {
+    
     /**
      *  @notice The claim conditions for a given tokenId x time window.
      *
@@ -41,7 +40,6 @@ interface ILazyMintERC721 {
         uint256 startTimestamp;
         uint256 maxClaimableSupply;
         uint256 supplyClaimed;
-        uint256 quantityLimitPerTransaction;
         uint256 waitTimeInSecondsBetweenClaims;
         bytes32 merkleRoot;
         uint256 pricePerToken;
@@ -69,15 +67,11 @@ interface ILazyMintERC721 {
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
-    /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
-
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
         uint256 indexed claimConditionIndex,
         address indexed claimer,
         address indexed receiver,
-        uint256 startTokenId,
         uint256 quantityClaimed
     );
 
@@ -87,35 +81,24 @@ interface ILazyMintERC721 {
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
 
+    /// @dev Emitted when the royalty fee bps is updated
+    event RoyaltyUpdated(uint256 newRoyaltyBps);
+
     /// @dev Emitted when fee on primary sales is updated.
     event PrimarySalesFeeUpdates(uint256 newFeeBps);
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
 
-    /// @dev Emitted when a new Owner is set.
-    event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev The next token ID of the NFT to "lazy mint".
-    function nextTokenIdToMint() external returns (uint256);
-
-    /**
-     *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
-     *          to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
-     *
-     *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
-     */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
-
     /**
      *  @notice Lets an account claim a given quantity of tokens.
      *
      *  @param receiver The receiver of the NFTs to claim.
-     *  @param _quantity The quantity of tokens to claim.
-     *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
+     *  @param quantity The quantity of tokens to claim.
+     *  @param proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(address receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable;
+    function claim(address receiver, uint256 quantity, bytes32[] calldata proofs) external payable;
 
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
