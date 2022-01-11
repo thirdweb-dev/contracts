@@ -387,7 +387,7 @@ contract LazyMintERC1155 is
 
         if (_mintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_claimer));
-            require(MerkleProof.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
+            require(MerkleProofUpgradeable.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
 
