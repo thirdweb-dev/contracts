@@ -87,7 +87,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     // Set mint conditions
     const templateMintCondition: ClaimConditionStruct = {
       startTimestamp: BigNumber.from((await ethers.provider.getBlock("latest")).timestamp).add(100),
-      maxClaimableSupply: BigNumber.from(15),
+      maxClaimableSupply: BigNumber.from(25),
       supplyClaimed: BigNumber.from(0),
       waitTimeInSecondsBetweenClaims: BigNumber.from(5),
       merkleRoot: whitelist,
@@ -134,16 +134,18 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
           await expect(lazyMintERC20.connect(claimer).claim(quantityToClaim, proof)).to.be.revertedWith(
             "invalid quantity claimed.",
           );
+          break;
+        } else {
+          await lazyMintERC20.connect(claimer).claim(quantityToClaim, proof);
+
+          const nextValidTimestampForClaim: BigNumber = await lazyMintERC20.getTimestampForNextValidClaim(
+            targetMintConditionIndex,
+            claimer.address,
+          );
+          await ethers.provider.send("evm_mine", [nextValidTimestampForClaim.toNumber()]);
+
+          supplyClaimed = supplyClaimed.add(quantityToClaim);
         }
-
-        await lazyMintERC20.connect(claimer).claim(quantityToClaim, proof);
-        const nextValidTimestampForClaim: BigNumber = await lazyMintERC20.getTimestampForNextValidClaim(
-          targetMintConditionIndex,
-          claimer.address,
-        );
-        await ethers.provider.send("evm_mine", [nextValidTimestampForClaim.toNumber()]);
-
-        supplyClaimed = supplyClaimed.add(quantityToClaim);
       }
     });
 
