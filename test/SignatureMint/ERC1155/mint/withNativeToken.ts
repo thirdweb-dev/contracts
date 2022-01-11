@@ -46,7 +46,7 @@ describe("Mint tokens with a valid mint request", function () {
 
     mintRequest = {
       to: requestor.address,
-      tokenId: 5,
+      tokenId: ethers.constants.MaxUint256.toString(),
       uri: "ipfs://test/",
       quantity: 10,
       pricePerToken: ethers.utils.parseEther("0.1").toString(),
@@ -101,11 +101,20 @@ describe("Mint tokens with a valid mint request", function () {
         sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: 0 }),
       ).to.be.revertedWith("must send total price.");
     });
+
+    it("Should revert if the tokenId provided is not reserved, and not already minted", async () => {
+      const invalidMintReq = { ...mintRequest, tokenId: 5 };
+      const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint1155, invalidMintReq)).signature;
+
+      await expect(
+        sigMint1155.connect(requestor).mintWithSignature(invalidMintReq, signatureToUse, { value: totalPrice }),
+      ).to.be.revertedWith("invalid id");
+    })
   });
 
   describe("Events", function () {
     it("Should emit TokenMinted", async () => {
-      const tokenIdToBeMinted = mintRequest.tokenId;
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
 
       await expect(sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice }))
         .to.emit(sigMint1155, "TokenMinted")
@@ -121,13 +130,15 @@ describe("Mint tokens with a valid mint request", function () {
 
     it("Should emit MintWithSignature.", async () => {
 
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
+
       await expect(sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice }))
         .to.emit(sigMint1155, "MintWithSignature")
         .withArgs(
           ...Object.values({
             signer: protocolAdmin.address,
             mintedTo: requestor.address,
-            tokenIdMinted: mintRequest.tokenId,
+            tokenIdMinted: tokenIdToBeMinted,
             mintRequest: Object.values({
               to: mintRequest.to,
               tokenId: mintRequest.tokenId,
@@ -146,20 +157,25 @@ describe("Mint tokens with a valid mint request", function () {
 
   describe("Balances", function () {
     it("Should increase the requestor's NFT balance by the specified quantity", async () => {
-      const requestorBalBefore = await sigMint1155.balanceOf(requestor.address, mintRequest.tokenId);
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
+
+      const requestorBalBefore = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
       await sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice });
-      const requestorBalAfter = await sigMint1155.balanceOf(requestor.address, mintRequest.tokenId);
+      const requestorBalAfter = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
       
       expect(requestorBalAfter).to.equal(requestorBalBefore.add(mintRequest.quantity));
     });
 
     it("Should increase the caller's NFT balance by 1, if mint request does not specify a recipient", async () => {
+
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
+
       const specialMintRequest = { ...mintRequest, to: ethers.constants.AddressZero }
       const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint1155, specialMintRequest)).signature;
 
-      const requestorBalBefore = await sigMint1155.balanceOf(requestor.address, mintRequest.tokenId);
+      const requestorBalBefore = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
       await sigMint1155.connect(requestor).mintWithSignature(specialMintRequest, signatureToUse, { value: totalPrice });
-      const requestorBalAfter = await sigMint1155.balanceOf(requestor.address, mintRequest.tokenId);
+      const requestorBalAfter = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
 
       expect(requestorBalAfter).to.equal(requestorBalBefore.add(mintRequest.quantity));
     })
@@ -194,7 +210,7 @@ describe("Mint tokens with a valid mint request", function () {
     });
 
     it("Should return the URI for a token in the intended baseURI + tokenId format", async () => {
-      const tokenIdToCheck: BigNumber = mintRequest.tokenId as BigNumber;
+      const tokenIdToCheck: BigNumber = await sigMint1155.nextTokenIdToMint();
       await sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice });
 
       const uriForToken: string = await sigMint1155.tokenURI(tokenIdToCheck);
