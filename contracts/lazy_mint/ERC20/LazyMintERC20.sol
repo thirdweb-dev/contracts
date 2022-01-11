@@ -279,7 +279,7 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         address _to,
         uint256 _amount
     ) internal {
-        if (_amount == 0 || _from == _to) {
+        if (_amount == 0) {
             return;
         }
 
@@ -327,6 +327,10 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         address _to,
         uint256 _amount
     ) internal {
+        if (_from == _to) {
+            return;
+        }
+        
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
