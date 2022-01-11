@@ -176,14 +176,14 @@ export async function getContracts(
           feeBps,
         ),
     )) as LazyMintERC721;
-  
+
   // Deploy LazyMintERC20
 
   const name_lazyMintERC20: string = "Lazy token";
   const symbol_lazyMintERC20: string = "LAZY";
 
   const lazyMintERC20: LazyMintERC20 = (await ethers
-    .getContractFactory("LazyMintERC721")
+    .getContractFactory("LazyMintERC20")
     .then(f =>
       f
         .connect(protocolAdmin)
@@ -221,14 +221,14 @@ export async function getContracts(
           feeBps,
         ),
     )) as SignatureMint721;
-  
+
   // Deploy SignatureMint1155
   const sigMint1155: SignatureMint1155 = (await ethers
     .getContractFactory("SignatureMint1155")
     .then(f =>
       f
         .connect(protocolAdmin)
-        .deploy(          
+        .deploy(
           contractURI,
           protocolControl.address,
           trustedForwarderAddr,
@@ -303,6 +303,6 @@ export async function getContracts(
     lazyMintERC721,
     lazyMintERC20,
     sigMint721,
-    sigMint1155
+    sigMint1155,
   };
 }
