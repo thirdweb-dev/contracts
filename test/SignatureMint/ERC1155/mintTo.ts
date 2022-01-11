@@ -25,7 +25,6 @@ describe("Tokens minted regularly by minter", function () {
 
   // Default `mintTo` params
   const uri: string = "ipfs://.../";
-  const tokenIdToMint: number = 0;
   const quantityToMint: number = 5;
 
   before(async () => {
@@ -39,7 +38,7 @@ describe("Tokens minted regularly by minter", function () {
 
   describe("Revert cases", function () {
     it("Should revert if caller does not have minter role", async () => {
-      await expect(sigMint1155.connect(accountWithoutMinterRole).mintTo(nftReceiver.address, uri, tokenIdToMint, quantityToMint)).to.be.revertedWith(
+      await expect(sigMint1155.connect(accountWithoutMinterRole).mintTo(nftReceiver.address, uri, quantityToMint)).to.be.revertedWith(
         "not minter.",
       );
     });
@@ -48,12 +47,14 @@ describe("Tokens minted regularly by minter", function () {
   describe("Events", function () {
     it("Should emit TokenMinted with mint information", async () => {
 
-      await expect(sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, tokenIdToMint, quantityToMint))
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
+
+      await expect(sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, quantityToMint))
         .to.emit(sigMint1155, "TokenMinted")
         .withArgs(
           ...Object.values({
             mintedTo: nftReceiver.address,
-            tokenIdMinted: tokenIdToMint,
+            tokenIdMinted: tokenIdToBeMinted,
             uri: uri,
             quantityMinted: quantityToMint
           }),
@@ -63,9 +64,11 @@ describe("Tokens minted regularly by minter", function () {
 
   describe("Balances", function () {
     it("Should increase the NFT receiver's relevant balance by 1", async () => {
-      const balBefore = await sigMint1155.balanceOf(nftReceiver.address, tokenIdToMint);
-      await sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, tokenIdToMint, quantityToMint);
-      const balAfter = await sigMint1155.balanceOf(nftReceiver.address, tokenIdToMint);
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
+
+      const balBefore = await sigMint1155.balanceOf(nftReceiver.address, tokenIdToBeMinted);
+      await sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, quantityToMint);
+      const balAfter = await sigMint1155.balanceOf(nftReceiver.address, tokenIdToBeMinted);
 
       expect(balAfter).to.equal(balBefore.add(quantityToMint));
     });
@@ -74,9 +77,11 @@ describe("Tokens minted regularly by minter", function () {
   describe("Contract state", function () {
 
     it("Should store the relevant URI for the NFT", async () => {
-      await sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, tokenIdToMint, quantityToMint);
+      const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
 
-      expect(await sigMint1155.tokenURI(tokenIdToMint)).to.equal(uri);
+      await sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, quantityToMint);
+
+      expect(await sigMint1155.tokenURI(tokenIdToBeMinted)).to.equal(uri);
     });
   });
 });
