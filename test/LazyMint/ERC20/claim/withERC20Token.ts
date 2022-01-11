@@ -75,10 +75,14 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     totalPrice = quantityToClaim.mul(ethers.utils.parseEther("0.1"));
 
     // Generate a merkle root for whitelisting
-    const leaves = [claimer.address].map(x => keccak256(x));
-    const tree = new MerkleTree(leaves, keccak256);
+    const leaves = [[claimer.address, quantityToClaim]].map(x =>
+      ethers.utils.solidityKeccak256(["address", "uint256"], x),
+    );
+    const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
     const whitelist = tree.getRoot();
-    proof = tree.getProof(claimer.address);
+    proof = tree.getHexProof(
+      ethers.utils.solidityKeccak256(["address", "uint256"], [claimer.address, quantityToClaim]),
+    );
 
     // Set mint conditions
     const templateMintCondition: ClaimConditionStruct = {
@@ -182,7 +186,6 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
           ...Object.values({
             mintConditionIndex: targetMintConditionIndex,
             claimer: claimer.address,
-            startTokenId: 0,
             quantityClaimed: quantityToClaim,
           }),
         );
