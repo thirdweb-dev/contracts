@@ -45,12 +45,12 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
 
     function withdrawFunds(address _currency) external {
         address recipient = paymentsRecipient;
-        address feeRecipient = thirdwebFees.getFeeRecipient(address(this));
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
             : IERC20(_currency).balanceOf(_currency);
-        uint256 fees = (totalTransferAmount * thirdwebFees.getFeeBps(address(this))) / MAX_BPS;
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
 
         transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
         transferCurrency(_currency, address(this), feeRecipient, fees);
