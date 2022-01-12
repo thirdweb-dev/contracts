@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./TWCurrencyTransfers.sol";
-import { ThirdwebFees } from "../ThirdwebFees.sol";
+import "../ThirdwebFees.sol";
 
 contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
     /// @dev Max bps in the thirdweb system
@@ -13,13 +13,13 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
     ThirdwebFees public immutable thirdwebFees;
 
     /// @dev The recipient of who gets the royalty.
-    address public paymentsRecipient;
+    address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint96 public royaltyBps;
+    uint256 public royaltyBps;
 
     /// @dev Emitted when the royalty recipient or fee bps is updated
-    event NewPaymentsRecipient(address newPaymentsRecipient);
+    event NewRoyaltyuRecipient(address newRoyaltyRecipient);
     event RoyaltyUpdated(uint96 newRoyaltyBps);
     event EtherReceived(address sender, uint256 amount);
     event FundsWithdrawn(
@@ -34,17 +34,17 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
     }
 
     /// @dev Initializes the contract, like a constructor.
-    function __TWPayments_init(address _receiver, uint96 _royaltyBps) internal onlyInitializing {
+    function __TWPayments_init(address _receiver, uint256 _royaltyBps) internal onlyInitializing {
         __TWPayments_init_unchained(_receiver, _royaltyBps);
     }
 
-    function __TWPayments_init_unchained(address _receiver, uint96 _royaltyBps) internal onlyInitializing {
-        paymentsRecipient = _receiver;
+    function __TWPayments_init_unchained(address _receiver, uint256 _royaltyBps) internal onlyInitializing {
+        royaltyRecipient = _receiver;
         royaltyBps = _royaltyBps;
     }
 
     function withdrawFunds(address _currency) external {
-        address recipient = paymentsRecipient;
+        address recipient = royaltyRecipient;
         address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
@@ -65,11 +65,11 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
     /**
      * @dev For setting NFT royalty recipient.
      *
-     * @param _paymentsRecipient The address of which the payments goes to.
+     * @param _royaltyRecipient The address of which the payments goes to.
      */
-    function _setPaymentsRecipient(address _paymentsRecipient) internal {
-        paymentsRecipient = _paymentsRecipient;
-        emit NewPaymentsRecipient(_paymentsRecipient);
+    function _setPaymentsRecipient(address _royaltyRecipient) internal {
+        royaltyRecipient = _royaltyRecipient;
+        emit NewRoyaltyuRecipient(_royaltyRecipient);
     }
 
     /**
@@ -91,7 +91,8 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        royaltyAmount = (salePrice * royaltyBps) / 10_000;
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        royaltyAmount += royaltyBps == 0 ? (salePrice * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS : 0;
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
