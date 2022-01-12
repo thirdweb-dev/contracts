@@ -120,25 +120,25 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
   describe("Revert cases", function () {
     it("Should revert if quantity wanted is zero", async () => {
       const invalidQty: BigNumber = BigNumber.from(0);
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, invalidQty, proof)).to.be.revertedWith(
-        "invalid quantity claimed.",
-      );
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, invalidQty, proof),
+      ).to.be.revertedWith("invalid quantity claimed.");
     });
 
     it("Should revert if quantity wanted is greater than limit per transaction", async () => {
       const invalidQty: BigNumber = (mintConditions[0].quantityLimitPerTransaction as BigNumber).add(1);
 
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, invalidQty, proof)).to.be.revertedWith(
-        "invalid quantity claimed.",
-      );
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, invalidQty, proof),
+      ).to.be.revertedWith("invalid quantity claimed.");
     });
 
     it("Should revert if tokenId provided is unminted", async () => {
       const invalidTokenId: BigNumber = amountToLazyMint.add(1);
 
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, invalidTokenId, quantityToClaim, proof)).to.be.revertedWith(
-        "no public mint condition.",
-      );
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, invalidTokenId, quantityToClaim, proof),
+      ).to.be.revertedWith("no public mint condition.");
     });
 
     it("Should revert if quantity wanted + current mint supply exceeds max mint supply", async () => {
@@ -149,9 +149,9 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
 
       while (supplyClaimed.lt(maxClaimableSupply)) {
         if (supplyClaimed.add(quantityToClaim).gt(maxClaimableSupply)) {
-          await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof)).to.be.revertedWith(
-            "exceed max mint supply.",
-          );
+          await expect(
+            lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof),
+          ).to.be.revertedWith("exceed max mint supply.");
         }
 
         await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof);
@@ -169,15 +169,15 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     it("Should revert if claimer claims before valid timestamp for transaction", async () => {
       await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof);
 
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof)).to.be.revertedWith(
-        "cannot claim yet.",
-      );
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof),
+      ).to.be.revertedWith("cannot claim yet.");
     });
 
     it("Should revert if claimer is not in the whitelist", async () => {
-      await expect(lazyMintERC1155.connect(protocolAdmin).claim(protocolAdmin.address, tokenId, quantityToClaim, proof)).to.be.revertedWith(
-        "not in whitelist.",
-      );
+      await expect(
+        lazyMintERC1155.connect(protocolAdmin).claim(protocolAdmin.address, tokenId, quantityToClaim, proof),
+      ).to.be.revertedWith("not in whitelist.");
     });
 
     it("Should revert if caller has not approved lazy mint to transfer currency", async () => {
@@ -186,9 +186,9 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
         .connect(claimer)
         .decreaseAllowance(lazyMintERC1155.address, await erc20Token.balanceOf(claimer.address));
 
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof)).to.be.revertedWith(
-        "insufficient currency balance or allowance.",
-      );
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof),
+      ).to.be.revertedWith("insufficient currency balance or allowance.");
     });
   });
 

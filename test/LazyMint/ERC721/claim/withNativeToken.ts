@@ -106,17 +106,17 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
   describe("Revert cases", function () {
     it("Should revert if quantity wanted is zero", async () => {
       const invalidQty: BigNumber = BigNumber.from(0);
-      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, invalidQty, proof, { value: totalPrice })).to.be.revertedWith(
-        "invalid quantity claimed.",
-      );
+      await expect(
+        lazyMintERC721.connect(claimer).claim(claimer.address, invalidQty, proof, { value: totalPrice }),
+      ).to.be.revertedWith("invalid quantity claimed.");
     });
 
     it("Should revert if quantity wanted is greater than limit per transaction", async () => {
       const invalidQty: BigNumber = (mintConditions[0].quantityLimitPerTransaction as BigNumber).add(1);
 
-      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, invalidQty, proof, { value: totalPrice })).to.be.revertedWith(
-        "invalid quantity claimed.",
-      );
+      await expect(
+        lazyMintERC721.connect(claimer).claim(claimer.address, invalidQty, proof, { value: totalPrice }),
+      ).to.be.revertedWith("invalid quantity claimed.");
     });
 
     it("Should revert if quantity wanted + current mint supply exceeds max mint supply", async () => {
@@ -155,7 +155,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
 
     it("Should revert if claimer is not in the whitelist", async () => {
       await expect(
-        lazyMintERC721.connect(protocolAdmin).claim(protocolAdmin.address, quantityToClaim, proof, { value: totalPrice }),
+        lazyMintERC721
+          .connect(protocolAdmin)
+          .claim(protocolAdmin.address, quantityToClaim, proof, { value: totalPrice }),
       ).to.be.revertedWith("not in whitelist.");
     });
 
@@ -168,7 +170,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
 
   describe("Events", function () {
     it("Should emit ClaimedTokens", async () => {
-      await expect(lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof, { value: totalPrice }))
+      await expect(
+        lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof, { value: totalPrice }),
+      )
         .to.emit(lazyMintERC721, "ClaimedTokens")
         .withArgs(
           ...Object.values({
@@ -195,7 +199,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       const claimerBalBefore: BigNumber = await ethers.provider.getBalance(claimer.address);
 
       const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
-      const tx = await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof, { value: totalPrice, gasPrice });
+      const tx = await lazyMintERC721
+        .connect(claimer)
+        .claim(claimer.address, quantityToClaim, proof, { value: totalPrice, gasPrice });
       const gasUsed: BigNumber = (await tx.wait()).gasUsed;
       const gasPaid: BigNumber = gasPrice.mul(gasUsed);
 

@@ -6,7 +6,6 @@ import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TWCurrencyTransfers {
-
     /// @dev The address interpreted as native token of the chain.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -37,7 +36,7 @@ contract TWCurrencyTransfers {
                 // store native currency in weth
                 require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
                 IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {                
+            } else {
                 safeTransferNativeToken(_to, _amount);
             }
         } else {
