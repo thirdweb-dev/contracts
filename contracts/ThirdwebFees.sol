@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 // Utils
-import { IThirdwebModule } from "./IThirdwebModule.sol";
+import { IThirdwebModule } from "./thirdweb-presets/IThirdwebModule.sol";
 
 contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev Max bps in the thirdweb system
