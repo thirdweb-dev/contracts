@@ -45,12 +45,12 @@ contract LazyMintERC1155 is
     using StringsUpgradeable for uint256;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev The address interpreted as native token of the chain.
-    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
     address public nativeTokenWrapper;
@@ -406,8 +406,6 @@ contract LazyMintERC1155 is
 
         if (_mintCondition.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
-        } else {
-            validateERC20BalAndAllowance(_msgSender(), _mintCondition.currency, totalPrice);
         }
 
         transferCurrency(_mintCondition.currency, _msgSender(), royaltyReceipient, fees);
@@ -449,31 +447,10 @@ contract LazyMintERC1155 is
         }
 
         if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                IWETH(nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                require(_amount == msg.value, "native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {
-                safeTransferNativeToken(_to, _amount);
-            }
+            safeTransferNativeToken(_to, _amount);
         } else {
             safeTransferERC20(_currency, _from, _to, _amount);
         }
-    }
-
-    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient currency balance or allowance."
-        );
     }
 
     /// @dev Transfers `amount` of native token to `to`.
@@ -495,13 +472,10 @@ contract LazyMintERC1155 is
         if (_from == _to) {
             return;
         }
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = _from == address(this)
             ? IERC20(_currency).transfer(_to, _amount)
             : IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
+        require(success, "failed to transfer currency.");
     }
 
     ///     =====   ERC 1155 functions  =====
