@@ -121,7 +121,7 @@ contract Pack is
         _;
     }
 
-    constructor(address _vrfCoordinator,address _linkToken) VRFConsumerBase(_vrfCoordinator, _linkToken) {}
+    constructor(address _vrfCoordinator, address _linkToken) VRFConsumerBase(_vrfCoordinator, _linkToken) {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -134,9 +134,8 @@ contract Pack is
         address _trustedForwarder,
         uint256 _royaltyBps
     ) external initializer {
-
         // Initialize inherited contracts, most base-like -> most derived.
-         __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
         __UUPSUpgradeable_init();
         __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
@@ -442,12 +441,24 @@ contract Pack is
     }
 
     /// @dev See EIP-2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See EIP-2771
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 

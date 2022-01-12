@@ -11,12 +11,11 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IThirdwebModule } from "./IThirdwebModule.sol";
 
 contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
-
     /// @dev Max bps in the thirdweb system
-    uint128 constant public MAX_BPS = 10_000;
+    uint128 public constant MAX_BPS = 10_000;
 
     /// @dev The threshold for thirdweb fees.
-    uint128 constant public maxFeeBps = 3000;
+    uint128 public constant maxFeeBps = 3000;
 
     /// @dev The default fee bps for thirdweb modules.
     uint256 public defaultFeeBps;
@@ -58,18 +57,14 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     /// @dev Returns the fee bps for a module address
     function getFeeBps(address _module) external view returns (uint256) {
-
         bytes32 moduleType = IThirdwebModule(_module).moduleType();
-        
-        if(takeNoFee[_module]) {
+
+        if (takeNoFee[_module]) {
             return 0;
-        
         } else if (feeBpsByModuleInstance[_module] > 0) {
             return feeBpsByModuleInstance[_module];
-        
         } else if (feeBpsByModuleType[moduleType] > 0) {
             return feeBpsByModuleType[moduleType];
-        
         } else {
             return defaultFeeBps;
         }
@@ -78,13 +73,11 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev Returns the fee recipient for a module address
     function getFeeRecipient(address _module) external view returns (address) {
         bytes32 moduleType = IThirdwebModule(_module).moduleType();
-        
+
         if (feeRecipientByModuleInstance[_module] != address(0)) {
             return feeRecipientByModuleInstance[_module];
-        
         } else if (feeRecipientByModuleType[moduleType] != address(0)) {
             return feeRecipientByModuleType[moduleType];
-        
         } else {
             return defaultFeeRecipient;
         }
@@ -92,7 +85,6 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     /// @dev Initializes contract state.
     function initialize(uint256 _defaultFeeBps, address _defaultFeeRecipient) external initializer {
-        
         // Initialize inherited contracts.
         __Ownable_init();
 
@@ -107,7 +99,11 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     /// @dev Lets the owner set fee bps for a particular module instance.
-    function setFeeForModuleInstance(address _moduleInstance, uint256 _feeBps) external onlyOwner onlyValidFee(_feeBps) {
+    function setFeeForModuleInstance(address _moduleInstance, uint256 _feeBps)
+        external
+        onlyOwner
+        onlyValidFee(_feeBps)
+    {
         feeBpsByModuleInstance[_moduleInstance] = _feeBps;
         emit FeeForModuleInstance(_feeBps, _moduleInstance);
     }

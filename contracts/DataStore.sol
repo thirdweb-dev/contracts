@@ -16,7 +16,7 @@ contract DataStore is
     MulticallUpgradeable,
     ERC2771ContextUpgradeable,
     UUPSUpgradeable,
-    AccessControlEnumerableUpgradeable 
+    AccessControlEnumerableUpgradeable
 {
     bytes32 public constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
 
@@ -58,12 +58,24 @@ contract DataStore is
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 

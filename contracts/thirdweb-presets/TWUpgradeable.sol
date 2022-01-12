@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract TWUpgradeable is Initializable, UUPSUpgradeable {
-
     function __TWUpgradeable_init() internal onlyInitializing {
         __UUPSUpgradeable_init();
 

@@ -81,7 +81,11 @@ interface ISignatureMint1155 {
      *  @param uri The URI to assign to the NFT.
      *
      */
-    function mintTo(address to, string calldata uri, uint256 amount) external;
+    function mintTo(
+        address to,
+        string calldata uri,
+        uint256 amount
+    ) external;
 
     /**
      *  @notice Mints an NFT according to the provided mint request.

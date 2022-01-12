@@ -46,14 +46,12 @@ contract LazyMintERC1155 is
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev The address of the native token wrapper contract.
-    address public nativeTokenWrapper;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -119,7 +117,6 @@ contract LazyMintERC1155 is
         __ERC1155_init("");
 
         // Initialize this contract's state.
-        nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
         feeBps = uint120(_feeBps);
@@ -129,6 +126,7 @@ contract LazyMintERC1155 is
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
         _setupRole(TRANSFER_ROLE, deployer);
+        _grantRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
@@ -269,10 +267,8 @@ contract LazyMintERC1155 is
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyModuleAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        address _prevOwner = _owner;
+        emit NewOwner(_owner, _newOwner);
         _owner = _newOwner;
-
-        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
@@ -397,7 +393,7 @@ contract LazyMintERC1155 is
         uint256 _quantityToClaim,
         uint256 _tokenId
     ) internal {
-        if (_mintCondition.pricePerToken <= 0) {
+        if (_mintCondition.pricePerToken == 0) {
             return;
         }
 
@@ -425,7 +421,7 @@ contract LazyMintERC1155 is
         uint256 _claimConditionIndex,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed
-    ) internal {
+    ) private {
         // Update the supply minted under mint condition.
         claimConditions[_tokenId].claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
@@ -441,7 +437,7 @@ contract LazyMintERC1155 is
         address _from,
         address _to,
         uint256 _amount
-    ) internal {
+    ) private {
         if (_amount == 0) {
             return;
         }
@@ -456,10 +452,7 @@ contract LazyMintERC1155 is
     /// @dev Transfers `amount` of native token to `to`.
     function safeTransferNativeToken(address to, uint256 value) internal {
         (bool success, ) = to.call{ value: value }("");
-        if (!success) {
-            IWETH(nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
-        }
+        require(success, "transfer failed.");
     }
 
     /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
@@ -522,7 +515,7 @@ contract LazyMintERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (transfersRestricted && from != address(0) && to != address(0)) {
+        if (transfersRestricted) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 

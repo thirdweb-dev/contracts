@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./TWCurrencyTransfers.sol";
 import { ThirdwebFees } from "../ThirdwebFees.sol";
 
 contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
-
     /// @dev Max bps in the thirdweb system
-    uint256 constant public MAX_BPS = 10_000;
+    uint256 public constant MAX_BPS = 10_000;
 
     ThirdwebFees public immutable thirdwebFees;
-    
+
     /// @dev The recipient of who gets the royalty.
     address public paymentsRecipient;
 
@@ -24,7 +22,12 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
     event NewPaymentsRecipient(address newPaymentsRecipient);
     event RoyaltyUpdated(uint96 newRoyaltyBps);
     event EtherReceived(address sender, uint256 amount);
-    event FundsWithdrawn(address indexed paymentReceiver, address feeRecipient, uint256 totalAmount, uint256 feeCollected);
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
 
     constructor(address _nativeTokenWrapper, address _thirdwebFees) TWCurrencyTransfers(_nativeTokenWrapper) {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
@@ -43,8 +46,10 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
     function withdrawFunds(address _currency) external {
         address recipient = paymentsRecipient;
         address feeRecipient = thirdwebFees.getFeeRecipient(address(this));
-        
-        uint256 totalTransferAmount = _currency == NATIVE_TOKEN ? address(this).balance : IERC20(_currency).balanceOf(_currency);
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
         uint256 fees = (totalTransferAmount * thirdwebFees.getFeeBps(address(this))) / MAX_BPS;
 
         transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Token
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import { ERC20PausableUpgradeable } from  "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
+import { ERC20PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
 import { ERC20VotesUpgradeable, ERC20PermitUpgradeable, ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Security
@@ -26,7 +26,7 @@ contract Coin is
     MulticallUpgradeable,
     UUPSUpgradeable,
     ERC20BurnableUpgradeable,
-    ERC20PausableUpgradeable,    
+    ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     AccessControlEnumerableUpgradeable
 {
@@ -55,8 +55,8 @@ contract Coin is
         string memory _symbol,
         address _trustedForwarder,
         string memory _uri
-    ) external  initializer {
-        // Initialize inherited contracts, most base-like -> most derived.        
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
         __UUPSUpgradeable_init();
@@ -166,11 +166,23 @@ contract Coin is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

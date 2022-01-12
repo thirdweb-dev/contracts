@@ -30,7 +30,6 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { MulticallUpgradeable } from "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-
 contract Marketplace is
     Initializable,
     IMarketplace,
@@ -104,7 +103,7 @@ contract Marketplace is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Marketplace: not a module admin.");
         _;
     }
-    
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _feeRecipient,
@@ -744,11 +743,23 @@ contract Marketplace is
         totalListings += 1;
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 

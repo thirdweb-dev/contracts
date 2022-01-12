@@ -5,7 +5,6 @@ import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgr
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract TWAccessControl is Initializable, AccessControlEnumerableUpgradeable {
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -17,7 +16,7 @@ contract TWAccessControl is Initializable, AccessControlEnumerableUpgradeable {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
     }
-    
+
     function __TWAccessControl_init() internal onlyInitializing {
         __AccessControlEnumerable_init();
 

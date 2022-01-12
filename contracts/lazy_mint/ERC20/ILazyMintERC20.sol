@@ -10,7 +10,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMintERC20 {
-    
     /**
      *  @notice The claim conditions for a given tokenId x time window.
      *
@@ -98,7 +97,11 @@ interface ILazyMintERC20 {
      *  @param proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(address receiver, uint256 quantity, bytes32[] calldata proofs) external payable;
+    function claim(
+        address receiver,
+        uint256 quantity,
+        bytes32[] calldata proofs
+    ) external payable;
 
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
