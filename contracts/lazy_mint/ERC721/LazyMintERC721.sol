@@ -4,23 +4,11 @@ pragma solidity ^0.8.0;
 // Interface
 import { ILazyMintERC721 } from "./ILazyMintERC721.sol";
 
-// Royalties
-import "../../royalty/RoyaltyReceiverUpgradeable.sol";
-
 // Token
 import { ERC721EnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
-// Access Control + security
-import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-// Meta transactions
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
-
 // Utils
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -28,38 +16,29 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "../../thirdweb-presets/TWModule.sol";
 
 contract LazyMintERC721 is
     Initializable,
     ILazyMintERC721,
-    ReentrancyGuardUpgradeable,
-    RoyaltyReceiverUpgradeable,
-    ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
-    UUPSUpgradeable,
-    AccessControlEnumerableUpgradeable,
+    TWModule,
     ERC721EnumerableUpgradeable
 {
     using StringsUpgradeable for uint256;
+
+    bytes32 private constant MODULE_TYPE = "Drop";
+    uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev The address of the native token wrapper contract.
-    address public nativeTokenWrapper;
-
-    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
-    address private _owner;
-
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
+
+    /// @dev The adress that receives all platform fee value.
+    address public defaultPlatformFeeRecipient;
 
     /// @dev The next token ID of the NFT to "lazy mint".
     uint256 public nextTokenIdToMint;
@@ -67,17 +46,11 @@ contract LazyMintERC721 is
     /// @dev The next token ID of the NFT that can be claimed.
     uint256 public nextTokenIdToClaim;
 
-    /// @dev Contract interprets 10_000 as 100%.
-    uint64 private constant MAX_BPS = 10_000;
-
     /// @dev The % of primary sales collected by the contract as fees.
-    uint120 public feeBps;
+    uint256 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
-
-    /// @dev Contract level metadata.
-    string public contractURI;
 
     uint256[] private baseURIIndices;
 
@@ -87,59 +60,53 @@ contract LazyMintERC721 is
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
     /// @dev Checks whether caller has MINTER_ROLE.
     modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _;
     }
 
+    constructor(address _nativeTokenWrapper, address _thirdwebFees)
+        TWModule(_nativeTokenWrapper, _thirdwebFees)
+    {}
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _royaltyReceiver,
         address _trustedForwarder,
-        address _nativeTokenWrapper,
+        address _platformFeeRecipient,
         address _saleRecipient,
+        address _royaltyRecipient,
         uint128 _royaltyBps,
-        uint128 _feeBps
+        uint128 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
-        __ReentrancyGuard_init();
-        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
-        __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
-        __UUPSUpgradeable_init();
-        __AccessControlEnumerable_init();
+        __TWModule_init(_contractURI, _trustedForwarder, _royaltyRecipient, _royaltyBps);
         __ERC721_init(_name, _symbol);
         __ERC721Enumerable_init();
 
         // Initialize this contract's state.
-        nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
-        contractURI = _contractURI;
-        feeBps = uint120(_feeBps);
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        platformFeeBps = uint120(_platformFeeBps);
 
         address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
         _setupRole(TRANSFER_ROLE, deployer);
     }
 
     ///     =====   Public functions  =====
+    
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
 
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
     }
 
     /// @dev Returns the URI for a given tokenId.
@@ -226,11 +193,6 @@ contract LazyMintERC721 is
 
     //      =====   Internal functions  =====
 
-    /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-    }
-
     /// @dev Overwrites the current claim conditions with new claim conditions
     function resetClaimConditions(ClaimCondition[] calldata _conditions) internal returns (uint256 indexForCondition) {
         // make sure the conditions are sorted in ascending order
@@ -296,7 +258,7 @@ contract LazyMintERC721 is
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_claimer));
-            require(MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
+            require(MerkleProofUpgradeable.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
 
@@ -307,17 +269,16 @@ contract LazyMintERC721 is
         }
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
-        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
-        } else {
-            validateERC20BalAndAllowance(_msgSender(), _claimCondition.currency, totalPrice);
         }
 
-        transferCurrency(_claimCondition.currency, _msgSender(), royaltyReceipient, fees);
-
-        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+        transferCurrency(_claimCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
+        transferCurrency(_claimCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
+        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -342,73 +303,6 @@ contract LazyMintERC721 is
         nextTokenIdToClaim = tokenIdToClaim;
     }
 
-    /// @dev Transfers a given amount of currency.
-    function transferCurrency(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
-        if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                IWETH(nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                require(_amount == msg.value, "native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {
-                safeTransferNativeToken(_to, _amount);
-            }
-        } else {
-            safeTransferERC20(_currency, _from, _to, _amount);
-        }
-    }
-
-    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient currency balance or allowance."
-        );
-    }
-
-    /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal {
-        (bool success, ) = to.call{ value: value }("");
-        if (!success) {
-            IWETH(nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
-        }
-    }
-
-    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_from == _to) {
-            return;
-        }
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = _from == address(this)
-            ? IERC20(_currency).transfer(_to, _amount)
-            : IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
-    }
-
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
@@ -417,23 +311,19 @@ contract LazyMintERC721 is
         emit NewSaleRecipient(_saleRecipient);
     }
 
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
-    }
-
-    /// @dev Lets a module admin set the royalty recipient.
-    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
-        _setRoyaltyRecipient(_royaltyRecipient);
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setPlatformFeeRecipient(address _platformFeeRecipient) external onlyModuleAdmin {
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        emit NewPlatformFeeRecipient(_platformFeeRecipient);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
-        require(_feeBps <= MAX_BPS, "bps <= 10000.");
+    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        feeBps = uint120(_feeBps);
+        platformFeeBps = uint120(_platformFeeBps);
 
-        emit PrimarySalesFeeUpdates(_feeBps);
+        emit PrimarySalesFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -441,20 +331,6 @@ contract LazyMintERC721 is
         transfersRestricted = _restrictedTransfer;
 
         emit TransfersRestricted(_restrictedTransfer);
-    }
-
-    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        address _prevOwner = _owner;
-        _owner = _newOwner;
-
-        emit NewOwner(_prevOwner, _newOwner);
-    }
-
-    /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
-        contractURI = _uri;
     }
 
     //      =====   Getter functions  =====
@@ -511,20 +387,19 @@ contract LazyMintERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, RoyaltyReceiverUpgradeable)
+        override(ERC721EnumerableUpgradeable, TWModule)
         returns (bool)
     {
         return
-            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
-            ERC721EnumerableUpgradeable.supportsInterface(interfaceId) ||
-            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId);
+            super.supportsInterface(interfaceId) ||
+            ERC721EnumerableUpgradeable.supportsInterface(interfaceId);  
     }
 
     function _msgSender()
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, TWModule)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -534,7 +409,7 @@ contract LazyMintERC721 is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, TWModule)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();
