@@ -116,8 +116,7 @@ contract SignatureMint721 is
         uint128 _royaltyBps,
         uint128 _feeBps
     ) external initializer {
-
-        // Initialize inherited contracts, most base-like -> most derived.        
+        // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
         __EIP712_init("SignatureMint721", "1");
@@ -126,7 +125,7 @@ contract SignatureMint721 is
         __UUPSUpgradeable_init();
         __AccessControlEnumerable_init();
         __ERC721_init(_name, _symbol);
-        __ERC721Enumerable_init();   
+        __ERC721Enumerable_init();
 
         // Initialize this contract's state.
         nativeTokenWrapper = _nativeTokenWrapper;
@@ -391,11 +390,23 @@ contract SignatureMint721 is
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }
