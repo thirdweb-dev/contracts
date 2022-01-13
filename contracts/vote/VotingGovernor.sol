@@ -18,12 +18,10 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 // Upgradeability
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract VotingGovernor is
     Initializable,
     ERC2771ContextUpgradeable,
-    UUPSUpgradeable,
     ERC721HolderUpgradeable,
     ERC1155HolderUpgradeable,
     GovernorUpgradeable,
@@ -66,7 +64,6 @@ contract VotingGovernor is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.        
         __ERC2771Context_init(_trustedForwarder);
-        __UUPSUpgradeable_init();
         __ERC721Holder_init();
         __ERC1155Holder_init();
         __Governor_init(_name);
@@ -121,11 +118,6 @@ contract VotingGovernor is
 
     function proposalThreshold() public view override(GovernorUpgradeable, GovernorSettingsUpgradeable) returns (uint256) {
         return GovernorSettingsUpgradeable.proposalThreshold();
-    }
-
-    /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(_msgSender() == _executor(), "Governor: onlyGovernance");
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC1155ReceiverUpgradeable, GovernorUpgradeable) returns (bool) {
