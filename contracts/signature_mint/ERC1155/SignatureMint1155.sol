@@ -8,42 +8,44 @@ import { ISignatureMint1155 } from "./ISignatureMint1155.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
 // Signature utils
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 // Access Control + security
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import { RoyaltyReceiver } from "../../royalty/RoyaltyReceiver.sol";
+import "../../royalty/TWPayments.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Thirdweb presets
-import "../../thirdweb-presets/TWModule.sol";
-import "../../thirdweb-presets/TWAccessControl.sol";
-import "../../thirdweb-presets/TWPayments.sol";
-import "../../thirdweb-presets/TWUtils.sol";
-
 contract SignatureMint1155 is
+    Initializable,
     ISignatureMint1155,
-    TWModule,
     EIP712Upgradeable,
+    ReentrancyGuardUpgradeable,
+    TWPayments,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable
 {
-    using ECDSA for bytes32;
-    using Strings for uint256;
+    using ECDSAUpgradeable for bytes32;
+    using StringsUpgradeable for uint256;
+
+    bytes32 private constant MODULE_TYPE = keccak256("SIGMINT_ERC1155");
+    uint256 private constant VERSION = 1;
 
     bytes32 private constant TYPEHASH =
         keccak256(
@@ -58,17 +60,23 @@ contract SignatureMint1155 is
     /// @dev The next token ID of the NFT to mint.
     uint256 public nextTokenIdToMint;
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The adress that receives all primary sales value.
-    address public defaultSaleRecipient; // TODO: remove or not?
+    address public defaultSaleRecipient;
+
+    /// @dev The adress that receives all primary sales value.
+    address public defaultPlatformFeeRecipient;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint120 public feeBps; // TODO: remove or not?
+    uint128 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
 
     /// @dev Contract level metadata.
-    string public contractURI; // TODO: New preset: TWModule
+    string public contractURI;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
@@ -79,7 +87,7 @@ contract SignatureMint1155 is
     mapping(uint256 => uint256) public totalSupply;
 
     /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public saleRecipient; // TODO: how to handle?
+    mapping(uint256 => address) public saleRecipient;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -93,20 +101,32 @@ contract SignatureMint1155 is
         _;
     }
 
-    constructor(
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+
+    /// @dev Initiliazes the contract, like a constructor.
+    function intialize(
         string memory _contractURI,
         address _trustedForwarder,
-        address _nativeTokenWrapper,
         address _saleRecipient,
-        address _royaltyRecipiet,
+        address _platformFeeRecipient,
         uint128 _royaltyBps,
-        uint128 _feeBps
-    ) ERC1155("") EIP712("SignatureMint1155", "1") ERC2771Context(_trustedForwarder) RoyaltyReceiver(_royaltyRecipiet, uint96(_royaltyBps)) {
-        nativeTokenWrapper = _nativeTokenWrapper;
+        address _royaltyReceiver,
+        uint128 _platformFeeBps
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
+        __ReentrancyGuard_init();
+        __TWPayments_init(_royaltyReceiver, _royaltyBps);
+        __EIP712_init("SignatureMint1155", "1");
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __AccessControlEnumerable_init();
+        __ERC1155_init("");
+        // Initialize this contract's state.
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
         defaultSaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        royaltyBps = uint64(_royaltyBps);
-        feeBps = uint120(_feeBps);
+        royaltyBps = _royaltyBps;
+        platformFeeBps = _platformFeeBps;
 
         address deployer = _msgSender();
         _owner = deployer;
@@ -115,23 +135,17 @@ contract SignatureMint1155 is
         _setupRole(TRANSFER_ROLE, deployer);
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
-    function initialize(
-        bytes32 _moduleType,
-        string memory _contractURI,
-        address _trustedForwarder,
-        address _nativeTokenWrapper,
-        address _saleRecipient,
-        address _royaltyRecipiet,
-        uint128 _royaltyBps,
-        uint128 _feeBps
-    ) external initializer {
-        // Initialize base contracts
-        __EIP712_init("SignatureMint1155", "1");
-        __TWModule_init(_moduleType, _trustedForwarder, _royaltyRecipient, _royaltyBps);
+    ///     =====   Public functions  =====
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
     }
 
-    ///     =====   Public functions  =====
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
 
     /**
      * @dev Returns the address of the current owner.
@@ -207,22 +221,29 @@ contract SignatureMint1155 is
         emit NewDefaultSaleRecipient(_saleRecipient);
     }
 
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultPlatformFeeRecipient(address _platformFeeRecipient) external onlyModuleAdmin {
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        emit NewPlatformFeeRecipient(_platformFeeRecipient);
+    }
+
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000.");
+        _setRoyaltyBps(_royaltyBps);
+    }
 
-        royaltyBps = uint64(_royaltyBps);
-
-        emit RoyaltyUpdated(_royaltyBps);
+    /// @dev Lets a module admin set the royalty recipient.
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
-        require(_feeBps <= MAX_BPS, "bps <= 10000.");
+    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        feeBps = uint120(_feeBps);
+        platformFeeBps = uint120(_platformFeeBps);
 
-        emit PrimarySalesFeeUpdates(_feeBps);
+        emit PlatformFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -304,7 +325,8 @@ contract SignatureMint1155 is
         }
 
         uint256 totalPrice = _req.pricePerToken * _req.quantity;
-        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
@@ -312,63 +334,9 @@ contract SignatureMint1155 is
 
         address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
 
-        transferCurrency(_req.currency, _msgSender(), royaltyReceipient, fees);
-
-        transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - fees);
-    }
-
-    /// @dev Transfers a given amount of currency.
-    function transferCurrency(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
-        if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                IWETH(nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                require(_amount == msg.value, "native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {
-                safeTransferNativeToken(_to, _amount);
-            }
-        } else {
-            safeTransferERC20(_currency, _from, _to, _amount);
-        }
-    }
-
-    /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal {
-        (bool success, ) = to.call{ value: value }("");
-        if (!success) {
-            IWETH(nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
-        }
-    }
-
-    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_from == _to) {
-            return;
-        }
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = _from == address(this)
-            ? IERC20(_currency).transfer(_to, _amount)
-            : IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
+        transferCurrency(_req.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
+        transferCurrency(_req.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
+        transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     ///     =====   Low-level overrides  =====
@@ -436,17 +404,17 @@ contract SignatureMint1155 is
         public
         view
         virtual
-        override(AccessControlEnumerable, ERC1155, IERC165, RoyaltyReceiver)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, TWPayments)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC1155Upgradeable).interfaceId || interfaceId == type(IERC2981).interfaceId;
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }

@@ -17,14 +17,10 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 contract Coin is
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    UUPSUpgradeable,
     ERC20BurnableUpgradeable,
     ERC20PausableUpgradeable,    
     ERC20VotesUpgradeable,
@@ -59,13 +55,40 @@ contract Coin is
         // Initialize inherited contracts, most base-like -> most derived.        
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __UUPSUpgradeable_init();
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
         __ERC20Burnable_init();
         __ERC20Pausable_init();
         __AccessControlEnumerable_init();
 
+        // Initialize this contract's state.
+        contractURI = _uri;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(TRANSFER_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    function __Coin_init(
+        string memory _name,
+        string memory _symbol,
+        address _trustedForwarder,
+        string memory _uri
+    ) internal onlyInitializing {
+        // Initialize inherited contracts, most base-like -> most derived.        
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __ERC20Permit_init(_name);
+        __ERC20_init(_name, _symbol);
+        __ERC20Burnable_init();
+        __ERC20Pausable_init();
+        __AccessControlEnumerable_init();
+
+        __Coin_init_unchained(_uri);
+    }
+
+    function __Coin_init_unchained(string memory _uri) internal onlyInitializing {
         // Initialize this contract's state.
         contractURI = _uri;
 
@@ -159,11 +182,6 @@ contract Coin is
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyModuleAdmin {
         contractURI = _URI;
-    }
-
-    /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {

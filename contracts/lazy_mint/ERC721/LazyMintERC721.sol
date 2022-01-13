@@ -348,6 +348,12 @@ contract LazyMintERC721 is
         emit NewSaleRecipient(_saleRecipient);
     }
 
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultPlatformFeeRecipient(address _platformFeeRecipient) external onlyModuleAdmin {
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        emit NewPlatformFeeRecipient(_platformFeeRecipient);
+    }
+
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
     function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
         _setRoyaltyBps(_royaltyBps);

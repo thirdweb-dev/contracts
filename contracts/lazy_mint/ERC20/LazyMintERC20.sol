@@ -5,65 +5,58 @@ pragma solidity ^0.8.0;
 import { ILazyMintERC20 } from "./ILazyMintERC20.sol";
 
 // Base
-import { Coin } from "../../Coin.sol";
+import "../../Coin.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
+import "../../royalty/TWPayments.sol";
 
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev The address of the native token wrapper contract.
-    address public immutable nativeTokenWrapper;
+contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments, Coin {
 
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
-    /// @dev Contract interprets 10_000 as 100%.
-    uint128 private constant MAX_BPS = 10_000;
-
-    /// @dev The % of secondary sales collected as royalties. See EIP 2981.
-    uint64 public royaltyBps;
+    /// @dev The adress that receives all primary sales value.
+    address public defaultPlatformFeeRecipient;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint64 public feeBps;
+    uint64 public platformFeeBps;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    constructor(
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address payable _controlCenter,
         address _trustedForwarder,
-        address _nativeTokenWrapper,
         address _saleRecipient,
         uint128 _royaltyBps,
-        uint128 _feeBps
-    ) 
-        Coin(
-            _controlCenter,
+        uint128 _platformFeeBps
+    ) external initializer {
+
+        __Coin_init(
             _name,
             _symbol,
             _trustedForwarder,
             _contractURI
-        )
-    {
-        // Set the protocol control center        
-        nativeTokenWrapper = _nativeTokenWrapper;
+        );
+
         defaultSaleRecipient = _saleRecipient;
         royaltyBps = uint64(_royaltyBps);
-        feeBps = uint64(_feeBps);
+        platformFeeBps = uint64(_platformFeeBps);
     }
 
     //      =====   Public functions  =====
@@ -137,12 +130,12 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
-        require(_feeBps <= MAX_BPS, "bps <= 10000.");
+    function setFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        feeBps = uint64(_feeBps);
+        platformFeeBps = uint64(_platformFeeBps);
 
-        emit PrimarySalesFeeUpdates(_feeBps);
+        emit PrimarySalesFeeUpdates(_platformFeeBps);
     }
 
     //      =====   Getter functions  =====
@@ -248,17 +241,16 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         }
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
-        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
-        } else {
-            validateERC20BalAndAllowance(_msgSender(), _claimCondition.currency, totalPrice);
         }
 
-        transferCurrency(_claimCondition.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
-
-        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - fees);
+        transferCurrency(_claimCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
+        transferCurrency(_claimCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
+        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -272,69 +264,13 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         _mint(_to, _quantityBeingClaimed);
     }
 
-    /// @dev Transfers a given amount of currency.
-    function transferCurrency(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
-        if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                IWETH(nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                require(_amount == msg.value, "native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {
-                safeTransferNativeToken(_to, _amount);
-            }
-        } else {
-            safeTransferERC20(_currency, _from, _to, _amount);
-        }
-    }
-
-    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient currency balance or allowance."
-        );
-    }
-
-    /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal {
-        (bool success, ) = to.call{ value: value }("");
-        if (!success) {
-            IWETH(nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
-        }
-    }
-
-    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_from == _to) {
-            return;
-        }
-        
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AccessControlEnumerableUpgradeable, TWPayments)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }

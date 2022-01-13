@@ -41,11 +41,11 @@ interface ISignatureMint721 {
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
 
-    /// @dev Emitted when the royalty fee bps is updated
-    event RoyaltyUpdated(uint256 newRoyaltyBps);
+    /// @dev Emitted when a new platform fee recipient is set.
+    event NewPlatformFeeRecipient(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PrimarySalesFeeUpdates(uint256 newFeeBps);
+    event PlatformFeeUpdates(uint256 newFeeBps);
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);

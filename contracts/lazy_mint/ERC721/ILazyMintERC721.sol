@@ -87,6 +87,9 @@ interface ILazyMintERC721 {
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
 
+    /// @dev Emitted when a new sale recipient is set.
+    event NewPlatformFeeRecipient(address indexed recipient);
+
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeUpdates(uint256 newFeeBps);
 
