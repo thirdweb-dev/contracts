@@ -45,6 +45,10 @@ contract Marketplace is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable
 {
+
+    bytes32 private constant MODULE_TYPE = keccak256("MARKETPLACE");
+    uint256 private constant VERSION = 1;
+
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
 
@@ -128,6 +132,16 @@ contract Marketplace is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
+    }
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
     }
 
     //  =====   External functions  =====

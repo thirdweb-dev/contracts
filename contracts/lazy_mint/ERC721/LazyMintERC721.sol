@@ -40,7 +40,7 @@ contract LazyMintERC721 is
 {
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = keccak256("DROP_ERC721");
+    bytes32 private constant MODULE_TYPE = keccak256("DROP");
     uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.

@@ -40,6 +40,9 @@ contract LazyMintERC1155 is
 {
     using StringsUpgradeable for uint256;
 
+    bytes32 private constant MODULE_TYPE = keccak256("BUNDLE_DROP");
+    uint256 private constant VERSION = 1;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
@@ -124,6 +127,16 @@ contract LazyMintERC1155 is
     }
 
     ///     =====   Public functions  =====
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
 
     /**
      * @dev Returns the address of the current owner.
