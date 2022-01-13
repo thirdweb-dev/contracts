@@ -4,11 +4,23 @@ pragma solidity ^0.8.0;
 // Interface
 import { ILazyMintERC721 } from "./ILazyMintERC721.sol";
 
+// Royalties
+import "../../royalty/TWPayments.sol";
+
 // Token
 import { ERC721EnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
+// Access Control + security
+import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+
+// Meta transactions
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+
 // Utils
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
+import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -16,17 +28,19 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../../thirdweb-presets/TWModule.sol";
-
 contract LazyMintERC721 is
     Initializable,
     ILazyMintERC721,
-    TWModule,
+    ReentrancyGuardUpgradeable,
+    TWPayments,
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable
 {
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = "Drop";
+    bytes32 private constant MODULE_TYPE = keccak256("DROP_ERC721");
     uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -34,10 +48,13 @@ contract LazyMintERC721 is
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
+    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    address private _owner;
+
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
-    /// @dev The adress that receives all platform fee value.
+    /// @dev The adress that receives all primary sales value.
     address public defaultPlatformFeeRecipient;
 
     /// @dev The next token ID of the NFT to "lazy mint".
@@ -47,10 +64,13 @@ contract LazyMintERC721 is
     uint256 public nextTokenIdToClaim;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint256 public platformFeeBps;
+    uint128 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
+
+    /// @dev Contract level metadata.
+    string public contractURI;
 
     uint256[] private baseURIIndices;
 
@@ -60,45 +80,55 @@ contract LazyMintERC721 is
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+        _;
+    }
+
     /// @dev Checks whether caller has MINTER_ROLE.
     modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees)
-        TWModule(_nativeTokenWrapper, _thirdwebFees)
-    {}
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
+        address _royaltyReceiver,
         address _trustedForwarder,
         address _platformFeeRecipient,
         address _saleRecipient,
-        address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
-        __TWModule_init(_contractURI, _trustedForwarder, _royaltyRecipient, _royaltyBps);
+        __ReentrancyGuard_init();
+        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __AccessControlEnumerable_init();
         __ERC721_init(_name, _symbol);
         __ERC721Enumerable_init();
 
         // Initialize this contract's state.
-        defaultSaleRecipient = _saleRecipient;
         defaultPlatformFeeRecipient = _platformFeeRecipient;
-        platformFeeBps = uint120(_platformFeeBps);
+        defaultSaleRecipient = _saleRecipient;
+        contractURI = _contractURI;
+        platformFeeBps = _platformFeeBps;
 
         address deployer = _msgSender();
+        _owner = deployer;
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
         _setupRole(MINTER_ROLE, deployer);
         _setupRole(TRANSFER_ROLE, deployer);
     }
 
     ///     =====   Public functions  =====
-    
+
     /// @dev Returns the module type of the contract.
     function moduleType() external pure returns (bytes32) {
         return MODULE_TYPE;
@@ -107,6 +137,13 @@ contract LazyMintERC721 is
     /// @dev Returns the version of the contract.
     function version() external pure returns (uint256) {
         return VERSION;
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /// @dev Returns the URI for a given tokenId.
@@ -311,37 +348,23 @@ contract LazyMintERC721 is
         emit NewSaleRecipient(_saleRecipient);
     }
 
-    /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setPlatformFeeRecipient(address _platformFeeRecipient) external onlyModuleAdmin {
-        defaultPlatformFeeRecipient = _platformFeeRecipient;
-        emit NewPlatformFeeRecipient(_platformFeeRecipient);
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
+        _setRoyaltyBps(_royaltyBps);
     }
 
-    /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeBps(uint256 _platformFeeBps) external onlyModuleAdmin {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
-
-        platformFeeBps = uint120(_platformFeeBps);
-
-        emit PrimarySalesFeeUpdates(_platformFeeBps);
-    }
-
-    /**
-     * @dev For setting NFT royalty recipient.
-     *
-     * @param _royaltyRecipient The address of which the payments goes to.
-     */
+    /// @dev Lets a module admin set the royalty recipient.
     function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
         _setRoyaltyRecipient(_royaltyRecipient);
     }
 
-    /**
-     * @dev For setting royalty basis points.
-     *
-     * @param _royaltyBps the basis points of royalty. 10_000 = 100%.
-     */
-    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+
+        platformFeeBps = uint120(_platformFeeBps);
+
+        emit PlatformFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -349,6 +372,20 @@ contract LazyMintERC721 is
         transfersRestricted = _restrictedTransfer;
 
         emit TransfersRestricted(_restrictedTransfer);
+    }
+
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        address _prevOwner = _owner;
+        _owner = _newOwner;
+
+        emit NewOwner(_prevOwner, _newOwner);
+    }
+
+    /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+        contractURI = _uri;
     }
 
     //      =====   Getter functions  =====
@@ -405,19 +442,20 @@ contract LazyMintERC721 is
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, TWModule)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, TWPayments)
         returns (bool)
     {
         return
             super.supportsInterface(interfaceId) ||
-            ERC721EnumerableUpgradeable.supportsInterface(interfaceId);  
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
+            ERC721EnumerableUpgradeable.supportsInterface(interfaceId);
     }
 
     function _msgSender()
         internal
         view
         virtual
-        override(ContextUpgradeable, TWModule)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -427,7 +465,7 @@ contract LazyMintERC721 is
         internal
         view
         virtual
-        override(ContextUpgradeable, TWModule)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();

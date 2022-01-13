@@ -86,15 +86,15 @@ interface ILazyMintERC721 {
 
     /// @dev Emitted when a new sale recipient is set.
     event NewSaleRecipient(address indexed recipient);
-    
-    /// @dev Emitted when a new platform fee recipient is set.
-    event NewPlatformFeeRecipient(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PrimarySalesFeeUpdates(uint256 newFeeBps);
+    event PlatformFeeUpdates(uint256 newFeeBps);
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
+
+    /// @dev Emitted when a new Owner is set.
+    event NewOwner(address prevOwner, address newOwner);
 
     /// @dev The next token ID of the NFT to "lazy mint".
     function nextTokenIdToMint() external returns (uint256);
@@ -115,7 +115,11 @@ interface ILazyMintERC721 {
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(address receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable;
+    function claim(
+        address receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external payable;
 
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
