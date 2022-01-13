@@ -17,7 +17,9 @@ contract ThirdwebFactory is TWAccessControl {
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address indexed proxy, address indexed deployer);
     event NewModuleImplementation(bytes32 indexed moduleType, uint256 indexed version, address indexed implementation);
+    event ImplementationApproved(address implementation, bool isApproved);
 
+    mapping(address => bool) public approvedForDeployment;
     mapping(bytes32 => uint256) public currentModuleVersion;
     mapping(bytes32 => mapping(uint256 => address)) public modules;
 
@@ -35,10 +37,10 @@ contract ThirdwebFactory is TWAccessControl {
         thirdwebRegistry = Create2.deploy(0, salt, registryBytecode);
     }
 
-    /// @dev Deploys a proxy that points to the given implementation.
-    function deployProxy(bytes32 _moduleType, uint256 _version, bytes memory _data) external {
+    /// @dev Deploys a proxy that points to the latest version of the given module type.
+    function deployProxy(bytes32 _moduleType, bytes memory _data) external {
 
-        address implementation = modules[_moduleType][_version];
+        address implementation = modules[_moduleType][currentModuleVersion[_moduleType]];
 
         bytes memory proxyBytecode = abi.encodePacked(
             type(ThirdwebProxy).creationCode,
@@ -53,10 +55,33 @@ contract ThirdwebFactory is TWAccessControl {
         emit ProxyDeployed(implementation, deployedProxy, msg.sender);
     }
 
-    /// @dev Deploys a proxy at a deterministic address by taking in `salt` as a parameter.
-    function deployProxyDeterministic(bytes32 _moduleType, uint256 _version, bytes memory _data, bytes32 _salt) external {
+    /// @dev Deploys a proxy that points to the given implementation.
+    function deployProxyToImplementation(address _implementation, bytes memory _data) external {
 
-        address implementation = modules[_moduleType][_version];
+        require(approvedForDeployment[_implementation], "implementation not approved");
+
+        bytes32 moduleType = IThirdwebModule(_implementation).moduleType();
+
+        bytes memory proxyBytecode = abi.encodePacked(
+            type(ThirdwebProxy).creationCode,
+            abi.encode(_implementation, _data)
+        );
+        bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.number));
+
+        address deployedProxy = Create2.deploy(0, salt, proxyBytecode);
+
+        ThirdwebRegistry(thirdwebRegistry).updateDeployments(moduleType, deployedProxy, msg.sender);
+
+        emit ProxyDeployed(_implementation, deployedProxy, msg.sender);
+    }
+
+    /**
+     *  @dev Deploys a proxy at a deterministic address by taking in `salt` as a parameter.
+     *       Proxy points to the latest version of the given module type.
+     */
+    function deployProxyDeterministic(bytes32 _moduleType, bytes memory _data, bytes32 _salt) external {
+
+        address implementation = modules[_moduleType][currentModuleVersion[_moduleType]];
 
         bytes memory proxyBytecode = abi.encodePacked(
             type(ThirdwebProxy).creationCode,
@@ -84,5 +109,19 @@ contract ThirdwebFactory is TWAccessControl {
         modules[_moduleType][version] = _implementation;
 
         emit NewModuleImplementation(_moduleType, version, _implementation);
+    }
+
+    /// @dev Lets a contract admin approve a specific contract for deployment.
+    function approveForDeployment(address _implementation, bool _toApprove) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "not admin.");
+
+        approvedForDeployment[_implementation] = _toApprove;
+
+        emit ImplementationApproved(_implementation, _toApprove);
+    }
+
+    /// @dev Returns the implementation given a module type and version.
+    function getImplementation(bytes32 _moduleType, uint256 _version) external view returns (address) {
+        return modules[_moduleType][_version];
     }
 }
