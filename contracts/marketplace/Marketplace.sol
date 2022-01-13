@@ -30,20 +30,25 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { MulticallUpgradeable } from "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+import "../thirdweb-presets/TWCurrencyTransfers.sol";
+import "../ThirdwebFees.sol";
+
 
 contract Marketplace is
     Initializable,
     IMarketplace,
     IERC1155Receiver,
     IERC721Receiver,
+    TWCurrencyTransfers,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    UUPSUpgradeable,
     AccessControlEnumerableUpgradeable
 {
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
+
+    ThirdwebFees public immutable thirdwebFees;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -53,12 +58,6 @@ contract Marketplace is
 
     /// @dev Whether listing is restricted by LISTER_ROLE.
     bool public restrictedListerRoleOnly;
-
-    /// @dev The address interpreted as native token of the chain.
-    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev The address of the native token wrapper contract.
-    address public nativeTokenWrapper;
 
     /// @dev The address of which the marketplace fee goes to.
     address public marketFeeRecipient;
@@ -104,12 +103,15 @@ contract Marketplace is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Marketplace: not a module admin.");
         _;
     }
+
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWCurrencyTransfers(_nativeTokenWrapper) {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    } 
     
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _feeRecipient,
         address _trustedForwarder,
-        address _nativeTokenWrapper,
         string memory _uri,
         uint256 _marketFeeBps
     ) external initializer {
@@ -117,12 +119,10 @@ contract Marketplace is
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __UUPSUpgradeable_init();
         __AccessControlEnumerable_init();
 
         // Initialize this contract's state.
         contractURI = _uri;
-        nativeTokenWrapper = _nativeTokenWrapper;
         marketFeeBps = uint64(_marketFeeBps);
         marketFeeRecipient = _feeRecipient;
 
@@ -355,11 +355,6 @@ contract Marketplace is
 
     //  =====   Internal functions  =====
 
-    /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-    }
-
     /// @dev Performs a direct listing sale.
     function executeSale(
         Listing memory _targetListing,
@@ -543,12 +538,13 @@ contract Marketplace is
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        // Collect protocol fee
+
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
-
-        transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut);
-
-        uint256 remainder = _totalPayoutAmount - marketCut;
+        uint256 twFee = (_totalPayoutAmount * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
+        uint256 royalties;        
+        
+        address royaltyRecipient;
+        address twFeeRecipient = thirdwebFees.getSalesFeeRecipient(address(this));
 
         // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
         try IERC2981(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
@@ -560,70 +556,16 @@ contract Marketplace is
                     royaltyFeeAmount + marketCut <= _totalPayoutAmount,
                     "Marketplace: Total market fees exceed the price."
                 );
-                remainder -= royaltyFeeAmount;
-                transferCurrency(_currencyToUse, _payer, royaltyFeeRecipient, royaltyFeeAmount);
+                royaltyRecipient = royaltyFeeRecipient;
+                royalties = royaltyFeeAmount;
             }
         } catch {}
 
         // Distribute price to token owner
-        transferCurrency(_currencyToUse, _payer, _payee, remainder);
-    }
-
-    /// @dev Transfers a given amount of currency.
-    function transferCurrency(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
-        if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                // withdraw from weth then transfer withdrawn native token to recipient
-                IWETH(nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                // store native currency in weth
-                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {
-                // passthrough for native token transfer from buyer to the seller
-                safeTransferNativeToken(_to, _amount);
-            }
-        } else {
-            safeTransferERC20(_currency, _from, _to, _amount);
-        }
-    }
-
-    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_from == _to) {
-            return;
-        }
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = _from == address(this)
-            ? IERC20(_currency).transfer(_to, _amount)
-            : IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
-    }
-
-    /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal {
-        (bool success, ) = to.call{ value: value }("");
-        if (!success) {
-            IWETH(nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
-        }
+        transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut);
+        transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties);
+        transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee);
+        transferCurrency(_currencyToUse, _payer, _payee, _totalPayoutAmount - (marketCut + royalties + twFee));
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
 
 // Royalties
-import "../../royalty/RoyaltyReceiverUpgradeable.sol";
+import "../../royalty/TWPayments.sol";
 
 // Token
 import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -28,17 +28,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 contract LazyMintERC1155 is
     Initializable,
     ILazyMintERC1155,
     ReentrancyGuardUpgradeable,
-    RoyaltyReceiverUpgradeable,
+    TWPayments,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    UUPSUpgradeable,
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable
 {
@@ -49,26 +45,20 @@ contract LazyMintERC1155 is
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    /// @dev The address interpreted as native token of the chain.
-    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev The address of the native token wrapper contract.
-    address public nativeTokenWrapper;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
+    /// @dev The adress that receives all primary sales value.
+    address public defaultPlatformFeeRecipient;
+
     /// @dev The next token ID of the NFT to "lazy mint".
     uint256 public nextTokenIdToMint;
 
-    /// @dev Contract interprets 10_000 as 100%.
-    uint64 private constant MAX_BPS = 10_000;
-
     /// @dev The % of primary sales collected by the contract as fees.
-    uint120 public feeBps;
+    uint256 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -99,6 +89,8 @@ contract LazyMintERC1155 is
         _;
     }
 
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _contractURI,
@@ -106,23 +98,23 @@ contract LazyMintERC1155 is
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient,
+        address _platformFeeRecipient,
         uint128 _royaltyBps,
-        uint128 _feeBps
+        uint128 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __UUPSUpgradeable_init();
         __AccessControlEnumerable_init();
         __ERC1155_init("");
 
         // Initialize this contract's state.
-        nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
         contractURI = _contractURI;
-        feeBps = uint120(_feeBps);
+        platformFeeBps = _platformFeeBps;
 
         address deployer = _msgSender();
         _owner = deployer;
@@ -251,12 +243,12 @@ contract LazyMintERC1155 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setFeeBps(uint256 _feeBps) public onlyModuleAdmin {
-        require(_feeBps <= MAX_BPS, "bps <= 10000.");
+    function setFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        feeBps = uint120(_feeBps);
+        platformFeeBps = uint120(_platformFeeBps);
 
-        emit PrimarySalesFeeUpdates(_feeBps);
+        emit PrimarySalesFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -312,11 +304,6 @@ contract LazyMintERC1155 is
     }
 
     //      =====   Internal functions  =====
-
-    /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-    }
 
     /// @dev Lets a module admin set mint conditions for a given tokenId.
     function resetClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions)
@@ -387,7 +374,7 @@ contract LazyMintERC1155 is
 
         if (_mintCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_claimer));
-            require(MerkleProof.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
+            require(MerkleProofUpgradeable.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
         }
     }
 
@@ -402,23 +389,17 @@ contract LazyMintERC1155 is
         }
 
         uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
-        uint256 fees = (totalPrice * feeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_mintCondition.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
-        } else {
-            validateERC20BalAndAllowance(_msgSender(), _mintCondition.currency, totalPrice);
         }
 
-        transferCurrency(_mintCondition.currency, _msgSender(), royaltyReceipient, fees);
-
-        address recipient = saleRecipient[_tokenId];
-        transferCurrency(
-            _mintCondition.currency,
-            _msgSender(),
-            recipient == address(0) ? defaultSaleRecipient : recipient,
-            totalPrice - fees
-        );
+        address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
+        transferCurrency(_mintCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
+        transferCurrency(_mintCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
+        transferCurrency(_mintCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -435,73 +416,6 @@ contract LazyMintERC1155 is
         claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
-    }
-
-    /// @dev Transfers a given amount of currency.
-    function transferCurrency(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
-        if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                IWETH(nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                require(_amount == msg.value, "native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
-            } else {
-                safeTransferNativeToken(_to, _amount);
-            }
-        } else {
-            safeTransferERC20(_currency, _from, _to, _amount);
-        }
-    }
-
-    /// @dev Validates that `_addrToCheck` owns and has approved contract to transfer the appropriate amount of currency
-    function validateERC20BalAndAllowance(
-        address _addrToCheck,
-        address _currency,
-        uint256 _currencyAmountToCheckAgainst
-    ) internal view {
-        require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient currency balance or allowance."
-        );
-    }
-
-    /// @dev Transfers `amount` of native token to `to`.
-    function safeTransferNativeToken(address to, uint256 value) internal {
-        (bool success, ) = to.call{ value: value }("");
-        if (!success) {
-            IWETH(nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(nativeTokenWrapper, address(this), to, value);
-        }
-    }
-
-    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_from == _to) {
-            return;
-        }
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
-        bool success = _from == address(this)
-            ? IERC20(_currency).transfer(_to, _amount)
-            : IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "failed to transfer currency.");
     }
 
     ///     =====   ERC 1155 functions  =====
@@ -571,13 +485,13 @@ contract LazyMintERC1155 is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, RoyaltyReceiverUpgradeable)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, TWPayments)
         returns (bool)
     {
         return
             ERC1155Upgradeable.supportsInterface(interfaceId) ||
             AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
-            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId);
+            TWPayments.supportsInterface(interfaceId);
     }
 
     function _msgSender()
