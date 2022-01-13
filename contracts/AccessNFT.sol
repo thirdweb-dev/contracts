@@ -8,27 +8,21 @@ import { ERC1155PresetUpgradeable } from "./openzeppelin-presets/ERC1155PresetUp
 import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
-import "./royalty/RoyaltyReceiverUpgradeable.sol";
+import "./royalty/TWPayments.sol";
 
 // Utils
 import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 contract AccessNFT is
     IERC2981,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    UUPSUpgradeable,
-    RoyaltyReceiverUpgradeable,
+    TWPayments,
     ERC1155PresetUpgradeable
 {
-    uint128 private constant MAX_BPS = 10_000;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -110,6 +104,8 @@ contract AccessNFT is
         _;
     }
 
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _royaltyReceiver,
@@ -120,8 +116,7 @@ contract AccessNFT is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __UUPSUpgradeable_init();
-        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC1155Preset_init(_uri);
 
         // Initialize this contract's state.
@@ -332,9 +327,6 @@ contract AccessNFT is
      */
 
     /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-    }
 
     /// @dev Runs on every transfer.
     function _beforeTokenTransfer(
@@ -383,12 +375,12 @@ contract AccessNFT is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetUpgradeable, RoyaltyReceiverUpgradeable, IERC165)
+        override(ERC1155PresetUpgradeable, TWPayments, IERC165)
         returns (bool)
     {
         return
             ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
-            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId) ||
+            TWPayments.supportsInterface(interfaceId) ||
             super.supportsInterface(interfaceId);
     }
 
