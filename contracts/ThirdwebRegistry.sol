@@ -19,6 +19,8 @@ contract ThirdwebRegistry is TWAccessControl {
 
     constructor(address _thirdwebFactory) {
         _setupRole(FACTORY_ROLE, _thirdwebFactory);
+
+        __TWAccessControl_init(msg.sender);
     }
 
     function updateDeployments(

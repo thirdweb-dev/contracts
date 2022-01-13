@@ -2,22 +2,29 @@
 pragma solidity ^0.8.0;
 
 // Thirdweb contracts
+import "./thirdweb-presets/TWAccessControl.sol";
 import "./ThirdwebProxy.sol";
 import "./ThirdwebRegistry.sol"; 
+import "./thirdweb-presets/IThirdwebModule.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Create2.sol";
 
-contract ThirdwebFactory {
+contract ThirdwebFactory is TWAccessControl {
 
     address public thirdwebRegistry;
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address indexed proxy, address indexed deployer);
+    event NewModuleImplementation(bytes32 indexed moduleType, uint256 indexed version, address indexed implementation);
 
+    mapping(bytes32 => uint256) public currentModuleVersion;
     mapping(bytes32 => mapping(uint256 => address)) public modules;
 
     constructor() {
+        __TWAccessControl_init(msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
         bytes memory registryBytecode = abi.encodePacked(
             type(ThirdwebRegistry).creationCode,
             abi.encode(address(this))
@@ -61,5 +68,21 @@ contract ThirdwebFactory {
         ThirdwebRegistry(thirdwebRegistry).updateDeployments(_moduleType, deployedProxy, msg.sender);
 
         emit ProxyDeployed(implementation, deployedProxy, msg.sender);
+    }
+
+    /// @dev Lets a contract admin set the address of a module type x version.
+    function addModuleImplementation(bytes32 _moduleType, address _implementation) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "not admin.");
+        require(
+            IThirdwebModule(_implementation).moduleType() == _moduleType,
+            "invalid module type."
+        );
+
+        currentModuleVersion[_moduleType] += 1;
+        uint256 version = currentModuleVersion[_moduleType];
+
+        modules[_moduleType][version] = _implementation;
+
+        emit NewModuleImplementation(_moduleType, version, _implementation);
     }
 }

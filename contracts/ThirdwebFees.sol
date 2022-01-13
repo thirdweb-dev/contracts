@@ -1,27 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-// Upgradeability
-import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
-
 // Access
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Utils
 import { IThirdwebModule } from "./thirdweb-presets/IThirdwebModule.sol";
 
-contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract ThirdwebFees is Ownable {
     /// @dev Max bps in the thirdweb system
     uint128 public constant MAX_BPS = 10_000;
 
     /// @dev The threshold for thirdweb fees.
     uint128 public constant maxFeeBps = 3000;
 
-    /// @dev The default fee bps for thirdweb modules.
-    uint256 public defaultFeeBps;
+    /// @dev The default royalty fee bps for thirdweb modules.
+    uint256 public defaultRoyaltyFeeBps;
 
-    /// @dev The default fee recipient for thirdweb modules.
-    address public defaultFeeRecipient;
+    /// @dev The default royalty fee recipient for thirdweb modules.
+    address public defaultRoyaltyFeeRecipient;
+
+    /// @dev The default sales fee bps for thirdweb modules.
+    uint256 public defaultSalesFeeBps;
+
+    /// @dev The default sales fee recipient for thirdweb modules.
+    address public defaultSalesFeeRecipient;
 
     /// @dev Mapping from particular module instance => whether thirdweb takes no fees
     mapping(address => bool) public takeNoFee;
@@ -57,6 +60,20 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _;
     }
 
+    constructor(
+        uint256 _defaultRoyaltyFeeBps,
+        address _defaultRoyaltyFeeRecipient,
+        uint256 _defaultSalesFeeBps,
+        address _defaultSalesFeeRecipient
+    ) 
+        Ownable()
+    {
+        defaultRoyaltyFeeBps = _defaultRoyaltyFeeBps;
+        defaultRoyaltyFeeRecipient = _defaultRoyaltyFeeRecipient;
+        defaultSalesFeeBps = _defaultSalesFeeBps;
+        defaultSalesFeeRecipient = _defaultSalesFeeRecipient;
+    }
+
     /// @dev Returns the royalty bps for a module address
     function getRoyaltyFeeBps(address _module) external view returns (uint256) {
         bytes32 moduleType = IThirdwebModule(_module).moduleType();
@@ -68,7 +85,7 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         } else if (feeBpsByModuleType[moduleType][FeeType.Royalty] > 0) {
             return feeBpsByModuleType[moduleType][FeeType.Royalty];
         } else {
-            return defaultFeeBps;
+            return defaultRoyaltyFeeBps;
         }
     }
 
@@ -81,7 +98,7 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         } else if (feeRecipientByModuleType[moduleType][FeeType.Royalty] != address(0)) {
             return feeRecipientByModuleType[moduleType][FeeType.Royalty];
         } else {
-            return defaultFeeRecipient;
+            return defaultRoyaltyFeeRecipient;
         }
     }
 
@@ -96,7 +113,7 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         } else if (feeBpsByModuleType[moduleType][FeeType.Sales] > 0) {
             return feeBpsByModuleType[moduleType][FeeType.Sales];
         } else {
-            return defaultFeeBps;
+            return defaultSalesFeeBps;
         }
     }
 
@@ -109,17 +126,8 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         } else if (feeRecipientByModuleType[moduleType][FeeType.Sales] != address(0)) {
             return feeRecipientByModuleType[moduleType][FeeType.Sales];
         } else {
-            return defaultFeeRecipient;
+            return defaultSalesFeeRecipient;
         }
-    }
-
-    /// @dev Initializes contract state.
-    function initialize(uint256 _defaultFeeBps, address _defaultFeeRecipient) external initializer {
-        // Initialize inherited contracts.
-        __Ownable_init();
-
-        defaultFeeBps = _defaultFeeBps;
-        defaultFeeRecipient = _defaultFeeRecipient;
     }
 
     /// @dev Lets the owner set royalty fee bps for module type.
@@ -149,8 +157,4 @@ contract ThirdwebFees is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         feeRecipientByModuleInstance[_moduleInstance][_feeType] = _recipient;
         emit RecipientForModuleInstance(_recipient, _moduleInstance, _feeType);
     }
-
-    /// @dev Runs on every upgrade.
-    // TODO: define restrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {}
 }
