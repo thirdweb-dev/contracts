@@ -318,12 +318,30 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+    function setPlatformFeeBps(uint256 _platformFeeBps) external onlyModuleAdmin {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint120(_platformFeeBps);
 
         emit PrimarySalesFeeUpdates(_platformFeeBps);
+    }
+
+    /**
+     * @dev For setting NFT royalty recipient.
+     *
+     * @param _royaltyRecipient The address of which the payments goes to.
+     */
+    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        _setRoyaltyRecipient(_royaltyRecipient);
+    }
+
+    /**
+     * @dev For setting royalty basis points.
+     *
+     * @param _royaltyBps the basis points of royalty. 10_000 = 100%.
+     */
+    function setRoyaltyBps(uint256 _royaltyBps) external onlyModuleAdmin {
+        _setRoyaltyBps(_royaltyBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.

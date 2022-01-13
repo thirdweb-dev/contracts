@@ -20,7 +20,7 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
 
     /// @dev Emitted when the royalty recipient or fee bps is updated
     event NewRoyaltyuRecipient(address newRoyaltyRecipient);
-    event RoyaltyUpdated(uint96 newRoyaltyBps);
+    event RoyaltyUpdated(uint256 newRoyaltyBps);
     event EtherReceived(address sender, uint256 amount);
     event FundsWithdrawn(
         address indexed paymentReceiver,
@@ -67,7 +67,7 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
      *
      * @param _royaltyRecipient The address of which the payments goes to.
      */
-    function _setPaymentsRecipient(address _royaltyRecipient) internal {
+    function _setRoyaltyRecipient(address _royaltyRecipient) internal {
         royaltyRecipient = _royaltyRecipient;
         emit NewRoyaltyuRecipient(_royaltyRecipient);
     }
@@ -79,8 +79,8 @@ contract TWPayments is IERC2981, Initializable, TWCurrencyTransfers {
      */
     function _setRoyaltyBps(uint256 _royaltyBps) internal {
         require(_royaltyBps <= 10_000, "exceed royalty bps");
-        royaltyBps = uint96(_royaltyBps);
-        emit RoyaltyUpdated(uint96(_royaltyBps));
+        royaltyBps = _royaltyBps;
+        emit RoyaltyUpdated(_royaltyBps);
     }
 
     /// @dev See EIP-2981
