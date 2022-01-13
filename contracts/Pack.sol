@@ -11,7 +11,7 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
-import "./royalty/RoyaltyReceiverUpgradeable.sol";
+import "./royalty/TWPayments.sol";
 
 // Utils
 import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
@@ -21,20 +21,15 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 contract Pack is
     IERC2981,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    UUPSUpgradeable,
-    RoyaltyReceiverUpgradeable,
+    TWPayments,
     ERC1155PresetUpgradeable
 {
-    uint128 private constant MAX_BPS = 10_000;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -121,14 +116,20 @@ contract Pack is
         _;
     }
 
-    constructor(address _vrfCoordinator,address _linkToken) VRFConsumerBase(_vrfCoordinator, _linkToken) {}
+    constructor(
+        address _vrfCoordinator,
+        address _linkToken,
+        address _nativeTokenWrapper,
+        address _thirdwebFees
+    ) 
+        VRFConsumerBase(_vrfCoordinator, _linkToken) 
+        TWPayments(_nativeTokenWrapper, _thirdwebFees)
+    {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _royaltyReceiver,
         string memory _uri,
-        address _vrfCoordinator,
-        address _linkToken,
         bytes32 _keyHash,
         uint256 _fees,
         address _trustedForwarder,
@@ -138,8 +139,7 @@ contract Pack is
         // Initialize inherited contracts, most base-like -> most derived.
          __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __UUPSUpgradeable_init();
-        __RoyaltyReceiver_init(_royaltyReceiver, uint96(_royaltyBps));
+        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC1155Preset_init(_uri);
 
         // Initialize this contract's state.
@@ -318,10 +318,6 @@ contract Pack is
      *   Internal functions.
      **/
 
-    /// @dev Sets retrictions on upgrades.
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-    }
 
     /// @dev Creates packs with rewards.
     function createPack(
@@ -458,12 +454,10 @@ contract Pack is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetUpgradeable, RoyaltyReceiverUpgradeable, IERC165)
+        override(ERC1155PresetUpgradeable, TWPayments, IERC165)
         returns (bool)
     {
-        return
-            ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
-            RoyaltyReceiverUpgradeable.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId) || ERC1155PresetUpgradeable.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155
