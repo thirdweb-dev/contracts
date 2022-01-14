@@ -121,13 +121,7 @@ contract TWPayments is IERC2981, Initializable {
         }
 
         if (_currency == NATIVE_TOKEN) {
-            if (_from == address(this)) {
-                safeTransferNativeToken(_to, _amount);
-            } else if (_to == address(this)) {
-                require(_amount == msg.value, "native != amount");
-            } else {
-                safeTransferNativeToken(_to, _amount);
-            }
+            safeTransferNativeToken(_to, _amount);
         } else {
             safeTransferERC20(_currency, _from, _to, _amount);
         }

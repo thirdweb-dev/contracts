@@ -82,10 +82,19 @@ interface ILazyMintERC20 {
     event NewSaleRecipient(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PrimarySalesFeeUpdates(uint256 newFeeBps);
+    event PrimarySalesFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
+
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event EtherReceived(address sender, uint256 amount);
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.
@@ -102,5 +111,5 @@ interface ILazyMintERC20 {
      *
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
      */
-    function setClaimConditions(ClaimCondition[] calldata _conditions) external;
+    function setClaimConditions(ClaimCondition[] calldata _conditions, bool resetRestriction) external;
 }

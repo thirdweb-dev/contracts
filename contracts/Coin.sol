@@ -30,11 +30,11 @@ contract Coin is
     bytes32 private constant MODULE_TYPE = keccak256("TOKEN");
     uint256 private constant VERSION = 1;
 
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -57,21 +57,18 @@ contract Coin is
         address _trustedForwarder
     ) external  initializer {
         // Initialize inherited contracts, most base-like -> most derived.        
-        __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
+        __ERC2771Context_init_unchained(_trustedForwarder);
         __ERC20Permit_init(_name);
-        __ERC20_init(_name, _symbol);
-        __ERC20Burnable_init();
-        __ERC20Pausable_init();
-        __AccessControlEnumerable_init();
+        __ERC20_init_unchained(_name, _symbol);
 
         // Initialize this contract's state.
         contractURI = _contractURI;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(TRANSFER_ROLE, _msgSender());
-        _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+        address deployer = _msgSender();
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
+        _setupRole(MINTER_ROLE, deployer);
+        _setupRole(PAUSER_ROLE, deployer);
     }
 
     function __Coin_init(
@@ -131,7 +128,7 @@ contract Coin is
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "Coin: Transfers are restricted to TRANSFER_ROLE holders"
+                "transfers restricted."
             );
         }
     }
@@ -154,7 +151,7 @@ contract Coin is
      * - the caller must have the `MINTER_ROLE`.
      */
     function mint(address to, uint256 amount) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "Coin: must have minter role to mint");
+        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _mint(to, amount);
     }
 
@@ -168,7 +165,7 @@ contract Coin is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "Coin: must have pauser role to pause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
         _pause();
     }
 
@@ -182,7 +179,7 @@ contract Coin is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "Coin: must have pauser role to unpause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
         _unpause();
     }
 

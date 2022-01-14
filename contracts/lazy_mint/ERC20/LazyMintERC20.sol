@@ -18,11 +18,28 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../../royalty/TWPayments.sol";
+import "../../ThirdwebFees.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments, Coin {
+import "../../lib/TWCurrencyTransfers.sol";
+
+contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
     bytes32 private constant MODULE_TYPE = keccak256("TOKEN_DROP");
     uint256 private constant VERSION = 1;
+
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    ThirdwebFees private immutable thirdwebFees;
+
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
+
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint256 public royaltyBps;
 
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
@@ -36,7 +53,9 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+    constructor(address _thirdwebFees) {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -52,7 +71,8 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     ) external initializer {
         __Coin_init(_name, _symbol, _trustedForwarder, _contractURI);
 
-        __TWPayments_init(_royaltyReceiver, _royaltyBps);
+        royaltyRecipient = _royaltyReceiver;
+        royaltyBps = _royaltyBps;
 
         defaultSaleRecipient = _saleRecipient;
         defaultPlatformFeeRecipient = _platformFeeRecipient;
@@ -75,8 +95,6 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     function getIndexOfActiveCondition() public view returns (uint256) {
         uint256 totalConditionCount = claimConditions.totalConditionCount;
 
-        require(totalConditionCount > 0, "no public mint condition.");
-
         for (uint256 i = totalConditionCount; i > 0; i -= 1) {
             if (block.timestamp >= claimConditions.claimConditionAtIndex[i - 1].startTimestamp) {
                 return i - 1;
@@ -87,6 +105,78 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     }
 
     //      =====   External functions  =====
+
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    receive() external payable {
+        emit EtherReceived(msg.sender, msg.value);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        }
+    }
+
+    // /// @dev Transfers a given amount of currency.
+    // function transferCurrency(
+    //     address _currency,
+    //     address _from,
+    //     address _to,
+    //     uint256 _amount
+    // ) internal {
+    //     if (_amount == 0) {
+    //         return;
+    //     }
+
+    //     if (_currency == NATIVE_TOKEN) {
+    //         safeTransferNativeToken(_to, _amount);
+    //     } else {
+    //         safeTransferERC20(_currency, _from, _to, _amount);
+    //     }
+    // }
+
+    // /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
+    // function safeTransferERC20(
+    //     address _currency,
+    //     address _from,
+    //     address _to,
+    //     uint256 _amount
+    // ) internal {
+    //     if (_from == _to) {
+    //         return;
+    //     }
+    //     bool success = _from == address(this)
+    //         ? IERC20(_currency).transfer(_to, _amount)
+    //         : IERC20(_currency).transferFrom(_from, _to, _amount);
+    //     require(success, "currency transfer failed.");
+    // }
+
+    // /// @dev Transfers `amount` of native token to `to`.
+    // function safeTransferNativeToken(address to, uint256 value) internal {
+    //     (bool success, ) = to.call{ value: value }("");
+    //     require(success, "eth transfer failed.");
+    // }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
     function claim(
@@ -110,80 +200,11 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         emit ClaimedTokens(activeConditionIndex, _msgSender(), _receiver, _quantity);
     }
 
-    /// @dev Lets a module admin update mint conditions without resetting the restrictions.
-    function updateClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
-        resetClaimConditions(_conditions);
-
-        emit NewClaimConditions(_conditions);
-    }
-
     /// @dev Lets a module admin set mint conditions.
-    function setClaimConditions(ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
-        uint256 numOfConditionsSet = resetClaimConditions(_conditions);
-        resetTimestampRestriction(numOfConditionsSet);
+    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction) external onlyModuleAdmin {
 
-        emit NewClaimConditions(_conditions);
-    }
-
-    //      =====   Setter functions  =====
-
-    /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
-        defaultSaleRecipient = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient);
-    }
-
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000.");
-
-        royaltyBps = uint64(_royaltyBps);
-
-        emit RoyaltyUpdated(royaltyRecipient, _royaltyBps);
-    }
-
-    /// @dev Lets a module admin update the fees on primary sales.
-    function setFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
-
-        platformFeeBps = uint64(_platformFeeBps);
-
-        emit PrimarySalesFeeUpdates(_platformFeeBps);
-    }
-
-    //      =====   Getter functions  =====
-
-    /// @dev Returns the current active mint condition for a given tokenId.
-    function getTimestampForNextValidClaim(uint256 _index, address _claimer)
-        public
-        view
-        returns (uint256 nextValidTimestampForClaim)
-    {
-        uint256 timestampIndex = _index + claimConditions.timstampLimitIndex;
-        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
-
-        unchecked {
-            nextValidTimestampForClaim =
-                timestampOfLastClaim +
-                claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
-
-            if (nextValidTimestampForClaim < timestampOfLastClaim) {
-                nextValidTimestampForClaim = type(uint256).max;
-            }
-        }
-    }
-
-    /// @dev Returns the  mint condition for a given tokenId, at the given index.
-    function getClaimConditionAtIndex(uint256 _index) external view returns (ClaimCondition memory mintCondition) {
-        mintCondition = claimConditions.claimConditionAtIndex[_index];
-    }
-
-    //      =====   Internal functions  =====
-
-    /// @dev Overwrites the current claim conditions with new claim conditions
-    function resetClaimConditions(ClaimCondition[] calldata _conditions) internal returns (uint256 indexForCondition) {
-        // make sure the conditions are sorted in ascending order
         uint256 lastConditionStartTimestamp;
+        uint256 indexForCondition;
 
         for (uint256 i = 0; i < _conditions.length; i++) {
             require(
@@ -214,12 +235,70 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         }
 
         claimConditions.totalConditionCount = indexForCondition;
+
+        if (_resetRestriction) {
+            claimConditions.timstampLimitIndex += indexForCondition;
+        }
+
+        emit NewClaimConditions(_conditions);
     }
 
-    /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
-    function resetTimestampRestriction(uint256 _factor) internal {
-        claimConditions.timstampLimitIndex += _factor;
+    //      =====   Setter functions  =====
+
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        defaultSaleRecipient = _saleRecipient;
+        emit NewSaleRecipient(_saleRecipient);
     }
+
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = _royaltyBps;
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+
+        platformFeeBps = uint64(_platformFeeBps);
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
+
+        emit PrimarySalesFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    //      =====   Getter functions  =====
+
+    /// @dev Returns the current active mint condition for a given tokenId.
+    function getTimestampForNextValidClaim(uint256 _index, address _claimer)
+        public
+        view
+        returns (uint256 nextValidTimestampForClaim)
+    {
+        uint256 timestampIndex = _index + claimConditions.timstampLimitIndex;
+        uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
+
+        unchecked {
+            nextValidTimestampForClaim =
+                timestampOfLastClaim +
+                claimConditions.claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+
+            if (nextValidTimestampForClaim < timestampOfLastClaim) {
+                nextValidTimestampForClaim = type(uint256).max;
+            }
+        }
+    }
+
+    /// @dev Returns the  mint condition for a given tokenId, at the given index.
+    function getClaimConditionAtIndex(uint256 _index) external view returns (ClaimCondition memory mintCondition) {
+        mintCondition = claimConditions.claimConditionAtIndex[_index];
+    }
+
+    //      =====   Internal functions  =====
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaim(
@@ -260,14 +339,14 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        transferCurrency(_claimCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
-        transferCurrency(
+        TWCurrencyTransfers.transferCurrency(_claimCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
+        TWCurrencyTransfers.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        transferCurrency(
+        TWCurrencyTransfers.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             defaultSaleRecipient,
@@ -294,7 +373,7 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, TWPayments)
+        override(AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
