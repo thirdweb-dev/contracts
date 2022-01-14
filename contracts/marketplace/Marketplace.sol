@@ -115,8 +115,8 @@ contract Marketplace is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _feeRecipient,
+        string memory _contractURI,
         address _trustedForwarder,
-        string memory _uri,
         uint256 _marketFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
@@ -126,7 +126,7 @@ contract Marketplace is
         __AccessControlEnumerable_init();
 
         // Initialize this contract's state.
-        contractURI = _uri;
+        contractURI = _contractURI;
         marketFeeBps = uint64(_marketFeeBps);
         marketFeeRecipient = _feeRecipient;
 

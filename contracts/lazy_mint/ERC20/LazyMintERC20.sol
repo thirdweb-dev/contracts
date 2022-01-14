@@ -29,7 +29,7 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     address public defaultPlatformFeeRecipient;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint64 public platformFeeBps;
+    uint128 public platformFeeBps;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
@@ -43,8 +43,10 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
+        address _royaltyReceiver,
         uint128 _royaltyBps,
-        uint128 _platformFeeBps
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient
     ) external initializer {
 
         __Coin_init(
@@ -54,9 +56,11 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
             _contractURI
         );
 
+        __TWPayments_init(_royaltyReceiver, _royaltyBps);
+
         defaultSaleRecipient = _saleRecipient;
-        royaltyBps = uint64(_royaltyBps);
-        platformFeeBps = uint64(_platformFeeBps);
+        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        platformFeeBps = _platformFeeBps;
     }
 
     //      =====   Public functions  =====

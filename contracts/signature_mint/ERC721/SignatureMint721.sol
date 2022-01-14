@@ -101,15 +101,15 @@ contract SignatureMint721 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function intialize(
-        address _royaltyReceiver,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
-        address _platformFeeRecipient,
+        address _royaltyReceiver,
         uint128 _royaltyBps,
-        uint128 _platformFeeBps
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();

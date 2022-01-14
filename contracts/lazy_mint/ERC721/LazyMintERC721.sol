@@ -98,12 +98,12 @@ contract LazyMintERC721 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _royaltyReceiver,
         address _trustedForwarder,
-        address _platformFeeRecipient,
         address _saleRecipient,
+        address _royaltyReceiver,
         uint128 _royaltyBps,
-        uint128 _platformFeeBps
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();

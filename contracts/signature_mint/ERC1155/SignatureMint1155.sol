@@ -108,10 +108,10 @@ contract SignatureMint1155 is
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
-        address _platformFeeRecipient,
-        uint128 _royaltyBps,
         address _royaltyReceiver,
-        uint128 _platformFeeBps
+        uint128 _royaltyBps,
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();

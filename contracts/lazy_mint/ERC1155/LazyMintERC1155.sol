@@ -97,12 +97,12 @@ contract LazyMintERC1155 is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _contractURI,
-        address _royaltyReceiver,
         address _trustedForwarder,
         address _saleRecipient,
-        address _platformFeeRecipient,
+        address _royaltyReceiver,
         uint128 _royaltyBps,
-        uint128 _platformFeeBps
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
