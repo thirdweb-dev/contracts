@@ -69,6 +69,12 @@ interface ILazyMintERC721 {
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
+    struct SalesInfo {
+        address salesRecipient;
+        address platformFeeRecipient;
+        uint256 platformFeeBps;
+    }
+
     /// @dev Emitted when tokens are lazy minted.
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 

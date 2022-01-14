@@ -52,10 +52,12 @@ contract LazyMintERC721 is
     address private _owner;
 
     /// @dev The adress that receives all primary sales value.
-    address public defaultSaleRecipient;
+    // address public salesInfo.saleRecipient;
 
     /// @dev The adress that receives all primary sales value.
-    address public defaultPlatformFeeRecipient;
+    // address public defaultPlatformFeeRecipient;
+
+    SalesInfo public salesInfo;
 
     /// @dev The next token ID of the NFT to "lazy mint".
     uint256 public nextTokenIdToMint;
@@ -64,7 +66,7 @@ contract LazyMintERC721 is
     uint256 public nextTokenIdToClaim;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    // uint128 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -115,10 +117,10 @@ contract LazyMintERC721 is
         __ERC721Enumerable_init();
 
         // Initialize this contract's state.
-        defaultPlatformFeeRecipient = _platformFeeRecipient;
-        defaultSaleRecipient = _saleRecipient;
+        salesInfo.platformFeeRecipient = _platformFeeRecipient;
+        salesInfo.salesRecipient = _saleRecipient;
         contractURI = _contractURI;
-        platformFeeBps = _platformFeeBps;
+        salesInfo.platformFeeBps = _platformFeeBps;
 
         address deployer = _msgSender();
         _owner = deployer;
@@ -306,16 +308,16 @@ contract LazyMintERC721 is
         }
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * salesInfo.platformFeeBps) / MAX_BPS;
         uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        transferCurrency(_claimCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
+        transferCurrency(_claimCondition.currency, _msgSender(), salesInfo.platformFeeRecipient, platformFees);
         transferCurrency(_claimCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
+        transferCurrency(_claimCondition.currency, _msgSender(), salesInfo.salesRecipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -344,13 +346,13 @@ contract LazyMintERC721 is
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
-        defaultSaleRecipient = _saleRecipient;
+        salesInfo.salesRecipient = _saleRecipient;
         emit NewSaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultPlatformFeeRecipient(address _platformFeeRecipient) external onlyModuleAdmin {
-        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        salesInfo.platformFeeRecipient = _platformFeeRecipient;
         emit NewPlatformFeeRecipient(_platformFeeRecipient);
     }
 
@@ -368,7 +370,7 @@ contract LazyMintERC721 is
     function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        platformFeeBps = uint120(_platformFeeBps);
+        salesInfo.platformFeeBps = uint120(_platformFeeBps);
 
         emit PlatformFeeUpdates(_platformFeeBps);
     }
