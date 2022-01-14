@@ -40,13 +40,17 @@ contract LazyMintERC1155 is
 {
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = keccak256("BUNDLE_DROP");
-    uint256 private constant VERSION = 1;
+    /// @dev Returns the module type of the contract.
+    bytes32 public constant MODULE_TYPE = bytes32("BUNDLE_DROP");
+
+    /// @dev Returns the version of the contract.
+    uint256 public constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -55,7 +59,7 @@ contract LazyMintERC1155 is
     address public defaultSaleRecipient;
 
     /// @dev The adress that receives all primary sales value.
-    address public defaultPlatformFeeRecipient;
+    address public platformFeeRecipient;
 
     /// @dev The next token ID of the NFT to "lazy mint".
     uint256 public nextTokenIdToMint;
@@ -92,7 +96,10 @@ contract LazyMintERC1155 is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+    constructor(address _nativeTokenWrapper, address _thirdwebFees)
+        TWPayments(_nativeTokenWrapper, _thirdwebFees)
+        initializer
+    {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -107,14 +114,12 @@ contract LazyMintERC1155 is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
-        __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
-        __AccessControlEnumerable_init();
-        __ERC1155_init("");
+        __ERC2771Context_init_unchained(_trustedForwarder);
+        __ERC1155_init_unchained("");
 
         // Initialize this contract's state.
         defaultSaleRecipient = _saleRecipient;
-        defaultPlatformFeeRecipient = _platformFeeRecipient;
+        platformFeeRecipient = _platformFeeRecipient;
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
@@ -126,16 +131,6 @@ contract LazyMintERC1155 is
     }
 
     ///     =====   Public functions  =====
-
-    /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
-    }
 
     /**
      * @dev Returns the address of the current owner.
@@ -155,16 +150,9 @@ contract LazyMintERC1155 is
         return "";
     }
 
-    /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view returns (string memory _tokenURI) {
-        return uri(_tokenId);
-    }
-
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
     function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
         uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
-
-        require(totalConditionCount > 0, "no public mint condition.");
 
         for (uint256 i = totalConditionCount; i > 0; i -= 1) {
             if (block.timestamp >= claimConditions[_tokenId].claimConditionAtIndex[i - 1].startTimestamp) {
@@ -215,17 +203,17 @@ contract LazyMintERC1155 is
         emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _receiver, _quantity);
     }
 
-    // @dev Lets a module admin update mint conditions without resetting the restrictions.
-    function updateClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
-        resetClaimConditions(_tokenId, _conditions);
-
-        emit NewClaimConditions(_tokenId, _conditions);
-    }
-
     /// @dev Lets a module admin set mint conditions.
-    function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external onlyModuleAdmin {
+    function setClaimConditions(
+        uint256 _tokenId,
+        ClaimCondition[] calldata _conditions,
+        bool resetRestriction
+    ) external onlyModuleAdmin {
         uint256 numOfConditionsSet = resetClaimConditions(_tokenId, _conditions);
-        resetTimestampRestriction(_tokenId, numOfConditionsSet);
+
+        if (resetRestriction) {
+            resetTimestampRestriction(_tokenId, numOfConditionsSet);
+        }
 
         emit NewClaimConditions(_tokenId, _conditions);
     }
@@ -273,10 +261,8 @@ contract LazyMintERC1155 is
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyModuleAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        address _prevOwner = _owner;
+        emit NewOwner(_owner, _newOwner);
         _owner = _newOwner;
-
-        emit NewOwner(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
@@ -396,7 +382,7 @@ contract LazyMintERC1155 is
         uint256 _quantityToClaim,
         uint256 _tokenId
     ) internal {
-        if (_mintCondition.pricePerToken <= 0) {
+        if (_mintCondition.pricePerToken == 0) {
             return;
         }
 
@@ -409,9 +395,14 @@ contract LazyMintERC1155 is
         }
 
         address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
-        transferCurrency(_mintCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
-        transferCurrency(_mintCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        transferCurrency(_mintCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
+        transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
+        transferCurrency(
+            _mintCondition.currency,
+            _msgSender(),
+            thirdwebFees.getSalesFeeRecipient(address(this)),
+            twFee
+        );
+        transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.

@@ -21,7 +21,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../royalty/TWPayments.sol";
 
 contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments, Coin {
-
     bytes32 private constant MODULE_TYPE = keccak256("TOKEN_DROP");
     uint256 private constant VERSION = 1;
 
@@ -51,13 +50,7 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-
-        __Coin_init(
-            _name,
-            _symbol,
-            _trustedForwarder,
-            _contractURI
-        );
+        __Coin_init(_name, _symbol, _trustedForwarder, _contractURI);
 
         __TWPayments_init(_royaltyReceiver, _royaltyBps);
 
@@ -96,8 +89,11 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     //      =====   External functions  =====
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
-    function claim(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
-
+    function claim(
+        address _receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external payable nonReentrant {
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition();
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
@@ -143,7 +139,7 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
 
         royaltyBps = uint64(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyBps);
+        emit RoyaltyUpdated(royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -232,7 +228,6 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
     ) public view {
-
         ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
 
         require(
@@ -266,12 +261,26 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         }
 
         transferCurrency(_claimCondition.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
-        transferCurrency(_claimCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        transferCurrency(_claimCondition.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
+        transferCurrency(
+            _claimCondition.currency,
+            _msgSender(),
+            thirdwebFees.getSalesFeeRecipient(address(this)),
+            twFee
+        );
+        transferCurrency(
+            _claimCondition.currency,
+            _msgSender(),
+            defaultSaleRecipient,
+            totalPrice - platformFees - twFee
+        );
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(address _to, uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
+    function transferClaimedTokens(
+        address _to,
+        uint256 _claimConditionIndex,
+        uint256 _quantityBeingClaimed
+    ) internal {
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
@@ -291,3 +300,4 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
         return super.supportsInterface(interfaceId);
     }
 }
+

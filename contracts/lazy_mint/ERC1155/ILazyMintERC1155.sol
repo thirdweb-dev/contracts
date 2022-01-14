@@ -129,6 +129,11 @@ interface ILazyMintERC1155 {
      *
      *  @param _tokenId The token ID for which to set mint conditions.
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
+     *  @param _resetRestriction Whether to reset the mint restriction.
      */
-    function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions) external;
+    function setClaimConditions(
+        uint256 _tokenId,
+        ClaimCondition[] calldata _conditions,
+        bool _resetRestriction
+    ) external;
 }

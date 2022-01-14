@@ -11,10 +11,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TWPayments is IERC2981, Initializable {
     /// @dev Max bps in the thirdweb system
-    uint256 public constant MAX_BPS = 10_000;
+    uint256 internal constant MAX_BPS = 10_000;
 
     /// @dev The address interpreted as native token of the chain.
-    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address internal constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
     address public immutable nativeTokenWrapper;
@@ -28,8 +28,7 @@ contract TWPayments is IERC2981, Initializable {
     uint256 public royaltyBps;
 
     /// @dev Emitted when the royalty recipient or fee bps is updated
-    event NewRoyaltyuRecipient(address newRoyaltyRecipient);
-    event RoyaltyUpdated(uint256 newRoyaltyBps);
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
     event EtherReceived(address sender, uint256 amount);
     event FundsWithdrawn(
         address indexed paymentReceiver,
@@ -79,7 +78,7 @@ contract TWPayments is IERC2981, Initializable {
      */
     function _setRoyaltyRecipient(address _royaltyRecipient) internal {
         royaltyRecipient = _royaltyRecipient;
-        emit NewRoyaltyuRecipient(_royaltyRecipient);
+        emit RoyaltyUpdated(royaltyRecipient, royaltyBps);
     }
 
     /**
@@ -88,9 +87,9 @@ contract TWPayments is IERC2981, Initializable {
      * @param _royaltyBps the basis points of royalty. 10_000 = 100%.
      */
     function _setRoyaltyBps(uint256 _royaltyBps) internal {
-        require(_royaltyBps <= 10_000, "exceed royalty bps");
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
         royaltyBps = _royaltyBps;
-        emit RoyaltyUpdated(_royaltyBps);
+        emit RoyaltyUpdated(royaltyRecipient, royaltyBps);
     }
 
     /// @dev See EIP-2981
@@ -101,8 +100,11 @@ contract TWPayments is IERC2981, Initializable {
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
-        royaltyAmount += royaltyBps == 0 ? (salePrice * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS : 0;
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        } else {
+            royaltyAmount = 0;
+        }
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -122,13 +124,9 @@ contract TWPayments is IERC2981, Initializable {
 
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
-                // withdraw from weth then transfer withdrawn native token to recipient
-                IWETH(nativeTokenWrapper).withdraw(_amount);
                 safeTransferNativeToken(_to, _amount);
             } else if (_to == address(this)) {
-                // store native currency in weth
-                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
-                IWETH(nativeTokenWrapper).deposit{ value: _amount }();
+                require(_amount == msg.value, "native != amount");
             } else {
                 safeTransferNativeToken(_to, _amount);
             }
@@ -147,13 +145,10 @@ contract TWPayments is IERC2981, Initializable {
         if (_from == _to) {
             return;
         }
-        uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = _from == address(this)
             ? IERC20(_currency).transfer(_to, _amount)
             : IERC20(_currency).transferFrom(_from, _to, _amount);
-        uint256 balAfter = IERC20(_currency).balanceOf(_to);
-
-        require(success && balAfter == balBefore + _amount, "Marketplace: failed to transfer currency.");
+        require(success, "failed to transfer currency.");
     }
 
     /// @dev Transfers `amount` of native token to `to`.
@@ -165,3 +160,4 @@ contract TWPayments is IERC2981, Initializable {
         }
     }
 }
+
