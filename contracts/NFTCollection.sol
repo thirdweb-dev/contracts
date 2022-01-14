@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "./openzeppelin-presets/ERC1155PresetMinterPauserSupplyHolder.sol";
+import { ERC1155PresetUpgradeable } from "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 
 // Token interfaces
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -10,17 +10,22 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "./royalty/RoyaltyReceiver.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "./royalty/TWPayments.sol";
 
 // Utils
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
-contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context, IERC2981, Multicall, RoyaltyReceiver {
-    uint128 private constant MAX_BPS = 10_000;
+contract NFTCollection is 
+    Initializable,
+    ERC2771ContextUpgradeable, 
+    MulticallUpgradeable,
+    TWPayments,
+    ERC1155PresetUpgradeable
+{
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -131,20 +136,23 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         _;
     }
 
-    constructor(
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+
+    function initialize(
         string memory _uri,
         address _trustedForwarder,
         address _royaltyReceiver,
         uint256 _royaltyBps
-    )
-        ERC1155PresetMinterPauserSupplyHolder(_uri)
-        ERC2771Context(_trustedForwarder)
-        RoyaltyReceiver(_royaltyReceiver, uint96(_royaltyBps))
-    {
-        // Set contract URI
-        _contractURI = _uri;
+    ) external initializer {
 
-        // Grant ownership and setup roles
+        // Initialize inherited contracts, most base-like -> most derived.
+        __ERC2771Context_init(_trustedForwarder);
+        __Multicall_init();
+        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
+        __ERC1155Preset_init(_uri);
+
+        // Initialize this contract's state.
+        _contractURI = _uri;
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
     }
@@ -429,13 +437,13 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
     }
 
     /// @dev See EIP-2771
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See EIP-2771
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     /**
@@ -447,12 +455,12 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
         public
         view
         virtual
-        override(ERC1155PresetMinterPauserSupplyHolder, RoyaltyReceiver, IERC165)
+        override(ERC1155PresetUpgradeable, TWPayments)
         returns (bool)
     {
-        return
-            ERC1155PresetMinterPauserSupplyHolder.supportsInterface(interfaceId) ||
-            RoyaltyReceiver.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId) ||
+            ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
+            TWPayments.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

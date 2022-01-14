@@ -16,13 +16,16 @@ import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgr
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract AccessNFT is
-    IERC2981,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     TWPayments,
     ERC1155PresetUpgradeable
 {
+
+    bytes32 private constant MODULE_TYPE = keccak256("ACCESS_NFT");
+    uint256 private constant VERSION = 1;
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -128,6 +131,16 @@ contract AccessNFT is
     /**
      *      Public functions
      */
+    
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
 
     /**
      * @dev Returns the address of the current owner.
@@ -375,7 +388,7 @@ contract AccessNFT is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetUpgradeable, TWPayments, IERC165)
+        override(ERC1155PresetUpgradeable, TWPayments)
         returns (bool)
     {
         return

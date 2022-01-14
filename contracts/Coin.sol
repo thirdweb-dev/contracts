@@ -26,6 +26,10 @@ contract Coin is
     ERC20VotesUpgradeable,
     AccessControlEnumerableUpgradeable
 {
+
+    bytes32 private constant MODULE_TYPE = keccak256("TOKEN");
+    uint256 private constant VERSION = 1;
+
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
@@ -96,6 +100,16 @@ contract Coin is
         _setupRole(TRANSFER_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure virtual returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure virtual returns (uint256) {
+        return VERSION;
     }
 
     function _afterTokenTransfer(
