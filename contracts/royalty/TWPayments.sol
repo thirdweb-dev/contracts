@@ -78,7 +78,7 @@ contract TWPayments is IERC2981, Initializable {
      */
     function _setRoyaltyRecipient(address _royaltyRecipient) internal {
         royaltyRecipient = _royaltyRecipient;
-        emit RoyaltyUpdated(royaltyRecipient, royaltyBps);
+        emit RoyaltyUpdated(_royaltyRecipient, royaltyBps);
     }
 
     /**
@@ -89,7 +89,7 @@ contract TWPayments is IERC2981, Initializable {
     function _setRoyaltyBps(uint256 _royaltyBps) internal {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
         royaltyBps = _royaltyBps;
-        emit RoyaltyUpdated(royaltyRecipient, royaltyBps);
+        emit RoyaltyUpdated(royaltyRecipient, _royaltyBps);
     }
 
     /// @dev See EIP-2981
