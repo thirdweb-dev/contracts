@@ -69,12 +69,12 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     //      =====   Public functions  =====
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function moduleType() external pure override returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
+    function version() external pure override returns (uint256) {
         return VERSION;
     }
 
