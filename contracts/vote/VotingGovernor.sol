@@ -30,6 +30,10 @@ contract VotingGovernor is
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
+
+    bytes32 private constant MODULE_TYPE = keccak256("VOTE");
+    uint256 private constant VERSION = 1;
+
     string public contractURI;
     uint256 public proposalIndex;
 
@@ -54,13 +58,13 @@ contract VotingGovernor is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _name,
-        ERC20VotesUpgradeable _token,
+        string memory _contractURI,
+        address _trustedForwarder,
+        address _token,
         uint256 _initialVotingDelay,
         uint256 _initialVotingPeriod,
         uint256 _initialProposalThreshold,
-        uint256 _initialVoteQuorumFraction,
-        address _trustedForwarder,
-        string memory _uri
+        uint256 _initialVoteQuorumFraction
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.        
         __ERC2771Context_init(_trustedForwarder);
@@ -69,12 +73,23 @@ contract VotingGovernor is
         __Governor_init(_name);
         __GovernorSettings_init(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold);
         __GovernorCountingSimple_init();
-        __GovernorVotes_init(_token);
+        __GovernorVotes_init(ERC20VotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_initialVoteQuorumFraction);
 
         // Initialize this contract's state.
-        contractURI = _uri;
+        contractURI = _contractURI;
     }
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    // TODO: version name clash
+    /// @dev Returns the version of the contract.
+    // function version() external pure returns (uint256) {
+    //     return VERSION;
+    // }
 
     /**
      * @dev See {IGovernor-propose}.

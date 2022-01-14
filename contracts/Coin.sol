@@ -49,8 +49,8 @@ contract Coin is
     function initialize(
         string memory _name,
         string memory _symbol,
-        address _trustedForwarder,
-        string memory _uri
+        string memory _contractURI,
+        address _trustedForwarder
     ) external  initializer {
         // Initialize inherited contracts, most base-like -> most derived.        
         __ERC2771Context_init(_trustedForwarder);
@@ -62,7 +62,7 @@ contract Coin is
         __AccessControlEnumerable_init();
 
         // Initialize this contract's state.
-        contractURI = _uri;
+        contractURI = _contractURI;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(TRANSFER_ROLE, _msgSender());

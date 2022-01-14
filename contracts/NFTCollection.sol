@@ -132,9 +132,9 @@ contract NFTCollection is ERC1155PresetMinterPauserSupplyHolder, ERC2771Context,
     }
 
     constructor(
-        address _royaltyReceiver,
-        address _trustedForwarder,
         string memory _uri,
+        address _trustedForwarder,
+        address _royaltyReceiver,
         uint256 _royaltyBps
     )
         ERC1155PresetMinterPauserSupplyHolder(_uri)

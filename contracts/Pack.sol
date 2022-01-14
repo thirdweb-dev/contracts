@@ -128,25 +128,25 @@ contract Pack is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
-        address _royaltyReceiver,
-        string memory _uri,
-        bytes32 _keyHash,
-        uint256 _fees,
+        string memory _contractURI,
         address _trustedForwarder,
-        uint256 _royaltyBps
+        address _royaltyReceiver,
+        uint128 _royaltyBps,
+        uint128 _fees,
+        bytes32 _keyHash
     ) external initializer {
 
         // Initialize inherited contracts, most base-like -> most derived.
          __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
         __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
-        __ERC1155Preset_init(_uri);
+        __ERC1155Preset_init(_contractURI);
 
         // Initialize this contract's state.
         vrfKeyHash = _keyHash;
         vrfFees = _fees;
 
-        contractURI = _uri;
+        contractURI = _contractURI;
 
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());

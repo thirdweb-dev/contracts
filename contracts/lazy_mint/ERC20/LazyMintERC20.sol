@@ -22,6 +22,9 @@ import "../../royalty/TWPayments.sol";
 
 contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments, Coin {
 
+    bytes32 private constant MODULE_TYPE = keccak256("TOKEN_DROP");
+    uint256 private constant VERSION = 1;
+
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
 
@@ -64,6 +67,16 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, TWPayments
     }
 
     //      =====   Public functions  =====
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
 
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getIndexOfActiveCondition() public view returns (uint256) {

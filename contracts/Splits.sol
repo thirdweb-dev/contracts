@@ -39,8 +39,8 @@ contract Splits is
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     function initialize(
-        address _trustedForwarder,
-        string memory _uri,
+        string memory _contractURI,
+        address _trustedForwarder,        
         address[] memory payees,
         uint256[] memory shares_
     ) external initializer {
@@ -55,7 +55,7 @@ contract Splits is
         require(payees.length > 0, "no payees provided.");
 
         // Set contract metadata
-        contractURI = _uri;
+        contractURI = _contractURI;
 
         // Scaling the share, so we don't lose precision on division
         for (uint256 i = 0; i < payees.length; i++) {
