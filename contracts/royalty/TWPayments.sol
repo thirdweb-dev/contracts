@@ -102,8 +102,6 @@ contract TWPayments is IERC2981, Initializable {
         receiver = address(this);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
-        } else {
-            royaltyAmount = 0;
         }
     }
 
