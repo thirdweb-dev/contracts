@@ -99,7 +99,6 @@ contract LazyMintERC1155 is
         string memory _contractURI,
         address _royaltyReceiver,
         address _trustedForwarder,
-        address _nativeTokenWrapper,
         address _saleRecipient,
         address _platformFeeRecipient,
         uint128 _royaltyBps,
