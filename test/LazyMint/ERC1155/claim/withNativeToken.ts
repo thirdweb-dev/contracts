@@ -126,7 +126,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       const invalidTokenId: BigNumber = amountToLazyMint.add(1);
 
       await expect(
-        lazyMintERC1155.connect(claimer).claim(claimer.address, invalidTokenId, quantityToClaim, proof, { value: totalPrice }),
+        lazyMintERC1155
+          .connect(claimer)
+          .claim(claimer.address, invalidTokenId, quantityToClaim, proof, { value: totalPrice }),
       ).to.be.revertedWith("no public mint condition.");
     });
 
@@ -137,11 +139,15 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       while (supplyClaimed.lt(maxClaimableSupply)) {
         if (supplyClaimed.add(quantityToClaim).gt(maxClaimableSupply)) {
           await expect(
-            lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice }),
+            lazyMintERC1155
+              .connect(claimer)
+              .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice }),
           ).to.be.revertedWith("exceed max mint supply.");
         }
 
-        await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
+        await lazyMintERC1155
+          .connect(claimer)
+          .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
         const nextValidTimestampForClaim: BigNumber = await lazyMintERC1155.getTimestampForNextValidClaim(
           tokenId,
           targetMintConditionIndex,
@@ -154,7 +160,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
     });
 
     it("Should revert if claimer claims before valid timestamp for transaction", async () => {
-      await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
+      await lazyMintERC1155
+        .connect(claimer)
+        .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
 
       await expect(
         lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice }),
@@ -163,20 +171,24 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
 
     it("Should revert if claimer is not in the whitelist", async () => {
       await expect(
-        lazyMintERC1155.connect(protocolAdmin).claim(protocolAdmin.address, tokenId, quantityToClaim, proof, { value: totalPrice }),
+        lazyMintERC1155
+          .connect(protocolAdmin)
+          .claim(protocolAdmin.address, tokenId, quantityToClaim, proof, { value: totalPrice }),
       ).to.be.revertedWith("not in whitelist.");
     });
 
     it("Should revert if caller has not sent enough native token", async () => {
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof)).to.be.revertedWith(
-        "must send total price.",
-      );
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof),
+      ).to.be.revertedWith("must send total price.");
     });
   });
 
   describe("Events", function () {
     it("Should emit ClaimedTokens", async () => {
-      await expect(lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice }))
+      await expect(
+        lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice }),
+      )
         .to.emit(lazyMintERC1155, "ClaimedTokens")
         .withArgs(
           ...Object.values({
@@ -193,7 +205,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
   describe("Balances", function () {
     it("Should increase the claimer's balance of the tokens claimed", async () => {
       const claimerBalBefore: BigNumber = await lazyMintERC1155.balanceOf(claimer.address, tokenId);
-      await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
+      await lazyMintERC1155
+        .connect(claimer)
+        .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
       const claimerBalAfter: BigNumber = await lazyMintERC1155.balanceOf(claimer.address, tokenId);
 
       expect(claimerBalAfter).to.equal(claimerBalBefore.add(quantityToClaim));
@@ -229,7 +243,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       const feeRecipientBalBefore: BigNumber = await ethers.provider.getBalance(feeRecipient);
       const remainderRecipientBalBefore: BigNumber = await ethers.provider.getBalance(remainderRecipient);
 
-      await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
+      await lazyMintERC1155
+        .connect(claimer)
+        .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
 
       const feeRecipientBalAfter: BigNumber = await ethers.provider.getBalance(feeRecipient);
       const remainderRecipientBalAfter: BigNumber = await ethers.provider.getBalance(remainderRecipient);
@@ -243,7 +259,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
     it("Should update the supply minted during the claim condition", async () => {
       const currenMintSupplyBefore = (await lazyMintERC1155.getClaimConditionAtIndex(tokenId, targetMintConditionIndex))
         .supplyClaimed;
-      await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
+      await lazyMintERC1155
+        .connect(claimer)
+        .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
       const currenMintSupplyAfter = (await lazyMintERC1155.getClaimConditionAtIndex(tokenId, targetMintConditionIndex))
         .supplyClaimed;
 
@@ -253,7 +271,9 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
       const waitBetweenClaims: BigNumber = (
         await lazyMintERC1155.getClaimConditionAtIndex(tokenId, targetMintConditionIndex)
       ).waitTimeInSecondsBetweenClaims;
-      await lazyMintERC1155.connect(claimer).claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
+      await lazyMintERC1155
+        .connect(claimer)
+        .claim(claimer.address, tokenId, quantityToClaim, proof, { value: totalPrice });
 
       const currentTimestamp: BigNumber = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
       const expectedNextValidTimestamp: BigNumber = currentTimestamp.add(waitBetweenClaims);

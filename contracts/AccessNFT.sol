@@ -8,7 +8,6 @@ import { ERC1155PresetUpgradeable } from "./openzeppelin-presets/ERC1155PresetUp
 import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-
 // Royalties
 import "./royalty/TWPayments.sol";
 import "./lib/TWCurrencyTransfers.sol";
@@ -18,13 +17,7 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract AccessNFT is
-    Initializable,
-    ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
-    ERC1155PresetUpgradeable
-{
-
+contract AccessNFT is Initializable, ERC2771ContextUpgradeable, MulticallUpgradeable, ERC1155PresetUpgradeable {
     bytes32 private constant MODULE_TYPE = keccak256("ACCESS_NFT");
     uint256 private constant VERSION = 1;
 
@@ -54,7 +47,6 @@ contract AccessNFT is
     /// @dev The address interpreted as native token of the chain.
     address internal constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    
     /// @dev The recipient of who gets the royalty.
     address public royaltyRecipient;
 
@@ -189,7 +181,7 @@ contract AccessNFT is
     /**
      *      Public functions
      */
-    
+
     /// @dev Returns the module type of the contract.
     function moduleType() external pure returns (bytes32) {
         return MODULE_TYPE;
@@ -215,10 +207,7 @@ contract AccessNFT is
         bytes memory data
     ) public virtual override {
         require(id < nextTokenId, "cannot mint new NFTs.");
-        require(
-            tokenState[id].underlyingType == UnderlyingType.None,
-            "cannot freely mint more ERC20 or ERC721."
-        );
+        require(tokenState[id].underlyingType == UnderlyingType.None, "cannot freely mint more ERC20 or ERC721.");
 
         super.mint(to, id, amount, data);
     }
@@ -317,10 +306,7 @@ contract AccessNFT is
         address redeemer = _msgSender();
 
         require(tokenState[_tokenId].isRedeemable, "token not redeemable.");
-        require(
-            balanceOf(redeemer, _tokenId) >= _amount && _amount > 0,
-            "redeeming more than owned."
-        );
+        require(balanceOf(redeemer, _tokenId) >= _amount && _amount > 0, "redeeming more than owned.");
         require(
             block.timestamp <= lastTimeToRedeem[_tokenId] || lastTimeToRedeem[_tokenId] == 0,
             "window to redeem closed."
@@ -412,29 +398,35 @@ contract AccessNFT is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(
-                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "transfers restricted."
-            );
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
 
         for (uint256 i = 0; i < ids.length; i++) {
             if (!tokenState[ids[i]].isRedeemable && !accessNftIsTransferable) {
-                require(
-                    from == address(0) || from == address(this),
-                    "transfers restricted on redeemed NFTs."
-                );
+                require(from == address(0) || from == address(this), "transfers restricted on redeemed NFTs.");
             }
         }
     }
 
     /// @dev See EIP-2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See EIP-2771
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 
@@ -443,15 +435,8 @@ contract AccessNFT is
      */
 
     /// @dev See EIP 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155PresetUpgradeable)
-        returns (bool)
-    {
-        return
-            ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable) returns (bool) {
+        return ERC1155PresetUpgradeable.supportsInterface(interfaceId) || super.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

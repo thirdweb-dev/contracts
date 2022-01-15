@@ -152,8 +152,10 @@ describe("Mint tokens with a valid mint request", function () {
     });
 
     it("Should increase the caller's NFT balance by 1, if mint request does not specify a recipient", async () => {
-      const specialMintRequest = { ...mintRequest, to: ethers.constants.AddressZero }
-      const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, specialMintRequest)).signature;
+      const specialMintRequest = { ...mintRequest, to: ethers.constants.AddressZero };
+      const signatureToUse = (
+        await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint721, specialMintRequest)
+      ).signature;
 
       const tokenIdToBeMintedBefore: number = (await sigMint721.nextTokenIdToMint()).toNumber();
       await sigMint721.connect(requestor).mintWithSignature(specialMintRequest, signatureToUse, { value: totalPrice });
@@ -162,7 +164,7 @@ describe("Mint tokens with a valid mint request", function () {
       for (let i = tokenIdToBeMintedBefore; i < tokenIdToBeMintedAfter; i += 1) {
         expect(await sigMint721.ownerOf(i)).to.equal(requestor.address);
       }
-    })
+    });
 
     it("Should distribute the price of the NFTs minted with a mint request from the requestor to the sale recipient", async () => {
       const saleRecipientAddr: string = await sigMint721.defaultSaleRecipient();

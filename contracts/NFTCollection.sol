@@ -22,13 +22,7 @@ import { MulticallUpgradeable, Initializable } from "./openzeppelin-presets/util
 
 import "./ThirdwebFees.sol";
 
-contract NFTCollection is 
-    Initializable,
-    ERC2771ContextUpgradeable, 
-    MulticallUpgradeable,
-    ERC1155PresetUpgradeable
-{
-
+contract NFTCollection is Initializable, ERC2771ContextUpgradeable, MulticallUpgradeable, ERC1155PresetUpgradeable {
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -156,10 +150,7 @@ contract NFTCollection is
 
     /// @dev Checks whether the caller has MINTER_ROLE.
     modifier onlyMinterRole() {
-        require(
-            hasRole(MINTER_ROLE, _msgSender()),
-            "not minter."
-        );
+        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _;
     }
 
@@ -173,7 +164,6 @@ contract NFTCollection is
         address _royaltyReceiver,
         uint256 _royaltyBps
     ) external initializer {
-
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
@@ -276,10 +266,7 @@ contract NFTCollection is
         bytes memory data
     ) public virtual override {
         require(id < nextTokenId, "cannot mint new NFTs.");
-        require(
-            tokenState[id].underlyingType == UnderlyingType.None,
-            "cannot freely mint more ERC20 or ERC721."
-        );
+        require(tokenState[id].underlyingType == UnderlyingType.None, "cannot freely mint more ERC20 or ERC721.");
 
         super.mint(to, id, amount, data);
     }
@@ -319,10 +306,7 @@ contract NFTCollection is
         uint256 _tokenId,
         string calldata _nftURI
     ) external whenNotPaused onlyMinterRole {
-        require(
-            IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
-            "not owner."
-        );
+        require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "not owner.");
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
                 IERC721(_nftContract).isApprovedForAll(_msgSender(), address(this)),
@@ -381,10 +365,7 @@ contract NFTCollection is
         // Get creator
         address tokenCreator = _msgSender();
 
-        require(
-            IERC20(_tokenContract).balanceOf(tokenCreator) >= _tokenAmount,
-            "owns insufficient amount."
-        );
+        require(IERC20(_tokenContract).balanceOf(tokenCreator) >= _tokenAmount, "owns insufficient amount.");
         require(
             IERC20(_tokenContract).allowance(tokenCreator, address(this)) >= _tokenAmount,
             "must approve transfer."
@@ -486,20 +467,29 @@ contract NFTCollection is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(
-                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "transfers restricted."
-            );
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }
 
     /// @dev See EIP-2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See EIP-2771
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 
@@ -515,8 +505,7 @@ contract NFTCollection is
         override(ERC1155PresetUpgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) ||
-            ERC1155PresetUpgradeable.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId) || ERC1155PresetUpgradeable.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155

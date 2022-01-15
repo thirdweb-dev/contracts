@@ -53,7 +53,10 @@ contract ThirdwebFees is Ownable {
     /// @dev Emitted when fee recipient is set for a module instance
     event RecipientForModuleInstance(address recipient, address moduleInstance, FeeType feeType);
 
-    enum FeeType { Sales, Royalty }
+    enum FeeType {
+        Sales,
+        Royalty
+    }
 
     modifier onlyValidFee(uint256 _feeBps) {
         require(_feeBps <= maxFeeBps, "fees too high");
@@ -65,9 +68,7 @@ contract ThirdwebFees is Ownable {
         address _defaultRoyaltyFeeRecipient,
         uint256 _defaultSalesFeeBps,
         address _defaultSalesFeeRecipient
-    ) 
-        Ownable()
-    {
+    ) Ownable() {
         defaultRoyaltyFeeBps = _defaultRoyaltyFeeBps;
         defaultRoyaltyFeeRecipient = _defaultRoyaltyFeeRecipient;
         defaultSalesFeeBps = _defaultSalesFeeBps;
@@ -131,29 +132,41 @@ contract ThirdwebFees is Ownable {
     }
 
     /// @dev Lets the owner set royalty fee bps for module type.
-    function setFeeForModuleType(bytes32 _moduleType, uint256 _feeBps, FeeType _feeType) external onlyOwner onlyValidFee(_feeBps) {
+    function setFeeForModuleType(
+        bytes32 _moduleType,
+        uint256 _feeBps,
+        FeeType _feeType
+    ) external onlyOwner onlyValidFee(_feeBps) {
         feeBpsByModuleType[_moduleType][_feeType] = _feeBps;
         emit FeeForModuleType(_feeBps, _moduleType, FeeType.Royalty);
     }
 
     /// @dev Lets the owner set royalty fee bps for a particular module instance.
-    function setFeeForModuleInstance(address _moduleInstance, uint256 _feeBps, FeeType _feeType)
-        external
-        onlyOwner
-        onlyValidFee(_feeBps)
-    {
+    function setFeeForModuleInstance(
+        address _moduleInstance,
+        uint256 _feeBps,
+        FeeType _feeType
+    ) external onlyOwner onlyValidFee(_feeBps) {
         feeBpsByModuleInstance[_moduleInstance][_feeType] = _feeBps;
         emit FeeForModuleInstance(_feeBps, _moduleInstance, FeeType.Royalty);
     }
 
     /// @dev Lets the owner set sales fee recipient for module type.
-    function setRecipientForModuleType(bytes32 _moduleType, address _recipient, FeeType _feeType) external onlyOwner {
+    function setRecipientForModuleType(
+        bytes32 _moduleType,
+        address _recipient,
+        FeeType _feeType
+    ) external onlyOwner {
         feeRecipientByModuleType[_moduleType][_feeType] = _recipient;
         emit RecipientForModuleType(_recipient, _moduleType, _feeType);
     }
 
     /// @dev Lets the owner set sales fee recipient for a particular module instance.
-    function setRecipientForModuleInstance(address _moduleInstance, address _recipient, FeeType _feeType) external onlyOwner {
+    function setRecipientForModuleInstance(
+        address _moduleInstance,
+        address _recipient,
+        FeeType _feeType
+    ) external onlyOwner {
         feeRecipientByModuleInstance[_moduleInstance][_feeType] = _recipient;
         emit RecipientForModuleInstance(_recipient, _moduleInstance, _feeType);
     }

@@ -288,8 +288,10 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets a module admin set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction) external onlyModuleAdmin {
-        
+    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction)
+        external
+        onlyModuleAdmin
+    {
         uint256 lastConditionStartTimestamp;
         uint256 indexForCondition;
 
@@ -424,9 +426,24 @@ contract LazyMintERC721 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        TWCurrencyTransfers.transferCurrency(_claimCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
-        TWCurrencyTransfers.transferCurrency(_claimCondition.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        TWCurrencyTransfers.transferCurrency(_claimCondition.currency, _msgSender(), primarySaleRecipient, totalPrice - platformFees - twFee);
+        TWCurrencyTransfers.transferCurrency(
+            _claimCondition.currency,
+            _msgSender(),
+            platformFeeRecipient,
+            platformFees
+        );
+        TWCurrencyTransfers.transferCurrency(
+            _claimCondition.currency,
+            _msgSender(),
+            thirdwebFees.getSalesFeeRecipient(address(this)),
+            twFee
+        );
+        TWCurrencyTransfers.transferCurrency(
+            _claimCondition.currency,
+            _msgSender(),
+            primarySaleRecipient,
+            totalPrice - platformFees - twFee
+        );
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -473,7 +490,7 @@ contract LazyMintERC721 is
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
     }
-    
+
     /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId)
         public

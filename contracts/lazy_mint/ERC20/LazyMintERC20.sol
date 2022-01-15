@@ -22,7 +22,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../ThirdwebFees.sol";
 
 contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
-    
     bytes32 private constant MODULE_TYPE = bytes32("DROP_TOKEN");
     uint128 private constant VERSION = 1;
 
@@ -188,8 +187,10 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
     }
 
     /// @dev Lets a module admin set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction) external onlyModuleAdmin {
-
+    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction)
+        external
+        onlyModuleAdmin
+    {
         uint256 lastConditionStartTimestamp;
         uint256 indexForCondition;
 
@@ -301,7 +302,12 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        TWCurrencyTransfers.transferCurrency(_claimCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
+        TWCurrencyTransfers.transferCurrency(
+            _claimCondition.currency,
+            _msgSender(),
+            platformFeeRecipient,
+            platformFees
+        );
         TWCurrencyTransfers.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
@@ -342,4 +348,3 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
         return super.supportsInterface(interfaceId);
     }
 }
-

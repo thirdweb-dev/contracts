@@ -6,13 +6,7 @@ import "./TWAccessControl.sol";
 import "./TWPayments.sol";
 import "./TWUtils.sol";
 
-abstract contract TWModule is
-    IThirdwebModule,
-    TWUtils,
-    TWPayments,
-    TWAccessControl
-{
-
+abstract contract TWModule is IThirdwebModule, TWUtils, TWPayments, TWAccessControl {
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -35,10 +29,7 @@ abstract contract TWModule is
         address _trustedForwarder,
         address _royaltyRecipient,
         uint256 _royaltyBps
-    )
-        internal
-        onlyInitializing
-    {
+    ) internal onlyInitializing {
         __TWUtils_init(_trustedForwarder);
         __TWPayments_init(_royaltyRecipient, _royaltyBps);
         __TWAccessControl_init(_msgSender());
@@ -72,17 +63,35 @@ abstract contract TWModule is
     }
 
     /// @dev See ERC-165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(TWPayments, AccessControlEnumerableUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(TWPayments, AccessControlEnumerableUpgradeable)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 
     /// @dev For meta-tx support.
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev For meta-tx support.
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

@@ -104,12 +104,13 @@ describe("Mint tokens with a valid mint request", function () {
 
     it("Should revert if the tokenId provided is not reserved, and not already minted", async () => {
       const invalidMintReq = { ...mintRequest, tokenId: 5 };
-      const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint1155, invalidMintReq)).signature;
+      const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint1155, invalidMintReq))
+        .signature;
 
       await expect(
         sigMint1155.connect(requestor).mintWithSignature(invalidMintReq, signatureToUse, { value: totalPrice }),
       ).to.be.revertedWith("invalid id");
-    })
+    });
   });
 
   describe("Events", function () {
@@ -123,13 +124,12 @@ describe("Mint tokens with a valid mint request", function () {
             mintedTo: requestor.address,
             tokenIdMinted: tokenIdToBeMinted,
             uri: mintRequest.uri,
-            quantityMinted: mintRequest.quantity
+            quantityMinted: mintRequest.quantity,
           }),
         );
     });
 
     it("Should emit MintWithSignature.", async () => {
-
       const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
 
       await expect(sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice }))
@@ -162,23 +162,24 @@ describe("Mint tokens with a valid mint request", function () {
       const requestorBalBefore = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
       await sigMint1155.connect(requestor).mintWithSignature(mintRequest, signature, { value: totalPrice });
       const requestorBalAfter = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
-      
+
       expect(requestorBalAfter).to.equal(requestorBalBefore.add(mintRequest.quantity));
     });
 
     it("Should increase the caller's NFT balance by 1, if mint request does not specify a recipient", async () => {
-
       const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
 
-      const specialMintRequest = { ...mintRequest, to: ethers.constants.AddressZero }
-      const signatureToUse = (await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint1155, specialMintRequest)).signature;
+      const specialMintRequest = { ...mintRequest, to: ethers.constants.AddressZero };
+      const signatureToUse = (
+        await signMintRequest(protocolAdmin.provider, protocolAdmin, sigMint1155, specialMintRequest)
+      ).signature;
 
       const requestorBalBefore = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
       await sigMint1155.connect(requestor).mintWithSignature(specialMintRequest, signatureToUse, { value: totalPrice });
       const requestorBalAfter = await sigMint1155.balanceOf(requestor.address, tokenIdToBeMinted);
 
       expect(requestorBalAfter).to.equal(requestorBalBefore.add(mintRequest.quantity));
-    })
+    });
 
     it("Should distribute the price of the NFTs minted with a mint request from the requestor to the sale recipient", async () => {
       const saleRecipientAddr: string = await sigMint1155.defaultSaleRecipient();

@@ -5,8 +5,6 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract TWAccessControl is Initializable, AccessControlEnumerableUpgradeable {
-    
-
     function __TWAccessControl_init(address _deployer) internal onlyInitializing {
         __AccessControlEnumerable_init();
 

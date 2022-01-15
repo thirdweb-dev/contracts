@@ -10,7 +10,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMintERC20 {
-    
     /**
      *  @notice The restrictions that make up a claim condition.
      *
@@ -87,10 +86,10 @@ interface ILazyMintERC20 {
 
     /// @dev Emitted when royalty info is updated.
     event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
-    
+
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);
-    
+
     /// @dev Emitted when accrued royalties are withdrawn from the contract.
     event FundsWithdrawn(
         address indexed paymentReceiver,
@@ -107,7 +106,11 @@ interface ILazyMintERC20 {
      *  @param proof   The proof required to prove the account's inclusion in the merkle root whitelist
      *                  of the mint conditions that apply.
      */
-    function claim(address receiver, uint256 quantity, bytes32[] calldata proof) external payable;
+    function claim(
+        address receiver,
+        uint256 quantity,
+        bytes32[] calldata proof
+    ) external payable;
 
     /**
      *  @notice Lets a module admin set claim conditions.

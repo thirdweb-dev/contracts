@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 /**
- *  `LazyMintERC721` is an ERC 721 contract. 
+ *  `LazyMintERC721` is an ERC 721 contract.
  *
  *  It takes in a base URI for every `n` tokens lazy minted at once. The URI
  *  for each of the `n` tokens lazy minted is the provided baseURI + `${tokenId}`
@@ -98,10 +98,10 @@ interface ILazyMintERC721 {
 
     /// @dev Emitted when royalty info is updated.
     event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
-    
+
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);
-    
+
     /// @dev Emitted when accrued royalties are withdrawn from the contract.
     event FundsWithdrawn(
         address indexed paymentReceiver,

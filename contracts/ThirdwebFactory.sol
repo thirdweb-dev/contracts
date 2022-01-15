@@ -4,14 +4,13 @@ pragma solidity ^0.8.0;
 // Thirdweb contracts
 import "./thirdweb-presets/TWAccessControl.sol";
 import "./ThirdwebProxy.sol";
-import "./ThirdwebRegistry.sol"; 
+import "./ThirdwebRegistry.sol";
 import "./thirdweb-presets/IThirdwebModule.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract ThirdwebFactory is TWAccessControl {
-
     address public thirdwebRegistry;
 
     /// @dev Emitted when a proxy is deployed.
@@ -39,7 +38,6 @@ contract ThirdwebFactory is TWAccessControl {
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
     function deployProxy(bytes32 _moduleType, bytes memory _data) external {
-
         address implementation = modules[_moduleType][currentModuleVersion[_moduleType]];
 
         bytes memory proxyBytecode = abi.encodePacked(
@@ -57,7 +55,6 @@ contract ThirdwebFactory is TWAccessControl {
 
     /// @dev Deploys a proxy that points to the given implementation.
     function deployProxyToImplementation(address _implementation, bytes memory _data) external {
-
         require(approvedForDeployment[_implementation], "implementation not approved");
 
         bytes32 moduleType = IThirdwebModule(_implementation).moduleType();
@@ -79,8 +76,11 @@ contract ThirdwebFactory is TWAccessControl {
      *  @dev Deploys a proxy at a deterministic address by taking in `salt` as a parameter.
      *       Proxy points to the latest version of the given module type.
      */
-    function deployProxyDeterministic(bytes32 _moduleType, bytes memory _data, bytes32 _salt) external {
-
+    function deployProxyDeterministic(
+        bytes32 _moduleType,
+        bytes memory _data,
+        bytes32 _salt
+    ) external {
         address implementation = modules[_moduleType][currentModuleVersion[_moduleType]];
 
         bytes memory proxyBytecode = abi.encodePacked(
@@ -98,10 +98,7 @@ contract ThirdwebFactory is TWAccessControl {
     /// @dev Lets a contract admin set the address of a module type x version.
     function addModuleImplementation(bytes32 _moduleType, address _implementation) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "not admin.");
-        require(
-            IThirdwebModule(_implementation).moduleType() == _moduleType,
-            "invalid module type."
-        );
+        require(IThirdwebModule(_implementation).moduleType() == _moduleType, "invalid module type.");
 
         currentModuleVersion[_moduleType] += 1;
         uint256 version = currentModuleVersion[_moduleType];

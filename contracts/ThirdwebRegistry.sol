@@ -4,12 +4,10 @@ pragma solidity ^0.8.0;
 import "./thirdweb-presets/TWAccessControl.sol";
 
 contract ThirdwebRegistry is TWAccessControl {
-
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
     struct Deployments {
         uint256 totalDeployments;
-        
         mapping(uint256 => address) moduleAddress;
     }
 
@@ -28,9 +26,8 @@ contract ThirdwebRegistry is TWAccessControl {
         address _moduleAddress,
         address _deployer
     ) external {
-
         require(hasRole(FACTORY_ROLE, msg.sender), "not factory");
-        
+
         uint256 id = deployments[_moduleType][_deployer].totalDeployments;
         deployments[_moduleType][_deployer].totalDeployments += 1;
 
@@ -39,11 +36,15 @@ contract ThirdwebRegistry is TWAccessControl {
         emit ModuleDeployed(_moduleType, _moduleAddress, _deployer);
     }
 
-    function getAllModulesOfType(bytes32 _moduleType, address _deployer) external view returns (address[] memory allModulesOfType) {
+    function getAllModulesOfType(bytes32 _moduleType, address _deployer)
+        external
+        view
+        returns (address[] memory allModulesOfType)
+    {
         uint256 numOfModulesOfType = deployments[_moduleType][_deployer].totalDeployments;
         allModulesOfType = new address[](numOfModulesOfType);
 
-        for(uint256 i = 0; i < numOfModulesOfType; i += 1) {
+        for (uint256 i = 0; i < numOfModulesOfType; i += 1) {
             allModulesOfType[i] = deployments[_moduleType][_deployer].moduleAddress[i];
         }
     }

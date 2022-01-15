@@ -21,8 +21,8 @@ abstract contract MulticallUpgradeable is Initializable {
         __Multicall_init_unchained();
     }
 
-    function __Multicall_init_unchained() internal onlyInitializing {
-    }
+    function __Multicall_init_unchained() internal onlyInitializing {}
+
     /**
      * @dev Receives and executes a batch of function calls on this contract.
      */
@@ -47,5 +47,6 @@ abstract contract MulticallUpgradeable is Initializable {
         (bool success, bytes memory returndata) = target.delegatecall(data);
         return AddressUpgradeable.verifyCallResult(success, returndata, "Address: low-level delegate call failed");
     }
+
     uint256[50] private __gap;
 }

@@ -33,7 +33,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../thirdweb-presets/TWCurrencyTransfers.sol";
 import "../ThirdwebFees.sol";
 
-
 contract Marketplace is
     Initializable,
     IMarketplace,
@@ -45,7 +44,6 @@ contract Marketplace is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-
     bytes32 private constant MODULE_TYPE = keccak256("MARKETPLACE");
     uint256 private constant VERSION = 1;
 
@@ -110,8 +108,8 @@ contract Marketplace is
 
     constructor(address _nativeTokenWrapper, address _thirdwebFees) TWCurrencyTransfers(_nativeTokenWrapper) {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
-    } 
-    
+    }
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         string memory _contractURI,
@@ -552,11 +550,10 @@ contract Marketplace is
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
         uint256 twFee = (_totalPayoutAmount * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
-        uint256 royalties;        
-        
+        uint256 royalties;
+
         address royaltyRecipient;
         address twFeeRecipient = thirdwebFees.getSalesFeeRecipient(address(this));
 
@@ -700,11 +697,23 @@ contract Marketplace is
         totalListings += 1;
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 

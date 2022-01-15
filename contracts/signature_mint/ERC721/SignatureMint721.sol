@@ -309,7 +309,7 @@ contract SignatureMint721 is
         transferCurrency(_req.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
         transferCurrency(_req.currency, _msgSender(), defaultSaleRecipient, totalPrice - platformFees - twFee);
     }
-    
+
     ///     =====   Low-level overrides  =====
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
