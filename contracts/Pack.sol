@@ -21,13 +21,14 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
+import "./lib/TWCurrencyTransfers.sol";
+
 contract Pack is
     IERC2981,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    TWPayments,
     ERC1155PresetUpgradeable
 {
 
@@ -41,7 +42,7 @@ contract Pack is
     string public contractURI;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -70,6 +71,30 @@ contract Pack is
         uint256 packId;
         address opener;
     }
+
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
+
+    /// @dev The address interpreted as native token of the chain.
+    address internal constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    ThirdwebFees private immutable thirdwebFees;
+
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
+
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint256 public royaltyBps;
+
+    /// @dev Emitted when the royalty recipient or fee bps is updated
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event EtherReceived(address sender, uint256 amount);
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
 
     /// @dev pack tokenId => The state of packs with id `tokenId`.
     mapping(uint256 => PackState) public packs;
@@ -119,12 +144,12 @@ contract Pack is
     constructor(
         address _vrfCoordinator,
         address _linkToken,
-        address _nativeTokenWrapper,
         address _thirdwebFees
     ) 
         VRFConsumerBase(_vrfCoordinator, _linkToken) 
-        TWPayments(_nativeTokenWrapper, _thirdwebFees)
-    {}
+    {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -139,17 +164,57 @@ contract Pack is
         // Initialize inherited contracts, most base-like -> most derived.
          __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC1155Preset_init(_contractURI);
 
         // Initialize this contract's state.
         vrfKeyHash = _keyHash;
         vrfFees = _fees;
 
+        royaltyRecipient = _royaltyReceiver;
+        royaltyBps = _royaltyBps;
+
         contractURI = _contractURI;
 
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
+    }
+
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = _royaltyBps;
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        }
     }
 
     /**
@@ -295,16 +360,6 @@ contract Pack is
     ) external onlyModuleAdmin {
         bool success = IERC20(_currency).transfer(_to, _amount);
         require(success, "failed to transfer currency.");
-    }
-
-    /// @dev Lets a module admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
-    }
-
-    /// @dev Lets a module admin set the royalty recipient.
-    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
-        _setRoyaltyRecipient(_royaltyRecipient);
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -454,7 +509,7 @@ contract Pack is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetUpgradeable, TWPayments, IERC165)
+        override(ERC1155PresetUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || ERC1155PresetUpgradeable.supportsInterface(interfaceId);
@@ -465,19 +520,9 @@ contract Pack is
         return packs[_id].uri;
     }
 
-    /// @dev Alternative function to return a token's URI
-    function tokenURI(uint256 _id) public view returns (string memory) {
-        return packs[_id].uri;
-    }
-
     /// @dev Returns the creator of a set of packs
     function creator(uint256 _packId) external view returns (address) {
         return packs[_packId].creator;
-    }
-
-    /// @dev Returns a pack for the given pack tokenId
-    function getPack(uint256 _packId) external view returns (PackState memory pack) {
-        pack = packs[_packId];
     }
 
     /// @dev Returns a pack with its underlying rewards
