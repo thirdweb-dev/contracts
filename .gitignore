@@ -10,7 +10,6 @@ scripts/reference-scripts
 cache/
 coverage/
 dist/
-lib/
 node_modules/
 typechain/
 .parcel-cache/
