@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/Proxy.sol";
-
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
