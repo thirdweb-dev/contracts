@@ -8,11 +8,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import { IThirdwebModule } from "./thirdweb-presets/IThirdwebModule.sol";
 
 contract ThirdwebFees is Ownable {
-    /// @dev Max bps in the thirdweb system
+    /// @dev Max bps in the thirdweb system.
     uint128 public constant MAX_BPS = 10_000;
 
-    /// @dev The threshold for thirdweb fees.
-    uint128 public constant maxFeeBps = 3000;
+    /// @dev The threshold for thirdweb fees. 1%
+    uint128 public constant maxFeeBps = 100;
 
     /// @dev The default royalty fee bps for thirdweb modules.
     uint256 public defaultRoyaltyFeeBps;
