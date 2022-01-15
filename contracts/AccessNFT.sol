@@ -6,9 +6,12 @@ import { ERC1155PresetUpgradeable } from "./openzeppelin-presets/ERC1155PresetUp
 
 // Meta transactions
 import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+
 
 // Royalties
 import "./royalty/TWPayments.sol";
+import "./lib/TWCurrencyTransfers.sol";
 
 // Utils
 import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
@@ -19,7 +22,6 @@ contract AccessNFT is
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    TWPayments,
     ERC1155PresetUpgradeable
 {
 
@@ -35,6 +37,8 @@ contract AccessNFT is
     /// @dev the URI for the storefront-level metadata of the contract.
     string public contractURI;
 
+    ThirdwebFees private immutable thirdwebFees;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -43,6 +47,29 @@ contract AccessNFT is
 
     /// @dev Whether AccessNFTs (where TokenState.isRedeemable == false) are transferable.
     bool public accessNftIsTransferable;
+
+    /// @dev Max bps in the thirdweb system
+    uint256 internal constant MAX_BPS = 10_000;
+
+    /// @dev The address interpreted as native token of the chain.
+    address internal constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
+
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint256 public royaltyBps;
+
+    /// @dev Emitted when the royalty recipient or fee bps is updated
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event EtherReceived(address sender, uint256 amount);
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
 
     /// @dev Whether the ERC 1155 token is a wrapped ERC 20 / 721 token.
     enum UnderlyingType {
@@ -107,7 +134,9 @@ contract AccessNFT is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+    constructor(address _thirdwebFees) {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -119,13 +148,42 @@ contract AccessNFT is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC1155Preset_init(_uri);
 
         // Initialize this contract's state.
+        royaltyRecipient = _royaltyReceiver;
+        royaltyBps = _royaltyBps;
         contractURI = _uri;
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
+    }
+
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        }
     }
 
     /**
@@ -199,9 +257,9 @@ contract AccessNFT is
     ) external whenNotPaused onlyMinterRole {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
-            "AccessNFT: Must specify equal number of config values."
+            "unequal lengths of configs."
         );
-        require(_nftURIs.length > 0, "AccessNFT: Must create at least one NFT.");
+        require(_nftURIs.length > 0, "cannot mint 0 NFTs");
 
         // Get tokenIds.
         uint256[] memory nftIds = new uint256[](_nftURIs.length);
@@ -258,14 +316,14 @@ contract AccessNFT is
         // Get redeemer
         address redeemer = _msgSender();
 
-        require(tokenState[_tokenId].isRedeemable, "AccessNFT: This token is not redeemable for access.");
+        require(tokenState[_tokenId].isRedeemable, "token not redeemable.");
         require(
             balanceOf(redeemer, _tokenId) >= _amount && _amount > 0,
-            "AccessNFT: Cannot redeem more NFTs than owned."
+            "redeeming more than owned."
         );
         require(
             block.timestamp <= lastTimeToRedeem[_tokenId] || lastTimeToRedeem[_tokenId] == 0,
-            "AccessNFT: Window to redeem access has closed."
+            "window to redeem closed."
         );
 
         // Burn NFTs of the 'unredeemed' state.
@@ -286,8 +344,8 @@ contract AccessNFT is
 
     /// @dev Lets an Access NFT creator set a limit for when the reward can be redeemed.
     function setLastTimeToRedeem(uint256 _tokenId, uint256 _secondsUntilRedeem) external {
-        require(_msgSender() == tokenState[_tokenId].creator, "AccessNFT: only the creator can call this function.");
-        require(tokenState[_tokenId].isRedeemable, "AccessNFT: can set redeem time for only redeemable NFTs.");
+        require(_msgSender() == tokenState[_tokenId].creator, "not creator.");
+        require(tokenState[_tokenId].isRedeemable, "setting redeem time for non-redeemable NFTs.");
 
         uint256 lastTimeToRedeemNFT = _secondsUntilRedeem == 0
             ? type(uint256).max
@@ -304,14 +362,14 @@ contract AccessNFT is
         emit AccessTransferabilityUpdated(_isTransferable);
     }
 
-    /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
-    }
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
-    /// @dev Lets a module admin set the royalty recipient.
-    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
-        _setRoyaltyRecipient(_royaltyRecipient);
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = _royaltyBps;
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -356,7 +414,7 @@ contract AccessNFT is
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "AccessNFT: Transfers are restricted to TRANSFER_ROLE holders"
+                "transfers restricted."
             );
         }
 
@@ -364,7 +422,7 @@ contract AccessNFT is
             if (!tokenState[ids[i]].isRedeemable && !accessNftIsTransferable) {
                 require(
                     from == address(0) || from == address(this),
-                    "AccessNFT: cannot transfer an access NFT that is redeemed"
+                    "transfers restricted on redeemed NFTs."
                 );
             }
         }
@@ -388,12 +446,11 @@ contract AccessNFT is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetUpgradeable, TWPayments)
+        override(ERC1155PresetUpgradeable)
         returns (bool)
     {
         return
             ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
-            TWPayments.supportsInterface(interfaceId) ||
             super.supportsInterface(interfaceId);
     }
 
