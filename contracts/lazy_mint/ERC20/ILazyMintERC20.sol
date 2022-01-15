@@ -55,8 +55,8 @@ interface ILazyMintERC20 {
      *  @param claimConditionAtIndex      The claim conditions at a given uid. Claim conditions
      *                                    are ordered in an ascending order by their `startTimestamp`.
      *
-     *  @param nextValidTimestampForClaim Account => uid for a claim condition => timestamp after
-     *                                    which the account can claim tokens again.
+     *  @param timestampOfLastClaim       Account => uid for a claim condition => the last timestamp at
+     *                                    which the account claimed tokens.
      */
     struct ClaimConditions {
         uint256 totalConditionCount;
