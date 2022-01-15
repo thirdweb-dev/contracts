@@ -9,21 +9,23 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
+import "./lib/TWCurrencyTransfers.sol";
+
 // Meta transactions
 import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
 import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "./royalty/TWPayments.sol";
 
 // Utils
-import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import { MulticallUpgradeable, Initializable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+
+import "./ThirdwebFees.sol";
 
 contract NFTCollection is 
     Initializable,
     ERC2771ContextUpgradeable, 
     MulticallUpgradeable,
-    TWPayments,
     ERC1155PresetUpgradeable
 {
 
@@ -34,10 +36,10 @@ contract NFTCollection is
     uint256 public nextTokenId;
 
     /// @dev Collection level metadata.
-    string public _contractURI;
+    string public contractURI;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -122,8 +124,33 @@ contract NFTCollection is
     /// @dev NFT tokenId => state of underlying ERC20 token.
     mapping(uint256 => ERC20Wrapped) public erc20WrappedTokens;
 
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
+
+    ThirdwebFees private immutable thirdwebFees;
+
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
+
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint256 public royaltyBps;
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev Emitted when the royalty recipient or fee bps is updated
+    event NewRoyaltyuRecipient(address newRoyaltyRecipient);
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event EtherReceived(address sender, uint256 amount);
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
+
     modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin.");
         _;
     }
 
@@ -131,12 +158,14 @@ contract NFTCollection is
     modifier onlyMinterRole() {
         require(
             hasRole(MINTER_ROLE, _msgSender()),
-            "NFTCollection: Only accounts with MINTER_ROLE can call this function."
+            "not minter."
         );
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+    constructor(address _thirdwebFees) {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
 
     function initialize(
         string memory _uri,
@@ -148,13 +177,41 @@ contract NFTCollection is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
-        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC1155Preset_init(_uri);
 
         // Initialize this contract's state.
-        _contractURI = _uri;
+        royaltyBps = _royaltyBps;
+        royaltyRecipient = _royaltyReceiver;
+        contractURI = _uri;
         _owner = _msgSender();
         _setupRole(TRANSFER_ROLE, _msgSender());
+    }
+
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        royaltyAmount += royaltyBps == 0 ? (salePrice * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS : 0;
     }
 
     /**
@@ -167,7 +224,7 @@ contract NFTCollection is
     /**
      * @dev Returns the address of the current owner.
      */
-    function owner() public view returns (address) {
+    function owner() external view returns (address) {
         return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
@@ -178,8 +235,8 @@ contract NFTCollection is
         uint256[] calldata _nftSupplies,
         bytes memory data
     ) public whenNotPaused onlyMinterRole returns (uint256[] memory nftIds) {
-        require(_nftURIs.length == _nftSupplies.length, "NFTCollection: Must specify equal number of config values.");
-        require(_nftURIs.length > 0, "NFTCollection: Must create at least one NFT.");
+        require(_nftURIs.length == _nftSupplies.length, "unequal lengths of configs.");
+        require(_nftURIs.length > 0, "cannot mint 0 NFTs.");
 
         // Get creator
         address tokenCreator = _msgSender();
@@ -218,10 +275,10 @@ contract NFTCollection is
         uint256 amount,
         bytes memory data
     ) public virtual override {
-        require(id < nextTokenId, "NFTCollection: cannot call this fn for creating new NFTs.");
+        require(id < nextTokenId, "cannot mint new NFTs.");
         require(
             tokenState[id].underlyingType == UnderlyingType.None,
-            "NFTCollection: cannot freely mint more of ERC20 or ERC721."
+            "cannot freely mint more ERC20 or ERC721."
         );
 
         super.mint(to, id, amount, data);
@@ -247,8 +304,8 @@ contract NFTCollection is
             }
         }
 
-        require(validIds, "NFTCollection: cannot call this fn for creating new NFTs.");
-        require(validTokenType, "NFTCollection: cannot freely mint more of ERC20 or ERC721.");
+        require(validIds, "cannot mint new NFTs.");
+        require(validTokenType, "cannot freely mint more ERC20 or ERC721.");
 
         super.mintBatch(to, ids, amounts, data);
     }
@@ -264,12 +321,12 @@ contract NFTCollection is
     ) external whenNotPaused onlyMinterRole {
         require(
             IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(),
-            "NFTCollection: Only the owner of the NFT can wrap it."
+            "not owner."
         );
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
                 IERC721(_nftContract).isApprovedForAll(_msgSender(), address(this)),
-            "NFTCollection: Must approve the contract to transfer the NFT."
+            "must approve transfer."
         );
 
         // Get token creator
@@ -299,7 +356,7 @@ contract NFTCollection is
         // Get redeemer
         address redeemer = _msgSender();
 
-        require(balanceOf(redeemer, _nftId) > 0, "NFTCollection: Cannot redeem an NFT you do not own.");
+        require(balanceOf(redeemer, _nftId) > 0, "must own token to redeem.");
 
         // Burn the native NFT token
         _burn(redeemer, _nftId, 1);
@@ -326,15 +383,15 @@ contract NFTCollection is
 
         require(
             IERC20(_tokenContract).balanceOf(tokenCreator) >= _tokenAmount,
-            "NFTCollection: Must own the amount of tokens being wrapped."
+            "owns insufficient amount."
         );
         require(
             IERC20(_tokenContract).allowance(tokenCreator, address(this)) >= _tokenAmount,
-            "NFTCollection: Must approve this contract to transfer tokens."
+            "must approve transfer."
         );
         require(
             IERC20(_tokenContract).transferFrom(tokenCreator, address(this), _tokenAmount),
-            "NFTCollection: Failed to transfer ERC20 tokens."
+            "failed to transfer tokens."
         );
 
         // Get NFT tokenId
@@ -360,7 +417,7 @@ contract NFTCollection is
         // Get redeemer
         address redeemer = _msgSender();
 
-        require(balanceOf(redeemer, _nftId) >= _amount, "NFTCollection: Cannot redeem an NFT you do not own.");
+        require(balanceOf(redeemer, _nftId) >= _amount, "must own token to redeem.");
 
         // Burn the native NFT token
         _burn(redeemer, _nftId, _amount);
@@ -372,7 +429,7 @@ contract NFTCollection is
         // Transfer the ERC20 tokens to redeemer
         require(
             IERC20(erc20WrappedTokens[_nftId].source).transfer(redeemer, amountToDistribute),
-            "NFTCollection: Failed to transfer ERC20 tokens."
+            "failed to transfer tokens."
         );
 
         emit ERC20Redeemed(redeemer, _nftId, erc20WrappedTokens[_nftId].source, amountToDistribute, _amount);
@@ -382,14 +439,14 @@ contract NFTCollection is
      *      External: setter functions
      */
 
-    /// @dev Lets a protocol admin update the royalties paid on pack sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
-    }
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
-    /// @dev Lets a module admin set the royalty recipient.
-    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
-        _setRoyaltyRecipient(_royaltyRecipient);
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = _royaltyBps;
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -403,7 +460,7 @@ contract NFTCollection is
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        _contractURI = _URI;
+        contractURI = _URI;
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -431,7 +488,7 @@ contract NFTCollection is
         if (transfersRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "NFTCollection: Transfers are restricted to or from TRANSFER_ROLE holders"
+                "transfers restricted."
             );
         }
     }
@@ -455,31 +512,15 @@ contract NFTCollection is
         public
         view
         virtual
-        override(ERC1155PresetUpgradeable, TWPayments)
+        override(ERC1155PresetUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) ||
-            ERC1155PresetUpgradeable.supportsInterface(interfaceId) ||
-            TWPayments.supportsInterface(interfaceId);
+            ERC1155PresetUpgradeable.supportsInterface(interfaceId);
     }
 
     /// @dev See EIP 1155
     function uri(uint256 _nftId) public view override returns (string memory) {
         return tokenState[_nftId].uri;
-    }
-
-    /// @dev Alternative function to return a token's URI
-    function tokenURI(uint256 _nftId) public view returns (string memory) {
-        return tokenState[_nftId].uri;
-    }
-
-    /// @dev Returns the URI for the storefront-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
-    }
-
-    /// @dev Returns the creator of an NFT
-    function creator(uint256 _nftId) external view returns (address) {
-        return tokenState[_nftId].creator;
     }
 }

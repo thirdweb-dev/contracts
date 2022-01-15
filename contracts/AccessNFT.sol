@@ -214,10 +214,10 @@ contract AccessNFT is
         uint256 amount,
         bytes memory data
     ) public virtual override {
-        require(id < nextTokenId, "NFTCollection: cannot call this fn for creating new NFTs.");
+        require(id < nextTokenId, "cannot mint new NFTs.");
         require(
             tokenState[id].underlyingType == UnderlyingType.None,
-            "NFTCollection: cannot freely mint more of ERC20 or ERC721."
+            "cannot freely mint more ERC20 or ERC721."
         );
 
         super.mint(to, id, amount, data);
@@ -232,11 +232,11 @@ contract AccessNFT is
     ) public virtual override {
         for (uint256 i = 0; i < ids.length; ++i) {
             if (ids[i] >= nextTokenId) {
-                revert("NFTCollection: cannot call this fn for creating new NFTs.");
+                revert("cannot mint new NFTs.");
             }
 
             if (tokenState[ids[i]].underlyingType != UnderlyingType.None) {
-                revert("NFTCollection: cannot freely mint more of ERC20 or ERC721.");
+                revert("cannot freely mint more ERC20 or ERC721.");
             }
         }
 
@@ -259,7 +259,7 @@ contract AccessNFT is
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
             "unequal lengths of configs."
         );
-        require(_nftURIs.length > 0, "cannot mint 0 NFTs");
+        require(_nftURIs.length > 0, "cannot mint 0 NFTs.");
 
         // Get tokenIds.
         uint256[] memory nftIds = new uint256[](_nftURIs.length);

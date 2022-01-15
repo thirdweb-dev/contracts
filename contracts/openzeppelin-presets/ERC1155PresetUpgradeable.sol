@@ -40,8 +40,8 @@ contract ERC1155PresetUpgradeable is
     ERC1155BurnableUpgradeable,
     ERC1155PausableUpgradeable
 {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     mapping(uint256 => uint256) private _totalSupply;
 
@@ -51,10 +51,7 @@ contract ERC1155PresetUpgradeable is
         __Context_init();
         __ERC721Holder_init();
         __ERC1155Holder_init();
-        __AccessControlEnumerable_init();
         __ERC1155_init(uri);
-        __ERC1155Burnable_init();
-        __ERC1155Pausable_init();
 
         __ERC1155Preset_init_unchained();
     }
@@ -89,7 +86,7 @@ contract ERC1155PresetUpgradeable is
         uint256 amount,
         bytes memory data
     ) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have minter role to mint");
+        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role");
 
         _mint(to, id, amount, data);
     }
@@ -103,7 +100,7 @@ contract ERC1155PresetUpgradeable is
         uint256[] memory amounts,
         bytes memory data
     ) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have minter role to mint");
+        require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role");
 
         _mintBatch(to, ids, amounts, data);
     }
@@ -118,7 +115,7 @@ contract ERC1155PresetUpgradeable is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have pauser role to pause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role");
         _pause();
     }
 
@@ -132,7 +129,7 @@ contract ERC1155PresetUpgradeable is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have pauser role to unpause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "must have pauser role");
         _unpause();
     }
 
