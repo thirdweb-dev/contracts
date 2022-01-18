@@ -43,13 +43,10 @@ interface ISignatureMint1155 {
     );
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
+    event NewPrimarySaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
 
-    /// @dev Emitted when a new sale recipient is set.
-    event NewDefaultSaleRecipient(address indexed recipient);
-
-    /// @dev Emitted when a new platform fee recipient is set.
-    event NewPlatformFeeRecipient(address indexed recipient);
+    /// @dev Emitted when fee on primary sales is updated.
+    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeUpdates(uint256 newFeeBps);
@@ -59,6 +56,20 @@ interface ISignatureMint1155 {
 
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
+
+    /// @dev Emitted when royalty info is updated.
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+
+    /// @dev Emitted when the contract receives ether.
+    event EtherReceived(address sender, uint256 amount);
+
+    /// @dev Emitted when accrued royalties are withdrawn from the contract.
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding

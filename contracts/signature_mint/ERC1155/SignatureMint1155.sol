@@ -9,33 +9,32 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
-import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 // Access Control + security
-import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-// Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "../../royalty/TWPayments.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../../lib/TWCurrencyTransfers.sol";
 
 // Helper interfaces
-import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+
+// Thirdweb top-level
+import "../../ThirdwebFees.sol";
 
 contract SignatureMint1155 is
     Initializable,
     ISignatureMint1155,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    TWPayments,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
@@ -44,7 +43,7 @@ contract SignatureMint1155 is
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = keccak256("SIGMINT_ERC1155");
+    bytes32 private constant MODULE_TYPE = bytes32("SIGMINT_ERC1155");
     uint256 private constant VERSION = 1;
 
     bytes32 private constant TYPEHASH =
@@ -53,21 +52,36 @@ contract SignatureMint1155 is
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    /// @dev The next token ID of the NFT to mint.
-    uint256 public nextTokenIdToMint;
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The thirdweb contract with fee related information.
+    ThirdwebFees public immutable thirdwebFees;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
-    /// @dev The adress that receives all primary sales value.
-    address public defaultSaleRecipient;
+    /// @dev The next token ID of the NFT to mint.
+    uint256 public nextTokenIdToMint;
 
     /// @dev The adress that receives all primary sales value.
-    address public defaultPlatformFeeRecipient;
+    address public primarySaleRecipient;
+
+    /// @dev The adress that receives all primary sales value.
+    address public platformFeeRecipient;
+
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
+
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint128 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
@@ -87,7 +101,7 @@ contract SignatureMint1155 is
     mapping(uint256 => uint256) public totalSupply;
 
     /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public saleRecipient;
+    mapping(uint256 => address) public saleRecipientForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -101,7 +115,9 @@ contract SignatureMint1155 is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWPayments(_nativeTokenWrapper, _thirdwebFees) {}
+    constructor(address _thirdwebFees) {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function intialize(
@@ -115,17 +131,16 @@ contract SignatureMint1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __TWPayments_init(_royaltyReceiver, _royaltyBps);
         __EIP712_init("SignatureMint1155", "1");
         __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
-        __AccessControlEnumerable_init();
         __ERC1155_init("");
+        
         // Initialize this contract's state.
-        defaultPlatformFeeRecipient = _platformFeeRecipient;
-        defaultSaleRecipient = _saleRecipient;
-        contractURI = _contractURI;
+        royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
+        platformFeeRecipient = _platformFeeRecipient;
+        primarySaleRecipient = _saleRecipient;
+        contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
         address deployer = _msgSender();
@@ -185,6 +200,40 @@ contract SignatureMint1155 is
 
     ///     =====   External functions  =====
 
+    /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    /// @dev Lets the contract accept ether.
+    receive() external payable {
+        emit EtherReceived(msg.sender, msg.value);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        }
+    }
+
     /// @dev Mints an NFT according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
@@ -209,31 +258,35 @@ contract SignatureMint1155 is
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
-        saleRecipient[_tokenId] = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient, _tokenId, false);
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
+        saleRecipientForToken[_tokenId] = _saleRecipient;
+        emit NewPrimarySaleRecipient(_saleRecipient, _tokenId, false);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
-        defaultSaleRecipient = _saleRecipient;
-        emit NewDefaultSaleRecipient(_saleRecipient);
+    function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        primarySaleRecipient = _saleRecipient;
+        emit NewPrimarySaleRecipient(_saleRecipient, 0, true);
     }
 
-    /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setDefaultPlatformFeeRecipient(address _platformFeeRecipient) external onlyModuleAdmin {
-        defaultPlatformFeeRecipient = _platformFeeRecipient;
-        emit NewPlatformFeeRecipient(_platformFeeRecipient);
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = uint128(_royaltyBps);
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
 
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
-    }
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-    /// @dev Lets a module admin set the royalty recipient.
-    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
-        _setRoyaltyRecipient(_royaltyRecipient);
+        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeRecipient = _platformFeeRecipient;
+
+        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -335,11 +388,11 @@ contract SignatureMint1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
+        address recipient = saleRecipientForToken[_tokenId] == address(0) ? primarySaleRecipient : saleRecipientForToken[_tokenId];
 
-        transferCurrency(_req.currency, _msgSender(), defaultPlatformFeeRecipient, platformFees);
-        transferCurrency(_req.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
+        TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
+        TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     ///     =====   Low-level overrides  =====
@@ -407,7 +460,7 @@ contract SignatureMint1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, TWPayments)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable)
         returns (bool)
     {
         return
