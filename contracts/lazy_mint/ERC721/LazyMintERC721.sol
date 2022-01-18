@@ -23,6 +23,7 @@ import "../../lib/TWCurrencyTransfers.sol";
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
 import "../../ThirdwebFees.sol";
@@ -497,13 +498,12 @@ contract LazyMintERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable)
+        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return
             super.supportsInterface(interfaceId) ||
-            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
-            ERC721EnumerableUpgradeable.supportsInterface(interfaceId);
+            type(IERC2981).interfaceId == interfaceId;
     }
 
     function _msgSender()

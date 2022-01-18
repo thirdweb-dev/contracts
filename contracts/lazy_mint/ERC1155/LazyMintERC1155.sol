@@ -4,35 +4,34 @@ pragma solidity ^0.8.0;
 // Interface
 import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
 
-// Royalties
-import "../../royalty/TWPayments.sol";
-
 // Token
-import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
 // Access Control + security
-import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import { MulticallUpgradeable } from "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../../lib/TWCurrencyTransfers.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+
+// Thirdweb top-level
+import "../../ThirdwebFees.sol";
 
 contract LazyMintERC1155 is
     Initializable,
     ILazyMintERC1155,
     ReentrancyGuardUpgradeable,
-    TWPayments,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
@@ -40,32 +39,43 @@ contract LazyMintERC1155 is
 {
     using StringsUpgradeable for uint256;
 
-    /// @dev Returns the module type of the contract.
-    bytes32 public constant MODULE_TYPE = bytes32("BUNDLE_DROP");
+    bytes32 private constant MODULE_TYPE = bytes32("BUNDLE_DROP");
+    uint256 private constant VERSION = 1;
 
-    /// @dev Returns the version of the contract.
-    uint256 public constant VERSION = 1;
+    /// @dev Only TRANSFER_ROLE holders can participate in transfers, when transfers are restricted.
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev Only MINTER_ROLE holders can lazy mint NFTs (i.e. can call functions prefixed with `lazyMint`).
-    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The thirdweb contract with fee related information.
+    ThirdwebFees public immutable thirdwebFees;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
+    // @dev The next token ID of the NFT to "lazy mint".
+    uint256 public nextTokenIdToMint;
+
     /// @dev The adress that receives all primary sales value.
-    address public defaultSaleRecipient;
+    address public primarySaleRecipient;
 
     /// @dev The adress that receives all primary sales value.
     address public platformFeeRecipient;
 
-    /// @dev The next token ID of the NFT to "lazy mint".
-    uint256 public nextTokenIdToMint;
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
+
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint128 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint256 public platformFeeBps;
+    uint128 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
@@ -96,10 +106,24 @@ contract LazyMintERC1155 is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees)
-        TWPayments(_nativeTokenWrapper, _thirdwebFees)
+    constructor(address _thirdwebFees)
         initializer
-    {}
+    {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        }
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -113,13 +137,14 @@ contract LazyMintERC1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __TWPayments_init(_royaltyReceiver, uint96(_royaltyBps));
         __ERC2771Context_init_unchained(_trustedForwarder);
         __ERC1155_init_unchained("");
 
         // Initialize this contract's state.
-        defaultSaleRecipient = _saleRecipient;
+        royaltyRecipient = _royaltyReceiver;
+        royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
+        primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
@@ -131,6 +156,16 @@ contract LazyMintERC1155 is
     }
 
     ///     =====   Public functions  =====
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
 
     /**
      * @dev Returns the address of the current owner.
@@ -164,6 +199,27 @@ contract LazyMintERC1155 is
     }
 
     ///     =====   External functions  =====
+
+    /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    /// @dev Lets the contract accept ether.
+    receive() external payable {
+        emit EtherReceived(msg.sender, msg.value);
+    }
 
     /**
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
@@ -221,34 +277,29 @@ contract LazyMintERC1155 is
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
-        defaultSaleRecipient = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient, type(uint256).max, true);
+    function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+        primarySaleRecipient = _saleRecipient;
+        emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
-    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
-        saleRecipient[_tokenId] = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient, _tokenId, false);
-    }
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        _setRoyaltyBps(_royaltyBps);
-    }
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = uint128(_royaltyBps);
 
-    /// @dev Lets a module admin set the royalty recipient.
-    function setRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
-        _setRoyaltyRecipient(_royaltyRecipient);
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        platformFeeBps = uint120(_platformFeeBps);
+        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeRecipient = _platformFeeRecipient;
 
-        emit PrimarySalesFeeUpdates(_platformFeeBps);
+        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -394,15 +445,15 @@ contract LazyMintERC1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
-        transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
-        transferCurrency(
+        address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
+        TWCurrencyTransfers.transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
+        TWCurrencyTransfers.transferCurrency(
             _mintCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        TWCurrencyTransfers.transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -484,17 +535,17 @@ contract LazyMintERC1155 is
 
     ///     =====   Low level overrides  =====
 
+    /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, TWPayments)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return
-            ERC1155Upgradeable.supportsInterface(interfaceId) ||
-            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
-            TWPayments.supportsInterface(interfaceId);
+            super.supportsInterface(interfaceId) ||
+            type(IERC2981).interfaceId == interfaceId;
     }
 
     function _msgSender()
