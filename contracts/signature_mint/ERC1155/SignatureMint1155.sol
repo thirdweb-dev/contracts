@@ -171,8 +171,11 @@ contract SignatureMint1155 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri, uint256 _amount) external onlyMinter {
-
+    function mintTo(
+        address _to,
+        string calldata _uri,
+        uint256 _amount
+    ) external onlyMinter {
         uint256 tokenIdToMint = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
@@ -183,16 +186,12 @@ contract SignatureMint1155 is
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-    {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
         uint256 tokenIdToMint;
-        if(_req.tokenId == type(uint).max) {
+        if (_req.tokenId == type(uint256).max) {
             tokenIdToMint = nextTokenIdToMint;
             nextTokenIdToMint += 1;
         } else {
@@ -270,9 +269,13 @@ contract SignatureMint1155 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
-        
-        if(bytes(_tokenURI[_tokenId]).length == 0) {
+    function _mintTo(
+        address _to,
+        string calldata _uri,
+        uint256 _tokenId,
+        uint256 _amount
+    ) internal {
+        if (bytes(_tokenURI[_tokenId]).length == 0) {
             require(bytes(_uri).length > 0, "empty uri.");
             _tokenURI[_tokenId] = _uri;
         }
@@ -407,14 +410,29 @@ contract SignatureMint1155 is
         override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, TWPayments)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC1155Upgradeable).interfaceId || interfaceId == type(IERC2981).interfaceId;
+        return
+            super.supportsInterface(interfaceId) ||
+            interfaceId == type(IERC1155Upgradeable).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId;
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

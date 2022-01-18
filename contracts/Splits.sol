@@ -40,7 +40,7 @@ contract Splits is
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     function initialize(
         string memory _contractURI,
-        address _trustedForwarder,        
+        address _trustedForwarder,
         address[] memory payees,
         uint256[] memory shares_
     ) external initializer {

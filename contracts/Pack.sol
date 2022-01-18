@@ -31,7 +31,6 @@ contract Pack is
     MulticallUpgradeable,
     ERC1155PresetUpgradeable
 {
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -145,9 +144,7 @@ contract Pack is
         address _vrfCoordinator,
         address _linkToken,
         address _thirdwebFees
-    ) 
-        VRFConsumerBase(_vrfCoordinator, _linkToken) 
-    {
+    ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
     }
 
@@ -160,9 +157,8 @@ contract Pack is
         uint128 _fees,
         bytes32 _keyHash
     ) external initializer {
-
         // Initialize inherited contracts, most base-like -> most derived.
-         __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
         __ERC1155Preset_init(_contractURI);
 
@@ -373,7 +369,6 @@ contract Pack is
      *   Internal functions.
      **/
 
-
     /// @dev Creates packs with rewards.
     function createPack(
         address _creator,
@@ -493,12 +488,24 @@ contract Pack is
     }
 
     /// @dev See EIP-2771
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See EIP-2771
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 

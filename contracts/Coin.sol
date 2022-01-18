@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Token
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import { ERC20PausableUpgradeable } from  "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
+import { ERC20PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
 import { ERC20VotesUpgradeable, ERC20PermitUpgradeable, ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Security
@@ -22,11 +22,10 @@ contract Coin is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC20BurnableUpgradeable,
-    ERC20PausableUpgradeable,    
+    ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-
     bytes32 private constant MODULE_TYPE = keccak256("TOKEN");
     uint256 private constant VERSION = 1;
 
@@ -55,8 +54,8 @@ contract Coin is
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder
-    ) external  initializer {
-        // Initialize inherited contracts, most base-like -> most derived.        
+    ) external initializer {
+        // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init_unchained(_trustedForwarder);
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
@@ -77,7 +76,7 @@ contract Coin is
         address _trustedForwarder,
         string memory _uri
     ) internal onlyInitializing {
-        // Initialize inherited contracts, most base-like -> most derived.        
+        // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
         __Multicall_init();
         __ERC20Permit_init(_name);
@@ -126,10 +125,7 @@ contract Coin is
         super._beforeTokenTransfer(from, to, amount);
 
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(
-                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "transfers restricted."
-            );
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }
 
@@ -195,11 +191,23 @@ contract Coin is
         contractURI = _URI;
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

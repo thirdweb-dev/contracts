@@ -152,4 +152,3 @@ contract TWPayments is IERC2981, Initializable {
         }
     }
 }
-

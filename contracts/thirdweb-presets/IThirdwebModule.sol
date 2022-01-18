@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IThirdwebModule {
-
     /// @dev Emitted when a new owner is set.
     event NewOwner(address prevOwner, address newOwner);
 

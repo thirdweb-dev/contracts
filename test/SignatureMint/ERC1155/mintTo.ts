@@ -38,21 +38,20 @@ describe("Tokens minted regularly by minter", function () {
 
   describe("Revert cases", function () {
     it("Should revert if caller does not have minter role", async () => {
-      await expect(sigMint1155.connect(accountWithoutMinterRole).mintTo(nftReceiver.address, uri, quantityToMint)).to.be.revertedWith(
-        "not minter.",
-      );
+      await expect(
+        sigMint1155.connect(accountWithoutMinterRole).mintTo(nftReceiver.address, uri, quantityToMint),
+      ).to.be.revertedWith("not minter.");
     });
 
     it("Should revert if minter tries to mint with empty uri", async () => {
-      await expect(sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, "", quantityToMint)).to.be.revertedWith(
-        "empty uri.",
-      );
-    })
+      await expect(
+        sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, "", quantityToMint),
+      ).to.be.revertedWith("empty uri.");
+    });
   });
 
   describe("Events", function () {
     it("Should emit TokenMinted with mint information", async () => {
-
       const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
 
       await expect(sigMint1155.connect(protocolAdmin).mintTo(nftReceiver.address, uri, quantityToMint))
@@ -62,7 +61,7 @@ describe("Tokens minted regularly by minter", function () {
             mintedTo: nftReceiver.address,
             tokenIdMinted: tokenIdToBeMinted,
             uri: uri,
-            quantityMinted: quantityToMint
+            quantityMinted: quantityToMint,
           }),
         );
     });
@@ -81,7 +80,6 @@ describe("Tokens minted regularly by minter", function () {
   });
 
   describe("Contract state", function () {
-
     it("Should store the relevant URI for the NFT", async () => {
       const tokenIdToBeMinted = await sigMint1155.nextTokenIdToMint();
 
