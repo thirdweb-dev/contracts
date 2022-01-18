@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Interface
 import { IMarketplace } from "./IMarketplace.sol";
-import { IWETH } from "../interfaces/IWETH.sol";
 
 // Tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,25 +11,21 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-// Access + Security
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+// Access Control + security
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 // Utils
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import { MulticallUpgradeable } from "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
+import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "../lib/TWCurrencyTransfers.sol";
+
+// Thirdweb top-level
 import "../ThirdwebFees.sol";
 
 contract Marketplace is
@@ -43,7 +38,7 @@ contract Marketplace is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = keccak256("MARKETPLACE");
+    bytes32 private constant MODULE_TYPE = bytes32("MARKETPLACE");
     uint256 private constant VERSION = 1;
 
     /// @dev Access control: aditional roles.
@@ -126,8 +121,6 @@ contract Marketplace is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
-        __AccessControlEnumerable_init();
 
         // Initialize this contract's state.
         contractURI = _contractURI;
