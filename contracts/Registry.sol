@@ -19,7 +19,7 @@ contract Registry is Ownable {
     /// @dev service provider / admin treasury
     address public treasury;
 
-    /// @dev `Forwarder` for meta-transacitons
+    /// @dev `Forwarder` for meta-transactions
     address public forwarder;
 
     /// @dev The Create2 `ProtocolControl` contract factory.
