@@ -30,7 +30,7 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { MulticallUpgradeable } from "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import "../thirdweb-presets/TWCurrencyTransfers.sol";
+import "../lib/TWCurrencyTransfers.sol";
 import "../ThirdwebFees.sol";
 
 contract Marketplace is
@@ -38,7 +38,6 @@ contract Marketplace is
     IMarketplace,
     IERC1155Receiver,
     IERC721Receiver,
-    TWCurrencyTransfers,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -48,7 +47,13 @@ contract Marketplace is
     uint256 private constant VERSION = 1;
 
     /// @dev Access control: aditional roles.
-    bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
+    bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The address of the native token wrapper contract.
+    address private immutable nativeTokenWrapper;
 
     ThirdwebFees public immutable thirdwebFees;
 
@@ -106,8 +111,9 @@ contract Marketplace is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) TWCurrencyTransfers(_nativeTokenWrapper) {
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
+        nativeTokenWrapper = _nativeTokenWrapper;
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -452,13 +458,15 @@ contract Marketplace is
                 listings[_targetListing.listingId] = _targetListing;
             }
 
+            address _nativeTokenWrapper = nativeTokenWrapper;
+
             // Payout previous highest bid.
             if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
-                transferCurrency(_targetListing.currency, address(this), currentWinningBid.offeror, currentOfferAmount);
+                TWCurrencyTransfers.transferCurrency(_targetListing.currency, address(this), currentWinningBid.offeror, currentOfferAmount, _nativeTokenWrapper);
             }
 
             // Collect incoming bid
-            transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount);
+            TWCurrencyTransfers.transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount, _nativeTokenWrapper);
 
             emit NewOffer(
                 _targetListing.listingId,
@@ -573,10 +581,12 @@ contract Marketplace is
         } catch {}
 
         // Distribute price to token owner
-        transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut);
-        transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties);
-        transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee);
-        transferCurrency(_currencyToUse, _payer, _payee, _totalPayoutAmount - (marketCut + royalties + twFee));
+        address _nativeTokenWrapper = nativeTokenWrapper;
+
+        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut, _nativeTokenWrapper);
+        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties, _nativeTokenWrapper);
+        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee, _nativeTokenWrapper);
+        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, _payee, _totalPayoutAmount - (marketCut + royalties + twFee), _nativeTokenWrapper);
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.
