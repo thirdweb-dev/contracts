@@ -27,6 +27,35 @@ library TWCurrencyTransfers {
         }
     }
 
+    /// @dev Transfers a given amount of currency. (With native token wrapping)
+    function transferCurrency(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount,
+        address _nativeTokenWrapper
+    ) internal {
+        if (_amount == 0) {
+            return;
+        }
+
+        if (_currency == NATIVE_TOKEN) {
+            if (_from == address(this)) {
+                // withdraw from weth then transfer withdrawn native token to recipient
+                IWETH(_nativeTokenWrapper).withdraw(_amount);
+                safeTransferNativeToken(_to, _amount, _nativeTokenWrapper);
+            } else if (_to == address(this)) {
+                // store native currency in weth
+                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
+                IWETH(_nativeTokenWrapper).deposit{ value: _amount }();
+            } else {
+                safeTransferNativeToken(_to, _amount, _nativeTokenWrapper);
+            }
+        } else {
+            safeTransferERC20(_currency, _from, _to, _amount);
+        }
+    }
+
     /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
     function safeTransferERC20(
         address _currency,
@@ -50,5 +79,14 @@ library TWCurrencyTransfers {
     function safeTransferNativeToken(address to, uint256 value) internal {
         (bool success, ) = to.call{ value: value }("");
         require(success, "native token transfer failed");
+    }
+
+    /// @dev Transfers `amount` of native token to `to`. (With native token wrapping)
+    function safeTransferNativeToken(address to, uint256 value, address _nativeTokenWrapper) internal {
+        (bool success, ) = to.call{ value: value }("");
+        if (!success) {
+            IWETH(_nativeTokenWrapper).deposit{ value: value }();
+            safeTransferERC20(_nativeTokenWrapper, address(this), to, value);
+        }
     }
 }
