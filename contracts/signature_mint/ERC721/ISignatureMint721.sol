@@ -39,19 +39,30 @@ interface ISignatureMint721 {
     );
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient);
-
-    /// @dev Emitted when a new platform fee recipient is set.
-    event NewPlatformFeeRecipient(address indexed recipient);
+    event NewPrimarySaleRecipient(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(uint256 newFeeBps);
+    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
 
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
+
+    /// @dev Emitted when royalty info is updated.
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+
+    /// @dev Emitted when the contract receives ether.
+    event EtherReceived(address sender, uint256 amount);
+
+    /// @dev Emitted when accrued royalties are withdrawn from the contract.
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding
