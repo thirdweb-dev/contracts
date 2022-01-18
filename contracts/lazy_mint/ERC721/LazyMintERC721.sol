@@ -200,6 +200,7 @@ contract LazyMintERC721 is
             _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
+        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
