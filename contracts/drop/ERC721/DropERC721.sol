@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ILazyMintERC721 } from "./ILazyMintERC721.sol";
+import { IDropERC721 } from "./IDropERC721.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -27,9 +27,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "../../ThirdwebFees.sol";
 
-contract LazyMintERC721 is
+contract DropERC721 is
     Initializable,
-    ILazyMintERC721,
+    IDropERC721,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

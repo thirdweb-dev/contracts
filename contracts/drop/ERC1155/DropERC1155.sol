@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ILazyMintERC1155 } from "./ILazyMintERC1155.sol";
+import { IDropERC1155 } from "./IDropERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -28,9 +28,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "../../ThirdwebFees.sol";
 
-contract LazyMintERC1155 is
+contract DropERC1155 is
     Initializable,
-    ILazyMintERC1155,
+    IDropERC1155,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ILazyMintERC20 } from "./ILazyMintERC20.sol";
+import { IDropERC20 } from "./IDropERC20.sol";
 
 // Base
 import "../../Coin.sol";
@@ -21,7 +21,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Thirdweb top-level
 import "../../ThirdwebFees.sol";
 
-contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
+contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, Coin {
     bytes32 private constant MODULE_TYPE = bytes32("DROP_TOKEN");
     uint128 private constant VERSION = 1;
 

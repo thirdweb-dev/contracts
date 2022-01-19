@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
  *  defined in that time window's claim conditions.
  */
 
-interface ILazyMintERC20 {
+interface IDropERC20 {
     /**
      *  @notice The restrictions that make up a claim condition.
      *
