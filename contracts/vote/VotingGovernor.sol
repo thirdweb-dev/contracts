@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { GovernorUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
-import { GovernorSettingsUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
-import { GovernorCountingSimpleUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import { GovernorVotesUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
-import { GovernorVotesQuorumFractionUpgradeable } from "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
-import { ERC721HolderUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-import { ERC1155HolderUpgradeable, ERC1155ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
-import { ERC20VotesUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+// Governance
+import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+
+// Meta transactions
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+
+// Utils
+import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-
-// Upgradeability
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract VotingGovernor is
     Initializable,
@@ -31,7 +32,7 @@ contract VotingGovernor is
     GovernorVotesQuorumFractionUpgradeable
 {
     bytes32 private constant MODULE_TYPE = keccak256("VOTE");
-    uint256 private constant VERSION = 1;
+    uint256 public constant VERSION = 1;
 
     string public contractURI;
     uint256 public proposalIndex;
@@ -67,11 +68,8 @@ contract VotingGovernor is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
-        __ERC721Holder_init();
-        __ERC1155Holder_init();
         __Governor_init(_name);
         __GovernorSettings_init(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold);
-        __GovernorCountingSimple_init();
         __GovernorVotes_init(ERC20VotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_initialVoteQuorumFraction);
 
@@ -83,12 +81,6 @@ contract VotingGovernor is
     function moduleType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
-
-    // TODO: version name clash
-    /// @dev Returns the version of the contract.
-    // function version() external pure returns (uint256) {
-    //     return VERSION;
-    // }
 
     /**
      * @dev See {IGovernor-propose}.
