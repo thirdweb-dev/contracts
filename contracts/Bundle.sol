@@ -22,7 +22,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "./ThirdwebFees.sol";
 
-contract NFTCollection is
+contract Bundle is
     IERC2981,
     Initializable,
     ERC2771ContextUpgradeable,
