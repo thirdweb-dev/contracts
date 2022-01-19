@@ -52,7 +52,7 @@ contract TokenERC20 is
         string memory _contractURI,
         address _trustedForwarder
     ) external initializer {
-        __Coin_init(
+        __TokenERC20_init(
             _name,
             _symbol,
             _trustedForwarder,
@@ -60,7 +60,7 @@ contract TokenERC20 is
         );
     }
 
-    function __Coin_init(
+    function __TokenERC20_init(
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
@@ -71,10 +71,10 @@ contract TokenERC20 is
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
 
-        __Coin_init_unchained(_uri);
+        __TokenERC20_init_unchained(_uri);
     }
 
-    function __Coin_init_unchained(string memory _uri) internal onlyInitializing {
+    function __TokenERC20_init_unchained(string memory _uri) internal onlyInitializing {
         // Initialize this contract's state.
         contractURI = _uri;
 

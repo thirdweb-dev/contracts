@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { IDropERC20 } from "./IDropERC20.sol";
 
 // Base
-import "../../Coin.sol";
+import "../../token/TokenERC20.sol";
 
 // Security
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -21,7 +21,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Thirdweb top-level
 import "../../ThirdwebFees.sol";
 
-contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, Coin {
+contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     bytes32 private constant MODULE_TYPE = bytes32("DROP_TOKEN");
     uint128 private constant VERSION = 1;
 
@@ -68,7 +68,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, Coin {
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-        __Coin_init(_name, _symbol, _trustedForwarder, _contractURI);
+        __TokenERC20_init(_name, _symbol, _trustedForwarder, _contractURI);
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
