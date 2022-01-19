@@ -180,7 +180,11 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
-    function claim(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
+    function claim(
+        address _receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external payable nonReentrant {
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
         // Get the claim conditions.
@@ -278,7 +282,6 @@ contract LazyMintERC721 is
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
     ) public view {
-
         ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
 
         require(_quantity > 0 && _quantity <= _claimCondition.quantityLimitPerTransaction, "invalid quantity claimed.");
@@ -286,6 +289,7 @@ contract LazyMintERC721 is
             _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
+        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
@@ -319,7 +323,11 @@ contract LazyMintERC721 is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(address _to, uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
+    function transferClaimedTokens(
+        address _to,
+        uint256 _claimConditionIndex,
+        uint256 _quantityBeingClaimed
+    ) internal {
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
