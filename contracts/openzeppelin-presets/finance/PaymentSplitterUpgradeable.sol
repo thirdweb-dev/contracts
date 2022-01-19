@@ -8,6 +8,9 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+// Thirdweb top-level
+import "../../ThirdwebFees.sol";
+
 /**
  * Changelog:
  * 1. Remove add payees and shares in the initialization function, so inherited class is responsible for adding.
@@ -15,6 +18,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  *    initialization.
  * 3. Add distribute(...) to distribute all owed amount to all payees.
  * 4. Add payeeCount() view to returns the number of payees.
+ * 5. Take a fee on every `release`.
  */
 
 /**
@@ -43,12 +47,22 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     uint256 private _totalShares;
     uint256 private _totalReleased;
 
+    /// @dev The thirdweb contract with fee related information.
+    ThirdwebFees public immutable thirdwebFees;
+    
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
+
     mapping(address => uint256) private _shares;
     mapping(address => uint256) private _released;
     address[] private _payees;
 
     mapping(IERC20Upgradeable => uint256) private _erc20TotalReleased;
     mapping(IERC20Upgradeable => mapping(address => uint256)) private _erc20Released;
+
+    constructor(address _thirdwebFees) {
+        thirdwebFees = ThirdwebFees(_thirdwebFees);
+    }
 
     /**
      * @dev Creates an instance of `PaymentSplitter` where each account in `payees` is assigned the number of shares at
@@ -144,10 +158,14 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
+        uint256 splitsFee = (payment * thirdwebFees.getSplitsFeeBps(address(this))) / MAX_BPS;
+        address splitsFeeRecipient = thirdwebFees.getSplitsFeeRecipient(address(this));
+
         _released[account] += payment;
         _totalReleased += payment;
 
-        AddressUpgradeable.sendValue(account, payment);
+        AddressUpgradeable.sendValue(payable(splitsFeeRecipient), splitsFee);
+        AddressUpgradeable.sendValue(account, payment - splitsFee);
         emit PaymentReleased(account, payment);
     }
 
@@ -164,10 +182,14 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
+        uint256 splitsFee = (payment * thirdwebFees.getSplitsFeeBps(address(this))) / MAX_BPS;
+        address splitsFeeRecipient = thirdwebFees.getSplitsFeeRecipient(address(this));
+
         _erc20Released[token][account] += payment;
         _erc20TotalReleased[token] += payment;
 
-        SafeERC20Upgradeable.safeTransfer(token, account, payment);
+        SafeERC20Upgradeable.safeTransfer(token, splitsFeeRecipient, splitsFee);
+        SafeERC20Upgradeable.safeTransfer(token, account, payment - splitsFee);
         emit ERC20PaymentReleased(token, account, payment);
     }
 

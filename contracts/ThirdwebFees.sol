@@ -26,6 +26,12 @@ contract ThirdwebFees is Ownable {
     /// @dev The default sales fee recipient for thirdweb modules.
     address public defaultSalesFeeRecipient;
 
+    /// @dev The default splits fee bps for thirdweb modules.
+    uint256 public defaultSplitsFeeBps;
+
+    /// @dev The default splits fee recipient for thirdweb modules.
+    address public defaultSplitsFeeRecipient;
+
     /// @dev Mapping from particular module instance => whether thirdweb takes no fees
     mapping(address => bool) public takeNoFee;
 
@@ -55,7 +61,8 @@ contract ThirdwebFees is Ownable {
 
     enum FeeType {
         Sales,
-        Royalty
+        Royalty,
+        Splits
     }
 
     modifier onlyValidFee(uint256 _feeBps) {
@@ -67,12 +74,44 @@ contract ThirdwebFees is Ownable {
         uint256 _defaultRoyaltyFeeBps,
         address _defaultRoyaltyFeeRecipient,
         uint256 _defaultSalesFeeBps,
-        address _defaultSalesFeeRecipient
+        address _defaultSalesFeeRecipient,
+        uint256 _defaultSplitsFeeBps,
+        address _defaultSplitsFeeRecipient
     ) Ownable() {
         defaultRoyaltyFeeBps = _defaultRoyaltyFeeBps;
         defaultRoyaltyFeeRecipient = _defaultRoyaltyFeeRecipient;
         defaultSalesFeeBps = _defaultSalesFeeBps;
         defaultSalesFeeRecipient = _defaultSalesFeeRecipient;
+        defaultSplitsFeeBps = _defaultSplitsFeeBps;
+        defaultSplitsFeeRecipient = _defaultSplitsFeeRecipient;
+    }
+
+    /// @dev Returns the royalty bps for a module address
+    function getSplitsFeeBps(address _module) external view returns (uint256) {
+        bytes32 moduleType = IThirdwebModule(_module).moduleType();
+
+        if (takeNoFee[_module]) {
+            return 0;
+        } else if (feeBpsByModuleInstance[_module][FeeType.Splits] > 0) {
+            return feeBpsByModuleInstance[_module][FeeType.Splits];
+        } else if (feeBpsByModuleType[moduleType][FeeType.Splits] > 0) {
+            return feeBpsByModuleType[moduleType][FeeType.Splits];
+        } else {
+            return defaultSplitsFeeBps;
+        }
+    }
+
+    /// @dev Returns the royalty fee recipient for a module address
+    function getSplitsFeeRecipient(address _module) external view returns (address) {
+        bytes32 moduleType = IThirdwebModule(_module).moduleType();
+
+        if (feeRecipientByModuleInstance[_module][FeeType.Splits] != address(0)) {
+            return feeRecipientByModuleInstance[_module][FeeType.Splits];
+        } else if (feeRecipientByModuleType[moduleType][FeeType.Splits] != address(0)) {
+            return feeRecipientByModuleType[moduleType][FeeType.Splits];
+        } else {
+            return defaultSplitsFeeRecipient;
+        }
     }
 
     /// @dev Returns the royalty bps for a module address
@@ -138,7 +177,7 @@ contract ThirdwebFees is Ownable {
         FeeType _feeType
     ) external onlyOwner onlyValidFee(_feeBps) {
         feeBpsByModuleType[_moduleType][_feeType] = _feeBps;
-        emit FeeForModuleType(_feeBps, _moduleType, FeeType.Royalty);
+        emit FeeForModuleType(_feeBps, _moduleType, _feeType);
     }
 
     /// @dev Lets the owner set royalty fee bps for a particular module instance.
@@ -148,7 +187,7 @@ contract ThirdwebFees is Ownable {
         FeeType _feeType
     ) external onlyOwner onlyValidFee(_feeBps) {
         feeBpsByModuleInstance[_moduleInstance][_feeType] = _feeBps;
-        emit FeeForModuleInstance(_feeBps, _moduleInstance, FeeType.Royalty);
+        emit FeeForModuleInstance(_feeBps, _moduleInstance, _feeType);
     }
 
     /// @dev Lets the owner set sales fee recipient for module type.
