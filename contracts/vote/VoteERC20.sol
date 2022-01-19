@@ -20,7 +20,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpg
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract VotingGovernor is
+contract VoteERC20 is
     Initializable,
     ERC2771ContextUpgradeable,
     ERC721HolderUpgradeable,
