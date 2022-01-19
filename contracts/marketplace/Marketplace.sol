@@ -106,7 +106,7 @@ contract Marketplace is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) {
+    constructor(address _nativeTokenWrapper, address _thirdwebFees) initializer {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
         nativeTokenWrapper = _nativeTokenWrapper;
     }

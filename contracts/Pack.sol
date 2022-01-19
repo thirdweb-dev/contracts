@@ -152,7 +152,10 @@ contract Pack is
         address _vrfCoordinator,
         address _linkToken,
         address _thirdwebFees
-    ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
+    ) 
+        VRFConsumerBase(_vrfCoordinator, _linkToken)
+        initializer
+    {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
     }
 

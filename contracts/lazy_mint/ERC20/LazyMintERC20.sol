@@ -52,7 +52,7 @@ contract LazyMintERC20 is ILazyMintERC20, ReentrancyGuardUpgradeable, Coin {
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    constructor(address _thirdwebFees) {
+    constructor(address _thirdwebFees) initializer {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
     }
 

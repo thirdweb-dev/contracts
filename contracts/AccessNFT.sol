@@ -139,7 +139,7 @@ contract AccessNFT is
         _;
     }
 
-    constructor(address _thirdwebFees) {
+    constructor(address _thirdwebFees) initializer {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
     }
 
