@@ -8,20 +8,19 @@ import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
 // Meta transactions
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
-
-// Royalties
-import "./royalty/TWPayments.sol";
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "./lib/TWCurrencyTransfers.sol";
 
 // Helper interfaces
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-import "./lib/TWCurrencyTransfers.sol";
+// Thirdweb top-level
+import "./ThirdwebFees.sol";
 
 contract Pack is
     IERC2981,
@@ -31,20 +30,38 @@ contract Pack is
     MulticallUpgradeable,
     ERC1155PresetUpgradeable
 {
+    bytes32 private constant MODULE_TYPE = bytes32("PACK");
+    uint256 private constant VERSION = 1;
+
+    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
+    /// @dev Max bps in the thirdweb system
+    uint256 private constant MAX_BPS = 10_000;
+
+    /// @dev The address interpreted as native token of the chain.
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev The thirdweb contract with fee related information.
+    ThirdwebFees public immutable thirdwebFees;
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
     /// @dev The token Id of the next token to be minted.
     uint256 public nextTokenId;
 
-    /// @dev Collection level metadata.
-    string public contractURI;
+    /// @dev The recipient of who gets the royalty.
+    address public royaltyRecipient;
 
-    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev The percentage of royalty how much royalty in basis points.
+    uint256 public royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public transfersRestricted;
+
+    /// @dev Collection level metadata.
+    string public contractURI;
 
     /// @dev Chainlink VRF variables.
     uint256 public vrfFees;
@@ -70,30 +87,6 @@ contract Pack is
         uint256 packId;
         address opener;
     }
-
-    /// @dev Max bps in the thirdweb system
-    uint256 private constant MAX_BPS = 10_000;
-
-    /// @dev The address interpreted as native token of the chain.
-    address internal constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    ThirdwebFees private immutable thirdwebFees;
-
-    /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
-
-    /// @dev The percentage of royalty how much royalty in basis points.
-    uint256 public royaltyBps;
-
-    /// @dev Emitted when the royalty recipient or fee bps is updated
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
-    event EtherReceived(address sender, uint256 amount);
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
-    );
 
     /// @dev pack tokenId => The state of packs with id `tokenId`.
     mapping(uint256 => PackState) public packs;
@@ -135,8 +128,23 @@ contract Pack is
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
 
+    /// @dev Emitted when royalty info is updated.
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+
+    /// @dev Emitted when the contract receives ether.
+    event EtherReceived(address sender, uint256 amount);
+
+    /// @dev Emitted when accrued royalties are withdrawn from the contract.
+    event FundsWithdrawn(
+        address indexed paymentReceiver,
+        address feeRecipient,
+        uint256 totalAmount,
+        uint256 feeCollected
+    );
+
+    /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
         _;
     }
 
@@ -159,7 +167,6 @@ contract Pack is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
         __ERC1155Preset_init(_contractURI);
 
         // Initialize this contract's state.
@@ -168,54 +175,27 @@ contract Pack is
 
         royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
-
         contractURI = _contractURI;
 
-        _owner = _msgSender();
-        _setupRole(TRANSFER_ROLE, _msgSender());
-    }
-
-    function withdrawFunds(address _currency) external {
-        address recipient = royaltyRecipient;
-        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
-
-        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
-            ? address(this).balance
-            : IERC20(_currency).balanceOf(_currency);
-        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
-
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
-
-        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
-    }
-
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
-
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
-    }
-
-    /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = address(this);
-        if (royaltyBps > 0) {
-            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
-        }
+        address deployer = _msgSender();
+        _owner = deployer;
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
     }
 
     /**
      *      Public functions
      */
+    
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
 
     /**
      * @dev Returns the address of the current owner.
@@ -281,6 +261,35 @@ contract Pack is
     /**
      *   External functions.
      **/
+    
+    /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
+    function withdrawFunds(address _currency) external {
+        address recipient = royaltyRecipient;
+        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+
+        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_currency).balanceOf(_currency);
+        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+
+        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+    }
+
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = address(this);
+        if (royaltyBps > 0) {
+            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+        }
+    }
 
     /// @dev Lets a pack owner request to open a single pack.
     function openPack(uint256 _packId) external whenNotPaused {
@@ -343,19 +352,19 @@ contract Pack is
         emit NewOwner(_prevOwner, _newOwner);
     }
 
+    /// @dev Lets a module admin update the royalties paid on secondary token sales.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = _royaltyBps;
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+    }
+
     /// @dev Lets a module admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
-    }
-
-    /// @dev Lets a module admin transfer ERC20 from the contract.
-    function transferERC20(
-        address _currency,
-        address _to,
-        uint256 _amount
-    ) external onlyModuleAdmin {
-        bool success = IERC20(_currency).transfer(_to, _amount);
-        require(success, "failed to transfer currency.");
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -391,7 +400,9 @@ contract Pack is
         require(sumOfRewards % _rewardsPerOpen == 0, "Pack: invalid number of rewards per open.");
 
         // Get pack tokenId and total supply.
-        uint256 packId = _newPackId();
+        uint256 packId = nextTokenId;
+        nextTokenId += 1;
+
         uint256 packTotalSupply = sumOfRewards / _rewardsPerOpen;
 
         // Store pack state.
@@ -474,12 +485,6 @@ contract Pack is
         }
     }
 
-    /// @dev Returns and then increments `currentTokenId`
-    function _newPackId() internal returns (uint256 tokenId) {
-        tokenId = nextTokenId;
-        nextTokenId += 1;
-    }
-
     /// @dev Returns the sum of all elements in the array
     function _sumArr(uint256[] memory arr) internal pure returns (uint256 sum) {
         for (uint256 i = 0; i < arr.length; i += 1) {
@@ -513,13 +518,9 @@ contract Pack is
      *   Rest: view functions
      **/
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155PresetUpgradeable, IERC165)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId) || ERC1155PresetUpgradeable.supportsInterface(interfaceId);
+    /// @dev See EIP 165
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
     /// @dev See EIP 1155
