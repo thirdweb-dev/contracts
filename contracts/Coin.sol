@@ -2,20 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Token
-import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import { ERC20PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
-import { ERC20VotesUpgradeable, ERC20PermitUpgradeable, ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Security
-import { AccessControlEnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Meta transactions
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import { MulticallUpgradeable } from "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
 contract Coin is
     Initializable,
@@ -26,13 +24,11 @@ contract Coin is
     ERC20VotesUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = keccak256("TOKEN");
+    bytes32 private constant MODULE_TYPE = bytes32("TOKEN");
     uint256 private constant VERSION = 1;
 
     bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-
-    /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
@@ -46,6 +42,7 @@ contract Coin is
         _;
     }
 
+    /// @dev Emitted when restrictions on transfers is updated.
     event RestrictedTransferUpdated(bool transferable);
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -55,19 +52,12 @@ contract Coin is
         string memory _contractURI,
         address _trustedForwarder
     ) external initializer {
-        // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init_unchained(_trustedForwarder);
-        __ERC20Permit_init(_name);
-        __ERC20_init_unchained(_name, _symbol);
-
-        // Initialize this contract's state.
-        contractURI = _contractURI;
-
-        address deployer = _msgSender();
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(PAUSER_ROLE, deployer);
+        __Coin_init(
+            _name,
+            _symbol,
+            _trustedForwarder,
+            _contractURI
+        );
     }
 
     function __Coin_init(
@@ -77,13 +67,9 @@ contract Coin is
         string memory _uri
     ) internal onlyInitializing {
         // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init(_trustedForwarder);
-        __Multicall_init();
+        __ERC2771Context_init_unchained(_trustedForwarder);
         __ERC20Permit_init(_name);
-        __ERC20_init(_name, _symbol);
-        __ERC20Burnable_init();
-        __ERC20Pausable_init();
-        __AccessControlEnumerable_init();
+        __ERC20_init_unchained(_name, _symbol);
 
         __Coin_init_unchained(_uri);
     }
@@ -92,10 +78,11 @@ contract Coin is
         // Initialize this contract's state.
         contractURI = _uri;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(TRANSFER_ROLE, _msgSender());
-        _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+        address deployer = _msgSender();
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+        _setupRole(TRANSFER_ROLE, deployer);
+        _setupRole(MINTER_ROLE, deployer);
+        _setupRole(PAUSER_ROLE, deployer);
     }
 
     /// @dev Returns the module type of the contract.
