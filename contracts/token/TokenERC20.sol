@@ -13,9 +13,9 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
-contract Coin is
+contract TokenERC20 is
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

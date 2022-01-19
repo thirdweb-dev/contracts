@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ISignatureMint1155 } from "./ISignatureMint1155.sol";
+import { ITokenERC721 } from "./ITokenERC721.sol";
 
 // Token
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
@@ -30,25 +30,25 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "../../ThirdwebFees.sol";
 
-contract SignatureMint1155 is
+contract TokenERC721 is
     Initializable,
-    ISignatureMint1155,
-    EIP712Upgradeable,
+    ITokenERC721,
     ReentrancyGuardUpgradeable,
+    EIP712Upgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable
+    ERC721EnumerableUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = bytes32("SIGMINT_ERC1155");
+    bytes32 private constant MODULE_TYPE = bytes32("SIGMINT_ERC721");
     uint256 private constant VERSION = 1;
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -68,7 +68,7 @@ contract SignatureMint1155 is
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
-    /// @dev The next token ID of the NFT to mint.
+    /// @dev The token ID of the next token to mint.
     uint256 public nextTokenIdToMint;
 
     /// @dev The adress that receives all primary sales value.
@@ -95,13 +95,7 @@ contract SignatureMint1155 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    mapping(uint256 => string) private _tokenURI;
-
-    /// @dev Token ID => total circulating supply of tokens with that ID.
-    mapping(uint256 => uint256) public totalSupply;
-
-    /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public saleRecipientForToken;
+    mapping(uint256 => string) private uri;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -121,6 +115,8 @@ contract SignatureMint1155 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function intialize(
+        string memory _name,
+        string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
@@ -131,10 +127,10 @@ contract SignatureMint1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("SignatureMint1155", "1");
+        __EIP712_init("SignatureMint721", "1");
         __ERC2771Context_init(_trustedForwarder);
-        __ERC1155_init("");
-        
+        __ERC721_init(_name, _symbol);
+
         // Initialize this contract's state.
         royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
@@ -176,26 +172,14 @@ contract SignatureMint1155 is
     }
 
     /// @dev Returns the URI for a tokenId
-    function tokenURI(uint256 _tokenId) public view returns (string memory) {
-        return _tokenURI[_tokenId];
-    }
-
-    /// @dev Returns the URI for a tokenId
-    function uri(uint256 _tokenId) public view override returns (string memory) {
-        return _tokenURI[_tokenId];
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        return uri[_tokenId];
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(
-        address _to,
-        string calldata _uri,
-        uint256 _amount
-    ) external onlyMinter {
-        uint256 tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
-
+    function mintTo(address _to, string calldata _uri) external onlyMinter returns (uint256) {
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
-        _mintTo(_to, _uri, tokenIdToMint, _amount);
+        return _mintTo(_to, _uri);
     }
 
     ///     =====   External functions  =====
@@ -235,38 +219,28 @@ contract SignatureMint1155 is
     }
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        nonReentrant
+        returns (uint256 tokenIdMinted)
+    {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
-        uint256 tokenIdToMint;
-        if (_req.tokenId == type(uint256).max) {
-            tokenIdToMint = nextTokenIdToMint;
-            nextTokenIdToMint += 1;
-        } else {
-            require(_req.tokenId < nextTokenIdToMint, "invalid id");
-            tokenIdToMint = _req.tokenId;
-        }
+        tokenIdMinted = _mintTo(receiver, _req.uri);
 
-        _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
+        collectPrice(_req);
 
-        collectPrice(_req, tokenIdToMint);
-
-        emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
+        emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
     }
 
     //      =====   Setter functions  =====
 
-    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
-        saleRecipientForToken[_tokenId] = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient, _tokenId, false);
-    }
-
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient, 0, true);
+        emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -287,15 +261,6 @@ contract SignatureMint1155 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
-
-        platformFeeBps = uint120(_platformFeeBps);
-
-        emit PlatformFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -322,20 +287,15 @@ contract SignatureMint1155 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(
-        address _to,
-        string calldata _uri,
-        uint256 _tokenId,
-        uint256 _amount
-    ) internal {
-        if (bytes(_tokenURI[_tokenId]).length == 0) {
-            require(bytes(_uri).length > 0, "empty uri.");
-            _tokenURI[_tokenId] = _uri;
-        }
+    function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
+        tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
 
-        _mint(_to, _tokenId, _amount, "");
+        uri[tokenIdToMint] = _uri;
 
-        emit TokenMinted(_to, _tokenId, _tokenURI[_tokenId], _amount);
+        _mint(_to, tokenIdToMint);
+
+        emit TokenMinted(_to, tokenIdToMint, _uri);
     }
 
     /// @dev Returns the address of the signer of the mint request.
@@ -346,10 +306,8 @@ contract SignatureMint1155 is
                     abi.encode(
                         TYPEHASH,
                         _req.to,
-                        _req.tokenId,
                         keccak256(bytes(_req.uri)),
-                        _req.quantity,
-                        _req.pricePerToken,
+                        _req.price,
                         _req.currency,
                         _req.validityStartTimestamp,
                         _req.validityEndTimestamp,
@@ -375,84 +333,43 @@ contract SignatureMint1155 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
-        if (_req.pricePerToken == 0) {
+    function collectPrice(MintRequest memory _req) internal {
+        if (_req.price == 0) {
             return;
         }
 
-        uint256 totalPrice = _req.pricePerToken * _req.quantity;
+        uint256 totalPrice = _req.price;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
+            require(msg.value == _req.price, "must send total price.");
         }
-
-        address recipient = saleRecipientForToken[_tokenId] == address(0) ? primarySaleRecipient : saleRecipientForToken[_tokenId];
-
         TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        TWCurrencyTransfers.transferCurrency(_req.currency, _msgSender(), primarySaleRecipient, totalPrice - platformFees - twFee);
     }
 
     ///     =====   Low-level overrides  =====
 
-    /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) public virtual {
-        require(
-            account == _msgSender() || isApprovedForAll(account, _msgSender()),
-            "ERC1155: caller is not owner nor approved."
-        );
-
-        _burn(account, id, value);
+    /// @dev Burns `tokenId`. See {ERC721-_burn}.
+    function burn(uint256 tokenId) public virtual {
+        //solhint-disable-next-line max-line-length
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
+        _burn(tokenId);
     }
 
-    /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
-        require(
-            account == _msgSender() || isApprovedForAll(account, _msgSender()),
-            "ERC1155: caller is not owner nor approved."
-        );
-
-        _burnBatch(account, ids, values);
-    }
-
-    /**
-     * @dev See {ERC1155-_beforeTokenTransfer}.
-     */
+    /// @dev See {ERC721-_beforeTokenTransfer}.
     function _beforeTokenTransfer(
-        address operator,
         address from,
         address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+        uint256 tokenId
+    ) internal virtual override(ERC721EnumerableUpgradeable) {
+        super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
-        }
-
-        if (from == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
-                totalSupply[ids[i]] += amounts[i];
-            }
-        }
-
-        if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
-                totalSupply[ids[i]] -= amounts[i];
-            }
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
     }
 
@@ -460,13 +377,10 @@ contract SignatureMint1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
-        return
-            super.supportsInterface(interfaceId) ||
-            interfaceId == type(IERC1155Upgradeable).interfaceId ||
-            interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
     }
 
     function _msgSender()
