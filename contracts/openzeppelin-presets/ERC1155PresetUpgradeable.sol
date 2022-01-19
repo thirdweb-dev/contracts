@@ -48,9 +48,6 @@ contract ERC1155PresetUpgradeable is
     /// @dev Initiliazes the contract, like a constructor.
     function __ERC1155Preset_init(string memory uri) internal onlyInitializing {
         // Initialize inherited contracts, most base-like -> most derived.
-        __Context_init();
-        __ERC721Holder_init();
-        __ERC1155Holder_init();
         __ERC1155_init(uri);
 
         __ERC1155Preset_init_unchained();
