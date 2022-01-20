@@ -43,7 +43,7 @@ contract TokenERC1155 is
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = bytes32("SIGMINT_ERC1155");
+    bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
     uint256 private constant VERSION = 1;
 
     bytes32 private constant TYPEHASH =

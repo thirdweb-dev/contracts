@@ -38,7 +38,7 @@ contract Marketplace is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = bytes32("MARKETPLACE");
+    bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
     uint256 private constant VERSION = 1;
 
     /// @dev Access control: aditional roles.

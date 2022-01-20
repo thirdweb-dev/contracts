@@ -38,7 +38,7 @@ contract DropERC721 is
 {
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = bytes32("DROP_721");
+    bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
     uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can participate in transfers, when transfers are restricted.

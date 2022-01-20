@@ -39,7 +39,7 @@ contract DropERC1155 is
 {
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = bytes32("BUNDLE_DROP");
+    bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
     uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can participate in transfers, when transfers are restricted.

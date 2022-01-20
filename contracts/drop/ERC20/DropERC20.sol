@@ -22,7 +22,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../ThirdwebFees.sol";
 
 contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
-    bytes32 private constant MODULE_TYPE = bytes32("DROP_TOKEN");
+    bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
     uint128 private constant VERSION = 1;
 
     /// @dev Max basis points in the thirdweb system

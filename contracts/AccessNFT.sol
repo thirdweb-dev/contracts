@@ -25,7 +25,7 @@ contract AccessNFT is
     ERC1155PresetUpgradeable 
 {
     
-    bytes32 private constant MODULE_TYPE = bytes32("ACCESS_NFT");
+    bytes32 private constant MODULE_TYPE = bytes32("AccessNFT");
     uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.

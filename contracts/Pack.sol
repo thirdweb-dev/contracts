@@ -30,7 +30,7 @@ contract Pack is
     MulticallUpgradeable,
     ERC1155PresetUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = bytes32("PACK");
+    bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.

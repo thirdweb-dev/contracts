@@ -21,6 +21,9 @@ contract Splits is
     PaymentSplitterUpgradeable
 {
 
+    bytes32 private constant MODULE_TYPE = bytes32("Splits");
+    uint256 private constant VERSION = 1;
+
     /// @dev Contract level metadata.
     string public contractURI;
 
@@ -55,6 +58,16 @@ contract Splits is
         }
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns the module type of the contract.
+    function moduleType() external pure returns (bytes32) {
+        return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function version() external pure returns (uint256) {
+        return VERSION;
     }
 
     /// @dev See ERC2771

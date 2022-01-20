@@ -24,7 +24,7 @@ contract TokenERC20 is
     ERC20VotesUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = bytes32("TOKEN");
+    bytes32 private constant MODULE_TYPE = bytes32("TokenERC20");
     uint256 private constant VERSION = 1;
 
     bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
