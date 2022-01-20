@@ -31,8 +31,8 @@ contract RegistryTest is BaseTest {
         assert(registry.getAllModulesOfType(moduleType, sender).length == 1);
     }
 
-    function testFail_AddModule_SenderForRandomDeployer() public {
-        bytes32 moduleType = bytes32("42");
-        registry.updateDeployments(moduleType, address(0x2), address(0x4));
+    function test_AddModule_SenderForOtherDeployer_Revert() public {
+        vm.expectRevert("not factory or deployer");
+        registry.updateDeployments(bytes32("42"), address(0x2), address(0x4));
     }
 }

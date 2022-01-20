@@ -25,7 +25,7 @@ contract ThirdwebRegistry is AccessControlEnumerable {
         address _moduleAddress,
         address _deployer
     ) external {
-        require(hasRole(FACTORY_ROLE, msg.sender) || msg.sender == _deployer, "not factory");
+        require(hasRole(FACTORY_ROLE, msg.sender) || msg.sender == _deployer, "not factory or deployer");
 
         uint256 id = deployments[_moduleType][_deployer].totalDeployments;
         deployments[_moduleType][_deployer].totalDeployments += 1;
