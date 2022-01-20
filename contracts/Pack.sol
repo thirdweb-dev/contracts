@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 
 // Randomness
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@chainlink/v0.8/VRFConsumerBase.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
@@ -152,10 +152,7 @@ contract Pack is
         address _vrfCoordinator,
         address _linkToken,
         address _thirdwebFees
-    ) 
-        VRFConsumerBase(_vrfCoordinator, _linkToken)
-        initializer
-    {
+    ) VRFConsumerBase(_vrfCoordinator, _linkToken) initializer {
         thirdwebFees = ThirdwebFees(_thirdwebFees);
     }
 
@@ -189,7 +186,7 @@ contract Pack is
     /**
      *      Public functions
      */
-    
+
     /// @dev Returns the module type of the contract.
     function moduleType() external pure returns (bytes32) {
         return MODULE_TYPE;
@@ -264,7 +261,7 @@ contract Pack is
     /**
      *   External functions.
      **/
-    
+
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
@@ -522,7 +519,12 @@ contract Pack is
      **/
 
     /// @dev See EIP 165
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155PresetUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
