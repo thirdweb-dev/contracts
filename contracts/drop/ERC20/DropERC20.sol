@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import "../../lib/TWCurrencyTransfers.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "../../interfaces/IWETH.sol";
@@ -252,19 +252,19 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             platformFeeRecipient,
             platformFees
         );
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             primarySaleRecipient,

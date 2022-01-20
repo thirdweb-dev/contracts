@@ -18,7 +18,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "../../lib/TWCurrencyTransfers.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -225,8 +225,8 @@ contract DropERC721 is
             : IERC20(_currency).balanceOf(_currency);
         uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
 
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), feeRecipient, fees);
 
         emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
     }
@@ -427,19 +427,19 @@ contract DropERC721 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             platformFeeRecipient,
             platformFees
         );
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             primarySaleRecipient,

@@ -18,7 +18,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "../../lib/TWCurrencyTransfers.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import { IWETH } from "../../interfaces/IWETH.sol";
@@ -210,8 +210,8 @@ contract DropERC1155 is
             : IERC20(_currency).balanceOf(_currency);
         uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
 
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), feeRecipient, fees);
 
         emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
     }
@@ -446,14 +446,14 @@ contract DropERC1155 is
         }
 
         address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
-        TWCurrencyTransfers.transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(
             _mintCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        TWCurrencyTransfers.transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.

@@ -23,7 +23,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Utils
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "../lib/TWCurrencyTransfers.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Thirdweb top-level
 import "../ThirdwebFees.sol";
@@ -455,11 +455,11 @@ contract Marketplace is
 
             // Payout previous highest bid.
             if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
-                TWCurrencyTransfers.transferCurrency(_targetListing.currency, address(this), currentWinningBid.offeror, currentOfferAmount, _nativeTokenWrapper);
+                CurrencyTransferLib.transferCurrency(_targetListing.currency, address(this), currentWinningBid.offeror, currentOfferAmount, _nativeTokenWrapper);
             }
 
             // Collect incoming bid
-            TWCurrencyTransfers.transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount, _nativeTokenWrapper);
+            CurrencyTransferLib.transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount, _nativeTokenWrapper);
 
             emit NewOffer(
                 _targetListing.listingId,
@@ -576,10 +576,10 @@ contract Marketplace is
         // Distribute price to token owner
         address _nativeTokenWrapper = nativeTokenWrapper;
 
-        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut, _nativeTokenWrapper);
-        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties, _nativeTokenWrapper);
-        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee, _nativeTokenWrapper);
-        TWCurrencyTransfers.transferCurrency(_currencyToUse, _payer, _payee, _totalPayoutAmount - (marketCut + royalties + twFee), _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, _payee, _totalPayoutAmount - (marketCut + royalties + twFee), _nativeTokenWrapper);
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.

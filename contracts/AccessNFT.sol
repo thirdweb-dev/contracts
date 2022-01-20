@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 
 // Utils
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "./lib/TWCurrencyTransfers.sol";
+import "./lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
@@ -248,8 +248,8 @@ contract AccessNFT is
             : IERC20(_currency).balanceOf(_currency);
         uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
 
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), feeRecipient, fees);
 
         emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
     }
