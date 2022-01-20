@@ -5,21 +5,21 @@ pragma solidity ^0.8.0;
 import { IDropERC20 } from "./IDropERC20.sol";
 
 // Base
-import "../../token/TokenERC20.sol";
+import "../token/TokenERC20.sol";
 
 // Security
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import "../../lib/CurrencyTransferLib.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
-import "../../interfaces/IWETH.sol";
+import "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Thirdweb top-level
-import "../../TWFee.sol";
+import "../TWFee.sol";
 
 contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     bytes32 private constant MODULE_TYPE = bytes32("DropERC20");

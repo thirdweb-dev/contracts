@@ -16,17 +16,17 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "../../lib/CurrencyTransferLib.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
-import { IWETH } from "../../interfaces/IWETH.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
-import "../../TWFee.sol";
+import "../TWFee.sol";
 
 contract DropERC1155 is
     Initializable,

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ITokenERC721 } from "./ITokenERC721.sol";
+import { ITokenERC1155 } from "./ITokenERC1155.sol";
 
 // Token
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
@@ -20,35 +20,35 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "../../lib/CurrencyTransferLib.sol";
+import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
-import "../../TWFee.sol";
+import "../TWFee.sol";
 
-contract TokenERC721 is
+contract TokenERC1155 is
     Initializable,
-    ITokenERC721,
-    ReentrancyGuardUpgradeable,
+    ITokenERC1155,
     EIP712Upgradeable,
+    ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC1155Upgradeable
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
 
-    bytes32 private constant MODULE_TYPE = bytes32("TokenERC721");
+    bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
     uint256 private constant VERSION = 1;
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -68,7 +68,7 @@ contract TokenERC721 is
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
-    /// @dev The token ID of the next token to mint.
+    /// @dev The next token ID of the NFT to mint.
     uint256 public nextTokenIdToMint;
 
     /// @dev The adress that receives all primary sales value.
@@ -95,7 +95,13 @@ contract TokenERC721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    mapping(uint256 => string) private uri;
+    mapping(uint256 => string) private _tokenURI;
+
+    /// @dev Token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public totalSupply;
+
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public saleRecipientForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -115,8 +121,6 @@ contract TokenERC721 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function intialize(
-        string memory _name,
-        string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
@@ -127,10 +131,10 @@ contract TokenERC721 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("SignatureMint721", "1");
+        __EIP712_init("SignatureMint1155", "1");
         __ERC2771Context_init(_trustedForwarder);
-        __ERC721_init(_name, _symbol);
-
+        __ERC1155_init("");
+        
         // Initialize this contract's state.
         royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
@@ -172,14 +176,26 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the URI for a tokenId
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return uri[_tokenId];
+    function tokenURI(uint256 _tokenId) public view returns (string memory) {
+        return _tokenURI[_tokenId];
+    }
+
+    /// @dev Returns the URI for a tokenId
+    function uri(uint256 _tokenId) public view override returns (string memory) {
+        return _tokenURI[_tokenId];
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri) external onlyMinter returns (uint256) {
+    function mintTo(
+        address _to,
+        string calldata _uri,
+        uint256 _amount
+    ) external onlyMinter {
+        uint256 tokenIdToMint = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
-        return _mintTo(_to, _uri);
+        _mintTo(_to, _uri, tokenIdToMint, _amount);
     }
 
     ///     =====   External functions  =====
@@ -219,28 +235,38 @@ contract TokenERC721 is
     }
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-        returns (uint256 tokenIdMinted)
-    {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
-        tokenIdMinted = _mintTo(receiver, _req.uri);
+        uint256 tokenIdToMint;
+        if (_req.tokenId == type(uint256).max) {
+            tokenIdToMint = nextTokenIdToMint;
+            nextTokenIdToMint += 1;
+        } else {
+            require(_req.tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _req.tokenId;
+        }
 
-        collectPrice(_req);
+        _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
-        emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
+        collectPrice(_req, tokenIdToMint);
+
+        emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     //      =====   Setter functions  =====
 
+    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
+        saleRecipientForToken[_tokenId] = _saleRecipient;
+        emit NewPrimarySaleRecipient(_saleRecipient, _tokenId, false);
+    }
+
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient);
+        emit NewPrimarySaleRecipient(_saleRecipient, 0, true);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -261,6 +287,15 @@ contract TokenERC721 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+
+        platformFeeBps = uint120(_platformFeeBps);
+
+        emit PlatformFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.
@@ -287,15 +322,20 @@ contract TokenERC721 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(address _to, string calldata _uri) internal returns (uint256 tokenIdToMint) {
-        tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+    function _mintTo(
+        address _to,
+        string calldata _uri,
+        uint256 _tokenId,
+        uint256 _amount
+    ) internal {
+        if (bytes(_tokenURI[_tokenId]).length == 0) {
+            require(bytes(_uri).length > 0, "empty uri.");
+            _tokenURI[_tokenId] = _uri;
+        }
 
-        uri[tokenIdToMint] = _uri;
+        _mint(_to, _tokenId, _amount, "");
 
-        _mint(_to, tokenIdToMint);
-
-        emit TokenMinted(_to, tokenIdToMint, _uri);
+        emit TokenMinted(_to, _tokenId, _tokenURI[_tokenId], _amount);
     }
 
     /// @dev Returns the address of the signer of the mint request.
@@ -306,8 +346,10 @@ contract TokenERC721 is
                     abi.encode(
                         TYPEHASH,
                         _req.to,
+                        _req.tokenId,
                         keccak256(bytes(_req.uri)),
-                        _req.price,
+                        _req.quantity,
+                        _req.pricePerToken,
                         _req.currency,
                         _req.validityStartTimestamp,
                         _req.validityEndTimestamp,
@@ -333,43 +375,84 @@ contract TokenERC721 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req) internal {
-        if (_req.price == 0) {
+    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
+        if (_req.pricePerToken == 0) {
             return;
         }
 
-        uint256 totalPrice = _req.price;
+        uint256 totalPrice = _req.pricePerToken * _req.quantity;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == _req.price, "must send total price.");
+            require(msg.value == totalPrice, "must send total price.");
         }
+
+        address recipient = saleRecipientForToken[_tokenId] == address(0) ? primarySaleRecipient : saleRecipientForToken[_tokenId];
+
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), thirdwebFees.getSalesFeeRecipient(address(this)), twFee);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), primarySaleRecipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     ///     =====   Low-level overrides  =====
 
-    /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burn(uint256 tokenId) public virtual {
-        //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
-        _burn(tokenId);
+    /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
+    function burn(
+        address account,
+        uint256 id,
+        uint256 value
+    ) public virtual {
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved."
+        );
+
+        _burn(account, id, value);
     }
 
-    /// @dev See {ERC721-_beforeTokenTransfer}.
+    /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
+    function burnBatch(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory values
+    ) public virtual {
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved."
+        );
+
+        _burnBatch(account, ids, values);
+    }
+
+    /**
+     * @dev See {ERC1155-_beforeTokenTransfer}.
+     */
     function _beforeTokenTransfer(
+        address operator,
         address from,
         address to,
-        uint256 tokenId
-    ) internal virtual override(ERC721EnumerableUpgradeable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (transfersRestricted && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
+        }
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] -= amounts[i];
+            }
         }
     }
 
@@ -377,10 +460,13 @@ contract TokenERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return
+            super.supportsInterface(interfaceId) ||
+            interfaceId == type(IERC1155Upgradeable).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId;
     }
 
     function _msgSender()
