@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Utils
-import { IThirdwebModule } from "./IThirdwebModule.sol";
+import { IThirdwebModule } from "./interfaces/IThirdwebModule.sol";
 
 contract ThirdwebFees is Ownable {
     /// @dev Max bps in the thirdweb system.

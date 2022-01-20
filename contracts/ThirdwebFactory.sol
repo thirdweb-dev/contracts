@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./ThirdwebProxy.sol";
 import "./ThirdwebRegistry.sol";
-import "./IThirdwebModule.sol";
+import "./interfaces/IThirdwebModule.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
