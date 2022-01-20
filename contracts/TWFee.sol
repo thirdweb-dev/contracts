@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // Utils
 import { IThirdwebModule } from "./interfaces/IThirdwebModule.sol";
 
-contract ThirdwebFees is Ownable {
+contract TWFee is Ownable {
     /// @dev Max bps in the thirdweb system.
     uint128 public constant MAX_BPS = 10_000;
 

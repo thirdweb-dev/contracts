@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ThirdwebProxy.sol";
-import "./ThirdwebRegistry.sol";
+import "./TWProxy.sol";
+import "./TWRegistry.sol";
 import "./interfaces/IThirdwebModule.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
-contract ThirdwebFactory is AccessControlEnumerable {
-    ThirdwebRegistry public immutable registry;
+contract TWFactory is AccessControlEnumerable {
+    TWRegistry public immutable registry;
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
@@ -22,7 +22,7 @@ contract ThirdwebFactory is AccessControlEnumerable {
 
     constructor() AccessControlEnumerable() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        registry = new ThirdwebRegistry(address(this));
+        registry = new TWRegistry(address(this));
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
@@ -55,7 +55,7 @@ contract ThirdwebFactory is AccessControlEnumerable {
         bytes32 moduleType = IThirdwebModule(_implementation).moduleType();
 
         bytes memory proxyBytecode = abi.encodePacked(
-            type(ThirdwebProxy).creationCode,
+            type(TWProxy).creationCode,
             abi.encode(_implementation, _data)
         );
 

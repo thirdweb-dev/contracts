@@ -26,7 +26,7 @@ import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 // Thirdweb top-level
-import "../ThirdwebFees.sol";
+import "../TWFee.sol";
 
 contract Marketplace is
     Initializable,
@@ -50,7 +50,7 @@ contract Marketplace is
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
-    ThirdwebFees public immutable thirdwebFees;
+    TWFee public immutable thirdwebFees;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -107,7 +107,7 @@ contract Marketplace is
     }
 
     constructor(address _nativeTokenWrapper, address _thirdwebFees) initializer {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 

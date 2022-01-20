@@ -20,7 +20,7 @@ import "./lib/CurrencyTransferLib.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
-import "./ThirdwebFees.sol";
+import "./TWFee.sol";
 
 contract Bundle is
     IERC2981,
@@ -43,7 +43,7 @@ contract Bundle is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    ThirdwebFees public immutable thirdwebFees;
+    TWFee public immutable thirdwebFees;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -171,7 +171,7 @@ contract Bundle is
     }
 
     constructor(address _thirdwebFees) initializer {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
     }
 
     /// @dev Initiliazes the contract, like a constructor.

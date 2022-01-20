@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Thirdweb top-level
-import "../../ThirdwebFees.sol";
+import "../../TWFee.sol";
 
 /**
  * Changelog:
@@ -48,7 +48,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     uint256 private _totalReleased;
 
     /// @dev The thirdweb contract with fee related information.
-    ThirdwebFees public immutable thirdwebFees;
+    TWFee public immutable thirdwebFees;
     
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
@@ -61,7 +61,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     mapping(IERC20Upgradeable => mapping(address => uint256)) private _erc20Released;
 
     constructor(address _thirdwebFees) initializer {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
     }
 
     /**

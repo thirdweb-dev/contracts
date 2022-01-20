@@ -28,7 +28,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
-import "../../ThirdwebFees.sol";
+import "../../TWFee.sol";
 
 contract TokenERC1155 is
     Initializable,
@@ -63,7 +63,7 @@ contract TokenERC1155 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    ThirdwebFees public immutable thirdwebFees;
+    TWFee public immutable thirdwebFees;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -116,7 +116,7 @@ contract TokenERC1155 is
     }
 
     constructor(address _thirdwebFees) initializer {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
     }
 
     /// @dev Initiliazes the contract, like a constructor.

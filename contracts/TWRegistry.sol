@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-contract ThirdwebRegistry is AccessControlEnumerable {
+contract TWRegistry is AccessControlEnumerable {
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
     struct Deployments {
