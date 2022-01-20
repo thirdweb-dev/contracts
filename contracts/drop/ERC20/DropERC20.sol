@@ -40,12 +40,6 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     /// @dev The address that receives the platform fees all primary sales value.
     address public platformFeeRecipient;
 
-    /// @dev The address that receives royalties on secondary sales.
-    address public royaltyRecipient;
-
-    /// @dev The % of secondary sale value to be taken as royalties.
-    uint128 public royaltyBps;
-
     /// @dev The % of primary sales collected as platform fees.
     uint128 public platformFeeBps;
 
@@ -63,15 +57,10 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
         string memory _contractURI,
         address _trustedForwarder,
         address _primarySaleRecipient,
-        address _royaltyRecipient,
-        uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
         __TokenERC20_init(_name, _symbol, _trustedForwarder, _contractURI);
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
 
         primarySaleRecipient = _primarySaleRecipient;
         platformFeeRecipient = _platformFeeRecipient;
@@ -130,38 +119,9 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
     //      =====   External functions  =====
 
-    /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
-    function withdrawFunds(address _currency) external {
-        address recipient = royaltyRecipient;
-        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
-
-        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
-            ? address(this).balance
-            : IERC20(_currency).balanceOf(_currency);
-        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
-
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
-
-        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
-    }
-
     /// @dev Lets the contract accept ether.
     receive() external payable {
         emit EtherReceived(msg.sender, msg.value);
-    }
-
-    /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = address(this);
-        if (royaltyBps > 0) {
-            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
-        }
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId, according to claim conditions.
@@ -237,16 +197,6 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     function setPrimarySaleRecipient(address _primarySaleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _primarySaleRecipient;
         emit NewPrimarySaleRecipient(_primarySaleRecipient);
-    }
-
-    /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
-
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.

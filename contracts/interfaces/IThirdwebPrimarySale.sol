@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./IThirdwebNFT.sol";
 
-interface IThirdwebNFTWithSale is IThirdwebNFT {
+interface IThirdwebPrimarySale is IThirdwebToken {
 
     /// @dev The adress that receives all primary sales value.
     function primarySaleRecipient() external view returns (address);
