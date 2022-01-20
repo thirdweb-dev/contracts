@@ -58,7 +58,7 @@ contract Bundle is
     uint256 public royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
+    bool public isTransferRestricted;
 
     /// @dev Collection level metadata.
     string public contractURI;
@@ -475,7 +475,7 @@ contract Bundle is
 
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        transfersRestricted = _restrictedTransfer;
+        isTransferRestricted = _restrictedTransfer;
 
         emit RestrictedTransferUpdated(_restrictedTransfer);
     }
@@ -495,7 +495,7 @@ contract Bundle is
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (transfersRestricted && from != address(0) && to != address(0)) {
+        if (isTransferRestricted && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }

@@ -78,7 +78,7 @@ contract DropERC1155 is
     uint128 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
+    bool public isTransferRestricted;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -304,7 +304,7 @@ contract DropERC1155 is
 
     /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        transfersRestricted = _restrictedTransfer;
+        isTransferRestricted = _restrictedTransfer;
 
         emit TransfersRestricted(_restrictedTransfer);
     }
@@ -516,7 +516,7 @@ contract DropERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (transfersRestricted && from != address(0) && to != address(0)) {
+        if (isTransferRestricted && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 
