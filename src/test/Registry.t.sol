@@ -6,13 +6,19 @@ import "contracts/ThirdwebRegistry.sol";
 
 contract RegistryTest is BaseTest {
     ThirdwebRegistry registry;
-    address proxyFactory = address(0x1);
+    address registryDeployer = address(0x4441);
+    address proxyFactory = address(0x4440);
 
     function setUp() public {
+        vm.startPrank(registryDeployer);
         registry = new ThirdwebRegistry(proxyFactory);
     }
 
-    function test_HasFactoryRole() public {
+    function test_RegistryDeployerHasAdminRole() public {
+        assert(registry.hasRole(registry.DEFAULT_ADMIN_ROLE(), registryDeployer));
+    }
+
+    function test_FactoryHasFactoryRole() public {
         assert(registry.hasRole(registry.FACTORY_ROLE(), proxyFactory));
     }
 
