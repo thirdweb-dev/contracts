@@ -26,7 +26,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        registry = new TWRegistry(address(this));
+        registry = new TWRegistry(address(this), _trustedForwarder);
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
