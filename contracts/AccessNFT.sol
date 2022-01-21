@@ -9,13 +9,13 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 
 // Utils
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
-import "./lib/TWCurrencyTransfers.sol";
+import "./lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
-import "./ThirdwebFees.sol";
+import "./TWFee.sol";
 
 contract AccessNFT is
     IERC2981,
@@ -38,7 +38,7 @@ contract AccessNFT is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    ThirdwebFees public immutable thirdwebFees;
+    TWFee public immutable thirdwebFees;
     
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -53,7 +53,7 @@ contract AccessNFT is
     uint256 public royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
+    bool public isTransferRestricted;
 
     /// @dev Whether AccessNFTs (where TokenState.isRedeemable == false) are transferable.
     bool public accessNftIsTransferable;
@@ -140,7 +140,7 @@ contract AccessNFT is
     }
 
     constructor(address _thirdwebFees) initializer {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -248,8 +248,8 @@ contract AccessNFT is
             : IERC20(_currency).balanceOf(_currency);
         uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
 
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), feeRecipient, fees);
 
         emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
     }
@@ -391,7 +391,7 @@ contract AccessNFT is
 
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        transfersRestricted = _restrictedTransfer;
+        isTransferRestricted = _restrictedTransfer;
 
         emit RestrictedTransferUpdated(_restrictedTransfer);
     }
@@ -428,7 +428,7 @@ contract AccessNFT is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (transfersRestricted && from != address(0) && to != address(0)) {
+        if (isTransferRestricted && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
 

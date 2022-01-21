@@ -32,7 +32,7 @@ contract TokenERC20 is
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
+    bool public isTransferRestricted;
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
@@ -111,7 +111,7 @@ contract TokenERC20 is
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (transfersRestricted && from != address(0) && to != address(0)) {
+        if (isTransferRestricted && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }
@@ -168,7 +168,7 @@ contract TokenERC20 is
 
     /// @dev Lets a protocol admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        transfersRestricted = _restrictedTransfer;
+        isTransferRestricted = _restrictedTransfer;
 
         emit RestrictedTransferUpdated(_restrictedTransfer);
     }

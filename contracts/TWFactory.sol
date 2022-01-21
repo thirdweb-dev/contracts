@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ThirdwebProxy.sol";
-import "./ThirdwebRegistry.sol";
+import "./TWProxy.sol";
+import "./TWRegistry.sol";
 import "./interfaces/IThirdwebModule.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
-contract ThirdwebFactory is AccessControlEnumerable {
-    ThirdwebRegistry public immutable registry;
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+
+contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
+    TWRegistry public immutable registry;
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
@@ -20,9 +24,9 @@ contract ThirdwebFactory is AccessControlEnumerable {
     mapping(bytes32 => uint256) public currentModuleVersion;
     mapping(bytes32 => mapping(uint256 => address)) public modules;
 
-    constructor() AccessControlEnumerable() {
+    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        registry = new ThirdwebRegistry(address(this));
+        registry = new TWRegistry(address(this), _trustedForwarder);
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
@@ -52,16 +56,14 @@ contract ThirdwebFactory is AccessControlEnumerable {
     ) public {
         require(implementationApproval[_implementation], "implementation not approved");
 
-        bytes32 moduleType = IThirdwebModule(_implementation).moduleType();
-
         bytes memory proxyBytecode = abi.encodePacked(
-            type(ThirdwebProxy).creationCode,
+            type(TWProxy).creationCode,
             abi.encode(_implementation, _data)
         );
 
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
-        registry.updateDeployments(moduleType, deployedProxy, msg.sender);
+        registry.addDeployment(deployedProxy, msg.sender);
 
         emit ProxyDeployed(_implementation, deployedProxy, msg.sender);
     }
@@ -92,5 +94,25 @@ contract ThirdwebFactory is AccessControlEnumerable {
     /// @dev Returns the implementation given a module type and version.
     function getImplementation(bytes32 _moduleType, uint256 _version) external view returns (address) {
         return modules[_moduleType][_version];
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }

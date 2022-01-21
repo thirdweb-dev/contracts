@@ -6,7 +6,7 @@ import "./IThirdwebModule.sol";
 interface IThirdwebToken is IThirdwebModule {
 
     /// @dev Returns whether token transfers are restricted amongst TRANSFER_ROLE holders.
-    function transfersRestricted() external view returns (bool);
+    function isTransferRestricted() external view returns (bool);
 
     /// @notice ==========  ACCESS CONTROL / ROLES  ==========
 

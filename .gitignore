@@ -31,3 +31,8 @@ yarn-error.log*
 /relayerTest
 ./contracts/v2/Market.sol
 /notes.txt
+.yalc/
+yalc.lock
+
+#Build
+.swc/

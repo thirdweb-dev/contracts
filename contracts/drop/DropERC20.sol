@@ -5,21 +5,21 @@ pragma solidity ^0.8.0;
 import { IDropERC20 } from "./IDropERC20.sol";
 
 // Base
-import "../../token/TokenERC20.sol";
+import "../token/TokenERC20.sol";
 
 // Security
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import "../../lib/TWCurrencyTransfers.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
-import "../../interfaces/IWETH.sol";
+import "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Thirdweb top-level
-import "../../ThirdwebFees.sol";
+import "../TWFee.sol";
 
 contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
@@ -32,7 +32,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    ThirdwebFees private immutable thirdwebFees;
+    TWFee private immutable thirdwebFees;
 
     /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
@@ -47,7 +47,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     ClaimConditions public claimConditions;
 
     constructor(address _thirdwebFees) initializer {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -252,19 +252,19 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             platformFeeRecipient,
             platformFees
         );
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
             primarySaleRecipient,

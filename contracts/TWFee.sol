@@ -2,12 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Access
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 // Utils
 import { IThirdwebModule } from "./interfaces/IThirdwebModule.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract ThirdwebFees is Ownable {
+contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev Max bps in the thirdweb system.
     uint128 public constant MAX_BPS = 10_000;
 
@@ -70,20 +72,31 @@ contract ThirdwebFees is Ownable {
         _;
     }
 
+    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+        _;
+    }
+
     constructor(
+        address _trustedForwarder,
         uint256 _defaultRoyaltyFeeBps,
         address _defaultRoyaltyFeeRecipient,
         uint256 _defaultSalesFeeBps,
         address _defaultSalesFeeRecipient,
         uint256 _defaultSplitsFeeBps,
         address _defaultSplitsFeeRecipient
-    ) Ownable() {
+    )
+        ERC2771Context(_trustedForwarder)
+    {
         defaultRoyaltyFeeBps = _defaultRoyaltyFeeBps;
         defaultRoyaltyFeeRecipient = _defaultRoyaltyFeeRecipient;
         defaultSalesFeeBps = _defaultSalesFeeBps;
         defaultSalesFeeRecipient = _defaultSalesFeeRecipient;
         defaultSplitsFeeBps = _defaultSplitsFeeBps;
         defaultSplitsFeeRecipient = _defaultSplitsFeeRecipient;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Returns the royalty bps for a module address
@@ -175,7 +188,7 @@ contract ThirdwebFees is Ownable {
         bytes32 _moduleType,
         uint256 _feeBps,
         FeeType _feeType
-    ) external onlyOwner onlyValidFee(_feeBps) {
+    ) external onlyModuleAdmin onlyValidFee(_feeBps) {
         feeBpsByModuleType[_moduleType][_feeType] = _feeBps;
         emit FeeForModuleType(_feeBps, _moduleType, _feeType);
     }
@@ -185,7 +198,7 @@ contract ThirdwebFees is Ownable {
         address _moduleInstance,
         uint256 _feeBps,
         FeeType _feeType
-    ) external onlyOwner onlyValidFee(_feeBps) {
+    ) external onlyModuleAdmin onlyValidFee(_feeBps) {
         feeBpsByModuleInstance[_moduleInstance][_feeType] = _feeBps;
         emit FeeForModuleInstance(_feeBps, _moduleInstance, _feeType);
     }
@@ -195,7 +208,7 @@ contract ThirdwebFees is Ownable {
         bytes32 _moduleType,
         address _recipient,
         FeeType _feeType
-    ) external onlyOwner {
+    ) external onlyModuleAdmin {
         feeRecipientByModuleType[_moduleType][_feeType] = _recipient;
         emit RecipientForModuleType(_recipient, _moduleType, _feeType);
     }
@@ -205,8 +218,28 @@ contract ThirdwebFees is Ownable {
         address _moduleInstance,
         address _recipient,
         FeeType _feeType
-    ) external onlyOwner {
+    ) external onlyModuleAdmin {
         feeRecipientByModuleInstance[_moduleInstance][_feeType] = _recipient;
         emit RecipientForModuleInstance(_recipient, _moduleInstance, _feeType);
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }

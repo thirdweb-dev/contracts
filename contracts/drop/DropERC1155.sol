@@ -16,17 +16,17 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import "../../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "../../lib/TWCurrencyTransfers.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
-import { IWETH } from "../../interfaces/IWETH.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
-import "../../ThirdwebFees.sol";
+import "../TWFee.sol";
 
 contract DropERC1155 is
     Initializable,
@@ -54,7 +54,7 @@ contract DropERC1155 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    ThirdwebFees public immutable thirdwebFees;
+    TWFee public immutable thirdwebFees;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -78,7 +78,7 @@ contract DropERC1155 is
     uint128 public platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
-    bool public transfersRestricted;
+    bool public isTransferRestricted;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -109,7 +109,7 @@ contract DropERC1155 is
     constructor(address _thirdwebFees)
         initializer
     {
-        thirdwebFees = ThirdwebFees(_thirdwebFees);
+        thirdwebFees = TWFee(_thirdwebFees);
     }
 
     /// @dev See EIP-2981
@@ -210,8 +210,8 @@ contract DropERC1155 is
             : IERC20(_currency).balanceOf(_currency);
         uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
 
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        TWCurrencyTransfers.transferCurrency(_currency, address(this), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), feeRecipient, fees);
 
         emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
     }
@@ -304,7 +304,7 @@ contract DropERC1155 is
 
     /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        transfersRestricted = _restrictedTransfer;
+        isTransferRestricted = _restrictedTransfer;
 
         emit TransfersRestricted(_restrictedTransfer);
     }
@@ -446,14 +446,14 @@ contract DropERC1155 is
         }
 
         address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
-        TWCurrencyTransfers.transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
-        TWCurrencyTransfers.transferCurrency(
+        CurrencyTransferLib.transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(
             _mintCondition.currency,
             _msgSender(),
             thirdwebFees.getSalesFeeRecipient(address(this)),
             twFee
         );
-        TWCurrencyTransfers.transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(_mintCondition.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -516,7 +516,7 @@ contract DropERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (transfersRestricted && from != address(0) && to != address(0)) {
+        if (isTransferRestricted && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 

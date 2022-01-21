@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-library TWCurrencyTransfers {
+library CurrencyTransferLib {
     /// @dev The address interpreted as native token of the chain.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 

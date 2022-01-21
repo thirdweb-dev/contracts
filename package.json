@@ -1,13 +1,14 @@
 {
   "name": "@3rdweb/contracts",
   "description": "",
-  "version": "2.0.1-2",
+  "version": "2.0.1-5",
   "license": "Apache-2.0",
   "dependencies": {},
-  "source": "src/index.ts",
+  "source": "typechain/index.ts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "module": "dist/contracts.esm.js",
+  "module": "dist/index.mjs",
+  "browser": "dist/index.global.js",
   "files": [
     "contracts/",
     "typechain/",
@@ -23,6 +24,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.3.3",
     "@openzeppelin/contracts-upgradeable": "^4.4.1",
+    "@swc/core": "^1.2.133",
     "@typechain/ethers-v5": "^9.0.0",
     "@typechain/hardhat": "^4.0.0",
     "@types/chai": "^4.3.0",
@@ -49,12 +51,11 @@
     "keccak256": "^1.0.3",
     "merkletreejs": "^0.2.27",
     "mocha": "^9.1.2",
-    "parcel": "^2.0.1",
     "prettier": "^2.5.1",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "ts-node": "^10.4.0",
-    "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
+    "tsup": "^5.11.11",
     "typechain": "^7.0.0",
     "typescript": "^4.5.2"
   },
@@ -70,8 +71,16 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn clean && yarn compile && yarn typechain && yarn build:lib",
-    "build:lib": "tsdx build --entry typechain/index.ts --tsconfig tsconfig.build.json",
+    "build:lib": "tsup --dts --env.NODE_ENV production --minify --format esm,cjs,iife",
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat"
+  },
+  "tsup": {
+    "entry": [
+      "typechain/index.ts"
+    ],
+    "splitting": true,
+    "sourcemap": true,
+    "clean": true
   }
 }
