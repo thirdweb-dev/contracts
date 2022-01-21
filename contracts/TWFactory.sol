@@ -8,7 +8,9 @@ import "./interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
-contract TWFactory is AccessControlEnumerable {
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
+contract TWFactory is Multicall, AccessControlEnumerable {
     TWRegistry public immutable registry;
 
     /// @dev Emitted when a proxy is deployed.

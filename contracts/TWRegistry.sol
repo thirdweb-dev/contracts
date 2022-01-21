@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract TWRegistry is AccessControlEnumerable {
+contract TWRegistry is Multicall, AccessControlEnumerable {
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
     struct Deployments {
