@@ -10,7 +10,9 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract TWFactory is Multicall, AccessControlEnumerable {
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+
+contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     TWRegistry public immutable registry;
 
     /// @dev Emitted when a proxy is deployed.
@@ -22,7 +24,7 @@ contract TWFactory is Multicall, AccessControlEnumerable {
     mapping(bytes32 => uint256) public currentModuleVersion;
     mapping(bytes32 => mapping(uint256 => address)) public modules;
 
-    constructor() AccessControlEnumerable() {
+    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         registry = new TWRegistry(address(this));
     }
@@ -92,5 +94,25 @@ contract TWFactory is Multicall, AccessControlEnumerable {
     /// @dev Returns the implementation given a module type and version.
     function getImplementation(bytes32 _moduleType, uint256 _version) external view returns (address) {
         return modules[_moduleType][_version];
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }

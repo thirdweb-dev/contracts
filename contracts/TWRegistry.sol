@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract TWRegistry is Multicall, AccessControlEnumerable {
+contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
     struct Deployments {
@@ -19,7 +20,7 @@ contract TWRegistry is Multicall, AccessControlEnumerable {
     event ModuleDeployed(address indexed moduleAddress, address indexed deployer);
     event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
 
-    constructor(address _thirdwebFactory) AccessControlEnumerable() {
+    constructor(address _thirdwebFactory, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(FACTORY_ROLE, _thirdwebFactory);
     }
@@ -68,5 +69,25 @@ contract TWRegistry is Multicall, AccessControlEnumerable {
                 allModules[i] = deployments[_deployer].moduleAddress[i];
             }
         }
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }
