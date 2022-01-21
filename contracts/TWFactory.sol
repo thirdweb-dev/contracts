@@ -54,8 +54,6 @@ contract TWFactory is Multicall, AccessControlEnumerable {
     ) public {
         require(implementationApproval[_implementation], "implementation not approved");
 
-        bytes32 moduleType = IThirdwebModule(_implementation).moduleType();
-
         bytes memory proxyBytecode = abi.encodePacked(
             type(TWProxy).creationCode,
             abi.encode(_implementation, _data)
@@ -63,7 +61,7 @@ contract TWFactory is Multicall, AccessControlEnumerable {
 
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
-        registry.updateDeployments(moduleType, deployedProxy, msg.sender);
+        registry.addDeployment(deployedProxy, msg.sender);
 
         emit ProxyDeployed(_implementation, deployedProxy, msg.sender);
     }
