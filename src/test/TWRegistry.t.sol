@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./utils/BaseTest.t.sol";
-import "contracts/ThirdwebRegistry.sol";
+import "./utils/BaseTest.sol";
+import "contracts/TWRegistry.sol";
 
-contract RegistryTest is BaseTest {
-    ThirdwebRegistry registry;
-    address registryDeployer = address(0x4441);
-    address proxyFactory = address(0x4440);
+contract TWRegistryTest is BaseTest {
+    TWRegistry registry;
+    address registryDeployer = address(0x4440);
+    address proxyFactory = address(0x4441);
+    address trustedForwarder = address(0x4442);
 
     function setUp() public {
         vm.startPrank(registryDeployer);
-        registry = new ThirdwebRegistry(proxyFactory);
+        registry = new TWRegistry(proxyFactory, trustedForwarder);
     }
 
     function test_RegistryDeployerHasAdminRole() public {
@@ -25,20 +26,20 @@ contract RegistryTest is BaseTest {
     function test_AddModule_ProxyFactoryForAnyDeployer() public {
         bytes32 moduleType = bytes32("42");
         vm.startPrank(proxyFactory);
-        registry.updateDeployments(moduleType, address(0x2), address(0x3));
-        assert(registry.getAllModulesOfType(moduleType, address(0x3)).length == 1);
+        registry.addDeployment(address(0x2), address(0x3));
+        assert(registry.getAllModules(address(0x3)).length == 1);
     }
 
     function test_AddModule_SenderForSelf() public {
         bytes32 moduleType = bytes32("42");
         address sender = address(0x321);
         vm.startPrank(sender);
-        registry.updateDeployments(moduleType, address(0x3), sender);
-        assert(registry.getAllModulesOfType(moduleType, sender).length == 1);
+        registry.addDeployment(address(0x3), sender);
+        assert(registry.getAllModules(sender).length == 1);
     }
 
     function test_AddModule_SenderForOtherDeployer_Revert() public {
-        vm.expectRevert("not factory or deployer");
-        registry.updateDeployments(bytes32("42"), address(0x2), address(0x4));
+        vm.expectRevert("not factory");
+        registry.addDeployment(address(0x2), address(0x4));
     }
 }

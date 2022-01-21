@@ -36,3 +36,4 @@ yalc.lock
 
 #Build
 .swc/
+out/
