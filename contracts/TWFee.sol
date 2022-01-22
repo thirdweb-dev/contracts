@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 // Utils
-import { IThirdwebModule } from "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
@@ -16,57 +16,29 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev The threshold for thirdweb fees. 1%
     uint128 public constant maxFeeBps = 100;
 
-    /// @dev The default royalty fee bps for thirdweb modules.
-    uint256 public defaultRoyaltyFeeBps;
+    /// @dev Mapping from module type => fee type => fee info
+    mapping(bytes32 => mapping(FeeType => FeeInfo)) public feeInfoByModuleType;
 
-    /// @dev The default royalty fee recipient for thirdweb modules.
-    address public defaultRoyaltyFeeRecipient;
+    /// @dev Mapping from module instance => fee type => fee info
+    mapping(address => mapping(FeeType => FeeInfo)) public feeInfoByModuleInstance;
 
-    /// @dev The default sales fee bps for thirdweb modules.
-    uint256 public defaultSalesFeeBps;
+    /// @dev Mapping from fee type => fee defaults
+    mapping(FeeType => FeeInfo) public defaultFeeInfo;
 
-    /// @dev The default sales fee recipient for thirdweb modules.
-    address public defaultSalesFeeRecipient;
-
-    /// @dev The default splits fee bps for thirdweb modules.
-    uint256 public defaultSplitsFeeBps;
-
-    /// @dev The default splits fee recipient for thirdweb modules.
-    address public defaultSplitsFeeRecipient;
-
-    /// @dev Mapping from particular module instance => whether thirdweb takes no fees
-    mapping(address => bool) public takeNoFee;
-
-    /// @dev Mapping from module type => royalty fee bps
-    mapping(bytes32 => mapping(FeeType => uint256)) public feeBpsByModuleType;
-
-    /// @dev Mapping from particular module instance => royalty fee bps
-    mapping(address => mapping(FeeType => uint256)) public feeBpsByModuleInstance;
-
-    /// @dev Mapping from module type => royalty fee recipient
-    mapping(bytes32 => mapping(FeeType => address)) public feeRecipientByModuleType;
-
-    /// @dev Mapping from particular module instance => royalty fee recipient
-    mapping(address => mapping(FeeType => address)) public feeRecipientByModuleInstance;
-
-    /// @dev Emitted when fee is set for a module type
-    event FeeForModuleType(uint256 feeBps, bytes32 moduleType, FeeType feeType);
-
-    /// @dev Emitted when fee is set for a module instance
-    event FeeForModuleInstance(uint256 feeBps, address moduleInstance, FeeType feeType);
-
-    /// @dev Emitted when fee recipient is set for a module type
-    event RecipientForModuleType(address recipient, bytes32 moduleType, FeeType feeType);
-
-    /// @dev Emitted when fee recipient is set for a module instance
-    event RecipientForModuleInstance(address recipient, address moduleInstance, FeeType feeType);
-
-    enum FeeType {
-        Sales,
-        Royalty,
-        Splits
+    struct FeeInfo {
+        uint256 bps;
+        address recipient;
     }
 
+    enum FeeType {
+        Transaction,
+        Royalty
+    }
+
+    event FeeInfoForModuleInstance(address indexed moduleInstance, FeeInfo feeInfo);
+    event FeeInfoForModuleType(bytes32 indexed moduleType, FeeInfo feeInfo);
+    event DefaultFeeInfo(FeeInfo feeInfo);
+    
     modifier onlyValidFee(uint256 _feeBps) {
         require(_feeBps <= maxFeeBps, "fees too high");
         _;
@@ -82,145 +54,99 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         address _trustedForwarder,
         uint256 _defaultRoyaltyFeeBps,
         address _defaultRoyaltyFeeRecipient,
-        uint256 _defaultSalesFeeBps,
-        address _defaultSalesFeeRecipient,
-        uint256 _defaultSplitsFeeBps,
-        address _defaultSplitsFeeRecipient
+        uint256 _defaultTransactionFeeBps,
+        address _defaultTransactionFeeRecipient
     )
         ERC2771Context(_trustedForwarder)
     {
-        defaultRoyaltyFeeBps = _defaultRoyaltyFeeBps;
-        defaultRoyaltyFeeRecipient = _defaultRoyaltyFeeRecipient;
-        defaultSalesFeeBps = _defaultSalesFeeBps;
-        defaultSalesFeeRecipient = _defaultSalesFeeRecipient;
-        defaultSplitsFeeBps = _defaultSplitsFeeBps;
-        defaultSplitsFeeRecipient = _defaultSplitsFeeRecipient;
+
+        defaultFeeInfo[FeeType.Royalty] = FeeInfo({
+            bps: _defaultRoyaltyFeeBps,
+            recipient: _defaultRoyaltyFeeRecipient
+        });
+
+        defaultFeeInfo[FeeType.Transaction] = FeeInfo({
+            bps: _defaultTransactionFeeBps,
+            recipient: _defaultTransactionFeeRecipient
+        });
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Returns the royalty bps for a module address
-    function getSplitsFeeBps(address _module) external view returns (uint256) {
+    function getFeeInfo(address _module, FeeType _feeType) external view returns (address recipient, uint256 bps) {
         bytes32 moduleType = IThirdwebModule(_module).moduleType();
 
-        if (takeNoFee[_module]) {
-            return 0;
-        } else if (feeBpsByModuleInstance[_module][FeeType.Splits] > 0) {
-            return feeBpsByModuleInstance[_module][FeeType.Splits];
-        } else if (feeBpsByModuleType[moduleType][FeeType.Splits] > 0) {
-            return feeBpsByModuleType[moduleType][FeeType.Splits];
-        } else {
-            return defaultSplitsFeeBps;
+        FeeInfo memory infoForModuleInstance = feeInfoByModuleInstance[_module][_feeType];
+        FeeInfo memory infoForModuleType = feeInfoByModuleType[moduleType][_feeType];
+        FeeInfo memory defaults = defaultFeeInfo[_feeType];
+
+        // Get appropriate fee bps
+        bps = infoForModuleInstance.bps;
+        if(bps == 0) {
+            bps = infoForModuleType.bps;
+        }
+        if(bps == 0) {
+            bps = defaults.bps;
+        }
+
+        // Get appropriate fee recipient
+        recipient = infoForModuleInstance.recipient;
+        if(recipient == address(0)) {
+            recipient = infoForModuleType.recipient;
+        }
+        if(recipient == address(0)) {
+            recipient = defaults.recipient;
         }
     }
 
-    /// @dev Returns the royalty fee recipient for a module address
-    function getSplitsFeeRecipient(address _module) external view returns (address) {
-        bytes32 moduleType = IThirdwebModule(_module).moduleType();
-
-        if (feeRecipientByModuleInstance[_module][FeeType.Splits] != address(0)) {
-            return feeRecipientByModuleInstance[_module][FeeType.Splits];
-        } else if (feeRecipientByModuleType[moduleType][FeeType.Splits] != address(0)) {
-            return feeRecipientByModuleType[moduleType][FeeType.Splits];
-        } else {
-            return defaultSplitsFeeRecipient;
-        }
-    }
-
-    /// @dev Returns the royalty bps for a module address
-    function getRoyaltyFeeBps(address _module) external view returns (uint256) {
-        bytes32 moduleType = IThirdwebModule(_module).moduleType();
-
-        if (takeNoFee[_module]) {
-            return 0;
-        } else if (feeBpsByModuleInstance[_module][FeeType.Royalty] > 0) {
-            return feeBpsByModuleInstance[_module][FeeType.Royalty];
-        } else if (feeBpsByModuleType[moduleType][FeeType.Royalty] > 0) {
-            return feeBpsByModuleType[moduleType][FeeType.Royalty];
-        } else {
-            return defaultRoyaltyFeeBps;
-        }
-    }
-
-    /// @dev Returns the royalty fee recipient for a module address
-    function getRoyaltyFeeRecipient(address _module) external view returns (address) {
-        bytes32 moduleType = IThirdwebModule(_module).moduleType();
-
-        if (feeRecipientByModuleInstance[_module][FeeType.Royalty] != address(0)) {
-            return feeRecipientByModuleInstance[_module][FeeType.Royalty];
-        } else if (feeRecipientByModuleType[moduleType][FeeType.Royalty] != address(0)) {
-            return feeRecipientByModuleType[moduleType][FeeType.Royalty];
-        } else {
-            return defaultRoyaltyFeeRecipient;
-        }
-    }
-
-    /// @dev Returns the royalty bps for a module address
-    function getSalesFeeBps(address _module) external view returns (uint256) {
-        bytes32 moduleType = IThirdwebModule(_module).moduleType();
-
-        if (takeNoFee[_module]) {
-            return 0;
-        } else if (feeBpsByModuleInstance[_module][FeeType.Sales] > 0) {
-            return feeBpsByModuleInstance[_module][FeeType.Sales];
-        } else if (feeBpsByModuleType[moduleType][FeeType.Sales] > 0) {
-            return feeBpsByModuleType[moduleType][FeeType.Sales];
-        } else {
-            return defaultSalesFeeBps;
-        }
-    }
-
-    /// @dev Returns the royalty fee recipient for a module address
-    function getSalesFeeRecipient(address _module) external view returns (address) {
-        bytes32 moduleType = IThirdwebModule(_module).moduleType();
-
-        if (feeRecipientByModuleInstance[_module][FeeType.Sales] != address(0)) {
-            return feeRecipientByModuleInstance[_module][FeeType.Sales];
-        } else if (feeRecipientByModuleType[moduleType][FeeType.Sales] != address(0)) {
-            return feeRecipientByModuleType[moduleType][FeeType.Sales];
-        } else {
-            return defaultSalesFeeRecipient;
-        }
-    }
-
-    /// @dev Lets the owner set royalty fee bps for module type.
-    function setFeeForModuleType(
+    /// @dev Lets the admin set fee bps and recipient for the given module type and fee type.
+    function setFeeInfoForModuleType(
         bytes32 _moduleType,
         uint256 _feeBps,
+        address _feeRecipient,
         FeeType _feeType
     ) external onlyModuleAdmin onlyValidFee(_feeBps) {
-        feeBpsByModuleType[_moduleType][_feeType] = _feeBps;
-        emit FeeForModuleType(_feeBps, _moduleType, _feeType);
+        FeeInfo memory feeInfo = FeeInfo({
+            bps: _feeBps,
+            recipient: _feeRecipient
+        });
+
+        feeInfoByModuleType[_moduleType][_feeType] = feeInfo;
+
+        emit FeeInfoForModuleType(_moduleType, feeInfo);
     }
 
-    /// @dev Lets the owner set royalty fee bps for a particular module instance.
-    function setFeeForModuleInstance(
-        address _moduleInstance,
+    /// @dev Lets the admin set fee bps and recipient for the given module instance and fee type.
+    function setFeeInfoForModuleInstance(
+        address _module,
         uint256 _feeBps,
+        address _feeRecipient,
         FeeType _feeType
     ) external onlyModuleAdmin onlyValidFee(_feeBps) {
-        feeBpsByModuleInstance[_moduleInstance][_feeType] = _feeBps;
-        emit FeeForModuleInstance(_feeBps, _moduleInstance, _feeType);
+        FeeInfo memory feeInfo = FeeInfo({
+            bps: _feeBps,
+            recipient: _feeRecipient
+        });
+
+        feeInfoByModuleInstance[_module][_feeType] = feeInfo;
+
+        emit FeeInfoForModuleInstance(_module, feeInfo);
     }
 
-    /// @dev Lets the owner set sales fee recipient for module type.
-    function setRecipientForModuleType(
-        bytes32 _moduleType,
-        address _recipient,
+    /// @dev Lets the admin set fee bps and recipient for the given module instance and fee type.
+    function setDefaultFeeInfo(
+        uint256 _feeBps,
+        address _feeRecipient,
         FeeType _feeType
-    ) external onlyModuleAdmin {
-        feeRecipientByModuleType[_moduleType][_feeType] = _recipient;
-        emit RecipientForModuleType(_recipient, _moduleType, _feeType);
-    }
+    ) external onlyModuleAdmin onlyValidFee(_feeBps) {
+        FeeInfo memory feeInfo = FeeInfo({
+            bps: _feeBps,
+            recipient: _feeRecipient
+        });
 
-    /// @dev Lets the owner set sales fee recipient for a particular module instance.
-    function setRecipientForModuleInstance(
-        address _moduleInstance,
-        address _recipient,
-        FeeType _feeType
-    ) external onlyModuleAdmin {
-        feeRecipientByModuleInstance[_moduleInstance][_feeType] = _recipient;
-        emit RecipientForModuleInstance(_recipient, _moduleInstance, _feeType);
+        defaultFeeInfo[_feeType] = feeInfo;
+
+        emit DefaultFeeInfo(feeInfo);
     }
 
     function _msgSender()
