@@ -4,20 +4,18 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 
 ### Deployments
 
-The contracts addresses are the same across all different chains that we supported.
+These are deployments to test the v2 minimum loop.
 
-- `Registry.sol`: [0x902a29f2cfe9f8580ad672AaAD7E917d85ca9a2E](https://etherscan.io/address/0x902a29f2cfe9f8580ad672AaAD7E917d85ca9a2E#code)
-- `Forwarder.sol`: [0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81](https://etherscan.io/address/0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81#code)
-- `ControlDeployer.sol` [0x9559F8A57931b85567350Cb50538ec0fc437F8c9](https://etherscan.io/address/0x9559F8A57931b85567350Cb50538ec0fc437F8c9#code)
+#### Mumbai
+- `CurrencyTransferLib`: [0x188B780e0AE7756BD0F2c2F4218a9b75EcF83124](https://mumbai.polygonscan.com/address/0x188B780e0AE7756BD0F2c2F4218a9b75EcF83124#code)
 
-**Deployed chains**
+- `TWFactory`: [0xBece728305e21899163E6effe81b9E3Db8FF1169](https://mumbai.polygonscan.com/address/0xBece728305e21899163E6effe81b9E3Db8FF1169#code)
 
-- **mainnet**: Ethereum, Polygon, Avalanche C-Chain, Fantom Opera
-- **testnet**: Rinkeby (Ethereum), Mumbai (Polygon), Avalanche Fuji Testnet, Fantom Testnet
+- `TWRegistry`: [0x968d263f329c4f6b91c50349976a544B475320ed](https://mumbai.polygonscan.com/address/0x968d263f329c4f6b91c50349976a544B475320ed#code)
 
-**Testnet Only Contract Deployments**
+- `TWFee`: [0x5a397224f7416080C6902361Cb7F9459863Cd16A](https://mumbai.polygonscan.com/address/0x5a397224f7416080C6902361Cb7F9459863Cd16A#code)
 
-- `MintableERC20Permit.sol` (mumbai only): [0xCe8271Ad06e8CB0EE47d1486947313b7c1290D14](https://mumbai.polygonscan.com/address/0xCe8271Ad06e8CB0EE47d1486947313b7c1290D14#code)
+- `Drop721`: [0x399ea7729265980F5E968043abA9E51fD302Af88](https://mumbai.polygonscan.com/address/0x399ea7729265980F5E968043abA9E51fD302Af88#code)
 
 ## Feedback
 
