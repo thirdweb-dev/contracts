@@ -52,10 +52,10 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
     constructor(
         address _trustedForwarder,
-        uint256 _defaultRoyaltyFeeBps,
         address _defaultRoyaltyFeeRecipient,
-        uint256 _defaultTransactionFeeBps,
-        address _defaultTransactionFeeRecipient
+        address _defaultTransactionFeeRecipient,
+        uint128 _defaultRoyaltyFeeBps,
+        uint128 _defaultTransactionFeeBps
     )
         ERC2771Context(_trustedForwarder)
     {
