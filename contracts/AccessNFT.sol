@@ -241,17 +241,20 @@ contract AccessNFT is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        address feeRecipient = thirdwebFees.getRoyaltyFeeRecipient(address(this));
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
+            address(this), 
+            TWFee.FeeType.Royalty
+        );
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
             : IERC20(_currency).balanceOf(_currency);
-        uint256 fees = (totalTransferAmount * thirdwebFees.getRoyaltyFeeBps(address(this))) / MAX_BPS;
+        uint256 fees = (totalTransferAmount * twFeeBps) / MAX_BPS;
 
         CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        CurrencyTransferLib.transferCurrency(_currency, address(this), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), twFeeRecipient, fees);
 
-        emit FundsWithdrawn(recipient, feeRecipient, totalTransferAmount, fees);
+        emit FundsWithdrawn(recipient, twFeeRecipient, totalTransferAmount, fees);
     }
 
     /// @dev See EIP-2981
@@ -262,8 +265,12 @@ contract AccessNFT is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
+        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(
+            address(this), 
+            TWFee.FeeType.Transaction
+        );
         if (royaltyBps > 0) {
-            royaltyAmount = (salePrice * (royaltyBps + thirdwebFees.getRoyaltyFeeBps(address(this)))) / MAX_BPS;
+            royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
     }
 
