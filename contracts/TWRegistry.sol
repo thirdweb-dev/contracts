@@ -25,10 +25,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         _setupRole(FACTORY_ROLE, _thirdwebFactory);
     }
 
-    function addDeployment(
-        address _moduleAddress,
-        address _deployer
-    ) external {
+    function addDeployment(address _moduleAddress, address _deployer) external {
         require(hasRole(FACTORY_ROLE, msg.sender) || msg.sender == _deployer, "not factory");
 
         deployments[_deployer].totalDeployments += 1;
@@ -43,10 +40,9 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     function removeDeployment(address _moduleAddress) external {
         address deployer = _msgSender();
         uint256 moduleIdx = deployments[deployer].moduleIndex[_moduleAddress];
-        
+
         require(moduleIdx != 0, "module does not exist");
 
-        
         deployments[deployer].totalDeleted += 1;
 
         delete deployments[deployer].moduleAddress[moduleIdx];
@@ -55,39 +51,23 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         emit ModuleDeleted(_moduleAddress, deployer);
     }
 
-    function getAllModules(address _deployer)
-        external
-        view
-        returns (address[] memory allModules)
-    {
+    function getAllModules(address _deployer) external view returns (address[] memory allModules) {
         uint256 totalDeployments = deployments[_deployer].totalDeployments;
         uint256 numOfModules = totalDeployments - deployments[_deployer].totalDeleted;
         allModules = new address[](numOfModules);
 
         for (uint256 i = 0; i < totalDeployments; i += 1) {
-            if(deployments[_deployer].moduleAddress[i] != address(0)) {
+            if (deployments[_deployer].moduleAddress[i] != address(0)) {
                 allModules[i] = deployments[_deployer].moduleAddress[i];
             }
         }
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }

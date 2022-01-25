@@ -52,12 +52,7 @@ contract TokenERC20 is
         string memory _contractURI,
         address _trustedForwarder
     ) external initializer {
-        __TokenERC20_init(
-            _name,
-            _symbol,
-            _trustedForwarder,
-            _contractURI
-        );
+        __TokenERC20_init(_name, _symbol, _trustedForwarder, _contractURI);
     }
 
     function __TokenERC20_init(

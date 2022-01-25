@@ -56,10 +56,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     ) public {
         require(implementationApproval[_implementation], "implementation not approved");
 
-        bytes memory proxyBytecode = abi.encodePacked(
-            type(TWProxy).creationCode,
-            abi.encode(_implementation, _data)
-        );
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(_implementation, _data));
 
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
@@ -96,23 +93,11 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         return modules[_moduleType][_version];
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }

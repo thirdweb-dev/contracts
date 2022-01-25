@@ -22,14 +22,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "./TWFee.sol";
 
-contract Bundle is
-    IERC2981,
-    Initializable,
-    ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
-    ERC1155PresetUpgradeable 
-{
-
+contract Bundle is IERC2981, Initializable, ERC2771ContextUpgradeable, MulticallUpgradeable, ERC1155PresetUpgradeable {
     bytes32 private constant MODULE_TYPE = bytes32("Bundle");
     uint256 private constant VERSION = 1;
 
@@ -299,14 +292,11 @@ contract Bundle is
     /**
      *      External functions
      */
-    
+
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Royalty
-        );
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -327,10 +317,7 @@ contract Bundle is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Transaction
-        );
+        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -534,7 +521,12 @@ contract Bundle is
      */
 
     /// @dev See EIP 165
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155PresetUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 

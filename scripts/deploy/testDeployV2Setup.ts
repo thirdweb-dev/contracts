@@ -15,50 +15,54 @@ async function main() {
 
   // Constructor args
   const trustedForwarderAddress: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
-  const defaultRoyaltyFeeBps: BigNumber = BigNumber.from(100) // 1 %
-  const defaultTransactionFeeBps: BigNumber = BigNumber.from(50) // 0.5%
+  const defaultRoyaltyFeeBps: BigNumber = BigNumber.from(100); // 1 %
+  const defaultTransactionFeeBps: BigNumber = BigNumber.from(50); // 0.5%
   const defaultRecipient: string = deployer.address;
 
   // Deploy CurrencyTransferLib
   const currencyTransferLib = await ethers.getContractFactory("CurrencyTransferLib").then(f => f.deploy());
 
   // Deploy TWFactory and TWRegistry
-  const thirdwebFactory: TWFactory = await ethers.getContractFactory("TWFactory").then(f => f.deploy(trustedForwarderAddress));
+  const thirdwebFactory: TWFactory = await ethers
+    .getContractFactory("TWFactory")
+    .then(f => f.deploy(trustedForwarderAddress));
   const deployTxFactory = thirdwebFactory.deployTransaction;
-  
+
   console.log("Deploying TWFactory and TWRegistry at tx: ", deployTxFactory.hash);
 
-  await deployTxFactory.wait()
+  await deployTxFactory.wait();
 
-  const thirdwebRegistryAddr: string = await thirdwebFactory.registry()
+  const thirdwebRegistryAddr: string = await thirdwebFactory.registry();
 
   console.log("TWFactory address: ", thirdwebFactory.address);
   console.log("TWRegistry address: ", thirdwebRegistryAddr);
 
   // Deploy TWFee
-  const thirdwebFee: TWFee = await ethers.getContractFactory("TWFee").then(f => f.deploy(
-    trustedForwarderAddress,
-    defaultRecipient,
-    defaultRecipient,
-    defaultRoyaltyFeeBps,
-    defaultTransactionFeeBps
-  ))
+  const thirdwebFee: TWFee = await ethers
+    .getContractFactory("TWFee")
+    .then(f =>
+      f.deploy(
+        trustedForwarderAddress,
+        defaultRecipient,
+        defaultRecipient,
+        defaultRoyaltyFeeBps,
+        defaultTransactionFeeBps,
+      ),
+    );
   const deployTxFee = thirdwebFee.deployTransaction;
 
   console.log("Deploying TWFee at tx: ", deployTxFee.hash);
 
-  await deployTxFactory.wait()
+  await deployTxFactory.wait();
 
   console.log("TWFee address: ", thirdwebFee.address);
 
   // Deploy a test implementation: Drop721
-  const drop721Factory: DropERC721__factory = await ethers.getContractFactory(
-    "DropERC721", {
-      libraries: {
-        CurrencyTransferLib: currencyTransferLib.address
-      }
-    }
-  );
+  const drop721Factory: DropERC721__factory = await ethers.getContractFactory("DropERC721", {
+    libraries: {
+      CurrencyTransferLib: currencyTransferLib.address,
+    },
+  });
   const drop721: DropERC721 = await drop721Factory.deploy(thirdwebFee.address);
 
   console.log("Deploying Drop721 at tx: ", drop721.deployTransaction.hash);
@@ -96,7 +100,7 @@ async function main() {
       defaultRecipient,
       defaultRecipient,
       defaultRoyaltyFeeBps,
-      defaultTransactionFeeBps
+      defaultTransactionFeeBps,
     ],
   });
   await hre.run("verify:verify", {
