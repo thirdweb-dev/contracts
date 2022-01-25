@@ -36,6 +36,10 @@ contract Marketplace is
     ERC2771Context,
     Multicall
 {
+
+    /// @dev Version of the contract.
+    uint256 public constant VERSION = 1;
+
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
 
@@ -235,9 +239,25 @@ contract Marketplace is
     }
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
-    function buy(uint256 _listingId, uint256 _quantityToBuy) external payable override nonReentrant {
+    function buy(
+        uint256 _listingId,
+        uint256 _quantityToBuy,
+        address _currency,
+        uint256 _totalPrice
+    )
+        external 
+        payable
+        override 
+        nonReentrant 
+    {
         Listing memory targetListing = listings[_listingId];
         address buyer = _msgSender();
+
+        // Check whether the settled total price and currency to use are correct.
+        require(
+            _currency == targetListing.currency && _totalPrice == (targetListing.buyoutPricePerToken * _quantityToBuy),
+            "Marketplace: invalid currency or price"
+        );
 
         executeSale(
             targetListing,
