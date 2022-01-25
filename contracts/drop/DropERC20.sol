@@ -246,7 +246,11 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        uint256 twFee = (totalPrice * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
+            address(this), 
+            TWFee.FeeType.Transaction
+        );
+        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
@@ -261,7 +265,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
         CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
-            thirdwebFees.getSalesFeeRecipient(address(this)),
+            twFeeRecipient,
             twFee
         );
         CurrencyTransferLib.transferCurrency(

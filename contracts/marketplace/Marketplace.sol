@@ -552,11 +552,15 @@ contract Marketplace is
         Listing memory _listing
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
-        uint256 twFee = (_totalPayoutAmount * thirdwebFees.getSalesFeeBps(address(this))) / MAX_BPS;
-        uint256 royalties;
 
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
+            address(this), 
+            TWFee.FeeType.Transaction
+        );
+        uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
+        
+        uint256 royalties;
         address royaltyRecipient;
-        address twFeeRecipient = thirdwebFees.getSalesFeeRecipient(address(this));
 
         // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
         try IERC2981(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
