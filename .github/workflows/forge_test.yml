@@ -25,8 +25,8 @@ jobs:
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
         with:
-          version: master
+          version: nightly
       - name: Run install deps
-        run: forge install
+        run: forge update # forge install
       - name: Run tests
         run: forge test
