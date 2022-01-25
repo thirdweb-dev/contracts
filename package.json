@@ -15,6 +15,8 @@
     "dist/"
   ],
   "devDependencies": {
+    "solhint": "^3.3.6",
+    "solhint-plugin-prettier": "^0.0.5",
     "@chainlink/contracts": "^0.3.0",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/bignumber": "^5.4.2",
@@ -67,6 +69,7 @@
     "clean": "hardhat clean && rm -rf abi/ && rm -rf artifacts/ && rm -rf dist/ && rm -rf typechain/",
     "compile": "hardhat compile",
     "prettier": "prettier --config .prettierrc --write \"**/*.{js,json,sol,ts}\"",
+    "lint": "solhint \"contracts/**/*.sol\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
