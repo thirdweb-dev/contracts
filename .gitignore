@@ -33,3 +33,4 @@ yarn-error.log*
 ./contracts/v2/Market.sol
 /notes.txt
 /out
+artifacts_forge/
