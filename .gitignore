@@ -16,6 +16,7 @@ typechain/
 
 abi/
 artifacts/
+artifacts_forge/
 
 # files
 *.env
