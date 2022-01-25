@@ -261,9 +261,20 @@ contract Marketplace is
     }
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
-    function buy(uint256 _listingId, uint256 _quantityToBuy) external payable override nonReentrant {
+    function buy(
+        uint256 _listingId,
+        uint256 _quantityToBuy,
+        address _currency,
+        uint256 _totalPrice
+    ) external payable override nonReentrant {
         Listing memory targetListing = listings[_listingId];
         address buyer = _msgSender();
+
+        // Check whether the settled total price and currency to use are correct.
+        require(
+            _currency == targetListing.currency && _totalPrice == (targetListing.buyoutPricePerToken * _quantityToBuy),
+            "Marketplace: invalid currency or price"
+        );
 
         executeSale(
             targetListing,
@@ -455,11 +466,23 @@ contract Marketplace is
 
             // Payout previous highest bid.
             if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
-                CurrencyTransferLib.transferCurrency(_targetListing.currency, address(this), currentWinningBid.offeror, currentOfferAmount, _nativeTokenWrapper);
+                CurrencyTransferLib.transferCurrency(
+                    _targetListing.currency,
+                    address(this),
+                    currentWinningBid.offeror,
+                    currentOfferAmount,
+                    _nativeTokenWrapper
+                );
             }
 
             // Collect incoming bid
-            CurrencyTransferLib.transferCurrency(_targetListing.currency, _incomingBid.offeror, address(this), incomingOfferAmount, _nativeTokenWrapper);
+            CurrencyTransferLib.transferCurrency(
+                _targetListing.currency,
+                _incomingBid.offeror,
+                address(this),
+                incomingOfferAmount,
+                _nativeTokenWrapper
+            );
 
             emit NewOffer(
                 _targetListing.listingId,
@@ -553,12 +576,9 @@ contract Marketplace is
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Transaction
-        );
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
-        
+
         uint256 royalties;
         address royaltyRecipient;
 
@@ -580,10 +600,22 @@ contract Marketplace is
         // Distribute price to token owner
         address _nativeTokenWrapper = nativeTokenWrapper;
 
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, marketFeeRecipient, marketCut, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(
+            _currencyToUse,
+            _payer,
+            marketFeeRecipient,
+            marketCut,
+            _nativeTokenWrapper
+        );
         CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties, _nativeTokenWrapper);
         CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee, _nativeTokenWrapper);
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, _payee, _totalPayoutAmount - (marketCut + royalties + twFee), _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(
+            _currencyToUse,
+            _payer,
+            _payee,
+            _totalPayoutAmount - (marketCut + royalties + twFee),
+            _nativeTokenWrapper
+        );
     }
 
     /// @dev Checks whether an incoming bid should be the new current highest bid.

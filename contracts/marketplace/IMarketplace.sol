@@ -211,7 +211,7 @@ interface IMarketplace {
      *          (2) the lister does not own or has removed Markeplace's
      *              approval to transfer the tokens listed for sale.
      */
-    function buy(uint256 _listingId, uint256 _quantity) external payable;
+    function buy(uint256 _listingId, uint256 _quantity, address _currency, uint256 _totalPrice) external payable;
 
     /**
      * @notice Lets someone make an offer to a direct listing, or bid in an auction.
