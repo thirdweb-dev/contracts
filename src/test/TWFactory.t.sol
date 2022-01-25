@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "./utils/Console.sol";
 
 contract MockThirdwebModule is IThirdwebModule {
-
     string public contractURI;
 
     function moduleType() external view returns (bytes32) {
@@ -35,7 +34,6 @@ interface ITWFactoryData {
 }
 
 contract TWFactoryTest is ITWFactoryData, BaseTest {
-
     // Target contract
     TWFactory internal twFactory;
 
@@ -58,7 +56,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
         vm.prank(moduleDeployer);
         mockModule = new MockThirdwebModule();
-
     }
 
     //  =====   Initial state   =====
@@ -69,12 +66,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
      *  - Deployer of the contract has `DEFAULT_ADMIN_ROLE`
      */
     function testInitialState() public {
-        assertTrue(
-            twFactory.hasRole(
-                twFactory.DEFAULT_ADMIN_ROLE(),
-                factoryDeployer
-            )
-        );
+        assertTrue(twFactory.hasRole(twFactory.DEFAULT_ADMIN_ROLE(), factoryDeployer));
     }
 
     //  =====   Functionality tests   =====
@@ -87,21 +79,12 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         uint256 moduleVersionOnFactory = twFactory.currentModuleVersion(moduleType);
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(
-            moduleType,
-            address(mockModule)
-        );
+        twFactory.addModuleImplementation(moduleType, address(mockModule));
 
         assertTrue(twFactory.implementationApproval(address(mockModule)));
-        assertEq(
-            address(mockModule),
-            twFactory.modules(moduleType, moduleVersion)
-        );
+        assertEq(address(mockModule), twFactory.modules(moduleType, moduleVersion));
         assertEq(twFactory.currentModuleVersion(moduleType), moduleVersionOnFactory + 1);
-        assertEq(
-            twFactory.getImplementation(moduleType, moduleVersion),
-            address(mockModule)
-        );
+        assertEq(twFactory.getImplementation(moduleType, moduleVersion), address(mockModule));
     }
 
     function testAddModuleInvalidCaller() public {
@@ -110,26 +93,18 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         vm.expectRevert("not admin.");
 
         vm.prank(moduleDeployer);
-        twFactory.addModuleImplementation(
-            moduleType,
-            address(mockModule)
-        );
+        twFactory.addModuleImplementation(moduleType, address(mockModule));
     }
 
     function testAddModuleInvalidModuleType() public {
         bytes32 moduleType = bytes32("Random");
 
-        assertTrue(
-            mockModule.moduleType() != moduleType
-        );
+        assertTrue(mockModule.moduleType() != moduleType);
 
         vm.expectRevert("invalid module type.");
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(
-            moduleType,
-            address(mockModule)
-        );
+        twFactory.addModuleImplementation(moduleType, address(mockModule));
     }
 
     function testAddModuleEvent() public {
@@ -140,43 +115,30 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         emit NewModuleImplementation(moduleType, moduleVersion, address(mockModule));
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(
-            moduleType,
-            address(mockModule)
-        );
+        twFactory.addModuleImplementation(moduleType, address(mockModule));
     }
 
     /// @dev Test `approveImplementation`
 
     function testValidApproveImpl() public {
-        assertTrue(
-            twFactory.implementationApproval(address(mockModule)) == false
-        );
-        assertTrue(
-            twFactory.currentModuleVersion(mockModule.moduleType()) == 0
-        );
+        assertTrue(twFactory.implementationApproval(address(mockModule)) == false);
+        assertTrue(twFactory.currentModuleVersion(mockModule.moduleType()) == 0);
 
         vm.prank(factoryDeployer);
         twFactory.approveImplementation(address(mockModule), true);
 
-        assertTrue(
-            twFactory.implementationApproval(address(mockModule))
-        );
-        assertTrue(
-            twFactory.currentModuleVersion(mockModule.moduleType()) == 0
-        );
+        assertTrue(twFactory.implementationApproval(address(mockModule)));
+        assertTrue(twFactory.currentModuleVersion(mockModule.moduleType()) == 0);
     }
 
     function testApproveImplInvalidCaller() public {
-
         vm.expectRevert("not admin.");
-        
+
         vm.prank(moduleDeployer);
         twFactory.approveImplementation(address(mockModule), true);
     }
 
     function testApproveImplEvent() public {
-
         vm.expectEmit(false, false, false, true);
         emit ImplementationApproved(address(mockModule), true);
 
@@ -209,9 +171,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         vm.prank(moduleDeployer);
         twFactory.deployProxyByImplementation(address(mockModule), "", _salt);
 
-        assertEq(
-            mockModule.moduleType(),
-            MockThirdwebModule(computedProxyAddr).moduleType()
-        );
+        assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
     }
 }

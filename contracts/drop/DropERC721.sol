@@ -218,10 +218,7 @@ contract DropERC721 is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Royalty
-        );
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -247,10 +244,7 @@ contract DropERC721 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Transaction
-        );
+        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -428,10 +422,7 @@ contract DropERC721 is
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Transaction
-        );
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
@@ -444,12 +435,7 @@ contract DropERC721 is
             platformFeeRecipient,
             platformFees
         );
-        CurrencyTransferLib.transferCurrency(
-            _claimCondition.currency,
-            _msgSender(),
-            twFeeRecipient,
-            twFee
-        );
+        CurrencyTransferLib.transferCurrency(_claimCondition.currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _claimCondition.currency,
             _msgSender(),
@@ -511,9 +497,7 @@ contract DropERC721 is
         override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
-        return
-            super.supportsInterface(interfaceId) ||
-            type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
     function _msgSender()

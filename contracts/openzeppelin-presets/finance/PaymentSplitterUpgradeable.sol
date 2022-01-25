@@ -49,7 +49,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
     /// @dev The thirdweb contract with fee related information.
     TWFee public immutable thirdwebFees;
-    
+
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
 
@@ -159,7 +159,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
+            address(this),
             TWFee.FeeType.Transaction
         );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
@@ -186,7 +186,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
+            address(this),
             TWFee.FeeType.Transaction
         );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;

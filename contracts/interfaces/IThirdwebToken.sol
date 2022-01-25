@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./IThirdwebModule.sol";
 
 interface IThirdwebToken is IThirdwebModule {
-
     /// @dev Returns whether token transfers are restricted amongst TRANSFER_ROLE holders.
     function isTransferRestricted() external view returns (bool);
 

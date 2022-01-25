@@ -20,7 +20,6 @@ contract Splits is
     AccessControlEnumerableUpgradeable,
     PaymentSplitterUpgradeable
 {
-
     bytes32 private constant MODULE_TYPE = bytes32("Splits");
     uint256 private constant VERSION = 1;
 

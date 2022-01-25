@@ -22,9 +22,8 @@ contract AccessNFT is
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC1155PresetUpgradeable 
+    ERC1155PresetUpgradeable
 {
-    
     bytes32 private constant MODULE_TYPE = bytes32("AccessNFT");
     uint256 private constant VERSION = 1;
 
@@ -39,7 +38,7 @@ contract AccessNFT is
 
     /// @dev The thirdweb contract with fee related information.
     TWFee public immutable thirdwebFees;
-    
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -179,7 +178,7 @@ contract AccessNFT is
         return VERSION;
     }
 
-     /// @dev See EIP 1155
+    /// @dev See EIP 1155
     function uri(uint256 _nftId) public view override returns (string memory) {
         return tokenState[_nftId].uri;
     }
@@ -237,14 +236,11 @@ contract AccessNFT is
     /**
      *      External functions.
      */
-    
+
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Royalty
-        );
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -265,10 +261,7 @@ contract AccessNFT is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(
-            address(this), 
-            TWFee.FeeType.Transaction
-        );
+        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -469,7 +462,12 @@ contract AccessNFT is
     }
 
     /// @dev See EIP 165
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155PresetUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 }
