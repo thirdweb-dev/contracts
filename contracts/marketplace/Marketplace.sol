@@ -36,6 +36,10 @@ contract Marketplace is
     ERC2771Context,
     Multicall
 {
+
+    /// @dev Version of the contract.
+    uint256 public constant VERSION = 1;
+
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
 
