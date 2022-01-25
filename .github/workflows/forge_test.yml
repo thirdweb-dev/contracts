@@ -22,11 +22,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.4.1
+      # Runs a single command using the runners shell
+      - name: Run npm install
+        run: yarn
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-      - name: Run install deps
-        run: forge update # forge install
       - name: Run tests
         run: forge test
