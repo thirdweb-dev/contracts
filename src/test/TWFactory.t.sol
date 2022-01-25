@@ -9,6 +9,7 @@ import "contracts/TWFactory.sol";
 import "contracts/TWProxy.sol";
 import "contracts/interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
+import "./utils/Console.sol";
 
 contract MockThirdwebModule is IThirdwebModule {
 
@@ -190,18 +191,19 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         twFactory.approveImplementation(address(mockModule), true);
     }
 
-    function testValidDeployProxyByImpl() public {
+    function testValidDeployProxyByImpl(bytes32 _salt) public {
 
         _setUpTestDeployProxyByImpl();
 
-        bytes32 _salt = bytes32("Hello");
+        bytes memory proxyBytecode = abi.encodePacked(
+            type(TWProxy).creationCode,
+            abi.encode(address(mockModule), "")
+        );
+
         address computedProxyAddr = Create2.computeAddress(
             _salt,
-            keccak256(abi.encodePacked(
-                type(TWProxy).creationCode,
-                abi.encode(address(mockModule), "")
-            )),
-            moduleDeployer
+            keccak256(proxyBytecode),
+            address(twFactory)
         );
 
         vm.prank(moduleDeployer);
