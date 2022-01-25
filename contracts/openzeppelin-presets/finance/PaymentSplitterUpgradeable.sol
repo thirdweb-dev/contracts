@@ -158,8 +158,11 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        uint256 splitsFee = (payment * thirdwebFees.getSplitsFeeBps(address(this))) / MAX_BPS;
-        address splitsFeeRecipient = thirdwebFees.getSplitsFeeRecipient(address(this));
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
+            address(this), 
+            TWFee.FeeType.Transaction
+        );
+        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _released[account] += payment;
         _totalReleased += payment;
@@ -182,8 +185,11 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        uint256 splitsFee = (payment * thirdwebFees.getSplitsFeeBps(address(this))) / MAX_BPS;
-        address splitsFeeRecipient = thirdwebFees.getSplitsFeeRecipient(address(this));
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
+            address(this), 
+            TWFee.FeeType.Transaction
+        );
+        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _erc20Released[token][account] += payment;
         _erc20TotalReleased[token] += payment;

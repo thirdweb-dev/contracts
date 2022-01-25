@@ -34,6 +34,10 @@ yarn-error.log*
 .yalc/
 yalc.lock
 
+# Forge
+/lib
+/out
+
 #Build
 .swc/
 out/
