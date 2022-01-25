@@ -26,5 +26,7 @@ jobs:
         uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
+      - name: Run install deps
+        run: git submodule update --init --recursive # forge install
       - name: Run tests
         run: forge test
