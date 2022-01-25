@@ -19,6 +19,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
 
+    /// @dev Version of the contract.
+    uint256 public constant VERSION = 1;
+
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
