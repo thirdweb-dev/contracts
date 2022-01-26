@@ -14,7 +14,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     uint128 public constant MAX_BPS = 10_000;
 
     /// @dev The threshold for thirdweb fees. 1%
-    uint128 public constant maxFeeBps = 100;
+    uint128 public constant MAX_FEE_BPS = 100;
 
     /// @dev Mapping from module type => fee type => fee info
     mapping(bytes32 => mapping(FeeType => FeeInfo)) public feeInfoByModuleType;
