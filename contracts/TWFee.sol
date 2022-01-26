@@ -40,7 +40,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     event DefaultFeeInfo(FeeInfo feeInfo);
 
     modifier onlyValidFee(uint256 _feeBps) {
-        require(_feeBps <= maxFeeBps, "fees too high");
+        require(_feeBps <= MAX_FEE_BPS, "fees too high");
         _;
     }
 
