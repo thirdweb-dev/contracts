@@ -3,7 +3,6 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 
 // Contract Types
-import { ClaimConditionStruct } from "typechain/LazyMintERC20";
 import { LazyMintERC20 } from "typechain/LazyMintERC20";
 import { Coin } from "typechain/Coin";
 
@@ -33,7 +32,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
   const baseURI: string = "ipfs://baseURI/";
 
   // Setting mint conditions default params
-  let mintConditions: ClaimConditionStruct[];
+  let mintConditions: any[];
 
   // Claim params
   let proof: BytesLike[];
@@ -85,7 +84,7 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     );
 
     // Set mint conditions
-    const templateMintCondition: ClaimConditionStruct = {
+    const templateMintCondition: any = {
       startTimestamp: BigNumber.from((await ethers.provider.getBlock("latest")).timestamp).add(100),
       maxClaimableSupply: BigNumber.from(25),
       supplyClaimed: BigNumber.from(0),
