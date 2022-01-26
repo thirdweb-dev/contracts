@@ -73,7 +73,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
     /// @dev Test `addModuleImplementation`
 
-    function testValidAddModule() public {
+    function test_addModuleImplementation() public {
         bytes32 moduleType = mockModule.moduleType();
         uint256 moduleVersion = mockModule.version();
         uint256 moduleVersionOnFactory = twFactory.currentModuleVersion(moduleType);
@@ -87,7 +87,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         assertEq(twFactory.getImplementation(moduleType, moduleVersion), address(mockModule));
     }
 
-    function testAddModuleInvalidCaller() public {
+    function test_addModuleImplementation_revert_invalidCaller() public {
         bytes32 moduleType = mockModule.moduleType();
 
         vm.expectRevert("not admin.");
@@ -96,7 +96,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         twFactory.addModuleImplementation(moduleType, address(mockModule));
     }
 
-    function testAddModuleInvalidModuleType() public {
+    function test_addModuleImplementation_revert_invalidModuleType() public {
         bytes32 moduleType = bytes32("Random");
 
         assertTrue(mockModule.moduleType() != moduleType);
@@ -107,7 +107,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         twFactory.addModuleImplementation(moduleType, address(mockModule));
     }
 
-    function testAddModuleEvent() public {
+    function test_addModuleImplementation_emit_NewModuleImplementation() public {
         bytes32 moduleType = mockModule.moduleType();
         uint256 moduleVersion = mockModule.version();
 
@@ -120,7 +120,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
     /// @dev Test `approveImplementation`
 
-    function testValidApproveImpl() public {
+    function test_approveImplementation() public {
         assertTrue(twFactory.implementationApproval(address(mockModule)) == false);
         assertTrue(twFactory.currentModuleVersion(mockModule.moduleType()) == 0);
 
@@ -131,14 +131,14 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         assertTrue(twFactory.currentModuleVersion(mockModule.moduleType()) == 0);
     }
 
-    function testApproveImplInvalidCaller() public {
+    function test_approveImplementation_revert_invalidCaller() public {
         vm.expectRevert("not admin.");
 
         vm.prank(moduleDeployer);
         twFactory.approveImplementation(address(mockModule), true);
     }
 
-    function testApproveImplEvent() public {
+    function test_approveImplementation_emit_ImplementationApproved() public {
         vm.expectEmit(false, false, false, true);
         emit ImplementationApproved(address(mockModule), true);
 
@@ -148,13 +148,13 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
     /// @dev Test `deployProxyByImplementation`
 
-    function _setUpTestDeployProxyByImpl() internal {
+    function _setUp_deployProxyByImplementation() internal {
         vm.prank(factoryDeployer);
         twFactory.approveImplementation(address(mockModule), true);
     }
 
-    function testValidDeployProxyByImpl(bytes32 _salt) public {
-        _setUpTestDeployProxyByImpl();
+    function test_deployProxyByImplementation(bytes32 _salt) public {
+        _setUp_deployProxyByImplementation();
 
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
 
@@ -164,5 +164,160 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         twFactory.deployProxyByImplementation(address(mockModule), "", _salt);
 
         assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
+    }
+
+    function test_deployProxyByImplementation_revert_invalidImpl() public {
+        
+        vm.expectRevert("implementation not approved");
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxyByImplementation(address(mockModule), "", "");
+    }
+
+    function test_deployProxyByImplementation_emit_ProxyDeployed() public {
+        _setUp_deployProxyByImplementation();
+
+        bytes32 salt = bytes32("Random");
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(twFactory));
+
+        vm.expectEmit(true, true, false, true);
+        emit ProxyDeployed(address(mockModule), computedProxyAddr, moduleDeployer);
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxyByImplementation(address(mockModule), "", salt);
+    }
+
+    /// @dev Test `deployProxyDeterministic`
+
+    function _setUp_deployProxyDeterministic() internal {
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        vm.prank(factoryDeployer);
+        twFactory.addModuleImplementation(moduleType, address(mockModule));
+    }
+
+    function test_deployProxyDeterministic(bytes32 _salt) public {
+        _setUp_deployProxyDeterministic();
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(twFactory));
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxyDeterministic(moduleType, "", _salt);
+
+        assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
+    }
+
+    function test_deployProxyDeterministic_revert_invalidImpl(bytes32 _salt) public {
+        bytes32 moduleType = mockModule.moduleType();
+
+        vm.expectRevert("implementation not approved");
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxyDeterministic(moduleType, "", _salt);
+    }
+
+    function test_deployProxyDeterministic_emit_ProxyDeployed() public {
+        _setUp_deployProxyDeterministic();
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        bytes32 salt = bytes32("Random");
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(twFactory));
+
+        vm.expectEmit(true, true, false, true);
+        emit ProxyDeployed(address(mockModule), computedProxyAddr, moduleDeployer);
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxyDeterministic(moduleType, "", salt);
+    }
+
+    /// @dev Test `deployProxy`
+
+    function _setUp_deployProxy() internal {
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        vm.prank(factoryDeployer);
+        twFactory.addModuleImplementation(moduleType, address(mockModule));
+    }
+
+    function test_deployProxy() public {
+        _setUp_deployProxy();
+
+        bytes32 moduleType = mockModule.moduleType();
+        bytes32 _salt = keccak256(abi.encodePacked(moduleType, block.number));
+
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(twFactory));
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxy(moduleType, "");
+
+        assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
+    }
+
+    function test_deployProxy_revert_invalidImpl() public {
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        vm.expectRevert("implementation not approved");
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxy(moduleType, "");
+    }
+
+    function test_deployProxy_emit_ProxyDeployed() public {
+        _setUp_deployProxy();
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        bytes32 salt = keccak256(abi.encodePacked(moduleType, block.number));
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(twFactory));
+
+        vm.expectEmit(true, true, false, true);
+        emit ProxyDeployed(address(mockModule), computedProxyAddr, moduleDeployer);
+
+        vm.prank(moduleDeployer);
+        twFactory.deployProxy(moduleType, "");
+    }
+
+    /**
+     *      =====   Attack vectors   =====
+     *
+     *  - No proxy should be able to point to an unapproved implementation.
+     *  - No non-admin should be able to approve an implementation.
+    **/
+
+    function testNoUnapprovedImpl(address _implementation) public {
+
+        vm.prank(factoryDeployer);
+        twFactory.approveImplementation(address(mockModule), true);
+
+        if(_implementation != address(mockModule)) {
+            vm.expectRevert("implementation not approved");
+
+            vm.prank(moduleDeployer);
+            twFactory.deployProxyByImplementation(_implementation, "", "");
+        }
+    }
+
+    function testNoNonAdmin(address _implementation, address _deployer) public {
+        bool toApprove = true;
+
+        if(
+            !twFactory.hasRole(twFactory.DEFAULT_ADMIN_ROLE(), _deployer)
+        ) {
+            vm.expectRevert("not admin.");
+
+            vm.prank(_deployer);
+            twFactory.approveImplementation(_implementation, toApprove);
+        }
     }
 }
