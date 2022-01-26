@@ -1,5 +1,6 @@
 # folders
 artifacts/
+artifacts_forge/
 build/
 cache/
 coverage/

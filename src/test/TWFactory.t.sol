@@ -154,19 +154,11 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     }
 
     function testValidDeployProxyByImpl(bytes32 _salt) public {
-
         _setUpTestDeployProxyByImpl();
 
-        bytes memory proxyBytecode = abi.encodePacked(
-            type(TWProxy).creationCode,
-            abi.encode(address(mockModule), "")
-        );
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
 
-        address computedProxyAddr = Create2.computeAddress(
-            _salt,
-            keccak256(proxyBytecode),
-            address(twFactory)
-        );
+        address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(twFactory));
 
         vm.prank(moduleDeployer);
         twFactory.deployProxyByImplementation(address(mockModule), "", _salt);
