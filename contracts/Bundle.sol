@@ -19,14 +19,10 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 
-// Helper Interfaces
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-
 // Thirdweb top-level
 import "./TWFee.sol";
 
 contract Bundle is
-    IERC2981,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -537,7 +533,7 @@ contract Bundle is
         override(ERC1155PresetUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
     }
 
     /// @dev See EIP 1155

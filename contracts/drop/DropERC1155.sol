@@ -24,7 +24,6 @@ import "../lib/CurrencyTransferLib.sol";
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -545,7 +544,7 @@ contract DropERC1155 is
         override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
     }
 
     function _msgSender()

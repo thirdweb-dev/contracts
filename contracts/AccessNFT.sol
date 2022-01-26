@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Interfaces
+import { IThirdwebRoyalty } from "./interfaces/IThirdwebRoyalty.sol";
+
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 
@@ -11,18 +14,15 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 
-// Helper interfaces
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-
 // Thirdweb top-level
 import "./TWFee.sol";
 
 contract AccessNFT is
-    IERC2981,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC1155PresetUpgradeable
+    ERC1155PresetUpgradeable,
+    IThirdwebRoyalty
 {
     bytes32 private constant MODULE_TYPE = bytes32("AccessNFT");
     uint256 private constant VERSION = 1;
@@ -49,7 +49,7 @@ contract AccessNFT is
     address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint256 public royaltyBps;
+    uint16 public royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -147,7 +147,7 @@ contract AccessNFT is
         string memory _contractURI,
         address _trustedForwarder,
         address _royaltyReceiver,
-        uint256 _royaltyBps
+        uint16 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
@@ -380,11 +380,11 @@ contract AccessNFT is
     }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint16(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
@@ -468,6 +468,6 @@ contract AccessNFT is
         override(ERC1155PresetUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
     }
 }

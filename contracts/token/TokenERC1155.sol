@@ -26,7 +26,6 @@ import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -472,7 +471,7 @@ contract TokenERC1155 is
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
-            interfaceId == type(IERC2981).interfaceId;
+            interfaceId == type(IThirdwebRoyalty).interfaceId;
     }
 
     function _msgSender()

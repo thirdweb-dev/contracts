@@ -18,7 +18,6 @@ import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
@@ -529,7 +528,7 @@ contract Pack is
         override(ERC1155PresetUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
     }
 
     /// @dev See EIP 1155

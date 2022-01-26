@@ -26,7 +26,6 @@ import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -389,7 +388,7 @@ contract TokenERC721 is
         override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId) || interfaceId == type(IThirdwebRoyalty).interfaceId;
     }
 
     function _msgSender()
