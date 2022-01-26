@@ -278,7 +278,7 @@ contract DropERC721 is
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_receiver, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity);
