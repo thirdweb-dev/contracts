@@ -28,9 +28,6 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     /// @dev Max basis points in the thirdweb system
     uint128 private constant MAX_BPS = 10_000;
 
-    /// @dev Version of the contract.
-    uint256 public constant VERSION = 1;
-
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
