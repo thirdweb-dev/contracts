@@ -20,7 +20,15 @@
     "prettier/prettier": [
       "error",
       {
-        "endOfLine": "auto"
+        "arrowParens": "avoid",
+        "bracketSpacing": true,
+        "endOfLine": "auto",
+        "printWidth": 120,
+        "useTabs": false,
+        "singleQuote": false,
+        "tabWidth": 4,
+        "trailingComma": "all",
+        "explicitTypes": "always"
       }
     ],
     "reason-string": ["warn", { "maxLength": 64 }]

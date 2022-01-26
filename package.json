@@ -68,8 +68,8 @@
   "scripts": {
     "clean": "hardhat clean && rm -rf abi/ && rm -rf artifacts/ && rm -rf dist/ && rm -rf typechain/",
     "compile": "hardhat compile",
-    "prettier": "prettier --config .prettierrc --write \"**/*.{js,json,sol,ts}\"",
     "lint": "solhint \"contracts/**/*.sol\"",
+    "prettier": "prettier --config .prettierrc --write \"{contracts,src}/**/*.{js,json,sol,ts}\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
     "prettier:contracts": "prettier --config .prettierrc --list-different \"{contracts,src}/**/*.sol\"",
     "test": "hardhat test",

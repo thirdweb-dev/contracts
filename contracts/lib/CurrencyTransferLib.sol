@@ -82,7 +82,11 @@ library CurrencyTransferLib {
     }
 
     /// @dev Transfers `amount` of native token to `to`. (With native token wrapping)
-    function safeTransferNativeToken(address to, uint256 value, address _nativeTokenWrapper) internal {
+    function safeTransferNativeToken(
+        address to,
+        uint256 value,
+        address _nativeTokenWrapper
+    ) internal {
         (bool success, ) = to.call{ value: value }("");
         if (!success) {
             IWETH(_nativeTokenWrapper).deposit{ value: value }();
