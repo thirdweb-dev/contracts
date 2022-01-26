@@ -71,6 +71,7 @@
     "prettier": "prettier --config .prettierrc --write \"**/*.{js,json,sol,ts}\"",
     "lint": "solhint \"contracts/**/*.sol\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
+    "prettier:contracts": "prettier --config .prettierrc --list-different \"{contracts,src}/**/*.sol\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "build": "yarn clean && yarn compile && yarn typechain && yarn build:lib",
