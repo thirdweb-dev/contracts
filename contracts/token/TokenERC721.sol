@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Interface
 import { ITokenERC721 } from "./ITokenERC721.sol";
+import { IThirdwebRoyalty } from "../interfaces/IThirdwebRoyalty.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -38,7 +39,8 @@ contract TokenERC721 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+    IThirdwebRoyalty
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -81,7 +83,7 @@ contract TokenERC721 is
     address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint16 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
@@ -121,7 +123,7 @@ contract TokenERC721 is
         address _trustedForwarder,
         address _saleRecipient,
         address _royaltyReceiver,
-        uint128 _royaltyBps,
+        uint16 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
@@ -245,11 +247,11 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
@@ -384,7 +386,7 @@ contract TokenERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;

@@ -13,5 +13,5 @@ interface IThirdwebModule {
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     /// @dev Only module admin can call this function.
-    function setContractURI(string calldata _URI) external;
+    function setContractURI(string calldata _uri) external;
 }

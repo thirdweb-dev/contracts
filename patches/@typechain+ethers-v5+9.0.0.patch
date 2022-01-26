@@ -1,0 +1,69 @@
+diff --git a/node_modules/@typechain/ethers-v5/dist/codegen/index.js b/node_modules/@typechain/ethers-v5/dist/codegen/index.js
+index 43bb7d2..11cb691 100644
+--- a/node_modules/@typechain/ethers-v5/dist/codegen/index.js
++++ b/node_modules/@typechain/ethers-v5/dist/codegen/index.js
+@@ -14,7 +14,7 @@ function codegenContractTypings(contract, codegenConfig) {
+   ${(0, structs_1.generateStructTypes)((0, lodash_1.values)(contract.structs).map((v) => v[0]))}
+ 
+   export interface ${contract.name}Interface extends utils.Interface {
+-    contractName: '${contract.name}';
++    contractName:  string | '${contract.name}';
+     functions: {
+       ${(0, lodash_1.values)(contract.functions)
+         .map((v) => v[0])
+@@ -48,7 +48,7 @@ function codegenContractTypings(contract, codegenConfig) {
+   ${(0, lodash_1.values)(contract.events).map(events_1.generateEventTypeExports).join('\n')}
+ 
+   export interface ${contract.name} extends BaseContract {
+-    contractName: '${contract.name}';
++    contractName: string | '${contract.name}';
+     connect(signerOrProvider: Signer | Provider | string): this;
+     attach(addressOrName: string): this;
+     deployed(): Promise<this>;
+@@ -131,8 +131,6 @@ function codegenContractFactory(contract, abi, bytecode) {
+     const source = `
+   ${header}
+ 
+-  const _bytecode = "${bytecode.bytecode}";
+-
+   ${generateFactoryConstructorParamsAlias(contract, bytecode)}
+ 
+   export class ${contract.name}${common_1.FACTORY_POSTFIX} extends ContractFactory {
+@@ -151,7 +149,6 @@ function codegenContractFactory(contract, abi, bytecode) {
+     }
+     static readonly contractName: '${contract.name}';
+     public readonly contractName: '${contract.name}';
+-    static readonly bytecode = _bytecode;
+     ${body}
+   }
+ 
+@@ -218,7 +215,7 @@ function generateFactoryConstructor(contract, bytecode) {
+         if (isSuperArgs(args)) {
+           super(...args);
+         } else {
+-          super(_abi, _bytecode, args[0]);
++          super(_abi, "", args[0]);
+         }
+         this.contractName = '${contract.name}';
+       }
+@@ -247,19 +244,12 @@ function generateFactoryConstructor(contract, bytecode) {
+         const [linkLibraryAddresses, signer] = args;
+         super(
+           _abi,
+-          ${className}.linkBytecode(linkLibraryAddresses),
++          "",
+           signer
+         )
+       }
+       this.contractName = '${contract.name}';
+     }
+-
+-    static linkBytecode(linkLibraryAddresses: ${libAddressesName}): string {
+-      let linkedBytecode = _bytecode;
+-      ${linkRefReplacements.join('\n')}
+-
+-      return linkedBytecode;
+-    }
+   `;
+ }
+ function generateFactoryConstructorParamsAlias(contract, bytecode) {

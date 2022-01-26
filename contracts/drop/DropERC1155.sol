@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Interface
 import { IDropERC1155 } from "./IDropERC1155.sol";
+import { IThirdwebRoyalty } from "../interfaces/IThirdwebRoyalty.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -35,7 +36,8 @@ contract DropERC1155 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable
+    ERC1155Upgradeable,
+    IThirdwebRoyalty
 {
     using StringsUpgradeable for uint256;
 
@@ -72,7 +74,7 @@ contract DropERC1155 is
     address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint16 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
@@ -130,7 +132,7 @@ contract DropERC1155 is
         address _trustedForwarder,
         address _saleRecipient,
         address _royaltyReceiver,
-        uint128 _royaltyBps,
+        uint16 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
@@ -282,11 +284,11 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
@@ -540,7 +542,7 @@ contract DropERC1155 is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;

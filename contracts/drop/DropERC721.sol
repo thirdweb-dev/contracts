@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-// Interface
+// Interfaces
 import { IDropERC721 } from "./IDropERC721.sol";
+import { IThirdwebRoyalty } from "../interfaces/IThirdwebRoyalty.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -34,7 +35,8 @@ contract DropERC721 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+    IThirdwebRoyalty
 {
     using StringsUpgradeable for uint256;
 
@@ -47,7 +49,7 @@ contract DropERC721 is
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Max bps in the thirdweb system
-    uint256 private constant MAX_BPS = 10_000;
+    uint16 private constant MAX_BPS = 10_000;
 
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -74,7 +76,7 @@ contract DropERC721 is
     address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint16 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
@@ -117,7 +119,7 @@ contract DropERC721 is
         address _trustedForwarder,
         address _saleRecipient,
         address _royaltyReceiver,
-        uint128 _royaltyBps,
+        uint16 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
@@ -345,11 +347,10 @@ contract DropERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
-
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
@@ -494,7 +495,7 @@ contract DropERC721 is
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;

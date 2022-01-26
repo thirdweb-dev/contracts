@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Interfaces
+import { IThirdwebRoyalty } from "./interfaces/IThirdwebRoyalty.sol";
+
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 
 // Randomness
-import "@chainlink/v0.8/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
@@ -23,12 +26,12 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "./TWFee.sol";
 
 contract Pack is
-    IERC2981,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC1155PresetUpgradeable
+    ERC1155PresetUpgradeable,
+    IThirdwebRoyalty
 {
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
@@ -55,7 +58,7 @@ contract Pack is
     address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint256 public royaltyBps;
+    uint16 public royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -161,7 +164,7 @@ contract Pack is
         string memory _contractURI,
         address _trustedForwarder,
         address _royaltyReceiver,
-        uint128 _royaltyBps,
+        uint16 _royaltyBps,
         uint128 _fees,
         bytes32 _keyHash
     ) external initializer {
@@ -354,7 +357,7 @@ contract Pack is
     }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
