@@ -10,7 +10,7 @@
     "contract-name-camelcase": "error",
     "event-name-camelcase": "error",
     "constructor-syntax": "error",
-    "func-name-mixedcase": "error",
+    "func-name-mixedcase": "off",
     "func-param-name-mixedcase": "error",
     "modifier-name-mixedcase": "error",
     "private-vars-leading-underscore": "off",
