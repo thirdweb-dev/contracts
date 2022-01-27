@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IDropERC20 } from "./IDropERC20.sol";
+import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 
 // Base
 import "../token/TokenERC20.sol";
@@ -28,6 +28,9 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     /// @dev Max basis points in the thirdweb system
     uint128 private constant MAX_BPS = 10_000;
 
+    /// @dev The % of primary sales collected as platform fees.
+    uint128 private platformFeeBps;
+
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -38,10 +41,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     address public primarySaleRecipient;
 
     /// @dev The address that receives the platform fees all primary sales value.
-    address public platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 public platformFeeBps;
+    address private platformFeeRecipient;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
@@ -70,13 +70,13 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     //      =====   Public functions  =====
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure override returns (bytes32) {
+    function moduleType() external pure override(IThirdwebModule, TokenERC20) returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure override returns (uint256) {
-        return VERSION;
+    function version() external pure override(IThirdwebModule, TokenERC20) returns (uint8) {
+        return uint8(VERSION);
     }
 
     /// @dev At any given moment, returns the uid for the active claim condition.
@@ -210,6 +210,11 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     }
 
     //      =====   Getter functions  =====
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
 
     /// @dev Returns the next calid timestamp for claiming, for a given claimer and claim condition index.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)

@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
+import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
+import "./interfaces/IThirdwebOwnable.sol";
 
 // Meta transactions
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
@@ -19,6 +22,9 @@ import "./TWFee.sol";
 
 contract AccessNFT is
     IERC2981,
+    IThirdwebModule,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -46,10 +52,10 @@ contract AccessNFT is
     uint256 public nextTokenId;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint256 public royaltyBps;
+    uint256 private royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -174,8 +180,8 @@ contract AccessNFT is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /// @dev See EIP 1155
@@ -353,6 +359,11 @@ contract AccessNFT is
         this.safeTransferFrom(address(this), redeemer, accessNftId, _amount, "");
 
         emit AccessNFTRedeemed(redeemer, _tokenId, accessNftId, _amount);
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
     }
 
     /**

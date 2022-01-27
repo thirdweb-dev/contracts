@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IMarketplace } from "./IMarketplace.sol";
+import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
 
 // Tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -62,13 +62,13 @@ contract Marketplace is
     bool public restrictedListerRoleOnly;
 
     /// @dev The address of which the marketplace fee goes to.
-    address public marketFeeRecipient;
+    address private platformFeeRecipient;
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
 
     /// @dev The marketplace fee.
-    uint64 public marketFeeBps;
+    uint64 private platformFeeBps;
 
     /// @dev The minimum amount of time left in an auction after a new bid is created. Default: 15 minutes.
     uint64 public timeBuffer = 15 minutes;
@@ -115,8 +115,8 @@ contract Marketplace is
     function initialize(
         string memory _contractURI,
         address _trustedForwarder,
-        address _marketFeeRecipient,
-        uint256 _marketFeeBps
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
@@ -124,8 +124,8 @@ contract Marketplace is
 
         // Initialize this contract's state.
         contractURI = _contractURI;
-        marketFeeBps = uint64(_marketFeeBps);
-        marketFeeRecipient = _marketFeeRecipient;
+        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeRecipient = _platformFeeRecipient;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
@@ -137,8 +137,8 @@ contract Marketplace is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     //  =====   External functions  =====
@@ -372,6 +372,11 @@ contract Marketplace is
         }
     }
 
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
     /// @dev Lets the contract accept ether.
     receive() external payable {}
 
@@ -574,7 +579,7 @@ contract Marketplace is
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        uint256 marketCut = (_totalPayoutAmount * marketFeeBps) / MAX_BPS;
+        uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
@@ -603,7 +608,7 @@ contract Marketplace is
         CurrencyTransferLib.transferCurrency(
             _currencyToUse,
             _payer,
-            marketFeeRecipient,
+            platformFeeRecipient,
             marketCut,
             _nativeTokenWrapper
         );
@@ -758,17 +763,14 @@ contract Marketplace is
 
     //  ===== Setter functions  =====
 
-    /// @dev Lets a module admin set market fees.
-    function setMarketFeeBps(uint256 _feeBps) external onlyModuleAdmin {
-        require(_feeBps < MAX_BPS, "Marketplace: invalid BPS.");
+    /// @dev Lets a module admin update the fees on primary sales.
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        marketFeeBps = uint64(_feeBps);
-        emit MarketFeeUpdate(uint64(_feeBps));
-    }
+        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeRecipient = _platformFeeRecipient;
 
-    /// @dev Lets a module admin set market fee recipient.
-    function setMarketFeeRecipient(address recipient) external onlyModuleAdmin {
-        marketFeeRecipient = recipient;
+        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set auction buffers

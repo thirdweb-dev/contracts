@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IDropERC721 } from "./IDropERC721.sol";
+import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -68,16 +68,16 @@ contract DropERC721 is
     address public primarySaleRecipient;
 
     /// @dev The adress that receives all primary sales value.
-    address public platformFeeRecipient;
+    address private platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -149,8 +149,8 @@ contract DropERC721 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -387,6 +387,16 @@ contract DropERC721 is
 
     //      =====   Getter functions  =====
 
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
     /// @dev Returns the current active mint condition for a given tokenId.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)
         public
@@ -494,7 +504,7 @@ contract DropERC721 is
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IDropERC1155 } from "./IDropERC1155.sol";
+import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -162,8 +162,8 @@ contract DropERC1155 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -321,6 +321,16 @@ contract DropERC1155 is
     }
 
     //      =====   Getter functions  =====
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
 
     /// @dev Returns the current active mint condition for a given tokenId.
     function getTimestampForNextValidClaim(
@@ -540,7 +550,7 @@ contract DropERC1155 is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;

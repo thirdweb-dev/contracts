@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ITokenERC721 } from "./ITokenERC721.sol";
+import { ITokenERC721 } from "../interfaces/token/ITokenERC721.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -154,8 +154,8 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -285,6 +285,18 @@ contract TokenERC721 is
         contractURI = _uri;
     }
 
+    ///     =====   Getter functions    =====
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
@@ -384,7 +396,7 @@ contract TokenERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;

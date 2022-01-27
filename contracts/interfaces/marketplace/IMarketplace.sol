@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "../IThirdwebModule.sol";
 import "../IThirdwebPlatformFee.sol";
 
-interface IMarketplace is IThirdwebPlatformFee {
+interface IMarketplace is IThirdwebModule, IThirdwebPlatformFee {
     /// @notice Type of the tokens that can be listed for sale.
     enum TokenType {
         ERC1155,
@@ -139,8 +140,8 @@ interface IMarketplace is IThirdwebPlatformFee {
         address winningBidder
     );
 
-    /// @dev Emitted when the market fee collected on every sale is updated.
-    event MarketFeeUpdate(uint64 newFee);
+    /// @dev Emitted when fee on primary sales is updated.
+    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when auction buffers are updated.
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);

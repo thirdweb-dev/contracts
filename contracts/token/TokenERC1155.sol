@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { ITokenERC1155 } from "./ITokenERC1155.sol";
+import { ITokenERC1155 } from "../interfaces/token/ITokenERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -158,8 +158,8 @@ contract TokenERC1155 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -320,6 +320,18 @@ contract TokenERC1155 is
         contractURI = _uri;
     }
 
+    ///     =====   Getter functions    =====
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
@@ -464,7 +476,7 @@ contract TokenERC1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165)
         returns (bool)
     {
         return

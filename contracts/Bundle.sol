@@ -3,6 +3,10 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
+import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
+import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
+import "./interfaces/IThirdwebOwnable.sol";
 
 // Token interfaces
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -22,7 +26,16 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "./TWFee.sol";
 
-contract Bundle is IERC2981, Initializable, ERC2771ContextUpgradeable, MulticallUpgradeable, ERC1155PresetUpgradeable {
+contract Bundle is 
+    IERC2981,
+    IThirdwebModule,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    Initializable, 
+    ERC2771ContextUpgradeable,
+    MulticallUpgradeable,
+    ERC1155PresetUpgradeable
+{
     bytes32 private constant MODULE_TYPE = bytes32("Bundle");
     uint256 private constant VERSION = 1;
 
@@ -45,10 +58,10 @@ contract Bundle is IERC2981, Initializable, ERC2771ContextUpgradeable, Multicall
     uint256 public nextTokenId;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint256 public royaltyBps;
+    uint256 private royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -199,8 +212,8 @@ contract Bundle is IERC2981, Initializable, ERC2771ContextUpgradeable, Multicall
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -438,6 +451,11 @@ contract Bundle is IERC2981, Initializable, ERC2771ContextUpgradeable, Multicall
 
         emit ERC20Redeemed(redeemer, _nftId, erc20WrappedTokens[_nftId].source, amountToDistribute, _amount);
     }
+    
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
 
     /**
      *      External: setter functions
@@ -463,8 +481,8 @@ contract Bundle is IERC2981, Initializable, ERC2771ContextUpgradeable, Multicall
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        contractURI = _URI;
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+        contractURI = _uri;
     }
 
     /// @dev Lets a protocol admin restrict token transfers.

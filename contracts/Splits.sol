@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
+import "./interfaces/IThirdwebModule.sol";
 
 // Meta-tx
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
@@ -14,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
 contract Splits is
+    IThirdwebModule,
     Initializable,
     MulticallUpgradeable,
     ERC2771ContextUpgradeable,
@@ -65,8 +67,8 @@ contract Splits is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /// @dev See ERC2771

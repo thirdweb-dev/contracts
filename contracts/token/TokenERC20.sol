@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+//Interface 
+import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
@@ -16,6 +19,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
 contract TokenERC20 is
+    ITokenERC20,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -86,8 +90,8 @@ contract TokenERC20 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure virtual returns (uint256) {
-        return VERSION;
+    function version() external pure virtual returns (uint8) {
+        return uint8(VERSION);
     }
 
     function _afterTokenTransfer(
@@ -169,8 +173,8 @@ contract TokenERC20 is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        contractURI = _URI;
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+        contractURI = _uri;
     }
 
     function _msgSender()
