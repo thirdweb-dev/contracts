@@ -71,7 +71,7 @@ abstract contract IGovernorUpgradeable is Initializable, IERC165Upgradeable {
      * @notice module:core
      * @dev Version of the governor instance (used in building the ERC712 domain separator). Default: "1"
      */
-    function version() public view virtual returns (string memory);
+    function version() public view virtual returns (uint8);
 
     /**
      * @notice module:voting

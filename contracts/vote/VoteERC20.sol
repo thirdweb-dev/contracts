@@ -82,6 +82,11 @@ contract VoteERC20 is
         return MODULE_TYPE;
     }
 
+    /// @dev Returns the version of the contract.
+    function version() public pure override returns (uint8) {
+        return uint8(VERSION);
+    }
+
     /**
      * @dev See {IGovernor-propose}.
      */

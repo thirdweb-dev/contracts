@@ -14,6 +14,13 @@ import "./IGovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
+ * Changelog:
+ *
+ *  - Change the return type of `version()` from `string memory` to `uint8`
+ *  - Replace `version()` in `__EIP712_init_unchained` parameters with hardcoded "1".
+ */
+
+/**
  * @dev Core of the governance system, designed to be extended though various modules.
  *
  * This contract is abstract and requires several function to be implemented in various modules:
@@ -56,7 +63,7 @@ abstract contract GovernorUpgradeable is Initializable, ContextUpgradeable, ERC1
     function __Governor_init(string memory name_) internal onlyInitializing {
         __Context_init_unchained();
         __ERC165_init_unchained();
-        __EIP712_init_unchained(name_, version());
+        __EIP712_init_unchained(name_, "1");
         __IGovernor_init_unchained();
         __Governor_init_unchained(name_);
     }
@@ -89,8 +96,8 @@ abstract contract GovernorUpgradeable is Initializable, ContextUpgradeable, ERC1
     /**
      * @dev See {IGovernor-version}.
      */
-    function version() public view virtual override returns (string memory) {
-        return "1";
+    function version() public view virtual override returns (uint8) {
+        return 1;
     }
 
     /**
