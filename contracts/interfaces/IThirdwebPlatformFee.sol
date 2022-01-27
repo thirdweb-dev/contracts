@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-interface IThirdwebPlatformFee {
+import "./IThirdwebModule.sol";
+
+interface IThirdwebPlatformFee is IThirdwebModule {
 
     /// @dev Returns the platform fee bps and recipient.
     function getPlatformFeeInfo() external returns (address recipient, uint16 platformFeeBps);
