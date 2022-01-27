@@ -33,7 +33,7 @@ contract Splits is
         _;
     }
 
-    constructor(address _thirdwebFees) PaymentSplitterUpgradeable(_thirdwebFees) initializer {}
+    constructor(address _thirdwebFee) PaymentSplitterUpgradeable(_thirdwebFee) initializer {}
 
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees

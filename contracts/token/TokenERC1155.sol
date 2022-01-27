@@ -63,7 +63,7 @@ contract TokenERC1155 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFees;
+    TWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -115,8 +115,8 @@ contract TokenERC1155 is
         _;
     }
 
-    constructor(address _thirdwebFees) initializer {
-        thirdwebFees = TWFee(_thirdwebFees);
+    constructor(address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -203,7 +203,7 @@ contract TokenERC1155 is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -229,7 +229,7 @@ contract TokenERC1155 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -395,7 +395,7 @@ contract TokenERC1155 is
 
         uint256 totalPrice = _req.pricePerToken * _req.quantity;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {

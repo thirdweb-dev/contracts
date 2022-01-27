@@ -50,7 +50,7 @@ contract Marketplace is
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
-    TWFee public immutable thirdwebFees;
+    TWFee public immutable thirdwebFee;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -106,8 +106,8 @@ contract Marketplace is
         _;
     }
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFees) initializer {
-        thirdwebFees = TWFee(_thirdwebFees);
+    constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
@@ -581,7 +581,7 @@ contract Marketplace is
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
         uint256 royalties;
