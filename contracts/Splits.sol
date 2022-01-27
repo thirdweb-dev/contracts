@@ -22,7 +22,7 @@ contract Splits is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mul
     ProtocolControl private controlCenter;
 
     /// @dev Contract level metadata.
-    string private _contractURI;
+    string public contractURI;
 
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
@@ -41,7 +41,7 @@ contract Splits is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mul
         require(payees.length > 0, "Royalty: no payees provided.");
 
         // Set contract metadata
-        _contractURI = _uri;
+        contractURI = _uri;
         // Set the protocol's control center.
         controlCenter = ProtocolControl(_controlCenter);
 
@@ -83,11 +83,6 @@ contract Splits is PaymentSplitter, AccessControlEnumerable, ERC2771Context, Mul
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
     function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        _contractURI = _URI;
-    }
-
-    /// @dev Returns the URI for the contract-level metadata of the contract.
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
+        contractURI = _URI;
     }
 }
