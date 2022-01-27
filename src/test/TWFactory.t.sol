@@ -65,7 +65,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
      *
      *  - Deployer of the contract has `FACTORY_ROLE`
      */
-    function testInitialState() public {
+    function test_initialState() public {
         assertTrue(twFactory.hasRole(twFactory.FACTORY_ROLE(), factoryDeployer));
     }
 
