@@ -247,7 +247,7 @@ contract DropERC1155 is
         ClaimCondition memory condition = claimConditions[_tokenId].claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_receiver, _tokenId, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _tokenId, _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity, _tokenId);
