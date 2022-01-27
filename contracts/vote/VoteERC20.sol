@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Base
+import "../interfaces/IThirdwebModule.sol";
+
 // Governance
 import "../openzeppelin-presets/governance/GovernorUpgradeable.sol";
 import "../openzeppelin-presets/governance/extensions/GovernorSettingsUpgradeable.sol";
@@ -22,6 +25,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract VoteERC20 is
     Initializable,
+    IThirdwebModule,
     ERC2771ContextUpgradeable,
     ERC721HolderUpgradeable,
     ERC1155HolderUpgradeable,
@@ -83,7 +87,7 @@ contract VoteERC20 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() public pure override returns (uint8) {
+    function version() public pure override(GovernorUpgradeable, IThirdwebModule) returns (uint8) {
         return uint8(VERSION);
     }
 
