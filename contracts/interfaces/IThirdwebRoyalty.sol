@@ -5,9 +5,7 @@ import "./IThirdwebModule.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 interface IThirdwebRoyalty is IERC2981, IThirdwebModule {
-    /// @dev The thirdweb contract with fee related information.
-    function thirdwebFees() external view returns (address);
-
+    
     /// @dev Returns the platform fee bps and recipient.
     function getRoyaltyFeeInfo() external returns (address recipient, uint16 royaltyFeeBps);
 
