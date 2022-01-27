@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 // Governance
-import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import "../openzeppelin-presets/governance/GovernorUpgradeable.sol";
+import "../openzeppelin-presets/governance/extensions/GovernorSettingsUpgradeable.sol";
+import "../openzeppelin-presets/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
+import "../openzeppelin-presets/governance/extensions/GovernorVotesUpgradeable.sol";
+import "../openzeppelin-presets/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Meta transactions
