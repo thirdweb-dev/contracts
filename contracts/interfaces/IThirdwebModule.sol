@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 interface IThirdwebModule {
     /// @dev Returns the module type of the contract.
-    function moduleType() external view returns (bytes32);
+    function moduleType() external pure returns (bytes32);
 
     /// @dev Returns the version of the contract.
-    function version() external view returns (uint8);
+    function version() external pure returns (uint8);
 
     /// @dev Returns the metadata URI of the contract.
     function contractURI() external view returns (string memory);
