@@ -14,11 +14,11 @@ import "./utils/Console.sol";
 contract MockThirdwebModule is IThirdwebModule {
     string public contractURI;
 
-    function moduleType() external view returns (bytes32) {
+    function moduleType() external pure returns (bytes32) {
         return bytes32("MOCK");
     }
 
-    function version() external view returns (uint256) {
+    function version() external pure returns (uint8) {
         return 1;
     }
 
@@ -63,10 +63,10 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     /**
      *  @dev Tests the relevant initial state of the contract.
      *
-     *  - Deployer of the contract has `DEFAULT_ADMIN_ROLE`
+     *  - Deployer of the contract has `FACTORY_ROLE`
      */
     function testInitialState() public {
-        assertTrue(twFactory.hasRole(twFactory.DEFAULT_ADMIN_ROLE(), factoryDeployer));
+        assertTrue(twFactory.hasRole(twFactory.FACTORY_ROLE(), factoryDeployer));
     }
 
     //  =====   Functionality tests   =====
@@ -312,7 +312,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bool toApprove = true;
 
         if(
-            !twFactory.hasRole(twFactory.DEFAULT_ADMIN_ROLE(), _deployer)
+            !twFactory.hasRole(twFactory.FACTORY_ROLE(), _deployer)
         ) {
             vm.expectRevert("not admin.");
 
