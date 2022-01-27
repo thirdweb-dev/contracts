@@ -6,12 +6,14 @@ interface IThirdwebModule {
     function moduleType() external view returns (bytes32);
 
     /// @dev Returns the version of the contract.
-    function version() external view returns (uint256);
+    function version() external view returns (uint8);
 
     /// @dev Returns the metadata URI of the contract.
     function contractURI() external view returns (string memory);
 
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    /// @dev Only module admin can call this function.
-    function setContractURI(string calldata _URI) external;
+    /**
+     *  @dev Sets contract URI for the storefront-level metadata of the contract.
+     *       Only module admin can call this function.
+     */
+    function setContractURI(string calldata _uri) external;
 }
