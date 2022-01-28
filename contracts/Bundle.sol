@@ -26,12 +26,12 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Thirdweb top-level
 import "./TWFee.sol";
 
-contract Bundle is 
+contract Bundle is
     IERC2981,
     IThirdwebModule,
     IThirdwebOwnable,
     IThirdwebRoyalty,
-    Initializable, 
+    Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC1155PresetUpgradeable
@@ -451,9 +451,9 @@ contract Bundle is
 
         emit ERC20Redeemed(redeemer, _nftId, erc20WrappedTokens[_nftId].source, amountToDistribute, _amount);
     }
-    
+
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+    function getRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 

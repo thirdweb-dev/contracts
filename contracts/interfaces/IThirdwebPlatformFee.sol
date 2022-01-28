@@ -4,9 +4,8 @@ pragma solidity ^0.8.0;
 import "./IThirdwebModule.sol";
 
 interface IThirdwebPlatformFee is IThirdwebModule {
-
     /// @dev Returns the platform fee bps and recipient.
-    function getPlatformFeeInfo() external returns (address recipient, uint16 platformFeeBps);
+    function getPlatformFeeInfo() external view returns (address platformFeeRecipient, uint16 platformFeeBps);
 
     /// @dev Lets a module admin update the fees on primary sales.
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external;
