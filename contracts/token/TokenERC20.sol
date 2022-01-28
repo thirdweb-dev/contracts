@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-//Interface 
+//Interface
 import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
 
 // Token

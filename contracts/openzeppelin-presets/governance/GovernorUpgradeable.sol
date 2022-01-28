@@ -31,7 +31,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  *
  * _Available since v4.3._
  */
-abstract contract GovernorUpgradeable is Initializable, ContextUpgradeable, ERC165Upgradeable, EIP712Upgradeable, IGovernorUpgradeable {
+abstract contract GovernorUpgradeable is
+    Initializable,
+    ContextUpgradeable,
+    ERC165Upgradeable,
+    EIP712Upgradeable,
+    IGovernorUpgradeable
+{
     using SafeCastUpgradeable for uint256;
     using TimersUpgradeable for TimersUpgradeable.BlockNumber;
 
@@ -82,7 +88,13 @@ abstract contract GovernorUpgradeable is Initializable, ContextUpgradeable, ERC1
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(IERC165Upgradeable, ERC165Upgradeable)
+        returns (bool)
+    {
         return interfaceId == type(IGovernorUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
@@ -270,7 +282,7 @@ abstract contract GovernorUpgradeable is Initializable, ContextUpgradeable, ERC1
     ) internal virtual {
         string memory errorMessage = "Governor: call reverted without message";
         for (uint256 i = 0; i < targets.length; ++i) {
-            (bool success, bytes memory returndata) = targets[i].call{value: values[i]}(calldatas[i]);
+            (bool success, bytes memory returndata) = targets[i].call{ value: values[i] }(calldatas[i]);
             AddressUpgradeable.verifyCallResult(success, returndata, errorMessage);
         }
     }
@@ -370,5 +382,6 @@ abstract contract GovernorUpgradeable is Initializable, ContextUpgradeable, ERC1
     function _executor() internal view virtual returns (address) {
         return address(this);
     }
+
     uint256[48] private __gap;
 }

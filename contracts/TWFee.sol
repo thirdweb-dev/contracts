@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
-
     /// @dev Only FEE_ROLE holders can set fee values.
     bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
 

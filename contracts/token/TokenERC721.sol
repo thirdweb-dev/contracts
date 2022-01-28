@@ -293,7 +293,7 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyFeeInfo() external view returns (address, uint16) {
+    function getRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 

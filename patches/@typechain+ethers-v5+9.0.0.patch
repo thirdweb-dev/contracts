@@ -1,0 +1,22 @@
+diff --git a/node_modules/@typechain/ethers-v5/dist/codegen/index.js b/node_modules/@typechain/ethers-v5/dist/codegen/index.js
+index 43bb7d2..f080718 100644
+--- a/node_modules/@typechain/ethers-v5/dist/codegen/index.js
++++ b/node_modules/@typechain/ethers-v5/dist/codegen/index.js
+@@ -14,7 +14,7 @@ function codegenContractTypings(contract, codegenConfig) {
+   ${(0, structs_1.generateStructTypes)((0, lodash_1.values)(contract.structs).map((v) => v[0]))}
+ 
+   export interface ${contract.name}Interface extends utils.Interface {
+-    contractName: '${contract.name}';
++    contractName: string | '${contract.name}';
+     functions: {
+       ${(0, lodash_1.values)(contract.functions)
+         .map((v) => v[0])
+@@ -48,7 +48,7 @@ function codegenContractTypings(contract, codegenConfig) {
+   ${(0, lodash_1.values)(contract.events).map(events_1.generateEventTypeExports).join('\n')}
+ 
+   export interface ${contract.name} extends BaseContract {
+-    contractName: '${contract.name}';
++    contractName: string | '${contract.name}';
+     connect(signerOrProvider: Signer | Provider | string): this;
+     attach(addressOrName: string): this;
+     deployed(): Promise<this>;

@@ -13,7 +13,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
-
     /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 

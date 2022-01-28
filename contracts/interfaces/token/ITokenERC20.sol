@@ -5,7 +5,6 @@ import "../IThirdwebModule.sol";
 import "../IThirdwebRestrictedTransfer.sol";
 
 interface ITokenERC20 is IThirdwebModule, IThirdwebRestrictedTransfer {
-
     /**
      * @dev Creates `amount` new tokens for `to`.
      *

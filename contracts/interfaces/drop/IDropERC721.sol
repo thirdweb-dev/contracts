@@ -19,7 +19,13 @@ import "../IThirdwebOwnable.sol";
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC721 is IThirdwebModule, IThirdwebOwnable, IThirdwebRoyalty, IThirdwebPrimarySale, IThirdwebPlatformFee {
+interface IDropERC721 is
+    IThirdwebModule,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee
+{
     /**
      *  @notice The restrictions that make up a claim condition.
      *

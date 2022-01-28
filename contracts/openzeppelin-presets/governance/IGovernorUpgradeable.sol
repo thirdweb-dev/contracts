@@ -16,8 +16,8 @@ abstract contract IGovernorUpgradeable is Initializable, IERC165Upgradeable {
         __IGovernor_init_unchained();
     }
 
-    function __IGovernor_init_unchained() internal onlyInitializing {
-    }
+    function __IGovernor_init_unchained() internal onlyInitializing {}
+
     enum ProposalState {
         Pending,
         Active,
@@ -222,5 +222,6 @@ abstract contract IGovernorUpgradeable is Initializable, IERC165Upgradeable {
         bytes32 r,
         bytes32 s
     ) public virtual returns (uint256 balance);
+
     uint256[50] private __gap;
 }
