@@ -1,66 +1,43 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
-    bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    struct Deployments {
-        uint256 totalDeployments;
-        uint256 totalDeleted;
-        mapping(uint256 => address) moduleAddress;
-        mapping(address => uint256) moduleIndex;
-    }
+    using EnumerableSet for EnumerableSet.AddressSet;
 
-    mapping(address => Deployments) public deployments;
+    mapping(address => EnumerableSet.AddressSet) private deployments;
 
-    event ModuleDeployed(address indexed moduleAddress, address indexed deployer);
+    event ModuleAdded(address indexed moduleAddress, address indexed deployer);
     event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
 
     constructor(address _thirdwebFactory, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(FACTORY_ROLE, _thirdwebFactory);
+        _setupRole(OPERATOR_ROLE, _thirdwebFactory);
     }
 
-    function addDeployment(address _moduleAddress, address _deployer) external {
-        require(hasRole(FACTORY_ROLE, msg.sender) || msg.sender == _deployer, "not factory");
-
-        deployments[_deployer].totalDeployments += 1;
-        uint256 idx = deployments[_deployer].totalDeployments;
-
-        deployments[_deployer].moduleAddress[idx] = _moduleAddress;
-        deployments[_deployer].moduleIndex[_moduleAddress] = idx;
-
-        emit ModuleDeployed(_moduleAddress, _deployer);
+    function addModule(address _moduleAddress, address _deployer) external {
+        require(hasRole(OPERATOR_ROLE, msg.sender), "not operator.");
+        deployments[_deployer].add(_moduleAddress);
+        emit ModuleAdded(_moduleAddress, _deployer);
     }
 
-    function removeDeployment(address _moduleAddress) external {
-        address deployer = _msgSender();
-        uint256 moduleIdx = deployments[deployer].moduleIndex[_moduleAddress];
+    function removeModule(address _moduleAddress, address _deployer) external {        
+        require(hasRole(OPERATOR_ROLE, msg.sender) || _deployer == msg.sender, "not operator or deployer.");
+        
+        bool removed = deployments[_deployer].remove(_moduleAddress);
+        require(removed, "failed to remove module.");
 
-        require(moduleIdx != 0, "module does not exist");
-
-        deployments[deployer].totalDeleted += 1;
-
-        delete deployments[deployer].moduleAddress[moduleIdx];
-        delete deployments[deployer].moduleIndex[_moduleAddress];
-
-        emit ModuleDeleted(_moduleAddress, deployer);
+        emit ModuleDeleted(_moduleAddress, _deployer);
     }
 
-    function getAllModules(address _deployer) external view returns (address[] memory allModules) {
-        uint256 totalDeployments = deployments[_deployer].totalDeployments;
-        uint256 numOfModules = totalDeployments - deployments[_deployer].totalDeleted;
-        allModules = new address[](numOfModules);
-
-        for (uint256 i = 0; i < totalDeployments; i += 1) {
-            if (deployments[_deployer].moduleAddress[i] != address(0)) {
-                allModules[i] = deployments[_deployer].moduleAddress[i];
-            }
-        }
+    function getAllModules(address _deployer) external view returns (address[] memory) {
+        return EnumerableSet.values(deployments[_deployer]);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

@@ -65,7 +65,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
-        registry.addDeployment(deployedProxy, msg.sender);
+        registry.addModule(deployedProxy, msg.sender);
 
         emit ProxyDeployed(_implementation, deployedProxy, msg.sender);
     }
