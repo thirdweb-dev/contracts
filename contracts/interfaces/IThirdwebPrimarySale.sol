@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./IThirdwebModule.sol";
-
-interface IThirdwebPrimarySale is IThirdwebModule {
+interface IThirdwebPrimarySale {
     /// @dev The adress that receives all primary sales value.
     function primarySaleRecipient() external view returns (address);
 

@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./IThirdwebModule.sol";
-
-interface IThirdwebOwnable is IThirdwebModule {
-
+interface IThirdwebOwnable {
     /// @dev Returns the owner of the contract.
     function owner() external view returns (address);
 
