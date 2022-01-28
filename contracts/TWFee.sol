@@ -41,10 +41,10 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
     event FeeInfoForModuleInstance(address indexed moduleInstance, FeeInfo feeInfo);
     event FeeInfoForModuleType(bytes32 indexed moduleType, FeeInfo feeInfo);
-    event DefaultFeeInfo(FeeInfo feeInfo);
+    event DefaultFeeInfo(FeeType feeType, FeeInfo feeInfo);
 
     modifier onlyValidFee(uint256 _feeBps) {
-        require(_feeBps <= MAX_FEE_BPS, "fees too high");
+        require(_feeBps <= MAX_FEE_BPS, "fee too high.");
         _;
     }
 
@@ -145,7 +145,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
         defaultFeeInfo[_feeType] = feeInfo;
 
-        emit DefaultFeeInfo(feeInfo);
+        emit DefaultFeeInfo(_feeType, feeInfo);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
