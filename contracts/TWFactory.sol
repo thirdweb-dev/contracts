@@ -31,7 +31,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(FACTORY_ROLE, msg.sender);
 
-        registry = new TWRegistry(address(this), _trustedForwarder);
+        registry = new TWRegistry(_trustedForwarder);
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
