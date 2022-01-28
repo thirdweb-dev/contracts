@@ -10,7 +10,6 @@
   "module": "dist/index.mjs",
   "files": [
     "contracts/",
-    "typechain/",
     "dist/"
   ],
   "devDependencies": {
