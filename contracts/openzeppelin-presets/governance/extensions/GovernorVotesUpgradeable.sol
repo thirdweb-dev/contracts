@@ -33,5 +33,6 @@ abstract contract GovernorVotesUpgradeable is Initializable, GovernorUpgradeable
     function getVotes(address account, uint256 blockNumber) public view virtual override returns (uint256) {
         return token.getPastVotes(account, blockNumber);
     }
+
     uint256[50] private __gap;
 }

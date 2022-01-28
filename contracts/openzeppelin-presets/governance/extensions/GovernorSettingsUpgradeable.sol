@@ -123,5 +123,6 @@ abstract contract GovernorSettingsUpgradeable is Initializable, GovernorUpgradea
         emit ProposalThresholdSet(_proposalThreshold, newProposalThreshold);
         _proposalThreshold = newProposalThreshold;
     }
+
     uint256[47] private __gap;
 }

@@ -19,8 +19,8 @@ abstract contract GovernorCountingSimpleUpgradeable is Initializable, GovernorUp
         __GovernorCountingSimple_init_unchained();
     }
 
-    function __GovernorCountingSimple_init_unchained() internal onlyInitializing {
-    }
+    function __GovernorCountingSimple_init_unchained() internal onlyInitializing {}
+
     /**
      * @dev Supported vote types. Matches Governor Bravo ordering.
      */
@@ -113,5 +113,6 @@ abstract contract GovernorCountingSimpleUpgradeable is Initializable, GovernorUp
             revert("GovernorVotingSimple: invalid value for enum VoteType");
         }
     }
+
     uint256[49] private __gap;
 }

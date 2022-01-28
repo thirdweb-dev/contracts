@@ -167,7 +167,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     }
 
     function test_deployProxyByImplementation_revert_invalidImpl() public {
-        
         vm.expectRevert("implementation not approved");
 
         vm.prank(moduleDeployer);
@@ -191,7 +190,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     /// @dev Test `deployProxyDeterministic`
 
     function _setUp_deployProxyDeterministic() internal {
-
         bytes32 moduleType = mockModule.moduleType();
 
         vm.prank(factoryDeployer);
@@ -240,7 +238,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     /// @dev Test `deployProxy`
 
     function _setUp_deployProxy() internal {
-
         bytes32 moduleType = mockModule.moduleType();
 
         vm.prank(factoryDeployer);
@@ -263,7 +260,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     }
 
     function test_deployProxy_revert_invalidImpl() public {
-
         bytes32 moduleType = mockModule.moduleType();
 
         vm.expectRevert("implementation not approved");
@@ -293,14 +289,13 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
      *
      *  - No proxy should be able to point to an unapproved implementation.
      *  - No non-admin should be able to approve an implementation.
-    **/
+     **/
 
     function testNoUnapprovedImpl(address _implementation) public {
-
         vm.prank(factoryDeployer);
         twFactory.approveImplementation(address(mockModule), true);
 
-        if(_implementation != address(mockModule)) {
+        if (_implementation != address(mockModule)) {
             vm.expectRevert("implementation not approved");
 
             vm.prank(moduleDeployer);
@@ -311,9 +306,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     function testNoNonAdmin(address _implementation, address _deployer) public {
         bool toApprove = true;
 
-        if(
-            !twFactory.hasRole(twFactory.FACTORY_ROLE(), _deployer)
-        ) {
+        if (!twFactory.hasRole(twFactory.FACTORY_ROLE(), _deployer)) {
             vm.expectRevert("not admin.");
 
             vm.prank(_deployer);

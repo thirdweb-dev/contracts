@@ -55,5 +55,6 @@ abstract contract GovernorVotesQuorumFractionUpgradeable is Initializable, Gover
 
         emit QuorumNumeratorUpdated(oldQuorumNumerator, newQuorumNumerator);
     }
+
     uint256[49] private __gap;
 }
