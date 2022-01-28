@@ -17,4 +17,3 @@ interface IThirdwebModule {
      */
     function setContractURI(string calldata _uri) external;
 }
-

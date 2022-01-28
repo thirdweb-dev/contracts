@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "./IThirdwebModule.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-interface IThirdwebRoyalty is IERC2981 {
+interface IThirdwebRoyalty is IERC2981, IThirdwebModule {
     /// @dev Returns the platform fee bps and recipient.
     function getRoyaltyInfo() external view returns (address royaltyRecipient, uint16 royaltyBps);
 
