@@ -161,8 +161,11 @@ contract SignatureMint1155 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri, uint256 _amount) external onlyMinter {
-
+    function mintTo(
+        address _to,
+        string calldata _uri,
+        uint256 _amount
+    ) external onlyMinter {
         uint256 tokenIdToMint = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
@@ -173,16 +176,12 @@ contract SignatureMint1155 is
     ///     =====   External functions  =====
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-    {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
         uint256 tokenIdToMint;
-        if(_req.tokenId == type(uint).max) {
+        if (_req.tokenId == type(uint256).max) {
             tokenIdToMint = nextTokenIdToMint;
             nextTokenIdToMint += 1;
         } else {
@@ -265,9 +264,13 @@ contract SignatureMint1155 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
-        
-        if(bytes(_tokenURI[_tokenId]).length == 0) {
+    function _mintTo(
+        address _to,
+        string calldata _uri,
+        uint256 _tokenId,
+        uint256 _amount
+    ) internal {
+        if (bytes(_tokenURI[_tokenId]).length == 0) {
             require(bytes(_uri).length > 0, "empty uri.");
             _tokenURI[_tokenId] = _uri;
         }
@@ -455,7 +458,10 @@ contract SignatureMint1155 is
         override(AccessControlEnumerable, ERC1155, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC2981).interfaceId;
+        return
+            super.supportsInterface(interfaceId) ||
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId;
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

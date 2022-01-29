@@ -380,7 +380,6 @@ contract LazyMintERC1155 is
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
     ) public view {
-
         ClaimCondition memory _mintCondition = claimConditions[_tokenId].claimConditionAtIndex[_conditionIndex];
 
         require(_quantity > 0 && _quantity <= _mintCondition.quantityLimitPerTransaction, "invalid quantity claimed.");

@@ -130,16 +130,32 @@ describe("Buy: direct listing", function () {
       await marketv2.connect(lister).createListing(newListingParams);
 
       await expect(
-        marketv2.connect(buyer).buy(newListingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay }),
+        marketv2
+          .connect(buyer)
+          .buy(
+            newListingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay },
+          ),
       ).to.be.revertedWith("Marketplace: cannot buy from listing.");
     });
 
     it("Should revert if quantity to buy is 0", async () => {
       const zeroQuantityWanted: BigNumber = BigNumber.from(0);
 
-      await expect(marketv2.connect(buyer).buy(listingId, zeroQuantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(zeroQuantityWanted), { value: 0 })).to.be.revertedWith(
-        "Marketplace: buying invalid amount of tokens.",
-      );
+      await expect(
+        marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            zeroQuantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(zeroQuantityWanted),
+            { value: 0 },
+          ),
+      ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");
     });
 
     it("Should revert if listing has no tokens left", async () => {
@@ -158,7 +174,15 @@ describe("Buy: direct listing", function () {
         );
 
       await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay }),
+        marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay },
+          ),
       ).to.be.revertedWith("Marketplace: buying invalid amount of tokens.");
     });
 
@@ -166,7 +190,15 @@ describe("Buy: direct listing", function () {
       await timeTravelToAfterListingWindow(listingId);
 
       await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay }),
+        marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay },
+          ),
       ).to.be.revertedWith("Marketplace: not within sale window.");
     });
 
@@ -185,7 +217,15 @@ describe("Buy: direct listing", function () {
       await timeTravelToListingWindow(listingId);
 
       await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay }),
+        marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay },
+          ),
       ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
     });
 
@@ -196,7 +236,15 @@ describe("Buy: direct listing", function () {
       await mockNft.connect(lister).setApprovalForAll(marketv2.address, false);
 
       await expect(
-        marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay }),
+        marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay },
+          ),
       ).to.be.revertedWith("Marketplace: insufficient token balance or approval.");
     });
   });
@@ -210,7 +258,17 @@ describe("Buy: direct listing", function () {
     it("Should emit NewDirectSale with the sale info", async () => {
       const quantityWanted: number = 1;
 
-      await expect(marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay }))
+      await expect(
+        marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay },
+          ),
+      )
         .to.emit(marketv2, "NewSale")
         .withArgs(
           ...Object.values({
@@ -237,7 +295,15 @@ describe("Buy: direct listing", function () {
       const listerBalBefore: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       const buyerBalBefore: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
 
-      await marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay });
+      await marketv2
+        .connect(buyer)
+        .buy(
+          listingId,
+          quantityWanted,
+          listingParams.currencyToAccept,
+          listingParams.buyoutPricePerToken.mul(quantityWanted),
+          { value: totalPriceToPay },
+        );
 
       const listerBalAfter: BigNumber = await mockNft.balanceOf(lister.address, nftTokenId);
       const buyerBalAfter: BigNumber = await mockNft.balanceOf(buyer.address, nftTokenId);
@@ -253,7 +319,15 @@ describe("Buy: direct listing", function () {
 
       const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
       const txReceipt = await (
-        await marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay, gasPrice })
+        await marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay, gasPrice },
+          )
       ).wait();
       const gasUesd: BigNumber = txReceipt.gasUsed;
       const gasPaid: BigNumber = gasPrice.mul(gasUesd);
@@ -282,7 +356,15 @@ describe("Buy: direct listing", function () {
 
       const gasPrice: BigNumber = ethers.utils.parseUnits("10", "gwei");
       const txReceipt = await (
-        await marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay, gasPrice })
+        await marketv2
+          .connect(buyer)
+          .buy(
+            listingId,
+            quantityWanted,
+            listingParams.currencyToAccept,
+            listingParams.buyoutPricePerToken.mul(quantityWanted),
+            { value: totalPriceToPay, gasPrice },
+          )
       ).wait();
       const gasUesd: BigNumber = txReceipt.gasUsed;
       const gasPaid: BigNumber = gasPrice.mul(gasUesd);
@@ -306,7 +388,15 @@ describe("Buy: direct listing", function () {
     it("Should decrease the quantity available in the listing", async () => {
       const quantityWanted: number = 1;
 
-      await marketv2.connect(buyer).buy(listingId, quantityWanted, listingParams.currencyToAccept, listingParams.buyoutPricePerToken.mul(quantityWanted), { value: totalPriceToPay });
+      await marketv2
+        .connect(buyer)
+        .buy(
+          listingId,
+          quantityWanted,
+          listingParams.currencyToAccept,
+          listingParams.buyoutPricePerToken.mul(quantityWanted),
+          { value: totalPriceToPay },
+        );
 
       const listing = await marketv2.listings(listingId);
 

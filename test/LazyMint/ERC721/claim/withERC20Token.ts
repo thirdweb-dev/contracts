@@ -139,9 +139,9 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
 
       while (supplyClaimed.lt(maxClaimableSupply)) {
         if (supplyClaimed.add(quantityToClaim).gt(maxClaimableSupply)) {
-          await expect(lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof)).to.be.revertedWith(
-            "exceed max mint supply.",
-          );
+          await expect(
+            lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof),
+          ).to.be.revertedWith("exceed max mint supply.");
         }
 
         await lazyMintERC721.connect(claimer).claim(claimer.address, quantityToClaim, proof);
@@ -164,9 +164,9 @@ describe("Test: claim lazy minted tokens with erc20 tokens", function () {
     });
 
     it("Should revert if claimer is not in the whitelist", async () => {
-      await expect(lazyMintERC721.connect(protocolAdmin).claim(protocolAdmin.address, quantityToClaim, proof)).to.be.revertedWith(
-        "not in whitelist.",
-      );
+      await expect(
+        lazyMintERC721.connect(protocolAdmin).claim(protocolAdmin.address, quantityToClaim, proof),
+      ).to.be.revertedWith("not in whitelist.");
     });
 
     it("Should revert if caller has not approved lazy mint to transfer currency", async () => {

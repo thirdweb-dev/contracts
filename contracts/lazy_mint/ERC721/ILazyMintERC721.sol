@@ -118,7 +118,11 @@ interface ILazyMintERC721 {
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
-    function claim(address receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable;
+    function claim(
+        address receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external payable;
 
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.

@@ -18,7 +18,6 @@ import { IWETH } from "../../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
-
     /// @dev Version of the contract.
     uint256 public constant VERSION = 1;
 
@@ -53,16 +52,8 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         address _saleRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
-    ) 
-        Coin(
-            _controlCenter,
-            _name,
-            _symbol,
-            _trustedForwarder,
-            _contractURI
-        )
-    {
-        // Set the protocol control center        
+    ) Coin(_controlCenter, _name, _symbol, _trustedForwarder, _contractURI) {
+        // Set the protocol control center
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
         royaltyBps = uint64(_royaltyBps);
@@ -89,8 +80,11 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     //      =====   External functions  =====
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
-    function claim(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external payable nonReentrant {
-
+    function claim(
+        address _receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external payable nonReentrant {
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition();
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
@@ -225,7 +219,6 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
     ) public view {
-
         ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
 
         require(
@@ -265,7 +258,11 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(address _to, uint256 _claimConditionIndex, uint256 _quantityBeingClaimed) internal {
+    function transferClaimedTokens(
+        address _to,
+        uint256 _claimConditionIndex,
+        uint256 _quantityBeingClaimed
+    ) internal {
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
@@ -333,7 +330,7 @@ contract LazyMintERC20 is ILazyMintERC20, Coin, ReentrancyGuard {
         if (_from == _to) {
             return;
         }
-        
+
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);

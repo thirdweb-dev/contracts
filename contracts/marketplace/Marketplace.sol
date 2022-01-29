@@ -36,7 +36,6 @@ contract Marketplace is
     ERC2771Context,
     Multicall
 {
-
     /// @dev Version of the contract.
     uint256 public constant VERSION = 1;
 
@@ -244,12 +243,7 @@ contract Marketplace is
         uint256 _quantityToBuy,
         address _currency,
         uint256 _totalPrice
-    )
-        external 
-        payable
-        override 
-        nonReentrant 
-    {
+    ) external payable override nonReentrant {
         Listing memory targetListing = listings[_listingId];
         address buyer = _msgSender();
 
