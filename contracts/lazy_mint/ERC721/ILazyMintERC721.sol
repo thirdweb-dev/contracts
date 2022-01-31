@@ -69,6 +69,12 @@ interface ILazyMintERC721 {
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
+    /// @dev Info related to a batch of NFTs that follow delayed-reveal.
+    struct DelayedReveal {
+        bytes encryptedURI;
+        bytes key;
+    }
+
     /// @dev Emitted when tokens are lazy minted.
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
@@ -108,7 +114,7 @@ interface ILazyMintERC721 {
      *
      *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens, bytes memory _encryptedBaseURI) external;
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.
