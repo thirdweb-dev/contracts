@@ -52,7 +52,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
-        address _deployer,
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
@@ -61,7 +61,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-        __TokenERC20_init(_deployer, _name, _symbol, _trustedForwarder, _contractURI);
+        __TokenERC20_init(_defaultAdmin, _name, _symbol, _trustedForwarder, _contractURI);
 
         primarySaleRecipient = _primarySaleRecipient;
         platformFeeRecipient = _platformFeeRecipient;

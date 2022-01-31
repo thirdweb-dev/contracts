@@ -126,7 +126,7 @@ contract DropERC1155 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
-        address _deployer,
+        address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
@@ -148,10 +148,10 @@ contract DropERC1155 is
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
-        _owner = _deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
-        _setupRole(MINTER_ROLE, _deployer);
-        _setupRole(TRANSFER_ROLE, _deployer);
+        _owner = _defaultAdmin;
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
     }
 
     ///     =====   Public functions  =====

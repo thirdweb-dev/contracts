@@ -150,7 +150,7 @@ contract AccessNFT is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
-        address _deployer,
+        address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
         address _royaltyReceiver,
@@ -158,16 +158,16 @@ contract AccessNFT is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
-        __ERC1155Preset_init(_deployer, _contractURI);
+        __ERC1155Preset_init(_defaultAdmin, _contractURI);
 
         // Initialize this contract's state.
         royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
         contractURI = _contractURI;
 
-        _owner = _deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
-        _setupRole(TRANSFER_ROLE, _deployer);
+        _owner = _defaultAdmin;
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
     }
 
     /**

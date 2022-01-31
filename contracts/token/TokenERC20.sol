@@ -51,17 +51,17 @@ contract TokenERC20 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
-        address _deployer,
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder
     ) external initializer {
-        __TokenERC20_init(_deployer, _name, _symbol, _trustedForwarder, _contractURI);
+        __TokenERC20_init(_defaultAdmin, _name, _symbol, _trustedForwarder, _contractURI);
     }
 
     function __TokenERC20_init(
-        address _deployer,
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
@@ -72,17 +72,17 @@ contract TokenERC20 is
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
 
-        __TokenERC20_init_unchained(_deployer, _uri);
+        __TokenERC20_init_unchained(_defaultAdmin, _uri);
     }
 
-    function __TokenERC20_init_unchained(address _deployer, string memory _uri) internal onlyInitializing {
+    function __TokenERC20_init_unchained(address _defaultAdmin, string memory _uri) internal onlyInitializing {
         // Initialize this contract's state.
         contractURI = _uri;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
-        _setupRole(TRANSFER_ROLE, _deployer);
-        _setupRole(MINTER_ROLE, _deployer);
-        _setupRole(PAUSER_ROLE, _deployer);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(PAUSER_ROLE, _defaultAdmin);
     }
 
     /// @dev Returns the module type of the contract.

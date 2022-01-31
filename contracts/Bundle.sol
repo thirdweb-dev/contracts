@@ -182,7 +182,7 @@ contract Bundle is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
-        address _deployer,
+        address _defaultAdmin,
         string memory _uri,
         address _trustedForwarder,
         address _royaltyReceiver,
@@ -190,16 +190,16 @@ contract Bundle is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
-        __ERC1155Preset_init(_deployer, _uri);
+        __ERC1155Preset_init(_defaultAdmin, _uri);
 
         // Initialize this contract's state.
         royaltyBps = _royaltyBps;
         royaltyRecipient = _royaltyReceiver;
         contractURI = _uri;
 
-        _owner = _deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
-        _setupRole(TRANSFER_ROLE, _deployer);
+        _owner = _defaultAdmin;
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
     }
 
     /**

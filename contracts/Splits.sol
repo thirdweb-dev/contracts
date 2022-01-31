@@ -38,7 +38,7 @@ contract Splits is
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     function initialize(
-        address _deployer,
+        address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
         address[] memory payees,
@@ -59,7 +59,7 @@ contract Splits is
             _addPayee(payees[i], shares_[i] * 10000);
         }
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
     /// @dev Returns the module type of the contract.
