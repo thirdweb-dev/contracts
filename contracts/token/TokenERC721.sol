@@ -115,6 +115,7 @@ contract TokenERC721 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function intialize(
+        address _deployer,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
@@ -139,11 +140,10 @@ contract TokenERC721 is
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
-        address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
+        _owner = _deployer;
+        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
+        _setupRole(MINTER_ROLE, _deployer);
+        _setupRole(TRANSFER_ROLE, _deployer);
     }
 
     ///     =====   Public functions  =====

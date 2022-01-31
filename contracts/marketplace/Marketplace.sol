@@ -113,6 +113,7 @@ contract Marketplace is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
+        address _deployer,
         string memory _contractURI,
         address _trustedForwarder,
         address _platformFeeRecipient,
@@ -127,8 +128,8 @@ contract Marketplace is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(LISTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _deployer);
+        _setupRole(LISTER_ROLE, _deployer);
     }
 
     /// @dev Returns the module type of the contract.
