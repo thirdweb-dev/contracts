@@ -69,12 +69,6 @@ interface ILazyMintERC721 {
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
-    /// @dev Info related to a batch of NFTs that follow delayed-reveal.
-    struct DelayedReveal {
-        bytes encryptedURI;
-        bytes key;
-    }
-
     /// @dev Emitted when tokens are lazy minted.
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
@@ -86,6 +80,9 @@ interface ILazyMintERC721 {
         uint256 startTokenId,
         uint256 quantityClaimed
     );
+
+    /// @dev Emitted when the URI for a batch of NFTs is revealed.
+    event RevealedNFT(uint256 endTokenId, string revealedURI);
 
     /// @dev Emitted when new mint conditions are set for a token.
     event NewClaimConditions(ClaimCondition[] claimConditions);

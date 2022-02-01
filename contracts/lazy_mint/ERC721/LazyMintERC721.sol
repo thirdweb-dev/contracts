@@ -91,7 +91,7 @@ contract LazyMintERC721 is
     mapping(uint256 => string) private baseURI;
 
     /// @dev End token Id => info related to the delayed reveal of the baseURI
-    mapping(uint256 => DelayedReveal) private delayedReveal;
+    mapping(uint256 => bytes) private encryptedBaseURI;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
@@ -146,17 +146,7 @@ contract LazyMintERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-
-                bytes memory encryptedURI = delayedReveal[baseURIIndices[i]].encryptedURI;
-                bytes memory key = delayedReveal[baseURIIndices[i]].key;
-
-                if(encryptedURI.length == 0) {
-                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
-                } else if (key.length == 0) {
-                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
-                } else {
-                    return string(abi.encodePacked(encryptDecrypt(encryptedURI, key), _tokenId.toString()));
-                }
+                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
             }
         }
 
@@ -248,7 +238,7 @@ contract LazyMintERC721 is
         baseURIIndices.push(baseURIIndex);
 
         if(_encryptedBaseURI.length != 0) {
-            delayedReveal[baseURIIndex] = DelayedReveal({ encryptedURI: _encryptedBaseURI, key: "" });
+            encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
         }
 
         emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens);
@@ -257,11 +247,16 @@ contract LazyMintERC721 is
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
     function reveal(uint256 _index, bytes memory _key) external onlyMinter {
         require(_index <= baseURIIndices[baseURIIndices.length - 1], "invalid index");
-        require(delayedReveal[_index].encryptedURI.length != 0 && delayedReveal[_index].key.length == 0, "nothing to reveal");
 
-        delayedReveal[_index].key = _key;
+        bytes memory encryptedURI = encryptedBaseURI[_index];
+        require(encryptedURI.length != 0, "nothing to reveal");
 
-        // TODO: emit event
+        string memory revealedURI = string(abi.encodePacked(encryptDecrypt(encryptedURI, _key)));
+
+        baseURI[_index] = revealedURI;
+        delete encryptedBaseURI[_index];
+
+        emit RevealedNFT(_index, revealedURI);
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
