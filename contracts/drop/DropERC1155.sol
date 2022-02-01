@@ -2,8 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IDropERC1155 } from "./IDropERC1155.sol";
-import { IThirdwebRoyalty } from "../interfaces/IThirdwebRoyalty.sol";
+import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -24,6 +23,7 @@ import "../lib/CurrencyTransferLib.sol";
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -35,8 +35,7 @@ contract DropERC1155 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable,
-    IThirdwebRoyalty
+    ERC1155Upgradeable
 {
     using StringsUpgradeable for uint256;
 
@@ -55,7 +54,7 @@ contract DropERC1155 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFees;
+    TWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -73,7 +72,7 @@ contract DropERC1155 is
     address public royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint16 public royaltyBps;
+    uint128 public royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
@@ -107,8 +106,8 @@ contract DropERC1155 is
         _;
     }
 
-    constructor(address _thirdwebFees) initializer {
-        thirdwebFees = TWFee(_thirdwebFees);
+    constructor(address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
     }
 
     /// @dev See EIP-2981
@@ -119,7 +118,7 @@ contract DropERC1155 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -127,11 +126,12 @@ contract DropERC1155 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
+        address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
         address _royaltyReceiver,
-        uint16 _royaltyBps,
+        uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
@@ -148,11 +148,10 @@ contract DropERC1155 is
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
-        address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
+        _owner = _defaultAdmin;
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
     }
 
     ///     =====   Public functions  =====
@@ -163,8 +162,8 @@ contract DropERC1155 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -203,7 +202,7 @@ contract DropERC1155 is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -248,7 +247,7 @@ contract DropERC1155 is
         ClaimCondition memory condition = claimConditions[_tokenId].claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_receiver, _tokenId, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _tokenId, _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity, _tokenId);
@@ -283,11 +282,11 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
+        royaltyBps = uint128(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
@@ -322,6 +321,16 @@ contract DropERC1155 is
     }
 
     //      =====   Getter functions  =====
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
 
     /// @dev Returns the current active mint condition for a given tokenId.
     function getTimestampForNextValidClaim(
@@ -439,7 +448,7 @@ contract DropERC1155 is
 
         uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_mintCondition.currency == NATIVE_TOKEN) {
@@ -544,7 +553,7 @@ contract DropERC1155 is
         override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
     function _msgSender()

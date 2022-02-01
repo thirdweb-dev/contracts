@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
+import "./interfaces/IThirdwebModule.sol";
 
 // Meta-tx
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
@@ -14,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
 contract Splits is
+    IThirdwebModule,
     Initializable,
     MulticallUpgradeable,
     ERC2771ContextUpgradeable,
@@ -31,11 +33,12 @@ contract Splits is
         _;
     }
 
-    constructor(address _thirdwebFees) PaymentSplitterUpgradeable(_thirdwebFees) initializer {}
+    constructor(address _thirdwebFee) PaymentSplitterUpgradeable(_thirdwebFee) initializer {}
 
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     function initialize(
+        address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
         address[] memory payees,
@@ -56,7 +59,7 @@ contract Splits is
             _addPayee(payees[i], shares_[i] * 10000);
         }
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
     /// @dev Returns the module type of the contract.
@@ -65,8 +68,8 @@ contract Splits is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /// @dev See ERC2771

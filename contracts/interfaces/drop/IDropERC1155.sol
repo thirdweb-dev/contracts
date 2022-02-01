@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "../IThirdwebModule.sol";
+import "../IThirdwebPlatformFee.sol";
+import "../IThirdwebPrimarySale.sol";
+import "../IThirdwebRoyalty.sol";
+import "../IThirdwebOwnable.sol";
+
 /**
- *  `LazyMintERC721` is an ERC 721 contract.
+ *  `LazyMintERC1155` is an ERC 1155 contract.
  *
  *  It takes in a base URI for every `n` tokens lazy minted at once. The URI
  *  for each of the `n` tokens lazy minted is the provided baseURI + `${tokenId}`
@@ -13,7 +19,13 @@ pragma solidity ^0.8.0;
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC721 {
+interface IDropERC1155 is
+    IThirdwebModule,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee
+{
     /**
      *  @notice The restrictions that make up a claim condition.
      *
@@ -75,14 +87,14 @@ interface IDropERC721 {
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
         uint256 indexed claimConditionIndex,
+        uint256 indexed tokenId,
         address indexed claimer,
-        address indexed receiver,
-        uint256 startTokenId,
+        address receiver,
         uint256 quantityClaimed
     );
 
     /// @dev Emitted when new mint conditions are set for a token.
-    event NewClaimConditions(ClaimCondition[] claimConditions);
+    event NewClaimConditions(uint256 indexed tokenId, ClaimCondition[] claimConditions);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewPrimarySaleRecipient(address indexed recipient);
@@ -119,23 +131,30 @@ interface IDropERC721 {
     function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
 
     /**
-     *  @notice Lets an account claim a given quantity of tokens.
+     *  @notice Lets an account claim a given quantity of tokens, of a single tokenId.
      *
-     *  @param receiver The receiver of the NFTs to claim.
+     *  @param _tokenId The unique ID of the token to claim.
      *  @param _quantity The quantity of tokens to claim.
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
     function claim(
-        address receiver,
+        address _receiver,
+        uint256 _tokenId,
         uint256 _quantity,
         bytes32[] calldata _proofs
     ) external payable;
 
     /**
-     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set mint conditions for a given token ID.
      *
+     *  @param _tokenId The token ID for which to set mint conditions.
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
+     *  @param _resetRestriction Whether to reset the mint restriction.
      */
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction) external;
+    function setClaimConditions(
+        uint256 _tokenId,
+        ClaimCondition[] calldata _conditions,
+        bool _resetRestriction
+    ) external;
 }

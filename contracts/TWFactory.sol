@@ -13,6 +13,9 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
+    /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
+    bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
+
     TWRegistry public immutable registry;
 
     /// @dev Emitted when a proxy is deployed.
@@ -26,7 +29,9 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        registry = new TWRegistry(address(this), _trustedForwarder);
+        _setupRole(FACTORY_ROLE, msg.sender);
+
+        registry = new TWRegistry(_trustedForwarder);
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
@@ -60,14 +65,14 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
-        registry.addDeployment(deployedProxy, msg.sender);
+        registry.addModule(deployedProxy, msg.sender);
 
         emit ProxyDeployed(_implementation, deployedProxy, msg.sender);
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
     function addModuleImplementation(bytes32 _moduleType, address _implementation) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "not admin.");
+        require(hasRole(FACTORY_ROLE, msg.sender), "not admin.");
         require(IThirdwebModule(_implementation).moduleType() == _moduleType, "invalid module type.");
 
         currentModuleVersion[_moduleType] += 1;
@@ -81,7 +86,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Lets a contract admin approve a specific contract for deployment.
     function approveImplementation(address _implementation, bool _toApprove) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "not admin.");
+        require(hasRole(FACTORY_ROLE, msg.sender), "not admin.");
 
         implementationApproval[_implementation] = _toApprove;
 

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+//Interface
+import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
@@ -16,6 +19,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 
 contract TokenERC20 is
+    ITokenERC20,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -47,15 +51,17 @@ contract TokenERC20 is
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder
     ) external initializer {
-        __TokenERC20_init(_name, _symbol, _trustedForwarder, _contractURI);
+        __TokenERC20_init(_defaultAdmin, _name, _symbol, _trustedForwarder, _contractURI);
     }
 
     function __TokenERC20_init(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
@@ -66,18 +72,17 @@ contract TokenERC20 is
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
 
-        __TokenERC20_init_unchained(_uri);
+        __TokenERC20_init_unchained(_defaultAdmin, _uri);
     }
 
-    function __TokenERC20_init_unchained(string memory _uri) internal onlyInitializing {
+    function __TokenERC20_init_unchained(address _defaultAdmin, string memory _uri) internal onlyInitializing {
         // Initialize this contract's state.
         contractURI = _uri;
 
-        address deployer = _msgSender();
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(PAUSER_ROLE, deployer);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(PAUSER_ROLE, _defaultAdmin);
     }
 
     /// @dev Returns the module type of the contract.
@@ -86,8 +91,8 @@ contract TokenERC20 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure virtual returns (uint256) {
-        return VERSION;
+    function version() external pure virtual returns (uint8) {
+        return uint8(VERSION);
     }
 
     function _afterTokenTransfer(
@@ -169,8 +174,8 @@ contract TokenERC20 is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        contractURI = _URI;
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+        contractURI = _uri;
     }
 
     function _msgSender()

@@ -46,19 +46,16 @@ contract ERC1155PresetUpgradeable is
     mapping(uint256 => uint256) private _totalSupply;
 
     /// @dev Initiliazes the contract, like a constructor.
-    function __ERC1155Preset_init(string memory uri) internal onlyInitializing {
+    function __ERC1155Preset_init(address _deployer, string memory uri) internal onlyInitializing {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC1155_init(uri);
 
-        __ERC1155Preset_init_unchained();
+        __ERC1155Preset_init_unchained(_deployer);
     }
 
-    function __ERC1155Preset_init_unchained() internal onlyInitializing {
-        // Initialize this contract's state.
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
-        _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+    function __ERC1155Preset_init_unchained(address _deployer) internal onlyInitializing {
+        _setupRole(MINTER_ROLE, _deployer);
+        _setupRole(PAUSER_ROLE, _deployer);
     }
 
     /**

@@ -10,6 +10,9 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
+    /// @dev Only FEE_ROLE holders can set fee values.
+    bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
+
     /// @dev Max bps in the thirdweb system.
     uint128 public constant MAX_BPS = 10_000;
 
@@ -37,10 +40,16 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
     event FeeInfoForModuleInstance(address indexed moduleInstance, FeeInfo feeInfo);
     event FeeInfoForModuleType(bytes32 indexed moduleType, FeeInfo feeInfo);
-    event DefaultFeeInfo(FeeInfo feeInfo);
+    event DefaultFeeInfo(FeeType feeType, FeeInfo feeInfo);
 
     modifier onlyValidFee(uint256 _feeBps) {
-        require(_feeBps <= MAX_FEE_BPS, "fees too high");
+        require(_feeBps <= MAX_FEE_BPS, "fee too high.");
+        _;
+    }
+
+    /// @dev Checks whether caller has FEE_ROLE.
+    modifier onlyFeeAdmin() {
+        require(hasRole(FEE_ROLE, _msgSender()), "not fee admin.");
         _;
     }
 
@@ -68,6 +77,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         });
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(FEE_ROLE, _msgSender());
     }
 
     function getFeeInfo(address _module, FeeType _feeType) external view returns (address recipient, uint256 bps) {
@@ -102,7 +112,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         uint256 _feeBps,
         address _feeRecipient,
         FeeType _feeType
-    ) external onlyModuleAdmin onlyValidFee(_feeBps) {
+    ) external onlyFeeAdmin onlyValidFee(_feeBps) {
         FeeInfo memory feeInfo = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
 
         feeInfoByModuleType[_moduleType][_feeType] = feeInfo;
@@ -116,7 +126,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         uint256 _feeBps,
         address _feeRecipient,
         FeeType _feeType
-    ) external onlyModuleAdmin onlyValidFee(_feeBps) {
+    ) external onlyFeeAdmin onlyValidFee(_feeBps) {
         FeeInfo memory feeInfo = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
 
         feeInfoByModuleInstance[_module][_feeType] = feeInfo;
@@ -134,7 +144,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
         defaultFeeInfo[_feeType] = feeInfo;
 
-        emit DefaultFeeInfo(feeInfo);
+        emit DefaultFeeInfo(_feeType, feeInfo);
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

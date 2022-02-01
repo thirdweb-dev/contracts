@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-// Interfaces
-import { IThirdwebRoyalty } from "./interfaces/IThirdwebRoyalty.sol";
-
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
+import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
+import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
+import "./interfaces/IThirdwebOwnable.sol";
 
 // Token interfaces
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -19,15 +20,21 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 
+// Helper Interfaces
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+
 // Thirdweb top-level
 import "./TWFee.sol";
 
 contract Bundle is
+    IERC2981,
+    IThirdwebModule,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC1155PresetUpgradeable,
-    IThirdwebRoyalty
+    ERC1155PresetUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("Bundle");
     uint256 private constant VERSION = 1;
@@ -42,7 +49,7 @@ contract Bundle is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFees;
+    TWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -51,10 +58,10 @@ contract Bundle is
     uint256 public nextTokenId;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint16 public royaltyBps;
+    uint256 private royaltyBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -169,30 +176,30 @@ contract Bundle is
         _;
     }
 
-    constructor(address _thirdwebFees) initializer {
-        thirdwebFees = TWFee(_thirdwebFees);
+    constructor(address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
+        address _defaultAdmin,
         string memory _uri,
         address _trustedForwarder,
         address _royaltyReceiver,
-        uint16 _royaltyBps
+        uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
-        __ERC1155Preset_init(_uri);
+        __ERC1155Preset_init(_defaultAdmin, _uri);
 
         // Initialize this contract's state.
         royaltyBps = _royaltyBps;
         royaltyRecipient = _royaltyReceiver;
         contractURI = _uri;
 
-        address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
+        _owner = _defaultAdmin;
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
     }
 
     /**
@@ -205,8 +212,8 @@ contract Bundle is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -302,7 +309,7 @@ contract Bundle is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -323,7 +330,7 @@ contract Bundle is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -445,12 +452,17 @@ contract Bundle is
         emit ERC20Redeemed(redeemer, _nftId, erc20WrappedTokens[_nftId].source, amountToDistribute, _amount);
     }
 
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
     /**
      *      External: setter functions
      */
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) public onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -469,8 +481,8 @@ contract Bundle is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _URI) external onlyModuleAdmin {
-        contractURI = _URI;
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+        contractURI = _uri;
     }
 
     /// @dev Lets a protocol admin restrict token transfers.
@@ -533,7 +545,7 @@ contract Bundle is
         override(ERC1155PresetUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
     /// @dev See EIP 1155

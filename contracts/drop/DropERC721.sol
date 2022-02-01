@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-// Interfaces
-import { IDropERC721 } from "./IDropERC721.sol";
-import { IThirdwebRoyalty } from "../interfaces/IThirdwebRoyalty.sol";
+// Interface
+import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -23,6 +22,7 @@ import "../lib/CurrencyTransferLib.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -34,8 +34,7 @@ contract DropERC721 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable,
-    IThirdwebRoyalty
+    ERC721EnumerableUpgradeable
 {
     using StringsUpgradeable for uint256;
 
@@ -48,13 +47,13 @@ contract DropERC721 is
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Max bps in the thirdweb system
-    uint16 private constant MAX_BPS = 10_000;
+    uint256 private constant MAX_BPS = 10_000;
 
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFees;
+    TWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -69,16 +68,16 @@ contract DropERC721 is
     address public primarySaleRecipient;
 
     /// @dev The adress that receives all primary sales value.
-    address public platformFeeRecipient;
+    address private platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint16 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev Whether transfers on tokens are restricted.
     bool public isTransferRestricted;
@@ -106,19 +105,20 @@ contract DropERC721 is
         _;
     }
 
-    constructor(address _thirdwebFees) initializer {
-        thirdwebFees = TWFee(_thirdwebFees);
+    constructor(address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
         address _royaltyReceiver,
-        uint16 _royaltyBps,
+        uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
@@ -135,11 +135,10 @@ contract DropERC721 is
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
-        address deployer = _msgSender();
-        _owner = deployer;
-        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
-        _setupRole(MINTER_ROLE, deployer);
-        _setupRole(TRANSFER_ROLE, deployer);
+        _owner = _defaultAdmin;
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
     }
 
     ///     =====   Public functions  =====
@@ -150,8 +149,8 @@ contract DropERC721 is
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint256) {
-        return VERSION;
+    function version() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /**
@@ -219,7 +218,7 @@ contract DropERC721 is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Royalty);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Royalty);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -245,7 +244,7 @@ contract DropERC721 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -279,7 +278,7 @@ contract DropERC721 is
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_receiver, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity);
@@ -346,10 +345,11 @@ contract DropERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint16 _royaltyBps) external onlyModuleAdmin {
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
+        royaltyBps = uint128(_royaltyBps);
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
@@ -387,6 +387,16 @@ contract DropERC721 is
 
     //      =====   Getter functions  =====
 
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
     /// @dev Returns the current active mint condition for a given tokenId.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)
         public
@@ -422,7 +432,7 @@ contract DropERC721 is
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
@@ -497,7 +507,7 @@ contract DropERC721 is
         override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IThirdwebRoyalty).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
     function _msgSender()

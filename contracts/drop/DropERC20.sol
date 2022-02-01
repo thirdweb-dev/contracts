@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import { IDropERC20 } from "./IDropERC20.sol";
+import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 
 // Base
 import "../token/TokenERC20.sol";
@@ -28,30 +28,31 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     /// @dev Max basis points in the thirdweb system
     uint128 private constant MAX_BPS = 10_000;
 
+    /// @dev The % of primary sales collected as platform fees.
+    uint128 private platformFeeBps;
+
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee private immutable thirdwebFees;
+    TWFee private immutable thirdwebFee;
 
     /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
     /// @dev The address that receives the platform fees all primary sales value.
-    address public platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 public platformFeeBps;
+    address private platformFeeRecipient;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    constructor(address _thirdwebFees) initializer {
-        thirdwebFees = TWFee(_thirdwebFees);
+    constructor(address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
@@ -60,7 +61,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-        __TokenERC20_init(_name, _symbol, _trustedForwarder, _contractURI);
+        __TokenERC20_init(_defaultAdmin, _name, _symbol, _trustedForwarder, _contractURI);
 
         primarySaleRecipient = _primarySaleRecipient;
         platformFeeRecipient = _platformFeeRecipient;
@@ -70,13 +71,13 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     //      =====   Public functions  =====
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure override returns (bytes32) {
+    function moduleType() external pure override(IThirdwebModule, TokenERC20) returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure override returns (uint256) {
-        return VERSION;
+    function version() external pure override(IThirdwebModule, TokenERC20) returns (uint8) {
+        return uint8(VERSION);
     }
 
     /// @dev At any given moment, returns the uid for the active claim condition.
@@ -135,7 +136,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
         ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_receiver, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _quantity, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
         collectClaimPrice(condition, _quantity);
@@ -211,6 +212,11 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
     //      =====   Getter functions  =====
 
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
     /// @dev Returns the next calid timestamp for claiming, for a given claimer and claim condition index.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)
         public
@@ -246,7 +252,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFees.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {

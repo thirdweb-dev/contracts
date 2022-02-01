@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "../IThirdwebModule.sol";
+import "../IThirdwebPlatformFee.sol";
+import "../IThirdwebPrimarySale.sol";
+
 /**
  *  `LazyMintERC20` is an ERC 20 contract.
  *
@@ -9,7 +13,7 @@ pragma solidity ^0.8.0;
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC20 {
+interface IDropERC20 is IThirdwebModule, IThirdwebPrimarySale, IThirdwebPlatformFee {
     /**
      *  @notice The restrictions that make up a claim condition.
      *
