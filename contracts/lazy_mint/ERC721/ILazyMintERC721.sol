@@ -70,7 +70,7 @@ interface ILazyMintERC721 {
     }
 
     /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
+    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(

@@ -230,6 +230,7 @@ contract LazyMintERC721 is
         external 
         onlyMinter
     {
+
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -237,21 +238,21 @@ contract LazyMintERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if(_encryptedBaseURI.length != 0) {
+        if(bytes(_encryptedBaseURI).length != 0) {
             encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
         }
 
-        emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens);
+        emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
     function reveal(uint256 _index, bytes memory _key) external onlyMinter {
-        require(_index <= baseURIIndices[baseURIIndices.length - 1], "invalid index");
+        require(_index <= baseURIIndices[baseURIIndices.length - 1], "invalid index.");
 
         bytes memory encryptedURI = encryptedBaseURI[_index];
-        require(encryptedURI.length != 0, "nothing to reveal");
+        require(encryptedURI.length != 0, "nothing to reveal.");
 
-        string memory revealedURI = string(abi.encodePacked(encryptDecrypt(encryptedURI, _key)));
+        string memory revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
         baseURI[_index] = revealedURI;
         delete encryptedBaseURI[_index];
