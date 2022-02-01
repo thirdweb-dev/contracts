@@ -114,7 +114,7 @@ contract TokenERC721 is
     }
 
     /// @dev Initiliazes the contract, like a constructor.
-    function intialize(
+    function initialize(
         address _defaultAdmin,
         string memory _name,
         string memory _symbol,
