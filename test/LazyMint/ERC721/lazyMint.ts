@@ -83,8 +83,8 @@ describe("Test: lazy mint tokens", function () {
   });
 
   describe("Delayed reveal tests", function() {
-    const placeholderURI: string = "ipfs://placeholder/";
-    const secretURI: string = "ipfs://secret/"
+    const placeholderURI: string = "ipfs://QmY5vGkXabXJEk8hDq3aJFEg75R7wENZ8xGoUXhF6LsCKA/";
+    const secretURI: string = "ipfs://QmTXt3Y2vKEnm6XzGmJcEnGZmihBRZ5RBQVt8RFPBzW69v/"
     const encryptionKey: string = "any key";
 
     const tokenId: BigNumber = BigNumber.from(999);
