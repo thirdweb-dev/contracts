@@ -38,9 +38,9 @@ describe("Test: lazy mint tokens", function () {
 
   describe("Revert cases", function () {
     it("Should revert if caller does not have minter role", async () => {
-      await expect(lazyMintERC721.connect(defaultSaleRecipient).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes(""))).to.be.revertedWith(
-        "not minter.",
-      );
+      await expect(
+        lazyMintERC721.connect(defaultSaleRecipient).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes("")),
+      ).to.be.revertedWith("not minter.");
     });
   });
 
@@ -49,14 +49,16 @@ describe("Test: lazy mint tokens", function () {
       const expectedStartTokenId: BigNumber = await lazyMintERC721.nextTokenIdToMint();
       const expectedEndTokenId: BigNumber = expectedStartTokenId.add(amountToLazyMint).sub(1);
 
-      await expect(lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes("")))
+      await expect(
+        lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes("")),
+      )
         .to.emit(lazyMintERC721, "LazyMintedTokens")
         .withArgs(
           ...Object.values({
             startTokenId: expectedStartTokenId,
             endTokenId: expectedEndTokenId,
             baseURI: baseURI,
-            encryptedBaseURI: ethers.utils.toUtf8Bytes("")
+            encryptedBaseURI: ethers.utils.toUtf8Bytes(""),
           }),
         );
     });
@@ -64,7 +66,6 @@ describe("Test: lazy mint tokens", function () {
 
   describe("Contract state", function () {
     it("Should increment the 'nextTokenIdToMint' by the amount of tokens lazy minted", async () => {
-
       const nextIdToMintBefore: BigNumber = await lazyMintERC721.nextTokenIdToMint();
       await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes(""));
       const nextIdToMintAfter: BigNumber = await lazyMintERC721.nextTokenIdToMint();
@@ -82,9 +83,9 @@ describe("Test: lazy mint tokens", function () {
     });
   });
 
-  describe("Delayed reveal tests", function() {
+  describe("Delayed reveal tests", function () {
     const placeholderURI: string = "ipfs://placeholder/";
-    const secretURI: string = "ipfs://secret/"
+    const secretURI: string = "ipfs://secret/";
     const encryptionKey: string = "any key";
 
     const tokenId: BigNumber = BigNumber.from(999);
@@ -92,10 +93,10 @@ describe("Test: lazy mint tokens", function () {
     beforeEach(async () => {
       const encrytpedSecretURI: string = await lazyMintERC721.encryptDecrypt(
         ethers.utils.toUtf8Bytes(secretURI),
-        ethers.utils.toUtf8Bytes(encryptionKey)
-      )
+        ethers.utils.toUtf8Bytes(encryptionKey),
+      );
       await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, placeholderURI, encrytpedSecretURI);
-    })
+    });
 
     it("Should return placeholder URI before reveal, and secret URI after", async () => {
       const expectedURIBefore: string = placeholderURI + tokenId.toString();
@@ -107,48 +108,50 @@ describe("Test: lazy mint tokens", function () {
       await lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey));
 
       expect(await lazyMintERC721.tokenURI(tokenId)).to.equal(expectedURIAfter);
-    })
+    });
 
     it("Should revert if reveal has already happened", async () => {
       const indexForToken = await lazyMintERC721.getBaseUriIndexOf(tokenId);
       await lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey));
-      
+
       await expect(
-        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes("some other key"))
+        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes("some other key")),
       ).to.be.revertedWith("nothing to reveal.");
-    })
+    });
 
     it("Should revert if non existent index is provided", async () => {
       const indexForToken: BigNumber = await lazyMintERC721.getBaseUriIndexOf(tokenId);
-      
+
       await expect(
-        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken.add(1), ethers.utils.toUtf8Bytes(encryptionKey))
+        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken.add(1), ethers.utils.toUtf8Bytes(encryptionKey)),
       ).to.be.revertedWith("invalid index.");
-    })
+    });
 
     it("Should be reverted if NFTs at given index are not delayed reveal NFTs", async () => {
       const nextTokenIdToBeMinted = await lazyMintERC721.nextTokenIdToMint();
 
-      await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, placeholderURI, ethers.utils.toUtf8Bytes(""));
-      
+      await lazyMintERC721
+        .connect(protocolAdmin)
+        .lazyMint(amountToLazyMint, placeholderURI, ethers.utils.toUtf8Bytes(""));
+
       const indexForToken = await lazyMintERC721.getBaseUriIndexOf(nextTokenIdToBeMinted);
       await expect(
-        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey))
+        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey)),
       ).to.be.revertedWith("nothing to reveal.");
-    })
+    });
 
     it("Should emit RevealedNFT with the revealed URI", async () => {
       const expectedRevealedURI: string = secretURI;
       const indexForToken = await lazyMintERC721.getBaseUriIndexOf(tokenId);
 
-      await expect(
-        lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey))
-      )
-      .to.emit(lazyMintERC721, "RevealedNFT")
-      .withArgs(...Object.values({
-        endTokenId: indexForToken,
-        revealedURI: expectedRevealedURI
-      }));
-    })
-  })
+      await expect(lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey)))
+        .to.emit(lazyMintERC721, "RevealedNFT")
+        .withArgs(
+          ...Object.values({
+            endTokenId: indexForToken,
+            revealedURI: expectedRevealedURI,
+          }),
+        );
+    });
+  });
 });

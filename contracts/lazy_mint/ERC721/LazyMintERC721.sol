@@ -169,46 +169,42 @@ contract LazyMintERC721 is
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    function encryptDecrypt (bytes memory data, bytes memory key)
-        public 
-        pure 
-        returns (bytes memory result) 
-    {
+    function encryptDecrypt(bytes memory data, bytes memory key) public pure returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
 
         assembly {
             // Set result to free memory pointer
-            result := mload (0x40)
+            result := mload(0x40)
             // Increase free memory pointer by lenght + 32
-            mstore (0x40, add (add (result, length), 32))
+            mstore(0x40, add(add(result, length), 32))
             // Set result length
-            mstore (result, length)
+            mstore(result, length)
         }
 
         // Iterate over the data stepping by 32 bytes
-        for (uint i = 0; i < length; i += 32) {
+        for (uint256 i = 0; i < length; i += 32) {
             // Generate hash of the key and offset
-            bytes32 hash = keccak256 (abi.encodePacked (key, i));
+            bytes32 hash = keccak256(abi.encodePacked(key, i));
 
             bytes32 chunk;
             assembly {
                 // Read 32-bytes data chunk
-                chunk := mload (add (data, add (i, 32)))
+                chunk := mload(add(data, add(i, 32)))
             }
             // XOR the chunk with hash
             chunk ^= hash;
             assembly {
                 // Write 32-byte encrypted chunk
-                mstore (add (result, add (i, 32)), chunk)
+                mstore(add(result, add(i, 32)), chunk)
             }
         }
     }
 
     ///     =====   External functions  =====
-    
+
     /// @dev Returns the baseURI index for a given tokenId.
-    function getBaseUriIndexOf(uint256 _tokenId) external view returns(uint256) {
+    function getBaseUriIndexOf(uint256 _tokenId) external view returns (uint256) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
                 return baseURIIndices[i];
@@ -223,14 +219,10 @@ contract LazyMintERC721 is
      *       to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      */
     function lazyMint(
-        uint256 _amount, 
+        uint256 _amount,
         string calldata _baseURIForTokens,
         bytes memory _encryptedBaseURI
-    )
-        external 
-        onlyMinter
-    {
-
+    ) external onlyMinter {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -238,7 +230,7 @@ contract LazyMintERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if(bytes(_encryptedBaseURI).length != 0) {
+        if (bytes(_encryptedBaseURI).length != 0) {
             encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
         }
 
