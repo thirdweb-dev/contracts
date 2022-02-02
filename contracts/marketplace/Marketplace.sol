@@ -184,6 +184,7 @@ contract Marketplace is
         // Can only edit auction listing before it starts.
         if (isAuction) {
             require(block.timestamp < targetListing.startTime, "Marketplace: auction already started.");
+            require(_buyoutPricePerToken >= _reservePricePerToken, "reserve price exceeds buyout price.");
         }
 
         uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;
