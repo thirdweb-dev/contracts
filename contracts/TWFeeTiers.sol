@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "./lib/CurrencyTransferLib.sol";
 
 contract TWFeeTiers is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev Only FEE_ROLE holders can set fee values.
@@ -31,6 +32,9 @@ contract TWFeeTiers is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Mapping from address => pricing tier for address.
     mapping(address => Tier) public pricingTier;
+    mapping(uint256 => uint256) public durationForTier;
+    mapping(uint256 => uint256) public priceForTier;
+    mapping(uint256 => address) public currencyForTier;
 
     mapping(address => mapping(address => bool)) public isApproved;
 
@@ -49,6 +53,19 @@ contract TWFeeTiers is Multicall, ERC2771Context, AccessControlEnumerable {
             _for == caller || isApproved[_for][caller] || hasRole(DEFAULT_ADMIN_ROLE, caller),
             "not approved to select tier."
         );
+
+        Tier memory tierSelected = Tier({
+            tier: _tier,
+            startTimestamp: uint128(block.timestamp),
+            durationInSeconds: uint128(durationForTier[_tier]),
+            price: priceForTier[_tier],
+            currency: currencyForTier[_tier]
+        });
+        pricingTier[_for] = tierSelected;
+
+        CurrencyTransferLib.transferCurrency(tierSelected.currency, _msgSender(), address(this), tierSelected.price);
+
+        // TODO: emit event
     }
    
 
