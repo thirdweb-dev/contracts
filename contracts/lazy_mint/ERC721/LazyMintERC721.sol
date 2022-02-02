@@ -146,7 +146,11 @@ contract LazyMintERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                if(encryptedBaseURI[baseURIIndices[i]].length != 0) {
+                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], uint(0).toString()));
+                } else {
+                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                }
             }
         }
 
