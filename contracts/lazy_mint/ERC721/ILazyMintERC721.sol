@@ -111,7 +111,11 @@ interface ILazyMintERC721 {
      *
      *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens, bytes memory _encryptedBaseURI) external;
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes memory _encryptedBaseURI
+    ) external;
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.
