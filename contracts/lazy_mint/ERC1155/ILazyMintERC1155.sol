@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 /**
  *  `LazyMintERC1155` is an ERC 1155 contract. It takes in a base URI in its
- *  constructor (e.g. "ipsf://Qmece.../"), and the URI for each token of ID
- *  `tokenId` is baseURI + `${tokenId}` (e.g. "ipsf://Qmece.../1").
+ *  constructor (e.g. "ipfs://Qmece.../"), and the URI for each token of ID
+ *  `tokenId` is baseURI + `${tokenId}` (e.g. "ipfs://Qmece.../1").
  *
  *  For each token with a unique ID, the module admin (account with `DEFAULT_ADMIN ROLE`)
  *  can create mint conditions with non-overlapping time windows, and accounts can claim
