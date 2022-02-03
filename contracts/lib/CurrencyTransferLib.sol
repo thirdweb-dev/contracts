@@ -15,7 +15,7 @@ library CurrencyTransferLib {
         address _from,
         address _to,
         uint256 _amount
-    ) public {
+    ) internal {
         if (_amount == 0) {
             return;
         }
