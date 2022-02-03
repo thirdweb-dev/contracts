@@ -85,7 +85,7 @@ contract LazyMintERC721 is
     /// @dev The protocol control center.
     ProtocolControl internal controlCenter;
 
-    uint256[] private baseURIIndices;
+    uint256[] public baseURIIndices;
 
     /// @dev End token Id => URI that overrides `baseURI + tokenId` convention.
     mapping(uint256 => string) private baseURI;
@@ -146,8 +146,8 @@ contract LazyMintERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                if(encryptedBaseURI[baseURIIndices[i]].length != 0) {
-                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], uint(0).toString()));
+                if (encryptedBaseURI[baseURIIndices[i]].length != 0) {
+                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
                 } else {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
                 }
@@ -173,7 +173,7 @@ contract LazyMintERC721 is
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    function encryptDecrypt(bytes memory data, bytes memory key) public pure returns (bytes memory result) {
+    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
 
@@ -208,14 +208,17 @@ contract LazyMintERC721 is
     ///     =====   External functions  =====
 
     /// @dev Returns the baseURI index for a given tokenId.
-    function getBaseUriIndexOf(uint256 _tokenId) external view returns (uint256) {
+    function getBaseURIIndex(uint256 _tokenId) external view returns (uint256) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                return baseURIIndices[i];
+                return i;
             }
         }
+        revert("invalid baseuri");
+    }
 
-        return 0;
+    function getBaseURICount() external view returns (uint256) {
+        return baseURIIndices.length;
     }
 
     /**
@@ -225,7 +228,7 @@ contract LazyMintERC721 is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes memory _encryptedBaseURI
+        bytes calldata _encryptedBaseURI
     ) external onlyMinter {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
@@ -234,7 +237,7 @@ contract LazyMintERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if (bytes(_encryptedBaseURI).length != 0) {
+        if (_encryptedBaseURI.length != 0) {
             encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
         }
 
@@ -242,18 +245,21 @@ contract LazyMintERC721 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
-    function reveal(uint256 _index, bytes memory _key) external onlyMinter {
-        require(_index <= baseURIIndices[baseURIIndices.length - 1], "invalid index.");
+    function reveal(uint256 index, bytes calldata _key) external onlyMinter returns (string memory revealedURI) {
+        require(index < baseURIIndices.length, "invalid index.");
 
+        uint256 _index = baseURIIndices[index];
         bytes memory encryptedURI = encryptedBaseURI[_index];
         require(encryptedURI.length != 0, "nothing to reveal.");
 
-        string memory revealedURI = string(encryptDecrypt(encryptedURI, _key));
+        revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
         baseURI[_index] = revealedURI;
         delete encryptedBaseURI[_index];
 
         emit RevealedNFT(_index, revealedURI);
+
+        return revealedURI;
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.
