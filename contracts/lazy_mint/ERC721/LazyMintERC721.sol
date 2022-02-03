@@ -206,17 +206,6 @@ contract LazyMintERC721 is
     }
 
     ///     =====   External functions  =====
-
-    /// @dev Returns the baseURI index for a given tokenId.
-    function getBaseURIIndex(uint256 _tokenId) external view returns (uint256) {
-        for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
-            if (_tokenId < baseURIIndices[i]) {
-                return i;
-            }
-        }
-        revert("invalid baseuri");
-    }
-
     function getBaseURICount() external view returns (uint256) {
         return baseURIIndices.length;
     }

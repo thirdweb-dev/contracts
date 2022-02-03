@@ -194,7 +194,7 @@ describe("Test: lazy mint tokens", function () {
     });
 
     it("Should revert if non existent index is provided", async () => {
-      const indexForToken = await lazyMintERC721.getBaseURICount(); //await lazyMintERC721.getBaseUriIndexOf(tokenId);
+      const indexForToken = await lazyMintERC721.getBaseURICount();
 
       await expect(
         lazyMintERC721.connect(protocolAdmin).reveal(indexForToken, ethers.utils.toUtf8Bytes(encryptionKey)),
