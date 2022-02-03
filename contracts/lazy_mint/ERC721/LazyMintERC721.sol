@@ -42,7 +42,7 @@ contract LazyMintERC721 is
     using Strings for uint256;
 
     /// @dev Version of the contract.
-    uint256 public constant VERSION = 1;
+    uint256 public constant VERSION = 2;
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
