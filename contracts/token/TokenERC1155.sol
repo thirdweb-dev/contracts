@@ -120,7 +120,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Initiliazes the contract, like a constructor.
-    function intialize(
+    function initialize(
         address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
