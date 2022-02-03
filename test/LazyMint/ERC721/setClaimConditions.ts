@@ -41,7 +41,7 @@ describe("Test: claim conditions", function () {
     lazyMintERC721 = contracts.lazyMintERC721;
 
     // Lazy mint tokens
-    await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI);
+    await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes(""));
 
     // Set mint conditions
     const templateMintCondition: ClaimConditionStruct = {

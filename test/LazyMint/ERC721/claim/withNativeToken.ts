@@ -62,7 +62,7 @@ describe("Test: claim lazy minted tokens with native tokens", function () {
     royaltyTreasury = contracts.protocolControl.address;
 
     // Lazy mint tokens
-    await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI);
+    await lazyMintERC721.connect(protocolAdmin).lazyMint(amountToLazyMint, baseURI, ethers.utils.toUtf8Bytes(""));
 
     // Generate a merkle root for whitelisting
     const leaves = [claimer.address].map(x => keccak256(x));
