@@ -11,9 +11,7 @@
   "files": [
     "contracts/",
     "typechain/",
-    "dist/",
-    "!contracts/mocks",
-    "!contracts/**/*.md"
+    "dist/"
   ],
   "devDependencies": {
     "@chainlink/contracts": "^0.3.0",
