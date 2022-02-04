@@ -17,18 +17,18 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(OPERATOR_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(OPERATOR_ROLE, _msgSender());
     }
 
     function addModule(address _moduleAddress, address _deployer) external {
-        require(hasRole(OPERATOR_ROLE, msg.sender), "not operator.");
+        require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
         deployments[_deployer].add(_moduleAddress);
         emit ModuleAdded(_moduleAddress, _deployer);
     }
 
     function removeModule(address _moduleAddress, address _deployer) external {
-        require(hasRole(OPERATOR_ROLE, msg.sender) || _deployer == msg.sender, "not operator or deployer.");
+        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool removed = deployments[_deployer].remove(_moduleAddress);
         require(removed, "failed to remove module.");
