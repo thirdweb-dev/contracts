@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Top-level contracts
+import "./TWRegistry.sol";
+
 // Access
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
@@ -8,8 +11,13 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "./lib/CurrencyTransferLib.sol";
 
 contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
+
+    /// @dev The thirdweb registry of deployments.
+    TWRegistry private immutable thirdwebRegistry;
+
     /// @dev Only FEE_ROLE holders can set fee values.
     bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
 
@@ -19,29 +27,49 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev The threshold for thirdweb fees. 1%
     uint128 public constant MAX_FEE_BPS = 100;
 
-    /// @dev Mapping from module type => fee type => fee info
-    mapping(bytes32 => mapping(FeeType => FeeInfo)) public feeInfoByModuleType;
+    /// @dev Mapping from pricing tier => FeeInfo
+    mapping(uint256 => mapping(uint256 => FeeInfo)) public feeInfo;
 
-    /// @dev Mapping from module instance => fee type => fee info
-    mapping(address => mapping(FeeType => FeeInfo)) public feeInfoByModuleInstance;
+    /// @dev Mapping from address => pricing tier for address.
+    mapping(address => Tier) public tierForUser;
 
-    /// @dev Mapping from fee type => fee defaults
-    mapping(FeeType => FeeInfo) public defaultFeeInfo;
+    /// @dev Mapping from tier => tier's pricing info.
+    mapping(uint256 => TierInfo) private tierInfo;
+
+    /**
+     *  @dev Mapping from user => external party => whether the external party
+     *       is approved to select a pricing tier for the user.
+     */
+    mapping(address => mapping(address => bool)) public isApproved;
+
+    struct Tier {
+        uint128 tier;
+        uint128 validUntilTimestamp;
+    }
+
+    struct TierInfo {
+        uint256 duration;
+        mapping (address => uint256) priceForCurrency;
+        mapping(address => bool) isCurrencyApproved;
+    }
 
     struct FeeInfo {
         uint256 bps;
         address recipient;
     }
 
-    enum FeeType {
-        Transaction,
-        Royalty
+    /// @dev Events
+    event TierForUser(address indexed user, uint256 indexed tier, address currencyForPayment, uint256 pricePaid, uint256 expirationTimestamp);
+    event PricingTierInfo(uint256 indexed tier, uint256 _duration, address indexed currencyApproved, uint256 priceForCurrency);
+    event FeeInfoForTier(uint256 indexed tier, uint256 indexed feeType, address recipient, uint256 bps);
+
+    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+        _;
     }
 
-    event FeeInfoForModuleInstance(address indexed moduleInstance, FeeInfo feeInfo);
-    event FeeInfoForModuleType(bytes32 indexed moduleType, FeeInfo feeInfo);
-    event DefaultFeeInfo(FeeType feeType, FeeInfo feeInfo);
-
+    /// @dev Checks whether fee is under 1%
     modifier onlyValidFee(uint256 _feeBps) {
         require(_feeBps <= MAX_FEE_BPS, "fee too high.");
         _;
@@ -53,99 +81,116 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         _;
     }
 
-    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
+    constructor(address _trustedForwarder, address _thirdwebRegistry) ERC2771Context(_trustedForwarder) {
+        thirdwebRegistry = TWRegistry(_thirdwebRegistry);
     }
 
-    constructor(
-        address _trustedForwarder,
-        address _defaultRoyaltyFeeRecipient,
-        address _defaultTransactionFeeRecipient,
-        uint128 _defaultRoyaltyFeeBps,
-        uint128 _defaultTransactionFeeBps
-    ) ERC2771Context(_trustedForwarder) {
-        defaultFeeInfo[FeeType.Royalty] = FeeInfo({
-            bps: _defaultRoyaltyFeeBps,
-            recipient: _defaultRoyaltyFeeRecipient
+    /// @dev Returns the fee infor for a given module and fee type.
+    function getFeeInfo(address _module, uint256 _feeType) external view returns (address recipient, uint256 bps) {
+        address deployer = thirdwebRegistry.deployer(_module);
+        Tier memory tierForDeployer = tierForUser[deployer];
+
+        uint256 tierToUse = block.timestamp < tierForDeployer.validUntilTimestamp ? tierForDeployer.tier : 0;
+        
+        FeeInfo memory targetFeeInfo = feeInfo[tierToUse][_feeType];
+        (recipient, bps) = (targetFeeInfo.recipient, targetFeeInfo.bps);
+    }
+
+    /// @dev Lets an approved caller select a subscription for `_for`.
+    function selectSubscription(
+        address _for,
+        uint256 _tier,
+        uint256 _priceToPay,
+        address _currencyToUse
+    )
+        external 
+        payable
+    {
+        address caller = _msgSender();
+        require(
+            _for == caller || isApproved[_for][caller] || hasRole(DEFAULT_ADMIN_ROLE, caller),
+            "not approved to select tier."
+        );
+
+        uint256 durationForTier = tierInfo[_tier].duration;
+        require(durationForTier != 0, "invalid tier.");
+
+        bool isValidPaymentInfo = tierInfo[_tier].isCurrencyApproved[_currencyToUse] || tierInfo[_tier].priceForCurrency[_currencyToUse] == _priceToPay;
+        require(isValidPaymentInfo, "invalid payment info.");
+
+        Tier memory tierSelected = Tier({
+            tier: uint128(_tier),
+            validUntilTimestamp: uint128(block.timestamp + durationForTier)
         });
 
-        defaultFeeInfo[FeeType.Transaction] = FeeInfo({
-            bps: _defaultTransactionFeeBps,
-            recipient: _defaultTransactionFeeRecipient
-        });
+        tierForUser[_for] = tierSelected;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(FEE_ROLE, _msgSender());
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), address(this), _priceToPay);
+
+        emit TierForUser(_for, _tier, _currencyToUse, _priceToPay, tierSelected.validUntilTimestamp);
     }
 
-    function getFeeInfo(address _module, FeeType _feeType) external view returns (address recipient, uint256 bps) {
-        bytes32 moduleType = IThirdwebModule(_module).moduleType();
+    /// @dev Lets the caller renew a subscription for `_for`.
+    function renewSubscription(
+        address _for,
+        address _currencyToUse,
+        uint256 _priceToPay
+    )
+        external
+        payable
+    {
+        Tier memory targetTier = tierForUser[_for];
 
-        FeeInfo memory infoForModuleInstance = feeInfoByModuleInstance[_module][_feeType];
-        FeeInfo memory infoForModuleType = feeInfoByModuleType[moduleType][_feeType];
-        FeeInfo memory defaults = defaultFeeInfo[_feeType];
+        uint256 durationForTier = tierInfo[targetTier.tier].duration;
+        require(durationForTier != 0, "invalid tier.");
 
-        // Get appropriate fee bps
-        bps = infoForModuleInstance.bps;
-        if (bps == 0) {
-            bps = infoForModuleType.bps;
-        }
-        if (bps == 0) {
-            bps = defaults.bps;
-        }
+        bool isValidPaymentInfo = tierInfo[targetTier.tier].isCurrencyApproved[_currencyToUse] || tierInfo[targetTier.tier].priceForCurrency[_currencyToUse] == _priceToPay;
+        require(isValidPaymentInfo, "invalid payment info.");
 
-        // Get appropriate fee recipient
-        recipient = infoForModuleInstance.recipient;
-        if (recipient == address(0)) {
-            recipient = infoForModuleType.recipient;
-        }
-        if (recipient == address(0)) {
-            recipient = defaults.recipient;
-        }
+        uint256 durationLeft = targetTier.validUntilTimestamp > block.timestamp ? targetTier.validUntilTimestamp - block.timestamp : 0;
+        targetTier.validUntilTimestamp = uint128(block.timestamp + durationLeft + tierInfo[targetTier.tier].duration);
+
+        tierForUser[_for] = targetTier;
+        
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), address(this), _priceToPay);
+
+        emit TierForUser(_for, targetTier.tier, _currencyToUse, _priceToPay, targetTier.validUntilTimestamp);
     }
 
-    /// @dev Lets the admin set fee bps and recipient for the given module type and fee type.
-    function setFeeInfoForModuleType(
-        bytes32 _moduleType,
+    /// @dev For a tier, lets the admin set the (1) duration, (2) approve a currency for payment and (3) set price for that currency.
+    function setPricingTierInfo(
+        uint256 _tier,
+        uint256 _duration,
+        address _currencyToApprove,
+        uint256 _priceForCurrency
+    )
+        external
+        onlyModuleAdmin
+    {
+        tierInfo[_tier].duration = _duration;
+        tierInfo[_tier].isCurrencyApproved[_currencyToApprove] = true;
+        tierInfo[_tier].priceForCurrency[_currencyToApprove] = _priceForCurrency;
+
+        emit PricingTierInfo(_tier, _duration, _currencyToApprove, _priceForCurrency);
+    }
+
+    /// @dev Lets the admin set fee bps and recipient for the given pricing tier and fee type.
+    function setFeeInfoForTier(
+        uint256 _tier,
         uint256 _feeBps,
         address _feeRecipient,
-        FeeType _feeType
-    ) external onlyFeeAdmin onlyValidFee(_feeBps) {
-        FeeInfo memory feeInfo = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
+        uint256 _feeType
+    ) 
+        external
+        onlyFeeAdmin
+        onlyValidFee(_feeBps)
+    {
+        FeeInfo memory feeInfoToSet = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
+        feeInfo[_tier][_feeType] = feeInfoToSet;
 
-        feeInfoByModuleType[_moduleType][_feeType] = feeInfo;
-
-        emit FeeInfoForModuleType(_moduleType, feeInfo);
+        emit FeeInfoForTier(_tier, _feeType, _feeRecipient, _feeBps);
     }
-
-    /// @dev Lets the admin set fee bps and recipient for the given module instance and fee type.
-    function setFeeInfoForModuleInstance(
-        address _module,
-        uint256 _feeBps,
-        address _feeRecipient,
-        FeeType _feeType
-    ) external onlyFeeAdmin onlyValidFee(_feeBps) {
-        FeeInfo memory feeInfo = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
-
-        feeInfoByModuleInstance[_module][_feeType] = feeInfo;
-
-        emit FeeInfoForModuleInstance(_module, feeInfo);
-    }
-
-    /// @dev Lets the admin set fee bps and recipient for the given module instance and fee type.
-    function setDefaultFeeInfo(
-        uint256 _feeBps,
-        address _feeRecipient,
-        FeeType _feeType
-    ) external onlyModuleAdmin onlyValidFee(_feeBps) {
-        FeeInfo memory feeInfo = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
-
-        defaultFeeInfo[_feeType] = feeInfo;
-
-        emit DefaultFeeInfo(_feeType, feeInfo);
-    }
+   
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
