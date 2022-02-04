@@ -35,8 +35,8 @@ contract VoteERC20 is
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = keccak256("VoteERC20");
-    uint256 public constant VERSION = 1;
+    bytes32 private constant MODULE_TYPE = bytes32("VoteERC20");
+    uint256 private constant VERSION = 1;
 
     string public contractURI;
     uint256 public proposalIndex;
