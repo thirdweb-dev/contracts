@@ -13,7 +13,7 @@ remappings = [
     '@std=lib/forge-std/src/',
 ]
 libraries = []
-cache = true
+cache = false
 force = false
 evm_version = 'london'
 optimizer = true
