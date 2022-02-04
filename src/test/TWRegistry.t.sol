@@ -42,7 +42,6 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
      */
 
     function test_initialState(address _deployer) public {
-
         address[] memory modules = twRegistry.getAllModules(_deployer);
         assertEq(modules.length, 0);
 
@@ -55,7 +54,6 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     /// @dev Test `addModule`
 
     function test_addModule() public {
-
         vm.prank(factory);
         twRegistry.addModule(mockModuleAddress, deployer);
 
@@ -66,7 +64,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
 
     function test_addModule_revert_notOperator() public {
         vm.expectRevert("not operator.");
-        
+
         vm.prank(deployer);
         twRegistry.addModule(mockModuleAddress, deployer);
     }
@@ -107,9 +105,8 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         vm.prank(invalidCaller);
         twRegistry.removeModule(mockModuleAddress, deployer);
     }
-    
-    function test_removeModule_revert_noModulesToRemove() public {
 
+    function test_removeModule_revert_noModulesToRemove() public {
         address[] memory modules = twRegistry.getAllModules(deployer);
         assertEq(modules.length, 0);
 
@@ -124,7 +121,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
 
         vm.expectEmit(true, true, false, true);
         emit ModuleDeleted(mockModuleAddress, deployer);
-        
+
         vm.prank(deployer);
         twRegistry.removeModule(mockModuleAddress, deployer);
     }

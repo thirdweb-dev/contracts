@@ -25,7 +25,6 @@ contract MockThirdwebModule is IThirdwebModule {
 }
 
 interface ITWFeeData {
-
     event FeeInfoForModuleInstance(address indexed moduleInstance, TWFee.FeeInfo feeInfo);
     event FeeInfoForModuleType(bytes32 indexed moduleType, TWFee.FeeInfo feeInfo);
     event DefaultFeeInfo(TWFee.FeeType feeType, TWFee.FeeInfo feeInfo);
@@ -53,10 +52,9 @@ contract TWFeeTest is ITWFeeData, BaseTest {
     //  =====   Set up  =====
 
     function setUp() public {
-
         vm.prank(moduleAdmin);
         twFee = new TWFee(
-            trustedForwarder, 
+            trustedForwarder,
             defaultRoyaltyFeeRecipient,
             defaultPlatformFeeRecipient,
             defaultRoyaltyFeeBps,
@@ -75,7 +73,6 @@ contract TWFeeTest is ITWFeeData, BaseTest {
      *  - Deployer of the contract has `FEE_ROLE`
      */
     function test_initalState() public {
-
         bytes32 defaultAdminRole = twFee.DEFAULT_ADMIN_ROLE();
         bytes32 feeRole = twFee.FEE_ROLE();
 
@@ -86,11 +83,17 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         twFee.grantRole(feeRole, feeAdmin);
         assertTrue(twFee.hasRole(feeRole, feeAdmin));
 
-        (address royaltyFeeRecipient, uint256 royaltyFeeBps) = twFee.getFeeInfo(address(mockModule), TWFee.FeeType.Royalty);
+        (address royaltyFeeRecipient, uint256 royaltyFeeBps) = twFee.getFeeInfo(
+            address(mockModule),
+            TWFee.FeeType.Royalty
+        );
         assertEq(defaultRoyaltyFeeBps, royaltyFeeBps);
         assertEq(defaultRoyaltyFeeRecipient, royaltyFeeRecipient);
 
-        (address platformFeeRecipient, uint256 platformFeeBps) = twFee.getFeeInfo(address(mockModule), TWFee.FeeType.Transaction);
+        (address platformFeeRecipient, uint256 platformFeeBps) = twFee.getFeeInfo(
+            address(mockModule),
+            TWFee.FeeType.Transaction
+        );
         assertEq(defaultPlatformFeeBps, platformFeeBps);
         assertEq(defaultPlatformFeeRecipient, platformFeeRecipient);
     }
@@ -111,7 +114,6 @@ contract TWFeeTest is ITWFeeData, BaseTest {
     /// @dev Test `setDefaultFeeInfo`
 
     function test_setDefaultFeeInfo() public {
-
         address newDefaultFeeRecipient = address(0x123);
         uint256 newDefaultFeeBps = 50;
 
@@ -142,7 +144,6 @@ contract TWFeeTest is ITWFeeData, BaseTest {
     }
 
     function test_setDefaultFeeInfo_revert_feeTooHigh() public {
-
         address newDefaultFeeRecipient = address(0x123);
         uint256 newDefaultFeeBps = 101;
 
@@ -154,17 +155,13 @@ contract TWFeeTest is ITWFeeData, BaseTest {
     }
 
     function test_setDefaultFeeInfo_emit_DefaultFeeInfo() public {
-        
         address newDefaultFeeRecipient = address(0x123);
         uint256 newDefaultFeeBps = 50;
-        TWFee.FeeInfo memory feeInfo = TWFee.FeeInfo({
-            bps: newDefaultFeeBps,
-            recipient: newDefaultFeeRecipient
-        });
+        TWFee.FeeInfo memory feeInfo = TWFee.FeeInfo({ bps: newDefaultFeeBps, recipient: newDefaultFeeRecipient });
 
         vm.expectEmit(false, false, false, true);
         emit DefaultFeeInfo(TWFee.FeeType.Royalty, feeInfo);
-        
+
         vm.prank(moduleAdmin);
         twFee.setDefaultFeeInfo(newDefaultFeeBps, newDefaultFeeRecipient, TWFee.FeeType.Royalty);
     }
@@ -202,7 +199,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_setFeeInfoForModuleType_revert_notFeeAdmin() public {
         _setup_setFeeInfoForModuleType();
-        
+
         bytes32 moduleType = mockModule.moduleType();
 
         address feeRecipient = address(0x123);
@@ -217,7 +214,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_setFeeInfoForModuleType_revert_feeTooHigh() public {
         _setup_setFeeInfoForModuleType();
-        
+
         bytes32 moduleType = mockModule.moduleType();
 
         address feeRecipient = address(0x123);
@@ -238,15 +235,9 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         address feeRecipient = address(0x123);
         uint256 feeBps = 50;
         TWFee.FeeType feeType = TWFee.FeeType.Royalty;
-        
+
         vm.expectEmit(true, false, false, true);
-        emit FeeInfoForModuleType(
-            moduleType,
-            TWFee.FeeInfo({
-                bps: feeBps,
-                recipient: feeRecipient
-            })
-        );
+        emit FeeInfoForModuleType(moduleType, TWFee.FeeInfo({ bps: feeBps, recipient: feeRecipient }));
 
         vm.prank(feeAdmin);
         twFee.setFeeInfoForModuleType(moduleType, feeBps, feeRecipient, feeType);
@@ -311,15 +302,9 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         address feeRecipient = address(0x123);
         uint256 feeBps = 50;
         TWFee.FeeType feeType = TWFee.FeeType.Royalty;
-        
+
         vm.expectEmit(true, false, false, true);
-        emit FeeInfoForModuleInstance(
-            address(mockModule),
-            TWFee.FeeInfo({
-                bps: feeBps,
-                recipient: feeRecipient
-            })
-        );
+        emit FeeInfoForModuleInstance(address(mockModule), TWFee.FeeInfo({ bps: feeBps, recipient: feeRecipient }));
 
         vm.prank(feeAdmin);
         twFee.setFeeInfoForModuleInstance(address(mockModule), feeBps, feeRecipient, feeType);
@@ -337,15 +322,14 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_getFeeInfo() public {
         _setup_getFeeInfo();
-        
+
         bytes32 moduleType = mockModule.moduleType();
         TWFee.FeeType feeType = TWFee.FeeType.Royalty;
-        
+
         (address recipient, uint256 bps) = twFee.getFeeInfo(address(mockModule), feeType);
         assertEq(recipient, defaultRoyaltyFeeRecipient);
         assertEq(bps, defaultRoyaltyFeeBps);
 
-        
         address feeRecipientForType = address(0x123);
         uint256 feeBpsForType = 50;
 
@@ -373,7 +357,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
      *  - No fees should ever be set greater than 1%.
      *  - No fees for module type / instance should ever be set by non fee admin.
      *  - No default fee should ever be set by non module admin.
-    **/
+     **/
 
     function _setup() public {
         bytes32 feeRole = twFee.FEE_ROLE();
@@ -385,7 +369,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_fuzz_feeBpsDefault(uint256 _bps) public {
         address recipient = address(0x123);
-        if(_bps > 100) {
+        if (_bps > 100) {
             vm.expectRevert("fee too high.");
         }
         vm.prank(moduleAdmin);
@@ -398,7 +382,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         address recipient = address(0x123);
         bytes32 moduleType = mockModule.moduleType();
 
-        if(_bps > 100) {
+        if (_bps > 100) {
             vm.expectRevert("fee too high.");
         }
         vm.prank(feeAdmin);
@@ -410,7 +394,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
         address recipient = address(0x123);
 
-        if(_bps > 100) {
+        if (_bps > 100) {
             vm.expectRevert("fee too high.");
         }
         vm.prank(feeAdmin);
@@ -424,7 +408,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         uint256 bps = 50;
         bytes32 moduleType = mockModule.moduleType();
 
-        if(!twFee.hasRole(twFee.FEE_ROLE(), _caller)) {
+        if (!twFee.hasRole(twFee.FEE_ROLE(), _caller)) {
             vm.expectRevert("not fee admin.");
         }
         vm.prank(_caller);
@@ -437,7 +421,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         address recipient = address(0x123);
         uint256 bps = 50;
 
-        if(!twFee.hasRole(twFee.FEE_ROLE(), _caller)) {
+        if (!twFee.hasRole(twFee.FEE_ROLE(), _caller)) {
             vm.expectRevert("not fee admin.");
         }
         vm.prank(_caller);
@@ -448,7 +432,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         address recipient = address(0x123);
         uint256 bps = 50;
 
-        if(!twFee.hasRole(twFee.DEFAULT_ADMIN_ROLE(), _caller)) {
+        if (!twFee.hasRole(twFee.DEFAULT_ADMIN_ROLE(), _caller)) {
             vm.expectRevert("not module admin.");
         }
         vm.prank(_caller);

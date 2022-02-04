@@ -6,13 +6,14 @@ test = 'test'
 out = 'artifacts_forge'
 libs = ['lib']
 remappings = [
-    '@chainlink=node_modules/@chainlink/contracts/src/',
+    #' @chainlink=node_modules/@chainlink/contracts/src/',
+    '@chainlink/contracts/src=node_modules/@chainlink/contracts/src/',
     '@ds-test=lib/ds-test/src/',
     '@openzeppelin=node_modules/@openzeppelin/',
     '@std=lib/forge-std/src/',
 ]
 libraries = []
-cache = true
+cache = false
 force = false
 evm_version = 'london'
 optimizer = true

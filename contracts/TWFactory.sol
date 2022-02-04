@@ -20,7 +20,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
-    event NewModuleImplementation(bytes32 indexed moduleType, uint256 version, address implementation);
+    event moduleImplementationAdded(bytes32 indexed moduleType, uint256 version, address implementation);
     event ImplementationApproved(address implementation, bool isApproved);
 
     mapping(address => bool) public implementationApproval;
@@ -28,8 +28,8 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     mapping(bytes32 => mapping(uint256 => address)) public modules;
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(FACTORY_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(FACTORY_ROLE, _msgSender());
 
         registry = new TWRegistry(_trustedForwarder);
     }
@@ -65,14 +65,14 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
-        registry.addModule(deployedProxy, msg.sender);
+        registry.addModule(deployedProxy, _msgSender());
 
-        emit ProxyDeployed(_implementation, deployedProxy, msg.sender);
+        emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
     function addModuleImplementation(bytes32 _moduleType, address _implementation) external {
-        require(hasRole(FACTORY_ROLE, msg.sender), "not admin.");
+        require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
         require(IThirdwebModule(_implementation).moduleType() == _moduleType, "invalid module type.");
 
         currentModuleVersion[_moduleType] += 1;
@@ -81,12 +81,12 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         modules[_moduleType][version] = _implementation;
         implementationApproval[_implementation] = true;
 
-        emit NewModuleImplementation(_moduleType, version, _implementation);
+        emit moduleImplementationAdded(_moduleType, version, _implementation);
     }
 
     /// @dev Lets a contract admin approve a specific contract for deployment.
     function approveImplementation(address _implementation, bool _toApprove) external {
-        require(hasRole(FACTORY_ROLE, msg.sender), "not admin.");
+        require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
         implementationApproval[_implementation] = _toApprove;
 
