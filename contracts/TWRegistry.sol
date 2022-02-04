@@ -27,9 +27,9 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         emit ModuleAdded(_moduleAddress, _deployer);
     }
 
-    function removeModule(address _moduleAddress, address _deployer) external {        
+    function removeModule(address _moduleAddress, address _deployer) external {
         require(hasRole(OPERATOR_ROLE, msg.sender) || _deployer == msg.sender, "not operator or deployer.");
-        
+
         bool removed = deployments[_deployer].remove(_moduleAddress);
         require(removed, "failed to remove module.");
 
