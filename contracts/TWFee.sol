@@ -162,14 +162,15 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         uint256 _tier,
         uint256 _duration,
         address _currencyToApprove,
-        uint256 _priceForCurrency
+        uint256 _priceForCurrency,
+        bool _toApproveCurrency
     )
         external
         onlyModuleAdmin
     {
         tierInfo[_tier].duration = _duration;
-        tierInfo[_tier].isCurrencyApproved[_currencyToApprove] = true;
-        tierInfo[_tier].priceForCurrency[_currencyToApprove] = _priceForCurrency;
+        tierInfo[_tier].isCurrencyApproved[_currencyToApprove] = _toApproveCurrency;
+        tierInfo[_tier].priceForCurrency[_currencyToApprove] = _toApproveCurrency ? _priceForCurrency : 0;
 
         emit PricingTierInfo(_tier, _duration, _currencyToApprove, _priceForCurrency);
     }
