@@ -582,7 +582,7 @@ contract Marketplace is
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), 2); // 2 == Marketplace fee
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
         uint256 royalties;

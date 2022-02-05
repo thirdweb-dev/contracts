@@ -20,7 +20,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
-    event moduleImplementationAdded(bytes32 indexed moduleType, uint256 version, address implementation);
+    event ModuleImplementationAdded(bytes32 indexed moduleType, uint256 version, address implementation);
     event ImplementationApproved(address implementation, bool isApproved);
 
     mapping(address => bool) public implementationApproval;
@@ -81,7 +81,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         modules[_moduleType][version] = _implementation;
         implementationApproval[_implementation] = true;
 
-        emit moduleImplementationAdded(_moduleType, version, _implementation);
+        emit ModuleImplementationAdded(_moduleType, version, _implementation);
     }
 
     /// @dev Lets a contract admin approve a specific contract for deployment.

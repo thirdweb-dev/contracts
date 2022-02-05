@@ -160,8 +160,8 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
             address(this),
-            TWFee.FeeType.Transaction
-        );
+            3
+        ); // 3 == Splits fee
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _released[account] += payment;
@@ -187,8 +187,8 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
             address(this),
-            TWFee.FeeType.Transaction
-        );
+            3
+        ); // 3 == Splits fee
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _erc20Released[token][account] += payment;
