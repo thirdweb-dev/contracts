@@ -88,6 +88,9 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     constructor(address _trustedForwarder, address _thirdwebRegistry, address _thirdwebTreasury) ERC2771Context(_trustedForwarder) {
         thirdwebRegistry = TWRegistry(_thirdwebRegistry);
         thirdwebTreasury = _thirdwebTreasury;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(FEE_ROLE, _msgSender());
     }
 
     /// @dev Returns the fee infor for a given module and fee type.
