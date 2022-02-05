@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 // Interface
 import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 
+// Abstract base
+import "../abstract/ThirdwebRoyalty.sol";
+import "../abstract/ThirdwebPrimarySale.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
@@ -31,6 +35,8 @@ import "../TWFee.sol";
 contract DropERC1155 is
     Initializable,
     IDropERC1155,
+    ThirdwebRoyalty,
+    ThirdwebPrimarySale,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -118,7 +124,7 @@ contract DropERC1155 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), 1); // 1 == Royalty 
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), ROYALTY_FEE_TYPE);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -202,7 +208,7 @@ contract DropERC1155 is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), 1); // 1 == Royalty
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), ROYALTY_FEE_TYPE);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -448,7 +454,7 @@ contract DropERC1155 is
 
         uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), 0); // 0 == Primary sales
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), PRIMARY_SALE_FEE_TYPE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_mintCondition.currency == NATIVE_TOKEN) {

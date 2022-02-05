@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 // Interface
 import { ITokenERC721 } from "../interfaces/token/ITokenERC721.sol";
 
+// Abstract base
+import "../abstract/ThirdwebRoyalty.sol";
+import "../abstract/ThirdwebPrimarySale.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -33,6 +37,8 @@ import "../TWFee.sol";
 contract TokenERC721 is
     Initializable,
     ITokenERC721,
+    ThirdwebRoyalty,
+    ThirdwebPrimarySale,
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
     ERC2771ContextUpgradeable,
@@ -187,7 +193,7 @@ contract TokenERC721 is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), 1); // 1 == Royalty
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), ROYALTY_FEE_TYPE);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -213,7 +219,7 @@ contract TokenERC721 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), 1); // 1 == Royalty
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), ROYALTY_FEE_TYPE);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -353,7 +359,7 @@ contract TokenERC721 is
 
         uint256 totalPrice = _req.price;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), 0); // 0 == Primary sales
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), PRIMARY_SALE_FEE_TYPE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {

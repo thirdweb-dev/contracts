@@ -8,8 +8,9 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// Thirdweb top-level
+// Thirdweb imports
 import "../../TWFee.sol";
+import "../../abstract/ThirdwebSplits.sol";
 
 /**
  * Changelog:
@@ -38,7 +39,7 @@ import "../../TWFee.sol";
  * tokens that apply fees during transfers, are likely to not be supported as expected. If in doubt, we encourage you
  * to run tests before sending real value to this contract.
  */
-contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
+contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable, ThirdwebSplits {
     event PayeeAdded(address account, uint256 shares);
     event PaymentReleased(address to, uint256 amount);
     event ERC20PaymentReleased(IERC20Upgradeable indexed token, address to, uint256 amount);
@@ -160,8 +161,8 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
             address(this),
-            3
-        ); // 3 == Splits fee
+            SPLITS_FEE_TYPE
+        );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _released[account] += payment;
@@ -187,8 +188,8 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
             address(this),
-            3
-        ); // 3 == Splits fee
+            SPLITS_FEE_TYPE
+        );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _erc20Released[token][account] += payment;

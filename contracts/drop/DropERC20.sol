@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 // Interface
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 
+// Abstract base
+import "../abstract/ThirdwebRoyalty.sol";
+import "../abstract/ThirdwebPrimarySale.sol";
+
 // Base
 import "../token/TokenERC20.sol";
 
@@ -21,7 +25,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Thirdweb top-level
 import "../TWFee.sol";
 
-contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
+contract DropERC20 is Initializable, IDropERC20, ThirdwebPrimarySale, ReentrancyGuardUpgradeable, TokenERC20 {
     bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
     uint128 private constant VERSION = 1;
 
@@ -252,7 +256,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), 0); // 0 == Primary sales
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), PRIMARY_SALE_FEE_TYPE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
