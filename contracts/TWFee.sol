@@ -18,6 +18,9 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev The thirdweb registry of deployments.
     TWRegistry private immutable thirdwebRegistry;
 
+    /// @dev The address of thirdweb's registry.
+    address public thirdwebTreasury;
+
     /// @dev Only FEE_ROLE holders can set fee values.
     bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
 
@@ -62,6 +65,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     event TierForUser(address indexed user, uint256 indexed tier, address currencyForPayment, uint256 pricePaid, uint256 expirationTimestamp);
     event PricingTierInfo(uint256 indexed tier, uint256 _duration, address indexed currencyApproved, uint256 priceForCurrency);
     event FeeInfoForTier(uint256 indexed tier, uint256 indexed feeType, address recipient, uint256 bps);
+    event NewTreasury(address oldTreasury, address newTreasury);
 
     /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
     modifier onlyModuleAdmin() {
@@ -81,8 +85,9 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         _;
     }
 
-    constructor(address _trustedForwarder, address _thirdwebRegistry) ERC2771Context(_trustedForwarder) {
+    constructor(address _trustedForwarder, address _thirdwebRegistry, address _thirdwebTreasury) ERC2771Context(_trustedForwarder) {
         thirdwebRegistry = TWRegistry(_thirdwebRegistry);
+        thirdwebTreasury = _thirdwebTreasury;
     }
 
     /// @dev Returns the fee infor for a given module and fee type.
@@ -125,7 +130,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
         tierForUser[_for] = tierSelected;
 
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), address(this), _priceToPay);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), thirdwebTreasury, _priceToPay);
 
         emit TierForUser(_for, _tier, _currencyToUse, _priceToPay, tierSelected.validUntilTimestamp);
     }
@@ -152,7 +157,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
         tierForUser[_for] = targetTier;
         
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), address(this), _priceToPay);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), thirdwebTreasury, _priceToPay);
 
         emit TierForUser(_for, targetTier.tier, _currencyToUse, _priceToPay, targetTier.validUntilTimestamp);
     }
@@ -190,6 +195,14 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         feeInfo[_tier][_feeType] = feeInfoToSet;
 
         emit FeeInfoForTier(_tier, _feeType, _feeRecipient, _feeBps);
+    }
+
+    /// @dev Lets module admin set thirdweb's treasury.
+    function setTreasury(address _newTreasury) external onlyModuleAdmin {
+        address oldTreasury = thirdwebTreasury;
+        thirdwebTreasury = _newTreasury;
+
+        emit NewTreasury(oldTreasury, _newTreasury);
     }
    
 
