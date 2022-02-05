@@ -207,6 +207,20 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
         emit NewTreasury(oldTreasury, _newTreasury);
     }
+
+    //  =====   Getters   =====
+
+    function isCurrencyApproved(uint256 _tier, address _currency) external view returns(bool) {
+        return tierInfo[_tier].isCurrencyApproved[_currency];
+    }
+
+    function priceToPayForCurrency(uint256 _tier, address _currency) external view returns(uint256) {
+        return tierInfo[_tier].priceForCurrency[_currency];
+    }
+
+    function tierDuration(uint256 _tier) external view returns(uint256) {
+        return tierInfo[_tier].duration;
+    }
    
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
