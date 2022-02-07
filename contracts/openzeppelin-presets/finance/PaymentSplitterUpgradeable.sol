@@ -60,7 +60,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     mapping(IERC20Upgradeable => uint256) private _erc20TotalReleased;
     mapping(IERC20Upgradeable => mapping(address => uint256)) private _erc20Released;
 
-    constructor(address _thirdwebFees) initializer {
+    constructor(address _thirdwebFees) {
         thirdwebFees = TWFee(_thirdwebFees);
     }
 
