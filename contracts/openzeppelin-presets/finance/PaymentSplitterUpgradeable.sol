@@ -8,17 +8,12 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// Thirdweb top-level
-import "../../TWFee.sol";
-
 /**
- * Changelog:
- * 1. Remove add payees and shares in the initialization function, so inherited class is responsible for adding.
- * 2. Change _addPayee(...) visibility to internal. DANGEROUS: Make sure it is not called outside from constructor
- *    initialization.
- * 3. Add distribute(...) to distribute all owed amount to all payees.
- * 4. Add payeeCount() view to returns the number of payees.
- * 5. Take a fee on every `release`.
+ *  Changelog:
+ *      - Change state variable visibility to internal:
+ *          - `_totalReleased`, `_released`, `_erc20TotalReleased`, `_erc20Released`, `_pendingPayment`
+ *
+ *      - Add `payeeCount`: returns the length of `_payees`
  */
 
 /**
@@ -45,24 +40,14 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     event PaymentReceived(address from, uint256 amount);
 
     uint256 private _totalShares;
-    uint256 private _totalReleased;
+    uint256 internal _totalReleased;
 
-    /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFees;
-
-    /// @dev Max bps in the thirdweb system
-    uint256 private constant MAX_BPS = 10_000;
-
-    mapping(address => uint256) private _shares;
-    mapping(address => uint256) private _released;
+    mapping(address => uint256) internal _shares;
+    mapping(address => uint256) internal _released;
     address[] private _payees;
 
-    mapping(IERC20Upgradeable => uint256) private _erc20TotalReleased;
-    mapping(IERC20Upgradeable => mapping(address => uint256)) private _erc20Released;
-
-    constructor(address _thirdwebFees) {
-        thirdwebFees = TWFee(_thirdwebFees);
-    }
+    mapping(IERC20Upgradeable => uint256) internal _erc20TotalReleased;
+    mapping(IERC20Upgradeable => mapping(address => uint256)) internal _erc20Released;
 
     /**
      * @dev Creates an instance of `PaymentSplitter` where each account in `payees` is assigned the number of shares at
@@ -71,8 +56,18 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
      * All addresses in `payees` must be non-zero. Both arrays must have the same non-zero length, and there must be no
      * duplicates in `payees`.
      */
-    function __PaymentSplitter_init() internal onlyInitializing {
+    function __PaymentSplitter_init(address[] memory payees, uint256[] memory shares_) internal onlyInitializing {
         __Context_init_unchained();
+        __PaymentSplitter_init_unchained(payees, shares_);
+    }
+
+    function __PaymentSplitter_init_unchained(address[] memory payees, uint256[] memory shares_) internal onlyInitializing {
+        require(payees.length == shares_.length, "PaymentSplitter: payees and shares length mismatch");
+        require(payees.length > 0, "PaymentSplitter: no payees");
+
+        for (uint256 i = 0; i < payees.length; i++) {
+            _addPayee(payees[i], shares_[i]);
+        }
     }
 
     /**
@@ -140,7 +135,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     }
 
     /**
-     * @dev Getter for getting the number of payee
+     * @dev Get the number of payees
      */
     function payeeCount() public view returns (uint256) {
         return _payees.length;
@@ -158,17 +153,10 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
-            address(this),
-            TWFee.FeeType.Transaction
-        );
-        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
-
         _released[account] += payment;
         _totalReleased += payment;
 
-        AddressUpgradeable.sendValue(payable(splitsFeeRecipient), splitsFee);
-        AddressUpgradeable.sendValue(account, payment - splitsFee);
+        AddressUpgradeable.sendValue(account, payment);
         emit PaymentReleased(account, payment);
     }
 
@@ -185,36 +173,11 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
-            address(this),
-            TWFee.FeeType.Transaction
-        );
-        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
-
         _erc20Released[token][account] += payment;
         _erc20TotalReleased[token] += payment;
 
-        SafeERC20Upgradeable.safeTransfer(token, splitsFeeRecipient, splitsFee);
-        SafeERC20Upgradeable.safeTransfer(token, account, payment - splitsFee);
+        SafeERC20Upgradeable.safeTransfer(token, account, payment);
         emit ERC20PaymentReleased(token, account, payment);
-    }
-
-    /**
-     * @dev Release the owed amount of token to all of the payees.
-     */
-    function distribute() public virtual {
-        for (uint256 i = 0; i < _payees.length; i++) {
-            release(payable(_payees[i]));
-        }
-    }
-
-    /**
-     * @dev Release owed amount of the `token` to all of the payees.
-     */
-    function distribute(IERC20Upgradeable token) public virtual {
-        for (uint256 i = 0; i < _payees.length; i++) {
-            release(token, _payees[i]);
-        }
     }
 
     /**
@@ -225,7 +188,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         address account,
         uint256 totalReceived,
         uint256 alreadyReleased
-    ) private view returns (uint256) {
+    ) internal view returns (uint256) {
         return (totalReceived * _shares[account]) / _totalShares - alreadyReleased;
     }
 
@@ -234,7 +197,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
      * @param account The address of the payee to add.
      * @param shares_ The number of shares owned by the payee.
      */
-    function _addPayee(address account, uint256 shares_) internal {
+    function _addPayee(address account, uint256 shares_) private {
         require(account != address(0), "PaymentSplitter: account is the zero address");
         require(shares_ > 0, "PaymentSplitter: shares are 0");
         require(_shares[account] == 0, "PaymentSplitter: account already has shares");
@@ -244,6 +207,5 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         _totalShares = _totalShares + shares_;
         emit PayeeAdded(account, shares_);
     }
-
     uint256[43] private __gap;
 }

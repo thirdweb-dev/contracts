@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Thirdweb top-level
+import "./TWFee.sol";
+
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
 import "./interfaces/IThirdwebModule.sol";
@@ -23,7 +26,13 @@ contract Splits is
     PaymentSplitterUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("Splits");
-    uint256 private constant VERSION = 1;
+    uint128 private constant VERSION = 1;
+
+    /// @dev Max bps in the thirdweb system
+    uint128 private constant MAX_BPS = 10_000;
+
+    /// @dev The thirdweb contract with fee related information.
+    TWFee public immutable thirdwebFee;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -33,7 +42,9 @@ contract Splits is
         _;
     }
 
-    constructor(address _thirdwebFee) PaymentSplitterUpgradeable(_thirdwebFee) initializer {}
+    constructor(address _thirdwebFee) initializer {
+        thirdwebFee = TWFee(_thirdwebFee);
+    }
 
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
@@ -41,24 +52,14 @@ contract Splits is
         address _defaultAdmin,
         string memory _contractURI,
         address _trustedForwarder,
-        address[] memory payees,
-        uint256[] memory shares_
+        address[] memory _payees,
+        uint256[] memory _shares
     ) external initializer {
         // Initialize inherited contracts: most base -> most derived
         __ERC2771Context_init(_trustedForwarder);
+        __PaymentSplitter_init(_payees, _shares);
 
-        require(payees.length == shares_.length, "unequal number of payees and shares provided.");
-        require(payees.length > 0, "no payees provided.");
-
-        // Set contract metadata
         contractURI = _contractURI;
-
-        // Scaling the share, so we don't lose precision on division
-        for (uint256 i = 0; i < payees.length; i++) {
-            // WARNING: Do not call _addPayee outside of this initializer
-            _addPayee(payees[i], shares_[i] * 10000);
-        }
-
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
@@ -70,6 +71,77 @@ contract Splits is
     /// @dev Returns the version of the contract.
     function version() external pure returns (uint8) {
         return uint8(VERSION);
+    }
+
+    /**
+     * @dev Triggers a transfer to `account` of the amount of Ether they are owed, according to their percentage of the
+     * total shares and their previous withdrawals.
+     */
+    function release(address payable account) public virtual override {
+        require(shares(account) > 0, "PaymentSplitter: account has no shares");
+
+        uint256 totalReceived = address(this).balance + totalReleased();
+        uint256 payment = _pendingPayment(account, totalReceived, released(account));
+
+        require(payment != 0, "PaymentSplitter: account is not due payment");
+
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(
+            address(this),
+            TWFee.FeeType.Transaction
+        );
+        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
+
+        _released[account] += payment;
+        _totalReleased += payment;
+
+        AddressUpgradeable.sendValue(payable(splitsFeeRecipient), splitsFee);
+        AddressUpgradeable.sendValue(account, payment - splitsFee);
+        emit PaymentReleased(account, payment);
+    }
+
+    /**
+     * @dev Triggers a transfer to `account` of the amount of `token` tokens they are owed, according to their
+     * percentage of the total shares and their previous withdrawals. `token` must be the address of an IERC20
+     * contract.
+     */
+    function release(IERC20Upgradeable token, address account) public virtual override {
+        require(shares(account) > 0, "PaymentSplitter: account has no shares");
+
+        uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
+        uint256 payment = _pendingPayment(account, totalReceived, released(token, account));
+
+        require(payment != 0, "PaymentSplitter: account is not due payment");
+
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(
+            address(this),
+            TWFee.FeeType.Transaction
+        );
+        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
+
+        _erc20Released[token][account] += payment;
+        _erc20TotalReleased[token] += payment;
+
+        SafeERC20Upgradeable.safeTransfer(token, splitsFeeRecipient, splitsFee);
+        SafeERC20Upgradeable.safeTransfer(token, account, payment - splitsFee);
+        emit ERC20PaymentReleased(token, account, payment);
+    }
+
+    /**
+     * @dev Release the owed amount of token to all of the payees.
+     */
+    function distribute() public virtual {
+        for (uint256 i = 0; i < payeeCount(); i++) {
+            release(payable(payee(i)));
+        }
+    }
+
+    /**
+     * @dev Release owed amount of the `token` to all of the payees.
+     */
+    function distribute(IERC20Upgradeable token) public virtual {
+        for (uint256 i = 0; i < payeeCount(); i++) {
+            release(token, payee(i));
+        }
     }
 
     /// @dev See ERC2771
