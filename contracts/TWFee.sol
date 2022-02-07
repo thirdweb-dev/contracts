@@ -63,7 +63,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Events
     event TierForUser(address indexed user, uint256 indexed tier, address currencyForPayment, uint256 pricePaid, uint256 expirationTimestamp);
-    event PricingTierInfo(uint256 indexed tier, uint256 _duration, address indexed currencyApproved, uint256 priceForCurrency);
+    event PricingTierInfo(uint256 indexed tier, address indexed currency, bool isCurrencyApproved, uint256 _duration, uint256 priceForCurrency);
     event FeeInfoForTier(uint256 indexed tier, uint256 indexed feeType, address recipient, uint256 bps);
     event NewTreasury(address oldTreasury, address newTreasury);
 
@@ -180,7 +180,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         tierInfo[_tier].isCurrencyApproved[_currencyToApprove] = _toApproveCurrency;
         tierInfo[_tier].priceForCurrency[_currencyToApprove] = _toApproveCurrency ? _priceForCurrency : 0;
 
-        emit PricingTierInfo(_tier, _duration, _currencyToApprove, _priceForCurrency);
+        emit PricingTierInfo(_tier, _currencyToApprove, _toApproveCurrency, _duration, _priceForCurrency);
     }
 
     /// @dev Lets the admin set fee bps and recipient for the given pricing tier and fee type.
