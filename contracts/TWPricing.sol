@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+// Top-level contracts
+import "./TWFee.sol";
+
 // Access
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
@@ -11,11 +14,11 @@ import "./lib/CurrencyTransferLib.sol";
 
 contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
 
-    /// @dev The address of thirdweb's registry.
-    address public thirdwebTreasury;
+    /// @dev The thirdweb store of fee info.
+    TWFee private immutable thirdwebFee;
 
-    /// @dev Mapping from address => pricing tier for address.
-    mapping(address => Tier) public tierForUser;
+    /// @dev The address of thirdweb's treasury.
+    address public thirdwebTreasury;
 
     /// @dev Mapping from tier => tier's pricing info.
     mapping(uint256 => TierInfo) private tierInfo;
@@ -25,11 +28,6 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
      *       is approved to select a pricing tier for the user.
      */
     mapping(address => mapping(address => bool)) public isApproved;
-
-    struct Tier {
-        uint128 tier;
-        uint128 validUntilTimestamp;
-    }
 
     struct TierInfo {
         uint256 duration;
@@ -48,21 +46,24 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
         _;
     }
 
-    constructor(address _trustedForwarder, address _thirdwebTreasury) ERC2771Context(_trustedForwarder) {
+    constructor(
+        address _trustedForwarder,
+        address _thirdwebTreasury,
+        address _thirdwebFee
+    ) 
+        ERC2771Context(_trustedForwarder)
+    {
         thirdwebTreasury = _thirdwebTreasury;
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
+        thirdwebFee = TWFee(_thirdwebFee);
 
-    /// @dev Returns the current tier for a user.
-    function getTierForUser(address _target) external view returns (uint256) {
-        Tier memory targetTier = tierForUser[_target];
-        return block.timestamp < targetTier.validUntilTimestamp ? targetTier.tier : 0;
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Lets an approved caller select a subscription for `_for`.
     function selectSubscription(
         address _for,
-        uint256 _tier,
+        uint128 _tier,
+        uint128 _cycles,
         uint256 _priceToPay,
         address _currencyToUse
     )
@@ -75,49 +76,23 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
             "not approved to select tier."
         );
 
-        uint256 durationForTier = tierInfo[_tier].duration;
-        require(durationForTier != 0, "invalid tier.");
-
-        bool isValidPaymentInfo = tierInfo[_tier].isCurrencyApproved[_currencyToUse] || tierInfo[_tier].priceForCurrency[_currencyToUse] == _priceToPay;
+        bool isValidPaymentInfo = _cycles != 0 && (tierInfo[_tier].isCurrencyApproved[_currencyToUse] || tierInfo[_tier].priceForCurrency[_currencyToUse] == _priceToPay);
         require(isValidPaymentInfo, "invalid payment info.");
 
-        Tier memory tierSelected = Tier({
-            tier: uint128(_tier),
-            validUntilTimestamp: uint128(block.timestamp + durationForTier)
-        });
-
-        tierForUser[_for] = tierSelected;
-
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), thirdwebTreasury, _priceToPay);
-
-        emit TierForUser(_for, _tier, _currencyToUse, _priceToPay, tierSelected.validUntilTimestamp);
-    }
-
-    /// @dev Lets the caller renew a subscription for `_for`.
-    function renewSubscription(
-        address _for,
-        address _currencyToUse,
-        uint256 _priceToPay
-    )
-        external
-        payable
-    {
-        Tier memory targetTier = tierForUser[_for];
-
-        uint256 durationForTier = tierInfo[targetTier.tier].duration;
+        uint256 durationForTier = tierInfo[_tier].duration * _cycles;
         require(durationForTier != 0, "invalid tier.");
-
-        bool isValidPaymentInfo = tierInfo[targetTier.tier].isCurrencyApproved[_currencyToUse] || tierInfo[targetTier.tier].priceForCurrency[_currencyToUse] == _priceToPay;
-        require(isValidPaymentInfo, "invalid payment info.");
-
-        uint256 durationLeft = targetTier.validUntilTimestamp > block.timestamp ? targetTier.validUntilTimestamp - block.timestamp : 0;
-        targetTier.validUntilTimestamp = uint128(block.timestamp + durationLeft + tierInfo[targetTier.tier].duration);
-
-        tierForUser[_for] = targetTier;
         
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), thirdwebTreasury, _priceToPay);
+        (uint256 currentTier, uint256 secondsUntilExpiry) = thirdwebFee.getFeeTier(_for);
+        if(currentTier == _tier) {
+            durationForTier += secondsUntilExpiry;
+        }
 
-        emit TierForUser(_for, targetTier.tier, _currencyToUse, _priceToPay, targetTier.validUntilTimestamp);
+        thirdwebFee.setTierForUser(_for, _tier, uint128(block.timestamp + durationForTier));
+
+        uint256 totalPrice = _priceToPay * _cycles;
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _msgSender(), thirdwebTreasury, totalPrice);
+
+        emit TierForUser(_for, _tier, _currencyToUse, totalPrice, block.timestamp + durationForTier);
     }
 
     /// @dev For a tier, lets the admin set the (1) duration, (2) approve a currency for payment and (3) set price for that currency.
