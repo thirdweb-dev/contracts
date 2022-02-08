@@ -91,6 +91,12 @@ contract Marketplace is
         _;
     }
 
+    /// @dev Checks whether a listing exists.
+    modifier onlyExistingListing(uint256 _listingId) {
+        require(listings[_listingId].assetContract != address(0), "Marketplace: listing DNE.");
+        _;
+    }
+
     /// @dev Checks whether caller has LISTER_ROLE when `restrictedListerRoleOnly` is true.
     modifier onlyListerRoleWhenRestricted() {
         require(
@@ -105,6 +111,8 @@ contract Marketplace is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Marketplace: not a module admin.");
         _;
     }
+
+    /// @dev Checks whether
 
     constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
@@ -204,6 +212,8 @@ contract Marketplace is
         uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
         bool isAuction = targetListing.listingType == ListingType.Auction;
 
+        require(safeNewQuantity != 0, "Marketplace: cannot update to 0 quantity");
+
         // Can only edit auction listing before it starts.
         if (isAuction) {
             require(block.timestamp < targetListing.startTime, "Marketplace: auction already started.");
@@ -227,38 +237,43 @@ contract Marketplace is
 
         // Must validate ownership and approval of the new quantity of tokens for diret listing.
         if (targetListing.quantity != safeNewQuantity) {
-            // If the new quantity for an auction is `0`, cancel the auction.
-            if (isAuction && safeNewQuantity == 0) {
-                _cancelAuction(targetListing);
-                return;
-            } else {
-                // Transfer all escrowed tokens back to the lister, to be reflected in the lister's
-                // balance for the upcoming ownership and approval check.
-                if (isAuction) {
-                    transferListingTokens(
-                        address(this),
-                        targetListing.tokenOwner,
-                        targetListing.quantity,
-                        targetListing
-                    );
-                }
-
-                validateOwnershipAndApproval(
+            // Transfer all escrowed tokens back to the lister, to be reflected in the lister's
+            // balance for the upcoming ownership and approval check.
+            if (isAuction) {
+                transferListingTokens(
+                    address(this),
                     targetListing.tokenOwner,
-                    targetListing.assetContract,
-                    targetListing.tokenId,
-                    safeNewQuantity,
-                    targetListing.tokenType
+                    targetListing.quantity,
+                    targetListing
                 );
+            }
 
-                // Escrow the new quantity of tokens to list in the auction.
-                if (isAuction) {
-                    transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
-                }
+            validateOwnershipAndApproval(
+                targetListing.tokenOwner,
+                targetListing.assetContract,
+                targetListing.tokenId,
+                safeNewQuantity,
+                targetListing.tokenType
+            );
+
+            // Escrow the new quantity of tokens to list in the auction.
+            if (isAuction) {
+                transferListingTokens(targetListing.tokenOwner, address(this), safeNewQuantity, targetListing);
             }
         }
 
         emit ListingUpdate(_listingId, targetListing.tokenOwner);
+    }
+
+    /// @dev Lets a direct listing creator cancel their listing.
+    function cancelDirectListing(uint256 _listingId) external onlyListingCreator(_listingId) {
+        Listing memory targetListing = listings[_listingId];
+
+        require(targetListing.listingType == ListingType.Direct, "not direct listing");
+
+        delete listings[_listingId];
+
+        emit ListingCancelled(_listingId, targetListing.tokenOwner);
     }
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
@@ -267,7 +282,7 @@ contract Marketplace is
         uint256 _quantityToBuy,
         address _currency,
         uint256 _totalPrice
-    ) external payable override nonReentrant {
+    ) external payable override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
         address buyer = _msgSender();
 
@@ -292,6 +307,7 @@ contract Marketplace is
         override
         nonReentrant
         onlyListingCreator(_listingId)
+        onlyExistingListing(_listingId)
     {
         Offer memory targetOffer = offers[_listingId][offeror];
         Listing memory targetListing = listings[_listingId];
@@ -313,7 +329,7 @@ contract Marketplace is
         uint256 _quantityWanted,
         address _currency,
         uint256 _pricePerToken
-    ) external payable override nonReentrant {
+    ) external payable override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
 
         require(
@@ -347,7 +363,7 @@ contract Marketplace is
     }
 
     /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
-    function closeAuction(uint256 _listingId, address _closeFor) external override nonReentrant {
+    function closeAuction(uint256 _listingId, address _closeFor) external override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
 
         require(targetListing.listingType == ListingType.Auction, "Marketplace: not an auction.");

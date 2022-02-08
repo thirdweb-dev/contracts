@@ -108,6 +108,9 @@ interface IMarketplace is IThirdwebModule, IThirdwebPlatformFee {
     /// @dev Emitted when the parameters of a listing are updated.
     event ListingUpdate(uint256 indexed listingId, address indexed listingCreator);
 
+    /// @dev Emitted when a listing is cancelled.
+    event ListingCancelled(uint256 indexed listingId, address indexed listingCreator);
+
     /**
      * @dev Emitted when a buyer buys from a direct listing, or a lister accepts some
      *      buyer's offer to their direct listing.
@@ -200,6 +203,13 @@ interface IMarketplace is IThirdwebModule, IThirdwebPlatformFee {
         uint256 _startTime,
         uint256 _secondsUntilEndTime
     ) external;
+
+    /**
+     *  @notice Lets a direct listing creator cancel their listing.
+     *
+     *  @param _listingId The unique Id of the lisitng to cancel.
+     */
+    function cancelDirectListing(uint256 _listingId) external;
 
     /**
      * @notice Lets someone buy a given quantity of tokens from a direct listing by paying the fixed price.
