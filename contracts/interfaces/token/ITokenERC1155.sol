@@ -60,9 +60,6 @@ interface ITokenERC1155 is
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(uint256 newFeeBps);
-
     /// @dev Emitted when transfers are set as restricted / not-restricted.
     event TransfersRestricted(bool restricted);
 

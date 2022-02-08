@@ -300,15 +300,6 @@ contract TokenERC1155 is
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
     }
 
-    /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
-
-        platformFeeBps = uint120(_platformFeeBps);
-
-        emit PlatformFeeUpdates(_platformFeeBps);
-    }
-
     /// @dev Lets a module admin restrict token transfers.
     function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
         isTransferRestricted = _restrictedTransfer;
