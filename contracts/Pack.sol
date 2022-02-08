@@ -39,6 +39,12 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
 
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -70,8 +76,8 @@ contract Pack is
     string public contractURI;
 
     /// @dev Chainlink VRF variables.
-    uint256 public vrfFees;
-    bytes32 public vrfKeyHash;
+    uint256 private vrfFees;
+    bytes32 private vrfKeyHash;
 
     /// @dev The state of packs with a unique tokenId.
     struct PackState {
@@ -165,6 +171,8 @@ contract Pack is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
+        string memory _name,
+        string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _royaltyReceiver,
@@ -180,6 +188,8 @@ contract Pack is
         vrfKeyHash = _keyHash;
         vrfFees = _fees;
 
+        name = _name;
+        symbol = _symbol;
         royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
         contractURI = _contractURI;
@@ -219,7 +229,7 @@ contract Pack is
         uint256,
         bytes memory
     ) public virtual override {
-        revert("Pack: cannot freely mint more packs");
+        revert("cannot freely mint more packs");
     }
 
     /**
@@ -231,7 +241,7 @@ contract Pack is
         uint256[] memory,
         bytes memory
     ) public virtual override {
-        revert("Pack: cannot freely mint more packs");
+        revert("cannot freely mint more packs");
     }
 
     function onERC1155Received(
@@ -241,7 +251,7 @@ contract Pack is
         uint256,
         bytes memory
     ) public virtual override returns (bytes4) {
-        revert("Pack: Must use batch transfer.");
+        revert("Must use batch transfer.");
     }
 
     /// @dev Creates pack on receiving ERC 1155 reward tokens
@@ -302,10 +312,10 @@ contract Pack is
     function openPack(uint256 _packId) external whenNotPaused {
         PackState memory packState = packs[_packId];
 
-        require(block.timestamp >= packState.openStart, "Pack: the window to open packs has not started or closed.");
-        require(LINK.balanceOf(address(this)) >= vrfFees, "Pack: Not enough LINK to fulfill randomness request.");
-        require(balanceOf(_msgSender(), _packId) > 0, "Pack: sender owns no packs of the given packId.");
-        require(currentRequestId[_packId][_msgSender()] == "", "Pack: must wait for the pending pack to be opened.");
+        require(block.timestamp >= packState.openStart, "outside window to open packs.");
+        require(LINK.balanceOf(address(this)) >= vrfFees, "out of LINK.");
+        require(balanceOf(_msgSender(), _packId) > 0, "must own packs to open.");
+        require(currentRequestId[_packId][_msgSender()] == "", "must wait for the pending pack to open.");
 
         // Burn the pack being opened.
         _burn(_msgSender(), _packId, 1);
@@ -404,12 +414,12 @@ contract Pack is
             IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
             "Pack: reward contract does not implement ERC 1155."
         );
-        require(hasRole(MINTER_ROLE, _creator), "Pack: Only accounts with MINTER_ROLE can call this function.");
-        require(_rewardIds.length > 0, "Pack: Must create a pack with at least one reward.");
+        require(hasRole(MINTER_ROLE, _creator), "not minter.");
+        require(_rewardIds.length > 0, "must add at least one reward.");
 
         uint256 sumOfRewards = _sumArr(_rewardAmounts);
 
-        require(sumOfRewards % _rewardsPerOpen == 0, "Pack: invalid number of rewards per open.");
+        require(sumOfRewards % _rewardsPerOpen == 0, "invalid number of rewards per open.");
 
         // Get pack tokenId and total supply.
         uint256 packId = nextTokenId;
@@ -492,7 +502,7 @@ contract Pack is
         if (isTransferRestricted && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "Pack: Transfers are restricted to TRANSFER_ROLE holders"
+                "transfers restricted to TRANSFER_ROLE holders"
             );
         }
     }
@@ -543,11 +553,6 @@ contract Pack is
     /// @dev See EIP 1155
     function uri(uint256 _id) public view override returns (string memory) {
         return packs[_id].uri;
-    }
-
-    /// @dev Returns the creator of a set of packs
-    function creator(uint256 _packId) external view returns (address) {
-        return packs[_packId].creator;
     }
 
     /// @dev Returns a pack with its underlying rewards

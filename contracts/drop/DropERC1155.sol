@@ -42,6 +42,12 @@ contract DropERC1155 is
     bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
     uint256 private constant VERSION = 1;
 
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
+
     /// @dev Only TRANSFER_ROLE holders can participate in transfers, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
@@ -127,6 +133,8 @@ contract DropERC1155 is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
+        string memory _name,
+        string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
@@ -141,6 +149,8 @@ contract DropERC1155 is
         __ERC1155_init_unchained("");
 
         // Initialize this contract's state.
+        name = _name;
+        symbol = _symbol;
         royaltyRecipient = _royaltyReceiver;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
