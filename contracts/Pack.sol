@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebModule.sol";
-import "./abstract/ThirdwebRoyalty.sol";
 import "./interfaces/IThirdwebOwnable.sol";
 
 // Randomness
@@ -16,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 // Utils
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
+import "./lib/FeeTypes.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
@@ -29,7 +29,6 @@ contract Pack is
     IERC2981,
     IThirdwebModule,
     IThirdwebOwnable,
-    ThirdwebRoyalty,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
@@ -271,7 +270,7 @@ contract Pack is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), ROYALTY_FEE_TYPE);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeTypes.ROYALTY_FEE_TYPE);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -292,7 +291,7 @@ contract Pack is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), ROYALTY_FEE_TYPE);
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeTypes.ROYALTY_FEE_TYPE);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }

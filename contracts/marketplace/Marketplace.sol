@@ -4,9 +4,6 @@ pragma solidity ^0.8.0;
 // Interface
 import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
 
-// Abstract base
-import "../abstract/ThirdwebMarketSale.sol";
-
 // Tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -27,6 +24,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Utils
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
+import "../lib/FeeTypes.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -34,7 +32,6 @@ import "../TWFee.sol";
 contract Marketplace is
     Initializable,
     IMarketplace,
-    ThirdwebMarketSale,
     IERC1155Receiver,
     IERC721Receiver,
     ReentrancyGuardUpgradeable,
@@ -586,7 +583,7 @@ contract Marketplace is
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), MARKET_SALE_FEE_TYPE);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeTypes.MARKET_SALE_FEE_TYPE);
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
         uint256 royalties;
