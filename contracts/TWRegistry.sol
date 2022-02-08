@@ -12,7 +12,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     mapping(address => EnumerableSet.AddressSet) private deployments;
-    mapping(address => address) public deployer;
+    
 
     event ModuleAdded(address indexed moduleAddress, address indexed deployer);
     event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
@@ -24,8 +24,9 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     function addModule(address _moduleAddress, address _deployer) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
+
         deployments[_deployer].add(_moduleAddress);
-        deployer[_moduleAddress] = _deployer;
+
         emit ModuleAdded(_moduleAddress, _deployer);
     }
 
@@ -34,7 +35,6 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
         bool removed = deployments[_deployer].remove(_moduleAddress);
         require(removed, "failed to remove module.");
-        delete deployer[_moduleAddress];
 
         emit ModuleDeleted(_moduleAddress, _deployer);
     }

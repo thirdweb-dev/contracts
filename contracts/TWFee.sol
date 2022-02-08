@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Top-level contracts
-import "./TWRegistry.sol";
+import "./TWFactory.sol";
 
 // Access
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
@@ -13,8 +13,8 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
-    /// @dev The thirdweb registry of deployments.
-    TWRegistry private immutable thirdwebRegistry;
+    /// @dev The thirdweb factory for deploying modules.
+    TWFactory private immutable thirdwebFactory;
 
     /// @dev Only FEE_ROLE holders can set fee values.
     bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
@@ -48,11 +48,11 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
     constructor(
         address _trustedForwarder,
-        address _thirdwebRegistry
+        address _thirdwebFactory
     ) 
         ERC2771Context(_trustedForwarder)
     {
-        thirdwebRegistry = TWRegistry(_thirdwebRegistry);
+        thirdwebFactory = TWFactory(_thirdwebFactory);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(FEE_ROLE, _msgSender());
@@ -68,7 +68,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Returns the fee infor for a given module and fee type.
     function getFeeInfo(address _module, uint256 _feeType) external view returns (address recipient, uint256 bps) {
-        address deployer = thirdwebRegistry.deployer(_module);
+        address deployer = thirdwebFactory.deployer(_module);
         (uint256 tier,) = getFeeTier(deployer);
         
         FeeInfo memory targetFeeInfo = feeInfo[tier][_feeType];

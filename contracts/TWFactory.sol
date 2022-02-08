@@ -26,6 +26,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     mapping(address => bool) public implementationApproval;
     mapping(bytes32 => uint256) public currentModuleVersion;
     mapping(bytes32 => mapping(uint256 => address)) public modules;
+    mapping(address => address) public deployer;
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -66,6 +67,8 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
         registry.addModule(deployedProxy, _msgSender());
+
+        deployer[deployedProxy] = _msgSender();
 
         emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
     }
