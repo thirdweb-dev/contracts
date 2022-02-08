@@ -161,7 +161,7 @@ contract AccessNFT is
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
@@ -171,7 +171,7 @@ contract AccessNFT is
         // Initialize this contract's state.
         name = _name;
         symbol = _symbol;
-        royaltyRecipient = _royaltyReceiver;
+        royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         contractURI = _contractURI;
 

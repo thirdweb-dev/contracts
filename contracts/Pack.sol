@@ -175,7 +175,7 @@ contract Pack is
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _fees,
         bytes32 _keyHash
@@ -190,7 +190,7 @@ contract Pack is
 
         name = _name;
         symbol = _symbol;
-        royaltyRecipient = _royaltyReceiver;
+        royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         contractURI = _contractURI;
 

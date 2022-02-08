@@ -193,7 +193,7 @@ contract Bundle is
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
@@ -204,7 +204,7 @@ contract Bundle is
         name = _name;
         symbol = _symbol;
         royaltyBps = _royaltyBps;
-        royaltyRecipient = _royaltyReceiver;
+        royaltyRecipient = _royaltyRecipient;
         contractURI = _contractURI;
 
         _owner = _defaultAdmin;
