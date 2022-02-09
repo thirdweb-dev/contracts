@@ -329,25 +329,10 @@ contract Pack is
         emit PackOpenRequest(_packId, _msgSender(), requestId);
     }
 
-    /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
-    function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
-        RandomnessRequest memory request = randomnessRequests[_requestId];
-
-        uint256 packId = request.packId;
-        address receiver = request.opener;
-
-        // Pending request completed
-        delete currentRequestId[packId][receiver];
-
-        // Get tokenId of the reward to distribute.
-        Rewards memory rewardsInPack = rewards[packId];
-
-        (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(packId, _randomness, rewardsInPack);
-
-        // Distribute the reward to the pack opener.
-        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), receiver, rewardIds, rewardAmounts, "");
-
-        emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
+    /// @dev Lets a module admin withdraw link from the contract.
+    function withdrawLink(address _to, uint256 _amount) external onlyModuleAdmin {
+        bool success = LINK.transfer(_to, _amount);
+        require(success, "failed to withdraw LINK.");
     }
 
     /// @dev Returns the platform fee bps and recipient.
@@ -485,6 +470,27 @@ contract Pack is
         }
 
         rewards[_packId] = _rewardsInPack;
+    }
+
+    /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
+    function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
+        RandomnessRequest memory request = randomnessRequests[_requestId];
+
+        uint256 packId = request.packId;
+        address receiver = request.opener;
+
+        // Pending request completed
+        delete currentRequestId[packId][receiver];
+
+        // Get tokenId of the reward to distribute.
+        Rewards memory rewardsInPack = rewards[packId];
+
+        (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(packId, _randomness, rewardsInPack);
+
+        // Distribute the reward to the pack opener.
+        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), receiver, rewardIds, rewardAmounts, "");
+
+        emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
     }
 
     /// @dev Runs on every transfer.
