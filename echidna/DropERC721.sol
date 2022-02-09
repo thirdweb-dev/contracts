@@ -36,20 +36,16 @@ contract DropERC721Proxy is EchidnaAddress {
         );
     }
 
-    function grantRole(address _account) public {
-        drop.grantRole(drop.DEFAULT_ADMIN_ROLE(), _account);
-    }
+    //function grantRole(address _account) public {
+    //drop.grantRole(drop.DEFAULT_ADMIN_ROLE(), _account);
+    //}
 
     function revokeRole(address _account) public {
-        drop.revokeRole(drop.DEFAULT_ADMIN_ROLE(), _account);
-    }
-
-    function renounceRole(address _account) public {
-        drop.renounceRole(drop.DEFAULT_ADMIN_ROLE(), _account);
-    }
-
-    function setOwner(address _newOwner) public {
-        drop.setOwner(_newOwner);
+        if (msg.sender == _account) {
+            drop.renounceRole(drop.DEFAULT_ADMIN_ROLE(), _account);
+        } else {
+            drop.revokeRole(drop.DEFAULT_ADMIN_ROLE(), _account);
+        }
     }
 
     function isAdmin(address _account) public view returns (bool) {
@@ -58,31 +54,25 @@ contract DropERC721Proxy is EchidnaAddress {
 }
 
 contract EchidnaDropERC721 is DropERC721Proxy {
-    address public __owner;
-    bool public __isAdmin;
+    constructor() DropERC721Proxy() {}
 
-    constructor() DropERC721Proxy() {
-        set_input_owner(msg.sender);
-        set_input_admin(msg.sender);
+    function set_admin_then_owner(address _newOwner) public {
+        drop.grantRole(drop.DEFAULT_ADMIN_ROLE(), _newOwner);
+        drop.setOwner(_newOwner);
     }
 
-    function set_input_owner(address owner) public {
-        __owner = drop.owner() == owner ? owner : address(0);
+    function set_owner(address _newOwner) public {
+        drop.setOwner(_newOwner);
     }
 
-    function set_input_admin(address account) public {
-        __isAdmin = isAdmin(account);
+    function echidna_owner_is_always_an_admin() public returns (bool) {
+        if (drop.owner() != address(0)) {
+            return isAdmin(drop.owner());
+        }
+        return true;
     }
 
-    function echidna_owner_has_admin() public returns (bool) {
-        return __isAdmin && __owner != address(0);
-    }
-
-    function echidna_deployer_is_admin() public returns (bool) {
-        return __owner == DEPLOYER && __isAdmin && isAdmin(DEPLOYER);
-    }
-
-    function echidna_msg_sender() public returns (bool) {
-        return __owner == msg.sender && __isAdmin && isAdmin(msg.sender);
+    function echidna_deployer_is_always_an_admin() public returns (bool) {
+        return isAdmin(DEPLOYER);
     }
 }
