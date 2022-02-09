@@ -41,6 +41,7 @@ contract Marketplace is
 
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
+    bytes32 public constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev Top level control center contract.
     ProtocolControl internal controlCenter;
@@ -116,6 +117,7 @@ contract Marketplace is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(LISTER_ROLE, _msgSender());
+        _setupRole(ASSET_ROLE, address(0));
     }
 
     //  =====   External functions  =====
@@ -131,6 +133,10 @@ contract Marketplace is
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
         require(tokenAmountToList > 0, "Marketplace: listing invalid quantity.");
+        require(
+            hasRole(ASSET_ROLE, _params.assetContract) || hasRole(ASSET_ROLE, address(0)),
+            "Marketplace: listing unapproved asset"
+        );
 
         validateOwnershipAndApproval(
             tokenOwner,
