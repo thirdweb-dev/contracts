@@ -205,6 +205,10 @@ contract SignatureMint1155 is
             tokenIdToMint = _req.tokenId;
         }
 
+        if(_req.royaltyRecipient != address(0)) {
+            royaltyRecipient[tokenIdToMint] = _req.royaltyRecipient;
+        }
+
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
         collectPrice(_req, tokenIdToMint);
