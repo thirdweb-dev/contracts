@@ -36,10 +36,6 @@ contract DropERC721Proxy is EchidnaAddress {
         );
     }
 
-    //function grantRole(address _account) public {
-    //drop.grantRole(drop.DEFAULT_ADMIN_ROLE(), _account);
-    //}
-
     function revokeRole(address _account) public {
         if (msg.sender == _account) {
             drop.renounceRole(drop.DEFAULT_ADMIN_ROLE(), _account);
@@ -73,6 +69,6 @@ contract EchidnaDropERC721 is DropERC721Proxy {
     }
 
     function echidna_deployer_is_always_an_admin() public returns (bool) {
-        return isAdmin(DEPLOYER);
+        return drop.owner() == DEPLOYER && isAdmin(DEPLOYER);
     }
 }
