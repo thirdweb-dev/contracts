@@ -13,6 +13,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
+import "../lib/FeeType.sol";
 
 // Helper interfaces
 import "../interfaces/IWETH.sol";
@@ -21,7 +22,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Thirdweb top-level
 import "../TWFee.sol";
 
-contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
+contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
     bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
     uint128 private constant VERSION = 1;
 
@@ -252,7 +253,7 @@ contract DropERC20 is IDropERC20, ReentrancyGuardUpgradeable, TokenERC20 {
 
         uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_claimCondition.currency == NATIVE_TOKEN) {
