@@ -3,11 +3,11 @@
 #testMode: benchmark
 #testMode: optimization
 #testMode: assertion
-testLimit: 1000
-shrinkLimit: 500
 #psender: "0x10000"
 #deployer: "0x30000"
-#sender: ["0x1", "0x2", "0x3"]
+#sender: ["0x70000", "0x70001", "0x70002"]
+testLimit: 1000
+shrinkLimit: 500
 
 cryticArgs: ["--solc-remaps", "@openzeppelin=node_modules/@openzeppelin @chainlink=node_modules/@chainlink", "--solc-args", "optimize optimize-runs=800 metadata-hash=none"]
 #cryticArgs: ["--compile-force-framework", "hardhat"]
