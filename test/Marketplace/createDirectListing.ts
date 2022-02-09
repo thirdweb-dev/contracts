@@ -115,6 +115,18 @@ describe("List token for sale: Direct Listing", function () {
         "Marketplace: insufficient token balance or approval.",
       );
     });
+
+    it("Should revert if asset listings are restricted, and asset to list is unapproved", async () => {
+
+      await marketv2.connect(protocolAdmin).revokeRole(
+        await marketv2.ASSET_ROLE(),
+        ethers.constants.AddressZero
+      );
+
+      await expect(marketv2.connect(protocolAdmin).createListing(listingParams)).to.be.revertedWith(
+        "Marketplace: listing unapproved asset",
+      );
+    })
   });
 
   describe("Events", function () {
