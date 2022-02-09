@@ -7,10 +7,11 @@ import "./Address.sol";
 
 contract EchidnaFactory is EchidnaAddress {
     TWFactory public factory;
+    TWFee public fee;
 
     constructor() {
-        TWFee fee = new TWFee(FEE_0, FEE_1, FEE_2, 0, 0);
         factory = new TWFactory(TRUSTED_FORWARDER);
+        fee = new TWFee(TRUSTED_FORWARDER, address(factory));
         factory.addModuleImplementation(bytes32("DropERC721"), address(new DropERC721(address(fee))));
     }
 
