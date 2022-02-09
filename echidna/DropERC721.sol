@@ -9,49 +9,80 @@ import "./Address.sol";
 contract DropERC721Proxy is EchidnaAddress {
     EchidnaFactory public factory;
     DropERC721 public drop;
-    TWProxy public proxy;
 
     constructor() {
         factory = new EchidnaFactory();
-        proxy = TWProxy(
+        drop = DropERC721(
             payable(
-                factory.deployProxy(
-                    bytes32("DropERC721"),
-                    abi.encodeWithSignature(
-                        "initialize(address,string,string,string,address,address,address,uint128,uint128,address)",
-                        msg.sender,
-                        "",
-                        "",
-                        "",
-                        TRUSTED_FORWARDER,
-                        msg.sender,
-                        msg.sender,
-                        0,
-                        0,
-                        msg.sender
+                address(
+                    factory.deployProxy(
+                        bytes32("DropERC721"),
+                        abi.encodeWithSignature(
+                            "initialize(address,string,string,string,address,address,address,uint128,uint128,address)",
+                            DEPLOYER,
+                            "",
+                            "",
+                            "",
+                            TRUSTED_FORWARDER,
+                            DEPLOYER,
+                            DEPLOYER,
+                            0,
+                            0,
+                            DEPLOYER
+                        )
                     )
                 )
             )
         );
-        drop = DropERC721(payable(address(proxy)));
+    }
+
+    function grantRole(address _account) public {
+        drop.grantRole(drop.DEFAULT_ADMIN_ROLE(), _account);
+    }
+
+    function revokeRole(address _account) public {
+        drop.revokeRole(drop.DEFAULT_ADMIN_ROLE(), _account);
+    }
+
+    function renounceRole(address _account) public {
+        drop.renounceRole(drop.DEFAULT_ADMIN_ROLE(), _account);
+    }
+
+    function setOwner(address _newOwner) public {
+        drop.setOwner(_newOwner);
+    }
+
+    function isAdmin(address _account) public view returns (bool) {
+        return drop.hasRole(drop.DEFAULT_ADMIN_ROLE(), _account);
     }
 }
 
 contract EchidnaDropERC721 is DropERC721Proxy {
-    uint256 public v;
+    address public __owner;
+    bool public __isAdmin;
 
-    constructor() DropERC721Proxy() {}
-
-    function set(uint256 x) public {
-        v = x;
+    constructor() DropERC721Proxy() {
+        set_input_owner(msg.sender);
+        set_input_admin(msg.sender);
     }
 
-    function a() public view returns (uint256) {
-        assert(v == 42);
-        return v;
+    function set_input_owner(address owner) public {
+        __owner = drop.owner() == owner ? owner : address(0);
     }
 
-    function echidna_as() public returns (bool) {
-        return v == 0;
+    function set_input_admin(address account) public {
+        __isAdmin = isAdmin(account);
+    }
+
+    function echidna_owner_has_admin() public returns (bool) {
+        return __isAdmin && __owner != address(0);
+    }
+
+    function echidna_deployer_is_admin() public returns (bool) {
+        return __owner == DEPLOYER && __isAdmin && isAdmin(DEPLOYER);
+    }
+
+    function echidna_msg_sender() public returns (bool) {
+        return __owner == msg.sender && __isAdmin && isAdmin(msg.sender);
     }
 }
