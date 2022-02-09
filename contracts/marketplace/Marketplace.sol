@@ -24,7 +24,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Utils
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeTypes.sol";
+import "../lib/FeeType.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -583,7 +583,7 @@ contract Marketplace is
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeTypes.MARKET_SALE_FEE_TYPE);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.MARKET_SALE);
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
         uint256 royalties;

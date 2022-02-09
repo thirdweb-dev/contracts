@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../TWFee.sol";
 
 // Helpers
-import "../../lib/FeeTypes.sol";
+import "../../lib/FeeType.sol";
 
 /**
  * Changelog:
@@ -163,7 +163,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
             address(this),
-            FeeTypes.SPLITS_FEE_TYPE
+            FeeType.SPLITS
         );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
@@ -190,7 +190,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFees.getFeeInfo(
             address(this),
-            FeeTypes.SPLITS_FEE_TYPE
+            FeeType.SPLITS
         );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
