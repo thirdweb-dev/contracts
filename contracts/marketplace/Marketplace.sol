@@ -71,10 +71,10 @@ contract Marketplace is
     uint64 private platformFeeBps;
 
     /// @dev The minimum amount of time left in an auction after a new bid is created. Default: 15 minutes.
-    uint64 public timeBuffer = 15 minutes;
+    uint64 public timeBuffer;
 
     /// @dev The minimum % increase required from the previous winning bid. Default: 5%.
-    uint64 public bidBufferBps = 500;
+    uint64 public bidBufferBps;
 
     /// @dev listingId => listing info.
     mapping(uint256 => Listing) public listings;
@@ -130,6 +130,9 @@ contract Marketplace is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarder);
+
+        timeBuffer = 15 minutes;
+        bidBufferBps = 500;
 
         // Initialize this contract's state.
         contractURI = _contractURI;
