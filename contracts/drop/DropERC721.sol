@@ -85,7 +85,8 @@ contract DropERC721 is
     /// @dev Contract level metadata.
     string public contractURI;
 
-    uint256[] private baseURIIndices;
+    /// @dev end indices of each batch of tokens with the same baseURI
+    uint256[] public baseURIIndices;
 
     /// @dev Mapping from 'end token Id' => URI that overrides `baseURI + tokenId` convention.
     mapping(uint256 => string) private baseURI;
