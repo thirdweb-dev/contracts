@@ -163,11 +163,19 @@ contract SignatureMint1155 is
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
     function mintTo(
         address _to,
+        uint256 _tokenId,
         string calldata _uri,
         uint256 _amount
     ) external onlyMinter {
-        uint256 tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+        
+        uint256 tokenIdToMint;
+        if(_tokenId == type(uint256).max) {
+            tokenIdToMint = nextTokenIdToMint;
+            nextTokenIdToMint += 1;
+        } else {
+            require(_tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _tokenId;
+        }
 
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
         _mintTo(_to, _uri, tokenIdToMint, _amount);

@@ -78,11 +78,14 @@ interface ISignatureMint1155 {
      *  @notice Lets an account with MINTER_ROLE mint an NFT.
      *
      *  @param to The address to mint the NFT to.
+     *  @param tokenId The tokenId to mint. If `tokenId == type(uint256).max` then `nextTokenIdToMint` is minted.
      *  @param uri The URI to assign to the NFT.
+     *  @param amount The amount of copies of the NFT to mint.
      *
      */
     function mintTo(
         address to,
+        uint256 tokenId,
         string calldata uri,
         uint256 amount
     ) external;
