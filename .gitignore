@@ -43,3 +43,5 @@ yalc.lock
 #Build
 .swc/
 out/
+
+crytic-export/
