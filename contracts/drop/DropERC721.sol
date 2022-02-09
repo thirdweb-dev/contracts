@@ -488,6 +488,11 @@ contract DropERC721 is
         mintCondition = claimConditions.claimConditionAtIndex[_index];
     }
 
+    /// @dev Returns the amount of stored baseURIs
+    function getBaseURICount() external view returns (uint256) {
+        return baseURIIndices.length;
+    }
+
     //      =====   Internal functions  =====
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
