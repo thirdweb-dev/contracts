@@ -16,6 +16,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 
 // Utils
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "./lib/FeeType.sol";
 
 contract Splits is
     IThirdwebModule,
@@ -87,7 +88,7 @@ contract Splits is
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(
             address(this),
-            TWFee.FeeType.Transaction
+            FeeType.SPLITS
         );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
@@ -114,7 +115,7 @@ contract Splits is
 
         (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(
             address(this),
-            TWFee.FeeType.Transaction
+            FeeType.SPLITS
         );
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 

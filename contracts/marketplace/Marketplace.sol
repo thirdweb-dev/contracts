@@ -24,6 +24,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // Utils
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
+import "../lib/FeeType.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -71,10 +72,10 @@ contract Marketplace is
     uint64 private platformFeeBps;
 
     /// @dev The minimum amount of time left in an auction after a new bid is created. Default: 15 minutes.
-    uint64 public timeBuffer = 15 minutes;
+    uint64 public timeBuffer;
 
     /// @dev The minimum % increase required from the previous winning bid. Default: 5%.
-    uint64 public bidBufferBps = 500;
+    uint64 public bidBufferBps;
 
     /// @dev listingId => listing info.
     mapping(uint256 => Listing) public listings;
@@ -130,6 +131,9 @@ contract Marketplace is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarder);
+
+        timeBuffer = 15 minutes;
+        bidBufferBps = 500;
 
         // Initialize this contract's state.
         contractURI = _contractURI;
@@ -598,7 +602,7 @@ contract Marketplace is
     ) internal {
         uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.MARKET_SALE);
         uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
         uint256 royalties;

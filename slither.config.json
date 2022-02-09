@@ -1,0 +1,10 @@
+{
+  "solc_remaps": ["@openzeppelin=node_modules/@openzeppelin", "@chainlink=node_modules/@chainlink"],
+  "detectors_to_exclude": "external-function,naming-convention,solc-version,dead-code,block-timestamp,missing-zero-check",
+  "filter_paths": "node_modules|openzeppelin-presets",
+  "exclude_informational": false,
+  "exclude_low": false,
+  "exclude_medium": false,
+  "exclude_high": false,
+  "disable_color": false
+}

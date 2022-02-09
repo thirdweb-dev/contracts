@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebModule.sol";
-import "./interfaces/IThirdwebRoyalty.sol";
 import "./interfaces/IThirdwebOwnable.sol";
 
 // Randomness
@@ -16,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol
 // Utils
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
+import "./lib/FeeType.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
@@ -29,7 +29,6 @@ contract Pack is
     IERC2981,
     IThirdwebModule,
     IThirdwebOwnable,
-    IThirdwebRoyalty,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
@@ -281,7 +280,7 @@ contract Pack is
     /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
     function withdrawFunds(address _currency) external {
         address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Royalty);
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.ROYALTY);
 
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
@@ -302,7 +301,7 @@ contract Pack is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), TWFee.FeeType.Transaction);
+        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.ROYALTY);
         if (royaltyBps > 0) {
             royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
         }
@@ -330,25 +329,10 @@ contract Pack is
         emit PackOpenRequest(_packId, _msgSender(), requestId);
     }
 
-    /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
-    function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
-        RandomnessRequest memory request = randomnessRequests[_requestId];
-
-        uint256 packId = request.packId;
-        address receiver = request.opener;
-
-        // Pending request completed
-        delete currentRequestId[packId][receiver];
-
-        // Get tokenId of the reward to distribute.
-        Rewards memory rewardsInPack = rewards[packId];
-
-        (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(packId, _randomness, rewardsInPack);
-
-        // Distribute the reward to the pack opener.
-        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), receiver, rewardIds, rewardAmounts, "");
-
-        emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
+    /// @dev Lets a module admin withdraw link from the contract.
+    function withdrawLink(address _to, uint256 _amount) external onlyModuleAdmin {
+        bool success = LINK.transfer(_to, _amount);
+        require(success, "failed to withdraw LINK.");
     }
 
     /// @dev Returns the platform fee bps and recipient.
@@ -486,6 +470,27 @@ contract Pack is
         }
 
         rewards[_packId] = _rewardsInPack;
+    }
+
+    /// @dev Called by Chainlink VRF with a random number, completing the opening of a pack.
+    function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
+        RandomnessRequest memory request = randomnessRequests[_requestId];
+
+        uint256 packId = request.packId;
+        address receiver = request.opener;
+
+        // Pending request completed
+        delete currentRequestId[packId][receiver];
+
+        // Get tokenId of the reward to distribute.
+        Rewards memory rewardsInPack = rewards[packId];
+
+        (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(packId, _randomness, rewardsInPack);
+
+        // Distribute the reward to the pack opener.
+        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), receiver, rewardIds, rewardAmounts, "");
+
+        emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
     }
 
     /// @dev Runs on every transfer.
