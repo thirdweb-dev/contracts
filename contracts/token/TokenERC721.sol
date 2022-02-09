@@ -122,7 +122,7 @@ contract TokenERC721 is
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
@@ -134,7 +134,7 @@ contract TokenERC721 is
         __ERC721_init(_name, _symbol);
 
         // Initialize this contract's state.
-        royaltyRecipient = _royaltyReceiver;
+        royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;

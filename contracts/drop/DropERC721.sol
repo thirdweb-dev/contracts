@@ -86,10 +86,14 @@ contract DropERC721 is
     /// @dev Contract level metadata.
     string public contractURI;
 
-    uint256[] private baseURIIndices;
+    /// @dev end indices of each batch of tokens with the same baseURI
+    uint256[] public baseURIIndices;
 
     /// @dev Mapping from 'end token Id' => URI that overrides `baseURI + tokenId` convention.
     mapping(uint256 => string) private baseURI;
+
+    /// @dev End token Id => info related to the delayed reveal of the baseURI
+    mapping(uint256 => bytes) private encryptedBaseURI;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
@@ -118,7 +122,7 @@ contract DropERC721 is
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
@@ -129,7 +133,7 @@ contract DropERC721 is
         __ERC721_init(_name, _symbol);
 
         // Initialize this contract's state.
-        royaltyRecipient = _royaltyReceiver;
+        royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;
@@ -165,7 +169,11 @@ contract DropERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                if (encryptedBaseURI[baseURIIndices[i]].length != 0) {
+                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
+                } else {
+                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                }
             }
         }
 
@@ -185,6 +193,39 @@ contract DropERC721 is
         }
 
         revert("no active mint condition.");
+    }
+
+    /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
+    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
+        // Store data length on stack for later use
+        uint256 length = data.length;
+
+        assembly {
+            // Set result to free memory pointer
+            result := mload(0x40)
+            // Increase free memory pointer by lenght + 32
+            mstore(0x40, add(add(result, length), 32))
+            // Set result length
+            mstore(result, length)
+        }
+
+        // Iterate over the data stepping by 32 bytes
+        for (uint256 i = 0; i < length; i += 32) {
+            // Generate hash of the key and offset
+            bytes32 hash = keccak256(abi.encodePacked(key, i));
+
+            bytes32 chunk;
+            assembly {
+                // Read 32-bytes data chunk
+                chunk := mload(add(data, add(i, 32)))
+            }
+            // XOR the chunk with hash
+            chunk ^= hash;
+            assembly {
+                // Write 32-byte encrypted chunk
+                mstore(add(result, add(i, 32)), chunk)
+            }
+        }
     }
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
@@ -255,7 +296,11 @@ contract DropERC721 is
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
      *       to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyMinter {
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _encryptedBaseURI
+    ) external onlyMinter {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -263,7 +308,29 @@ contract DropERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens);
+        if (_encryptedBaseURI.length != 0) {
+            encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
+        }
+
+        emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
+    }
+
+    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
+    function reveal(uint256 index, bytes calldata _key) external onlyMinter returns (string memory revealedURI) {
+        require(index < baseURIIndices.length, "invalid index.");
+
+        uint256 _index = baseURIIndices[index];
+        bytes memory encryptedURI = encryptedBaseURI[_index];
+        require(encryptedURI.length != 0, "nothing to reveal.");
+
+        revealedURI = string(encryptDecrypt(encryptedURI, _key));
+
+        baseURI[_index] = revealedURI;
+        delete encryptedBaseURI[_index];
+
+        emit RevealedNFT(_index, revealedURI);
+
+        return revealedURI;
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId, according to claim conditions.
@@ -421,6 +488,11 @@ contract DropERC721 is
     /// @dev Returns the  mint condition for a given tokenId, at the given index.
     function getClaimConditionAtIndex(uint256 _index) external view returns (ClaimCondition memory mintCondition) {
         mintCondition = claimConditions.claimConditionAtIndex[_index];
+    }
+
+    /// @dev Returns the amount of stored baseURIs
+    function getBaseURICount() external view returns (uint256) {
+        return baseURIIndices.length;
     }
 
     //      =====   Internal functions  =====

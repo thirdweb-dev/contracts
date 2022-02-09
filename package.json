@@ -1,7 +1,7 @@
 {
   "name": "@3rdweb/contracts",
   "description": "",
-  "version": "2.0.1-24",
+  "version": "2.0.1-34",
   "license": "Apache-2.0",
   "dependencies": {},
   "source": "typechain/index.ts",
@@ -72,10 +72,11 @@
     "prettier:contracts": "prettier --config .prettierrc --list-different \"{contracts,src}/**/*.sol\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
-    "build": "yarn clean && yarn compile && yarn build:lib",
-    "build:lib": "patch-package && tsup --dts --env.NODE_ENV production --minify --format esm,cjs",
+    "build": "yarn clean && yarn patch-package && yarn compile && yarn build:lib",
+    "build:lib": "tsup --dts --env.NODE_ENV production --minify --format esm,cjs",
     "forge:build": "forge build --hardhat",
-    "forge:test": "forge test --hardhat"
+    "forge:test": "forge test --hardhat",
+    "patch-package": "patch-package"
   },
   "tsup": {
     "entry": [

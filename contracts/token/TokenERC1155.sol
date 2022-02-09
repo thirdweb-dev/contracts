@@ -47,6 +47,12 @@ contract TokenERC1155 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
     uint256 private constant VERSION = 1;
 
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
+
     bytes32 private constant TYPEHASH =
         keccak256(
             "MintRequest(address to,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -123,10 +129,12 @@ contract TokenERC1155 is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
+        string memory _name,
+        string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
         address _saleRecipient,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
@@ -138,7 +146,9 @@ contract TokenERC1155 is
         __ERC1155_init("");
 
         // Initialize this contract's state.
-        royaltyRecipient = _royaltyReceiver;
+        name = _name;
+        symbol = _symbol;
+        royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;
@@ -289,15 +299,6 @@ contract TokenERC1155 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyModuleAdmin {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
-
-        platformFeeBps = uint120(_platformFeeBps);
-
-        emit PlatformFeeUpdates(_platformFeeBps);
     }
 
     /// @dev Lets a module admin restrict token transfers.

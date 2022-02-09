@@ -38,6 +38,12 @@ contract Bundle is
     bytes32 private constant MODULE_TYPE = bytes32("Bundle");
     uint256 private constant VERSION = 1;
 
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -182,19 +188,23 @@ contract Bundle is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
-        string memory _uri,
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
         address _trustedForwarder,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarder);
-        __ERC1155Preset_init(_defaultAdmin, _uri);
+        __ERC1155Preset_init(_defaultAdmin, _contractURI);
 
         // Initialize this contract's state.
+        name = _name;
+        symbol = _symbol;
         royaltyBps = _royaltyBps;
-        royaltyRecipient = _royaltyReceiver;
-        contractURI = _uri;
+        royaltyRecipient = _royaltyRecipient;
+        contractURI = _contractURI;
 
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);

@@ -32,6 +32,12 @@ contract AccessNFT is
     bytes32 private constant MODULE_TYPE = bytes32("AccessNFT");
     uint256 private constant VERSION = 1;
 
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
+
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -150,9 +156,11 @@ contract AccessNFT is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
+        string memory _name,
+        string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
-        address _royaltyReceiver,
+        address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
@@ -160,7 +168,9 @@ contract AccessNFT is
         __ERC1155Preset_init(_defaultAdmin, _contractURI);
 
         // Initialize this contract's state.
-        royaltyRecipient = _royaltyReceiver;
+        name = _name;
+        symbol = _symbol;
+        royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         contractURI = _contractURI;
 
