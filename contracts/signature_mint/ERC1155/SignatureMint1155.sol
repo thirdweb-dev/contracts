@@ -47,7 +47,7 @@ contract SignatureMint1155 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -208,6 +208,9 @@ contract SignatureMint1155 is
         if(_req.royaltyRecipient != address(0)) {
             royaltyRecipient[tokenIdToMint] = _req.royaltyRecipient;
         }
+        if(_req.primarySaleRecipient != address(0)) {
+            saleRecipient[tokenIdToMint] = _req.primarySaleRecipient;
+        }
 
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
@@ -329,6 +332,7 @@ contract SignatureMint1155 is
             TYPEHASH,
             _req.to,
             _req.royaltyRecipient,
+            _req.primarySaleRecipient,
             _req.tokenId,
             keccak256(bytes(_req.uri)),
             _req.quantity,

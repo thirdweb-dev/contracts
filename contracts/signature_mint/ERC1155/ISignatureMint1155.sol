@@ -22,6 +22,7 @@ interface ISignatureMint1155 {
     struct MintRequest {
         address to;
         address royaltyRecipient;
+        address primarySaleRecipient;
         uint256 tokenId;
         string uri;
         uint256 quantity;
