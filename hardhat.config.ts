@@ -27,9 +27,9 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-let testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
-let alchemyKey: string = process.env.ALCHEMY_KEY || "";
-let explorerScanKey: string = process.env.SCAN_API_KEY || "";
+const testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
+const alchemyKey: string = process.env.ALCHEMY_KEY || "";
+const explorerScanKey: string = process.env.SCAN_API_KEY || "";
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (!alchemyKey) {
@@ -108,6 +108,7 @@ const config: ConfigWithEtherscan = {
 if (testPrivateKey) {
   config.networks = {
     mainnet: createTestnetConfig("mainnet"),
+    goerli: createTestnetConfig("goerli"),
     rinkeby: createTestnetConfig("rinkeby"),
     polygon: createTestnetConfig("polygon"),
     mumbai: createTestnetConfig("mumbai"),

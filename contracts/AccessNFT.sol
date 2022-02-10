@@ -252,20 +252,13 @@ contract AccessNFT is
      *      External functions.
      */
 
-    /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
-    function withdrawFunds(address _currency) external {
-        address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.ROYALTY);
-
+    /// @dev Recover tokens from the contract.
+    function withdrawFunds(address _currency, address _recipient) external onlyModuleAdmin {
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
             : IERC20(_currency).balanceOf(_currency);
-        uint256 fees = (totalTransferAmount * twFeeBps) / MAX_BPS;
 
-        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        CurrencyTransferLib.transferCurrency(_currency, address(this), twFeeRecipient, fees);
-
-        emit FundsWithdrawn(recipient, twFeeRecipient, totalTransferAmount, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), _recipient, totalTransferAmount);
     }
 
     /// @dev See EIP-2981
@@ -275,11 +268,8 @@ contract AccessNFT is
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.ROYALTY);
-        if (royaltyBps > 0) {
-            royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
-        }
+        receiver = royaltyRecipient;
+        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
     }
 
     /// @notice Create native ERC 1155 NFTs.
