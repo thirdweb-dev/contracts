@@ -51,7 +51,7 @@ interface ISignatureMint1155 {
 
     /// @dev Emitted when a new sale recipient is set.
     event NewDefaultSaleRecipient(address indexed recipient);
-    
+
     /// @dev Emitted when a new sale recipient is set.
     event NewDefaultRoyaltyRecipient(address indexed recipient);
 

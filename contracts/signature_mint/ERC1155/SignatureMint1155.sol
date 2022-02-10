@@ -175,9 +175,8 @@ contract SignatureMint1155 is
         string calldata _uri,
         uint256 _amount
     ) external onlyMinter {
-        
         uint256 tokenIdToMint;
-        if(_tokenId == type(uint256).max) {
+        if (_tokenId == type(uint256).max) {
             tokenIdToMint = nextTokenIdToMint;
             nextTokenIdToMint += 1;
         } else {
@@ -205,10 +204,10 @@ contract SignatureMint1155 is
             tokenIdToMint = _req.tokenId;
         }
 
-        if(_req.royaltyRecipient != address(0)) {
+        if (_req.royaltyRecipient != address(0)) {
             royaltyRecipient[tokenIdToMint] = _req.royaltyRecipient;
         }
-        if(_req.primarySaleRecipient != address(0)) {
+        if (_req.primarySaleRecipient != address(0)) {
             saleRecipient[tokenIdToMint] = _req.primarySaleRecipient;
         }
 
@@ -318,30 +317,26 @@ contract SignatureMint1155 is
 
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return
-            _hashTypedDataV4(
-                keccak256(
-                    _encodeRequest(_req)
-                )
-            ).recover(_signature);
+        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
-        return abi.encode(
-            TYPEHASH,
-            _req.to,
-            _req.royaltyRecipient,
-            _req.primarySaleRecipient,
-            _req.tokenId,
-            keccak256(bytes(_req.uri)),
-            _req.quantity,
-            _req.pricePerToken,
-            _req.currency,
-            _req.validityStartTimestamp,
-            _req.validityEndTimestamp,
-            _req.uid
-        );
+        return
+            abi.encode(
+                TYPEHASH,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.primarySaleRecipient,
+                _req.tokenId,
+                keccak256(bytes(_req.uri)),
+                _req.quantity,
+                _req.pricePerToken,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     /// @dev Verifies that a mint request is valid.
