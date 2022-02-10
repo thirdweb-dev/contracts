@@ -117,20 +117,6 @@ contract DropERC1155 is
         thirdwebFee = TWFee(_thirdwebFee);
     }
 
-    /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = address(this);
-        (, uint256 royaltyFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.ROYALTY);
-        if (royaltyBps > 0) {
-            royaltyAmount = (salePrice * (royaltyBps + royaltyFeeBps)) / MAX_BPS;
-        }
-    }
-
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -210,20 +196,24 @@ contract DropERC1155 is
 
     ///     =====   External functions  =====
 
-    /// @dev Distributes accrued royalty and thirdweb fees to the relevant stakeholders.
-    function withdrawFunds(address _currency) external {
-        address recipient = royaltyRecipient;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.ROYALTY);
-
+    /// @dev Recover tokens from the contract.
+    function withdrawFunds(address _currency, address _recipient) external onlyModuleAdmin {
         uint256 totalTransferAmount = _currency == NATIVE_TOKEN
             ? address(this).balance
             : IERC20(_currency).balanceOf(_currency);
-        uint256 fees = (totalTransferAmount * twFeeBps) / MAX_BPS;
 
-        CurrencyTransferLib.transferCurrency(_currency, address(this), recipient, totalTransferAmount - fees);
-        CurrencyTransferLib.transferCurrency(_currency, address(this), twFeeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, address(this), _recipient, totalTransferAmount);
+    }
 
-        emit FundsWithdrawn(recipient, twFeeRecipient, totalTransferAmount, fees);
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = royaltyRecipient;
+        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
     }
 
     /// @dev Lets the contract accept ether.
