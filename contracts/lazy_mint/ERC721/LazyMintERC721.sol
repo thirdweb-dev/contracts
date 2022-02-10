@@ -91,7 +91,7 @@ contract LazyMintERC721 is
     mapping(uint256 => string) private baseURI;
 
     /// @dev End token Id => info related to the delayed reveal of the baseURI
-    mapping(uint256 => bytes) private encryptedBaseURI;
+    mapping(uint256 => bytes) public encryptedBaseURI;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
