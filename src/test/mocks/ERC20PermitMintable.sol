@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
-contract MintableERC20Permit is ERC20PresetMinterPauser, ERC20Permit {
-    constructor() ERC20PresetMinterPauser("USD Coin", "USDC") ERC20Permit("USD Coin") {}
+contract ERC20PermitMintable is ERC20PresetMinterPauser, ERC20Permit {
+    constructor() ERC20PresetMinterPauser("Mock Coin", "MOCK") ERC20Permit("Mock Coin") {}
 
     function mint(address to, uint256 amount) public override(ERC20PresetMinterPauser) {
         _mint(to, amount);

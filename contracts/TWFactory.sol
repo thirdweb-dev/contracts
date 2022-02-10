@@ -36,9 +36,9 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
-    function deployProxy(bytes32 _moduleType, bytes memory _data) external {
+    function deployProxy(bytes32 _moduleType, bytes memory _data) external returns (address) {
         bytes32 salt = keccak256(abi.encodePacked(_moduleType, block.number));
-        deployProxyDeterministic(_moduleType, _data, salt);
+        return deployProxyDeterministic(_moduleType, _data, salt);
     }
 
     /**
@@ -49,9 +49,9 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         bytes32 _moduleType,
         bytes memory _data,
         bytes32 _salt
-    ) public {
+    ) public returns (address) {
         address implementation = modules[_moduleType][currentModuleVersion[_moduleType]];
-        deployProxyByImplementation(implementation, _data, _salt);
+        return deployProxyByImplementation(implementation, _data, _salt);
     }
 
     /// @dev Deploys a proxy that points to the given implementation.
@@ -59,12 +59,12 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         address _implementation,
         bytes memory _data,
         bytes32 _salt
-    ) public {
+    ) public returns (address deployedProxy) {
         require(implementationApproval[_implementation], "implementation not approved");
 
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(_implementation, _data));
 
-        address deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
+        deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
         registry.addModule(deployedProxy, _msgSender());
 
