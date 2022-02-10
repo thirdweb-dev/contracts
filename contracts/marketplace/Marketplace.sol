@@ -37,7 +37,7 @@ contract Marketplace is
     Multicall
 {
     /// @dev Version of the contract.
-    uint256 public constant VERSION = 1;
+    uint256 public constant VERSION = 2;
 
     /// @dev Access control: aditional roles.
     bytes32 public constant LISTER_ROLE = keccak256("LISTER_ROLE");
@@ -166,7 +166,10 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
-            require(newListing.buyoutPricePerToken >= newListing.reservePricePerToken, "reserve price exceeds buyout price.");
+            require(
+                newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
+                "reserve price exceeds buyout price."
+            );
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
