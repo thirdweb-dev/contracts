@@ -88,6 +88,9 @@ contract Multiwrap is
         uint256[] erc20AmountsToWrap;
     }
 
+    event Wrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
+    event Unwrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -139,14 +142,15 @@ contract Multiwrap is
     }
 
     ///     =====   External functions  =====
-
-    // TODO: require checks.
+    
+    /// @dev Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
     function wrap(
         WrappedContents calldata _wrappedContents,
         uint256 _shares,
         string calldata _uriForShares
     )
         external
+        nonReentrant
     {
         uint256 tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
@@ -157,20 +161,29 @@ contract Multiwrap is
         _mint(msg.sender, tokenId, _shares, "");
 
         transferWrappedAssets(msg.sender, address(this), _wrappedContents);
+
+        emit Wrapped(_msgSender(), tokenId, _wrappedContents);
     }
 
-    // TODO: require checks
+    /// @dev Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId) external {
-        WrappedContents memory _wrappedContents = wrappedContents[_tokenId];
+        uint256 totalSupplyOfToken = totalSupply[_tokenId];
+        require(_tokenId < nextTokenIdToMint, "invalid tokenId");
+        require(balanceOf(_msgSender(), _tokenId) == totalSupplyOfToken, "must own all shares to unwrap");
+
+        WrappedContents memory wrappedContents_ = wrappedContents[_tokenId];
 
         delete wrappedContents[_tokenId];
 
-        burn(msg.sender, _tokenId, totalSupply[_tokenId]);
+        burn(msg.sender, _tokenId, totalSupplyOfToken);
 
-        transferWrappedAssets(address(this), msg.sender, _wrappedContents);
+        transferWrappedAssets(address(this), msg.sender, wrappedContents_);
+
+        emit Unwrapped(_msgSender(), _tokenId, wrappedContents_);
     }
 
-    // TODO: require checks
+    ///     =====   Internal functions  =====
+
     function transferWrappedAssets(
         address _from,
         address _to,
@@ -178,26 +191,24 @@ contract Multiwrap is
     ) 
         internal
     {
+        // Logic divided up into internal functions to combat linter's `cycomatic complexity` error.
+        transfer1155(_from, _to, _wrappedContents);
+        transfer721(_from, _to, _wrappedContents);
+        transfer20(_from, _to, _wrappedContents);
 
+    }
+
+    function transfer20(
+        address _from,
+        address _to,
+        WrappedContents memory _wrappedContents
+    ) 
+        internal
+    {
         uint256 i;
-        uint256 j;
 
-        for(i = 0; i < _wrappedContents.erc1155AssetContracts.length; i += 1) {
-            IERC1155 assetContract = IERC1155(_wrappedContents.erc1155AssetContracts[i]);
-            
-            for(j = 0; j < _wrappedContents.erc1155TokensToWrap[i].length; j +=1) {
-                assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc1155TokensToWrap[i][j], _wrappedContents.erc1155AmountsToWrap[i][j], "");
-            }
-        }
-
-        for(i = 0; i < _wrappedContents.erc721AssetContracts.length; i += 1) {
-            IERC721 assetContract = IERC721(_wrappedContents.erc721AssetContracts[i]);
-            
-            for(j = 0; j < _wrappedContents.erc721TokensToWrap[i].length; j +=1) {
-                assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc721TokensToWrap[i][j]);
-            }
-        }
-
+        bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
+        require(isValidData, "invalid erc20 wrap");
         for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
             CurrencyTransferLib.transferCurrency(
                 _wrappedContents.erc20AssetContracts[i],
@@ -206,7 +217,60 @@ contract Multiwrap is
                 _wrappedContents.erc20AmountsToWrap[i]
             );
         }
+    }
 
+    function transfer721(
+        address _from,
+        address _to,
+        WrappedContents memory _wrappedContents
+    ) 
+        internal
+    {
+        uint256 i;
+        uint256 j;
+
+        bool isValidData =  _wrappedContents.erc721AssetContracts.length == _wrappedContents.erc721TokensToWrap.length;
+        if(isValidData) {
+            for(i = 0; i < _wrappedContents.erc721AssetContracts.length; i += 1) {
+                IERC721 assetContract = IERC721(_wrappedContents.erc721AssetContracts[i]);
+                
+                for(j = 0; j < _wrappedContents.erc721TokensToWrap[i].length; j += 1) {
+                    assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc721TokensToWrap[i][j]);
+                }
+            }
+        }
+        require(isValidData, "invalid erc721 wrap");
+    }
+
+    function transfer1155(
+        address _from,
+        address _to,
+        WrappedContents memory _wrappedContents
+    ) 
+        internal
+    {
+        uint256 i;
+        uint256 j;
+
+        bool isValidData =  _wrappedContents.erc1155AssetContracts.length == _wrappedContents.erc1155TokensToWrap.length
+                && _wrappedContents.erc1155AssetContracts.length == _wrappedContents.erc1155AmountsToWrap.length;
+
+        if(isValidData) {
+            for(i = 0; i < _wrappedContents.erc1155AssetContracts.length; i += 1) {
+                isValidData = _wrappedContents.erc1155TokensToWrap[i].length == _wrappedContents.erc1155AmountsToWrap[i].length;
+
+                if(!isValidData) {
+                    break;
+                }
+
+                IERC1155 assetContract = IERC1155(_wrappedContents.erc1155AssetContracts[i]);
+                    
+                for(j = 0; j < _wrappedContents.erc1155TokensToWrap[i].length; j += 1) {
+                    assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc1155TokensToWrap[i][j], _wrappedContents.erc1155AmountsToWrap[i][j], "");
+                }
+            }
+        }
+        require(isValidData, "invalid erc1155 wrap");
     }
 
     ///     =====   Low-level overrides  =====
