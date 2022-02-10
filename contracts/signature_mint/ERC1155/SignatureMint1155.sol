@@ -47,7 +47,7 @@ contract SignatureMint1155 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -69,6 +69,9 @@ contract SignatureMint1155 is
 
     /// @dev The adress that receives all primary sales value.
     address public defaultSaleRecipient;
+
+    /// @dev The adress that receives all primary sales value.
+    address public defaultRoyaltyRecipient;
 
     /// @dev Contract interprets 10_000 as 100%.
     uint64 private constant MAX_BPS = 10_000;
@@ -99,6 +102,9 @@ contract SignatureMint1155 is
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
 
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public royaltyRecipient;
+
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
@@ -117,6 +123,7 @@ contract SignatureMint1155 is
         address _trustedForwarder,
         address _nativeTokenWrapper,
         address _saleRecipient,
+        address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _feeBps
     ) ERC1155("") EIP712("SignatureMint1155", "1") ERC2771Context(_trustedForwarder) {
@@ -124,6 +131,7 @@ contract SignatureMint1155 is
         controlCenter = ProtocolControl(_controlCenter);
         nativeTokenWrapper = _nativeTokenWrapper;
         defaultSaleRecipient = _saleRecipient;
+        defaultRoyaltyRecipient = _royaltyRecipient;
         contractURI = _contractURI;
         royaltyBps = uint64(_royaltyBps);
         feeBps = uint120(_feeBps);
@@ -163,11 +171,18 @@ contract SignatureMint1155 is
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
     function mintTo(
         address _to,
+        uint256 _tokenId,
         string calldata _uri,
         uint256 _amount
     ) external onlyMinter {
-        uint256 tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+        uint256 tokenIdToMint;
+        if (_tokenId == type(uint256).max) {
+            tokenIdToMint = nextTokenIdToMint;
+            nextTokenIdToMint += 1;
+        } else {
+            require(_tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _tokenId;
+        }
 
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
         _mintTo(_to, _uri, tokenIdToMint, _amount);
@@ -189,6 +204,13 @@ contract SignatureMint1155 is
             tokenIdToMint = _req.tokenId;
         }
 
+        if (_req.royaltyRecipient != address(0)) {
+            royaltyRecipient[tokenIdToMint] = _req.royaltyRecipient;
+        }
+        if (_req.primarySaleRecipient != address(0)) {
+            saleRecipient[tokenIdToMint] = _req.primarySaleRecipient;
+        }
+
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
         collectPrice(_req, tokenIdToMint);
@@ -197,14 +219,15 @@ contract SignatureMint1155 is
     }
 
     /// @dev See EIP 2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = controlCenter.getRoyaltyTreasury(address(this));
+        address targetRecipient = royaltyRecipient[tokenId];
+        receiver = targetRecipient != address(0) ? targetRecipient : defaultRoyaltyRecipient;
         royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
@@ -213,13 +236,25 @@ contract SignatureMint1155 is
     /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
     function setSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
         saleRecipient[_tokenId] = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient, _tokenId, false);
+        emit NewSaleRecipient(_saleRecipient, _tokenId);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         defaultSaleRecipient = _saleRecipient;
         emit NewDefaultSaleRecipient(_saleRecipient);
+    }
+
+    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
+    function setRoyaltyRecipient(uint256 _tokenId, address _royaltyRecipient) external onlyModuleAdmin {
+        royaltyRecipient[_tokenId] = _royaltyRecipient;
+        emit NewRoyaltyRecipient(_royaltyRecipient, _tokenId);
+    }
+
+    /// @dev Lets a module admin set the default recipient of all primary sales.
+    function setDefaultRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
+        defaultRoyaltyRecipient = _royaltyRecipient;
+        emit NewDefaultRoyaltyRecipient(_royaltyRecipient);
     }
 
     /// @dev Lets a module admin update the royalties paid on secondary token sales.
@@ -282,23 +317,26 @@ contract SignatureMint1155 is
 
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    }
+
+    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
+    function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
         return
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        TYPEHASH,
-                        _req.to,
-                        _req.tokenId,
-                        keccak256(bytes(_req.uri)),
-                        _req.quantity,
-                        _req.pricePerToken,
-                        _req.currency,
-                        _req.validityStartTimestamp,
-                        _req.validityEndTimestamp,
-                        _req.uid
-                    )
-                )
-            ).recover(_signature);
+            abi.encode(
+                TYPEHASH,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.primarySaleRecipient,
+                _req.tokenId,
+                keccak256(bytes(_req.uri)),
+                _req.quantity,
+                _req.pricePerToken,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     /// @dev Verifies that a mint request is valid.

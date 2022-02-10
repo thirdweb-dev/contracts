@@ -234,6 +234,7 @@ export async function getContracts(
           trustedForwarderAddr,
           nativeTokenWrapperAddr,
           defaultSaleRecipient,
+          protocolAdmin.address,
           royaltyBps,
           feeBps,
         ),

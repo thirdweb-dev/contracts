@@ -21,6 +21,8 @@ interface ISignatureMint1155 {
      */
     struct MintRequest {
         address to;
+        address royaltyRecipient;
+        address primarySaleRecipient;
         uint256 tokenId;
         string uri;
         uint256 quantity;
@@ -43,10 +45,15 @@ interface ISignatureMint1155 {
     );
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId, bool isDefaultRecipient);
+    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId);
+    /// @dev Emitted when a new sale recipient is set.
+    event NewRoyaltyRecipient(address indexed recipient, uint256 indexed _tokenId);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewDefaultSaleRecipient(address indexed recipient);
+
+    /// @dev Emitted when a new sale recipient is set.
+    event NewDefaultRoyaltyRecipient(address indexed recipient);
 
     /// @dev Emitted when the royalty fee bps is updated
     event RoyaltyUpdated(uint256 newRoyaltyBps);
@@ -78,11 +85,14 @@ interface ISignatureMint1155 {
      *  @notice Lets an account with MINTER_ROLE mint an NFT.
      *
      *  @param to The address to mint the NFT to.
+     *  @param tokenId The tokenId to mint. If `tokenId == type(uint256).max` then `nextTokenIdToMint` is minted.
      *  @param uri The URI to assign to the NFT.
+     *  @param amount The amount of copies of the NFT to mint.
      *
      */
     function mintTo(
         address to,
+        uint256 tokenId,
         string calldata uri,
         uint256 amount
     ) external;
