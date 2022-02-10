@@ -3,6 +3,10 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 
-contract MockERC1155 is ERC1155PresetMinterPauser {
+contract ERC1155Mintable is ERC1155PresetMinterPauser {
     constructor() ERC1155PresetMinterPauser("ipfs://BaseURI") {}
+
+    function hasRole(bytes32 _role, address _account) public view override returns (bool) {
+        return true;
+    }
 }
