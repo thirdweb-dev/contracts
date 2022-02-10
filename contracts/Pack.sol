@@ -277,15 +277,6 @@ contract Pack is
      *   External functions.
      **/
 
-    /// @dev Recover tokens from the contract.
-    function withdrawFunds(address _currency, address _recipient) external onlyModuleAdmin {
-        uint256 totalTransferAmount = _currency == NATIVE_TOKEN
-            ? address(this).balance
-            : IERC20(_currency).balanceOf(_currency);
-
-        CurrencyTransferLib.transferCurrency(_currency, address(this), _recipient, totalTransferAmount);
-    }
-    
     /// @dev See EIP-2981
     function royaltyInfo(uint256, uint256 salePrice)
         external
