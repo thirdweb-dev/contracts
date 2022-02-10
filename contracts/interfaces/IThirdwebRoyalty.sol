@@ -10,7 +10,4 @@ interface IThirdwebRoyalty is IERC2981, IThirdwebModule {
 
     /// @dev Lets a module admin update the royalty bps and recipient.
     function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external;
-
-    /// @dev Distributes accrued royalty and thirdweb fees (% of the accrued royalty) to the relevant stakeholders.
-    function withdrawFunds(address _currency) external;
 }
