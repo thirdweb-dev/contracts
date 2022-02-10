@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 // Base
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
-// Token interfaces
+// Interfaces
+import "./interfaces/IMultiwrap.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,7 +21,6 @@ import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Helpers
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "./lib/CurrencyTransferLib.sol";
 
 /**
@@ -28,6 +28,7 @@ import "./lib/CurrencyTransferLib.sol";
  */
 
 contract Multiwrap is
+    IMultiwrap,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -55,10 +56,10 @@ contract Multiwrap is
     uint256 public nextTokenIdToMint;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev Max bps in the thirdweb system
     uint128 private constant MAX_BPS = 10_000;
@@ -78,18 +79,11 @@ contract Multiwrap is
     /// @dev Mapping from tokenId => wrapped contents of the token.
     mapping(uint256 => WrappedContents) private wrappedContents;
 
-    struct WrappedContents {
-        address[] erc1155AssetContracts;
-        uint256[][] erc1155TokensToWrap;
-        uint256[][] erc1155AmountsToWrap;
-        address[] erc721AssetContracts;
-        uint256[][] erc721TokensToWrap;
-        address[] erc20AssetContracts;
-        uint256[] erc20AmountsToWrap;
+    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
+    modifier onlyModuleAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
+        _;
     }
-
-    event Wrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
-    event Unwrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -141,6 +135,13 @@ contract Multiwrap is
         return uriForShares[_tokenId];
     }
 
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() external view returns (address) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
+    }
+
     ///     =====   External functions  =====
     
     /// @dev Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
@@ -180,6 +181,33 @@ contract Multiwrap is
         transferWrappedAssets(address(this), msg.sender, wrappedContents_);
 
         emit Unwrapped(_msgSender(), _tokenId, wrappedContents_);
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getRoyaltyInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = uint128(_royaltyBps);
+
+        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    function setOwner(address _newOwner) external onlyModuleAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        emit NewOwner(_owner, _newOwner);
+        _owner = _newOwner;
+    }
+
+    /// @dev Lets a module admin set the URI for contract-level metadata.
+    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+        contractURI = _uri;
     }
 
     ///     =====   Internal functions  =====
@@ -273,6 +301,17 @@ contract Multiwrap is
         require(isValidData, "invalid erc1155 wrap");
     }
 
+    /// @dev See EIP-2981
+    function royaltyInfo(uint256, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = royaltyRecipient;
+        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
+    }
+
     ///     =====   Low-level overrides  =====
 
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
@@ -338,7 +377,7 @@ contract Multiwrap is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165)
         returns (bool)
     {
         return
