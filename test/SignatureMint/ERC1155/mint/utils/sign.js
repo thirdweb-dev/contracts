@@ -9,6 +9,8 @@ const EIP712Domain = [
 
 const MintRequest = [
   { name: "to", type: "address" },
+  { name: "royaltyRecipient", type: "address" },
+  { name: "primarySaleRecipient", type: "address" },
   { name: "tokenId", type: "uint256" },
   { name: "uri", type: "string" },
   { name: "quantity", type: "uint256" },

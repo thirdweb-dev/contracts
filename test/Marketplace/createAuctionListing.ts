@@ -121,13 +121,13 @@ describe("List token for sale: Auction Listing", function () {
       const incorrectParams = {
         ...listingParams,
         buyoutPricePerToken: ethers.utils.parseEther("0.1"),
-        reservePricePerToken: ethers.utils.parseEther("0.2")
+        reservePricePerToken: ethers.utils.parseEther("0.2"),
       };
 
       await expect(marketv2.connect(lister).createListing(incorrectParams)).to.be.revertedWith(
         "reserve price exceeds buyout price.",
       );
-    })
+    });
   });
 
   describe("Events", function () {

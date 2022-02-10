@@ -28,6 +28,7 @@ describe("Initial state of SignatureMint1155 on deployment", function () {
   let trustedForwarderAddr: string;
   let protocolControlAddr: string;
   let nativeTokenWrapperAddr: string;
+  let royaltyRecipient: string;
   const royaltyBps: BigNumber = BigNumber.from(0);
   const feeBps: BigNumber = BigNumber.from(0);
 
@@ -41,6 +42,7 @@ describe("Initial state of SignatureMint1155 on deployment", function () {
     trustedForwarderAddr = contracts.forwarder.address;
     protocolControlAddr = contracts.protocolControl.address;
     nativeTokenWrapperAddr = contracts.weth.address;
+    royaltyRecipient = protocolAdmin.address;
 
     sigMint1155 = (await ethers
       .getContractFactory("SignatureMint1155")
@@ -53,6 +55,7 @@ describe("Initial state of SignatureMint1155 on deployment", function () {
             trustedForwarderAddr,
             nativeTokenWrapperAddr,
             defaultSaleRecipient.address,
+            royaltyRecipient,
             royaltyBps,
             feeBps,
           ),
