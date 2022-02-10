@@ -115,6 +115,14 @@ describe("List token for sale: Direct Listing", function () {
         "Marketplace: insufficient token balance or approval.",
       );
     });
+
+    it("Should revert if asset listings are restricted, and asset to list is unapproved", async () => {
+      await marketv2.connect(protocolAdmin).revokeRole(await marketv2.ASSET_ROLE(), ethers.constants.AddressZero);
+
+      await expect(marketv2.connect(protocolAdmin).createListing(listingParams)).to.be.revertedWith(
+        "Marketplace: listing unapproved asset",
+      );
+    });
   });
 
   describe("Events", function () {
@@ -187,6 +195,19 @@ describe("List token for sale: Direct Listing", function () {
       expect(listing.buyoutPricePerToken).to.equal(listingParams.buyoutPricePerToken);
       expect(listing.tokenType).to.equal(TokenType.ERC1155);
       expect(listing.listingType).to.equal(ListingType.Direct);
+    });
+
+    it.only("Should gate assets properly", async () => {
+      // default all assets is allowed
+      await expect(marketv2.connect(lister).createListing(listingParams)).to.not.be.reverted;
+      // no asset is allowed
+      await marketv2.connect(protocolAdmin).revokeRole(await marketv2.ASSET_ROLE(), ethers.constants.AddressZero);
+      await expect(marketv2.connect(lister).createListing(listingParams)).to.be.revertedWith(
+        "Marketplace: listing unapproved asset",
+      );
+      // only allow specific allowed
+      await marketv2.connect(protocolAdmin).grantRole(await marketv2.ASSET_ROLE(), listingParams.assetContract);
+      await expect(marketv2.connect(lister).createListing(listingParams)).to.not.be.reverted;
     });
   });
 });
