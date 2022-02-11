@@ -36,7 +36,7 @@ print(f'[+] Calling contract functions sequences.')
 m.constrain(x > 0)
 
 # outline the transactions
-m.transaction(caller=attacker, address=contract, value=v, data=m.make_symbolic_buffer(120))
+m.transaction(caller=attacker, address=contract, value=v, data=m.make_symbolic_buffer(4+32*4))
 contract.withdraw(x, caller=attacker)
 
 print(f"[+] There are {m.count_all_states()} states. ({m.count_ready_states()} ready, {m.count_terminated_states()} terminated, {m.count_busy_states()} alive).")
