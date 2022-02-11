@@ -47,3 +47,4 @@ out/
 crytic-export/
 venv/
 mcore_*/
+corpus/
