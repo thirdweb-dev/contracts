@@ -70,7 +70,7 @@ interface ILazyMintERC721 {
     }
 
     /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
+    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
@@ -80,6 +80,9 @@ interface ILazyMintERC721 {
         uint256 startTokenId,
         uint256 quantityClaimed
     );
+
+    /// @dev Emitted when the URI for a batch of NFTs is revealed.
+    event RevealedNFT(uint256 endTokenId, string revealedURI);
 
     /// @dev Emitted when new mint conditions are set for a token.
     event NewClaimConditions(ClaimCondition[] claimConditions);
@@ -108,7 +111,11 @@ interface ILazyMintERC721 {
      *
      *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes memory _encryptedBaseURI
+    ) external;
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.
