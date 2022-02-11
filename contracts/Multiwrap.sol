@@ -192,7 +192,7 @@ contract Multiwrap is
         transfer721(address(this), _msgSender(), wrappedContents_);
         transfer20(address(this), _msgSender(), wrappedContents_, totalSupplyOfToken, totalSupplyOfToken);
 
-        emit Unwrapped(_msgSender(), _tokenId, wrappedContents_);
+        emit Unwrapped(_msgSender(), _tokenId, totalSupplyOfToken, wrappedContents_);
     }
 
     /// @dev Unwrap shares to retrieve share of underlying ERC20 tokens.
@@ -215,7 +215,7 @@ contract Multiwrap is
 
         transfer20(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalShares[_tokenId]);
 
-        emit Unwrapped(_msgSender(), _tokenId, wrappedContents_);
+        emit Unwrapped(_msgSender(), _tokenId, _amountToRedeem, wrappedContents_);
     }
 
     /// @dev Returns the platform fee bps and recipient.

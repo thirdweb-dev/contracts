@@ -21,7 +21,7 @@ interface IMultiwrap is IThirdwebModule, IThirdwebOwnable, IThirdwebRoyalty {
     event Wrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
     
     /// @dev Emitted when tokens are unwrapped.
-    event Unwrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
+    event Unwrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, uint256 sharesUnwrapped, WrappedContents wrappedContents);
 
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
