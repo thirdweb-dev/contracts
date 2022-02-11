@@ -25,12 +25,8 @@ contract = m.solidity_create_contract('./Test.sol', contract_name='Test', owner=
 print(f'[+] Deploy contract. address: {hex(contract.address)}')
 
 x = m.make_symbolic_value()
-
-x = m.make_symbolic_value()
 y = m.make_symbolic_value()
 z = m.make_symbolic_value()
-value = m.make_symbolic_value()
-data = m.make_symbolic_buffer(320)
 
 print(f'[+] Call contract functions.')
 # outline the transactions
@@ -57,7 +53,7 @@ for state in m.ready_states:
     # Check if it is possible to have balance_after > balance_before
     condition = Operators.UGT(balance_before, balance_after)
     if m.generate_testcase(state, name="State", only_if=condition):
-        print(" see {}".format(m.workspace))
+        print("State found. see {}".format(m.workspace))
         state_found = True
 
 if not state_found:
