@@ -20,7 +20,7 @@ user = m.create_account(balance=100 * ETHER, name="user")
 attacker = m.create_account(balance=100 * ETHER, name="attacker")
 print(f'[+] Created user wallet. deployer: {hex(deployer.address)}, user: {hex(user.address)}, attacker: {hex(attacker.address)}')
 
-contract = m.solidity_create_contract('./Test.sol', contract_name='Test', owner=user)
+contract = m.solidity_create_contract('./Test.sol', contract_name='Test', owner=deployer)
 print(f'[+] Deployed contract. address: {hex(contract.address)}')
 
 print(f'[+] Declaring symbolic variables.')
@@ -42,7 +42,7 @@ print(f'[+] Generating transactions traces.')
 num_state_found = 0
 for state in m.all_states:
     num_state_found += 1
-    balance = state.platform.get_balance(int(user_account))
+    balance = state.platform.get_balance(attacker.address)
     print(state.solve_one(balance))
 
 print(f"[+] {num_state_found} constraints test cases generated.")
