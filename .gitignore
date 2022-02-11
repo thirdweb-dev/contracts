@@ -45,3 +45,5 @@ yalc.lock
 out/
 
 crytic-export/
+venv/
+mcore_*/
