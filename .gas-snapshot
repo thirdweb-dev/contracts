@@ -1,0 +1,3 @@
+MultiwrapGasTest:test_wrap() (gas: 342769)
+MultiwrapTest:testInitialState() (gas: 26401)
+MultiwrapTest:test_wrap() (gas: 7019265)

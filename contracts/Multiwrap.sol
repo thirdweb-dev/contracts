@@ -21,6 +21,8 @@ import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 
 // Helpers
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 
 /**
@@ -33,6 +35,8 @@ contract Multiwrap is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
+    ERC1155HolderUpgradeable,
+    ERC721HolderUpgradeable,
     ERC1155Upgradeable 
 {
     bytes32 private constant MODULE_TYPE = bytes32("Multiwrap");
@@ -72,6 +76,9 @@ contract Multiwrap is
 
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
+
+    /// @dev Token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public totalShares;
 
     /// @dev Mapping from tokenId => uri for tokenId
     mapping(uint256 => string) private uriForShares;
@@ -160,8 +167,11 @@ contract Multiwrap is
         wrappedContents[tokenId] = _wrappedContents;
 
         _mint(msg.sender, tokenId, _shares, "");
+        totalShares[tokenId] = _shares;
 
-        transferWrappedAssets(msg.sender, address(this), _wrappedContents);
+        transfer1155(_msgSender(), address(this), _wrappedContents);
+        transfer721(_msgSender(), address(this), _wrappedContents);
+        transfer20(_msgSender(), address(this), _wrappedContents, _shares, _shares);
 
         emit Wrapped(_msgSender(), tokenId, _wrappedContents);
     }
@@ -178,7 +188,32 @@ contract Multiwrap is
 
         burn(msg.sender, _tokenId, totalSupplyOfToken);
 
-        transferWrappedAssets(address(this), msg.sender, wrappedContents_);
+        transfer1155(address(this), _msgSender(), wrappedContents_);
+        transfer721(address(this), _msgSender(), wrappedContents_);
+        transfer20(address(this), _msgSender(), wrappedContents_, totalSupplyOfToken, totalSupplyOfToken);
+
+        emit Unwrapped(_msgSender(), _tokenId, wrappedContents_);
+    }
+
+    /// @dev Unwrap shares to retrieve share of underlying ERC20 tokens.
+    function unwrapByShares(uint256 _tokenId, uint256 _amountToRedeem) external {
+        
+        require(_tokenId < nextTokenIdToMint, "invalid tokenId");
+        require(balanceOf(_msgSender(), _tokenId) >= _amountToRedeem, "unwrapping more than owned");
+
+        WrappedContents memory wrappedContents_ = wrappedContents[_tokenId];
+        require(
+            wrappedContents_.erc721AssetContracts.length == 0 && wrappedContents_.erc1155AssetContracts.length == 0,
+            "cannot unwrap NFTs by shares"
+        );
+        
+        burn(msg.sender, _tokenId, _amountToRedeem);
+
+        if(totalSupply[_tokenId] == 0) {
+            delete wrappedContents[_tokenId];
+        }
+
+        transfer20(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalShares[_tokenId]);
 
         emit Unwrapped(_msgSender(), _tokenId, wrappedContents_);
     }
@@ -212,37 +247,28 @@ contract Multiwrap is
 
     ///     =====   Internal functions  =====
 
-    function transferWrappedAssets(
-        address _from,
-        address _to,
-        WrappedContents memory _wrappedContents
-    ) 
-        internal
-    {
-        // Logic divided up into internal functions to combat linter's `cycomatic complexity` error.
-        transfer1155(_from, _to, _wrappedContents);
-        transfer721(_from, _to, _wrappedContents);
-        transfer20(_from, _to, _wrappedContents);
-
-    }
-
     function transfer20(
         address _from,
         address _to,
-        WrappedContents memory _wrappedContents
+        WrappedContents memory _wrappedContents,
+        uint256 _sharesToAccount,
+        uint256 _totalShares
     ) 
         internal
     {
+
         uint256 i;
 
         bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
         require(isValidData, "invalid erc20 wrap");
         for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+            uint256 tokensToIssue = (_wrappedContents.erc20AmountsToWrap[i] * _sharesToAccount) / _totalShares;
+
             CurrencyTransferLib.transferCurrency(
                 _wrappedContents.erc20AssetContracts[i],
                 _from,
                 _to,
-                _wrappedContents.erc20AmountsToWrap[i]
+                tokensToIssue
             );
         }
     }
@@ -377,7 +403,7 @@ contract Multiwrap is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165, ERC1155ReceiverUpgradeable)
         returns (bool)
     {
         return
