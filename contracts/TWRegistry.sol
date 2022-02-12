@@ -39,7 +39,11 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     function getAllModules(address _deployer) external view returns (address[] memory) {
-        return EnumerableSet.values(deployments[_deployer]);
+        return deployments[_deployer].values();
+    }
+
+    function getModuleCount(address _deployer) external view returns (uint256) {
+        return deployments[_deployer].length();
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

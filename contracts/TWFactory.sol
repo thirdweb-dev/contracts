@@ -37,7 +37,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
     function deployProxy(bytes32 _moduleType, bytes memory _data) external returns (address) {
-        bytes32 salt = keccak256(abi.encodePacked(_moduleType, block.number));
+        bytes32 salt = keccak256(abi.encodePacked(_msgSender(), registry.getModuleCount(_msgSender())));
         return deployProxyDeterministic(_moduleType, _data, salt);
     }
 
