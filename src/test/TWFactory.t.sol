@@ -81,7 +81,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         uint256 moduleVersionOnFactory = twFactory.currentModuleVersion(moduleType);
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(moduleType, address(mockModule));
+        twFactory.addModuleImplementation(address(mockModule));
 
         assertTrue(twFactory.implementationApproval(address(mockModule)));
         assertEq(address(mockModule), twFactory.modules(moduleType, moduleVersion));
@@ -95,18 +95,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         vm.expectRevert("not admin.");
 
         vm.prank(moduleDeployer);
-        twFactory.addModuleImplementation(moduleType, address(mockModule));
-    }
-
-    function test_addModuleImplementation_revert_invalidModuleType() public {
-        bytes32 moduleType = bytes32("Random");
-
-        assertTrue(mockModule.moduleType() != moduleType);
-
-        vm.expectRevert("invalid module type.");
-
-        vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(moduleType, address(mockModule));
+        twFactory.addModuleImplementation(address(mockModule));
     }
 
     function test_addModuleImplementation_emit_NewModuleImplementation() public {
@@ -117,7 +106,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         emit NewModuleImplementation(moduleType, moduleVersion, address(mockModule));
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(moduleType, address(mockModule));
+        twFactory.addModuleImplementation(address(mockModule));
     }
 
     /// @dev Test `approveImplementation`
@@ -195,7 +184,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bytes32 moduleType = mockModule.moduleType();
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(moduleType, address(mockModule));
+        twFactory.addModuleImplementation(address(mockModule));
     }
 
     function test_deployProxyDeterministic(bytes32 _salt) public {
@@ -243,7 +232,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bytes32 moduleType = mockModule.moduleType();
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(moduleType, address(mockModule));
+        twFactory.addModuleImplementation(address(mockModule));
     }
 
     function test_deployProxy() public {

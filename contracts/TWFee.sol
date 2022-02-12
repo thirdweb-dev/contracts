@@ -4,10 +4,7 @@ pragma solidity ^0.8.0;
 // Top-level contracts
 import "./TWFactory.sol";
 
-// Access
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-
-// Utils
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 

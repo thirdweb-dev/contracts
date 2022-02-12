@@ -6,11 +6,9 @@ import "./TWRegistry.sol";
 import "./interfaces/IThirdwebModule.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
-
-import "@openzeppelin/contracts/utils/Multicall.sol";
-
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
@@ -23,9 +21,16 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     event ModuleImplementationAdded(bytes32 indexed moduleType, uint256 version, address implementation);
     event ImplementationApproved(address implementation, bool isApproved);
 
+    /// @dev mapping of module implementation address to deployment approval
     mapping(address => bool) public implementationApproval;
+
+    /// @dev mapping of module implementation address to deployment approval
     mapping(bytes32 => uint256) public currentModuleVersion;
+
+    /// @dev mapping of module type to module version to implementation address
     mapping(bytes32 => mapping(uint256 => address)) public modules;
+
+    /// @dev mapping of module address to deployer address
     mapping(address => address) public deployer;
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
@@ -75,17 +80,21 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
-    function addModuleImplementation(bytes32 _moduleType, address _implementation) external {
+    function addModuleImplementation(address _implementation) external {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
-        require(IThirdwebModule(_implementation).moduleType() == _moduleType, "invalid module type.");
 
-        currentModuleVersion[_moduleType] += 1;
-        uint256 version = currentModuleVersion[_moduleType];
+        IThirdwebModule module = IThirdwebModule(_implementation);
+        bytes32 moduleType = module.moduleType();
+        uint8 version = module.version();
+        require(moduleType.length > 0 && version > 0, "invalid module");
 
-        modules[_moduleType][version] = _implementation;
+        currentModuleVersion[moduleType] += 1;
+        require(currentModuleVersion[moduleType] == version, "wrong module version");
+
+        modules[moduleType][version] = _implementation;
         implementationApproval[_implementation] = true;
 
-        emit ModuleImplementationAdded(_moduleType, version, _implementation);
+        emit ModuleImplementationAdded(moduleType, version, _implementation);
     }
 
     /// @dev Lets a contract admin approve a specific contract for deployment.
