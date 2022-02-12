@@ -42,7 +42,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
     function deployProxy(bytes32 _type, bytes memory _data) external returns (address) {
-        bytes32 salt = keccak256(abi.encodePacked(_msgSender(), registry.getModuleCount(_msgSender())));
+        bytes32 salt = keccak256(abi.encodePacked(_msgSender(), registry.count(_msgSender())));
         return deployProxyDeterministic(_type, _data, salt);
     }
 
@@ -76,11 +76,11 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
         emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
 
-        registry.addModule(deployedProxy, _msgSender());
+        registry.add(_msgSender(), deployedProxy);
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
-    function addModuleImplementation(address _implementation) external {
+    function addImplementation(address _implementation) external {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
         IThirdwebContract module = IThirdwebContract(_implementation);

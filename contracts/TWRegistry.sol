@@ -13,37 +13,37 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     mapping(address => EnumerableSet.AddressSet) private deployments;
 
-    event ModuleAdded(address indexed moduleAddress, address indexed deployer);
-    event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
+    event Added(address indexed _address, address indexed deployer);
+    event Deleted(address indexed _address, address indexed deployer);
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OPERATOR_ROLE, _msgSender());
     }
 
-    function addModule(address _moduleAddress, address _deployer) external {
+    function add(address _deployer, address _address) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
 
-        bool added = deployments[_deployer].add(_moduleAddress);
-        require(added, "failed to add module.");
+        bool added = deployments[_deployer].add(_address);
+        require(added, "failed to add");
 
-        emit ModuleAdded(_moduleAddress, _deployer);
+        emit Added(_address, _deployer);
     }
 
-    function removeModule(address _moduleAddress, address _deployer) external {
+    function remove(address _deployer, address _address) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
-        bool removed = deployments[_deployer].remove(_moduleAddress);
-        require(removed, "failed to remove module.");
+        bool removed = deployments[_deployer].remove(_address);
+        require(removed, "failed to remove");
 
-        emit ModuleDeleted(_moduleAddress, _deployer);
+        emit Deleted(_address, _deployer);
     }
 
-    function getAllModules(address _deployer) external view returns (address[] memory) {
+    function getAll(address _deployer) external view returns (address[] memory) {
         return deployments[_deployer].values();
     }
 
-    function getModuleCount(address _deployer) external view returns (uint256) {
+    function count(address _deployer) external view returns (uint256) {
         return deployments[_deployer].length();
     }
 
