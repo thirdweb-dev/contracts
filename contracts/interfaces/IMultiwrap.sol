@@ -36,7 +36,7 @@ interface IMultiwrap is IThirdwebModule, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param shares The number of shares to issue for the wrapped contents.
      *  @param uriForShares The URI for the shares i.e. wrapped token.
      */
-    function wrap(WrappedContents calldata wrappedContents, uint256 shares, string calldata uriForShares) external;
+    function wrap(WrappedContents calldata wrappedContents, uint256 shares, string calldata uriForShares) external payable;
 
     /**
      *  @notice Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.

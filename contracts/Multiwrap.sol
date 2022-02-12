@@ -158,6 +158,7 @@ contract Multiwrap is
         string calldata _uriForShares
     )
         external
+        payable
         nonReentrant
     {
         uint256 tokenId = nextTokenIdToMint;
