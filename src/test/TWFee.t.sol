@@ -29,7 +29,6 @@ contract MockThirdwebModule is IThirdwebModule {
 }
 
 interface ITWFeeData {
-
     enum ExampleFeeTier {
         Basic,
         Growth,
@@ -43,8 +42,20 @@ interface ITWFeeData {
         Splits
     }
 
-    event TierForUser(address indexed user, uint256 indexed tier, address currencyForPayment, uint256 pricePaid, uint256 expirationTimestamp);
-    event PricingTierInfo(uint256 indexed tier, address indexed currency, bool isCurrencyApproved, uint256 _duration, uint256 priceForCurrency);
+    event TierForUser(
+        address indexed user,
+        uint256 indexed tier,
+        address currencyForPayment,
+        uint256 pricePaid,
+        uint256 expirationTimestamp
+    );
+    event PricingTierInfo(
+        uint256 indexed tier,
+        address indexed currency,
+        bool isCurrencyApproved,
+        uint256 _duration,
+        uint256 priceForCurrency
+    );
     event FeeInfoForTier(uint256 indexed tier, uint256 indexed feeType, address recipient, uint256 bps);
     event NewTreasury(address oldTreasury, address newTreasury);
 }
@@ -74,16 +85,12 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function setUp() public {
         vm.startPrank(moduleAdmin);
-        
+
         twFactory = new TWFactory(trustedForwarder);
         twRegistry = TWRegistry(twFactory.registry());
 
-        twFee = new TWFee(
-            trustedForwarder,
-            address(twRegistry),
-            thirdwebTreasury
-        );
-        
+        twFee = new TWFee(trustedForwarder, address(twRegistry), thirdwebTreasury);
+
         MockThirdwebModule mockModuleImpl = new MockThirdwebModule();
         twFactory.approveImplementation(address(mockModuleImpl), true);
         vm.stopPrank();
@@ -166,7 +173,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_setFeeInfoForTier_revert_notFeeAdmin() public {
         _setup_setFeeInfoForTier();
-        
+
         address recipientForTier = address(0x123);
         uint256 bpsForTier = 100;
 
@@ -183,7 +190,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_setFeeInfoForTier_revert_invalidFeeBps() public {
         _setup_setFeeInfoForTier();
-        
+
         address recipientForTier = address(0x123);
         uint256 bpsForTier = 101;
 
@@ -200,17 +207,12 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
     function test_setFeeInfoForTier_emit_FeeInfoForTier() public {
         _setup_setFeeInfoForTier();
-        
+
         address recipientForTier = address(0x123);
         uint256 bpsForTier = 100;
 
         vm.expectEmit(true, true, false, true);
-        emit FeeInfoForTier(
-            uint256(ExampleFeeTier.Basic), 
-            uint256(FeeType.PrimarySale),
-            recipientForTier,
-            bpsForTier
-        );
+        emit FeeInfoForTier(uint256(ExampleFeeTier.Basic), uint256(FeeType.PrimarySale), recipientForTier, bpsForTier);
 
         vm.prank(feeAdmin);
         twFee.setFeeInfoForTier(
@@ -230,31 +232,19 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
         vm.prank(moduleAdmin);
         twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic), 
-            durationForTier, 
-            currencyForTier, 
-            subscriptionAmount, 
+            uint256(ExampleFeeTier.Basic),
+            durationForTier,
+            currencyForTier,
+            subscriptionAmount,
             true
         );
 
-        assertTrue(
-            twFee.isCurrencyApproved(
-                uint256(ExampleFeeTier.Basic),
-                currencyForTier
-            )
-        );
-        assertEq(
-            twFee.priceToPayForCurrency(
-                uint256(ExampleFeeTier.Basic),
-                currencyForTier
-            ),
-            subscriptionAmount
-        );
+        assertTrue(twFee.isCurrencyApproved(uint256(ExampleFeeTier.Basic), currencyForTier));
+        assertEq(twFee.priceToPayForCurrency(uint256(ExampleFeeTier.Basic), currencyForTier), subscriptionAmount);
         assertEq(twFee.tierDuration(uint256(ExampleFeeTier.Basic)), durationForTier);
     }
 
     function test_setPricingTierInfo_revert_notModuleAdmin() public {
-        
         uint256 durationForTier = 30 days;
         uint256 subscriptionAmount = 1 ether;
         address currencyForTier = NATIVE_TOKEN;
@@ -262,13 +252,13 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         assertTrue(!twFee.hasRole(twFee.DEFAULT_ADMIN_ROLE(), feeAdmin));
 
         vm.expectRevert("not module admin.");
-        
+
         vm.prank(feeAdmin);
         twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic), 
-            durationForTier, 
-            currencyForTier, 
-            subscriptionAmount, 
+            uint256(ExampleFeeTier.Basic),
+            durationForTier,
+            currencyForTier,
+            subscriptionAmount,
             true
         );
     }
@@ -279,20 +269,14 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         address currencyForTier = NATIVE_TOKEN;
 
         vm.expectEmit(true, true, false, true);
-        emit PricingTierInfo(
-            uint256(ExampleFeeTier.Basic), 
-            currencyForTier,
-            true,
-            durationForTier, 
-            subscriptionAmount
-        );
+        emit PricingTierInfo(uint256(ExampleFeeTier.Basic), currencyForTier, true, durationForTier, subscriptionAmount);
 
         vm.prank(moduleAdmin);
         twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic), 
-            durationForTier, 
-            currencyForTier, 
-            subscriptionAmount, 
+            uint256(ExampleFeeTier.Basic),
+            durationForTier,
+            currencyForTier,
+            subscriptionAmount,
             true
         );
     }
@@ -335,10 +319,10 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
         vm.prank(moduleAdmin);
         twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic), 
-            durationForTier, 
-            currencyForTier, 
-            subscriptionAmount, 
+            uint256(ExampleFeeTier.Basic),
+            durationForTier,
+            currencyForTier,
+            subscriptionAmount,
             true
         );
     }
@@ -353,13 +337,12 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         twFee.selectSubscription(mockModuleDeployer, tier, subscriptionAmount, NATIVE_TOKEN);
 
         (address recipient, uint256 bps) = twFee.getFeeInfo(address(mockModule), uint256(FeeType.PrimarySale));
-        (address recipientForTier, uint256 bpsForTier) = _feeInfoForUpgradedTier();();
+        (address recipientForTier, uint256 bpsForTier) = _feeInfoForUpgradedTier();
 
         assertEq(recipient, recipientForTier);
         assertEq(bps, bpsForTier);
     }
 
-    
     /**
      *      =====   Attack vectors   =====
      *

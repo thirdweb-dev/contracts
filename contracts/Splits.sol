@@ -86,10 +86,7 @@ contract Splits is
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(
-            address(this),
-            FeeType.SPLITS
-        );
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _released[account] += payment;
@@ -113,10 +110,7 @@ contract Splits is
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(
-            address(this),
-            FeeType.SPLITS
-        );
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
         uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
 
         _erc20Released[token][account] += payment;

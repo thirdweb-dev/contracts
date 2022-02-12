@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
-
     /// @dev The thirdweb factory for deploying modules.
     TWFactory private immutable thirdwebFactory;
 
@@ -46,12 +45,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     event FeeInfoForTier(uint256 indexed tier, uint256 indexed feeType, address recipient, uint256 bps);
     event NewThirdwebPricing(address oldThirdwebPricing, address newThirdwebPricing);
 
-    constructor(
-        address _trustedForwarder,
-        address _thirdwebFactory
-    ) 
-        ERC2771Context(_trustedForwarder)
-    {
+    constructor(address _trustedForwarder, address _thirdwebFactory) ERC2771Context(_trustedForwarder) {
         thirdwebFactory = TWFactory(_thirdwebFactory);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -61,28 +55,31 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev Returns the fee tier for a user.
     function getFeeTier(address _user) public view returns (uint256 tier, uint256 secondsUntilExpiry) {
         Tier memory targetTier = tierForUser[_user];
-        
+
         tier = block.timestamp < targetTier.validUntilTimestamp ? targetTier.tier : 0;
-        secondsUntilExpiry = block.timestamp < targetTier.validUntilTimestamp ? targetTier.validUntilTimestamp - block.timestamp : 0;
+        secondsUntilExpiry = block.timestamp < targetTier.validUntilTimestamp
+            ? targetTier.validUntilTimestamp - block.timestamp
+            : 0;
     }
 
     /// @dev Returns the fee infor for a given module and fee type.
     function getFeeInfo(address _module, uint256 _feeType) external view returns (address recipient, uint256 bps) {
         address deployer = thirdwebFactory.deployer(_module);
-        (uint256 tier,) = getFeeTier(deployer);
-        
+        (uint256 tier, ) = getFeeTier(deployer);
+
         FeeInfo memory targetFeeInfo = feeInfo[tier][_feeType];
         (recipient, bps) = (targetFeeInfo.recipient, targetFeeInfo.bps);
     }
 
     /// @dev Lets a TIER_ADMIN_ROLE holder assign a tier to a user.
-    function setTierForUser(address _user, uint128 _tier, uint128 _validUntilTimestamp) external {
+    function setTierForUser(
+        address _user,
+        uint128 _tier,
+        uint128 _validUntilTimestamp
+    ) external {
         require(hasRole(TIER_ADMIN_ROLE, _msgSender()), "not tier admin.");
 
-        tierForUser[_user] = Tier({
-            tier: _tier,
-            validUntilTimestamp: _validUntilTimestamp
-        });
+        tierForUser[_user] = Tier({ tier: _tier, validUntilTimestamp: _validUntilTimestamp });
 
         emit TierForUser(_user, _tier, _validUntilTimestamp);
     }
@@ -93,9 +90,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
         uint256 _feeBps,
         address _feeRecipient,
         uint256 _feeType
-    ) 
-        external
-    {
+    ) external {
         require(_feeBps <= MAX_FEE_BPS, "fee too high.");
         require(hasRole(FEE_ROLE, _msgSender()), "not fee admin.");
 

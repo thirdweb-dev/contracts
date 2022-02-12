@@ -12,21 +12,18 @@ import { TokenERC721 } from "typechain/TokenERC721";
 import { TokenERC1155 } from "typechain/TokenERC1155";
 
 async function main() {
-
   // Constructor args
   const trustedForwarderAddress: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
 
-  // Deploy CurrencyTransferLib
-  const currencyTransferLib = await ethers.getContractFactory("CurrencyTransferLib").then(f => f.deploy());
   // Deploy FeeType
   const feeTypeLib = await ethers.getContractFactory("FeeType").then(f => f.deploy());
 
   const options = { gasPrice: ethers.utils.parseUnits("30", "gwei"), gasLimit: 7000000 };
 
   // Deploy TWFactory and TWRegistry
-  const thirdwebFactory: TWFactory = await ethers
+  const thirdwebFactory: TWFactory = (await ethers
     .getContractFactory("TWFactory")
-    .then(f => f.deploy(trustedForwarderAddress, options)) as TWFactory;
+    .then(f => f.deploy(trustedForwarderAddress, options))) as TWFactory;
   const deployTxFactory = thirdwebFactory.deployTransaction;
 
   console.log("Deploying TWFactory and TWRegistry at tx: ", deployTxFactory.hash);
@@ -39,15 +36,9 @@ async function main() {
   console.log("TWRegistry address: ", thirdwebRegistryAddr);
 
   // Deploy TWFee
-  const thirdwebFee: TWFee = await ethers
+  const thirdwebFee: TWFee = (await ethers
     .getContractFactory("TWFee")
-    .then(f =>
-      f.deploy(
-        trustedForwarderAddress,
-        thirdwebFactory.address,
-        options
-      ),
-    ) as TWFee;
+    .then(f => f.deploy(trustedForwarderAddress, thirdwebFactory.address, options))) as TWFee;
   const deployTxFee = thirdwebFee.deployTransaction;
 
   console.log("Deploying TWFee at tx: ", deployTxFee.hash);
@@ -58,7 +49,7 @@ async function main() {
 
   // Deploy a test implementation: Drop721
   const drop721Factory = await ethers.getContractFactory("DropERC721");
-  const drop721: DropERC721 = await drop721Factory.deploy(thirdwebFee.address, options) as DropERC721;
+  const drop721: DropERC721 = (await drop721Factory.deploy(thirdwebFee.address, options)) as DropERC721;
 
   console.log("Deploying Drop721 at tx: ", drop721.deployTransaction.hash);
 
@@ -74,7 +65,9 @@ async function main() {
   await tx1.wait();
 
   // Deploy a test implementation: Drop1155
-  const drop1155: DropERC1155 = await ethers.getContractFactory("DropERC1155").then(f => f.deploy(thirdwebFee.address, options)) as DropERC1155;
+  const drop1155: DropERC1155 = (await ethers
+    .getContractFactory("DropERC1155")
+    .then(f => f.deploy(thirdwebFee.address, options))) as DropERC1155;
 
   console.log("Deploying Drop1155 at tx: ", drop1155.deployTransaction.hash);
 
@@ -88,7 +81,9 @@ async function main() {
   await tx2.wait();
 
   // Deploy a test implementation: TokenERC20
-  const tokenERC20: TokenERC20 = await ethers.getContractFactory("TokenERC20").then(f => f.deploy(options)) as TokenERC20;
+  const tokenERC20: TokenERC20 = (await ethers
+    .getContractFactory("TokenERC20")
+    .then(f => f.deploy(options))) as TokenERC20;
   console.log("Deploying TokenERC20 at tx: ", tokenERC20.deployTransaction.hash);
   console.log("TokenERC20 address: ", tokenERC20.address);
 
@@ -100,7 +95,9 @@ async function main() {
   await tx3.wait();
 
   // Deploy a test implementation: TokenERC721
-  const tokenERC721: TokenERC721 = await ethers.getContractFactory("TokenERC721").then(f => f.deploy(thirdwebFee.address, options)) as TokenERC721;
+  const tokenERC721: TokenERC721 = (await ethers
+    .getContractFactory("TokenERC721")
+    .then(f => f.deploy(thirdwebFee.address, options))) as TokenERC721;
   console.log("Deploying TokenERC721 at tx: ", tokenERC721.deployTransaction.hash);
   console.log("TokenERC721 address: ", tokenERC721.address);
 
@@ -112,7 +109,9 @@ async function main() {
   await tx4.wait();
 
   // Deploy a test implementation: TokenERC1155
-  const tokenERC1155: TokenERC1155 = await ethers.getContractFactory("TokenERC1155").then(f => f.deploy(thirdwebFee.address, options)) as TokenERC1155;
+  const tokenERC1155: TokenERC1155 = (await ethers
+    .getContractFactory("TokenERC1155")
+    .then(f => f.deploy(thirdwebFee.address, options))) as TokenERC1155;
   console.log("Deploying TokenERC1155 at tx: ", tokenERC1155.deployTransaction.hash);
   console.log("TokenERC1155 address: ", tokenERC1155.address);
 
@@ -127,10 +126,6 @@ async function main() {
 
   // Verify deployed contracts.
   await hre.run("verify:verify", {
-    address: currencyTransferLib.address,
-    constructorArguments: [],
-  });
-  await hre.run("verify:verify", {
     address: thirdwebFactory.address,
     constructorArguments: [trustedForwarderAddress],
   });
@@ -140,10 +135,7 @@ async function main() {
   });
   await hre.run("verify:verify", {
     address: thirdwebFee.address,
-    constructorArguments: [
-      trustedForwarderAddress,
-      thirdwebFactory.address
-    ],
+    constructorArguments: [trustedForwarderAddress, thirdwebFactory.address],
   });
   await hre.run("verify:verify", {
     address: drop721.address,

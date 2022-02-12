@@ -244,12 +244,7 @@ contract Marketplace is
             // Transfer all escrowed tokens back to the lister, to be reflected in the lister's
             // balance for the upcoming ownership and approval check.
             if (isAuction) {
-                transferListingTokens(
-                    address(this),
-                    targetListing.tokenOwner,
-                    targetListing.quantity,
-                    targetListing
-                );
+                transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
             }
 
             validateOwnershipAndApproval(
@@ -367,7 +362,12 @@ contract Marketplace is
     }
 
     /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
-    function closeAuction(uint256 _listingId, address _closeFor) external override nonReentrant onlyExistingListing(_listingId) {
+    function closeAuction(uint256 _listingId, address _closeFor)
+        external
+        override
+        nonReentrant
+        onlyExistingListing(_listingId)
+    {
         Listing memory targetListing = listings[_listingId];
 
         require(targetListing.listingType == ListingType.Auction, "Marketplace: not an auction.");

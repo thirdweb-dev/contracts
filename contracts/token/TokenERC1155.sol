@@ -224,7 +224,7 @@ contract TokenERC1155 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.

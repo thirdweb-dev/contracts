@@ -13,7 +13,6 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "./lib/CurrencyTransferLib.sol";
 
 contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
-
     /// @dev The thirdweb store of fee info.
     TWFee private immutable thirdwebFee;
 
@@ -31,13 +30,25 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
 
     struct TierInfo {
         uint256 duration;
-        mapping (address => uint256) priceForCurrency;
+        mapping(address => uint256) priceForCurrency;
         mapping(address => bool) isCurrencyApproved;
     }
 
     /// @dev Events
-    event TierForUser(address indexed user, uint256 indexed tier, address currencyForPayment, uint256 pricePaid, uint256 expirationTimestamp);
-    event PricingTierInfo(uint256 indexed tier, address indexed currency, bool isCurrencyApproved, uint256 _duration, uint256 priceForCurrency);
+    event TierForUser(
+        address indexed user,
+        uint256 indexed tier,
+        address currencyForPayment,
+        uint256 pricePaid,
+        uint256 expirationTimestamp
+    );
+    event PricingTierInfo(
+        uint256 indexed tier,
+        address indexed currency,
+        bool isCurrencyApproved,
+        uint256 _duration,
+        uint256 priceForCurrency
+    );
     event NewTreasury(address oldTreasury, address newTreasury);
 
     /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
@@ -50,9 +61,7 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
         address _trustedForwarder,
         address _thirdwebTreasury,
         address _thirdwebFee
-    ) 
-        ERC2771Context(_trustedForwarder)
-    {
+    ) ERC2771Context(_trustedForwarder) {
         thirdwebTreasury = _thirdwebTreasury;
         thirdwebFee = TWFee(_thirdwebFee);
 
@@ -66,24 +75,23 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
         uint128 _cycles,
         uint256 _priceToPay,
         address _currencyToUse
-    )
-        external 
-        payable
-    {
+    ) external payable {
         address caller = _msgSender();
         require(
             _for == caller || isApproved[_for][caller] || hasRole(DEFAULT_ADMIN_ROLE, caller),
             "not approved to select tier."
         );
 
-        bool isValidPaymentInfo = _cycles != 0 && (tierInfo[_tier].isCurrencyApproved[_currencyToUse] || tierInfo[_tier].priceForCurrency[_currencyToUse] == _priceToPay);
+        bool isValidPaymentInfo = _cycles != 0 &&
+            (tierInfo[_tier].isCurrencyApproved[_currencyToUse] ||
+                tierInfo[_tier].priceForCurrency[_currencyToUse] == _priceToPay);
         require(isValidPaymentInfo, "invalid payment info.");
 
         uint256 durationForTier = tierInfo[_tier].duration * _cycles;
         require(durationForTier != 0, "invalid tier.");
-        
+
         (uint256 currentTier, uint256 secondsUntilExpiry) = thirdwebFee.getFeeTier(_for);
-        if(currentTier == _tier) {
+        if (currentTier == _tier) {
             durationForTier += secondsUntilExpiry;
         }
 
@@ -102,10 +110,7 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
         address _currencyToApprove,
         uint256 _priceForCurrency,
         bool _toApproveCurrency
-    )
-        external
-        onlyModuleAdmin
-    {
+    ) external onlyModuleAdmin {
         tierInfo[_tier].duration = _duration;
         tierInfo[_tier].isCurrencyApproved[_currencyToApprove] = _toApproveCurrency;
         tierInfo[_tier].priceForCurrency[_currencyToApprove] = _toApproveCurrency ? _priceForCurrency : 0;
@@ -123,18 +128,17 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
 
     //  =====   Getters   =====
 
-    function isCurrencyApproved(uint256 _tier, address _currency) external view returns(bool) {
+    function isCurrencyApproved(uint256 _tier, address _currency) external view returns (bool) {
         return tierInfo[_tier].isCurrencyApproved[_currency];
     }
 
-    function priceToPayForCurrency(uint256 _tier, address _currency) external view returns(uint256) {
+    function priceToPayForCurrency(uint256 _tier, address _currency) external view returns (uint256) {
         return tierInfo[_tier].priceForCurrency[_currency];
     }
 
-    function tierDuration(uint256 _tier) external view returns(uint256) {
+    function tierDuration(uint256 _tier) external view returns (uint256) {
         return tierInfo[_tier].duration;
     }
-   
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();

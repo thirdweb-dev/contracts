@@ -270,7 +270,7 @@ contract DropERC721 is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     /**

@@ -323,7 +323,7 @@ contract Bundle is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.

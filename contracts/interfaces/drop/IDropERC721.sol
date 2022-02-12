@@ -133,7 +133,11 @@ interface IDropERC721 is
      *  @param _baseURIForTokens The URI for the tokenIds of NFTs minted is baseURI + `${tokenId}`.
      *  @param _encryptedBaseURI Optional -- for delayed-reveal NFTs.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens, bytes calldata _encryptedBaseURI) external;
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _encryptedBaseURI
+    ) external;
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.

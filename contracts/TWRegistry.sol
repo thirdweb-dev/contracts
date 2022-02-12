@@ -12,7 +12,6 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     mapping(address => EnumerableSet.AddressSet) private deployments;
-    
 
     event ModuleAdded(address indexed moduleAddress, address indexed deployer);
     event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
