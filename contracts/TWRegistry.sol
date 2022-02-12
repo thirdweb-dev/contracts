@@ -14,30 +14,30 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev wallet address => [contract addresses]
     mapping(address => EnumerableSet.AddressSet) private deployments;
 
-    event Added(address indexed _address, address indexed deployer);
-    event Deleted(address indexed _address, address indexed deployer);
+    event Added(address indexed deployer, address indexed deployment);
+    event Deleted(address indexed deployer, address indexed deployment);
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OPERATOR_ROLE, _msgSender());
     }
 
-    function add(address _deployer, address _address) external {
+    function add(address _deployer, address _deployment) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator.");
 
-        bool added = deployments[_deployer].add(_address);
+        bool added = deployments[_deployer].add(_deployment);
         require(added, "failed to add");
 
-        emit Added(_address, _deployer);
+        emit Added(_deployment, _deployer);
     }
 
-    function remove(address _deployer, address _address) external {
+    function remove(address _deployer, address _deployment) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
-        bool removed = deployments[_deployer].remove(_address);
+        bool removed = deployments[_deployer].remove(_deployment);
         require(removed, "failed to remove");
 
-        emit Deleted(_address, _deployer);
+        emit Deleted(_deployment, _deployer);
     }
 
     function getAll(address _deployer) external view returns (address[] memory) {
