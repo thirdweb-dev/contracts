@@ -171,7 +171,7 @@ contract Multiwrap is
 
         transfer1155(_msgSender(), address(this), _wrappedContents);
         transfer721(_msgSender(), address(this), _wrappedContents);
-        transfer20(_msgSender(), address(this), _wrappedContents, _shares, _shares);
+        transfer20(_msgSender(), address(this), _wrappedContents);
 
         emit Wrapped(_msgSender(), tokenId, _wrappedContents);
     }
@@ -190,7 +190,7 @@ contract Multiwrap is
 
         transfer1155(address(this), _msgSender(), wrappedContents_);
         transfer721(address(this), _msgSender(), wrappedContents_);
-        transfer20(address(this), _msgSender(), wrappedContents_, totalSupplyOfToken, totalSupplyOfToken);
+        transfer20(address(this), _msgSender(), wrappedContents_);
 
         emit Unwrapped(_msgSender(), _tokenId, totalSupplyOfToken, wrappedContents_);
     }
@@ -213,7 +213,7 @@ contract Multiwrap is
             delete wrappedContents[_tokenId];
         }
 
-        transfer20(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalShares[_tokenId]);
+        transfer20ByShares(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalShares[_tokenId]);
 
         emit Unwrapped(_msgSender(), _tokenId, _amountToRedeem, wrappedContents_);
     }
@@ -250,6 +250,28 @@ contract Multiwrap is
     function transfer20(
         address _from,
         address _to,
+        WrappedContents memory _wrappedContents
+    ) 
+        internal
+    {
+
+        uint256 i;
+
+        bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
+        require(isValidData, "invalid erc20 wrap");
+        for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+            CurrencyTransferLib.transferCurrency(
+                _wrappedContents.erc20AssetContracts[i],
+                _from,
+                _to,
+                _wrappedContents.erc20AmountsToWrap[i]
+            );
+        }
+    }
+
+    function transfer20ByShares(
+        address _from,
+        address _to,
         WrappedContents memory _wrappedContents,
         uint256 _sharesToAccount,
         uint256 _totalShares
@@ -262,6 +284,10 @@ contract Multiwrap is
         bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
         require(isValidData, "invalid erc20 wrap");
         for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+            require(
+                _wrappedContents.erc20AmountsToWrap[i] % _totalShares == 0,
+                "cannot unwrap by shares"
+            );
             uint256 tokensToIssue = (_wrappedContents.erc20AmountsToWrap[i] * _sharesToAccount) / _totalShares;
 
             CurrencyTransferLib.transferCurrency(
