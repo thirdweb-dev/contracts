@@ -600,12 +600,12 @@ contract Marketplace is
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
+        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.MARKET_SALE);
-        uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
+        uint256 twFeeCut = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
-        uint256 royalties;
+        uint256 royaltyCut;
         address royaltyRecipient;
 
         // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
@@ -613,13 +613,13 @@ contract Marketplace is
             address royaltyFeeRecipient,
             uint256 royaltyFeeAmount
         ) {
-            if (royaltyFeeAmount > 0) {
+            if (royaltyFeeRecipient != address(0) && royaltyFeeAmount > 0) {
                 require(
-                    royaltyFeeAmount + marketCut <= _totalPayoutAmount,
+                    royaltyFeeAmount + platformFeeCut + twFeeCut <= _totalPayoutAmount,
                     "Marketplace: Total market fees exceed the price."
                 );
                 royaltyRecipient = royaltyFeeRecipient;
-                royalties = royaltyFeeAmount;
+                royaltyCut = royaltyFeeAmount;
             }
         } catch {}
 
@@ -630,16 +630,16 @@ contract Marketplace is
             _currencyToUse,
             _payer,
             platformFeeRecipient,
-            marketCut,
+            platformFeeCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties, _nativeTokenWrapper);
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royaltyCut, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFeeCut, _nativeTokenWrapper);
         CurrencyTransferLib.transferCurrency(
             _currencyToUse,
             _payer,
             _payee,
-            _totalPayoutAmount - (marketCut + royalties + twFee),
+            _totalPayoutAmount - (platformFeeCut + royaltyCut + twFeeCut),
             _nativeTokenWrapper
         );
     }
