@@ -62,15 +62,16 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     ) public returns (address deployedProxy) {
         require(implementationApproval[_implementation], "implementation not approved");
 
+        // slither-disable-next-line too-many-digits
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(_implementation, _data));
 
         deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
 
-        registry.addModule(deployedProxy, _msgSender());
-
         deployer[deployedProxy] = _msgSender();
 
         emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
+
+        registry.addModule(deployedProxy, _msgSender());
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
