@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-interface IThirdwebRestrictedTransfer {
+import "./IThirdwebContract.sol";
+
+interface IThirdwebRestrictedTransfer is IThirdwebContract {
     /// @dev Returns whether transfers on tokens are restricted.
     function isTransferRestricted() external view returns (bool);
 
