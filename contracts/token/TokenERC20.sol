@@ -16,7 +16,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 contract TokenERC20 is
     ITokenERC20,

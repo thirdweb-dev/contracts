@@ -10,7 +10,7 @@ import "./interfaces/IThirdwebOwnable.sol";
 import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 import "./lib/FeeType.sol";
 
