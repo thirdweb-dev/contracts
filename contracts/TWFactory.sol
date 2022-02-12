@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./TWProxy.sol";
 import "./TWRegistry.sol";
-import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebContract.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -18,19 +18,19 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
-    event ModuleImplementationAdded(bytes32 indexed moduleType, uint256 version, address implementation);
+    event ImplementationAdded(bytes32 indexed contractType, uint256 version, address implementation);
     event ImplementationApproved(address implementation, bool isApproved);
 
-    /// @dev mapping of module implementation address to deployment approval
-    mapping(address => bool) public implementationApproval;
+    /// @dev mapping of implementation address to deployment approval
+    mapping(address => bool) public approval;
 
-    /// @dev mapping of module implementation address to deployment approval
-    mapping(bytes32 => uint256) public currentModuleVersion;
+    /// @dev mapping of implementation address to implementation added version
+    mapping(bytes32 => uint256) public currentVersion;
 
-    /// @dev mapping of module type to module version to implementation address
-    mapping(bytes32 => mapping(uint256 => address)) public modules;
+    /// @dev mapping of contract type to module version to implementation address
+    mapping(bytes32 => mapping(uint256 => address)) public implementation;
 
-    /// @dev mapping of module address to deployer address
+    /// @dev mapping of proxy address to deployer address
     mapping(address => address) public deployer;
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
@@ -41,9 +41,9 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
-    function deployProxy(bytes32 _moduleType, bytes memory _data) external returns (address) {
+    function deployProxy(bytes32 _type, bytes memory _data) external returns (address) {
         bytes32 salt = keccak256(abi.encodePacked(_msgSender(), registry.getModuleCount(_msgSender())));
-        return deployProxyDeterministic(_moduleType, _data, salt);
+        return deployProxyDeterministic(_type, _data, salt);
     }
 
     /**
@@ -51,12 +51,12 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
      *       Proxy points to the latest version of the given module type.
      */
     function deployProxyDeterministic(
-        bytes32 _moduleType,
+        bytes32 _type,
         bytes memory _data,
         bytes32 _salt
     ) public returns (address) {
-        address implementation = modules[_moduleType][currentModuleVersion[_moduleType]];
-        return deployProxyByImplementation(implementation, _data, _salt);
+        address _implementation = implementation[_type][currentVersion[_type]];
+        return deployProxyByImplementation(_implementation, _data, _salt);
     }
 
     /// @dev Deploys a proxy that points to the given implementation.
@@ -65,7 +65,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         bytes memory _data,
         bytes32 _salt
     ) public returns (address deployedProxy) {
-        require(implementationApproval[_implementation], "implementation not approved");
+        require(approval[_implementation], "implementation not approved");
 
         // slither-disable-next-line too-many-digits
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(_implementation, _data));
@@ -83,32 +83,32 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     function addModuleImplementation(address _implementation) external {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
-        IThirdwebModule module = IThirdwebModule(_implementation);
-        bytes32 moduleType = module.moduleType();
-        uint8 version = module.version();
-        require(moduleType.length > 0 && version > 0, "invalid module");
+        IThirdwebContract module = IThirdwebContract(_implementation);
+        bytes32 _type = module.contractType();
+        uint8 version = module.contractVersion();
+        require(_type.length > 0 && version > 0, "invalid module");
 
-        currentModuleVersion[moduleType] += 1;
-        require(currentModuleVersion[moduleType] == version, "wrong module version");
+        currentVersion[_type] += 1;
+        require(currentVersion[_type] == version, "wrong module version");
 
-        modules[moduleType][version] = _implementation;
-        implementationApproval[_implementation] = true;
+        implementation[_type][version] = _implementation;
+        approval[_implementation] = true;
 
-        emit ModuleImplementationAdded(moduleType, version, _implementation);
+        emit ImplementationAdded(_type, version, _implementation);
     }
 
     /// @dev Lets a contract admin approve a specific contract for deployment.
     function approveImplementation(address _implementation, bool _toApprove) external {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
-        implementationApproval[_implementation] = _toApprove;
+        approval[_implementation] = _toApprove;
 
         emit ImplementationApproved(_implementation, _toApprove);
     }
 
     /// @dev Returns the implementation given a module type and version.
-    function getImplementation(bytes32 _moduleType, uint256 _version) external view returns (address) {
-        return modules[_moduleType][_version];
+    function getImplementation(bytes32 _type, uint256 _version) external view returns (address) {
+        return implementation[_type][_version];
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

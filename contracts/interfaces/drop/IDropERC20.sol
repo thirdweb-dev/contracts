@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../IThirdwebModule.sol";
+import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 
@@ -13,7 +13,7 @@ import "../IThirdwebPrimarySale.sol";
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC20 is IThirdwebModule, IThirdwebPrimarySale, IThirdwebPlatformFee {
+interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee {
     /**
      *  @notice The restrictions that make up a claim condition.
      *

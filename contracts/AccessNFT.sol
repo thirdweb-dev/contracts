@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
-import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
@@ -22,7 +22,7 @@ import "./TWFee.sol";
 
 contract AccessNFT is
     IERC2981,
-    IThirdwebModule,
+    IThirdwebContract,
     IThirdwebOwnable,
     Initializable,
     ERC2771ContextUpgradeable,
@@ -184,12 +184,12 @@ contract AccessNFT is
      */
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint8) {
+    function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
     }
 

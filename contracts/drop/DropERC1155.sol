@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
@@ -154,12 +154,12 @@ contract DropERC1155 is
     ///     =====   Public functions  =====
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint8) {
+    function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
     }
 

@@ -6,10 +6,10 @@ import "./TWFee.sol";
 
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
-import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebContract.sol";
 
 // Meta-tx
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Access
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -19,7 +19,7 @@ import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
 import "./lib/FeeType.sol";
 
 contract Splits is
-    IThirdwebModule,
+    IThirdwebContract,
     Initializable,
     MulticallUpgradeable,
     ERC2771ContextUpgradeable,
@@ -65,12 +65,12 @@ contract Splits is
     }
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint8) {
+    function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
     }
 

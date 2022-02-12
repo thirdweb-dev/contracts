@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../IThirdwebModule.sol";
+import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
@@ -12,7 +12,7 @@ import "../IThirdwebOwnable.sol";
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
 interface ITokenERC1155 is
-    IThirdwebModule,
+    IThirdwebContract,
     IThirdwebOwnable,
     IThirdwebRoyalty,
     IThirdwebPrimarySale,

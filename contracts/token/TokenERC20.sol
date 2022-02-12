@@ -13,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpg
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
@@ -86,12 +86,12 @@ contract TokenERC20 is
     }
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure virtual returns (bytes32) {
+    function contractType() external pure virtual returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure virtual returns (uint8) {
+    function contractVersion() external pure virtual returns (uint8) {
         return uint8(VERSION);
     }
 
