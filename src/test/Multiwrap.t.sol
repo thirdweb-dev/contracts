@@ -23,6 +23,53 @@ interface IMultiwrapEvents {
     event Unwrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, uint256 sharesUnwrapped, Multiwrap.WrappedContents wrappedContents);
 }
 
+contract MockERC20Reentrancy is MockERC20 {
+
+    uint256 targetTokenId;
+    Multiwrap multiwrap;
+
+    bool toReenter;
+
+    constructor(address _multiwrap) MockERC20() {
+        multiwrap = Multiwrap(_multiwrap);
+    }
+
+    function setToReenter(bool _toReenter) external {
+        toReenter = _toReenter;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+
+        if(_msgSender() == address(multiwrap) && toReenter) {
+            multiwrap.unwrap(targetTokenId);
+        } else {
+            _transfer(sender, recipient, amount);
+
+            uint256 currentAllowance = allowance(sender,_msgSender());
+            require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+            unchecked {
+                _approve(sender, _msgSender(), currentAllowance - amount);
+            }
+        }
+
+        return true;
+    }
+
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        if(_msgSender() == address(multiwrap)) {
+            multiwrap.unwrap(targetTokenId);
+        } else {
+            _transfer(_msgSender(), recipient, amount);
+        }
+        
+        return true;
+    }
+}
+
 contract MultiwrapTest is BaseTest, IMultiwrapEvents {
     // Target contract
     Multiwrap internal multiwrap;
@@ -576,5 +623,119 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
 
         vm.prank(tokenOwner);
         multiwrap.unwrapByShares(tokenIdOfWrapped, sharesToRedeem);
+    }
+
+    //  =====   Attack vectors  =====
+    /**
+     *      - Re-entrancy on `unwrap` and `unwrapByShares`.
+     *      - `unwrapByShares` should always honor the correct
+     *         amount of shares.
+     */
+    
+    MockERC20Reentrancy mockERC20Reentrancy;
+    
+    function _setup_unwrap_reentrancy() internal returns (uint256 tokenIdOfWrapped) {
+        vm.startPrank(tokenOwner);
+
+        mockERC20Reentrancy = new MockERC20Reentrancy(address(multiwrap));
+        mockERC20Reentrancy.mint(tokenOwner, erc20AmountToWrap);
+
+        mockERC721 = new MockERC721();
+        mockERC721.mint(erc721TokensToWrap.length);
+
+        mockERC1155 = new MockERC1155();
+        mockERC1155.mintBatch(
+            tokenOwner,
+            erc1155TokensToWrap,
+            erc1155AmountsToWrap,
+            ""
+        );
+
+        vm.stopPrank();
+
+        IMultiwrap.WrappedContents memory onlyERC20Wrapped = _get_onlyWrapERC20Reentrancy();
+
+        setApproval20(
+            onlyERC20Wrapped.erc20AssetContracts, 
+            onlyERC20Wrapped.erc20AmountsToWrap,
+            true,
+            tokenOwner,
+            address(multiwrap)
+        );
+
+        uint256 sharesToMint = 10;
+        string memory uriForShares = "ipfs://shares";
+
+        tokenIdOfWrapped = multiwrap.nextTokenIdToMint();
+
+        vm.prank(tokenOwner);
+        multiwrap.wrap(onlyERC20Wrapped, sharesToMint, uriForShares);
+    }
+    function _get_onlyWrapERC20Reentrancy() internal view returns (IMultiwrap.WrappedContents memory onlyERC20Wrapped)  {
+
+        address[] memory erc1155AssetContracts_;
+        uint256[][] memory erc1155TokensToWrap_;
+        uint256[][] memory erc1155AmountsToWrap_;
+
+        address[] memory erc721AssetContracts_;
+        uint256[][] memory erc721TokensToWrap_;
+        
+        address[] memory erc20AssetContracts_ = new address[](1);
+        erc20AssetContracts_[0] = address(mockERC20Reentrancy);
+        
+        uint256[] memory erc20AmountsToWrap_ = new uint256[](1);
+        erc20AmountsToWrap_[0] = erc20AmountToWrap;
+
+        return IMultiwrap.WrappedContents({
+            erc1155AssetContracts: erc1155AssetContracts_,
+            erc1155TokensToWrap: erc1155TokensToWrap_,
+            erc1155AmountsToWrap: erc1155AmountsToWrap_,
+            erc721AssetContracts: erc721AssetContracts_,
+            erc721TokensToWrap: erc721TokensToWrap_,
+            erc20AssetContracts: erc20AssetContracts_,
+            erc20AmountsToWrap: erc20AmountsToWrap_
+        });
+    }
+    
+    function test_unwrap_reentrancy() public {
+        uint256 tokenIdOfWrapped = _setup_unwrap_reentrancy();
+
+        mockERC20Reentrancy.setToReenter(true);
+
+        vm.expectRevert("ReentrancyGuard: reentrant call");
+
+        vm.prank(tokenOwner);
+        multiwrap.unwrap(tokenIdOfWrapped);
+    }
+
+    function test_unwrapByShares_reentrancy() public {
+        uint256 tokenIdOfWrapped = _setup_unwrap_reentrancy();
+
+        uint256 totalShares = multiwrap.totalShares(tokenIdOfWrapped);
+        uint256 sharesToRedeem = (totalShares * 10) / 100; // 10%
+
+        mockERC20Reentrancy.setToReenter(true);
+
+        vm.expectRevert("ReentrancyGuard: reentrant call");
+
+        vm.prank(tokenOwner);
+        multiwrap.unwrapByShares(tokenIdOfWrapped, sharesToRedeem);
+    }
+
+    function test_unwrapByShares_fuzz(uint256 x) public {
+        uint256 tokenIdOfWrapped =_setup_unwrapByShares();
+
+        uint256 totalShares = multiwrap.totalShares(tokenIdOfWrapped);
+        uint256 sharesToRedeem = x < totalShares ? x : x % totalShares;
+
+        uint256 expectedRedeemAmount = (erc20AmountToWrap * sharesToRedeem) / totalShares;
+        uint256 ownerBalBefore = mockERC20.balanceOf(tokenOwner);
+        uint256 totalSupplyBefore = multiwrap.totalSupply(tokenIdOfWrapped);
+
+        vm.prank(tokenOwner);
+        multiwrap.unwrapByShares(tokenIdOfWrapped, sharesToRedeem);
+
+        assertEq(mockERC20.balanceOf(tokenOwner), ownerBalBefore + expectedRedeemAmount);
+        assertEq(multiwrap.totalSupply(tokenIdOfWrapped), totalSupplyBefore - sharesToRedeem);
     }
 }

@@ -177,7 +177,7 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(uint256 _tokenId) external {
+    function unwrap(uint256 _tokenId) external nonReentrant {
         uint256 totalSupplyOfToken = totalSupply[_tokenId];
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(balanceOf(_msgSender(), _tokenId) == totalSupplyOfToken, "must own all shares to unwrap");
@@ -196,7 +196,7 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap shares to retrieve share of underlying ERC20 tokens.
-    function unwrapByShares(uint256 _tokenId, uint256 _amountToRedeem) external {
+    function unwrapByShares(uint256 _tokenId, uint256 _amountToRedeem) external nonReentrant {
         
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(balanceOf(_msgSender(), _tokenId) >= _amountToRedeem, "unwrapping more than owned");
