@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 // Test imports
 import "./utils/BaseTest.sol";
 import "contracts/TWFactory.sol";
+import "contracts/TWRegistry.sol";
 
 // Helpers
 import "contracts/TWProxy.sol";
@@ -42,7 +43,8 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
     // Actors
     address internal factoryDeployer = address(0x1);
-    address internal moduleDeployer = address(0x2);
+    address internal moduleDeployer = address(0x20);
+    address internal moduleDeployer2 = address(0x21);
 
     // Test params
     address internal trustedForwarder = address(0x3);
@@ -248,15 +250,24 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         _setUp_deployProxy();
 
         bytes32 moduleType = mockModule.moduleType();
-        bytes32 _salt = keccak256(abi.encodePacked(moduleType, block.number));
-
-        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
-        address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(twFactory));
 
         vm.prank(moduleDeployer);
-        twFactory.deployProxy(moduleType, "");
+        address proxyAddr = twFactory.deployProxy(moduleType, "");
 
-        assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
+        assertEq(mockModule.moduleType(), MockThirdwebModule(proxyAddr).moduleType());
+    }
+
+    function test_deployProxy_sameBlock() public {
+        _setUp_deployProxy();
+
+        bytes32 moduleType = mockModule.moduleType();
+
+        vm.startPrank(moduleDeployer);
+        address proxyAddr = twFactory.deployProxy(moduleType, "");
+        address proxyAddr2 = twFactory.deployProxy(moduleType, "");
+
+        assertTrue(proxyAddr != proxyAddr2);
+        assertEq(mockModule.moduleType(), MockThirdwebModule(proxyAddr).moduleType());
     }
 
     function test_deployProxy_revert_invalidImpl() public {

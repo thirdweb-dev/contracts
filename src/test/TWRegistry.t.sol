@@ -60,6 +60,14 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         address[] memory modules = twRegistry.getAllModules(deployer);
         assertEq(modules.length, 1);
         assertEq(modules[0], mockModuleAddress);
+        assertEq(twRegistry.getModuleCount(deployer), 1);
+
+        vm.prank(factory);
+        twRegistry.addModule(address(0x42), deployer);
+        modules = twRegistry.getAllModules(deployer);
+        assertEq(modules.length, 2);
+        assertEq(modules[1], address(0x42));
+        assertEq(twRegistry.getModuleCount(deployer), 2);
     }
 
     function test_addModule_revert_notOperator() public {
