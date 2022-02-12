@@ -11,6 +11,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    /// @dev wallet address => [contract addresses]
     mapping(address => EnumerableSet.AddressSet) private deployments;
 
     event Added(address indexed _address, address indexed deployer);
@@ -22,7 +23,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     function add(address _deployer, address _address) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
+        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator.");
 
         bool added = deployments[_deployer].add(_address);
         require(added, "failed to add");
