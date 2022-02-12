@@ -89,7 +89,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         twFactory = new TWFactory(trustedForwarder);
         twRegistry = TWRegistry(twFactory.registry());
 
-        twFee = new TWFee(trustedForwarder, address(twRegistry), thirdwebTreasury);
+        twFee = new TWFee(trustedForwarder, address(twRegistry));
 
         MockThirdwebModule mockModuleImpl = new MockThirdwebModule();
         twFactory.approveImplementation(address(mockModuleImpl), true);
@@ -114,7 +114,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
      *  - Deployer of the contract has `FEE_ROLE`
      */
     function test_initalState(uint256 _feeType) public {
-        assertEq(twRegistry.deployer(address(mockModule)), mockModuleDeployer);
+        assertEq(twFactory.deployer(address(mockModule)), mockModuleDeployer);
 
         bytes32 defaultAdminRole = twFee.DEFAULT_ADMIN_ROLE();
         bytes32 feeRole = twFee.FEE_ROLE();
@@ -221,126 +221,6 @@ contract TWFeeTest is ITWFeeData, BaseTest {
             recipientForTier,
             uint256(FeeType.PrimarySale)
         );
-    }
-
-    /// @dev Test `setPricingTierInfo`
-
-    function test_setPricingTierInfo() public {
-        uint256 durationForTier = 30 days;
-        uint256 subscriptionAmount = 1 ether;
-        address currencyForTier = NATIVE_TOKEN;
-
-        vm.prank(moduleAdmin);
-        twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic),
-            durationForTier,
-            currencyForTier,
-            subscriptionAmount,
-            true
-        );
-
-        assertTrue(twFee.isCurrencyApproved(uint256(ExampleFeeTier.Basic), currencyForTier));
-        assertEq(twFee.priceToPayForCurrency(uint256(ExampleFeeTier.Basic), currencyForTier), subscriptionAmount);
-        assertEq(twFee.tierDuration(uint256(ExampleFeeTier.Basic)), durationForTier);
-    }
-
-    function test_setPricingTierInfo_revert_notModuleAdmin() public {
-        uint256 durationForTier = 30 days;
-        uint256 subscriptionAmount = 1 ether;
-        address currencyForTier = NATIVE_TOKEN;
-
-        assertTrue(!twFee.hasRole(twFee.DEFAULT_ADMIN_ROLE(), feeAdmin));
-
-        vm.expectRevert("not module admin.");
-
-        vm.prank(feeAdmin);
-        twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic),
-            durationForTier,
-            currencyForTier,
-            subscriptionAmount,
-            true
-        );
-    }
-
-    function test_setPricingTierInfo_emit_PricingTierInfo() public {
-        uint256 durationForTier = 30 days;
-        uint256 subscriptionAmount = 1 ether;
-        address currencyForTier = NATIVE_TOKEN;
-
-        vm.expectEmit(true, true, false, true);
-        emit PricingTierInfo(uint256(ExampleFeeTier.Basic), currencyForTier, true, durationForTier, subscriptionAmount);
-
-        vm.prank(moduleAdmin);
-        twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic),
-            durationForTier,
-            currencyForTier,
-            subscriptionAmount,
-            true
-        );
-    }
-
-    /// @dev Test `selectSubscription`
-
-    function _feeInfoForDefaultTier() internal returns (address, uint256) {
-        return (address(0x123), 100);
-    }
-
-    function _feeInfoForUpgradedTier() internal returns (address, uint256) {
-        return (address(0x12345), 50);
-    }
-
-    function _setup_selectSubscription() internal {
-        _setup_setFeeInfoForTier();
-
-        (address recipientForDefualtTier, uint256 bpsForDefaultTier) = _feeInfoForDefaultTier();
-        (address recipientForUpgradedTier, uint256 bpsForUpgradedTier) = _feeInfoForUpgradedTier();
-
-        vm.prank(feeAdmin);
-        twFee.setFeeInfoForTier(
-            uint256(ExampleFeeTier.Basic),
-            bpsForDefaultTier,
-            recipientForDefualtTier,
-            uint256(FeeType.PrimarySale)
-        );
-
-        vm.prank(feeAdmin);
-        twFee.setFeeInfoForTier(
-            uint256(ExampleFeeTier.Growth),
-            bpsForUpgradedTier,
-            recipientForUpgradedTier,
-            uint256(FeeType.PrimarySale)
-        );
-
-        uint256 durationForTier = 30 days;
-        uint256 subscriptionAmount = 1 ether;
-        address currencyForTier = NATIVE_TOKEN;
-
-        vm.prank(moduleAdmin);
-        twFee.setPricingTierInfo(
-            uint256(ExampleFeeTier.Basic),
-            durationForTier,
-            currencyForTier,
-            subscriptionAmount,
-            true
-        );
-    }
-
-    function test_selectSubscription() public {
-        uint256 tier = uint256(ExampleFeeTier.Growth);
-        uint256 subscriptionAmount = twFee.priceToPayForCurrency(tier, NATIVE_TOKEN);
-
-        vm.deal(payer, subscriptionAmount);
-
-        vm.prank(payer);
-        twFee.selectSubscription(mockModuleDeployer, tier, subscriptionAmount, NATIVE_TOKEN);
-
-        (address recipient, uint256 bps) = twFee.getFeeInfo(address(mockModule), uint256(FeeType.PrimarySale));
-        (address recipientForTier, uint256 bpsForTier) = _feeInfoForUpgradedTier();
-
-        assertEq(recipient, recipientForTier);
-        assertEq(bps, bpsForTier);
     }
 
     /**
