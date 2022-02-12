@@ -28,7 +28,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         bool added = deployments[_deployer].add(_deployment);
         require(added, "failed to add");
 
-        emit Added(_deployment, _deployer);
+        emit Added(_deployer, _deployment);
     }
 
     function remove(address _deployer, address _deployment) external {
@@ -37,7 +37,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         bool removed = deployments[_deployer].remove(_deployment);
         require(removed, "failed to remove");
 
-        emit Deleted(_deployment, _deployer);
+        emit Deleted(_deployer, _deployment);
     }
 
     function getAll(address _deployer) external view returns (address[] memory) {

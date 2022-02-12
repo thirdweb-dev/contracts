@@ -2,31 +2,15 @@
 pragma solidity ^0.8.0;
 
 // Test imports
+import "./mocks/MockThirdwebContract.sol";
 import "./utils/BaseTest.sol";
 import "contracts/TWFee.sol";
 
 // Helpers
-import "contracts/interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import "contracts/TWProxy.sol";
-
-contract MockThirdwebModule is IThirdwebModule {
-    string public contractURI;
-
-    function moduleType() external pure returns (bytes32) {
-        return bytes32("MOCK");
-    }
-
-    function version() external pure returns (uint8) {
-        return 1;
-    }
-
-    function setContractURI(string calldata _uri) external {
-        contractURI = _uri;
-    }
-}
 
 interface ITWFeeData {
     enum ExampleFeeTier {
@@ -67,7 +51,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
     // Helper contracts
     TWRegistry internal twRegistry;
     TWFactory internal twFactory;
-    MockThirdwebModule internal mockModule;
+    MockThirdwebContract internal mockModule;
 
     // Actors
     address internal mockModuleDeployer;
@@ -91,7 +75,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
 
         twFee = new TWFee(trustedForwarder, address(twRegistry));
 
-        MockThirdwebModule mockModuleImpl = new MockThirdwebModule();
+        MockThirdwebContract mockModuleImpl = new MockThirdwebContract();
         twFactory.approveImplementation(address(mockModuleImpl), true);
         vm.stopPrank();
 
@@ -102,7 +86,7 @@ contract TWFeeTest is ITWFeeData, BaseTest {
         vm.prank(mockModuleDeployer);
         twFactory.deployProxyByImplementation(address(mockModuleImpl), "", salt);
 
-        mockModule = MockThirdwebModule(computedProxyAddr);
+        mockModule = MockThirdwebContract(computedProxyAddr);
     }
 
     //  =====   Initial state   =====

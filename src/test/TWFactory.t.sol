@@ -8,29 +8,13 @@ import "contracts/TWRegistry.sol";
 
 // Helpers
 import "contracts/TWProxy.sol";
-import "contracts/interfaces/IThirdwebModule.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "./utils/Console.sol";
-
-contract MockThirdwebModule is IThirdwebModule {
-    string public contractURI;
-
-    function moduleType() external pure returns (bytes32) {
-        return bytes32("MOCK");
-    }
-
-    function version() external pure returns (uint8) {
-        return 1;
-    }
-
-    function setContractURI(string calldata _uri) external {
-        contractURI = _uri;
-    }
-}
+import "./mocks/MockThirdwebContract.sol";
 
 interface ITWFactoryData {
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
-    event NewModuleImplementation(bytes32 indexed moduleType, uint256 version, address implementation);
+    event NewModuleImplementation(bytes32 indexed contractType, uint256 version, address implementation);
     event ImplementationApproved(address implementation, bool isApproved);
 }
 
@@ -39,7 +23,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     TWFactory internal twFactory;
 
     // Secondary contracts
-    MockThirdwebModule internal mockModule;
+    MockThirdwebContract internal mockModule;
 
     // Actors
     address internal factoryDeployer = address(0x1);
@@ -57,7 +41,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         twFactory = new TWFactory(trustedForwarder);
 
         vm.prank(moduleDeployer);
-        mockModule = new MockThirdwebModule();
+        mockModule = new MockThirdwebContract();
     }
 
     //  =====   Initial state   =====
@@ -73,53 +57,53 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
     //  =====   Functionality tests   =====
 
-    /// @dev Test `addModuleImplementation`
+    /// @dev Test `addImplementation`
 
-    function test_addModuleImplementation() public {
-        bytes32 moduleType = mockModule.moduleType();
-        uint256 moduleVersion = mockModule.version();
-        uint256 moduleVersionOnFactory = twFactory.currentModuleVersion(moduleType);
+    function test_addImplementation() public {
+        bytes32 contractType = mockModule.contractType();
+        uint256 moduleVersion = mockModule.contractVersion();
+        uint256 moduleVersionOnFactory = twFactory.currentVersion(contractType);
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(address(mockModule));
+        twFactory.addImplementation(address(mockModule));
 
-        assertTrue(twFactory.implementationApproval(address(mockModule)));
-        assertEq(address(mockModule), twFactory.modules(moduleType, moduleVersion));
-        assertEq(twFactory.currentModuleVersion(moduleType), moduleVersionOnFactory + 1);
-        assertEq(twFactory.getImplementation(moduleType, moduleVersion), address(mockModule));
+        assertTrue(twFactory.approval(address(mockModule)));
+        assertEq(address(mockModule), twFactory.implementation(contractType, moduleVersion));
+        assertEq(twFactory.currentVersion(contractType), moduleVersionOnFactory + 1);
+        assertEq(twFactory.getImplementation(contractType, moduleVersion), address(mockModule));
     }
 
-    function test_addModuleImplementation_revert_invalidCaller() public {
-        bytes32 moduleType = mockModule.moduleType();
+    function test_addImplementation_revert_invalidCaller() public {
+        bytes32 contractType = mockModule.contractType();
 
         vm.expectRevert("not admin.");
 
         vm.prank(moduleDeployer);
-        twFactory.addModuleImplementation(address(mockModule));
+        twFactory.addImplementation(address(mockModule));
     }
 
-    function test_addModuleImplementation_emit_NewModuleImplementation() public {
-        bytes32 moduleType = mockModule.moduleType();
-        uint256 moduleVersion = mockModule.version();
+    function test_addImplementation_emit_NewModuleImplementation() public {
+        bytes32 contractType = mockModule.contractType();
+        uint256 moduleVersion = mockModule.contractVersion();
 
         vm.expectEmit(true, false, false, true);
-        emit NewModuleImplementation(moduleType, moduleVersion, address(mockModule));
+        emit NewModuleImplementation(contractType, moduleVersion, address(mockModule));
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(address(mockModule));
+        twFactory.addImplementation(address(mockModule));
     }
 
     /// @dev Test `approveImplementation`
 
     function test_approveImplementation() public {
-        assertTrue(twFactory.implementationApproval(address(mockModule)) == false);
-        assertTrue(twFactory.currentModuleVersion(mockModule.moduleType()) == 0);
+        assertTrue(twFactory.approval(address(mockModule)) == false);
+        assertTrue(twFactory.currentVersion(mockModule.contractType()) == 0);
 
         vm.prank(factoryDeployer);
         twFactory.approveImplementation(address(mockModule), true);
 
-        assertTrue(twFactory.implementationApproval(address(mockModule)));
-        assertTrue(twFactory.currentModuleVersion(mockModule.moduleType()) == 0);
+        assertTrue(twFactory.approval(address(mockModule)));
+        assertTrue(twFactory.currentVersion(mockModule.contractType()) == 0);
     }
 
     function test_approveImplementation_revert_invalidCaller() public {
@@ -154,7 +138,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         vm.prank(moduleDeployer);
         twFactory.deployProxyByImplementation(address(mockModule), "", _salt);
 
-        assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
+        assertEq(mockModule.contractType(), MockThirdwebContract(computedProxyAddr).contractType());
     }
 
     function test_deployProxyByImplementation_revert_invalidImpl() public {
@@ -181,39 +165,39 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     /// @dev Test `deployProxyDeterministic`
 
     function _setUp_deployProxyDeterministic() internal {
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(address(mockModule));
+        twFactory.addImplementation(address(mockModule));
     }
 
     function test_deployProxyDeterministic(bytes32 _salt) public {
         _setUp_deployProxyDeterministic();
 
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
         address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(twFactory));
 
         vm.prank(moduleDeployer);
-        twFactory.deployProxyDeterministic(moduleType, "", _salt);
+        twFactory.deployProxyDeterministic(contractType, "", _salt);
 
-        assertEq(mockModule.moduleType(), MockThirdwebModule(computedProxyAddr).moduleType());
+        assertEq(mockModule.contractType(), MockThirdwebContract(computedProxyAddr).contractType());
     }
 
     function test_deployProxyDeterministic_revert_invalidImpl(bytes32 _salt) public {
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         vm.expectRevert("implementation not approved");
 
         vm.prank(moduleDeployer);
-        twFactory.deployProxyDeterministic(moduleType, "", _salt);
+        twFactory.deployProxyDeterministic(contractType, "", _salt);
     }
 
     function test_deployProxyDeterministic_emit_ProxyDeployed() public {
         _setUp_deployProxyDeterministic();
 
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         bytes32 salt = bytes32("Random");
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
@@ -223,57 +207,57 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         emit ProxyDeployed(address(mockModule), computedProxyAddr, moduleDeployer);
 
         vm.prank(moduleDeployer);
-        twFactory.deployProxyDeterministic(moduleType, "", salt);
+        twFactory.deployProxyDeterministic(contractType, "", salt);
     }
 
     /// @dev Test `deployProxy`
 
     function _setUp_deployProxy() internal {
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         vm.prank(factoryDeployer);
-        twFactory.addModuleImplementation(address(mockModule));
+        twFactory.addImplementation(address(mockModule));
     }
 
     function test_deployProxy() public {
         _setUp_deployProxy();
 
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         vm.prank(moduleDeployer);
-        address proxyAddr = twFactory.deployProxy(moduleType, "");
+        address proxyAddr = twFactory.deployProxy(contractType, "");
 
-        assertEq(mockModule.moduleType(), MockThirdwebModule(proxyAddr).moduleType());
+        assertEq(mockModule.contractType(), MockThirdwebContract(proxyAddr).contractType());
     }
 
     function test_deployProxy_sameBlock() public {
         _setUp_deployProxy();
 
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         vm.startPrank(moduleDeployer);
-        address proxyAddr = twFactory.deployProxy(moduleType, "");
-        address proxyAddr2 = twFactory.deployProxy(moduleType, "");
+        address proxyAddr = twFactory.deployProxy(contractType, "");
+        address proxyAddr2 = twFactory.deployProxy(contractType, "");
 
         assertTrue(proxyAddr != proxyAddr2);
-        assertEq(mockModule.moduleType(), MockThirdwebModule(proxyAddr).moduleType());
+        assertEq(mockModule.contractType(), MockThirdwebContract(proxyAddr).contractType());
     }
 
     function test_deployProxy_revert_invalidImpl() public {
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
         vm.expectRevert("implementation not approved");
 
         vm.prank(moduleDeployer);
-        twFactory.deployProxy(moduleType, "");
+        twFactory.deployProxy(contractType, "");
     }
 
     function test_deployProxy_emit_ProxyDeployed() public {
         _setUp_deployProxy();
 
-        bytes32 moduleType = mockModule.moduleType();
+        bytes32 contractType = mockModule.contractType();
 
-        bytes32 salt = keccak256(abi.encodePacked(moduleType, block.number));
+        bytes32 salt = keccak256(abi.encodePacked(contractType, block.number));
         bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
         address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(twFactory));
 
@@ -281,7 +265,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         emit ProxyDeployed(address(mockModule), computedProxyAddr, moduleDeployer);
 
         vm.prank(moduleDeployer);
-        twFactory.deployProxy(moduleType, "");
+        twFactory.deployProxy(contractType, "");
     }
 
     /**

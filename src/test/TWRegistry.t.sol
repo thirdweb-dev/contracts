@@ -5,12 +5,9 @@ pragma solidity ^0.8.0;
 import "./utils/BaseTest.sol";
 import "contracts/TWRegistry.sol";
 
-// Helpers
-import "contracts/interfaces/IThirdwebModule.sol";
-
 interface ITWRegistryData {
-    event ModuleAdded(address indexed moduleAddress, address indexed deployer);
-    event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
+    event Added(address indexed deployer, address indexed moduleAddress);
+    event Deleted(address indexed deployer, address indexed moduleAddress);
 }
 
 contract TWRegistryTest is ITWRegistryData, BaseTest {
@@ -42,7 +39,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
      */
 
     function test_initialState(address _deployer) public {
-        address[] memory modules = twRegistry.getAllModules(_deployer);
+        address[] memory modules = twRegistry.getAll(_deployer);
         assertEq(modules.length, 0);
 
         assertTrue(twRegistry.hasRole(twRegistry.DEFAULT_ADMIN_ROLE(), factory));
@@ -51,59 +48,57 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
 
     //  =====   Functionality tests   =====
 
-    /// @dev Test `addModule`
+    /// @dev Test `add`
 
-    function test_addModule() public {
+    function test_add() public {
         vm.prank(factory);
-        twRegistry.addModule(mockModuleAddress, deployer);
+        twRegistry.add(deployer, mockModuleAddress);
 
-        address[] memory modules = twRegistry.getAllModules(deployer);
+        address[] memory modules = twRegistry.getAll(deployer);
         assertEq(modules.length, 1);
         assertEq(modules[0], mockModuleAddress);
-        assertEq(twRegistry.getModuleCount(deployer), 1);
+        assertEq(twRegistry.count(deployer), 1);
 
         vm.prank(factory);
-        twRegistry.addModule(address(0x42), deployer);
-        modules = twRegistry.getAllModules(deployer);
+        twRegistry.add(deployer, address(0x42));
+        modules = twRegistry.getAll(deployer);
         assertEq(modules.length, 2);
         assertEq(modules[1], address(0x42));
-        assertEq(twRegistry.getModuleCount(deployer), 2);
+        assertEq(twRegistry.count(deployer), 2);
     }
 
-    function test_addModule_revert_notOperator() public {
-        vm.expectRevert("not operator.");
-
+    function test_add_self() public {
         vm.prank(deployer);
-        twRegistry.addModule(mockModuleAddress, deployer);
+        twRegistry.add(deployer, mockModuleAddress);
     }
 
-    function test_addModule_emit_ModuleAdded() public {
+    function test_add_emit_Added() public {
         vm.expectEmit(true, true, false, true);
-        emit ModuleAdded(mockModuleAddress, deployer);
+        emit Added(deployer, mockModuleAddress);
 
         vm.prank(factory);
-        twRegistry.addModule(mockModuleAddress, deployer);
+        twRegistry.add(deployer, mockModuleAddress);
     }
 
-    /// @dev Test `removeModule`
+    /// @dev Test `remove`
 
-    function _setup_removeModule() internal {
+    function _setup_remove() internal {
         vm.prank(factory);
-        twRegistry.addModule(mockModuleAddress, deployer);
+        twRegistry.add(deployer, mockModuleAddress);
     }
 
-    function test_removeModule() public {
-        _setup_removeModule();
+    function test_remove() public {
+        _setup_remove();
 
         vm.prank(deployer);
-        twRegistry.removeModule(mockModuleAddress, deployer);
+        twRegistry.remove(deployer, mockModuleAddress);
 
-        address[] memory modules = twRegistry.getAllModules(deployer);
+        address[] memory modules = twRegistry.getAll(deployer);
         assertEq(modules.length, 0);
     }
 
-    function test_removeModule_revert_invalidCaller() public {
-        _setup_removeModule();
+    function test_remove_revert_invalidCaller() public {
+        _setup_remove();
 
         address invalidCaller = address(0x123);
         assertTrue(invalidCaller != factory || invalidCaller != deployer);
@@ -111,26 +106,26 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         vm.expectRevert("not operator or deployer.");
 
         vm.prank(invalidCaller);
-        twRegistry.removeModule(mockModuleAddress, deployer);
+        twRegistry.remove(deployer, mockModuleAddress);
     }
 
-    function test_removeModule_revert_noModulesToRemove() public {
-        address[] memory modules = twRegistry.getAllModules(deployer);
+    function test_remove_revert_noModulesToRemove() public {
+        address[] memory modules = twRegistry.getAll(deployer);
         assertEq(modules.length, 0);
 
-        vm.expectRevert("failed to remove module.");
+        vm.expectRevert("failed to remove");
 
         vm.prank(deployer);
-        twRegistry.removeModule(mockModuleAddress, deployer);
+        twRegistry.remove(deployer, mockModuleAddress);
     }
 
-    function test_removeModule_emit_ModuleDeleted() public {
-        _setup_removeModule();
+    function test_remove_emit_Deleted() public {
+        _setup_remove();
 
         vm.expectEmit(true, true, false, true);
-        emit ModuleDeleted(mockModuleAddress, deployer);
+        emit Deleted(deployer, mockModuleAddress);
 
         vm.prank(deployer);
-        twRegistry.removeModule(mockModuleAddress, deployer);
+        twRegistry.remove(deployer, mockModuleAddress);
     }
 }
