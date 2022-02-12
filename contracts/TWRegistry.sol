@@ -24,7 +24,8 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
     function addModule(address _moduleAddress, address _deployer) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
 
-        deployments[_deployer].add(_moduleAddress);
+        bool added = deployments[_deployer].add(_moduleAddress);
+        require(added, "failed to add module.");
 
         emit ModuleAdded(_moduleAddress, _deployer);
     }
