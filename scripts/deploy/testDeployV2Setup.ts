@@ -16,8 +16,6 @@ async function main() {
   const trustedForwarderAddress: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
 
   // Deploy FeeType
-  const feeTypeLib = await ethers.getContractFactory("FeeType").then(f => f.deploy());
-
   const options = { gasPrice: ethers.utils.parseUnits("30", "gwei"), gasLimit: 7000000 };
 
   // Deploy TWFactory and TWRegistry
@@ -52,14 +50,12 @@ async function main() {
   const drop721: DropERC721 = (await drop721Factory.deploy(thirdwebFee.address, options)) as DropERC721;
 
   console.log("Deploying Drop721 at tx: ", drop721.deployTransaction.hash);
-
   await drop721.deployTransaction.wait();
 
   console.log("Drop721 address: ", drop721.address);
 
   // Set the deployed `Drop721` as an approved module in TWFactory
-  const drop721ModuteType = await drop721.moduleType();
-  const tx1 = await thirdwebFactory.addModuleImplementation(drop721ModuteType, drop721.address, options);
+  const tx1 = await thirdwebFactory.addImplementation(drop721.address, options);
 
   console.log("Setting deployed Drop721 as an approved implementation at tx: ", tx1.hash);
   await tx1.wait();
@@ -74,8 +70,7 @@ async function main() {
   console.log("Drop1155 address: ", drop1155.address);
 
   // Set the deployed `Drop721` as an approved module in TWFactory
-  const drop1155ModuteType = await drop1155.moduleType();
-  const tx2 = await thirdwebFactory.addModuleImplementation(drop1155ModuteType, drop1155.address, options);
+  const tx2 = await thirdwebFactory.addImplementation(drop1155.address, options);
 
   console.log("Setting deployed Drop1155 as an approved implementation at tx: ", tx2.hash);
   await tx2.wait();
@@ -88,8 +83,7 @@ async function main() {
   console.log("TokenERC20 address: ", tokenERC20.address);
 
   // Set the deployed `TokenERC20` as an approved module in TWFactory
-  const tokenERC20ModulteType = await tokenERC20.moduleType();
-  const tx3 = await thirdwebFactory.addModuleImplementation(tokenERC20ModulteType, tokenERC20.address, options);
+  const tx3 = await thirdwebFactory.addImplementation(tokenERC20.address, options);
 
   console.log("Setting deployed TokenERC20 as an approved implementation at tx: ", tx3.hash);
   await tx3.wait();
@@ -102,8 +96,7 @@ async function main() {
   console.log("TokenERC721 address: ", tokenERC721.address);
 
   // Set the deployed `TokenERC721` as an approved module in TWFactory
-  const tokenERC721ModulteType = await tokenERC721.moduleType();
-  const tx4 = await thirdwebFactory.addModuleImplementation(tokenERC721ModulteType, tokenERC721.address, options);
+  const tx4 = await thirdwebFactory.addImplementation(tokenERC721.address, options);
 
   console.log("Setting deployed TokenERC721 as an approved implementation at tx: ", tx4.hash);
   await tx4.wait();
@@ -116,8 +109,7 @@ async function main() {
   console.log("TokenERC1155 address: ", tokenERC1155.address);
 
   // Set the deployed `TokenERC1155` as an approved module in TWFactory
-  const tokenERC1155ModulteType = await tokenERC1155.moduleType();
-  const tx5 = await thirdwebFactory.addModuleImplementation(tokenERC1155ModulteType, tokenERC1155.address, options);
+  const tx5 = await thirdwebFactory.addImplementation(tokenERC1155.address, options);
 
   console.log("Setting deployed TokenERC1155 as an approved implementation at tx: ", tx5.hash);
   await tx5.wait();
