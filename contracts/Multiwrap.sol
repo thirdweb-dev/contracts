@@ -166,7 +166,7 @@ contract Multiwrap is
         uriForShares[tokenId] = _uriForShares;
         wrappedContents[tokenId] = _wrappedContents;
 
-        _mint(msg.sender, tokenId, _shares, "");
+        _mint(_msgSender(), tokenId, _shares, "");
         totalShares[tokenId] = _shares;
 
         transfer1155(_msgSender(), address(this), _wrappedContents);
@@ -186,7 +186,7 @@ contract Multiwrap is
 
         delete wrappedContents[_tokenId];
 
-        burn(msg.sender, _tokenId, totalSupplyOfToken);
+        burn(_msgSender(), _tokenId, totalSupplyOfToken);
 
         transfer1155(address(this), _msgSender(), wrappedContents_);
         transfer721(address(this), _msgSender(), wrappedContents_);
@@ -207,7 +207,7 @@ contract Multiwrap is
             "cannot unwrap NFTs by shares"
         );
         
-        burn(msg.sender, _tokenId, _amountToRedeem);
+        burn(_msgSender(), _tokenId, _amountToRedeem);
 
         if(totalSupply[_tokenId] == 0) {
             delete wrappedContents[_tokenId];
