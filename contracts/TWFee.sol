@@ -16,7 +16,7 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
 
     /// @dev Only TIER_ADMIN_ROLE holders can assign tiers to users.
-    bytes32 public constant TIER_ADMIN_ROLE = keccak256("FEE_ROLE");
+    bytes32 public constant TIER_ADMIN_ROLE = keccak256("TIER_ADMIN_ROLE");
 
     /// @dev The threshold for thirdweb fees. 1%
     uint256 public constant MAX_FEE_BPS = 100;
