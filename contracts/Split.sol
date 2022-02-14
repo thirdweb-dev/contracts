@@ -18,7 +18,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./lib/FeeType.sol";
 
-contract Splits is
+contract Split is
     IThirdwebContract,
     Initializable,
     MulticallUpgradeable,
@@ -26,7 +26,7 @@ contract Splits is
     AccessControlEnumerableUpgradeable,
     PaymentSplitterUpgradeable
 {
-    bytes32 private constant MODULE_TYPE = bytes32("Splits");
+    bytes32 private constant MODULE_TYPE = bytes32("Split");
     uint128 private constant VERSION = 1;
 
     /// @dev Max bps in the thirdweb system
@@ -90,14 +90,14 @@ contract Splits is
         _totalReleased += payment;
 
         // fees
-        uint256 splitsFee = 0;
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
-        if (splitsFeeRecipient != address(0) && splitsFeeBps > 0) {
-            splitsFee = (payment * splitsFeeBps) / MAX_BPS;
-            AddressUpgradeable.sendValue(payable(splitsFeeRecipient), splitsFee);
+        uint256 fee = 0;
+        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
+        if (feeRecipient != address(0) && feeBps > 0) {
+            fee = (payment * feeBps) / MAX_BPS;
+            AddressUpgradeable.sendValue(payable(feeRecipient), fee);
         }
 
-        AddressUpgradeable.sendValue(account, payment - splitsFee);
+        AddressUpgradeable.sendValue(account, payment - fee);
         emit PaymentReleased(account, payment);
     }
 
@@ -118,14 +118,14 @@ contract Splits is
         _erc20TotalReleased[token] += payment;
 
         // fees
-        uint256 splitsFee = 0;
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
-        if (splitsFeeRecipient != address(0) && splitsFeeBps > 0) {
-            splitsFee = (payment * splitsFeeBps) / MAX_BPS;
-            SafeERC20Upgradeable.safeTransfer(token, splitsFeeRecipient, splitsFee);
+        uint256 fee = 0;
+        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
+        if (feeRecipient != address(0) && feeBps > 0) {
+            fee = (payment * feeBps) / MAX_BPS;
+            SafeERC20Upgradeable.safeTransfer(token, feeRecipient, fee);
         }
 
-        SafeERC20Upgradeable.safeTransfer(token, account, payment - splitsFee);
+        SafeERC20Upgradeable.safeTransfer(token, account, payment - fee);
         emit ERC20PaymentReleased(token, account, payment);
     }
 
