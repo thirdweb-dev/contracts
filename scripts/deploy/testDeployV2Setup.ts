@@ -22,16 +22,21 @@ async function main() {
     gasLimit: 10_000_000,
   };
 
+  // Deploy TWRegistry
+  const thirdwebRegistry = await (await ethers.getContractFactory("TWRegistry")).deploy(trustedForwarderAddress);
+  const deployTxRegistry = thirdwebRegistry.deployTransaction;
+  console.log("Deploying TWRegistry at tx: ", deployTxRegistry.hash);
+  await thirdwebRegistry.deployed();
+
+  console.log("TWRegistry address: ", thirdwebRegistry.address);
+
   // Deploy TWFactory and TWRegistry
-  const thirdwebFactory = await (await ethers.getContractFactory("TWFactory")).deploy(trustedForwarderAddress, options);
+  const thirdwebFactory = await (await ethers.getContractFactory("TWFactory")).deploy(trustedForwarderAddress, thirdwebRegistry.address, options);
   const deployTxFactory = thirdwebFactory.deployTransaction;
   console.log("Deploying TWFactory and TWRegistry at tx: ", deployTxFactory.hash);
   await thirdwebFactory.deployed();
 
-  const thirdwebRegistryAddr: string = await thirdwebFactory.registry();
-
   console.log("TWFactory address: ", thirdwebFactory.address);
-  console.log("TWRegistry address: ", thirdwebRegistryAddr);
 
   // Deploy TWFee
   const thirdwebFee: TWFee = (await ethers
@@ -119,12 +124,12 @@ async function main() {
 
   // Verify deployed contracts.
   await hre.run("verify:verify", {
-    address: thirdwebFactory.address,
+    address: thirdwebRegistry.address,
     constructorArguments: [trustedForwarderAddress],
   });
   await hre.run("verify:verify", {
-    address: thirdwebRegistryAddr,
-    constructorArguments: [trustedForwarderAddress],
+    address: thirdwebFactory.address,
+    constructorArguments: [trustedForwarderAddress, thirdwebRegistry.address],
   });
   await hre.run("verify:verify", {
     address: thirdwebFee.address,

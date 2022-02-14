@@ -33,11 +33,11 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev mapping of proxy address to deployer address
     mapping(address => address) public deployer;
 
-    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(address _trustedForwarder, address _registry) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(FACTORY_ROLE, _msgSender());
 
-        registry = new TWRegistry(_trustedForwarder);
+        registry = TWRegistry(_registry);
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
