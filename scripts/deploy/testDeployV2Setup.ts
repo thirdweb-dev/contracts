@@ -16,17 +16,17 @@ async function main() {
   const trustedForwarderAddress: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
 
   // Deploy FeeType
-  const options = { gasPrice: ethers.utils.parseUnits("30", "gwei"), gasLimit: 7000000 };
+  const options = {
+    maxFeePerGas: ethers.utils.parseUnits("7.5", "gwei"),
+    maxPriorityFeePerGas: ethers.utils.parseUnits("2.5", "gwei"),
+    gasLimit: 10_000_000,
+  };
 
   // Deploy TWFactory and TWRegistry
-  const thirdwebFactory: TWFactory = (await ethers
-    .getContractFactory("TWFactory")
-    .then(f => f.deploy(trustedForwarderAddress, options))) as TWFactory;
+  const thirdwebFactory = await (await ethers.getContractFactory("TWFactory")).deploy(trustedForwarderAddress, options);
   const deployTxFactory = thirdwebFactory.deployTransaction;
-
   console.log("Deploying TWFactory and TWRegistry at tx: ", deployTxFactory.hash);
-
-  await deployTxFactory.wait();
+  await thirdwebFactory.deployed();
 
   const thirdwebRegistryAddr: string = await thirdwebFactory.registry();
 
@@ -46,6 +46,7 @@ async function main() {
   console.log("TWFee address: ", thirdwebFee.address);
 
   // Deploy a test implementation: Drop721
+  //
   const drop721Factory = await ethers.getContractFactory("DropERC721");
   const drop721: DropERC721 = (await drop721Factory.deploy(thirdwebFee.address, options)) as DropERC721;
 
@@ -139,7 +140,7 @@ async function main() {
   });
   await hre.run("verify:verify", {
     address: tokenERC20.address,
-    constructorArguments: [thirdwebFee.address],
+    constructorArguments: [],
   });
   await hre.run("verify:verify", {
     address: tokenERC721.address,
