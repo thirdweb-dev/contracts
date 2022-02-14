@@ -410,7 +410,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
             address(multiwrap)
         );
 
-        vm.expectRevert("ERC20: transfer amount exceeds allowance");
+        vm.expectRevert("ERC20: insufficient allowance");
 
         vm.prank(tokenOwner);
         multiwrap.wrap(wrappedContents, sharesToMint, uriForShares);
