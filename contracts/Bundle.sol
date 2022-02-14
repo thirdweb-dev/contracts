@@ -68,9 +68,6 @@ contract Bundle is
     /// @dev The percentage of royalty how much royalty in basis points.
     uint256 private royaltyBps;
 
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
-
     /// @dev Collection level metadata.
     string public contractURI;
 
@@ -209,6 +206,7 @@ contract Bundle is
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     /**
@@ -475,13 +473,6 @@ contract Bundle is
         contractURI = _uri;
     }
 
-    /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit RestrictedTransferUpdated(_restrictedTransfer);
-    }
-
     /**
      *      Internal functions.
      */
@@ -497,7 +488,7 @@ contract Bundle is
     ) internal override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }

@@ -80,9 +80,6 @@ contract DropERC721 is
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 private platformFeeBps;
 
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
-
     /// @dev Contract level metadata.
     string public contractURI;
 
@@ -144,6 +141,7 @@ contract DropERC721 is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
@@ -413,13 +411,6 @@ contract DropERC721 is
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
     }
 
-    /// @dev Lets a module admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit TransfersRestricted(_restrictedTransfer);
-    }
-
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyModuleAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
@@ -548,7 +539,7 @@ contract DropERC721 is
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
     }

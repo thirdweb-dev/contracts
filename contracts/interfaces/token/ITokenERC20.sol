@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "../IThirdwebContract.sol";
-import "../IThirdwebRestrictedTransfer.sol";
 
-interface ITokenERC20 is IThirdwebContract, IThirdwebRestrictedTransfer {
+interface ITokenERC20 is IThirdwebContract {
     /**
      * @dev Creates `amount` new tokens for `to`.
      *

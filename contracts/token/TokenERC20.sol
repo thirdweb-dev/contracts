@@ -35,9 +35,6 @@ contract TokenERC20 is
     bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
-
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
 
@@ -83,6 +80,8 @@ contract TokenERC20 is
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(PAUSER_ROLE, _defaultAdmin);
+
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     /// @dev Returns the module type of the contract.
@@ -111,7 +110,7 @@ contract TokenERC20 is
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }
@@ -164,13 +163,6 @@ contract TokenERC20 is
     function unpause() public virtual {
         require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
         _unpause();
-    }
-
-    /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit RestrictedTransferUpdated(_restrictedTransfer);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
