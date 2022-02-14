@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./IThirdwebModule.sol";
+import "./IThirdwebContract.sol";
 import "./IThirdwebRoyalty.sol";
 import "./IThirdwebOwnable.sol";
 
-interface IMultiwrap is IThirdwebModule, IThirdwebOwnable, IThirdwebRoyalty {
+interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
 
     struct WrappedContents {
         address[] erc1155AssetContracts;
