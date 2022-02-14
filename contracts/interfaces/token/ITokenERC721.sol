@@ -56,14 +56,8 @@ interface ITokenERC721 is
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
-    /// @dev Emitted when transfers are set as restricted / not-restricted.
-    event TransfersRestricted(bool restricted);
-
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);

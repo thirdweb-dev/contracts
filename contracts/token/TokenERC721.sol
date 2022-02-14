@@ -79,10 +79,10 @@ contract TokenERC721 is
     address public platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
@@ -93,7 +93,11 @@ contract TokenERC721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
+    /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
+
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) private royaltyRecipientForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -234,6 +238,13 @@ contract TokenERC721 is
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
     }
 
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external {
+        royaltyRecipientForToken[_tokenId] = _recipient;
+
+        emit RoyaltyRecipient(_tokenId, _recipient);
+    }
+
     /// @dev Lets a module admin update the fees on primary sales.
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
@@ -268,6 +279,13 @@ contract TokenERC721 is
     /// @dev Returns the platform fee bps and recipient.
     function getRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
+        return royaltyRecipientForToken[_tokenId] == address (0)
+            ? royaltyRecipient 
+            : royaltyRecipientForToken[_tokenId];
     }
 
     ///     =====   Internal functions  =====

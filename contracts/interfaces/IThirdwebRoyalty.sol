@@ -9,4 +9,17 @@ interface IThirdwebRoyalty is IERC2981 {
 
     /// @dev Lets a module admin update the royalty bps and recipient.
     function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external;
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyRecipientForToken(uint256 tokenId, address recipient) external;
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyRecipientForToken(uint256 tokenId) external returns (address);
+
+    /// @dev Emitted when royalty info is updated.
+    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+
+    /// @dev Emitted when royalty recipient for tokenId is set
+    event RoyaltyRecipient(uint256 indexed tokenId, address royaltyRecipient);
+
 }

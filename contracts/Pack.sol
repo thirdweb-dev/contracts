@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -29,6 +30,7 @@ contract Pack is
     IERC2981,
     IThirdwebContract,
     IThirdwebOwnable,
+    IThirdwebRoyalty,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
@@ -96,6 +98,9 @@ contract Pack is
         address opener;
     }
 
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) private royaltyRecipientForToken;
+
     /// @dev pack tokenId => The state of packs with id `tokenId`.
     mapping(uint256 => PackState) public packs;
 
@@ -135,9 +140,6 @@ contract Pack is
 
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);
@@ -319,6 +321,13 @@ contract Pack is
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
+        return royaltyRecipientForToken[_tokenId] == address (0)
+            ? royaltyRecipient 
+            : royaltyRecipientForToken[_tokenId];
+    }
+
     /**
      *      External: setter functions
      */
@@ -345,6 +354,13 @@ contract Pack is
         royaltyBps = _royaltyBps;
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external {
+        royaltyRecipientForToken[_tokenId] = _recipient;
+
+        emit RoyaltyRecipient(_tokenId, _recipient);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.

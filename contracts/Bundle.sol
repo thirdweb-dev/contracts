@@ -6,6 +6,7 @@ import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
 
 // Token interfaces
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -30,6 +31,7 @@ contract Bundle is
     IERC2981,
     IThirdwebContract,
     IThirdwebOwnable,
+    IThirdwebRoyalty,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -143,9 +145,6 @@ contract Bundle is
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
 
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
-
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);
 
@@ -156,6 +155,9 @@ contract Bundle is
         uint256 totalAmount,
         uint256 feeCollected
     );
+
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) private royaltyRecipientForToken;
 
     /// @dev NFT tokenId => token state.
     mapping(uint256 => TokenState) public tokenState;
@@ -445,6 +447,13 @@ contract Bundle is
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
+        return royaltyRecipientForToken[_tokenId] == address (0)
+            ? royaltyRecipient 
+            : royaltyRecipientForToken[_tokenId];
+    }
+
     /**
      *      External: setter functions
      */
@@ -457,6 +466,13 @@ contract Bundle is
         royaltyBps = _royaltyBps;
 
         emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external {
+        royaltyRecipientForToken[_tokenId] = _recipient;
+
+        emit RoyaltyRecipient(_tokenId, _recipient);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
