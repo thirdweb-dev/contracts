@@ -239,7 +239,7 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external {
+    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external onlyModuleAdmin {
         royaltyRecipientForToken[_tokenId] = _recipient;
 
         emit RoyaltyRecipient(_tokenId, _recipient);
