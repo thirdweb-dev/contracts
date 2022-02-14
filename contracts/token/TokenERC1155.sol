@@ -107,7 +107,7 @@ contract TokenERC1155 is
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipientForToken;
 
-    /// @dev Token ID => the address of the recipient of primary sales.
+    /// @dev Token ID => the address of the recipient of royalty.
     mapping(uint256 => address) private royaltyRecipientForToken;
 
     /// @dev Checks whether the caller is a module admin.
@@ -334,9 +334,7 @@ contract TokenERC1155 is
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
-        return royaltyRecipientForToken[_tokenId] == address (0)
-            ? royaltyRecipient 
-            : royaltyRecipientForToken[_tokenId];
+        return royaltyRecipientForToken[_tokenId] == address(0) ? royaltyRecipient : royaltyRecipientForToken[_tokenId];
     }
 
     ///     =====   Internal functions  =====
