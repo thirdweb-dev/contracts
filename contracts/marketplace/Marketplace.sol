@@ -560,7 +560,7 @@ contract Marketplace is
             address royaltyFeeRecipient,
             uint256 royaltyFeeAmount
         ) {
-            if (royaltyFeeAmount > 0) {
+            if (royaltyFeeRecipient != address(0) && royaltyFeeAmount > 0) {
                 require(
                     royaltyFeeAmount + marketCut <= _totalPayoutAmount,
                     "Marketplace: Total market fees exceed the price."
