@@ -22,6 +22,8 @@ interface ITokenERC1155 is
      *  @notice The body of a request to mint NFTs.
      *
      *  @param to The receiver of the NFTs to mint.
+     *  @param royaltyRecipient The recipient of the minted NFT's secondary sales royalties.
+     *  @param primarySaleRecipient The recipient of the minted NFT's primary sales proceeds.
      *  @param tokenId Optional: specify only if not first mint.
      *  @param uri The URI of the NFT to mint.
      *  @param quantity The quantity of NFTs to mint.
@@ -33,6 +35,8 @@ interface ITokenERC1155 is
      */
     struct MintRequest {
         address to;
+        address royaltyRecipient;
+        address primarySaleRecipient;
         uint256 tokenId;
         string uri;
         uint256 quantity;
@@ -98,11 +102,14 @@ interface ITokenERC1155 is
      *  @notice Lets an account with MINTER_ROLE mint an NFT.
      *
      *  @param to The address to mint the NFT to.
+     *  @param tokenId The tokenId of the NFTs to mint
      *  @param uri The URI to assign to the NFT.
+     *  @param amount The number of copies of the NFT to mint.
      *
      */
     function mintTo(
         address to,
+        uint256 tokenId,
         string calldata uri,
         uint256 amount
     ) external;

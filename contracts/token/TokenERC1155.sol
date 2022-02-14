@@ -55,7 +55,7 @@ contract TokenERC1155 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -109,6 +109,9 @@ contract TokenERC1155 is
 
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipientForToken;
+
+    /// @dev Token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public royaltyRecipientForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -199,11 +202,18 @@ contract TokenERC1155 is
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
     function mintTo(
         address _to,
+        uint256 _tokenId,
         string calldata _uri,
         uint256 _amount
     ) external onlyMinter {
-        uint256 tokenIdToMint = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+        uint256 tokenIdToMint;
+        if (_tokenId == type(uint256).max) {
+            tokenIdToMint = nextTokenIdToMint;
+            nextTokenIdToMint += 1;
+        } else {
+            require(_tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _tokenId;
+        }
 
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
         _mintTo(_to, _uri, tokenIdToMint, _amount);
@@ -216,14 +226,16 @@ contract TokenERC1155 is
         emit EtherReceived(msg.sender, msg.value);
     }
 
-    /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    /// @dev See EIP 2981
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
+        override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
+        address targetRecipient = royaltyRecipientForToken[tokenId];
+        receiver = targetRecipient != address(0) ? targetRecipient : royaltyRecipient;
         royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
@@ -239,6 +251,13 @@ contract TokenERC1155 is
         } else {
             require(_req.tokenId < nextTokenIdToMint, "invalid id");
             tokenIdToMint = _req.tokenId;
+        }
+
+        if (_req.royaltyRecipient != address(0)) {
+            royaltyRecipientForToken[tokenIdToMint] = _req.royaltyRecipient;
+        }
+        if (_req.primarySaleRecipient != address(0)) {
+            saleRecipientForToken[tokenIdToMint] = _req.primarySaleRecipient;
         }
 
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
@@ -336,23 +355,26 @@ contract TokenERC1155 is
 
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    }
+
+    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
+    function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
         return
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        TYPEHASH,
-                        _req.to,
-                        _req.tokenId,
-                        keccak256(bytes(_req.uri)),
-                        _req.quantity,
-                        _req.pricePerToken,
-                        _req.currency,
-                        _req.validityStartTimestamp,
-                        _req.validityEndTimestamp,
-                        _req.uid
-                    )
-                )
-            ).recover(_signature);
+            abi.encode(
+                TYPEHASH,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.primarySaleRecipient,
+                _req.tokenId,
+                keccak256(bytes(_req.uri)),
+                _req.quantity,
+                _req.pricePerToken,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     /// @dev Verifies that a mint request is valid.
@@ -385,9 +407,10 @@ contract TokenERC1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address recipient = saleRecipientForToken[_tokenId] == address(0)
+        address saleRecipient = saleRecipientForToken[_tokenId];
+        address recipient = saleRecipient == address(0)
             ? primarySaleRecipient
-            : saleRecipientForToken[_tokenId];
+            : saleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
