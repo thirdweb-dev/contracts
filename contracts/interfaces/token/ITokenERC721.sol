@@ -31,6 +31,8 @@ interface ITokenERC721 is
      */
     struct MintRequest {
         address to;
+        address royaltyRecipient;
+        address primarySaleRecipient;
         string uri;
         uint256 price;
         address currency;

@@ -49,7 +49,7 @@ contract TokenERC721 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -96,7 +96,7 @@ contract TokenERC721 is
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
 
-    /// @dev Token ID => the address of the recipient of primary sales.
+    /// @dev Token ID => the address of the recipient of royalty.
     mapping(uint256 => address) private royaltyRecipientForToken;
 
     /// @dev Checks whether the caller is a module admin.
@@ -215,6 +215,10 @@ contract TokenERC721 is
 
         tokenIdMinted = _mintTo(receiver, _req.uri);
 
+        if (_req.royaltyRecipient != address(0)) {
+            royaltyRecipientForToken[tokenIdMinted] = _req.royaltyRecipient;
+        }
+
         collectPrice(_req);
 
         emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
@@ -283,9 +287,7 @@ contract TokenERC721 is
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
-        return royaltyRecipientForToken[_tokenId] == address (0)
-            ? royaltyRecipient 
-            : royaltyRecipientForToken[_tokenId];
+        return royaltyRecipientForToken[_tokenId] == address(0) ? royaltyRecipient : royaltyRecipientForToken[_tokenId];
     }
 
     ///     =====   Internal functions  =====
@@ -348,14 +350,19 @@ contract TokenERC721 is
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == _req.price, "must send total price.");
+            require(msg.value == totalPrice, "must send total price.");
         }
+
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? primarySaleRecipient
+            : _req.primarySaleRecipient;
+
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _req.currency,
             _msgSender(),
-            primarySaleRecipient,
+            saleRecipient,
             totalPrice - platformFees - twFee
         );
     }
