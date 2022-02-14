@@ -2,18 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Base
-import "../interfaces/IThirdwebModule.sol";
+import "../interfaces/IThirdwebContract.sol";
 
 // Governance
-import "../openzeppelin-presets/governance/GovernorUpgradeable.sol";
-import "../openzeppelin-presets/governance/extensions/GovernorSettingsUpgradeable.sol";
-import "../openzeppelin-presets/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import "../openzeppelin-presets/governance/extensions/GovernorVotesUpgradeable.sol";
-import "../openzeppelin-presets/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
@@ -25,7 +25,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract VoteERC20 is
     Initializable,
-    IThirdwebModule,
+    IThirdwebContract,
     ERC2771ContextUpgradeable,
     ERC721HolderUpgradeable,
     ERC1155HolderUpgradeable,
@@ -82,12 +82,12 @@ contract VoteERC20 is
     }
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() public pure override(GovernorUpgradeable, IThirdwebModule) returns (uint8) {
+    function contractVersion() public pure override returns (uint8) {
         return uint8(VERSION);
     }
 

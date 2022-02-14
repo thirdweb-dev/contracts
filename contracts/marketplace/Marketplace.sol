@@ -16,13 +16,13 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // Utils
-import "../openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
@@ -145,12 +145,12 @@ contract Marketplace is
     }
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint8) {
+    function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
     }
 
@@ -244,12 +244,7 @@ contract Marketplace is
             // Transfer all escrowed tokens back to the lister, to be reflected in the lister's
             // balance for the upcoming ownership and approval check.
             if (isAuction) {
-                transferListingTokens(
-                    address(this),
-                    targetListing.tokenOwner,
-                    targetListing.quantity,
-                    targetListing
-                );
+                transferListingTokens(address(this), targetListing.tokenOwner, targetListing.quantity, targetListing);
             }
 
             validateOwnershipAndApproval(
@@ -367,7 +362,12 @@ contract Marketplace is
     }
 
     /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
-    function closeAuction(uint256 _listingId, address _closeFor) external override nonReentrant onlyExistingListing(_listingId) {
+    function closeAuction(uint256 _listingId, address _closeFor)
+        external
+        override
+        nonReentrant
+        onlyExistingListing(_listingId)
+    {
         Listing memory targetListing = listings[_listingId];
 
         require(targetListing.listingType == ListingType.Auction, "Marketplace: not an auction.");
@@ -600,12 +600,12 @@ contract Marketplace is
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        uint256 marketCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
+        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.MARKET_SALE);
-        uint256 twFee = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
+        uint256 twFeeCut = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
 
-        uint256 royalties;
+        uint256 royaltyCut;
         address royaltyRecipient;
 
         // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
@@ -613,13 +613,13 @@ contract Marketplace is
             address royaltyFeeRecipient,
             uint256 royaltyFeeAmount
         ) {
-            if (royaltyFeeAmount > 0) {
+            if (royaltyFeeRecipient != address(0) && royaltyFeeAmount > 0) {
                 require(
-                    royaltyFeeAmount + marketCut <= _totalPayoutAmount,
+                    royaltyFeeAmount + platformFeeCut + twFeeCut <= _totalPayoutAmount,
                     "Marketplace: Total market fees exceed the price."
                 );
                 royaltyRecipient = royaltyFeeRecipient;
-                royalties = royaltyFeeAmount;
+                royaltyCut = royaltyFeeAmount;
             }
         } catch {}
 
@@ -630,16 +630,16 @@ contract Marketplace is
             _currencyToUse,
             _payer,
             platformFeeRecipient,
-            marketCut,
+            platformFeeCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royalties, _nativeTokenWrapper);
-        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFee, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royaltyCut, _nativeTokenWrapper);
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, twFeeRecipient, twFeeCut, _nativeTokenWrapper);
         CurrencyTransferLib.transferCurrency(
             _currencyToUse,
             _payer,
             _payee,
-            _totalPayoutAmount - (marketCut + royalties + twFee),
+            _totalPayoutAmount - (platformFeeCut + royaltyCut + twFeeCut),
             _nativeTokenWrapper
         );
     }

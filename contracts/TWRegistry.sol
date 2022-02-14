@@ -11,36 +11,41 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    /// @dev wallet address => [contract addresses]
     mapping(address => EnumerableSet.AddressSet) private deployments;
-    
 
-    event ModuleAdded(address indexed moduleAddress, address indexed deployer);
-    event ModuleDeleted(address indexed moduleAddress, address indexed deployer);
+    event Added(address indexed deployer, address indexed deployment);
+    event Deleted(address indexed deployer, address indexed deployment);
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OPERATOR_ROLE, _msgSender());
     }
 
-    function addModule(address _moduleAddress, address _deployer) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
+    function add(address _deployer, address _deployment) external {
+        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator.");
 
-        deployments[_deployer].add(_moduleAddress);
+        bool added = deployments[_deployer].add(_deployment);
+        require(added, "failed to add");
 
-        emit ModuleAdded(_moduleAddress, _deployer);
+        emit Added(_deployer, _deployment);
     }
 
-    function removeModule(address _moduleAddress, address _deployer) external {
+    function remove(address _deployer, address _deployment) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
-        bool removed = deployments[_deployer].remove(_moduleAddress);
-        require(removed, "failed to remove module.");
+        bool removed = deployments[_deployer].remove(_deployment);
+        require(removed, "failed to remove");
 
-        emit ModuleDeleted(_moduleAddress, _deployer);
+        emit Deleted(_deployer, _deployment);
     }
 
-    function getAllModules(address _deployer) external view returns (address[] memory) {
-        return EnumerableSet.values(deployments[_deployer]);
+    function getAll(address _deployer) external view returns (address[] memory) {
+        return deployments[_deployer].values();
+    }
+
+    function count(address _deployer) external view returns (uint256) {
+        return deployments[_deployer].length();
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

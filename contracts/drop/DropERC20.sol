@@ -72,12 +72,12 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     //      =====   Public functions  =====
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure override(IThirdwebModule, TokenERC20) returns (bytes32) {
+    function contractType() external pure override(IThirdwebContract, TokenERC20) returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure override(IThirdwebModule, TokenERC20) returns (uint8) {
+    function contractVersion() external pure override(IThirdwebContract, TokenERC20) returns (uint8) {
         return uint8(VERSION);
     }
 

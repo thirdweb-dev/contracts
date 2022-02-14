@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../IThirdwebModule.sol";
+import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 
-interface IMarketplace is IThirdwebModule, IThirdwebPlatformFee {
+interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     /// @notice Type of the tokens that can be listed for sale.
     enum TokenType {
         ERC1155,

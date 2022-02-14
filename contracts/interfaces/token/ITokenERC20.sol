@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../IThirdwebModule.sol";
+import "../IThirdwebContract.sol";
 import "../IThirdwebRestrictedTransfer.sol";
 
-interface ITokenERC20 is IThirdwebModule, IThirdwebRestrictedTransfer {
+interface ITokenERC20 is IThirdwebContract, IThirdwebRestrictedTransfer {
     /**
      * @dev Creates `amount` new tokens for `to`.
      *

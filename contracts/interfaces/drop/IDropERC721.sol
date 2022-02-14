@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../IThirdwebModule.sol";
+import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
@@ -20,7 +20,7 @@ import "../IThirdwebOwnable.sol";
  */
 
 interface IDropERC721 is
-    IThirdwebModule,
+    IThirdwebContract,
     IThirdwebOwnable,
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
@@ -133,7 +133,11 @@ interface IDropERC721 is
      *  @param _baseURIForTokens The URI for the tokenIds of NFTs minted is baseURI + `${tokenId}`.
      *  @param _encryptedBaseURI Optional -- for delayed-reveal NFTs.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens, bytes calldata _encryptedBaseURI) external;
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _encryptedBaseURI
+    ) external;
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.

@@ -3,17 +3,17 @@ pragma solidity ^0.8.0;
 
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
-import "./interfaces/IThirdwebModule.sol";
+import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
 // Meta transactions
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "./openzeppelin-presets/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 import "./lib/FeeType.sol";
 
@@ -27,7 +27,7 @@ import "./TWFee.sol";
 
 contract Pack is
     IERC2981,
-    IThirdwebModule,
+    IThirdwebContract,
     IThirdwebOwnable,
     Initializable,
     VRFConsumerBase,
@@ -203,12 +203,12 @@ contract Pack is
      */
 
     /// @dev Returns the module type of the contract.
-    function moduleType() external pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
 
     /// @dev Returns the version of the contract.
-    function version() external pure returns (uint8) {
+    function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
     }
 
@@ -285,7 +285,7 @@ contract Pack is
         returns (address receiver, uint256 royaltyAmount)
     {
         receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps ) / MAX_BPS;
+        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
     }
 
     /// @dev Lets a pack owner request to open a single pack.

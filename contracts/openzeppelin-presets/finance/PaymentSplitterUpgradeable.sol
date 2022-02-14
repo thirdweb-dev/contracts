@@ -61,7 +61,10 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         __PaymentSplitter_init_unchained(payees, shares_);
     }
 
-    function __PaymentSplitter_init_unchained(address[] memory payees, uint256[] memory shares_) internal onlyInitializing {
+    function __PaymentSplitter_init_unchained(address[] memory payees, uint256[] memory shares_)
+        internal
+        onlyInitializing
+    {
         require(payees.length == shares_.length, "PaymentSplitter: payees and shares length mismatch");
         require(payees.length > 0, "PaymentSplitter: no payees");
 
@@ -207,5 +210,6 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         _totalShares = _totalShares + shares_;
         emit PayeeAdded(account, shares_);
     }
+
     uint256[43] private __gap;
 }

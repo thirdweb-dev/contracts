@@ -46,7 +46,7 @@ library CurrencyTransferLib {
                 safeTransferNativeToken(_to, _amount, _nativeTokenWrapper);
             } else if (_to == address(this)) {
                 // store native currency in weth
-                require(_amount == msg.value, "Marketplace: native token value does not match bid amount.");
+                require(_amount == msg.value, "msg.value != amount");
                 IWETH(_nativeTokenWrapper).deposit{ value: _amount }();
             } else {
                 safeTransferNativeToken(_to, _amount, _nativeTokenWrapper);
@@ -66,13 +66,14 @@ library CurrencyTransferLib {
         if (_from == _to) {
             return;
         }
+
         uint256 balBefore = IERC20(_currency).balanceOf(_to);
         bool success = _from == address(this)
             ? IERC20(_currency).transfer(_to, _amount)
             : IERC20(_currency).transferFrom(_from, _to, _amount);
         uint256 balAfter = IERC20(_currency).balanceOf(_to);
 
-        require(success && balAfter == balBefore + _amount, "currency transfer failed.");
+        require(success && (balAfter == balBefore + _amount), "currency transfer failed.");
     }
 
     /// @dev Transfers `amount` of native token to `to`.

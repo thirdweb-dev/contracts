@@ -17,6 +17,7 @@ contract TWProxy is Proxy {
         assert(_IMPLEMENTATION_SLOT == bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1));
         StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = _logic;
         if (_data.length > 0) {
+            // slither-disable-next-line unused-return
             Address.functionDelegateCall(_logic, _data);
         }
     }
