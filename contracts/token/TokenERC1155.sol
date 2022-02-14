@@ -408,9 +408,7 @@ contract TokenERC1155 is
         }
 
         address saleRecipient = saleRecipientForToken[_tokenId];
-        address recipient = saleRecipient == address(0)
-            ? primarySaleRecipient
-            : saleRecipient;
+        address recipient = saleRecipient == address(0) ? primarySaleRecipient : saleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
