@@ -86,13 +86,17 @@ contract Splits is
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
-        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
-
         _released[account] += payment;
         _totalReleased += payment;
 
-        AddressUpgradeable.sendValue(payable(splitsFeeRecipient), splitsFee);
+        // fees
+        uint256 splitsFee = 0;
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
+        if (splitsFeeRecipient != address(0) && splitsFeeBps > 0) {
+            splitsFee = (payment * splitsFeeBps) / MAX_BPS;
+            AddressUpgradeable.sendValue(payable(splitsFeeRecipient), splitsFee);
+        }
+
         AddressUpgradeable.sendValue(account, payment - splitsFee);
         emit PaymentReleased(account, payment);
     }
@@ -110,13 +114,17 @@ contract Splits is
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
-        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
-        uint256 splitsFee = (payment * splitsFeeBps) / MAX_BPS;
-
         _erc20Released[token][account] += payment;
         _erc20TotalReleased[token] += payment;
 
-        SafeERC20Upgradeable.safeTransfer(token, splitsFeeRecipient, splitsFee);
+        // fees
+        uint256 splitsFee = 0;
+        (address splitsFeeRecipient, uint256 splitsFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLITS);
+        if (splitsFeeRecipient != address(0) && splitsFeeBps > 0) {
+            splitsFee = (payment * splitsFeeBps) / MAX_BPS;
+            SafeERC20Upgradeable.safeTransfer(token, splitsFeeRecipient, splitsFee);
+        }
+
         SafeERC20Upgradeable.safeTransfer(token, account, payment - splitsFee);
         emit ERC20PaymentReleased(token, account, payment);
     }
@@ -125,7 +133,8 @@ contract Splits is
      * @dev Release the owed amount of token to all of the payees.
      */
     function distribute() public virtual {
-        for (uint256 i = 0; i < payeeCount(); i++) {
+        uint256 count = payeeCount();
+        for (uint256 i = 0; i < count; i++) {
             release(payable(payee(i)));
         }
     }
@@ -134,7 +143,8 @@ contract Splits is
      * @dev Release owed amount of the `token` to all of the payees.
      */
     function distribute(IERC20Upgradeable token) public virtual {
-        for (uint256 i = 0; i < payeeCount(); i++) {
+        uint256 count = payeeCount();
+        for (uint256 i = 0; i < count; i++) {
             release(token, payee(i));
         }
     }
