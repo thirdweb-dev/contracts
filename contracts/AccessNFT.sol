@@ -198,11 +198,6 @@ contract AccessNFT is
         return tokenState[_nftId].uri;
     }
 
-    /// @dev Alternative function to return a token's URI
-    function tokenURI(uint256 _nftId) public view returns (string memory) {
-        return tokenState[_nftId].uri;
-    }
-
     /// @dev Returns whether a token represent is redeemable.
     function isRedeemable(uint256 _nftId) public view returns (bool) {
         return tokenState[_nftId].isRedeemable;
