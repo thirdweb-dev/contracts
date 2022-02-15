@@ -142,6 +142,10 @@ async function main() {
   console.log("Adding implementations at tx: ", tx.hash);
   await tx.wait();
 
+  const tx2 = await thirdwebRegistry.grantRole(await thirdwebRegistry.OPERATOR_ROLE(), thirdwebFactory.address);
+  await tx2.wait();
+  console.log("grant role: ", tx2.hash);
+
   console.log("DONE. Now verifying contracts...");
 
   // Verify deployed contracts.
