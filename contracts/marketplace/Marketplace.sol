@@ -200,6 +200,10 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
+            require(
+                newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
+                "reserve price exceeds buyout price."
+            );
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
