@@ -12,6 +12,17 @@ import { TokenERC721 } from "typechain/TokenERC721";
 import { TokenERC1155 } from "typechain/TokenERC1155";
 import { Marketplace, Split, VoteERC20 } from "typechain";
 
+async function verify(address: string, args: any[]) {
+  try {
+    return await hre.run("verify:verify", {
+      address: address,
+      constructorArguments: args,
+    });
+  } catch (e) {
+    console.log(address, args, e);
+  }
+}
+
 async function main() {
   // Constructor args
   const trustedForwarderAddress: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
@@ -148,51 +159,17 @@ async function main() {
 
   console.log("DONE. Now verifying contracts...");
 
-  // Verify deployed contracts.
-  await hre.run("verify:verify", {
-    address: thirdwebRegistry.address,
-    constructorArguments: [trustedForwarderAddress],
-  });
-  await hre.run("verify:verify", {
-    address: thirdwebFactory.address,
-    constructorArguments: [trustedForwarderAddress, thirdwebRegistry.address],
-  });
-  await hre.run("verify:verify", {
-    address: thirdwebFee.address,
-    constructorArguments: [trustedForwarderAddress, thirdwebFactory.address],
-  });
-  await hre.run("verify:verify", {
-    address: drop721.address,
-    constructorArguments: [thirdwebFee.address],
-  });
-  await hre.run("verify:verify", {
-    address: drop1155.address,
-    constructorArguments: [thirdwebFee.address],
-  });
-  await hre.run("verify:verify", {
-    address: tokenERC20.address,
-    constructorArguments: [],
-  });
-  await hre.run("verify:verify", {
-    address: tokenERC721.address,
-    constructorArguments: [thirdwebFee.address],
-  });
-  await hre.run("verify:verify", {
-    address: tokenERC1155.address,
-    constructorArguments: [thirdwebFee.address],
-  });
-  await hre.run("verify:verify", {
-    address: split.address,
-    constructorArguments: [thirdwebFee.address],
-  });
-  await hre.run("verify:verify", {
-    address: vote.address,
-    constructorArguments: [],
-  });
-  await hre.run("verify:verify", {
-    address: marketplace.address,
-    constructorArguments: [nativeTokenWrapper[ethers.provider.network.chainId], thirdwebFee.address],
-  });
+  await verify(thirdwebRegistry.address, [trustedForwarderAddress]);
+  await verify(thirdwebFactory.address, [trustedForwarderAddress, thirdwebRegistry.address]);
+  await verify(thirdwebFee.address, [trustedForwarderAddress, thirdwebFactory.address]);
+  await verify(drop721.address, [thirdwebFee.address]);
+  await verify(drop1155.address, [thirdwebFee.address]);
+  await verify(tokenERC20.address, []);
+  await verify(tokenERC721.address, [thirdwebFee.address]);
+  await verify(tokenERC1155.address, [thirdwebFee.address]);
+  await verify(split.address, [thirdwebFee.address]);
+  await verify(vote.address, []);
+  await verify(marketplace.address, [nativeTokenWrapper[ethers.provider.network.chainId], thirdwebFee.address]);
 }
 
 main()
