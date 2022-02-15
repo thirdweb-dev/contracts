@@ -14,12 +14,11 @@ interface IThirdwebRoyalty is IERC2981 {
     function setRoyaltyRecipientForToken(uint256 tokenId, address recipient) external;
 
     /// @dev Returns the royalty recipient for a particular token Id.
-    function getRoyaltyRecipientForToken(uint256 tokenId) external returns (address);
+    function getRoyaltyRecipientForToken(uint256 tokenId) external view returns (address);
 
     /// @dev Emitted when royalty info is updated.
     event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when royalty recipient for tokenId is set
     event RoyaltyRecipient(uint256 indexed tokenId, address royaltyRecipient);
-
 }
