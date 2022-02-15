@@ -86,13 +86,13 @@ contract Marketplace is
 
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
-        require(listings[_listingId].tokenOwner == _msgSender(), "Marketplace: caller is not listing creator.");
+        require(listings[_listingId].tokenOwner == _msgSender(), "caller != listing creator");
         _;
     }
 
     /// @dev Checks whether a listing exists.
     modifier onlyExistingListing(uint256 _listingId) {
-        require(listings[_listingId].assetContract != address(0), "Marketplace: listing DNE.");
+        require(listings[_listingId].assetContract != address(0), "listing DNE");
         _;
     }
 
@@ -104,14 +104,6 @@ contract Marketplace is
         );
         _;
     }
-
-    /// @dev Checks whether the caller is a module admin.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Marketplace: not a module admin.");
-        _;
-    }
-
-    /// @dev Checks whether
 
     constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
@@ -168,7 +160,7 @@ contract Marketplace is
 
         require(tokenAmountToList > 0, "Marketplace: listing invalid quantity.");
         require(
-            hasRole(ASSET_ROLE, _params.assetContract) || hasRole(ASSET_ROLE, address(0)),
+            hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract),
             "Marketplace: listing unapproved asset"
         );
 
@@ -794,7 +786,10 @@ contract Marketplace is
     //  ===== Setter functions  =====
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -804,7 +799,7 @@ contract Marketplace is
     }
 
     /// @dev Lets a module admin set auction buffers
-    function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyModuleAdmin {
+    function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bidBufferBps < MAX_BPS, "Marketplace: invalid BPS.");
 
         timeBuffer = uint64(_timeBuffer);
@@ -814,7 +809,7 @@ contract Marketplace is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 
