@@ -60,7 +60,7 @@ contract VoteERC20 is
     mapping(uint256 => uint256) public indexForProposal;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor() public initializer {}
+    constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
