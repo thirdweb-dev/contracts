@@ -141,7 +141,7 @@ contract TokenERC1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("SignatureMint1155", "1");
+        __EIP712_init("TokenERC1155", "1");
         __ERC2771Context_init(_trustedForwarder);
         __ERC1155_init("");
 
