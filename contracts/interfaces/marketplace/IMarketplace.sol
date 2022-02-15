@@ -149,9 +149,6 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     /// @dev Emitted when auction buffers are updated.
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
 
-    /// @dev Emitted when the LISTER_ROLE restriction is updated.
-    event ListingRestricted(bool restricted);
-
     /**
      * @notice Lets a token (ERC 721 or ERC 1155) owner list tokens for sale in a direct listing, or an auction.
      * @param _params The parameters that govern the listing to be created.

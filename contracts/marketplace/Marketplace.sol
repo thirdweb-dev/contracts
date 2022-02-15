@@ -44,6 +44,7 @@ contract Marketplace is
 
     /// @dev Access control: aditional roles.
     bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
+    bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -58,9 +59,6 @@ contract Marketplace is
 
     /// @dev Collection level metadata.
     string public contractURI;
-
-    /// @dev Whether listing is restricted by LISTER_ROLE.
-    bool public restrictedListerRoleOnly;
 
     /// @dev The address of which the marketplace fee goes to.
     address private platformFeeRecipient;
@@ -101,7 +99,7 @@ contract Marketplace is
     /// @dev Checks whether caller has LISTER_ROLE when `restrictedListerRoleOnly` is true.
     modifier onlyListerRoleWhenRestricted() {
         require(
-            !restrictedListerRoleOnly || hasRole(LISTER_ROLE, _msgSender()),
+            hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()),
             "Marketplace: caller does not have LISTER_ROLE."
         );
         _;
@@ -142,6 +140,8 @@ contract Marketplace is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(LISTER_ROLE, _defaultAdmin);
+        _setupRole(LISTER_ROLE, address(0));
+        _setupRole(ASSET_ROLE, address(0));
     }
 
     /// @dev Returns the module type of the contract.
@@ -167,6 +167,10 @@ contract Marketplace is
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
         require(tokenAmountToList > 0, "Marketplace: listing invalid quantity.");
+        require(
+            hasRole(ASSET_ROLE, _params.assetContract) || hasRole(ASSET_ROLE, address(0)),
+            "Marketplace: listing unapproved asset"
+        );
 
         validateOwnershipAndApproval(
             tokenOwner,
@@ -221,6 +225,7 @@ contract Marketplace is
         // Can only edit auction listing before it starts.
         if (isAuction) {
             require(block.timestamp < targetListing.startTime, "Marketplace: auction already started.");
+            require(_buyoutPricePerToken >= _reservePricePerToken, "reserve price exceeds buyout price.");
         }
 
         uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;
@@ -802,12 +807,6 @@ contract Marketplace is
         bidBufferBps = uint64(_bidBufferBps);
 
         emit AuctionBuffersUpdated(_timeBuffer, _bidBufferBps);
-    }
-
-    /// @dev Lets a module admin restrict listing by LISTER_ROLE.
-    function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {
-        restrictedListerRoleOnly = restricted;
-        emit ListingRestricted(restricted);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
