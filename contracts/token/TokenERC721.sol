@@ -312,6 +312,8 @@ contract TokenERC721 is
                     abi.encode(
                         TYPEHASH,
                         _req.to,
+                        _req.royaltyRecipient,
+                        _req.primarySaleRecipient,
                         keccak256(bytes(_req.uri)),
                         _req.price,
                         _req.currency,
