@@ -99,18 +99,6 @@ contract TokenERC721 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
-    /// @dev Checks whether the caller is a module admin.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
-    /// @dev Checks whether the caller has MINTER_ROLE.
-    modifier onlyMinter() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
-        _;
-    }
-
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
     }
@@ -180,7 +168,7 @@ contract TokenERC721 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri) external onlyMinter returns (uint256) {
+    function mintTo(address _to, string calldata _uri) external onlyRole(MINTER_ROLE) returns (uint256) {
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
         return _mintTo(_to, _uri);
     }
@@ -231,13 +219,16 @@ contract TokenERC721 is
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+    function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
         emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -251,7 +242,7 @@ contract TokenERC721 is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -260,7 +251,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -270,7 +264,7 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
@@ -279,7 +273,7 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

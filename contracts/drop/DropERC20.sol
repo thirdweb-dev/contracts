@@ -151,7 +151,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     /// @dev Lets a module admin set claim conditions.
     function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction)
         external
-        onlyModuleAdmin
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         uint256 lastConditionStartTimestamp;
         uint256 indexForCondition;
@@ -196,13 +196,16 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setPrimarySaleRecipient(address _primarySaleRecipient) external onlyModuleAdmin {
+    function setPrimarySaleRecipient(address _primarySaleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _primarySaleRecipient;
         emit NewPrimarySaleRecipient(_primarySaleRecipient);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);

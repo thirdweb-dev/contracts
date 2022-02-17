@@ -101,18 +101,6 @@ contract DropERC721 is
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
-    /// @dev Checks whether caller has MINTER_ROLE.
-    modifier onlyMinter() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
-        _;
-    }
-
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
     }
@@ -292,7 +280,7 @@ contract DropERC721 is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
-    ) external onlyMinter {
+    ) external onlyRole(MINTER_ROLE) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -308,7 +296,11 @@ contract DropERC721 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
-    function reveal(uint256 index, bytes calldata _key) external onlyMinter returns (string memory revealedURI) {
+    function reveal(uint256 index, bytes calldata _key)
+        external
+        onlyRole(MINTER_ROLE)
+        returns (string memory revealedURI)
+    {
         require(index < baseURIIndices.length, "invalid index.");
 
         uint256 _index = baseURIIndices[index];
@@ -352,7 +344,7 @@ contract DropERC721 is
     /// @dev Lets a module admin set claim conditions.
     function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction)
         external
-        onlyModuleAdmin
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         uint256 lastConditionStartTimestamp;
         uint256 indexForCondition;
@@ -399,19 +391,22 @@ contract DropERC721 is
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set a claim limit on a wallet.
-    function setClaimLimitForWallet(address _claimer, uint256 _limit) external onlyModuleAdmin {
+    function setClaimLimitForWallet(address _claimer, uint256 _limit) external onlyRole(DEFAULT_ADMIN_ROLE) {
         claimLimitPerWallet[_claimer].canClaim = uint128(_limit);
         emit ClaimLimitForWallet(_claimer, _limit);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+    function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
         emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -425,7 +420,7 @@ contract DropERC721 is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -434,7 +429,10 @@ contract DropERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -444,7 +442,7 @@ contract DropERC721 is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
@@ -453,7 +451,7 @@ contract DropERC721 is
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

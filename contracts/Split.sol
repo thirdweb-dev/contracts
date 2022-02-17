@@ -38,11 +38,6 @@ contract Split is
     /// @dev Contract level metadata.
     string public contractURI;
 
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
-        _;
-    }
-
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
     }
@@ -172,7 +167,7 @@ contract Split is
     }
 
     /// @dev Sets contract URI for the contract-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 }

@@ -49,13 +49,8 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
         uint256 _duration,
         uint256 priceForCurrency
     );
-    event NewTreasury(address oldTreasury, address newTreasury);
 
-    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
+    event NewTreasury(address oldTreasury, address newTreasury);
 
     constructor(
         address _trustedForwarder,
@@ -110,7 +105,7 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
         address _currencyToApprove,
         uint256 _priceForCurrency,
         bool _toApproveCurrency
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         tierInfo[_tier].duration = _duration;
         tierInfo[_tier].isCurrencyApproved[_currencyToApprove] = _toApproveCurrency;
         tierInfo[_tier].priceForCurrency[_currencyToApprove] = _toApproveCurrency ? _priceForCurrency : 0;
@@ -119,7 +114,7 @@ contract TWPricing is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     /// @dev Lets module admin set thirdweb's treasury.
-    function setTreasury(address _newTreasury) external onlyModuleAdmin {
+    function setTreasury(address _newTreasury) external onlyRole(DEFAULT_ADMIN_ROLE) {
         address oldTreasury = thirdwebTreasury;
         thirdwebTreasury = _newTreasury;
 

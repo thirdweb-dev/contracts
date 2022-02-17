@@ -86,12 +86,6 @@ contract Multiwrap is
     /// @dev Mapping from tokenId => wrapped contents of the token.
     mapping(uint256 => WrappedContents) private wrappedContents;
 
-    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -214,7 +208,10 @@ contract Multiwrap is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -228,7 +225,7 @@ contract Multiwrap is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -237,14 +234,14 @@ contract Multiwrap is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         emit NewOwner(_owner, _newOwner);
         _owner = _newOwner;
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

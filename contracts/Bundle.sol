@@ -168,18 +168,6 @@ contract Bundle is
     /// @dev NFT tokenId => state of underlying ERC20 token.
     mapping(uint256 => ERC20Wrapped) public erc20WrappedTokens;
 
-    /// @dev Checks whether the caller is a module admin.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin.");
-        _;
-    }
-
-    /// @dev Checks whether the caller has MINTER_ROLE.
-    modifier onlyMinterRole() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
-        _;
-    }
-
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
     }
@@ -238,7 +226,7 @@ contract Bundle is
         string[] calldata _nftURIs,
         uint256[] calldata _nftSupplies,
         bytes memory data
-    ) public whenNotPaused onlyMinterRole returns (uint256[] memory nftIds) {
+    ) public whenNotPaused onlyRole(MINTER_ROLE) returns (uint256[] memory nftIds) {
         require(_nftURIs.length == _nftSupplies.length, "unequal lengths of configs.");
         require(_nftURIs.length > 0, "cannot mint 0 NFTs.");
 
@@ -332,7 +320,7 @@ contract Bundle is
         address _nftContract,
         uint256 _tokenId,
         string calldata _nftURI
-    ) external whenNotPaused onlyMinterRole {
+    ) external whenNotPaused onlyRole(MINTER_ROLE) {
         require(IERC721(_nftContract).ownerOf(_tokenId) == _msgSender(), "not owner.");
         require(
             IERC721(_nftContract).getApproved(_tokenId) == address(this) ||
@@ -388,7 +376,7 @@ contract Bundle is
         uint256 _tokenAmount,
         uint256 _numOfNftsToMint,
         string calldata _nftURI
-    ) external whenNotPaused onlyMinterRole {
+    ) external whenNotPaused onlyRole(MINTER_ROLE) {
         // Get creator
         address tokenCreator = _msgSender();
 
@@ -463,7 +451,10 @@ contract Bundle is
      */
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -477,7 +468,7 @@ contract Bundle is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -486,7 +477,7 @@ contract Bundle is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
@@ -495,7 +486,7 @@ contract Bundle is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

@@ -51,6 +51,7 @@ contract DropERC1155 is
 
     /// @dev Only TRANSFER_ROLE holders can participate in transfers, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -109,18 +110,6 @@ contract DropERC1155 is
 
     /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
     mapping(address => mapping(uint256 => LimitPerWallet)) public claimLimitPerWallet;
-
-    /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
-    /// @dev Checks whether caller has MINTER_ROLE.
-    modifier onlyMinter() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
-        _;
-    }
 
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
@@ -222,7 +211,7 @@ contract DropERC1155 is
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
      *       to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyMinter {
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyRole(MINTER_ROLE) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -261,7 +250,7 @@ contract DropERC1155 is
         uint256 _tokenId,
         ClaimCondition[] calldata _conditions,
         bool resetRestriction
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 numOfConditionsSet = resetClaimConditions(_tokenId, _conditions);
 
         if (resetRestriction) {
@@ -278,25 +267,31 @@ contract DropERC1155 is
         address _claimer,
         uint256 _tokenId,
         uint256 _limit
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         claimLimitPerWallet[_claimer][_tokenId].canClaim = uint128(_limit);
         emit ClaimLimitForWallet(_claimer, _tokenId, _limit);
     }
 
     /// @dev Lets a module admin set a max total supply for token.
-    function setMaxTotalSupplyForToken(uint256 _tokenId, uint256 _maxTotalSupply) external onlyModuleAdmin {
+    function setMaxTotalSupplyForToken(uint256 _tokenId, uint256 _maxTotalSupply)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         maxTotalSupply[_tokenId] = _maxTotalSupply;
         emit MaxTotalSupplyForToken(_tokenId, _maxTotalSupply);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
+    function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
         emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -310,7 +305,7 @@ contract DropERC1155 is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -319,7 +314,10 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -329,14 +327,14 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         emit NewOwner(_owner, _newOwner);
         _owner = _newOwner;
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

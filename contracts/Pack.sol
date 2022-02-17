@@ -152,12 +152,6 @@ contract Pack is
         uint256 feeCollected
     );
 
-    /// @dev Checks whether the caller is a module admin.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
     constructor(
         address _vrfCoordinator,
         address _linkToken,
@@ -312,7 +306,7 @@ contract Pack is
     }
 
     /// @dev Lets a module admin withdraw link from the contract.
-    function withdrawLink(address _to, uint256 _amount) external onlyModuleAdmin {
+    function withdrawLink(address _to, uint256 _amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
         bool success = LINK.transfer(_to, _amount);
         require(success, "failed to withdraw LINK.");
     }
@@ -337,12 +331,12 @@ contract Pack is
      */
 
     /// @dev Lets a module admin change the Chainlink VRF fee.
-    function setChainlinkFees(uint256 _newFees) external onlyModuleAdmin {
+    function setChainlinkFees(uint256 _newFees) external onlyRole(DEFAULT_ADMIN_ROLE) {
         vrfFees = _newFees;
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
@@ -351,7 +345,10 @@ contract Pack is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -365,7 +362,7 @@ contract Pack is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -374,7 +371,7 @@ contract Pack is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

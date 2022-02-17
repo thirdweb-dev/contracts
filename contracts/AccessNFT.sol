@@ -136,18 +136,6 @@ contract AccessNFT is
     /// @dev Access NFT tokenId => final redemption timestamp.
     mapping(uint256 => uint256) public lastTimeToRedeem;
 
-    /// @dev Checks whether the caller is a module admin.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not module admin.");
-        _;
-    }
-
-    /// @dev Checks whether the caller has MINTER_ROLE.
-    modifier onlyMinterRole() {
-        require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
-        _;
-    }
-
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
     }
@@ -266,7 +254,7 @@ contract AccessNFT is
         string[] calldata _accessNftURIs,
         uint256[] calldata _nftSupplies,
         bytes calldata data
-    ) external whenNotPaused onlyMinterRole {
+    ) external whenNotPaused onlyRole(MINTER_ROLE) {
         require(
             _nftURIs.length == _nftSupplies.length && _nftURIs.length == _accessNftURIs.length,
             "unequal lengths of configs."
@@ -380,14 +368,17 @@ contract AccessNFT is
     }
 
     /// @dev Lets the protocol admin set the transferability of Access NFTs.
-    function setAccessNftTransferability(bool _isTransferable) external onlyModuleAdmin {
+    function setAccessNftTransferability(bool _isTransferable) external onlyRole(DEFAULT_ADMIN_ROLE) {
         accessNftIsTransferable = _isTransferable;
 
         emit AccessTransferabilityUpdated(_isTransferable);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -401,7 +392,7 @@ contract AccessNFT is
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyModuleAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bps <= MAX_BPS, "exceed royalty bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
@@ -410,7 +401,7 @@ contract AccessNFT is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyModuleAdmin {
+    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
@@ -419,7 +410,7 @@ contract AccessNFT is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

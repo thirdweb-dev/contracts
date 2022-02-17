@@ -38,11 +38,6 @@ contract TokenERC20 is
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
 
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "only module admin role");
-        _;
-    }
-
     /// @dev Emitted when restrictions on transfers is updated.
     event RestrictedTransferUpdated(bool transferable);
 
@@ -166,7 +161,7 @@ contract TokenERC20 is
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 
