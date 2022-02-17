@@ -107,8 +107,8 @@ contract TokenERC1155 is
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipientForToken;
 
-    /// @dev Token ID => the address of the recipient of royalty.
-    mapping(uint256 => address) private royaltyRecipientForToken;
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -219,17 +219,16 @@ contract TokenERC1155 is
         emit EtherReceived(msg.sender, msg.value);
     }
 
-    /// @dev See EIP 2981
+    /// @dev See EIP-2981
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
-        override
         returns (address receiver, uint256 royaltyAmount)
     {
-        address targetRecipient = royaltyRecipientForToken[tokenId];
-        receiver = targetRecipient != address(0) ? targetRecipient : royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
@@ -247,48 +246,47 @@ contract TokenERC1155 is
         }
 
         if (_req.royaltyRecipient != address(0)) {
-            royaltyRecipientForToken[tokenIdToMint] = _req.royaltyRecipient;
-        }
-        if (_req.primarySaleRecipient != address(0)) {
-            saleRecipientForToken[tokenIdToMint] = _req.primarySaleRecipient;
+            royaltyInfoForToken[tokenIdToMint] = RoyaltyInfo({
+                recipient: _req.royaltyRecipient,
+                bps: _req.royaltyBps
+            });
         }
 
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
-        collectPrice(_req, tokenIdToMint);
+        collectPrice(_req);
 
         emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     //      =====   Setter functions  =====
 
-    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
-        saleRecipientForToken[_tokenId] = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient, _tokenId, false);
-    }
-
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient, 0, true);
+        emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external onlyModuleAdmin {
-        royaltyRecipientForToken[_tokenId] = _recipient;
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
 
-        emit RoyaltyRecipient(_tokenId, _recipient);
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -323,13 +321,18 @@ contract TokenERC1155 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
     /// @dev Returns the royalty recipient for a particular token Id.
-    function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
-        return royaltyRecipientForToken[_tokenId] == address(0) ? royaltyRecipient : royaltyRecipientForToken[_tokenId];
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     ///     =====   Internal functions  =====
@@ -363,6 +366,7 @@ contract TokenERC1155 is
                 TYPEHASH,
                 _req.to,
                 _req.royaltyRecipient,
+                _req.royaltyBps,
                 _req.primarySaleRecipient,
                 _req.tokenId,
                 keccak256(bytes(_req.uri)),
@@ -391,7 +395,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
+    function collectPrice(MintRequest memory _req) internal {
         if (_req.pricePerToken == 0) {
             return;
         }
@@ -405,12 +409,13 @@ contract TokenERC1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address saleRecipient = saleRecipientForToken[_tokenId];
-        address recipient = saleRecipient == address(0) ? primarySaleRecipient : saleRecipient;
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? primarySaleRecipient
+            : _req.primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees - twFee);
     }
 
     ///     =====   Low-level overrides  =====

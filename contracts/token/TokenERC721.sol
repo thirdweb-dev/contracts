@@ -49,7 +49,7 @@ contract TokenERC721 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address royaltyRecipient,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -96,8 +96,8 @@ contract TokenERC721 is
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
 
-    /// @dev Token ID => the address of the recipient of royalty.
-    mapping(uint256 => address) private royaltyRecipientForToken;
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -193,14 +193,15 @@ contract TokenERC721 is
     }
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
@@ -216,7 +217,10 @@ contract TokenERC721 is
         tokenIdMinted = _mintTo(receiver, _req.uri);
 
         if (_req.royaltyRecipient != address(0)) {
-            royaltyRecipientForToken[tokenIdMinted] = _req.royaltyRecipient;
+            royaltyInfoForToken[tokenIdMinted] = RoyaltyInfo({
+                recipient: _req.royaltyRecipient,
+                bps: _req.royaltyBps
+            });
         }
 
         collectPrice(_req);
@@ -233,20 +237,25 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external onlyModuleAdmin {
-        royaltyRecipientForToken[_tokenId] = _recipient;
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
 
-        emit RoyaltyRecipient(_tokenId, _recipient);
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -281,13 +290,18 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
     /// @dev Returns the royalty recipient for a particular token Id.
-    function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
-        return royaltyRecipientForToken[_tokenId] == address(0) ? royaltyRecipient : royaltyRecipientForToken[_tokenId];
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     ///     =====   Internal functions  =====
@@ -305,24 +319,26 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) private view returns (address) {
+        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    }
+
+    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
+    function _encodeRequest(MintRequest calldata _req) private pure returns (bytes memory) {
         return
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        TYPEHASH,
-                        _req.to,
-                        _req.royaltyRecipient,
-                        _req.primarySaleRecipient,
-                        keccak256(bytes(_req.uri)),
-                        _req.price,
-                        _req.currency,
-                        _req.validityStartTimestamp,
-                        _req.validityEndTimestamp,
-                        _req.uid
-                    )
-                )
-            ).recover(_signature);
+            abi.encode(
+                TYPEHASH,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.royaltyBps,
+                _req.primarySaleRecipient,
+                keccak256(bytes(_req.uri)),
+                _req.price,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     /// @dev Verifies that a mint request is valid.

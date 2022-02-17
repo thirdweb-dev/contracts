@@ -156,8 +156,8 @@ contract Bundle is
         uint256 feeCollected
     );
 
-    /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) private royaltyRecipientForToken;
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev NFT tokenId => token state.
     mapping(uint256 => TokenState) public tokenState;
@@ -316,14 +316,15 @@ contract Bundle is
      */
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Wraps an ERC721 NFT as an ERC1155 NFT.
@@ -443,36 +444,44 @@ contract Bundle is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
     /// @dev Returns the royalty recipient for a particular token Id.
-    function getRoyaltyRecipientForToken(uint256 _tokenId) external view returns (address) {
-        return royaltyRecipientForToken[_tokenId] == address (0)
-            ? royaltyRecipient 
-            : royaltyRecipientForToken[_tokenId];
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /**
      *      External: setter functions
      */
 
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyRecipientForToken(uint256 _tokenId, address _recipient) external onlyModuleAdmin {
-        royaltyRecipientForToken[_tokenId] = _recipient;
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
 
-        emit RoyaltyRecipient(_tokenId, _recipient);
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
