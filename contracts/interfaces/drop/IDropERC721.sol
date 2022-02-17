@@ -80,7 +80,7 @@ interface IDropERC721 is
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
-    
+
     /**
      *  @notice A global limit on the number of NFTs a wallet can claim.
      *

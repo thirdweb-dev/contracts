@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 interface IThirdwebRoyalty is IERC2981 {
-
     struct RoyaltyInfo {
         address recipient;
         uint256 bps;
@@ -17,7 +16,11 @@ interface IThirdwebRoyalty is IERC2981 {
     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external;
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyInfoForToken(uint256 tokenId, address recipient, uint256 bps) external;
+    function setRoyaltyInfoForToken(
+        uint256 tokenId,
+        address recipient,
+        uint256 bps
+    ) external;
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyInfoForToken(uint256 tokenId) external view returns (address, uint16);

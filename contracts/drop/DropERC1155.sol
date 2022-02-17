@@ -100,7 +100,7 @@ contract DropERC1155 is
 
     /// @dev Token ID => public claim conditions for tokens with that ID.
     mapping(uint256 => ClaimConditions) public claimConditions;
-    
+
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
 
@@ -274,7 +274,11 @@ contract DropERC1155 is
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set a claim limit on a wallet.
-    function setClaimLimitForWallet(address _claimer, uint256 _tokenId, uint256 _limit) external onlyModuleAdmin {
+    function setClaimLimitForWallet(
+        address _claimer,
+        uint256 _tokenId,
+        uint256 _limit
+    ) external onlyModuleAdmin {
         claimLimitPerWallet[_claimer][_tokenId].canClaim = uint128(_limit);
         emit ClaimLimitForWallet(_claimer, _tokenId, _limit);
     }
@@ -302,13 +306,14 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+    function setRoyaltyInfoForToken(
+        uint256 _tokenId,
+        address _recipient,
+        uint256 _bps
+    ) external onlyModuleAdmin {
         require(_bps <= MAX_BPS, "exceed royalty bps");
-        
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
-            recipient: _recipient,
-            bps: _bps
-        });
+
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
@@ -349,12 +354,12 @@ contract DropERC1155 is
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
-        return royaltyForToken.recipient == address (0)
-            ? (royaltyRecipient, uint16(royaltyBps)) 
-            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+        return
+            royaltyForToken.recipient == address(0)
+                ? (royaltyRecipient, uint16(royaltyBps))
+                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /// @dev Returns the current active mint condition for a given tokenId.

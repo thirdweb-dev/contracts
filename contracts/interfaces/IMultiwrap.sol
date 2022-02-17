@@ -6,7 +6,6 @@ import "./IThirdwebRoyalty.sol";
 import "./IThirdwebOwnable.sol";
 
 interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
-
     struct WrappedContents {
         address[] erc1155AssetContracts;
         uint256[][] erc1155TokensToWrap;
@@ -19,9 +18,14 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
 
     /// @dev Emitted when tokens are wrapped.
     event Wrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
-    
+
     /// @dev Emitted when tokens are unwrapped.
-    event Unwrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, uint256 sharesUnwrapped, WrappedContents wrappedContents);
+    event Unwrapped(
+        address indexed wrapper,
+        uint256 indexed tokenIdOfShares,
+        uint256 sharesUnwrapped,
+        WrappedContents wrappedContents
+    );
 
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
@@ -36,7 +40,11 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param shares The number of shares to issue for the wrapped contents.
      *  @param uriForShares The URI for the shares i.e. wrapped token.
      */
-    function wrap(WrappedContents calldata wrappedContents, uint256 shares, string calldata uriForShares) external payable;
+    function wrap(
+        WrappedContents calldata wrappedContents,
+        uint256 shares,
+        string calldata uriForShares
+    ) external payable;
 
     /**
      *  @notice Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.

@@ -278,13 +278,14 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+    function setRoyaltyInfoForToken(
+        uint256 _tokenId,
+        address _recipient,
+        uint256 _bps
+    ) external onlyModuleAdmin {
         require(_bps <= MAX_BPS, "exceed royalty bps");
-        
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
-            recipient: _recipient,
-            bps: _bps
-        });
+
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
@@ -327,12 +328,12 @@ contract TokenERC1155 is
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
-        return royaltyForToken.recipient == address (0)
-            ? (royaltyRecipient, uint16(royaltyBps)) 
-            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+        return
+            royaltyForToken.recipient == address(0)
+                ? (royaltyRecipient, uint16(royaltyBps))
+                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     ///     =====   Internal functions  =====
@@ -415,7 +416,12 @@ contract TokenERC1155 is
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(
+            _req.currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice - platformFees - twFee
+        );
     }
 
     ///     =====   Low-level overrides  =====

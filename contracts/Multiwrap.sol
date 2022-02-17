@@ -37,7 +37,7 @@ contract Multiwrap is
     AccessControlEnumerableUpgradeable,
     ERC1155HolderUpgradeable,
     ERC721HolderUpgradeable,
-    ERC1155Upgradeable 
+    ERC1155Upgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("Multiwrap");
     uint256 private constant VERSION = 1;
@@ -145,17 +145,13 @@ contract Multiwrap is
     }
 
     ///     =====   External functions  =====
-    
+
     /// @dev Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
     function wrap(
         WrappedContents calldata _wrappedContents,
         uint256 _shares,
         string calldata _uriForShares
-    )
-        external
-        payable
-        nonReentrant
-    {
+    ) external payable nonReentrant {
         uint256 tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
@@ -174,7 +170,6 @@ contract Multiwrap is
 
     /// @dev Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, uint256 _amountToRedeem) external nonReentrant {
-        
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(balanceOf(_msgSender(), _tokenId) >= _amountToRedeem, "unwrapping more than owned");
 
@@ -184,11 +179,11 @@ contract Multiwrap is
 
         burn(_msgSender(), _tokenId, _amountToRedeem);
 
-        if(totalSupply[_tokenId] == 0) {
+        if (totalSupply[_tokenId] == 0) {
             delete wrappedContents[_tokenId];
         }
 
-        if(isTotalRedemption) {
+        if (isTotalRedemption) {
             transfer1155(address(this), _msgSender(), wrappedContents_);
             transfer721(address(this), _msgSender(), wrappedContents_);
         }
@@ -210,12 +205,12 @@ contract Multiwrap is
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
-        return royaltyForToken.recipient == address (0)
-            ? (royaltyRecipient, uint16(royaltyBps)) 
-            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+        return
+            royaltyForToken.recipient == address(0)
+                ? (royaltyRecipient, uint16(royaltyBps))
+                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -229,13 +224,14 @@ contract Multiwrap is
     }
 
     /// @dev Lets a module admin set the royalty recipient for a particular token Id.
-    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+    function setRoyaltyInfoForToken(
+        uint256 _tokenId,
+        address _recipient,
+        uint256 _bps
+    ) external onlyModuleAdmin {
         require(_bps <= MAX_BPS, "exceed royalty bps");
-        
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
-            recipient: _recipient,
-            bps: _bps
-        });
+
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
@@ -258,15 +254,12 @@ contract Multiwrap is
         address _from,
         address _to,
         WrappedContents memory _wrappedContents
-    ) 
-        internal
-    {
-
+    ) internal {
         uint256 i;
 
-        bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
+        bool isValidData = _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
         require(isValidData, "invalid erc20 wrap");
-        for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+        for (i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
             CurrencyTransferLib.transferCurrency(
                 _wrappedContents.erc20AssetContracts[i],
                 _from,
@@ -282,18 +275,15 @@ contract Multiwrap is
         WrappedContents memory _wrappedContents,
         uint256 _sharesToAccount,
         uint256 _totalShares
-    ) 
-        internal
-    {
-
+    ) internal {
         uint256 i;
 
-        bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
-        if(isValidData) {
-            for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+        bool isValidData = _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
+        if (isValidData) {
+            for (i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
                 isValidData = _wrappedContents.erc20AmountsToWrap[i] % _totalShares == 0;
-                
-                if(!isValidData) {
+
+                if (!isValidData) {
                     break;
                 }
                 uint256 tokensToIssue = (_wrappedContents.erc20AmountsToWrap[i] * _sharesToAccount) / _totalShares;
@@ -313,18 +303,16 @@ contract Multiwrap is
         address _from,
         address _to,
         WrappedContents memory _wrappedContents
-    ) 
-        internal
-    {
+    ) internal {
         uint256 i;
         uint256 j;
 
-        bool isValidData =  _wrappedContents.erc721AssetContracts.length == _wrappedContents.erc721TokensToWrap.length;
-        if(isValidData) {
-            for(i = 0; i < _wrappedContents.erc721AssetContracts.length; i += 1) {
+        bool isValidData = _wrappedContents.erc721AssetContracts.length == _wrappedContents.erc721TokensToWrap.length;
+        if (isValidData) {
+            for (i = 0; i < _wrappedContents.erc721AssetContracts.length; i += 1) {
                 IERC721 assetContract = IERC721(_wrappedContents.erc721AssetContracts[i]);
-                
-                for(j = 0; j < _wrappedContents.erc721TokensToWrap[i].length; j += 1) {
+
+                for (j = 0; j < _wrappedContents.erc721TokensToWrap[i].length; j += 1) {
                     assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc721TokensToWrap[i][j]);
                 }
             }
@@ -336,27 +324,33 @@ contract Multiwrap is
         address _from,
         address _to,
         WrappedContents memory _wrappedContents
-    ) 
-        internal
-    {
+    ) internal {
         uint256 i;
         uint256 j;
 
-        bool isValidData =  _wrappedContents.erc1155AssetContracts.length == _wrappedContents.erc1155TokensToWrap.length
-                && _wrappedContents.erc1155AssetContracts.length == _wrappedContents.erc1155AmountsToWrap.length;
+        bool isValidData = _wrappedContents.erc1155AssetContracts.length ==
+            _wrappedContents.erc1155TokensToWrap.length &&
+            _wrappedContents.erc1155AssetContracts.length == _wrappedContents.erc1155AmountsToWrap.length;
 
-        if(isValidData) {
-            for(i = 0; i < _wrappedContents.erc1155AssetContracts.length; i += 1) {
-                isValidData = _wrappedContents.erc1155TokensToWrap[i].length == _wrappedContents.erc1155AmountsToWrap[i].length;
+        if (isValidData) {
+            for (i = 0; i < _wrappedContents.erc1155AssetContracts.length; i += 1) {
+                isValidData =
+                    _wrappedContents.erc1155TokensToWrap[i].length == _wrappedContents.erc1155AmountsToWrap[i].length;
 
-                if(!isValidData) {
+                if (!isValidData) {
                     break;
                 }
 
                 IERC1155 assetContract = IERC1155(_wrappedContents.erc1155AssetContracts[i]);
-                    
-                for(j = 0; j < _wrappedContents.erc1155TokensToWrap[i].length; j += 1) {
-                    assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc1155TokensToWrap[i][j], _wrappedContents.erc1155AmountsToWrap[i][j], "");
+
+                for (j = 0; j < _wrappedContents.erc1155TokensToWrap[i].length; j += 1) {
+                    assetContract.safeTransferFrom(
+                        _from,
+                        _to,
+                        _wrappedContents.erc1155TokensToWrap[i][j],
+                        _wrappedContents.erc1155AmountsToWrap[i][j],
+                        ""
+                    );
                 }
             }
         }
