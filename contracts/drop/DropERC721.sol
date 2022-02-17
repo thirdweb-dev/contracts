@@ -92,6 +92,9 @@ contract DropERC721 is
     /// @dev End token Id => info related to the delayed reveal of the baseURI
     mapping(uint256 => bytes) public encryptedBaseURI;
 
+    /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
+    mapping(address => LimitPerWallet) public claimLimitPerWallet;
+
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
@@ -245,6 +248,12 @@ contract DropERC721 is
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
+        LimitPerWallet memory limitForWallet = claimLimitPerWallet[_claimer];
+        require(
+            limitForWallet.canClaim == 0 || limitForWallet.hasClaimed + _quantity <= limitForWallet.canClaim,
+            "exceed claim limit for wallet"
+        );
+
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
         uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _claimer);
@@ -388,6 +397,12 @@ contract DropERC721 is
     }
 
     //      =====   Setter functions  =====
+
+    /// @dev Lets a module admin set a claim limit on a wallet.
+    function setClaimLimitForWallet(address _claimer, uint256 _limit) external onlyModuleAdmin {
+        claimLimitPerWallet[_claimer].canClaim = uint128(_limit);
+        emit ClaimLimitForWallet(_claimer, _limit);
+    }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
@@ -536,6 +551,8 @@ contract DropERC721 is
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
         uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
         claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
+
+        claimLimitPerWallet[_msgSender()].hasClaimed += uint128(_quantityBeingClaimed);
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
