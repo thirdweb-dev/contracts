@@ -73,7 +73,7 @@ contract DropERC1155 is
     address public primarySaleRecipient;
 
     /// @dev The adress that receives all primary sales value.
-    address public platformFeeRecipient;
+    address private platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
     address private royaltyRecipient;
@@ -82,7 +82,7 @@ contract DropERC1155 is
     uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -216,11 +216,6 @@ contract DropERC1155 is
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
-    }
-
-    /// @dev Lets the contract accept ether.
-    receive() external payable {
-        emit EtherReceived(msg.sender, msg.value);
     }
 
     /**
