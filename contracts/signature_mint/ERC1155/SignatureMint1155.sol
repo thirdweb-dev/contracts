@@ -47,7 +47,7 @@ contract SignatureMint1155 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address royaltyRecipient,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -99,11 +99,8 @@ contract SignatureMint1155 is
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
 
-    /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public saleRecipient;
-
-    /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public royaltyRecipient;
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -205,15 +202,15 @@ contract SignatureMint1155 is
         }
 
         if (_req.royaltyRecipient != address(0)) {
-            royaltyRecipient[tokenIdToMint] = _req.royaltyRecipient;
-        }
-        if (_req.primarySaleRecipient != address(0)) {
-            saleRecipient[tokenIdToMint] = _req.primarySaleRecipient;
+            royaltyInfoForToken[tokenIdToMint] = RoyaltyInfo({
+                recipient: _req.royaltyRecipient,
+                bps: _req.royaltyBps
+            });
         }
 
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
-        collectPrice(_req, tokenIdToMint);
+        collectPrice(_req);
 
         emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
@@ -223,21 +220,29 @@ contract SignatureMint1155 is
         external
         view
         virtual
-        override
         returns (address receiver, uint256 royaltyAmount)
     {
-        address targetRecipient = royaltyRecipient[tokenId];
-        receiver = targetRecipient != address(0) ? targetRecipient : defaultRoyaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
+        return (defaultRoyaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (defaultRoyaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     //      =====   Setter functions  =====
-
-    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setSaleRecipient(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
-        saleRecipient[_tokenId] = _saleRecipient;
-        emit NewSaleRecipient(_saleRecipient, _tokenId);
-    }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setDefaultSaleRecipient(address _saleRecipient) external onlyModuleAdmin {
@@ -245,25 +250,26 @@ contract SignatureMint1155 is
         emit NewDefaultSaleRecipient(_saleRecipient);
     }
 
-    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setRoyaltyRecipient(uint256 _tokenId, address _royaltyRecipient) external onlyModuleAdmin {
-        royaltyRecipient[_tokenId] = _royaltyRecipient;
-        emit NewRoyaltyRecipient(_royaltyRecipient, _tokenId);
-    }
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
-    /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setDefaultRoyaltyRecipient(address _royaltyRecipient) external onlyModuleAdmin {
         defaultRoyaltyRecipient = _royaltyRecipient;
-        emit NewDefaultRoyaltyRecipient(_royaltyRecipient);
-    }
-
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyBps(uint256 _royaltyBps) public onlyModuleAdmin {
-        require(_royaltyBps <= MAX_BPS, "bps <= 10000.");
-
         royaltyBps = uint64(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
+
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -327,6 +333,7 @@ contract SignatureMint1155 is
                 TYPEHASH,
                 _req.to,
                 _req.royaltyRecipient,
+                _req.royaltyBps,
                 _req.primarySaleRecipient,
                 _req.tokenId,
                 keccak256(bytes(_req.uri)),
@@ -355,7 +362,7 @@ contract SignatureMint1155 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
+    function collectPrice(MintRequest memory _req) internal {
         if (_req.pricePerToken == 0) {
             return;
         }
@@ -367,11 +374,13 @@ contract SignatureMint1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address recipient = saleRecipient[_tokenId] == address(0) ? defaultSaleRecipient : saleRecipient[_tokenId];
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? defaultSaleRecipient
+            : _req.primarySaleRecipient;
 
         transferCurrency(_req.currency, _msgSender(), controlCenter.getRoyaltyTreasury(address(this)), fees);
 
-        transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - fees);
+        transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - fees);
     }
 
     /// @dev Transfers a given amount of currency.

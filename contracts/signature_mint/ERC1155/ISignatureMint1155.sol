@@ -22,6 +22,7 @@ interface ISignatureMint1155 {
     struct MintRequest {
         address to;
         address royaltyRecipient;
+        uint256 royaltyBps;
         address primarySaleRecipient;
         uint256 tokenId;
         string uri;
@@ -31,6 +32,11 @@ interface ISignatureMint1155 {
         uint128 validityStartTimestamp;
         uint128 validityEndTimestamp;
         bytes32 uid;
+    }
+
+    struct RoyaltyInfo {
+        address recipient;
+        uint256 bps;
     }
 
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
@@ -44,19 +50,17 @@ interface ISignatureMint1155 {
         MintRequest mintRequest
     );
 
-    /// @dev Emitted when a new sale recipient is set.
-    event NewSaleRecipient(address indexed recipient, uint256 indexed _tokenId);
-    /// @dev Emitted when a new sale recipient is set.
-    event NewRoyaltyRecipient(address indexed recipient, uint256 indexed _tokenId);
+    /// @dev Emitted when royalty info is updated.
+    event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+
+    /// @dev Emitted when royalty recipient for tokenId is set
+    event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewDefaultSaleRecipient(address indexed recipient);
 
     /// @dev Emitted when a new sale recipient is set.
     event NewDefaultRoyaltyRecipient(address indexed recipient);
-
-    /// @dev Emitted when the royalty fee bps is updated
-    event RoyaltyUpdated(uint256 newRoyaltyBps);
 
     /// @dev Emitted when fee on primary sales is updated.
     event PrimarySalesFeeUpdates(uint256 newFeeBps);

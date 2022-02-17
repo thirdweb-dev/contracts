@@ -56,6 +56,7 @@ describe("Mint tokens with a valid mint request", function () {
     mintRequest = {
       to: requestor.address,
       royaltyRecipient: protocolAdmin.address,
+      royaltyBps: 100,
       primarySaleRecipient: protocolAdmin.address,
       tokenId: ethers.constants.MaxUint256.toString(),
       uri: "ipfs://test/",
@@ -148,6 +149,7 @@ describe("Mint tokens with a valid mint request", function () {
             mintRequest: Object.values({
               to: mintRequest.to,
               royaltyRecipient: mintRequest.royaltyRecipient,
+              royaltyBps: mintRequest.royaltyBps,
               primarySaleRecipient: mintRequest.primarySaleRecipient,
               tokenId: mintRequest.tokenId,
               uri: mintRequest.uri,
