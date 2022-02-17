@@ -19,11 +19,10 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(OPERATOR_ROLE, _msgSender());
     }
 
     function add(address _deployer, address _deployment) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator.");
+        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool added = deployments[_deployer].add(_deployment);
         require(added, "failed to add");

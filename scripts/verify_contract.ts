@@ -1,22 +1,17 @@
 import hre, { ethers } from "hardhat";
 
 async function verify() {
-  const txhashs = [""];
+  const txhashs = [];
   for (const txhash of txhashs) {
     const types = [
-      "Coin",
-      "LazyMintERC721",
-      "LazyMintERC1155",
-      "VotingGovernor",
-      "SignatureMint721",
+      "TokenERC20",
+      "TokenERC721",
+      "TokenERC1155",
+      "DropERC721",
+      "DropERC1155",
+      "VoteERC20",
+      "Split",
       "Marketplace",
-      "LazyNFT",
-      "NFT",
-      "NFTCollection",
-      "Royalty",
-      "Pack",
-      "DataStore",
-      "Market",
     ];
 
     const tx = await ethers.provider.getTransaction(txhash);

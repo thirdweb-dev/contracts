@@ -85,16 +85,13 @@ contract TokenERC1155 is
     address public platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
-
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -110,8 +107,8 @@ contract TokenERC1155 is
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipientForToken;
 
-    /// @dev Token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public royaltyRecipientForToken;
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -144,7 +141,7 @@ contract TokenERC1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("SignatureMint1155", "1");
+        __EIP712_init("TokenERC1155", "1");
         __ERC2771Context_init(_trustedForwarder);
         __ERC1155_init("");
 
@@ -162,6 +159,7 @@ contract TokenERC1155 is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
@@ -187,11 +185,6 @@ contract TokenERC1155 is
     function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool, address) {
         address signer = recoverAddress(_req, _signature);
         return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
-    }
-
-    /// @dev Returns the URI for a tokenId
-    function tokenURI(uint256 _tokenId) public view returns (string memory) {
-        return _tokenURI[_tokenId];
     }
 
     /// @dev Returns the URI for a tokenId
@@ -226,7 +219,7 @@ contract TokenERC1155 is
         emit EtherReceived(msg.sender, msg.value);
     }
 
-    /// @dev See EIP 2981
+    /// @dev See EIP-2981
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
@@ -234,9 +227,9 @@ contract TokenERC1155 is
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        address targetRecipient = royaltyRecipientForToken[tokenId];
-        receiver = targetRecipient != address(0) ? targetRecipient : royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
@@ -254,41 +247,47 @@ contract TokenERC1155 is
         }
 
         if (_req.royaltyRecipient != address(0)) {
-            royaltyRecipientForToken[tokenIdToMint] = _req.royaltyRecipient;
-        }
-        if (_req.primarySaleRecipient != address(0)) {
-            saleRecipientForToken[tokenIdToMint] = _req.primarySaleRecipient;
+            royaltyInfoForToken[tokenIdToMint] = RoyaltyInfo({
+                recipient: _req.royaltyRecipient,
+                bps: _req.royaltyBps
+            });
         }
 
         _mintTo(receiver, _req.uri, tokenIdToMint, _req.quantity);
 
-        collectPrice(_req, tokenIdToMint);
+        collectPrice(_req);
 
         emit MintWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     //      =====   Setter functions  =====
 
-    /// @dev Lets a module admin set the recipient of all primary sales for a given token ID.
-    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyModuleAdmin {
-        saleRecipientForToken[_tokenId] = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient, _tokenId, false);
-    }
-
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient, 0, true);
+        emit NewPrimarySaleRecipient(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
+
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -299,13 +298,6 @@ contract TokenERC1155 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /// @dev Lets a module admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -330,8 +322,18 @@ contract TokenERC1155 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     ///     =====   Internal functions  =====
@@ -365,6 +367,7 @@ contract TokenERC1155 is
                 TYPEHASH,
                 _req.to,
                 _req.royaltyRecipient,
+                _req.royaltyBps,
                 _req.primarySaleRecipient,
                 _req.tokenId,
                 keccak256(bytes(_req.uri)),
@@ -393,7 +396,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req, uint256 _tokenId) internal {
+    function collectPrice(MintRequest memory _req) internal {
         if (_req.pricePerToken == 0) {
             return;
         }
@@ -407,14 +410,13 @@ contract TokenERC1155 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address saleRecipient = saleRecipientForToken[_tokenId];
-        address recipient = saleRecipient == address(0)
+        address saleRecipient = _req.primarySaleRecipient == address(0)
             ? primarySaleRecipient
-            : saleRecipient;
+            : _req.primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees - twFee);
     }
 
     ///     =====   Low-level overrides  =====
@@ -461,7 +463,7 @@ contract TokenERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 

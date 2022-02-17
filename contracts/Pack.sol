@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -29,6 +30,7 @@ contract Pack is
     IERC2981,
     IThirdwebContract,
     IThirdwebOwnable,
+    IThirdwebRoyalty,
     Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
@@ -68,9 +70,6 @@ contract Pack is
     /// @dev The percentage of royalty how much royalty in basis points.
     uint256 private royaltyBps;
 
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
-
     /// @dev Collection level metadata.
     string public contractURI;
 
@@ -98,6 +97,9 @@ contract Pack is
         uint256 packId;
         address opener;
     }
+
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev pack tokenId => The state of packs with id `tokenId`.
     mapping(uint256 => PackState) public packs;
@@ -138,9 +140,6 @@ contract Pack is
 
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);
@@ -196,6 +195,7 @@ contract Pack is
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     /**
@@ -278,14 +278,15 @@ contract Pack is
      **/
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Lets a pack owner request to open a single pack.
@@ -317,8 +318,18 @@ contract Pack is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /**
@@ -339,26 +350,31 @@ contract Pack is
         emit NewOwner(_prevOwner, _newOwner);
     }
 
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
+
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _uri) external onlyModuleAdmin {
         contractURI = _uri;
-    }
-
-    /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /**
@@ -485,7 +501,7 @@ contract Pack is
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(
                 hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
                 "transfers restricted to TRANSFER_ROLE holders"

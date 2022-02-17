@@ -80,9 +80,17 @@ interface IDropERC721 is
         mapping(uint256 => ClaimCondition) claimConditionAtIndex;
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
-
-    /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    
+    /**
+     *  @notice A global limit on the number of NFTs a wallet can claim.
+     *
+     *  @param hasClaimed The number of NFTs claimed by a wallet.
+     *  @param canClaim The number of NFTs the wallet can claim.
+     */
+    struct LimitPerWallet {
+        uint128 hasClaimed;
+        uint128 canClaim;
+    }
 
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
@@ -92,6 +100,12 @@ interface IDropERC721 is
         uint256 startTokenId,
         uint256 quantityClaimed
     );
+
+    /// @dev Emitted when tokens are lazy minted.
+    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+
+    /// @dev Emitted when a claim limit for a wallet is set.
+    event ClaimLimitForWallet(address indexed claimer, uint256 limit);
 
     /// @dev Emitted when the URI for a batch of NFTs is revealed.
     event RevealedNFT(uint256 endTokenId, string revealedURI);
@@ -105,14 +119,8 @@ interface IDropERC721 is
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
 
-    /// @dev Emitted when transfers are set as restricted / not-restricted.
-    event TransfersRestricted(bool restricted);
-
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);

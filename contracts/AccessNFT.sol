@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
 
 // Meta transactions
 import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
@@ -24,6 +25,7 @@ contract AccessNFT is
     IERC2981,
     IThirdwebContract,
     IThirdwebOwnable,
+    IThirdwebRoyalty,
     Initializable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -61,9 +63,6 @@ contract AccessNFT is
 
     /// @dev The percentage of royalty how much royalty in basis points.
     uint256 private royaltyBps;
-
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
 
     /// @dev Whether AccessNFTs (where TokenState.isRedeemable == false) are transferable.
     bool public accessNftIsTransferable;
@@ -117,9 +116,6 @@ contract AccessNFT is
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
 
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
-
     /// @dev Emitted when the contract receives ether.
     event EtherReceived(address sender, uint256 amount);
 
@@ -130,6 +126,9 @@ contract AccessNFT is
         uint256 totalAmount,
         uint256 feeCollected
     );
+
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev NFT tokenId => token state.
     mapping(uint256 => TokenState) public tokenState;
@@ -177,6 +176,7 @@ contract AccessNFT is
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     /**
@@ -195,11 +195,6 @@ contract AccessNFT is
 
     /// @dev See EIP 1155
     function uri(uint256 _nftId) public view override returns (string memory) {
-        return tokenState[_nftId].uri;
-    }
-
-    /// @dev Alternative function to return a token's URI
-    function tokenURI(uint256 _nftId) public view returns (string memory) {
         return tokenState[_nftId].uri;
     }
 
@@ -253,14 +248,15 @@ contract AccessNFT is
      */
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @notice Create native ERC 1155 NFTs.
@@ -352,8 +348,18 @@ contract AccessNFT is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /**
@@ -380,21 +386,26 @@ contract AccessNFT is
         emit AccessTransferabilityUpdated(_isTransferable);
     }
 
-    /// @dev Lets a module admin update the royalties paid on secondary token sales.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public onlyModuleAdmin {
+    /// @dev Lets a module admin update the royalty bps and recipient.
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
-    /// @dev Lets a protocol admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
 
-        emit RestrictedTransferUpdated(_restrictedTransfer);
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -429,7 +440,7 @@ contract AccessNFT is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
 

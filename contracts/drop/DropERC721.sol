@@ -80,9 +80,6 @@ contract DropERC721 is
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 private platformFeeBps;
 
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
-
     /// @dev Contract level metadata.
     string public contractURI;
 
@@ -94,6 +91,12 @@ contract DropERC721 is
 
     /// @dev End token Id => info related to the delayed reveal of the baseURI
     mapping(uint256 => bytes) public encryptedBaseURI;
+
+    /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
+    mapping(address => LimitPerWallet) public claimLimitPerWallet;
+
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
@@ -144,6 +147,7 @@ contract DropERC721 is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
@@ -244,6 +248,12 @@ contract DropERC721 is
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
+        LimitPerWallet memory limitForWallet = claimLimitPerWallet[_claimer];
+        require(
+            limitForWallet.canClaim == 0 || limitForWallet.hasClaimed + _quantity <= limitForWallet.canClaim,
+            "exceed claim limit for wallet"
+        );
+
         uint256 timestampIndex = _conditionIndex + claimConditions.timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions.timestampOfLastClaim[_claimer][timestampIndex];
         uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_conditionIndex, _claimer);
@@ -263,14 +273,15 @@ contract DropERC721 is
     }
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /**
@@ -387,6 +398,12 @@ contract DropERC721 is
 
     //      =====   Setter functions  =====
 
+    /// @dev Lets a module admin set a claim limit on a wallet.
+    function setClaimLimitForWallet(address _claimer, uint256 _limit) external onlyModuleAdmin {
+        claimLimitPerWallet[_claimer].canClaim = uint128(_limit);
+        emit ClaimLimitForWallet(_claimer, _limit);
+    }
+
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
@@ -394,13 +411,25 @@ contract DropERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
+
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -411,13 +440,6 @@ contract DropERC721 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /// @dev Lets a module admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -442,8 +464,18 @@ contract DropERC721 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /// @dev Returns the current active mint condition for a given tokenId.
@@ -520,6 +552,8 @@ contract DropERC721 is
         uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
         claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
+        claimLimitPerWallet[_msgSender()].hasClaimed += uint128(_quantityBeingClaimed);
+
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
         for (uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
@@ -548,7 +582,7 @@ contract DropERC721 is
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
     }

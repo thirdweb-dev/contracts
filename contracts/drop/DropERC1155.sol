@@ -73,19 +73,16 @@ contract DropERC1155 is
     address public primarySaleRecipient;
 
     /// @dev The adress that receives all primary sales value.
-    address public platformFeeRecipient;
+    address private platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
-
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
+    uint128 private platformFeeBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -94,12 +91,24 @@ contract DropERC1155 is
 
     /// @dev End token Id => URI that overrides `baseURI + tokenId` convention.
     mapping(uint256 => string) private baseURI;
+
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
+
+    /// @dev Token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public maxTotalSupply;
+
     /// @dev Token ID => public claim conditions for tokens with that ID.
     mapping(uint256 => ClaimConditions) public claimConditions;
+    
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
+
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
+
+    /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
+    mapping(address => mapping(uint256 => LimitPerWallet)) public claimLimitPerWallet;
 
     /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
     modifier onlyModuleAdmin() {
@@ -149,6 +158,7 @@ contract DropERC1155 is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
@@ -197,19 +207,15 @@ contract DropERC1155 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
-    }
-
-    /// @dev Lets the contract accept ether.
-    receive() external payable {
-        emit EtherReceived(msg.sender, msg.value);
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /**
@@ -267,6 +273,18 @@ contract DropERC1155 is
 
     //      =====   Setter functions  =====
 
+    /// @dev Lets a module admin set a claim limit on a wallet.
+    function setClaimLimitForWallet(address _claimer, uint256 _tokenId, uint256 _limit) external onlyModuleAdmin {
+        claimLimitPerWallet[_claimer][_tokenId].canClaim = uint128(_limit);
+        emit ClaimLimitForWallet(_claimer, _tokenId, _limit);
+    }
+
+    /// @dev Lets a module admin set a max total supply for token.
+    function setMaxTotalSupplyForToken(uint256 _tokenId, uint256 _maxTotalSupply) external onlyModuleAdmin {
+        maxTotalSupply[_tokenId] = _maxTotalSupply;
+        emit MaxTotalSupplyForToken(_tokenId, _maxTotalSupply);
+    }
+
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
@@ -274,13 +292,25 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
+
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -291,13 +321,6 @@ contract DropERC1155 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /// @dev Lets a module admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -320,8 +343,18 @@ contract DropERC1155 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     /// @dev Returns the current active mint condition for a given tokenId.
@@ -416,6 +449,17 @@ contract DropERC1155 is
             _mintCondition.supplyClaimed + _quantity <= _mintCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
+        uint256 maxTotalSupplyOfToken = maxTotalSupply[_tokenId];
+        require(
+            maxTotalSupplyOfToken == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupplyOfToken,
+            "exceed max total supply"
+        );
+
+        LimitPerWallet memory limitForWallet = claimLimitPerWallet[_claimer][_tokenId];
+        require(
+            limitForWallet.canClaim == 0 || limitForWallet.hasClaimed + _quantity <= limitForWallet.canClaim,
+            "exceed claim limit for wallet"
+        );
 
         uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex];
@@ -471,6 +515,8 @@ contract DropERC1155 is
         uint256 timestampIndex = _claimConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
+        claimLimitPerWallet[_msgSender()][_tokenId].hasClaimed += uint128(_quantityBeingClaimed);
+
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
@@ -518,7 +564,7 @@ contract DropERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 

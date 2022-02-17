@@ -44,6 +44,7 @@ contract Marketplace is
 
     /// @dev Access control: aditional roles.
     bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
+    bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -58,9 +59,6 @@ contract Marketplace is
 
     /// @dev Collection level metadata.
     string public contractURI;
-
-    /// @dev Whether listing is restricted by LISTER_ROLE.
-    bool public restrictedListerRoleOnly;
 
     /// @dev The address of which the marketplace fee goes to.
     address private platformFeeRecipient;
@@ -88,32 +86,24 @@ contract Marketplace is
 
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
-        require(listings[_listingId].tokenOwner == _msgSender(), "Marketplace: caller is not listing creator.");
+        require(listings[_listingId].tokenOwner == _msgSender(), "caller != listing creator");
         _;
     }
 
     /// @dev Checks whether a listing exists.
     modifier onlyExistingListing(uint256 _listingId) {
-        require(listings[_listingId].assetContract != address(0), "Marketplace: listing DNE.");
+        require(listings[_listingId].assetContract != address(0), "listing DNE");
         _;
     }
 
     /// @dev Checks whether caller has LISTER_ROLE when `restrictedListerRoleOnly` is true.
     modifier onlyListerRoleWhenRestricted() {
         require(
-            !restrictedListerRoleOnly || hasRole(LISTER_ROLE, _msgSender()),
+            hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()),
             "Marketplace: caller does not have LISTER_ROLE."
         );
         _;
     }
-
-    /// @dev Checks whether the caller is a module admin.
-    modifier onlyModuleAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Marketplace: not a module admin.");
-        _;
-    }
-
-    /// @dev Checks whether
 
     constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
@@ -142,6 +132,8 @@ contract Marketplace is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(LISTER_ROLE, _defaultAdmin);
+        _setupRole(LISTER_ROLE, address(0));
+        _setupRole(ASSET_ROLE, address(0));
     }
 
     /// @dev Returns the module type of the contract.
@@ -167,6 +159,10 @@ contract Marketplace is
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
         require(tokenAmountToList > 0, "Marketplace: listing invalid quantity.");
+        require(
+            hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract),
+            "Marketplace: listing unapproved asset"
+        );
 
         validateOwnershipAndApproval(
             tokenOwner,
@@ -196,6 +192,10 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
+            require(
+                newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
+                "reserve price exceeds buyout price."
+            );
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
@@ -221,6 +221,7 @@ contract Marketplace is
         // Can only edit auction listing before it starts.
         if (isAuction) {
             require(block.timestamp < targetListing.startTime, "Marketplace: auction already started.");
+            require(_buyoutPricePerToken >= _reservePricePerToken, "reserve price exceeds buyout price.");
         }
 
         uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;
@@ -785,7 +786,10 @@ contract Marketplace is
     //  ===== Setter functions  =====
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external onlyModuleAdmin {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -795,7 +799,7 @@ contract Marketplace is
     }
 
     /// @dev Lets a module admin set auction buffers
-    function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyModuleAdmin {
+    function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bidBufferBps < MAX_BPS, "Marketplace: invalid BPS.");
 
         timeBuffer = uint64(_timeBuffer);
@@ -804,14 +808,8 @@ contract Marketplace is
         emit AuctionBuffersUpdated(_timeBuffer, _bidBufferBps);
     }
 
-    /// @dev Lets a module admin restrict listing by LISTER_ROLE.
-    function setRestrictedListerRoleOnly(bool restricted) external onlyModuleAdmin {
-        restrictedListerRoleOnly = restricted;
-        emit ListingRestricted(restricted);
-    }
-
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyModuleAdmin {
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
 

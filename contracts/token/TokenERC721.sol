@@ -49,7 +49,7 @@ contract TokenERC721 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -79,16 +79,13 @@ contract TokenERC721 is
     address public platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.
-    address public royaltyRecipient;
+    address private royaltyRecipient;
 
     /// @dev The percentage of royalty how much royalty in basis points.
-    uint128 public royaltyBps;
+    uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 public platformFeeBps;
-
-    /// @dev Whether transfers on tokens are restricted.
-    bool public isTransferRestricted;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -96,7 +93,11 @@ contract TokenERC721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
+    /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
+
+    /// @dev Token ID => royalty recipient and bps for token
+    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /// @dev Checks whether the caller is a module admin.
     modifier onlyModuleAdmin() {
@@ -129,7 +130,7 @@ contract TokenERC721 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("SignatureMint721", "1");
+        __EIP712_init("TokenERC721", "1");
         __ERC2771Context_init(_trustedForwarder);
         __ERC721_init(_name, _symbol);
 
@@ -145,6 +146,7 @@ contract TokenERC721 is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
@@ -191,14 +193,15 @@ contract TokenERC721 is
     }
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256, uint256 salePrice)
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         virtual
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = royaltyRecipient;
-        royaltyAmount = (salePrice * royaltyBps) / MAX_BPS;
+        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        receiver = recipient;
+        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
@@ -212,6 +215,13 @@ contract TokenERC721 is
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
         tokenIdMinted = _mintTo(receiver, _req.uri);
+
+        if (_req.royaltyRecipient != address(0)) {
+            royaltyInfoForToken[tokenIdMinted] = RoyaltyInfo({
+                recipient: _req.royaltyRecipient,
+                bps: _req.royaltyBps
+            });
+        }
 
         collectPrice(_req);
 
@@ -227,13 +237,25 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external onlyModuleAdmin {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint128(_royaltyBps);
 
-        emit RoyaltyUpdated(_royaltyRecipient, _royaltyBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external onlyModuleAdmin {
+        require(_bps <= MAX_BPS, "exceed royalty bps");
+        
+        royaltyInfoForToken[_tokenId] = RoyaltyInfo({
+            recipient: _recipient,
+            bps: _bps
+        });
+
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -244,13 +266,6 @@ contract TokenERC721 is
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /// @dev Lets a module admin restrict token transfers.
-    function setRestrictedTransfer(bool _restrictedTransfer) external onlyModuleAdmin {
-        isTransferRestricted = _restrictedTransfer;
-
-        emit TransfersRestricted(_restrictedTransfer);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -275,8 +290,18 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the platform fee bps and recipient.
-    function getRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return royaltyForToken.recipient == address (0)
+            ? (royaltyRecipient, uint16(royaltyBps)) 
+            : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
     ///     =====   Internal functions  =====
@@ -294,22 +319,26 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) private view returns (address) {
+        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    }
+
+    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
+    function _encodeRequest(MintRequest calldata _req) private pure returns (bytes memory) {
         return
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        TYPEHASH,
-                        _req.to,
-                        keccak256(bytes(_req.uri)),
-                        _req.price,
-                        _req.currency,
-                        _req.validityStartTimestamp,
-                        _req.validityEndTimestamp,
-                        _req.uid
-                    )
-                )
-            ).recover(_signature);
+            abi.encode(
+                TYPEHASH,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.royaltyBps,
+                _req.primarySaleRecipient,
+                keccak256(bytes(_req.uri)),
+                _req.price,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     /// @dev Verifies that a mint request is valid.
@@ -339,14 +368,19 @@ contract TokenERC721 is
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
-            require(msg.value == _req.price, "must send total price.");
+            require(msg.value == totalPrice, "must send total price.");
         }
+
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? primarySaleRecipient
+            : _req.primarySaleRecipient;
+
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _req.currency,
             _msgSender(),
-            primarySaleRecipient,
+            saleRecipient,
             totalPrice - platformFees - twFee
         );
     }
@@ -369,7 +403,7 @@ contract TokenERC721 is
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (isTransferRestricted && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
     }
