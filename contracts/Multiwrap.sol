@@ -176,48 +176,29 @@ contract Multiwrap is
     function unwrap(uint256 _tokenId, uint256 _amountToRedeem) external nonReentrant {
         
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
-        
-        uint256 totalSupplyOfToken = totalSupply[_tokenId];
-        // require(balanceOf(_msgSender(), _tokenId) == totalSupplyOfToken, "must own all shares to unwrap");
         require(balanceOf(_msgSender(), _tokenId) >= _amountToRedeem, "unwrapping more than owned");
 
+        uint256 totalSharesOfToken = totalShares[_tokenId];
+        bool isTotalRedemption = _amountToRedeem == totalSharesOfToken;
         WrappedContents memory wrappedContents_ = wrappedContents[_tokenId];
+
         burn(_msgSender(), _tokenId, _amountToRedeem);
 
         if(totalSupply[_tokenId] == 0) {
             delete wrappedContents[_tokenId];
+        }
+
+        if(isTotalRedemption) {
+            transfer1155(address(this), _msgSender(), wrappedContents_);
+            transfer721(address(this), _msgSender(), wrappedContents_);
         }
 
         // delete wrappedContents[_tokenId];
 
-        burn(_msgSender(), _tokenId, totalSupplyOfToken);
+        // burn(_msgSender(), _tokenId, totalSupplyOfToken);
 
-        transfer1155(address(this), _msgSender(), wrappedContents_);
-        transfer721(address(this), _msgSender(), wrappedContents_);
-        transfer20(address(this), _msgSender(), wrappedContents_);
-
-        emit Unwrapped(_msgSender(), _tokenId, totalSupplyOfToken, wrappedContents_);
-    }
-
-    /// @dev Unwrap shares to retrieve share of underlying ERC20 tokens.
-    function unwrapByShares(uint256 _tokenId, uint256 _amountToRedeem) external nonReentrant {
-        
-        require(_tokenId < nextTokenIdToMint, "invalid tokenId");
-        require(balanceOf(_msgSender(), _tokenId) >= _amountToRedeem, "unwrapping more than owned");
-
-        WrappedContents memory wrappedContents_ = wrappedContents[_tokenId];
-        require(
-            wrappedContents_.erc721AssetContracts.length == 0 && wrappedContents_.erc1155AssetContracts.length == 0,
-            "cannot unwrap NFTs by shares"
-        );
-        
-        burn(_msgSender(), _tokenId, _amountToRedeem);
-
-        if(totalSupply[_tokenId] == 0) {
-            delete wrappedContents[_tokenId];
-        }
-
-        transfer20ByShares(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalShares[_tokenId]);
+        // transfer20(address(this), _msgSender(), wrappedContents_);
+        transfer20ByShares(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalSharesOfToken);
 
         emit Unwrapped(_msgSender(), _tokenId, _amountToRedeem, wrappedContents_);
     }
@@ -308,21 +289,24 @@ contract Multiwrap is
         uint256 i;
 
         bool isValidData =  _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
-        require(isValidData, "invalid erc20 wrap");
-        for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
-            require(
-                _wrappedContents.erc20AmountsToWrap[i] % _totalShares == 0,
-                "cannot unwrap by shares"
-            );
-            uint256 tokensToIssue = (_wrappedContents.erc20AmountsToWrap[i] * _sharesToAccount) / _totalShares;
+        if(isValidData) {
+            for(i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+                isValidData = _wrappedContents.erc20AmountsToWrap[i] % _totalShares == 0;
+                
+                if(!isValidData) {
+                    break;
+                }
+                uint256 tokensToIssue = (_wrappedContents.erc20AmountsToWrap[i] * _sharesToAccount) / _totalShares;
 
-            CurrencyTransferLib.transferCurrency(
-                _wrappedContents.erc20AssetContracts[i],
-                _from,
-                _to,
-                tokensToIssue
-            );
+                CurrencyTransferLib.transferCurrency(
+                    _wrappedContents.erc20AssetContracts[i],
+                    _from,
+                    _to,
+                    tokensToIssue
+                );
+            }
         }
+        require(isValidData, "invalid erc20 wrap");
     }
 
     function transfer721(

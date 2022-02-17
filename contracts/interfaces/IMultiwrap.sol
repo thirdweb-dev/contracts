@@ -42,6 +42,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @notice Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
      *
      *  @param tokenId The token Id of the tokens to unwrap.
+     *  @param amountToRedeem The amount of shares to unwrap
      */
-    function unwrap(uint256 tokenId) external;
+    function unwrap(uint256 tokenId, uint256 amountToRedeem) external;
 }
