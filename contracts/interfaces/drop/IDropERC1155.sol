@@ -81,8 +81,16 @@ interface IDropERC1155 is
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
-    /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
+    /**
+     *  @notice A global limit on the number of NFTs a wallet can claim.
+     *
+     *  @param hasClaimed The number of NFTs claimed by a wallet.
+     *  @param canClaim The number of NFTs the wallet can claim.
+     */
+    struct LimitPerWallet {
+        uint128 hasClaimed;
+        uint128 canClaim;
+    }
 
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
@@ -92,6 +100,15 @@ interface IDropERC1155 is
         address receiver,
         uint256 quantityClaimed
     );
+
+    /// @dev Emitted when tokens are lazy minted.
+    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
+
+    /// @dev Emitted when a claim limit for a wallet is set.
+    event ClaimLimitForWallet(address indexed claimer, uint256 indexed tokenId, uint256 limit);
+
+    /// @dev Emitted when a max total supply is set for a token.
+    event MaxTotalSupplyForToken(uint256 indexed tokenId, uint256 maxTotalSupply);
 
     /// @dev Emitted when new mint conditions are set for a token.
     event NewClaimConditions(uint256 indexed tokenId, ClaimCondition[] claimConditions);

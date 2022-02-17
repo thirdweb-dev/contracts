@@ -91,14 +91,24 @@ contract DropERC1155 is
 
     /// @dev End token Id => URI that overrides `baseURI + tokenId` convention.
     mapping(uint256 => string) private baseURI;
+
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
+
+    /// @dev Token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public maxTotalSupply;
+
     /// @dev Token ID => public claim conditions for tokens with that ID.
     mapping(uint256 => ClaimConditions) public claimConditions;
+    
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
+
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
+
+    /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
+    mapping(address => mapping(uint256 => LimitPerWallet)) public claimLimitPerWallet;
 
     /// @dev Checks whether caller has DEFAULT_ADMIN_ROLE.
     modifier onlyModuleAdmin() {
@@ -268,6 +278,18 @@ contract DropERC1155 is
 
     //      =====   Setter functions  =====
 
+    /// @dev Lets a module admin set a claim limit on a wallet.
+    function setClaimLimitForWallet(address _claimer, uint256 _tokenId, uint256 _limit) external onlyModuleAdmin {
+        claimLimitPerWallet[_claimer][_tokenId].canClaim = uint128(_limit);
+        emit ClaimLimitForWallet(_claimer, _tokenId, _limit);
+    }
+
+    /// @dev Lets a module admin set a max total supply for token.
+    function setMaxTotalSupplyForToken(uint256 _tokenId, uint256 _maxTotalSupply) external onlyModuleAdmin {
+        maxTotalSupply[_tokenId] = _maxTotalSupply;
+        emit MaxTotalSupplyForToken(_tokenId, _maxTotalSupply);
+    }
+
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyModuleAdmin {
         primarySaleRecipient = _saleRecipient;
@@ -432,6 +454,17 @@ contract DropERC1155 is
             _mintCondition.supplyClaimed + _quantity <= _mintCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
+        uint256 maxTotalSupplyOfToken = maxTotalSupply[_tokenId];
+        require(
+            maxTotalSupplyOfToken == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupplyOfToken,
+            "exceed max total supply"
+        );
+
+        LimitPerWallet memory limitForWallet = claimLimitPerWallet[_claimer][_tokenId];
+        require(
+            limitForWallet.canClaim == 0 || limitForWallet.hasClaimed + _quantity <= limitForWallet.canClaim,
+            "exceed claim limit for wallet"
+        );
 
         uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex];
@@ -486,6 +519,8 @@ contract DropERC1155 is
         // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
         uint256 timestampIndex = _claimConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
+
+        claimLimitPerWallet[_msgSender()][_tokenId].hasClaimed += uint128(_quantityBeingClaimed);
 
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
