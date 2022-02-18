@@ -21,6 +21,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    // slither-disable-next-line similar-names
     function add(address _deployer, address _deployment) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
@@ -30,6 +31,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         emit Added(_deployer, _deployment);
     }
 
+    // slither-disable-next-line similar-names
     function remove(address _deployer, address _deployment) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
