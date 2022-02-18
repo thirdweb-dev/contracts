@@ -227,17 +227,18 @@ contract DropERC1155 is
         address _receiver,
         uint256 _tokenId,
         uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
         bytes32[] calldata _proofs
     ) external payable nonReentrant {
-        // Get the claim conditions.
+        // Get the active claim condition index.
         uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
-        ClaimCondition memory condition = claimConditions[_tokenId].claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_msgSender(), _tokenId, _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _tokenId, _quantity, _currency, _pricePerToken, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
-        collectClaimPrice(condition, _quantity, _tokenId);
+        collectClaimPrice(_quantity, _currency, _pricePerToken, _tokenId);
 
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _tokenId, _quantity);
@@ -442,14 +443,20 @@ contract DropERC1155 is
         address _claimer,
         uint256 _tokenId,
         uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
     ) public view {
-        ClaimCondition memory _mintCondition = claimConditions[_tokenId].claimConditionAtIndex[_conditionIndex];
+        ClaimCondition memory _claimCondition = claimConditions[_tokenId].claimConditionAtIndex[_conditionIndex];
 
-        require(_quantity > 0 && _quantity <= _mintCondition.quantityLimitPerTransaction, "invalid quantity claimed.");
         require(
-            _mintCondition.supplyClaimed + _quantity <= _mintCondition.maxClaimableSupply,
+            _currency == _claimCondition.currency && _pricePerToken == _claimCondition.pricePerToken,
+            "invalid currency or price specified."
+        );
+        require(_quantity > 0 && _quantity <= _claimCondition.quantityLimitPerTransaction, "invalid quantity claimed.");
+        require(
+            _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
         uint256 maxTotalSupplyOfToken = maxTotalSupply[_tokenId];
@@ -465,40 +472,45 @@ contract DropERC1155 is
         );
 
         uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex];
-        uint256 nextValidTimestampForClaim = getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer);
-        require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
+        require(
+            claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex] == 0 
+                || block.timestamp >=  getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer), 
+            "cannot claim yet."
+        );
 
-        if (_mintCondition.merkleRoot != bytes32(0)) {
-            bytes32 leaf = keccak256(abi.encodePacked(_claimer));
-            require(MerkleProofUpgradeable.verify(_proofs, _mintCondition.merkleRoot, leaf), "not in whitelist.");
+        if (_claimCondition.merkleRoot != bytes32(0)) {
+            require(
+                MerkleProofUpgradeable.verify(_proofs, _claimCondition.merkleRoot, keccak256(abi.encodePacked(_claimer))),
+                "not in whitelist."
+            );
         }
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectClaimPrice(
-        ClaimCondition memory _mintCondition,
         uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken,
         uint256 _tokenId
     ) internal {
-        if (_mintCondition.pricePerToken == 0) {
+        if (_pricePerToken == 0) {
             return;
         }
 
-        uint256 totalPrice = _quantityToClaim * _mintCondition.pricePerToken;
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
-        if (_mintCondition.currency == NATIVE_TOKEN) {
+        if (_currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
         address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
-        CurrencyTransferLib.transferCurrency(_mintCondition.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_mintCondition.currency, _msgSender(), twFeeRecipient, twFee);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
-            _mintCondition.currency,
+            _currency,
             _msgSender(),
             recipient,
             totalPrice - platformFees - twFee

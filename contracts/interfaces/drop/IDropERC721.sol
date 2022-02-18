@@ -152,12 +152,16 @@ interface IDropERC721 is
      *
      *  @param receiver The receiver of the NFTs to claim.
      *  @param _quantity The quantity of tokens to claim.
+     *  @param _currency The currency in which to pay for the claim.
+     *  @param _pricePerToken The price per token to pay for the claim.
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
      */
     function claim(
         address receiver,
         uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
         bytes32[] calldata _proofs
     ) external payable;
 
