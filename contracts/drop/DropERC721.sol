@@ -68,6 +68,9 @@ contract DropERC721 is
     /// @dev The adress that receives all primary sales value.
     address public primarySaleRecipient;
 
+    /// @dev The max number of claim per wallet.
+    uint256 public maxWalletClaimCount;
+
     /// @dev The adress that receives all primary sales value.
     address private platformFeeRecipient;
 
@@ -92,8 +95,8 @@ contract DropERC721 is
     /// @dev End token Id => info related to the delayed reveal of the baseURI
     mapping(uint256 => bytes) public encryptedBaseURI;
 
-    /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
-    mapping(address => LimitPerWallet) public claimLimitPerWallet;
+    /// @dev Mapping from address => number of NFTs a wallet claimed.
+    mapping(address => uint256) public walletClaimCount;
 
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
@@ -127,9 +130,9 @@ contract DropERC721 is
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
+        platformFeeBps = _platformFeeBps;
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        platformFeeBps = _platformFeeBps;
 
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -176,8 +179,6 @@ contract DropERC721 is
     function getIndexOfActiveCondition() public view returns (uint256) {
         uint256 totalConditionCount = claimConditions.totalConditionCount;
 
-        require(totalConditionCount > 0, "no public mint condition.");
-
         for (uint256 i = totalConditionCount; i > 0; i -= 1) {
             if (block.timestamp >= claimConditions.claimConditionAtIndex[i - 1].startTimestamp) {
                 return i - 1;
@@ -192,6 +193,7 @@ contract DropERC721 is
         // Store data length on stack for later use
         uint256 length = data.length;
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             // Set result to free memory pointer
             result := mload(0x40)
@@ -207,12 +209,14 @@ contract DropERC721 is
             bytes32 hash = keccak256(abi.encodePacked(key, i));
 
             bytes32 chunk;
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 // Read 32-bytes data chunk
                 chunk := mload(add(data, add(i, 32)))
             }
             // XOR the chunk with hash
             chunk ^= hash;
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 // Write 32-byte encrypted chunk
                 mstore(add(result, add(i, 32)), chunk)
@@ -241,10 +245,8 @@ contract DropERC721 is
             "exceed max mint supply."
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-
-        LimitPerWallet memory limitForWallet = claimLimitPerWallet[_claimer];
         require(
-            limitForWallet.canClaim == 0 || limitForWallet.hasClaimed + _quantity <= limitForWallet.canClaim,
+            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
             "exceed claim limit for wallet"
         );
 
@@ -393,9 +395,15 @@ contract DropERC721 is
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set a claim limit on a wallet.
-    function setClaimLimitForWallet(address _claimer, uint256 _limit) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        claimLimitPerWallet[_claimer].canClaim = uint128(_limit);
-        emit ClaimLimitForWallet(_claimer, _limit);
+    function setWalletClaimCount(address _claimer, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        walletClaimCount[_claimer] = _count;
+        emit WalletClaimCountUpdated(_claimer, _count);
+    }
+
+    /// @dev Lets a module admin set a maximum number of claim per wallet.
+    function setMaxWalletClaimCount(uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxWalletClaimCount = _count;
+        emit MaxWalletClaimCountUpdated(_count);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
@@ -548,11 +556,11 @@ contract DropERC721 is
     ) internal {
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
-        // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
+
         uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
         claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
-        claimLimitPerWallet[_msgSender()].hasClaimed += uint128(_quantityBeingClaimed);
+        walletClaimCount[_msgSender()] += _quantityBeingClaimed;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 

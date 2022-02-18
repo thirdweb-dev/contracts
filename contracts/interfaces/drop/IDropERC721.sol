@@ -81,17 +81,6 @@ interface IDropERC721 is
         mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
     }
 
-    /**
-     *  @notice A global limit on the number of NFTs a wallet can claim.
-     *
-     *  @param hasClaimed The number of NFTs claimed by a wallet.
-     *  @param canClaim The number of NFTs the wallet can claim.
-     */
-    struct LimitPerWallet {
-        uint128 hasClaimed;
-        uint128 canClaim;
-    }
-
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
         uint256 indexed claimConditionIndex,
@@ -103,9 +92,6 @@ interface IDropERC721 is
 
     /// @dev Emitted when tokens are lazy minted.
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-
-    /// @dev Emitted when a claim limit for a wallet is set.
-    event ClaimLimitForWallet(address indexed claimer, uint256 limit);
 
     /// @dev Emitted when the URI for a batch of NFTs is revealed.
     event RevealedNFT(uint256 endTokenId, string revealedURI);
@@ -122,16 +108,11 @@ interface IDropERC721 is
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
 
-    /// @dev Emitted when the contract receives ether.
-    event EtherReceived(address sender, uint256 amount);
+    /// @dev Emitted when a wallet claim count is updated.
+    event WalletClaimCountUpdated(address indexed wallet, uint256 count);
 
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
-    );
+    /// @dev Emitted when the max wallet claim count is updated.
+    event MaxWalletClaimCountUpdated(uint256 claimCount);
 
     /**
      *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
