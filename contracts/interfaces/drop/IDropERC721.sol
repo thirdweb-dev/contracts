@@ -108,11 +108,14 @@ interface IDropERC721 is
     /// @dev Emitted when a new Owner is set.
     event NewOwner(address prevOwner, address newOwner);
 
+    /// @dev Emitted when a max total supply is set for a token.
+    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
+
     /// @dev Emitted when a wallet claim count is updated.
     event WalletClaimCountUpdated(address indexed wallet, uint256 count);
 
     /// @dev Emitted when the max wallet claim count is updated.
-    event MaxWalletClaimCountUpdated(uint256 claimCount);
+    event MaxWalletClaimCountUpdated(uint256 count);
 
     /**
      *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`

@@ -71,6 +71,9 @@ contract DropERC721 is
     /// @dev The max number of claim per wallet.
     uint256 public maxWalletClaimCount;
 
+    /// @dev Token max total supply for the collection.
+    uint256 public maxTotalSupply;
+
     /// @dev The adress that receives all primary sales value.
     address private platformFeeRecipient;
 
@@ -245,6 +248,7 @@ contract DropERC721 is
             "exceed max mint supply."
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
+        require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
         require(
             maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
             "exceed claim limit for wallet"
@@ -404,6 +408,12 @@ contract DropERC721 is
     function setMaxWalletClaimCount(uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxWalletClaimCount = _count;
         emit MaxWalletClaimCountUpdated(_count);
+    }
+
+    /// @dev Lets a module admin set the maximum number of supply for the collection.
+    function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxTotalSupply = _maxTotalSupply;
+        emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
