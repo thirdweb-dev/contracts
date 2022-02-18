@@ -96,7 +96,7 @@ contract DropERC1155 is
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
 
-    /// @dev Token ID => total circulating supply of tokens with that ID.
+    /// @dev Token ID => maximum allowed total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public maxTotalSupply;
 
     /// @dev Token ID => public claim conditions for tokens with that ID.
@@ -108,8 +108,11 @@ contract DropERC1155 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
-    /// @dev Mapping from address => limit on the number of NFTs a wallet can claim.
-    mapping(address => mapping(uint256 => LimitPerWallet)) public claimLimitPerWallet;
+    /// @dev Token ID => claimer wallet address => number of claim.
+    mapping(uint256 => mapping(address => uint256)) public walletClaimCount;
+
+    /// @dev Token ID => max claim limit per wallet.
+    mapping(uint256 => uint256) public maxWalletClaimCount;
 
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = TWFee(_thirdwebFee);
@@ -262,24 +265,26 @@ contract DropERC1155 is
     }
 
     //      =====   Setter functions  =====
-
     /// @dev Lets a module admin set a claim limit on a wallet.
-    function setClaimLimitForWallet(
-        address _claimer,
+    function setWalletClaimCount(
         uint256 _tokenId,
-        uint256 _limit
+        address _claimer,
+        uint256 _count
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        claimLimitPerWallet[_claimer][_tokenId].canClaim = uint128(_limit);
-        emit ClaimLimitForWallet(_claimer, _tokenId, _limit);
+        walletClaimCount[_tokenId][_claimer] = _count;
+        emit WalletClaimCountUpdated(_tokenId, _claimer, _count);
+    }
+
+    /// @dev Lets a module admin set a maximum number of claim per wallet.
+    function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxWalletClaimCount[_tokenId] = _count;
+        emit MaxWalletClaimCountUpdated(_tokenId, _count);
     }
 
     /// @dev Lets a module admin set a max total supply for token.
-    function setMaxTotalSupplyForToken(uint256 _tokenId, uint256 _maxTotalSupply)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxTotalSupply[_tokenId] = _maxTotalSupply;
-        emit MaxTotalSupplyForToken(_tokenId, _maxTotalSupply);
+        emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
@@ -459,15 +464,13 @@ contract DropERC1155 is
             _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
             "exceed max mint supply."
         );
-        uint256 maxTotalSupplyOfToken = maxTotalSupply[_tokenId];
         require(
-            maxTotalSupplyOfToken == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupplyOfToken,
+            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
             "exceed max total supply"
         );
-
-        LimitPerWallet memory limitForWallet = claimLimitPerWallet[_claimer][_tokenId];
         require(
-            limitForWallet.canClaim == 0 || limitForWallet.hasClaimed + _quantity <= limitForWallet.canClaim,
+            maxWalletClaimCount[_tokenId] == 0 ||
+                walletClaimCount[_tokenId][_claimer] + _quantity <= maxWalletClaimCount[_tokenId],
             "exceed claim limit for wallet"
         );
 
@@ -529,7 +532,7 @@ contract DropERC1155 is
         uint256 timestampIndex = _claimConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
 
-        claimLimitPerWallet[_msgSender()][_tokenId].hasClaimed += uint128(_quantityBeingClaimed);
+        walletClaimCount[_tokenId][_msgSender()] += _quantityBeingClaimed;
 
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
