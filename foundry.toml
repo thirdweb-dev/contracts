@@ -1,5 +1,5 @@
 [default]
-solc-version = "0.8.11"
+solc-version = "0.8.12"
 # auto_detect_solc = false
 src = 'src'
 test = 'test'
