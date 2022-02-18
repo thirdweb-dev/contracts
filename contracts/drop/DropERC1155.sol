@@ -473,14 +473,18 @@ contract DropERC1155 is
 
         uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         require(
-            claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex] == 0 
-                || block.timestamp >=  getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer), 
+            claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex] == 0 ||
+                block.timestamp >= getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer),
             "cannot claim yet."
         );
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
             require(
-                MerkleProofUpgradeable.verify(_proofs, _claimCondition.merkleRoot, keccak256(abi.encodePacked(_claimer))),
+                MerkleProofUpgradeable.verify(
+                    _proofs,
+                    _claimCondition.merkleRoot,
+                    keccak256(abi.encodePacked(_claimer))
+                ),
                 "not in whitelist."
             );
         }
@@ -509,12 +513,7 @@ contract DropERC1155 is
         address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            recipient,
-            totalPrice - platformFees - twFee
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
     }
 
     /// @dev Transfers the tokens being claimed.

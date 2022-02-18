@@ -516,9 +516,7 @@ contract DropERC721 is
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) 
-        internal
-    {
+    ) internal {
         if (_pricePerToken == 0) {
             return;
         }
@@ -532,12 +530,7 @@ contract DropERC721 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            platformFeeRecipient,
-            platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _currency,

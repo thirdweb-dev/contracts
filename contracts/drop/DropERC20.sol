@@ -256,7 +256,11 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     //      =====   Internal functions  =====
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectClaimPrice(uint256 _quantityToClaim, address _currency, uint256 _pricePerToken) internal {
+    function collectClaimPrice(
+        uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken
+    ) internal {
         if (_pricePerToken == 0) {
             return;
         }
@@ -270,12 +274,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            platformFeeRecipient,
-            platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _currency,

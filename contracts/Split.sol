@@ -131,7 +131,7 @@ contract Split is
         uint256 totalReceived = address(this).balance + totalReleased();
         uint256 payment = _pendingPayment(account, totalReceived, released(account));
 
-        if(payment == 0) {
+        if (payment == 0) {
             return;
         }
 
@@ -157,7 +157,7 @@ contract Split is
         uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
         uint256 payment = _pendingPayment(account, totalReceived, released(token, account));
 
-        if(payment == 0) {
+        if (payment == 0) {
             return;
         }
 
