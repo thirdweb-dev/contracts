@@ -410,7 +410,6 @@ contract DropERC1155 is
                 lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _conditions[i].startTimestamp,
                 "startTimestamp must be in ascending order."
             );
-            require(_conditions[i].maxClaimableSupply > 0, "max mint supply cannot be 0.");
             require(_conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0.");
 
             claimConditions[_tokenId].claimConditionAtIndex[indexForCondition] = ClaimCondition({
