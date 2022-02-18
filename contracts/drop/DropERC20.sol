@@ -98,11 +98,17 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     function verifyClaim(
         address _claimer,
         uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
         bytes32[] calldata _proofs,
         uint256 _conditionIndex
     ) public view {
         ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
 
+        require(
+            _currency == _claimCondition.currency && _pricePerToken == _claimCondition.pricePerToken,
+            "invalid currency or price specified."
+        );
         require(
             _quantity > 0 && _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
             "invalid quantity claimed."
@@ -130,17 +136,18 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     function claim(
         address _receiver,
         uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
         bytes32[] calldata _proofs
     ) external payable nonReentrant {
         // Get the claim conditions.
         uint256 activeConditionIndex = getIndexOfActiveCondition();
-        ClaimCondition memory condition = claimConditions.claimConditionAtIndex[activeConditionIndex];
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_msgSender(), _quantity, _proofs, activeConditionIndex);
+        verifyClaim(_msgSender(), _quantity, _currency, _pricePerToken, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
-        collectClaimPrice(condition, _quantity);
+        collectClaimPrice(_quantity, _currency, _pricePerToken);
 
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _quantity);
@@ -249,29 +256,29 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     //      =====   Internal functions  =====
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectClaimPrice(ClaimCondition memory _claimCondition, uint256 _quantityToClaim) internal {
-        if (_claimCondition.pricePerToken == 0) {
+    function collectClaimPrice(uint256 _quantityToClaim, address _currency, uint256 _pricePerToken) internal {
+        if (_pricePerToken == 0) {
             return;
         }
 
-        uint256 totalPrice = _quantityToClaim * _claimCondition.pricePerToken;
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
-        if (_claimCondition.currency == NATIVE_TOKEN) {
+        if (_currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
         CurrencyTransferLib.transferCurrency(
-            _claimCondition.currency,
+            _currency,
             _msgSender(),
             platformFeeRecipient,
             platformFees
         );
-        CurrencyTransferLib.transferCurrency(_claimCondition.currency, _msgSender(), twFeeRecipient, twFee);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
-            _claimCondition.currency,
+            _currency,
             _msgSender(),
             primarySaleRecipient,
             totalPrice - platformFees - twFee
