@@ -1,34 +1,45 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-// Top-level contracts
 import "./TWFactory.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
-    /// @dev The thirdweb factory for deploying modules.
-    TWFactory private immutable thirdwebFactory;
+interface IFeeTierPlacementExtension {
+    /// @dev Returns the fee tier for a given proxy contract address and proxy deployer address.
+    function getFeeTier(address deployer, address proxy)
+        external
+        view
+        returns (uint128 tierId, uint128 validUntilTimestamp);
+}
 
-    /// @dev Only FEE_ROLE holders can set fee values.
-    bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
+contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable, IFeeTierPlacementExtension {
+    /// @dev The factory for deploying contracts.
+    TWFactory public immutable factory;
 
-    /// @dev Only TIER_ADMIN_ROLE holders can assign tiers to users.
-    bytes32 public constant TIER_ADMIN_ROLE = keccak256("TIER_ADMIN_ROLE");
-
-    /// @dev The threshold for thirdweb fees. 1%
+    /// @dev The maximum threshold for fees. 1%
     uint256 public constant MAX_FEE_BPS = 100;
 
-    /// @dev Mapping from address => pricing tier for address.
-    mapping(address => Tier) public tierForUser;
+    /// @dev TIER_FEE_ROLE holders can create tiers.
+    bytes32 private constant TIER_FEE_ROLE = keccak256("TIER_FEE_ROLE");
 
-    /// @dev Mapping from pricing tier => Fee Type => FeeInfo
+    /// @dev TIER_CONTROLLER_ROLE holders can assign tiers to deployer or proxy.
+    bytes32 private constant TIER_CONTROLLER_ROLE = keccak256("TIER_CONTROLLER_ROLE");
+
+    /// @dev Mapping from proxy contract or proxy deployer address => pricing tier.
+    mapping(address => Tier) private tier;
+
+    /// @dev Mapping from pricing tier id => Fee Type (lib/FeeType.sol) => FeeInfo
     mapping(uint256 => mapping(uint256 => FeeInfo)) public feeInfo;
 
+    /// @dev If we want to extend the logic for fee tier placement, we
+    /// could easily points it to a different extension implementation.
+    IFeeTierPlacementExtension public tierPlacementExtension;
+
     struct Tier {
-        uint128 tier;
+        uint128 id;
         uint128 validUntilTimestamp;
     }
 
@@ -38,63 +49,99 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable {
     }
 
     /// @dev Events
-    event TierForUser(address indexed user, uint256 tier, uint256 validUntilTimestamp);
-    event FeeInfoForTier(uint256 indexed tier, uint256 indexed feeType, address recipient, uint256 bps);
-    event NewThirdwebPricing(address oldThirdwebPricing, address newThirdwebPricing);
+    event TierUpdated(address indexed proxyOrDeployer, uint256 tierId, uint256 validUntilTimestamp);
+    event FeeTierUpdated(uint256 indexed tierId, uint256 indexed feeType, address recipient, uint256 bps);
 
-    constructor(address _trustedForwarder, address _thirdwebFactory) ERC2771Context(_trustedForwarder) {
-        thirdwebFactory = TWFactory(_thirdwebFactory);
+    constructor(address _trustedForwarder, address _factory) ERC2771Context(_trustedForwarder) {
+        factory = TWFactory(_factory);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(FEE_ROLE, _msgSender());
+        _setupRole(TIER_FEE_ROLE, _msgSender());
+        _setupRole(TIER_CONTROLLER_ROLE, _msgSender());
     }
 
-    /// @dev Returns the fee tier for a user.
-    function getFeeTier(address _user) public view returns (uint256 tier, uint256 secondsUntilExpiry) {
-        Tier memory targetTier = tierForUser[_user];
-
-        tier = block.timestamp < targetTier.validUntilTimestamp ? targetTier.tier : 0;
-        secondsUntilExpiry = block.timestamp < targetTier.validUntilTimestamp
-            ? targetTier.validUntilTimestamp - block.timestamp
-            : 0;
+    function setFeeTierPlacementExtension(address _extension) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        tierPlacementExtension = IFeeTierPlacementExtension(_extension);
     }
 
-    /// @dev Returns the fee infor for a given module and fee type.
-    function getFeeInfo(address _module, uint256 _feeType) external view returns (address recipient, uint256 bps) {
-        address deployer = thirdwebFactory.deployer(_module);
-        (uint256 tier, ) = getFeeTier(deployer);
+    /// @dev Returns the fee tier for a proxy deployer wallet or contract address.
+    function getFeeTier(address _deployer, address _proxy)
+        public
+        view
+        override
+        returns (uint128 tierId, uint128 validUntilTimestamp)
+    {
+        Tier memory targetTier = tier[_proxy];
+        if (block.timestamp <= targetTier.validUntilTimestamp) {
+            tierId = targetTier.id;
+            validUntilTimestamp = targetTier.validUntilTimestamp;
+        } else {
+            tierId = 0;
+            validUntilTimestamp = 0;
+        }
 
-        FeeInfo memory targetFeeInfo = feeInfo[tier][_feeType];
+        // if the proxy doesn't have a tier, then look up the deployer's tier
+        if (tierId == 0 && validUntilTimestamp == 0) {
+            targetTier = tier[_deployer];
+            if (block.timestamp <= targetTier.validUntilTimestamp) {
+                tierId = targetTier.id;
+                validUntilTimestamp = targetTier.validUntilTimestamp;
+            } else {
+                tierId = 0;
+                validUntilTimestamp = 0;
+            }
+        }
+    }
+
+    /// @dev Returns the fee info for a given module and fee type.
+    function getFeeInfo(address _proxy, uint256 _feeType) external view returns (address recipient, uint256 bps) {
+        address deployer = factory.deployer(_proxy);
+        uint128 tierId = 0;
+        uint128 validUntilTimestamp = 0;
+
+        if (address(tierPlacementExtension) != address(0)) {
+            (tierId, validUntilTimestamp) = abi.decode(
+                Address.functionStaticCall(
+                    address(tierPlacementExtension),
+                    abi.encodeWithSignature("getFeeTier(address,address)", deployer, _proxy)
+                ),
+                (uint128, uint128)
+            );
+        }
+
+        // if extension doesn't return a tier, then we fetch the local states
+        if (tierId == 0 && validUntilTimestamp == 0) {
+            (tierId, ) = getFeeTier(deployer, _proxy);
+        }
+
+        FeeInfo memory targetFeeInfo = feeInfo[tierId][_feeType];
         (recipient, bps) = (targetFeeInfo.recipient, targetFeeInfo.bps);
     }
 
-    /// @dev Lets a TIER_ADMIN_ROLE holder assign a tier to a user.
-    function setTierForUser(
-        address _user,
-        uint128 _tier,
+    /// @dev Lets a TIER_CONTROLLER_ROLE holder assign a tier to a proxy deployer.
+    function setTier(
+        address _proxyOrDeployer,
+        uint128 _tierId,
         uint128 _validUntilTimestamp
-    ) external {
-        require(hasRole(TIER_ADMIN_ROLE, _msgSender()), "not tier admin.");
+    ) external onlyRole(TIER_CONTROLLER_ROLE) {
+        tier[_proxyOrDeployer] = Tier({ id: _tierId, validUntilTimestamp: _validUntilTimestamp });
 
-        tierForUser[_user] = Tier({ tier: _tier, validUntilTimestamp: _validUntilTimestamp });
-
-        emit TierForUser(_user, _tier, _validUntilTimestamp);
+        emit TierUpdated(_proxyOrDeployer, _tierId, _validUntilTimestamp);
     }
 
     /// @dev Lets the admin set fee bps and recipient for the given pricing tier and fee type.
     function setFeeInfoForTier(
-        uint256 _tier,
+        uint256 _tierId,
         uint256 _feeBps,
         address _feeRecipient,
         uint256 _feeType
-    ) external {
+    ) external onlyRole(TIER_FEE_ROLE) {
         require(_feeBps <= MAX_FEE_BPS, "fee too high.");
-        require(hasRole(FEE_ROLE, _msgSender()), "not fee admin.");
 
         FeeInfo memory feeInfoToSet = FeeInfo({ bps: _feeBps, recipient: _feeRecipient });
-        feeInfo[_tier][_feeType] = feeInfoToSet;
+        feeInfo[_tierId][_feeType] = feeInfoToSet;
 
-        emit FeeInfoForTier(_tier, _feeType, _feeRecipient, _feeBps);
+        emit FeeTierUpdated(_tierId, _feeType, _feeRecipient, _feeBps);
     }
 
     //  =====   Getters   =====
