@@ -84,17 +84,17 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
         IThirdwebContract module = IThirdwebContract(_implementation);
-        bytes32 _type = module.contractType();
+        bytes32 ctype = module.contractType();
         uint8 version = module.contractVersion();
-        require(_type.length > 0 && version > 0, "invalid module");
+        require(ctype.length > 0 && version > 0, "invalid module");
 
-        currentVersion[_type] += 1;
-        require(currentVersion[_type] == version, "wrong module version");
+        currentVersion[ctype] += 1;
+        require(currentVersion[ctype] == version, "wrong module version");
 
-        implementation[_type][version] = _implementation;
+        implementation[ctype][version] = _implementation;
         approval[_implementation] = true;
 
-        emit ImplementationAdded(_implementation, _type, version);
+        emit ImplementationAdded(_implementation, ctype, version);
     }
 
     /// @dev Lets a contract admin approve a specific contract for deployment.
