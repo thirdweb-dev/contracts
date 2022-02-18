@@ -74,26 +74,8 @@ contract Split is
      * total shares and their previous withdrawals.
      */
     function release(address payable account) public virtual override {
-        require(shares(account) > 0, "PaymentSplitter: account has no shares");
-
-        uint256 totalReceived = address(this).balance + totalReleased();
-        uint256 payment = _pendingPayment(account, totalReceived, released(account));
-
+        uint256 payment = _release(account);
         require(payment != 0, "PaymentSplitter: account is not due payment");
-
-        _released[account] += payment;
-        _totalReleased += payment;
-
-        // fees
-        uint256 fee = 0;
-        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
-        if (feeRecipient != address(0) && feeBps > 0) {
-            fee = (payment * feeBps) / MAX_BPS;
-            AddressUpgradeable.sendValue(payable(feeRecipient), fee);
-        }
-
-        AddressUpgradeable.sendValue(account, payment - fee);
-        emit PaymentReleased(account, payment);
     }
 
     /**
@@ -102,37 +84,19 @@ contract Split is
      * contract.
      */
     function release(IERC20Upgradeable token, address account) public virtual override {
-        require(shares(account) > 0, "PaymentSplitter: account has no shares");
-
-        uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
-        uint256 payment = _pendingPayment(account, totalReceived, released(token, account));
-
+        uint256 payment = _release(token, account);
         require(payment != 0, "PaymentSplitter: account is not due payment");
-
-        _erc20Released[token][account] += payment;
-        _erc20TotalReleased[token] += payment;
-
-        // fees
-        uint256 fee = 0;
-        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
-        if (feeRecipient != address(0) && feeBps > 0) {
-            fee = (payment * feeBps) / MAX_BPS;
-            SafeERC20Upgradeable.safeTransfer(token, feeRecipient, fee);
-        }
-
-        SafeERC20Upgradeable.safeTransfer(token, account, payment - fee);
-        emit ERC20PaymentReleased(token, account, payment);
     }
 
-    /// @dev To be used with `distribute`
-    function releaseOnDistribute(address payable account) internal {
+    /// @dev Returns the amount of Ether that `account` is owed, according to their percentage of the total shares and returns the payment
+    function _release(address payable account) internal returns (uint256) {
         require(shares(account) > 0, "PaymentSplitter: account has no shares");
 
         uint256 totalReceived = address(this).balance + totalReleased();
         uint256 payment = _pendingPayment(account, totalReceived, released(account));
 
         if (payment == 0) {
-            return;
+            return 0;
         }
 
         _released[account] += payment;
@@ -148,17 +112,19 @@ contract Split is
 
         AddressUpgradeable.sendValue(account, payment - fee);
         emit PaymentReleased(account, payment);
+
+        return payment;
     }
 
-    /// @dev To be used with `distribute`
-    function releaseOnDistribute(IERC20Upgradeable token, address account) internal {
+    /// @dev Returns the amount of `token` that `account` is owed, according to their percentage of the total shares and returns the payment
+    function _release(IERC20Upgradeable token, address account) internal returns (uint256) {
         require(shares(account) > 0, "PaymentSplitter: account has no shares");
 
         uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
         uint256 payment = _pendingPayment(account, totalReceived, released(token, account));
 
         if (payment == 0) {
-            return;
+            return 0;
         }
 
         _erc20Released[token][account] += payment;
@@ -174,6 +140,8 @@ contract Split is
 
         SafeERC20Upgradeable.safeTransfer(token, account, payment - fee);
         emit ERC20PaymentReleased(token, account, payment);
+
+        return payment;
     }
 
     /**
@@ -182,7 +150,8 @@ contract Split is
     function distribute() public virtual {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
-            releaseOnDistribute(payable(payee(i)));
+            // note: `_release` should not fail because payee always has shares, protected by `_appPay`
+            _release(payable(payee(i)));
         }
     }
 
@@ -192,7 +161,8 @@ contract Split is
     function distribute(IERC20Upgradeable token) public virtual {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
-            releaseOnDistribute(token, payee(i));
+            // note: `_release` should not fail because payee always has shares, protected by `_appPay`
+            _release(token, payee(i));
         }
     }
 
