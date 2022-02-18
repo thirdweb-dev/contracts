@@ -100,13 +100,18 @@ contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable, IFeeTierPl
         uint128 validUntilTimestamp = 0;
 
         if (address(tierPlacementExtension) != address(0)) {
-            (tierId, validUntilTimestamp) = abi.decode(
-                Address.functionStaticCall(
-                    address(tierPlacementExtension),
-                    abi.encodeWithSignature("getFeeTier(address,address)", deployer, _proxy)
-                ),
-                (uint128, uint128)
-            );
+            // https://github.com/crytic/slither/issues/982
+            // slither-disable-next-line unused-return
+            try tierPlacementExtension.getFeeTier(deployer, _proxy) returns (
+                // slither-disable-next-line uninitialized-local,variable-scope
+                uint128 retTierId,
+                // slither-disable-next-line uninitialized-local,variable-scope
+                uint128 retValidUntilTimestamp
+            ) {
+                tierId = retTierId;
+                validUntilTimestamp = retValidUntilTimestamp;
+                // solhint-disable-next-line no-empty-blocks
+            } catch {}
         }
 
         // if extension doesn't return a tier, then we fetch the local states
