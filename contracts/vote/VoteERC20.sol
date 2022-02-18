@@ -6,11 +6,11 @@ import "../interfaces/IThirdwebContract.sol";
 
 // Governance
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/utils/IVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Meta transactions
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
@@ -56,9 +56,6 @@ contract VoteERC20 is
     /// @dev proposal index => Proposal
     mapping(uint256 => Proposal) public proposals;
 
-    /// @dev proposal ID => proposal index
-    mapping(uint256 => uint256) public indexForProposal;
-
     // solhint-disable-next-line no-empty-blocks
     constructor() initializer {}
 
@@ -77,7 +74,7 @@ contract VoteERC20 is
         __ERC2771Context_init(_trustedForwarder);
         __Governor_init(_name);
         __GovernorSettings_init(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold);
-        __GovernorVotes_init(ERC20VotesUpgradeable(_token));
+        __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_initialVoteQuorumFraction);
 
         // Initialize this contract's state.
