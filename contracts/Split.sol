@@ -124,13 +124,65 @@ contract Split is
         emit ERC20PaymentReleased(token, account, payment);
     }
 
+    /// @dev To be used with `distribute`
+    function releaseOnDistribute(address payable account) internal {
+        require(shares(account) > 0, "PaymentSplitter: account has no shares");
+
+        uint256 totalReceived = address(this).balance + totalReleased();
+        uint256 payment = _pendingPayment(account, totalReceived, released(account));
+
+        if(payment == 0) {
+            return;
+        }
+
+        _released[account] += payment;
+        _totalReleased += payment;
+
+        // fees
+        uint256 fee = 0;
+        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
+        if (feeRecipient != address(0) && feeBps > 0) {
+            fee = (payment * feeBps) / MAX_BPS;
+            AddressUpgradeable.sendValue(payable(feeRecipient), fee);
+        }
+
+        AddressUpgradeable.sendValue(account, payment - fee);
+        emit PaymentReleased(account, payment);
+    }
+
+    /// @dev To be used with `distribute`
+    function releaseOnDistribute(IERC20Upgradeable token, address account) internal {
+        require(shares(account) > 0, "PaymentSplitter: account has no shares");
+
+        uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
+        uint256 payment = _pendingPayment(account, totalReceived, released(token, account));
+
+        if(payment == 0) {
+            return;
+        }
+
+        _erc20Released[token][account] += payment;
+        _erc20TotalReleased[token] += payment;
+
+        // fees
+        uint256 fee = 0;
+        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
+        if (feeRecipient != address(0) && feeBps > 0) {
+            fee = (payment * feeBps) / MAX_BPS;
+            SafeERC20Upgradeable.safeTransfer(token, feeRecipient, fee);
+        }
+
+        SafeERC20Upgradeable.safeTransfer(token, account, payment - fee);
+        emit ERC20PaymentReleased(token, account, payment);
+    }
+
     /**
      * @dev Release the owed amount of token to all of the payees.
      */
     function distribute() public virtual {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
-            release(payable(payee(i)));
+            releaseOnDistribute(payable(payee(i)));
         }
     }
 
@@ -140,7 +192,7 @@ contract Split is
     function distribute(IERC20Upgradeable token) public virtual {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
-            release(token, payee(i));
+            releaseOnDistribute(token, payee(i));
         }
     }
 
