@@ -38,8 +38,8 @@ contract TokenERC20 is
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
 
-    /// @dev Emitted when restrictions on transfers is updated.
-    event RestrictedTransferUpdated(bool transferable);
+    // solhint-disable-next-line no-empty-blocks
+    constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
