@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.11;
 
 // Interface
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";

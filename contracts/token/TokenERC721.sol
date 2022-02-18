@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.11;
 
 // Interface
 import { ITokenERC721 } from "../interfaces/token/ITokenERC721.sol";
