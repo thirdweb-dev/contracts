@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-interface IPack {
+import "./IThirdwebContract.sol";
+import "./IThirdwebOwnable.sol";
+import "./IThirdwebRoyalty.sol";
+
+interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
 
     /**
      *  @notice A pack can contain ERC1155 tokens from n number of ERC1155 contracts.
