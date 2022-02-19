@@ -103,13 +103,13 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     }
 
     /// @dev Emitted when a new listing is created.
-    event NewListing(uint256 indexed listingId, address indexed assetContract, address indexed lister, Listing listing);
+    event ListingAdded(uint256 indexed listingId, address indexed assetContract, address indexed lister, Listing listing);
 
     /// @dev Emitted when the parameters of a listing are updated.
-    event ListingUpdate(uint256 indexed listingId, address indexed listingCreator);
+    event ListingUpdated(uint256 indexed listingId, address indexed listingCreator);
 
     /// @dev Emitted when a listing is cancelled.
-    event ListingCancelled(uint256 indexed listingId, address indexed listingCreator);
+    event ListingRemoved(uint256 indexed listingId, address indexed listingCreator);
 
     /**
      * @dev Emitted when a buyer buys from a direct listing, or a lister accepts some
@@ -144,7 +144,7 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     );
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
+    event PlatformFeeUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when auction buffers are updated.
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);

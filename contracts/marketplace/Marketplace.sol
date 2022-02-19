@@ -199,7 +199,7 @@ contract Marketplace is
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
-        emit NewListing(listingId, _params.assetContract, tokenOwner, newListing);
+        emit ListingAdded(listingId, _params.assetContract, tokenOwner, newListing);
     }
 
     /// @dev Lets a listing's creator edit the listing's parameters.
@@ -262,7 +262,7 @@ contract Marketplace is
             }
         }
 
-        emit ListingUpdate(_listingId, targetListing.tokenOwner);
+        emit ListingUpdated(_listingId, targetListing.tokenOwner);
     }
 
     /// @dev Lets a direct listing creator cancel their listing.
@@ -273,7 +273,7 @@ contract Marketplace is
 
         delete listings[_listingId];
 
-        emit ListingCancelled(_listingId, targetListing.tokenOwner);
+        emit ListingRemoved(_listingId, targetListing.tokenOwner);
     }
 
     /// @dev Lets an account buy a given quantity of tokens from a listing.
@@ -795,7 +795,7 @@ contract Marketplace is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set auction buffers
