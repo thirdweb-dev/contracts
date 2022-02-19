@@ -159,7 +159,7 @@ contract Multiwrap is
         transfer721(_msgSender(), address(this), _wrappedContents);
         transfer20(_msgSender(), address(this), _wrappedContents);
 
-        emit Wrapped(_msgSender(), tokenId, _wrappedContents);
+        emit TokensWrapped(_msgSender(), tokenId, _wrappedContents);
     }
 
     /// @dev Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
@@ -189,7 +189,7 @@ contract Multiwrap is
         // transfer20(address(this), _msgSender(), wrappedContents_);
         transfer20ByShares(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalSharesOfToken);
 
-        emit Unwrapped(_msgSender(), _tokenId, _amountToRedeem, wrappedContents_);
+        emit TokensUnwrapped(_msgSender(), _tokenId, _amountToRedeem, wrappedContents_);
     }
 
     /// @dev Returns the platform fee bps and recipient.
@@ -236,7 +236,7 @@ contract Multiwrap is
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        emit NewOwner(_owner, _newOwner);
+        emit OwnerUpdated(_owner, _newOwner);
         _owner = _newOwner;
     }
 

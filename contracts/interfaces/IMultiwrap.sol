@@ -17,10 +17,10 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
     }
 
     /// @dev Emitted when tokens are wrapped.
-    event Wrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
+    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
 
     /// @dev Emitted when tokens are unwrapped.
-    event Unwrapped(
+    event TokensUnwrapped(
         address indexed wrapper,
         uint256 indexed tokenIdOfShares,
         uint256 sharesUnwrapped,
@@ -28,10 +28,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
     );
 
     /// @dev Emitted when a new Owner is set.
-    event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event OwnerUpdated(address prevOwner, address newOwner);
 
     /**
      *  @notice Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
