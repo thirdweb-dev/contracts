@@ -140,13 +140,15 @@ interface IDropERC721 is
      *  @param _pricePerToken The price per token to pay for the claim.
      *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
      *                 of the mint conditions that apply.
+     *  @param _proofMaxQuantity The max claimable quantity proof required for merkle root check.
      */
     function claim(
         address receiver,
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bytes32[] calldata _proofs
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantity
     ) external payable;
 
     /**
