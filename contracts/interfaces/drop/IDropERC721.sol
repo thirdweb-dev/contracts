@@ -29,7 +29,7 @@ interface IDropERC721 is
     IDropClaimCondition
 {
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(
+    event TokensClaimed(
         uint256 indexed claimConditionIndex,
         address indexed claimer,
         address indexed receiver,
@@ -44,16 +44,16 @@ interface IDropERC721 is
     event RevealedNFT(uint256 endTokenId, string revealedURI);
 
     /// @dev Emitted when new mint conditions are set for a token.
-    event NewClaimConditions(ClaimCondition[] claimConditions);
+    event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewPrimarySaleRecipient(address indexed recipient);
+    event PrimarySaleRecipientUpdated(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
+    event PlatformFeeUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when a new Owner is set.
-    event NewOwner(address prevOwner, address newOwner);
+    event OwnerUpdated(address prevOwner, address newOwner);
 
     /// @dev Emitted when a max total supply is set for a token.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);

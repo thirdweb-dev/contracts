@@ -371,7 +371,7 @@ contract DropERC721 is
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _quantity);
 
-        emit ClaimedTokens(activeConditionIndex, _msgSender(), _receiver, tokenIdToClaim, _quantity);
+        emit TokensClaimed(activeConditionIndex, _msgSender(), _receiver, tokenIdToClaim, _quantity);
     }
 
     /// @dev Lets a module admin set claim conditions.
@@ -417,7 +417,7 @@ contract DropERC721 is
             claimConditions.timstampLimitIndex += indexForCondition;
         }
 
-        emit NewClaimConditions(_conditions);
+        emit ClaimConditionsUpdated(_conditions);
     }
 
     //      =====   Setter functions  =====
@@ -443,7 +443,7 @@ contract DropERC721 is
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient);
+        emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -482,7 +482,7 @@ contract DropERC721 is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -491,7 +491,7 @@ contract DropERC721 is
         address _prevOwner = _owner;
         _owner = _newOwner;
 
-        emit NewOwner(_prevOwner, _newOwner);
+        emit OwnerUpdated(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
