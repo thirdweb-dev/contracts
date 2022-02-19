@@ -127,11 +127,6 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
 
     //      =====   External functions  =====
 
-    /// @dev Lets the contract accept ether.
-    receive() external payable {
-        emit EtherReceived(msg.sender, msg.value);
-    }
-
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId, according to claim conditions.
     function claim(
         address _receiver,
@@ -152,7 +147,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _quantity);
 
-        emit ClaimedTokens(activeConditionIndex, _msgSender(), _receiver, _quantity);
+        emit TokensClaimed(activeConditionIndex, _msgSender(), _receiver, _quantity);
     }
 
     /// @dev Lets a module admin set claim conditions.
@@ -197,7 +192,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
             claimConditions.timstampLimitIndex += indexForCondition;
         }
 
-        emit NewClaimConditions(_conditions);
+        emit ClaimConditionsUpdated(_conditions);
     }
 
     //      =====   Setter functions  =====
@@ -205,7 +200,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _primarySaleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _primarySaleRecipient;
-        emit NewPrimarySaleRecipient(_primarySaleRecipient);
+        emit PrimarySaleRecipientUpdated(_primarySaleRecipient);
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
@@ -218,7 +213,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     //      =====   Getter functions  =====

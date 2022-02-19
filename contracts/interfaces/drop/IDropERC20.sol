@@ -69,7 +69,7 @@ interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatfo
     }
 
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(
+    event TokensClaimed(
         uint256 indexed claimConditionIndex,
         address indexed claimer,
         address indexed receiver,
@@ -77,27 +77,13 @@ interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatfo
     );
 
     /// @dev Emitted when new claim conditions are set.
-    event NewClaimConditions(ClaimCondition[] claimConditions);
+    event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
     /// @dev Emitted when a new primary sale recipient is set.
-    event NewPrimarySaleRecipient(address indexed recipient);
+    event PrimarySaleRecipientUpdated(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
-
-    /// @dev Emitted when royalty info is updated.
-    event RoyaltyUpdated(address newRoyaltyRecipient, uint256 newRoyaltyBps);
-
-    /// @dev Emitted when the contract receives ether.
-    event EtherReceived(address sender, uint256 amount);
-
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
-    );
+    event PlatformFeeUpdated(address platformFeeRecipient, uint256 platformFeeBps); 
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.
