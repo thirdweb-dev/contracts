@@ -175,11 +175,6 @@ contract TokenERC721 is
 
     ///     =====   External functions  =====
 
-    /// @dev Lets the contract accept ether.
-    receive() external payable {
-        emit EtherReceived(msg.sender, msg.value);
-    }
-
     /// @dev See EIP-2981
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
@@ -213,7 +208,7 @@ contract TokenERC721 is
 
         collectPrice(_req);
 
-        emit MintWithSignature(signer, receiver, tokenIdMinted, _req);
+        emit TokensMintedWithSignature(signer, receiver, tokenIdMinted, _req);
     }
 
     //      =====   Setter functions  =====
@@ -221,7 +216,7 @@ contract TokenERC721 is
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient);
+        emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -260,7 +255,7 @@ contract TokenERC721 is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
@@ -269,7 +264,7 @@ contract TokenERC721 is
         address _prevOwner = _owner;
         _owner = _newOwner;
 
-        emit NewOwner(_prevOwner, _newOwner);
+        emit OwnerUpdated(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.
@@ -310,7 +305,7 @@ contract TokenERC721 is
 
         _mint(_to, tokenIdToMint);
 
-        emit TokenMinted(_to, tokenIdToMint, _uri);
+        emit TokensMinted(_to, tokenIdToMint, _uri);
     }
 
     /// @dev Returns the address of the signer of the mint request.
