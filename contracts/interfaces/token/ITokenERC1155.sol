@@ -49,10 +49,10 @@ interface ITokenERC1155 is
     }
 
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
-    event TokenMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
+    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
 
     /// @dev Emitted when tokens are minted.
-    event MintWithSignature(
+    event TokensMintedWithSignature(
         address indexed signer,
         address indexed mintedTo,
         uint256 indexed tokenIdMinted,
@@ -60,24 +60,13 @@ interface ITokenERC1155 is
     );
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewPrimarySaleRecipient(address indexed recipient);
+    event PrimarySaleRecipientUpdated(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
+    event PlatformFeeUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when a new Owner is set.
-    event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when the contract receives ether.
-    event EtherReceived(address sender, uint256 amount);
-
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
-    );
+    event OwnerUpdated(address prevOwner, address newOwner);
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding
