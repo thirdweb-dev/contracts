@@ -233,7 +233,7 @@ contract DropERC1155 is
         address _currency,
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantity
+        uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
         // Get the active claim condition index.
         uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
@@ -246,7 +246,7 @@ contract DropERC1155 is
             _currency,
             _pricePerToken,
             _proofs,
-            _proofMaxQuantity,
+            _proofMaxQuantityPerTransaction,
             activeConditionIndex
         );
 
@@ -460,7 +460,7 @@ contract DropERC1155 is
         address _currency,
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantity,
+        uint256 _proofMaxQuantityPerTransaction,
         uint256 _conditionIndex
     ) public view {
         ClaimCondition memory _claimCondition = claimConditions[_tokenId].claimConditionAtIndex[_conditionIndex];
@@ -496,11 +496,15 @@ contract DropERC1155 is
                 MerkleProofUpgradeable.verify(
                     _proofs,
                     _claimCondition.merkleRoot,
-                    keccak256(abi.encodePacked(_claimer, _proofMaxQuantity))
+                    keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
                 ),
                 "not in whitelist."
             );
-            require(_quantity <= _proofMaxQuantity, "invalid quantity proof.");
+            // since it's included in the leaves and proof, it's safe to check for 0
+            require(
+                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
+                "invalid quantity proof."
+            );
         }
     }
 

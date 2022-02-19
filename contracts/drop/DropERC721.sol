@@ -234,7 +234,7 @@ contract DropERC721 is
         address _currency,
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantity,
+        uint256 _proofMaxQuantityPerTransaction,
         uint256 _conditionIndex
     ) public view {
         ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
@@ -261,9 +261,12 @@ contract DropERC721 is
         require(timestampOfLastClaim == 0 || block.timestamp >= nextValidTimestampForClaim, "cannot claim yet.");
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
-            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _proofMaxQuantity));
+            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction));
             require(MerkleProofUpgradeable.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
-            require(_quantity <= _proofMaxQuantity, "invalid quantity proof.");
+            require(
+                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
+                "invalid quantity proof."
+            );
         }
     }
 
@@ -333,7 +336,7 @@ contract DropERC721 is
         address _currency,
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantity
+        uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
@@ -347,7 +350,7 @@ contract DropERC721 is
             _currency,
             _pricePerToken,
             _proofs,
-            _proofMaxQuantity,
+            _proofMaxQuantityPerTransaction,
             activeConditionIndex
         );
 
