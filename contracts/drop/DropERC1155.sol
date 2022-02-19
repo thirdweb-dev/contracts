@@ -224,7 +224,7 @@ contract DropERC1155 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens);
     }
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId.

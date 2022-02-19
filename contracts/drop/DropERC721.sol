@@ -308,7 +308,7 @@ contract DropERC721 is
             encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
         }
 
-        emit LazyMintedTokens(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
@@ -328,7 +328,7 @@ contract DropERC721 is
         baseURI[_index] = revealedURI;
         delete encryptedBaseURI[_index];
 
-        emit RevealedNFT(_index, revealedURI);
+        emit NFTRevealed(_index, revealedURI);
 
         return revealedURI;
     }

@@ -38,7 +38,7 @@ interface IDropERC1155 is
     );
 
     /// @dev Emitted when tokens are lazy minted.
-    event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when new mint conditions are set for a token.
     event ClaimConditionsUpdated(uint256 indexed tokenId, ClaimCondition[] claimConditions);
