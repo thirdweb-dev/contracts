@@ -95,11 +95,11 @@ interface IDropERC1155 is
      *
      *  @param _tokenId The token ID for which to set mint conditions.
      *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
-     *  @param _resetRestriction Whether to reset the mint restriction.
+     *  @param _resetLimitRestriction Whether to reset the claim limit restriction.
      */
     function setClaimConditions(
         uint256 _tokenId,
         ClaimCondition[] calldata _conditions,
-        bool _resetRestriction
+        bool _resetLimitRestriction
     ) external;
 }

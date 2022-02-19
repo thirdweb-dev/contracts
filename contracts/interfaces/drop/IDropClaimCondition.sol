@@ -41,26 +41,32 @@ interface IDropClaimCondition {
     }
 
     /**
-     *  @notice The set of all claim conditionsl, at any given moment.
+     *  @notice The set of all claim conditions, at any given moment.
+     *  Claim Phase ID = [currentStartId, currentStartId + length - 1];
      *
-     *  @param totalConditionCount        Acts as the uid for each claim condition. Incremented
+     *  @param currentStartId Acts as the uid for each claim condition. Incremented
      *                                    by one every time a claim condition is created.
      *
-     *  @param timstampLimitIndex         The index of the claim condition last claim timestamp.
+     *  @param length The total number of phases / claim condition that is currently active.
      *
-     *  @param claimConditionAtIndex      The claim conditions at a given uid. Claim conditions
+     *  @param phases The claim conditions at a given uid. Claim conditions
      *                                    are ordered in an ascending order by their `startTimestamp`.
-
-     *  @param merkleClaimProofAtIndex    claim condition index => bitmap of merkle proof claimed.
-
-     *  @param timestampOfLastClaim       Account => uid for a claim condition => the last timestamp at
+     *
+     *  @param limitLastClaimTimestamp Account => uid for a claim condition => the last timestamp at
      *                                    which the account claimed tokens.
+     *
+     *  @param limitMerkleProofClaim claim condition index => bitmap of merkle proof claimed.
      */
-    struct ClaimConditions {
-        uint256 totalConditionCount;
-        uint256 timstampLimitIndex;
-        mapping(uint256 => ClaimCondition) claimConditionAtIndex;
-        mapping(uint256 => BitMaps.BitMap) merkleClaimProofAtIndex;
-        mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
+    struct ClaimConditionList {
+        // the current index of Claim Phase ID
+        uint256 currentStartId;
+        // the total number of phases.
+        uint256 length;
+        // Claim Phase ID => Claim Phase
+        mapping(uint256 => ClaimCondition) phases;
+        // Claim Phase ID => Address => last claim timestamp. (per claim phases limits)
+        mapping(uint256 => mapping(address => uint256)) limitLastClaimTimestamp;
+        // Claim Phase ID => BitMaps merkle proof has claimed. (per claim phases limits)
+        mapping(uint256 => BitMaps.BitMap) limitMerkleProofClaim;
     }
 }
