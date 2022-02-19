@@ -114,7 +114,7 @@ contract Pack is
     mapping(uint256 => mapping(address => bytes32)) public currentRequestId;
 
     /// @dev Emitted when a set of packs is created.
-    event PackCreated(
+    event PackAdded(
         uint256 indexed packId,
         address indexed rewardContract,
         address indexed creator,
@@ -124,7 +124,7 @@ contract Pack is
     );
 
     /// @dev Emitted on a request to open a pack.
-    event PackOpenRequest(uint256 indexed packId, address indexed opener, bytes32 requestId);
+    event PackOpenRequested(uint256 indexed packId, address indexed opener, bytes32 requestId);
 
     /// @dev Emitted when a request to open a pack is fulfilled.
     event PackOpenFulfilled(
@@ -135,22 +135,8 @@ contract Pack is
         uint256[] rewardIds
     );
 
-    /// @dev Emitted when transfers are set as restricted / not-restricted.
-    event TransfersRestricted(bool restricted);
-
     /// @dev Emitted when a new Owner is set.
-    event NewOwner(address prevOwner, address newOwner);
-
-    /// @dev Emitted when the contract receives ether.
-    event EtherReceived(address sender, uint256 amount);
-
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
-    );
+    event OwnerUpdated(address prevOwner, address newOwner);
 
     constructor(
         address _vrfCoordinator,
@@ -302,7 +288,7 @@ contract Pack is
         randomnessRequests[requestId] = RandomnessRequest({ packId: _packId, opener: _msgSender() });
         currentRequestId[_packId][_msgSender()] = requestId;
 
-        emit PackOpenRequest(_packId, _msgSender(), requestId);
+        emit PackOpenRequested(_packId, _msgSender(), requestId);
     }
 
     /// @dev Lets a module admin withdraw link from the contract.
@@ -341,7 +327,7 @@ contract Pack is
         address _prevOwner = _owner;
         _owner = _newOwner;
 
-        emit NewOwner(_prevOwner, _newOwner);
+        emit OwnerUpdated(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -427,7 +413,7 @@ contract Pack is
         // Mint packs to creator.
         _mint(_creator, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _rewardContract, _creator, packTotalSupply, packState, rewardsInPack);
+        emit PackAdded(packId, _rewardContract, _creator, packTotalSupply, packState, rewardsInPack);
     }
 
     /// @dev Returns a reward tokenId using `_randomness` provided by RNG.
