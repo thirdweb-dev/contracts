@@ -15,15 +15,16 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
+import "../lib/MerkleProof.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -37,6 +38,7 @@ contract DropERC721 is
     AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable
 {
+    using BitMaps for BitMaps.BitMap;
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
@@ -236,7 +238,7 @@ contract DropERC721 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction,
         uint256 _conditionIndex
-    ) public view {
+    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory _claimCondition = claimConditions.claimConditionAtIndex[_conditionIndex];
 
         require(
@@ -262,7 +264,9 @@ contract DropERC721 is
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
             bytes32 leaf = keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction));
-            require(MerkleProofUpgradeable.verify(_proofs, _claimCondition.merkleRoot, leaf), "not in whitelist.");
+            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf);
+            require(validMerkleProof, "not in whitelist.");
+            require(!claimConditions.merkleClaimProofAtIndex[_conditionIndex].get(merkleProofIndex), "proof claimed.");
             require(
                 _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
                 "invalid quantity proof."
@@ -344,7 +348,7 @@ contract DropERC721 is
         uint256 activeConditionIndex = getIndexOfActiveCondition();
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(
+        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaim(
             _msgSender(),
             _quantity,
             _currency,
@@ -353,6 +357,13 @@ contract DropERC721 is
             _proofMaxQuantityPerTransaction,
             activeConditionIndex
         );
+
+        // if the current claim condition and has a merkle root and the provided proof is valid
+        // if validMerkleProof is false, it means that claim condition does not have a merkle root
+        // if invalid proof is provided, the verify would fail on require.
+        if (validMerkleProof) {
+            claimConditions.merkleClaimProofAtIndex[activeConditionIndex].set(merkleProofIndex);
+        }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken);
@@ -580,9 +591,10 @@ contract DropERC721 is
         // Update the supply minted under mint condition.
         claimConditions.claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
 
+        // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
+        // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
         uint256 timestampIndex = _claimConditionIndex + claimConditions.timstampLimitIndex;
         claimConditions.timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
-
         walletClaimCount[_msgSender()] += _quantityBeingClaimed;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;

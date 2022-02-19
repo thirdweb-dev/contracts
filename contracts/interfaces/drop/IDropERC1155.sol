@@ -6,6 +6,7 @@ import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
 import "../IThirdwebOwnable.sol";
+import "./IDropClaimCondition.sol";
 
 /**
  *  `LazyMintERC1155` is an ERC 1155 contract.
@@ -24,63 +25,9 @@ interface IDropERC1155 is
     IThirdwebOwnable,
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
-    IThirdwebPlatformFee
+    IThirdwebPlatformFee,
+    IDropClaimCondition
 {
-    /**
-     *  @notice The restrictions that make up a claim condition.
-     *
-     *  @param startTimestamp                 The unix timestamp after which the claim condition applies.
-     *                                        The same claim condition applies until the `startTimestamp`
-     *                                        of the next claim condition.
-     *
-     *  @param maxClaimableSupply             The maximum number of tokens that can
-     *                                        be claimed under the claim condition.
-     *
-     *  @param supplyClaimed                  At any given point, the number of tokens that have been claimed.
-     *
-     *  @param quantityLimitPerTransaction    The maximum number of tokens a single account can
-     *                                        claim in a single transaction.
-     *
-     *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait
-     *                                        after claiming tokens, to be able to claim again.
-     *
-     *  @param merkleRoot                     Only accounts whitelisted by `merkleRoot` can claim tokens
-     *                                        under the claim condition.
-     *
-     *  @param pricePerToken                  The price per token that can be claimed.
-     *
-     *  @param currency                       The currency in which `pricePerToken` must be paid.
-     */
-    struct ClaimCondition {
-        uint256 startTimestamp;
-        uint256 maxClaimableSupply;
-        uint256 supplyClaimed;
-        uint256 quantityLimitPerTransaction;
-        uint256 waitTimeInSecondsBetweenClaims;
-        bytes32 merkleRoot;
-        uint256 pricePerToken;
-        address currency;
-    }
-
-    /**
-     *  @notice The set of all claim conditionsl, at any given moment.
-     *
-     *  @param totalConditionCount        Acts as the uid for each claim condition. Incremented
-     *                                    by one every time a claim condition is created.
-     *
-     *  @param claimConditionAtIndex      The claim conditions at a given uid. Claim conditions
-     *                                    are ordered in an ascending order by their `startTimestamp`.
-     *
-     *  @param timestampOfLastClaim       Account => uid for a claim condition => the last timestamp at
-     *                                    which the account claimed tokens.
-     */
-    struct ClaimConditions {
-        uint256 totalConditionCount;
-        uint256 timstampLimitIndex;
-        mapping(uint256 => ClaimCondition) claimConditionAtIndex;
-        mapping(address => mapping(uint256 => uint256)) timestampOfLastClaim;
-    }
-
     /// @dev Emitted when tokens are claimed.
     event ClaimedTokens(
         uint256 indexed claimConditionIndex,

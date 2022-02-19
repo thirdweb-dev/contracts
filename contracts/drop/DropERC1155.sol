@@ -15,16 +15,17 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
+import "../lib/MerkleProof.sol";
 
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -38,6 +39,7 @@ contract DropERC1155 is
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable
 {
+    using BitMaps for BitMaps.BitMap;
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
@@ -239,7 +241,7 @@ contract DropERC1155 is
         uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(
+        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaim(
             _msgSender(),
             _tokenId,
             _quantity,
@@ -249,6 +251,13 @@ contract DropERC1155 is
             _proofMaxQuantityPerTransaction,
             activeConditionIndex
         );
+
+        // if the current claim condition and has a merkle root and the provided proof is valid
+        // if validMerkleProof is false, it means that claim condition does not have a merkle root
+        // if invalid proof is provided, the verify would fail on require.
+        if (validMerkleProof) {
+            claimConditions[_tokenId].merkleClaimProofAtIndex[activeConditionIndex].set(merkleProofIndex);
+        }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken, _tokenId);
@@ -462,7 +471,7 @@ contract DropERC1155 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction,
         uint256 _conditionIndex
-    ) public view {
+    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory _claimCondition = claimConditions[_tokenId].claimConditionAtIndex[_conditionIndex];
 
         require(
@@ -484,23 +493,24 @@ contract DropERC1155 is
             "exceed claim limit for wallet"
         );
 
-        uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
+        // uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
         require(
-            claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex] == 0 ||
+            claimConditions[_tokenId].timestampOfLastClaim[_claimer][
+                _conditionIndex + claimConditions[_tokenId].timstampLimitIndex
+            ] ==
+                0 ||
                 block.timestamp >= getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer),
             "cannot claim yet."
         );
 
         if (_claimCondition.merkleRoot != bytes32(0)) {
+            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction));
+            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf);
+            require(validMerkleProof, "not in whitelist.");
             require(
-                MerkleProofUpgradeable.verify(
-                    _proofs,
-                    _claimCondition.merkleRoot,
-                    keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
-                ),
-                "not in whitelist."
+                !claimConditions[_tokenId].merkleClaimProofAtIndex[_conditionIndex].get(merkleProofIndex),
+                "proof claimed."
             );
-            // since it's included in the leaves and proof, it's safe to check for 0
             require(
                 _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
                 "invalid quantity proof."
