@@ -29,7 +29,7 @@ interface IDropERC1155 is
     IDropClaimCondition
 {
     /// @dev Emitted when tokens are claimed.
-    event ClaimedTokens(
+    event TokensClaimed(
         uint256 indexed claimConditionIndex,
         uint256 indexed tokenId,
         address indexed claimer,
@@ -41,16 +41,16 @@ interface IDropERC1155 is
     event LazyMintedTokens(uint256 startTokenId, uint256 endTokenId, string baseURI);
 
     /// @dev Emitted when new mint conditions are set for a token.
-    event NewClaimConditions(uint256 indexed tokenId, ClaimCondition[] claimConditions);
+    event ClaimConditionsUpdated(uint256 indexed tokenId, ClaimCondition[] claimConditions);
 
     /// @dev Emitted when a new sale recipient is set.
-    event NewPrimarySaleRecipient(address indexed recipient);
+    event PrimarySaleRecipientUpdated(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdates(address platformFeeRecipient, uint256 platformFeeBps);
+    event PlatformFeeUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when a new Owner is set.
-    event NewOwner(address prevOwner, address newOwner);
+    event OwnerUpdated(address prevOwner, address newOwner);
 
     /// @dev Emitted when a max total supply is set for a token.
     event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);

@@ -265,7 +265,7 @@ contract DropERC1155 is
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _tokenId, _quantity);
 
-        emit ClaimedTokens(activeConditionIndex, _tokenId, _msgSender(), _receiver, _quantity);
+        emit TokensClaimed(activeConditionIndex, _tokenId, _msgSender(), _receiver, _quantity);
     }
 
     /// @dev Lets a module admin set mint conditions.
@@ -280,7 +280,7 @@ contract DropERC1155 is
             resetTimestampRestriction(_tokenId, numOfConditionsSet);
         }
 
-        emit NewClaimConditions(_tokenId, _conditions);
+        emit ClaimConditionsUpdated(_tokenId, _conditions);
     }
 
     //      =====   Setter functions  =====
@@ -309,7 +309,7 @@ contract DropERC1155 is
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
-        emit NewPrimarySaleRecipient(_saleRecipient);
+        emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
@@ -348,13 +348,13 @@ contract DropERC1155 is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdates(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        emit NewOwner(_owner, _newOwner);
+        emit OwnerUpdated(_owner, _newOwner);
         _owner = _newOwner;
     }
 
