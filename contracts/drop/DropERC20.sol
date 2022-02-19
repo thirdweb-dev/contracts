@@ -213,7 +213,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     //      =====   Getter functions  =====

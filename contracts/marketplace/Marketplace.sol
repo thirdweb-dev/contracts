@@ -795,7 +795,7 @@ contract Marketplace is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set auction buffers

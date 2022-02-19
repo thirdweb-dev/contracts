@@ -255,7 +255,7 @@ contract TokenERC721 is
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
-        emit PlatformFeeUpdated(_platformFeeRecipient, _platformFeeBps);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.

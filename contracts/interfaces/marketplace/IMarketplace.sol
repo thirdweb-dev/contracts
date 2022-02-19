@@ -144,7 +144,7 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     );
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeUpdated(address platformFeeRecipient, uint256 platformFeeBps);
+    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when auction buffers are updated.
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
