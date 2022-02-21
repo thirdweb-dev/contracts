@@ -186,7 +186,7 @@ contract DropERC1155 is
     }
 
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
-    function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
+    function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
         for (uint256 i = conditionList.currentStartId + conditionList.length; i > conditionList.length; i -= 1) {
             if (block.timestamp >= conditionList.phases[i - 1].startTimestamp) {
@@ -237,13 +237,13 @@ contract DropERC1155 is
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
         // Get the active claim condition index.
-        uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
+        uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(_msgSender(), _tokenId, _quantity, _currency, _pricePerToken, activeConditionIndex);
+        verifyClaim(activeConditionId, _msgSender(), _tokenId, _quantity, _currency, _pricePerToken);
 
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            activeConditionIndex,
+            activeConditionId,
             _msgSender(),
             _tokenId,
             _quantity,
@@ -253,18 +253,18 @@ contract DropERC1155 is
 
         // if the current claim condition and has a merkle root and the provided proof is valid
         // if validMerkleProof is false, it means that claim condition does not have a merkle root
-        // if invalid proof is provided, the verify would fail on require.
+        // if invalid proof is provided, the verifyClaimMerkleProof would fail on require.
         if (validMerkleProof) {
-            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionIndex].set(merkleProofIndex);
+            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(_receiver, activeConditionIndex, _tokenId, _quantity);
+        transferClaimedTokens(_receiver, activeConditionId, _tokenId, _quantity);
 
-        emit TokensClaimed(activeConditionIndex, _tokenId, _msgSender(), _receiver, _quantity);
+        emit TokensClaimed(activeConditionId, _tokenId, _msgSender(), _receiver, _quantity);
     }
 
     /// @dev Lets a module admin set mint conditions.
@@ -460,12 +460,12 @@ contract DropERC1155 is
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaim(
+        uint256 _conditionId,
         address _claimer,
         uint256 _tokenId,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken,
-        uint256 _conditionId
+        uint256 _pricePerToken
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
 

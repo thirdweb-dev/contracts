@@ -180,7 +180,7 @@ contract DropERC721 is
     }
 
     /// @dev At any given moment, returns the uid for the active claim condition.
-    function getIndexOfActiveCondition() public view returns (uint256) {
+    function getActiveClaimConditionId() public view returns (uint256) {
         for (uint256 i = claimCondition.currentStartId + claimCondition.length; i > claimCondition.length; i -= 1) {
             if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
                 return i - 1;
@@ -228,14 +228,12 @@ contract DropERC721 is
 
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaim(
+        uint256 _conditionId,
         address _claimer,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction,
-        uint256 _conditionId
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
+        uint256 _pricePerToken
+    ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
 
         require(
@@ -259,10 +257,23 @@ contract DropERC721 is
 
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
         require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
+    }
+
+    function verifyClaimMerkleProof(
+        uint256 _conditionId,
+        address _claimer,
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityPerTransaction
+    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
+        ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
 
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
-            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction));
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(_proofs, currentClaimPhase.merkleRoot, leaf);
+            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
+                _proofs,
+                currentClaimPhase.merkleRoot,
+                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
+            );
             require(validMerkleProof, "not in whitelist.");
             require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
             require(
@@ -343,33 +354,33 @@ contract DropERC721 is
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
         // Get the claim conditions.
-        uint256 activeConditionIndex = getIndexOfActiveCondition();
+        uint256 activeConditionId = getActiveClaimConditionId();
 
         // Verify claim validity. If not valid, revert.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaim(
+        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken);
+
+        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
+            activeConditionId,
             _msgSender(),
             _quantity,
-            _currency,
-            _pricePerToken,
             _proofs,
-            _proofMaxQuantityPerTransaction,
-            activeConditionIndex
+            _proofMaxQuantityPerTransaction
         );
 
         // if the current claim condition and has a merkle root and the provided proof is valid
         // if validMerkleProof is false, it means that claim condition does not have a merkle root
-        // if invalid proof is provided, the verify would fail on require.
+        // if invalid proof is provided, the verifyClaimMerkleProof would fail on require.
         if (validMerkleProof) {
-            claimCondition.limitMerkleProofClaim[activeConditionIndex].set(merkleProofIndex);
+            claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(_receiver, activeConditionIndex, _quantity);
+        transferClaimedTokens(_receiver, activeConditionId, _quantity);
 
-        emit TokensClaimed(activeConditionIndex, _msgSender(), _receiver, tokenIdToClaim, _quantity);
+        emit TokensClaimed(activeConditionId, _msgSender(), _receiver, tokenIdToClaim, _quantity);
     }
 
     /// @dev Lets a module admin set claim conditions.
