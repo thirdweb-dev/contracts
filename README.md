@@ -6,6 +6,30 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 
 These are deployments to test the v2 minimum loop.
 
+#### Mumbai
+
+- `TWFactory`: [0xc034653383B10884c86DAe348C90D4d9160Dd3CD](https://mumbai.polygonscan.com/address/0xc034653383B10884c86DAe348C90D4d9160Dd3CD#code)
+
+- `TWRegistry`: [0xDF4102C8199D271bb2819C6B1C21e3B4b8C37671](https://mumbai.polygonscan.com/address/0xDF4102C8199D271bb2819C6B1C21e3B4b8C37671#code)
+
+- `TWFee`: [0xb927Bd28777cEa8D34c07000c587A4ea5a8c53D0](https://mumbai.polygonscan.com/address/0xb927Bd28777cEa8D34c07000c587A4ea5a8c53D0#code)
+
+- `Drop721`: [0xFFdc132694b26aa8C55791fa02EC3c3f764e3315](https://mumbai.polygonscan.com/address/0xFFdc132694b26aa8C55791fa02EC3c3f764e3315#code)
+
+- `Drop1155`: [0xAa4E1e1d9dF74E9353e0768B980D9dcf7296811a](https://mumbai.polygonscan.com/address/0xAa4E1e1d9dF74E9353e0768B980D9dcf7296811a#code)
+
+- `TokenERC20`: [0x9208132EC8f0df887821424F62CdD1ee174C9d76](https://mumbai.polygonscan.com/address/0x9208132EC8f0df887821424F62CdD1ee174C9d76#code)
+
+- `TokenERC721`: [0x8e594527874A51CE594Aea0c9788C07b080a7967](https://mumbai.polygonscan.com/address/0x8e594527874A51CE594Aea0c9788C07b080a7967#code)
+
+- `TokenERC1155`: [0x0A249E1c9998934EdD7cd8D1585B62cFD09c580B](https://mumbai.polygonscan.com/address/0x0A249E1c9998934EdD7cd8D1585B62cFD09c580B#code)
+
+- `Split`: [0x2B46418FD3eBEe7448b80685A2a629239dCc671b](https://mumbai.polygonscan.com/address/0x2B46418FD3eBEe7448b80685A2a629239dCc671b#code)
+
+- `Marketplace`: [0x8811E2f59B0511026f35CC2A1FCdD5a2057812eF](https://mumbai.polygonscan.com/address/0x8811E2f59B0511026f35CC2A1FCdD5a2057812eF#code)
+
+- `VoteERC20`: [0x1926B1cbA12816d35B4ce58e2DF31588f9BE87B4](https://mumbai.polygonscan.com/address/0x1926B1cbA12816d35B4ce58e2DF31588f9BE87B4#code)
+
 #### Goerli
 
 - `TWFactory`: [0xC966c8E15c104515A49F91C58DCcc65CC5a2CBA5](https://goerli.etherscan.io/address/0xC966c8E15c104515A49F91C58DCcc65CC5a2CBA5#code)
