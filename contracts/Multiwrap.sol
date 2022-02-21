@@ -145,8 +145,8 @@ contract Multiwrap is
         WrappedContents calldata _wrappedContents,
         uint256 _shares,
         string calldata _uriForShares
-    ) external payable nonReentrant {
-        uint256 tokenId = nextTokenIdToMint;
+    ) external payable nonReentrant returns (uint256 tokenId) {
+        tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
         uriForShares[tokenId] = _uriForShares;

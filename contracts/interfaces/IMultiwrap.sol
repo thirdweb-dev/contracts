@@ -41,7 +41,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
         WrappedContents calldata wrappedContents,
         uint256 shares,
         string calldata uriForShares
-    ) external payable;
+    ) external payable returns (uint256 tokenId);
 
     /**
      *  @notice Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
