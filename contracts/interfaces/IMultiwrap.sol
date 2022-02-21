@@ -22,6 +22,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
     /// @dev Emitted when tokens are unwrapped.
     event TokensUnwrapped(
         address indexed wrapper,
+        address sentTo,
         uint256 indexed tokenIdOfShares,
         uint256 sharesUnwrapped,
         WrappedContents wrappedContents
@@ -49,5 +50,5 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param tokenId The token Id of the tokens to unwrap.
      *  @param amountToRedeem The amount of shares to unwrap
      */
-    function unwrap(uint256 tokenId, uint256 amountToRedeem) external;
+    function unwrap(uint256 tokenId, uint256 amountToRedeem, address _sendTo) external;
 }

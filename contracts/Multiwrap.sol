@@ -163,7 +163,7 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(uint256 _tokenId, uint256 _amountToRedeem) external nonReentrant {
+    function unwrap(uint256 _tokenId, uint256 _amountToRedeem, address _sendTo) external nonReentrant {
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(balanceOf(_msgSender(), _tokenId) >= _amountToRedeem, "unwrapping more than owned");
 
@@ -178,18 +178,13 @@ contract Multiwrap is
         }
 
         if (isTotalRedemption) {
-            transfer1155(address(this), _msgSender(), wrappedContents_);
-            transfer721(address(this), _msgSender(), wrappedContents_);
+            transfer1155(address(this), _sendTo, wrappedContents_);
+            transfer721(address(this), _sendTo, wrappedContents_);
         }
 
-        // delete wrappedContents[_tokenId];
+        transfer20ByShares(address(this), _sendTo, wrappedContents_, _amountToRedeem, totalSharesOfToken);
 
-        // burn(_msgSender(), _tokenId, totalSupplyOfToken);
-
-        // transfer20(address(this), _msgSender(), wrappedContents_);
-        transfer20ByShares(address(this), _msgSender(), wrappedContents_, _amountToRedeem, totalSharesOfToken);
-
-        emit TokensUnwrapped(_msgSender(), _tokenId, _amountToRedeem, wrappedContents_);
+        emit TokensUnwrapped(_msgSender(), _sendTo, _tokenId, _amountToRedeem, wrappedContents_);
     }
 
     /// @dev Returns the platform fee bps and recipient.
