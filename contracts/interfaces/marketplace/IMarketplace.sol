@@ -103,7 +103,12 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     }
 
     /// @dev Emitted when a new listing is created.
-    event ListingAdded(uint256 indexed listingId, address indexed assetContract, address indexed lister, Listing listing);
+    event ListingAdded(
+        uint256 indexed listingId,
+        address indexed assetContract,
+        address indexed lister,
+        Listing listing
+    );
 
     /// @dev Emitted when the parameters of a listing are updated.
     event ListingUpdated(uint256 indexed listingId, address indexed listingCreator);
