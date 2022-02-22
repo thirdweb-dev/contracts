@@ -4,6 +4,10 @@ async function verify() {
   const txhashs = [];
   for (const txhash of txhashs) {
     const types = [
+      "TWFee",
+      "TWRegistry",
+      "TWFactory",
+      "TWProxy",
       "TokenERC20",
       "TokenERC721",
       "TokenERC1155",
@@ -40,7 +44,7 @@ async function verify() {
 
       const paramsData = `0x${txdata.substring(bytecode.length)}`;
       const paramsDeployed = ethers.utils.defaultAbiCoder.decode(contract.interface.deploy.inputs, paramsData);
-      const paramsArguments = paramsDeployed.toString().split(",");
+      const paramsArguments = paramsDeployed.length ? paramsDeployed.toString().split(",") : [];
       try {
         await hre.run("verify:verify", {
           address,
