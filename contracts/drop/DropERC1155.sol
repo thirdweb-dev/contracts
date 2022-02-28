@@ -431,15 +431,15 @@ contract DropERC1155 is
     /// @dev Returns the timestamp for next available claim for a claimer address
     function getClaimTimestamp(
         uint256 _tokenId,
-        uint256 _index,
+        uint256 _conditionId,
         address _claimer
     ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
-        lastClaimTimestamp = claimCondition[_tokenId].limitLastClaimTimestamp[_index][_claimer];
+        lastClaimTimestamp = claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_claimer];
 
         unchecked {
             nextValidClaimTimestamp =
                 lastClaimTimestamp +
-                claimCondition[_tokenId].phases[_index].waitTimeInSecondsBetweenClaims;
+                claimCondition[_tokenId].phases[_conditionId].waitTimeInSecondsBetweenClaims;
 
             if (nextValidClaimTimestamp < lastClaimTimestamp) {
                 nextValidClaimTimestamp = type(uint256).max;
@@ -447,13 +447,13 @@ contract DropERC1155 is
         }
     }
 
-    /// @dev Returns the  mint condition for a given tokenId, at the given index.
-    function getClaimConditionAtIndex(uint256 _tokenId, uint256 _index)
+    /// @dev Returns the claim condition for a given tokenId for the given condition id.
+    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
         external
         view
         returns (ClaimCondition memory condition)
     {
-        condition = claimCondition[_tokenId].phases[claimCondition[_tokenId].currentStartId + _index];
+        condition = claimCondition[_tokenId].phases[_conditionId];
     }
 
     //      =====   Internal functions  =====
@@ -556,16 +556,16 @@ contract DropERC1155 is
     /// @dev Transfers the tokens being claimed.
     function transferClaimedTokens(
         address _to,
-        uint256 _claimConditionIndex,
+        uint256 _conditionId,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed
     ) internal {
         // Update the supply minted under mint condition.
-        claimCondition[_tokenId].phases[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
+        claimCondition[_tokenId].phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
 
         // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
         // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
-        claimCondition[_tokenId].limitLastClaimTimestamp[_claimConditionIndex][_msgSender()] = block.timestamp;
+        claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
 
         walletClaimCount[_tokenId][_msgSender()] += _quantityBeingClaimed;
 
