@@ -188,7 +188,7 @@ contract DropERC1155 is
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
     function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
-        for (uint256 i = conditionList.currentStartId + conditionList.count; i > conditionList.count; i -= 1) {
+        for (uint256 i = conditionList.currentStartId + conditionList.count; i > conditionList.currentStartId; i--) {
             if (block.timestamp >= conditionList.phases[i - 1].startTimestamp) {
                 return i - 1;
             }

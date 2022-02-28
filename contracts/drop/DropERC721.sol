@@ -181,7 +181,7 @@ contract DropERC721 is
 
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getActiveClaimConditionId() public view returns (uint256) {
-        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.count; i -= 1) {
+        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.currentStartId; i--) {
             if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
                 return i - 1;
             }
