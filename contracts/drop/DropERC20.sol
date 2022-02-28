@@ -26,30 +26,10 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
     uint128 private constant VERSION = 1;
 
-    /// @dev Max basis points in the thirdweb system
-    uint128 private constant MAX_BPS = 10_000;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 private platformFeeBps;
-
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev The thirdweb contract with fee related information.
-    TWFee private immutable thirdwebFee;
-
-    /// @dev The address that receives all primary sales value.
-    address public primarySaleRecipient;
-
-    /// @dev The address that receives the platform fees all primary sales value.
-    address private platformFeeRecipient;
-
     /// @dev The claim conditions at any given moment.
     ClaimConditions public claimConditions;
 
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
-    }
+    constructor(address _thirdwebFee) TokenERC20(_thirdwebFee) initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -59,14 +39,19 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         string memory _contractURI,
         address _trustedForwarder,
         address _primarySaleRecipient,
-        uint128 _platformFeeBps,
+        uint256 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-        __TokenERC20_init(_defaultAdmin, _name, _symbol, _trustedForwarder, _contractURI);
-
-        primarySaleRecipient = _primarySaleRecipient;
-        platformFeeRecipient = _platformFeeRecipient;
-        platformFeeBps = _platformFeeBps;
+        __TokenERC20_init(
+            _defaultAdmin,
+            _name,
+            _symbol,
+            _contractURI,
+            _trustedForwarder,
+            _primarySaleRecipient,
+            _platformFeeRecipient,
+            _platformFeeBps
+        );
     }
 
     //      =====   Public functions  =====
@@ -142,7 +127,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         verifyClaim(_msgSender(), _quantity, _currency, _pricePerToken, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
-        collectClaimPrice(_quantity, _currency, _pricePerToken);
+        collectPrice(primarySaleRecipient, _quantity, _currency, _pricePerToken);
 
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _quantity);
@@ -195,33 +180,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         emit ClaimConditionsUpdated(_conditions);
     }
 
-    //      =====   Setter functions  =====
-
-    /// @dev Lets a module admin set the default recipient of all primary sales.
-    function setPrimarySaleRecipient(address _primarySaleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        primarySaleRecipient = _primarySaleRecipient;
-        emit PrimarySaleRecipientUpdated(_primarySaleRecipient);
-    }
-
-    /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
-
-        platformFeeBps = uint64(_platformFeeBps);
-        platformFeeRecipient = _platformFeeRecipient;
-
-        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
-    }
-
     //      =====   Getter functions  =====
-
-    /// @dev Returns the platform fee bps and recipient.
-    function getPlatformFeeInfo() external view returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
-    }
 
     /// @dev Returns the next calid timestamp for claiming, for a given claimer and claim condition index.
     function getTimestampForNextValidClaim(uint256 _index, address _claimer)
@@ -249,35 +208,6 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
     }
 
     //      =====   Internal functions  =====
-
-    /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectClaimPrice(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal {
-        if (_pricePerToken == 0) {
-            return;
-        }
-
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
-
-        if (_currency == NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
-        }
-
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            primarySaleRecipient,
-            totalPrice - platformFees - twFee
-        );
-    }
 
     /// @dev Transfers the tokens being claimed.
     function transferClaimedTokens(

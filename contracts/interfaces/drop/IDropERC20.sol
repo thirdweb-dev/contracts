@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
+import "../token/ITokenERC20.sol";
 
 /**
  *  `LazyMintERC20` is an ERC 20 contract.
@@ -13,7 +11,7 @@ import "../IThirdwebPrimarySale.sol";
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee {
+interface IDropERC20 is ITokenERC20 {
     /**
      *  @notice The restrictions that make up a claim condition.
      *
@@ -78,12 +76,6 @@ interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatfo
 
     /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
-
-    /// @dev Emitted when a new primary sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.

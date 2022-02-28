@@ -121,7 +121,7 @@ contract TokenERC1155 is
         string memory _symbol,
         string memory _contractURI,
         address _trustedForwarder,
-        address _saleRecipient,
+        address _primarySaleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
@@ -139,7 +139,7 @@ contract TokenERC1155 is
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
-        primarySaleRecipient = _saleRecipient;
+        primarySaleRecipient = _primarySaleRecipient;
         contractURI = _contractURI;
         platformFeeBps = _platformFeeBps;
 
