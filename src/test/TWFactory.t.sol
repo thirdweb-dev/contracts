@@ -36,9 +36,9 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
     //  =====   Set up  =====
 
-    function setUp() public {
+    function setUp() public override {
         vm.prank(factoryDeployer);
-        twFactory = new TWFactory(trustedForwarder);
+        twFactory = new TWFactory(trustedForwarder, address(new TWRegistry(trustedForwarder)));
 
         vm.prank(moduleDeployer);
         mockModule = new MockThirdwebContract();

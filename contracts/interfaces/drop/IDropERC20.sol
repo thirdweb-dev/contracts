@@ -83,7 +83,7 @@ interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatfo
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps); 
+    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.

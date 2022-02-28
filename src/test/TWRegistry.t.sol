@@ -14,19 +14,14 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     // Target contract
     TWRegistry internal twRegistry;
 
-    // Actors
-    address internal factory = address(0x1);
-    address internal deployer = address(0x2);
-
     // Test params
-    address internal trustedForwarder = address(0x3);
     address internal mockModuleAddress = address(0x5);
 
     //  =====   Set up  =====
 
-    function setUp() public {
+    function setUp() public override {
         vm.prank(factory);
-        twRegistry = new TWRegistry(trustedForwarder);
+        twRegistry = new TWRegistry(forwarder);
     }
 
     //  =====   Initial state   =====

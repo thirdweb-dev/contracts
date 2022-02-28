@@ -101,7 +101,8 @@ interface IDropERC721 is
     /**
      *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param _conditions Mint conditions in ascending order by `startTimestamp`.
+     *  @param _phases Mint conditions in ascending order by `startTimestamp`.
+     *  @param _resetLimitRestriction To reset claim phases limit restriction.
      */
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetRestriction) external;
+    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetLimitRestriction) external;
 }

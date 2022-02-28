@@ -102,7 +102,7 @@ contract DropERC1155 is
     mapping(uint256 => uint256) public maxTotalSupply;
 
     /// @dev Token ID => public claim conditions for tokens with that ID.
-    mapping(uint256 => ClaimConditions) public claimConditions;
+    mapping(uint256 => ClaimConditionList) public claimCondition;
 
     /// @dev Token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
@@ -186,11 +186,10 @@ contract DropERC1155 is
     }
 
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
-    function getIndexOfActiveCondition(uint256 _tokenId) public view returns (uint256) {
-        uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
-
-        for (uint256 i = totalConditionCount; i > 0; i -= 1) {
-            if (block.timestamp >= claimConditions[_tokenId].claimConditionAtIndex[i - 1].startTimestamp) {
+    function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
+        ClaimConditionList storage conditionList = claimCondition[_tokenId];
+        for (uint256 i = conditionList.currentStartId + conditionList.length; i > conditionList.length; i -= 1) {
+            if (block.timestamp >= conditionList.phases[i - 1].startTimestamp) {
                 return i - 1;
             }
         }
@@ -238,49 +237,93 @@ contract DropERC1155 is
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
         // Get the active claim condition index.
-        uint256 activeConditionIndex = getIndexOfActiveCondition(_tokenId);
+        uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
         // Verify claim validity. If not valid, revert.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaim(
+        verifyClaim(activeConditionId, _msgSender(), _tokenId, _quantity, _currency, _pricePerToken);
+
+        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
+            activeConditionId,
             _msgSender(),
             _tokenId,
             _quantity,
-            _currency,
-            _pricePerToken,
             _proofs,
-            _proofMaxQuantityPerTransaction,
-            activeConditionIndex
+            _proofMaxQuantityPerTransaction
         );
 
         // if the current claim condition and has a merkle root and the provided proof is valid
         // if validMerkleProof is false, it means that claim condition does not have a merkle root
-        // if invalid proof is provided, the verify would fail on require.
+        // if invalid proof is provided, the verifyClaimMerkleProof would fail on require.
         if (validMerkleProof) {
-            claimConditions[_tokenId].merkleClaimProofAtIndex[activeConditionIndex].set(merkleProofIndex);
+            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken, _tokenId);
 
         // Mint the relevant tokens to claimer.
-        transferClaimedTokens(_receiver, activeConditionIndex, _tokenId, _quantity);
+        transferClaimedTokens(_receiver, activeConditionId, _tokenId, _quantity);
 
-        emit TokensClaimed(activeConditionIndex, _tokenId, _msgSender(), _receiver, _quantity);
+        emit TokensClaimed(activeConditionId, _tokenId, _msgSender(), _receiver, _quantity);
     }
 
     /// @dev Lets a module admin set mint conditions.
     function setClaimConditions(
         uint256 _tokenId,
-        ClaimCondition[] calldata _conditions,
-        bool resetRestriction
+        ClaimCondition[] calldata _phases,
+        bool _resetLimitRestriction
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 numOfConditionsSet = resetClaimConditions(_tokenId, _conditions);
+        ClaimConditionList storage condition = claimCondition[_tokenId];
+        uint256 existingStartIndex = condition.currentStartId;
+        uint256 existingPhaseCount = condition.length;
 
-        if (resetRestriction) {
-            resetTimestampRestriction(_tokenId, numOfConditionsSet);
+        // if it's to reset restriction, all new claim phases would start at the end of the existing batch.
+        // otherwise, the new claim phases would override the existing phases and limits from the existing start index
+        uint256 newStartIndex = existingPhaseCount;
+        if (_resetLimitRestriction) {
+            newStartIndex = existingStartIndex + existingPhaseCount;
         }
 
-        emit ClaimConditionsUpdated(_tokenId, _conditions);
+        uint256 lastConditionStartTimestamp;
+        for (uint256 i = 0; i < _phases.length; i++) {
+            require(
+                lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
+                "startTimestamp must be in ascending order."
+            );
+            require(_phases[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0.");
+            require(_phases[i].supplyClaimed == 0, "supply claimed must be 0.");
+
+            condition.phases[newStartIndex + i] = _phases[i];
+
+            lastConditionStartTimestamp = _phases[i].startTimestamp;
+        }
+
+        // freeing up claim phases and claim limit
+        // if we are resetting restriction, then we'd clean up previous batch maps
+        // if we are not, then we'd only clean up unused claim phases and limits.
+        if (_resetLimitRestriction) {
+            for (uint256 i = 0; i < existingPhaseCount; i++) {
+                delete condition.phases[existingStartIndex + i];
+                delete condition.limitMerkleProofClaim[existingStartIndex + i];
+                // can't delete limitLastClaimTimestamp because we don't have addresses
+            }
+        } else {
+            // if there are more old (existing) phases than the newly set ones, delete all the remaining
+            // unused phases and limits
+            // if there are more new phases than old phases, then we'd only need to set the `length` properly
+            if (existingPhaseCount > _phases.length) {
+                for (uint256 i = _phases.length; i < existingPhaseCount; i++) {
+                    delete condition.phases[newStartIndex + i];
+                    delete condition.limitMerkleProofClaim[newStartIndex + i];
+                    // can't delete limitLastClaimTimestamp because we don't have addresses
+                }
+            }
+        }
+
+        condition.length = _phases.length;
+        condition.currentStartId = newStartIndex;
+
+        emit ClaimConditionsUpdated(_tokenId, _phases);
     }
 
     //      =====   Setter functions  =====
@@ -385,22 +428,21 @@ contract DropERC1155 is
                 : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
-    /// @dev Returns the current active mint condition for a given tokenId.
-    function getTimestampForNextValidClaim(
+    /// @dev Returns the timestamp for next available claim for a claimer address
+    function getClaimTimestamp(
         uint256 _tokenId,
         uint256 _index,
         address _claimer
-    ) public view returns (uint256 nextValidTimestampForClaim) {
-        uint256 timestampIndex = _index + claimConditions[_tokenId].timstampLimitIndex;
-        uint256 timestampOfLastClaim = claimConditions[_tokenId].timestampOfLastClaim[_claimer][timestampIndex];
+    ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
+        lastClaimTimestamp = claimCondition[_tokenId].limitLastClaimTimestamp[_index][_claimer];
 
         unchecked {
-            nextValidTimestampForClaim =
-                timestampOfLastClaim +
-                claimConditions[_tokenId].claimConditionAtIndex[_index].waitTimeInSecondsBetweenClaims;
+            nextValidClaimTimestamp =
+                lastClaimTimestamp +
+                claimCondition[_tokenId].phases[_index].waitTimeInSecondsBetweenClaims;
 
-            if (nextValidTimestampForClaim < timestampOfLastClaim) {
-                nextValidTimestampForClaim = type(uint256).max;
+            if (nextValidClaimTimestamp < lastClaimTimestamp) {
+                nextValidClaimTimestamp = type(uint256).max;
             }
         }
     }
@@ -409,78 +451,34 @@ contract DropERC1155 is
     function getClaimConditionAtIndex(uint256 _tokenId, uint256 _index)
         external
         view
-        returns (ClaimCondition memory mintCondition)
+        returns (ClaimCondition memory condition)
     {
-        mintCondition = claimConditions[_tokenId].claimConditionAtIndex[_index];
+        condition = claimCondition[_tokenId].phases[claimCondition[_tokenId].currentStartId + _index];
     }
 
     //      =====   Internal functions  =====
 
-    /// @dev Lets a module admin set mint conditions for a given tokenId.
-    function resetClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions)
-        internal
-        returns (uint256 indexForCondition)
-    {
-        // make sure the conditions are sorted in ascending order
-        uint256 lastConditionStartTimestamp;
-
-        for (uint256 i = 0; i < _conditions.length; i++) {
-            require(
-                lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _conditions[i].startTimestamp,
-                "startTimestamp must be in ascending order."
-            );
-            require(_conditions[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0.");
-
-            claimConditions[_tokenId].claimConditionAtIndex[indexForCondition] = ClaimCondition({
-                startTimestamp: _conditions[i].startTimestamp,
-                maxClaimableSupply: _conditions[i].maxClaimableSupply,
-                supplyClaimed: 0,
-                quantityLimitPerTransaction: _conditions[i].quantityLimitPerTransaction,
-                waitTimeInSecondsBetweenClaims: _conditions[i].waitTimeInSecondsBetweenClaims,
-                pricePerToken: _conditions[i].pricePerToken,
-                currency: _conditions[i].currency,
-                merkleRoot: _conditions[i].merkleRoot
-            });
-
-            indexForCondition += 1;
-            lastConditionStartTimestamp = _conditions[i].startTimestamp;
-        }
-
-        uint256 totalConditionCount = claimConditions[_tokenId].totalConditionCount;
-        if (indexForCondition < totalConditionCount) {
-            for (uint256 j = indexForCondition; j < totalConditionCount; j += 1) {
-                delete claimConditions[_tokenId].claimConditionAtIndex[j];
-            }
-        }
-
-        claimConditions[_tokenId].totalConditionCount = indexForCondition;
-    }
-
-    /// @dev Updates the `timstampLimitIndex` to reset the time restriction between claims, for a claim condition.
-    function resetTimestampRestriction(uint256 _tokenId, uint256 _factor) internal {
-        claimConditions[_tokenId].timstampLimitIndex += _factor;
-    }
-
     /// @dev Checks whether a request to claim tokens obeys the active mint condition.
     function verifyClaim(
+        uint256 _conditionId,
         address _claimer,
         uint256 _tokenId,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction,
-        uint256 _conditionIndex
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        ClaimCondition memory _claimCondition = claimConditions[_tokenId].claimConditionAtIndex[_conditionIndex];
+        uint256 _pricePerToken
+    ) public view {
+        ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
 
         require(
-            _currency == _claimCondition.currency && _pricePerToken == _claimCondition.pricePerToken,
+            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
-        require(_quantity > 0 && _quantity <= _claimCondition.quantityLimitPerTransaction, "invalid quantity claimed.");
         require(
-            _claimCondition.supplyClaimed + _quantity <= _claimCondition.maxClaimableSupply,
+            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            "invalid quantity claimed."
+        );
+        require(
+            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
             "exceed max mint supply."
         );
         require(
@@ -493,22 +491,33 @@ contract DropERC1155 is
             "exceed claim limit for wallet"
         );
 
-        // uint256 timestampIndex = _conditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        require(
-            claimConditions[_tokenId].timestampOfLastClaim[_claimer][
-                _conditionIndex + claimConditions[_tokenId].timstampLimitIndex
-            ] ==
-                0 ||
-                block.timestamp >= getTimestampForNextValidClaim(_tokenId, _conditionIndex, _claimer),
-            "cannot claim yet."
+        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(
+            _tokenId,
+            _conditionId,
+            _claimer
         );
+        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
+    }
 
-        if (_claimCondition.merkleRoot != bytes32(0)) {
-            bytes32 leaf = keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction));
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(_proofs, _claimCondition.merkleRoot, leaf);
+    function verifyClaimMerkleProof(
+        uint256 _conditionId,
+        address _claimer,
+        uint256 _tokenId,
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityPerTransaction
+    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
+        ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
+
+        if (currentClaimPhase.merkleRoot != bytes32(0)) {
+            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
+                _proofs,
+                currentClaimPhase.merkleRoot,
+                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
+            );
             require(validMerkleProof, "not in whitelist.");
             require(
-                !claimConditions[_tokenId].merkleClaimProofAtIndex[_conditionIndex].get(merkleProofIndex),
+                !claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].get(merkleProofIndex),
                 "proof claimed."
             );
             require(
@@ -552,10 +561,11 @@ contract DropERC1155 is
         uint256 _quantityBeingClaimed
     ) internal {
         // Update the supply minted under mint condition.
-        claimConditions[_tokenId].claimConditionAtIndex[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
-        // Update the claimer's next valid timestamp to mint. If next mint timestamp overflows, cap it to max uint256.
-        uint256 timestampIndex = _claimConditionIndex + claimConditions[_tokenId].timstampLimitIndex;
-        claimConditions[_tokenId].timestampOfLastClaim[_msgSender()][timestampIndex] = block.timestamp;
+        claimCondition[_tokenId].phases[_claimConditionIndex].supplyClaimed += _quantityBeingClaimed;
+
+        // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
+        // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
+        claimCondition[_tokenId].limitLastClaimTimestamp[_claimConditionIndex][_msgSender()] = block.timestamp;
 
         walletClaimCount[_tokenId][_msgSender()] += _quantityBeingClaimed;
 
