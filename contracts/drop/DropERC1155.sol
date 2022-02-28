@@ -188,7 +188,7 @@ contract DropERC1155 is
     /// @dev At any given moment, returns the uid for the active mint condition for a given tokenId.
     function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
-        for (uint256 i = conditionList.currentStartId + conditionList.length; i > conditionList.length; i -= 1) {
+        for (uint256 i = conditionList.currentStartId + conditionList.count; i > conditionList.count; i -= 1) {
             if (block.timestamp >= conditionList.phases[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -275,7 +275,7 @@ contract DropERC1155 is
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         ClaimConditionList storage condition = claimCondition[_tokenId];
         uint256 existingStartIndex = condition.currentStartId;
-        uint256 existingPhaseCount = condition.length;
+        uint256 existingPhaseCount = condition.count;
 
         // if it's to reset restriction, all new claim phases would start at the end of the existing batch.
         // otherwise, the new claim phases would override the existing phases and limits from the existing start index
@@ -290,10 +290,9 @@ contract DropERC1155 is
                 lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."
             );
-            require(_phases[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0.");
-            require(_phases[i].supplyClaimed == 0, "supply claimed must be 0.");
 
             condition.phases[newStartIndex + i] = _phases[i];
+            condition.phases[newStartIndex + i].supplyClaimed = 0;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
@@ -320,7 +319,7 @@ contract DropERC1155 is
             }
         }
 
-        condition.length = _phases.length;
+        condition.count = _phases.length;
         condition.currentStartId = newStartIndex;
 
         emit ClaimConditionsUpdated(_tokenId, _phases);

@@ -47,7 +47,7 @@ interface IDropClaimCondition {
      *  @param currentStartId Acts as the uid for each claim condition. Incremented
      *                                    by one every time a claim condition is created.
      *
-     *  @param length The total number of phases / claim condition that is currently active.
+     *  @param count The total number of phases / claim condition in the list of claim conditions.
      *
      *  @param phases The claim conditions at a given uid. Claim conditions
      *                                    are ordered in an ascending order by their `startTimestamp`.
@@ -61,7 +61,7 @@ interface IDropClaimCondition {
         // the current index of Claim Phase ID
         uint256 currentStartId;
         // the total number of phases.
-        uint256 length;
+        uint256 count;
         // Claim Phase ID => Claim Phase
         mapping(uint256 => ClaimCondition) phases;
         // Claim Phase ID => Address => last claim timestamp. (per claim phases limits)

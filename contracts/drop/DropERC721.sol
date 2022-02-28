@@ -181,7 +181,7 @@ contract DropERC721 is
 
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getActiveClaimConditionId() public view returns (uint256) {
-        for (uint256 i = claimCondition.currentStartId + claimCondition.length; i > claimCondition.length; i -= 1) {
+        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.count; i -= 1) {
             if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -389,7 +389,7 @@ contract DropERC721 is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         uint256 existingStartIndex = claimCondition.currentStartId;
-        uint256 existingPhaseCount = claimCondition.length;
+        uint256 existingPhaseCount = claimCondition.count;
 
         // if it's to reset restriction, all new claim phases would start at the end of the existing batch.
         // otherwise, the new claim phases would override the existing phases and limits from the existing start index
@@ -404,10 +404,9 @@ contract DropERC721 is
                 lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."
             );
-            require(_phases[i].quantityLimitPerTransaction > 0, "quantity limit cannot be 0.");
-            require(_phases[i].supplyClaimed == 0, "supply claimed must be 0.");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
+            claimCondition.phases[newStartIndex + i].supplyClaimed = 0;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
@@ -434,7 +433,7 @@ contract DropERC721 is
             }
         }
 
-        claimCondition.length = _phases.length;
+        claimCondition.count = _phases.length;
         claimCondition.currentStartId = newStartIndex;
 
         emit ClaimConditionsUpdated(_phases);
