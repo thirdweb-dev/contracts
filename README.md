@@ -1,4 +1,8 @@
-# Protocol
+# Thirdweb Contracts v2 (nightly)
+
+> This is an **nightly** version of Thirdweb Contracts v2. It is not ready for production use, but it is ready to be taste-tested!
+
+> [Looking for version 1? Click here!](https://github.com/thirdweb-dev/contracts/tree/v1)
 
 Lets anyone deploy their own copy of the smart contracts on the platform.
 
