@@ -271,12 +271,13 @@ contract Marketplace is
     /// @dev Lets an account buy a given quantity of tokens from a listing.
     function buy(
         uint256 _listingId,
+        address _buyFor,
         uint256 _quantityToBuy,
         address _currency,
         uint256 _totalPrice
     ) external payable override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
-        address buyer = _msgSender();
+        address payer = _msgSender();
 
         // Check whether the settled total price and currency to use are correct.
         require(
@@ -286,7 +287,8 @@ contract Marketplace is
 
         executeSale(
             targetListing,
-            buyer,
+            payer,
+            _buyFor,
             targetListing.currency,
             targetListing.buyoutPricePerToken * _quantityToBuy,
             _quantityToBuy
@@ -312,6 +314,7 @@ contract Marketplace is
 
         executeSale(
             targetListing,
+            _offeror,
             _offeror,
             targetOffer.currency,
             targetOffer.pricePerToken * targetOffer.quantityWanted,
@@ -401,6 +404,7 @@ contract Marketplace is
     /// @dev Performs a direct listing sale.
     function executeSale(
         Listing memory _targetListing,
+        address _payer,
         address _buyer,
         address _currency,
         uint256 _currencyAmountToTransfer,
@@ -411,7 +415,7 @@ contract Marketplace is
         _targetListing.quantity -= _listingTokenAmountToTransfer;
         listings[_targetListing.listingId] = _targetListing;
 
-        payout(_buyer, _targetListing.tokenOwner, _currency, _currencyAmountToTransfer, _targetListing);
+        payout(_payer, _targetListing.tokenOwner, _currency, _currencyAmountToTransfer, _targetListing);
         transferListingTokens(_targetListing.tokenOwner, _buyer, _listingTokenAmountToTransfer, _targetListing);
 
         emit NewSale(
