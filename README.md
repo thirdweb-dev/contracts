@@ -1,4 +1,9 @@
-# Protocol
+# Thirdweb Contracts v1 (legacy)
+
+> This is an **legacy** version of Thirdweb Contracts.
+
+> [Looking for version 2? Click here!](https://github.com/thirdweb-dev/contracts)
+
 
 Lets anyone deploy their own copy of the smart contracts on the platform.
 
