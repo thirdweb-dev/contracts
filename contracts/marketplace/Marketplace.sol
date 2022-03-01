@@ -298,14 +298,13 @@ contract Marketplace is
         uint256 _listingId,
         address _offeror,
         address _currency,
-        uint256 _totalPrice
+        uint256 _pricePerToken
     ) external override nonReentrant onlyListingCreator(_listingId) onlyExistingListing(_listingId) {
         Offer memory targetOffer = offers[_listingId][_offeror];
         Listing memory targetListing = listings[_listingId];
 
         require(
-            _currency == targetOffer.currency &&
-                _totalPrice == (targetOffer.pricePerToken * targetOffer.quantityWanted),
+            _currency == targetOffer.currency && _pricePerToken == targetOffer.pricePerToken,
             "invalid currency or price"
         );
 
