@@ -28,7 +28,7 @@ library CurrencyTransferLib {
     }
 
     /// @dev Transfers a given amount of currency. (With native token wrapping)
-    function transferCurrency(
+    function transferCurrencyWithWrapperAndBalanceCheck(
         address _currency,
         address _from,
         address _to,
@@ -43,21 +43,39 @@ library CurrencyTransferLib {
             if (_from == address(this)) {
                 // withdraw from weth then transfer withdrawn native token to recipient
                 IWETH(_nativeTokenWrapper).withdraw(_amount);
-                safeTransferNativeToken(_to, _amount, _nativeTokenWrapper);
+                safeTransferNativeTokenWithWrapper(_to, _amount, _nativeTokenWrapper);
             } else if (_to == address(this)) {
                 // store native currency in weth
                 require(_amount == msg.value, "msg.value != amount");
                 IWETH(_nativeTokenWrapper).deposit{ value: _amount }();
             } else {
-                safeTransferNativeToken(_to, _amount, _nativeTokenWrapper);
+                safeTransferNativeTokenWithWrapper(_to, _amount, _nativeTokenWrapper);
             }
         } else {
-            safeTransferERC20(_currency, _from, _to, _amount);
+            safeTransferERC20WithBalanceCheck(_currency, _from, _to, _amount);
         }
     }
 
     /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
     function safeTransferERC20(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        if (_from == _to) {
+            return;
+        }
+
+        bool success = _from == address(this)
+            ? IERC20(_currency).transfer(_to, _amount)
+            : IERC20(_currency).transferFrom(_from, _to, _amount);
+
+        require(success, "currency transfer failed.");
+    }
+
+    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
+    function safeTransferERC20WithBalanceCheck(
         address _currency,
         address _from,
         address _to,
@@ -78,24 +96,24 @@ library CurrencyTransferLib {
 
     /// @dev Transfers `amount` of native token to `to`.
     function safeTransferNativeToken(address to, uint256 value) internal {
-        // solhint-disable-next-line avoid-low-level-calls
+        // solhint-disable avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{ value: value }("");
         require(success, "native token transfer failed");
     }
 
     /// @dev Transfers `amount` of native token to `to`. (With native token wrapping)
-    function safeTransferNativeToken(
+    function safeTransferNativeTokenWithWrapper(
         address to,
         uint256 value,
         address _nativeTokenWrapper
     ) internal {
-        // solhint-disable-next-line avoid-low-level-calls
+        // solhint-disable avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{ value: value }("");
         if (!success) {
             IWETH(_nativeTokenWrapper).deposit{ value: value }();
-            safeTransferERC20(_nativeTokenWrapper, address(this), to, value);
+            require(IERC20(_nativeTokenWrapper).transfer(to, value), "transfer failed");
         }
     }
 }

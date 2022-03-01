@@ -264,8 +264,15 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
      * @notice Lets a listing's creator accept an offer to their direct listing.
      * @param _listingId The unique ID of the listing for which to accept the offer.
      * @param _offeror The address of the buyer whose offer is to be accepted.
+     * @param _currency The currency of the offer that is to be accepted.
+     * @param _totalPrice The total price of the offer that is to be accepted.
      */
-    function acceptOffer(uint256 _listingId, address _offeror) external;
+    function acceptOffer(
+        uint256 _listingId,
+        address _offeror,
+        address _currency,
+        uint256 _totalPrice
+    ) external;
 
     /**
      * @notice Lets any account close an auction on behalf of either the (1) auction's creator, or (2) winning bidder.
