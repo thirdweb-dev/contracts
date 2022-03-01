@@ -50,5 +50,9 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param tokenId The token Id of the tokens to unwrap.
      *  @param amountToRedeem The amount of shares to unwrap
      */
-    function unwrap(uint256 tokenId, uint256 amountToRedeem, address _sendTo) external;
+    function unwrap(
+        uint256 tokenId,
+        uint256 amountToRedeem,
+        address _sendTo
+    ) external;
 }

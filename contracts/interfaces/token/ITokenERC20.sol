@@ -5,8 +5,7 @@ import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 
-interface ITokenERC20 is IThirdwebContract,  IThirdwebPrimarySale, IThirdwebPlatformFee {
-
+interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee {
     /**
      *  @notice The body of a request to mint tokens.
      *
@@ -34,11 +33,7 @@ interface ITokenERC20 is IThirdwebContract,  IThirdwebPrimarySale, IThirdwebPlat
     event TokensMinted(address indexed mintedTo, uint256 quantityMinted);
 
     /// @dev Emitted when tokens are minted.
-    event TokensMintedWithSignature(
-        address indexed signer,
-        address indexed mintedTo,
-        MintRequest mintRequest
-    );
+    event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
 
     /// @dev Emitted when a new sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);

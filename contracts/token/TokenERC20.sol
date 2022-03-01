@@ -89,7 +89,16 @@ contract TokenERC20 is
         address _platformFeeRecipient,
         uint256 _platformFeeBps
     ) external initializer {
-        __TokenERC20_init(_defaultAdmin, _name, _symbol, _contractURI, _trustedForwarder, _primarySaleRecipient, _platformFeeRecipient, _platformFeeBps);
+        __TokenERC20_init(
+            _defaultAdmin,
+            _name,
+            _symbol,
+            _contractURI,
+            _trustedForwarder,
+            _primarySaleRecipient,
+            _platformFeeRecipient,
+            _platformFeeBps
+        );
     }
 
     function __TokenERC20_init(
@@ -107,11 +116,17 @@ contract TokenERC20 is
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
 
-        __TokenERC20_init_unchained(_defaultAdmin, _contractURI, _primarySaleRecipient, _platformFeeRecipient, _platformFeeBps);
+        __TokenERC20_init_unchained(
+            _defaultAdmin,
+            _contractURI,
+            _primarySaleRecipient,
+            _platformFeeRecipient,
+            _platformFeeBps
+        );
     }
 
     function __TokenERC20_init_unchained(
-        address _defaultAdmin, 
+        address _defaultAdmin,
         string memory _contractURI,
         address _primarySaleRecipient,
         address _platformFeeRecipient,
@@ -198,12 +213,7 @@ contract TokenERC20 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
-        collectPrice(
-            saleRecipient,
-            _req.quantity,
-            _req.currency,
-            _req.pricePerToken
-        );
+        collectPrice(saleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         _mintTo(receiver, _req.quantity);
 
@@ -240,9 +250,7 @@ contract TokenERC20 is
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    )
-        internal
-    {
+    ) internal {
         if (_pricePerToken == 0) {
             return;
         }
