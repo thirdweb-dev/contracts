@@ -46,7 +46,7 @@ contract TokenERC20 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -213,7 +213,7 @@ contract TokenERC20 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
-        collectPrice(saleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+        collectPrice(saleRecipient, _req.currency, _req.price);
 
         _mintTo(receiver, _req.quantity);
 
@@ -247,21 +247,19 @@ contract TokenERC20 is
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(
         address _primarySaleRecipient,
-        uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _price
     ) internal {
-        if (_pricePerToken == 0) {
+        if (_price == 0) {
             return;
         }
 
-        uint256 totalPrice = _pricePerToken * _quantityToClaim;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (_price * platformFeeBps) / MAX_BPS;
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
+        uint256 twFee = (_price * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
+            require(msg.value == _price, "must send total price.");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
@@ -270,7 +268,7 @@ contract TokenERC20 is
             _currency,
             _msgSender(),
             _primarySaleRecipient,
-            totalPrice - platformFees - twFee
+            _price - platformFees - twFee
         );
     }
 
@@ -308,7 +306,7 @@ contract TokenERC20 is
                 _req.to,
                 _req.primarySaleRecipient,
                 _req.quantity,
-                _req.pricePerToken,
+                _req.price,
                 _req.currency,
                 _req.validityStartTimestamp,
                 _req.validityEndTimestamp,

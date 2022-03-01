@@ -127,7 +127,7 @@ contract DropERC20 is Initializable, IDropERC20, ReentrancyGuardUpgradeable, Tok
         verifyClaim(_msgSender(), _quantity, _currency, _pricePerToken, _proofs, activeConditionIndex);
 
         // If there's a price, collect price.
-        collectPrice(primarySaleRecipient, _quantity, _currency, _pricePerToken);
+        collectPrice(primarySaleRecipient, _currency, _pricePerToken);
 
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, activeConditionIndex, _quantity);

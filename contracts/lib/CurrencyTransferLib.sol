@@ -78,6 +78,8 @@ library CurrencyTransferLib {
 
     /// @dev Transfers `amount` of native token to `to`.
     function safeTransferNativeToken(address to, uint256 value) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{ value: value }("");
         require(success, "native token transfer failed");
     }
@@ -88,6 +90,8 @@ library CurrencyTransferLib {
         uint256 value,
         address _nativeTokenWrapper
     ) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{ value: value }("");
         if (!success) {
             IWETH(_nativeTokenWrapper).deposit{ value: value }();

@@ -12,7 +12,7 @@ interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatf
      *  @param to The receiver of the tokens to mint.
      *  @param primarySaleRecipient The receiver of the primary sale funds from the mint.
      *  @param quantity The quantity of tpkens to mint.
-     *  @param pricePerToken Price to pay (per token) for minting with the signature.
+     *  @param price Price to pay for minting with the signature.
      *  @param currency The currency in which the price per token must be paid.
      *  @param validityStartTimestamp The unix timestamp after which the request is valid.
      *  @param validityEndTimestamp The unix timestamp after which the request expires.
@@ -22,7 +22,7 @@ interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatf
         address to;
         address primarySaleRecipient;
         uint256 quantity;
-        uint256 pricePerToken;
+        uint256 price;
         address currency;
         uint128 validityStartTimestamp;
         uint128 validityEndTimestamp;
