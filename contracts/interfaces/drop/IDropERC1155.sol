@@ -7,7 +7,6 @@ import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
 import "../IThirdwebOwnable.sol";
 import "./IDropClaimCondition.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
 /**
  *  `LazyMintERC1155` is an ERC 1155 contract.
@@ -27,8 +26,7 @@ interface IDropERC1155 is
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
-    IDropClaimCondition,
-    IERC1155MetadataURI
+    IDropClaimCondition
 {
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(

@@ -6,7 +6,6 @@ import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
 import "../IThirdwebOwnable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
 /**
  *  `SignatureMint` is an ERC 721 contract. It lets anyone mint NFTs by producing a mint request
@@ -17,8 +16,7 @@ interface ITokenERC721 is
     IThirdwebOwnable,
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IERC721Metadata
+    IThirdwebPlatformFee
 {
     /**
      *  @notice The body of a request to mint NFTs.
