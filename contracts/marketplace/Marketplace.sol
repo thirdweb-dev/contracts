@@ -405,24 +405,24 @@ contract Marketplace is
     function executeSale(
         Listing memory _targetListing,
         address _payer,
-        address _buyer,
+        address _receiver,
         address _currency,
         uint256 _currencyAmountToTransfer,
         uint256 _listingTokenAmountToTransfer
     ) internal {
-        validateDirectListingSale(_targetListing, _buyer, _listingTokenAmountToTransfer, _currencyAmountToTransfer);
+        validateDirectListingSale(_targetListing, _payer, _listingTokenAmountToTransfer, _currencyAmountToTransfer);
 
         _targetListing.quantity -= _listingTokenAmountToTransfer;
         listings[_targetListing.listingId] = _targetListing;
 
         payout(_payer, _targetListing.tokenOwner, _currency, _currencyAmountToTransfer, _targetListing);
-        transferListingTokens(_targetListing.tokenOwner, _buyer, _listingTokenAmountToTransfer, _targetListing);
+        transferListingTokens(_targetListing.tokenOwner, _receiver, _listingTokenAmountToTransfer, _targetListing);
 
         emit NewSale(
             _targetListing.listingId,
             _targetListing.assetContract,
             _targetListing.tokenOwner,
-            _buyer,
+            _receiver,
             _listingTokenAmountToTransfer,
             _currencyAmountToTransfer
         );
@@ -704,7 +704,7 @@ contract Marketplace is
     /// @dev Validates conditions of a direct listing sale.
     function validateDirectListingSale(
         Listing memory _listing,
-        address _buyer,
+        address _payer,
         uint256 _quantityToBuy,
         uint256 settledTotalPrice
     ) internal {
@@ -723,7 +723,7 @@ contract Marketplace is
         if (_listing.currency == NATIVE_TOKEN) {
             require(msg.value == settledTotalPrice, "msg.value != price");
         } else {
-            validateERC20BalAndAllowance(_buyer, _listing.currency, settledTotalPrice);
+            validateERC20BalAndAllowance(_payer, _listing.currency, settledTotalPrice);
         }
 
         // Check iwhether token owner owns and has approved `quantityToBuy` amount of listing tokens from the listing.
