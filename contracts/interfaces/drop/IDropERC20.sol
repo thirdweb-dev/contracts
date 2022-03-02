@@ -33,6 +33,15 @@ interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatfo
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
+    /// @dev Emitted when a max total supply is set for a token.
+    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
+
+    /// @dev Emitted when a wallet claim count is updated.
+    event WalletClaimCountUpdated(address indexed wallet, uint256 count);
+
+    /// @dev Emitted when the max wallet claim count is updated.
+    event MaxWalletClaimCountUpdated(uint256 count);
+
     /**
      *  @notice Lets an account claim a given quantity of tokens.
      *
