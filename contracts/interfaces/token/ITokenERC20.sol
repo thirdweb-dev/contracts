@@ -4,8 +4,9 @@ pragma solidity ^0.8.11;
 import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee {
+interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IERC20 {
     /**
      *  @notice The body of a request to mint tokens.
      *

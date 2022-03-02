@@ -6,6 +6,7 @@ import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
 import "../IThirdwebOwnable.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
 /**
  *  `SignatureMint1155` is an ERC 1155 contract. It lets anyone mint NFTs by producing a mint request
@@ -16,7 +17,8 @@ interface ITokenERC1155 is
     IThirdwebOwnable,
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
-    IThirdwebPlatformFee
+    IThirdwebPlatformFee,
+    IERC1155MetadataURI
 {
     /**
      *  @notice The body of a request to mint NFTs.

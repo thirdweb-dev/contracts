@@ -4,8 +4,9 @@ pragma solidity ^0.8.11;
 import "./IThirdwebContract.sol";
 import "./IThirdwebOwnable.sol";
 import "./IThirdwebRoyalty.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
-interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
+interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty, IERC1155MetadataURI {
     /**
      *  @notice A pack can contain ERC1155 tokens from n number of ERC1155 contracts.
      *          You can add any kinds of tokens to a pack via Multiwrap.

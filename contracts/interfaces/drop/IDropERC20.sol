@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "../token/ITokenERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  *  `LazyMintERC20` is an ERC 20 contract.
@@ -11,7 +12,7 @@ import "../token/ITokenERC20.sol";
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC20 is ITokenERC20 {
+interface IDropERC20 is IERC20, ITokenERC20 {
     /**
      *  @notice The restrictions that make up a claim condition.
      *

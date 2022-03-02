@@ -7,6 +7,7 @@ import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
 import "../IThirdwebOwnable.sol";
 import "./IDropClaimCondition.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
 /**
  *  `LazyMintERC721` is an ERC 721 contract.
@@ -26,7 +27,8 @@ interface IDropERC721 is
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
-    IDropClaimCondition
+    IDropClaimCondition,
+    IERC721Metadata
 {
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
