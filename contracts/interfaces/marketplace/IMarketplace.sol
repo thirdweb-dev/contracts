@@ -217,7 +217,10 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
      * @notice Lets someone buy a given quantity of tokens from a direct listing by paying the fixed price.
      *
      * @param _listingId The unique ID of the direct lisitng to buy from.
+     * @param _buyFor The receiver of the NFT being bought.
      * @param _quantity The amount of NFTs to buy from the direct listing.
+     * @param _currency The currency to pay the price in.
+     * @param _totalPrice The total price to pay for the tokens being bought.
      *
      * @dev A sale will fail to execute if either:
      *          (1) buyer does not own or has not approved Marketplace to transfer the appropriate
@@ -228,6 +231,7 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
      */
     function buy(
         uint256 _listingId,
+        address _buyFor,
         uint256 _quantity,
         address _currency,
         uint256 _totalPrice
