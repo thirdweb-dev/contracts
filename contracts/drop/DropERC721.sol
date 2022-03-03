@@ -26,7 +26,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
 contract DropERC721 is
     Initializable,
@@ -55,7 +55,7 @@ contract DropERC721 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -108,7 +108,7 @@ contract DropERC721 is
     ClaimConditionList public claimCondition;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.

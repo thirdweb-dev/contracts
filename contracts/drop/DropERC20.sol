@@ -24,7 +24,7 @@ import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
 contract DropERC20 is
     IDropERC20,
@@ -47,7 +47,7 @@ contract DropERC20 is
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee internal immutable thirdwebFee;
+    ITWFee internal immutable thirdwebFee;
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
@@ -77,7 +77,7 @@ contract DropERC20 is
     mapping(address => uint256) public walletClaimCount;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.

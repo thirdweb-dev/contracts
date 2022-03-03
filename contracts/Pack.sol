@@ -22,7 +22,7 @@ import "./lib/FeeType.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 // Thirdweb top-level
-import "./TWFee.sol";
+import "./interfaces/ITWFee.sol";
 
 contract Pack is
     Initializable,
@@ -53,7 +53,7 @@ contract Pack is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -140,7 +140,7 @@ contract Pack is
         address _linkToken,
         address _thirdwebFee
     ) VRFConsumerBase(_vrfCoordinator, _linkToken) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.

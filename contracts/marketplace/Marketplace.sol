@@ -28,7 +28,7 @@ import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
 contract Marketplace is
     Initializable,
@@ -53,7 +53,7 @@ contract Marketplace is
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Total number of listings on market.
     uint256 public totalListings;
@@ -98,7 +98,7 @@ contract Marketplace is
     }
 
     constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 

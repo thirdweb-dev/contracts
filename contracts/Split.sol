@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // Thirdweb top-level
-import "./TWFee.sol";
+import "./interfaces/ITWFee.sol";
 
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
@@ -33,13 +33,13 @@ contract Split is
     uint128 private constant MAX_BPS = 10_000;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Contract level metadata.
     string public contractURI;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Performs the job of the constructor.

@@ -28,7 +28,7 @@ import "../lib/FeeType.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
 contract TokenERC721 is
     Initializable,
@@ -63,7 +63,7 @@ contract TokenERC721 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -99,7 +99,7 @@ contract TokenERC721 is
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
