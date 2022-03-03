@@ -15,7 +15,6 @@ import "./IDropClaimCondition.sol";
  */
 
 interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IDropClaimCondition {
-
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
