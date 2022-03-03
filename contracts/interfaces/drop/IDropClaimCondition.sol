@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 interface IDropClaimCondition {
     /**
@@ -67,6 +67,6 @@ interface IDropClaimCondition {
         // Claim Phase ID => Address => last claim timestamp. (per claim phases limits)
         mapping(uint256 => mapping(address => uint256)) limitLastClaimTimestamp;
         // Claim Phase ID => BitMaps merkle proof has claimed. (per claim phases limits)
-        mapping(uint256 => BitMaps.BitMap) limitMerkleProofClaim;
+        mapping(uint256 => BitMapsUpgradeable.BitMap) limitMerkleProofClaim;
     }
 }

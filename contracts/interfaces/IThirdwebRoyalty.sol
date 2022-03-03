@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-interface IThirdwebRoyalty is IERC2981 {
+interface IThirdwebRoyalty is IERC2981Upgradeable {
     struct RoyaltyInfo {
         address recipient;
         uint256 bps;

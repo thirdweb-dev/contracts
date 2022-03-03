@@ -17,20 +17,16 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
+import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/MerkleProof.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
-import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
-
-// Helper interfaces
-import "../interfaces/IWETH.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
-contract DropERC20 is 
+contract DropERC20 is
     IDropERC20,
     Initializable,
     ReentrancyGuardUpgradeable,
@@ -41,7 +37,7 @@ contract DropERC20 is
     ERC20VotesUpgradeable,
     AccessControlEnumerableUpgradeable
 {
-    using BitMaps for BitMaps.BitMap;
+    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
     uint128 private constant VERSION = 1;
@@ -51,7 +47,7 @@ contract DropERC20 is
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee internal immutable thirdwebFee;
+    ITWFee internal immutable thirdwebFee;
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
@@ -81,7 +77,7 @@ contract DropERC20 is
     mapping(address => uint256) public walletClaimCount;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -234,7 +230,7 @@ contract DropERC20 is
             currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
             "exceed max mint supply."
         );
-        
+
         require(maxTotalSupply == 0 || totalSupply() + _quantity <= maxTotalSupply, "exceed max total supply.");
         require(
             maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
@@ -280,7 +276,6 @@ contract DropERC20 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
-
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 

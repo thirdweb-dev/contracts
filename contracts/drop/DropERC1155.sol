@@ -23,23 +23,23 @@ import "../lib/MerkleProof.sol";
 
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
 contract DropERC1155 is
     Initializable,
-    IDropERC1155,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable
+    ERC1155Upgradeable,
+    IDropERC1155
 {
-    using BitMaps for BitMaps.BitMap;
+    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
@@ -64,7 +64,7 @@ contract DropERC1155 is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -117,7 +117,7 @@ contract DropERC1155 is
     mapping(uint256 => uint256) public maxWalletClaimCount;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -639,10 +639,10 @@ contract DropERC1155 is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     function _msgSender()

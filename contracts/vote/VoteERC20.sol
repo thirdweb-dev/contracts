@@ -20,8 +20,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgra
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 
 // Helper interfaces
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 contract VoteERC20 is
     Initializable,
@@ -147,8 +147,8 @@ contract VoteERC20 is
         returns (bool)
     {
         return
-            interfaceId == type(IERC1155Receiver).interfaceId ||
-            interfaceId == type(IERC721Receiver).interfaceId ||
+            interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
+            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 

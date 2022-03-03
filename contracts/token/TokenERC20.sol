@@ -26,10 +26,9 @@ import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
 // Thirdweb top-level
-import "../TWFee.sol";
+import "../interfaces/ITWFee.sol";
 
 contract TokenERC20 is
-    ITokenERC20,
     Initializable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
@@ -37,6 +36,7 @@ contract TokenERC20 is
     ERC20BurnableUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
+    ITokenERC20,
     AccessControlEnumerableUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
@@ -54,7 +54,7 @@ contract TokenERC20 is
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee internal immutable thirdwebFee;
+    ITWFee internal immutable thirdwebFee;
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
     string public contractURI;
@@ -75,7 +75,7 @@ contract TokenERC20 is
     mapping(bytes32 => bool) private minted;
 
     constructor(address _thirdwebFee) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.

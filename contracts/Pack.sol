@@ -19,19 +19,16 @@ import "./lib/CurrencyTransferLib.sol";
 import "./lib/FeeType.sol";
 
 // Helper interfaces
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 // Thirdweb top-level
-import "./TWFee.sol";
+import "./interfaces/ITWFee.sol";
 
 contract Pack is
-    IERC2981,
+    Initializable,
     IThirdwebContract,
     IThirdwebOwnable,
     IThirdwebRoyalty,
-    Initializable,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -56,7 +53,7 @@ contract Pack is
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
-    TWFee public immutable thirdwebFee;
+    ITWFee public immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
@@ -143,7 +140,7 @@ contract Pack is
         address _linkToken,
         address _thirdwebFee
     ) VRFConsumerBase(_vrfCoordinator, _linkToken) initializer {
-        thirdwebFee = TWFee(_thirdwebFee);
+        thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -376,7 +373,7 @@ contract Pack is
         uint256 _rewardsPerOpen
     ) internal whenNotPaused {
         require(
-            IERC1155(_rewardContract).supportsInterface(type(IERC1155).interfaceId),
+            IERC1155Upgradeable(_rewardContract).supportsInterface(type(IERC1155Upgradeable).interfaceId),
             "Pack: reward contract does not implement ERC 1155."
         );
         require(hasRole(MINTER_ROLE, _creator), "not minter.");
@@ -469,7 +466,13 @@ contract Pack is
         (uint256[] memory rewardIds, uint256[] memory rewardAmounts) = getReward(packId, _randomness, rewardsInPack);
 
         // Distribute the reward to the pack opener.
-        IERC1155(rewardsInPack.source).safeBatchTransferFrom(address(this), receiver, rewardIds, rewardAmounts, "");
+        IERC1155Upgradeable(rewardsInPack.source).safeBatchTransferFrom(
+            address(this),
+            receiver,
+            rewardIds,
+            rewardAmounts,
+            ""
+        );
 
         emit PackOpenFulfilled(packId, receiver, _requestId, rewardsInPack.source, rewardIds);
     }
@@ -530,10 +533,10 @@ contract Pack is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155PresetUpgradeable, IERC165)
+        override(ERC1155PresetUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /// @dev See EIP 1155

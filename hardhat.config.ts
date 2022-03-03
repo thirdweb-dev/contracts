@@ -60,11 +60,7 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
   };
 }
 
-interface ConfigWithEtherscan extends HardhatUserConfig {
-  etherscan: { apiKey: string };
-}
-
-const config: ConfigWithEtherscan = {
+const config: HardhatUserConfig = {
   paths: {
     artifacts: "./artifacts",
     cache: "./cache",
@@ -95,7 +91,19 @@ const config: ConfigWithEtherscan = {
     target: "ethers-v5",
   },
   etherscan: {
-    apiKey: explorerScanKey,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
+      ropsten: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
+      rinkeby: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
+      kovan: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY || process.env.SCAN_API_KEY,
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY || process.env.SCAN_API_KEY,
+      opera: process.env.FANTOMSCAN_API_KEY || process.env.SCAN_API_KEY,
+      ftmTestnet: process.env.FANTOMSCAN_API_KEY || process.env.SCAN_API_KEY,
+      avalanche: process.env.SNOWTRACE_API_KEY || process.env.SCAN_API_KEY,
+      avalancheFujiTestnet: process.env.SNOWTRACE_API_KEY || process.env.SCAN_API_KEY,
+    },
   },
   gasReporter: {
     coinmarketcap: process.env.REPORT_GAS_COINMARKETCAP_API_KEY,

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "./TWFactory.sol";
+import "./interfaces/ITWFee.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
@@ -15,7 +16,7 @@ interface IFeeTierPlacementExtension {
         returns (uint128 tierId, uint128 validUntilTimestamp);
 }
 
-contract TWFee is Multicall, ERC2771Context, AccessControlEnumerable, IFeeTierPlacementExtension {
+contract TWFee is ITWFee, Multicall, ERC2771Context, AccessControlEnumerable, IFeeTierPlacementExtension {
     /// @dev The factory for deploying contracts.
     TWFactory public immutable factory;
 
