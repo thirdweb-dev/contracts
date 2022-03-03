@@ -33,12 +33,12 @@ import "../interfaces/ITWFee.sol";
 contract Marketplace is
     Initializable,
     IMarketplace,
-    IERC1155ReceiverUpgradeable,
-    IERC721ReceiverUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable
+    AccessControlEnumerableUpgradeable,
+    IERC721ReceiverUpgradeable,
+    IERC1155ReceiverUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
     uint256 private constant VERSION = 1;
