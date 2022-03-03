@@ -30,12 +30,12 @@ import "../interfaces/ITWFee.sol";
 
 contract DropERC721 is
     Initializable,
-    IDropERC721,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+    IDropERC721
 {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;

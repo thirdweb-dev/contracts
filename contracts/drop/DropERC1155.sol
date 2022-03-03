@@ -32,12 +32,12 @@ import "../interfaces/ITWFee.sol";
 
 contract DropERC1155 is
     Initializable,
-    IDropERC1155,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable
+    ERC1155Upgradeable,
+    IDropERC1155
 {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;
