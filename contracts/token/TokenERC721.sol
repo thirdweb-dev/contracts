@@ -25,21 +25,20 @@ import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
 // Helper interfaces
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
 
 contract TokenERC721 is
     Initializable,
-    ITokenERC721,
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+    ITokenERC721
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -402,10 +401,10 @@ contract TokenERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, IERC165)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981).interfaceId;
+        return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981Upgradeable).interfaceId;
     }
 
     function _msgSender()

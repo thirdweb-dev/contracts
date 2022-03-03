@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee {
+interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IERC20Upgradeable {
     /**
      *  @notice The body of a request to mint tokens.
      *

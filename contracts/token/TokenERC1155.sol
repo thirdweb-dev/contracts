@@ -15,31 +15,28 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgra
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-// Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Helper interfaces
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
 
 contract TokenERC1155 is
     Initializable,
-    ITokenERC1155,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable
+    ERC1155Upgradeable,
+    ITokenERC1155
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -478,13 +475,13 @@ contract TokenERC1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable)
         returns (bool)
     {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
-            interfaceId == type(IERC2981).interfaceId;
+            interfaceId == type(IERC2981Upgradeable).interfaceId;
     }
 
     function _msgSender()

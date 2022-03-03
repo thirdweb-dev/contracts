@@ -29,15 +29,15 @@ import "../lib/FeeType.sol";
 import "../TWFee.sol";
 
 contract TokenERC20 is
-    ITokenERC20,
     Initializable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    AccessControlEnumerableUpgradeable,
     ERC20BurnableUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
-    AccessControlEnumerableUpgradeable
+    ITokenERC20
 {
     using ECDSAUpgradeable for bytes32;
 

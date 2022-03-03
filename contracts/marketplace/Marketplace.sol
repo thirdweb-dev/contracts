@@ -5,11 +5,12 @@ pragma solidity ^0.8.11;
 import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
 
 // Tokens
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -19,7 +20,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Royalties
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
@@ -32,8 +33,8 @@ import "../TWFee.sol";
 contract Marketplace is
     Initializable,
     IMarketplace,
-    IERC1155Receiver,
-    IERC721Receiver,
+    IERC1155ReceiverUpgradeable,
+    IERC721ReceiverUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -582,9 +583,9 @@ contract Marketplace is
         Listing memory _listing
     ) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
-            IERC1155(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, _quantity, "");
+            IERC1155Upgradeable(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, _quantity, "");
         } else if (_listing.tokenType == TokenType.ERC721) {
-            IERC721(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, "");
+            IERC721Upgradeable(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, "");
         }
     }
 
@@ -605,7 +606,7 @@ contract Marketplace is
         address royaltyRecipient;
 
         // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
-        try IERC2981(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
+        try IERC2981Upgradeable(_listing.assetContract).royaltyInfo(_listing.tokenId, _totalPayoutAmount) returns (
             address royaltyFeeRecipient,
             uint256 royaltyFeeAmount
         ) {
@@ -670,8 +671,8 @@ contract Marketplace is
         uint256 _currencyAmountToCheckAgainst
     ) internal view {
         require(
-            IERC20(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
-                IERC20(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
+            IERC20Upgradeable(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
+                IERC20Upgradeable(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
             "insufficient balance or allowance."
         );
     }
@@ -689,13 +690,13 @@ contract Marketplace is
 
         if (_tokenType == TokenType.ERC1155) {
             isValid =
-                IERC1155(_assetContract).balanceOf(_tokenOwner, _tokenId) >= _quantity &&
-                IERC1155(_assetContract).isApprovedForAll(_tokenOwner, market);
+                IERC1155Upgradeable(_assetContract).balanceOf(_tokenOwner, _tokenId) >= _quantity &&
+                IERC1155Upgradeable(_assetContract).isApprovedForAll(_tokenOwner, market);
         } else if (_tokenType == TokenType.ERC721) {
             isValid =
-                IERC721(_assetContract).ownerOf(_tokenId) == _tokenOwner &&
-                (IERC721(_assetContract).getApproved(_tokenId) == market ||
-                    IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
+                IERC721Upgradeable(_assetContract).ownerOf(_tokenId) == _tokenOwner &&
+                (IERC721Upgradeable(_assetContract).getApproved(_tokenId) == market ||
+                    IERC721Upgradeable(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
 
         require(isValid, "insufficient token balance or approval.");
@@ -751,9 +752,9 @@ contract Marketplace is
 
     /// @dev Returns the interface supported by a contract.
     function getTokenType(address _assetContract) internal view returns (TokenType tokenType) {
-        if (IERC165(_assetContract).supportsInterface(type(IERC1155).interfaceId)) {
+        if (IERC165Upgradeable(_assetContract).supportsInterface(type(IERC1155Upgradeable).interfaceId)) {
             tokenType = TokenType.ERC1155;
-        } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
+        } else if (IERC165Upgradeable(_assetContract).supportsInterface(type(IERC721Upgradeable).interfaceId)) {
             tokenType = TokenType.ERC721;
         } else {
             revert("token must be ERC1155 or ERC721.");
@@ -853,12 +854,12 @@ contract Marketplace is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, IERC165)
+        override(AccessControlEnumerableUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
         return
-            interfaceId == type(IERC1155Receiver).interfaceId ||
-            interfaceId == type(IERC721Receiver).interfaceId ||
+            interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
+            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 }

@@ -6,9 +6,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 
 // Interfaces
 import "./interfaces/IMultiwrap.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -306,7 +305,7 @@ contract Multiwrap is
         bool isValidData = _wrappedContents.erc721AssetContracts.length == _wrappedContents.erc721TokensToWrap.length;
         if (isValidData) {
             for (i = 0; i < _wrappedContents.erc721AssetContracts.length; i += 1) {
-                IERC721 assetContract = IERC721(_wrappedContents.erc721AssetContracts[i]);
+                IERC721Upgradeable assetContract = IERC721Upgradeable(_wrappedContents.erc721AssetContracts[i]);
 
                 for (j = 0; j < _wrappedContents.erc721TokensToWrap[i].length; j += 1) {
                     assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc721TokensToWrap[i][j]);
@@ -337,7 +336,7 @@ contract Multiwrap is
                     break;
                 }
 
-                IERC1155 assetContract = IERC1155(_wrappedContents.erc1155AssetContracts[i]);
+                IERC1155Upgradeable assetContract = IERC1155Upgradeable(_wrappedContents.erc1155AssetContracts[i]);
 
                 for (j = 0; j < _wrappedContents.erc1155TokensToWrap[i].length; j += 1) {
                     assetContract.safeTransferFrom(
@@ -430,13 +429,13 @@ contract Multiwrap is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165, ERC1155ReceiverUpgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable, ERC1155ReceiverUpgradeable)
         returns (bool)
     {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
-            interfaceId == type(IERC2981).interfaceId;
+            interfaceId == type(IERC2981Upgradeable).interfaceId;
     }
 
     function _msgSender()

@@ -23,9 +23,9 @@ import "../lib/MerkleProof.sol";
 
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -39,7 +39,7 @@ contract DropERC1155 is
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable
 {
-    using BitMaps for BitMaps.BitMap;
+    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
@@ -639,10 +639,10 @@ contract DropERC1155 is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165)
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     function _msgSender()

@@ -22,9 +22,8 @@ import "../lib/FeeType.sol";
 import "../lib/MerkleProof.sol";
 
 // Helper interfaces
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 // Thirdweb top-level
 import "../TWFee.sol";
@@ -38,7 +37,7 @@ contract DropERC721 is
     AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable
 {
-    using BitMaps for BitMaps.BitMap;
+    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
@@ -654,10 +653,10 @@ contract DropERC721 is
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165)
+        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     function _msgSender()

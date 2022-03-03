@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
@@ -16,7 +17,8 @@ interface ITokenERC1155 is
     IThirdwebOwnable,
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
-    IThirdwebPlatformFee
+    IThirdwebPlatformFee,
+    IERC1155Upgradeable
 {
     /**
      *  @notice The body of a request to mint NFTs.
