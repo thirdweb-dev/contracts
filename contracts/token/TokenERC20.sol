@@ -33,11 +33,11 @@ contract TokenERC20 is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable,
     ERC20BurnableUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
-    ITokenERC20
+    ITokenERC20,
+    AccessControlEnumerableUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
 
