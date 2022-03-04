@@ -5,4 +5,8 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 
 contract MockERC1155 is ERC1155PresetMinterPauser {
     constructor() ERC1155PresetMinterPauser("ipfs://BaseURI") {}
+
+    function hasRole(bytes32, address) public pure override(AccessControl, IAccessControl) returns (bool) {
+        return true;
+    }
 }

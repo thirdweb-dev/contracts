@@ -14,7 +14,7 @@ remappings = [
     'contracts/=contracts/',
 ]
 libraries = []
-cache = false
+cache = true
 force = false
 evm_version = 'london'
 optimizer = true

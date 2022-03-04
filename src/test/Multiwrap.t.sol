@@ -34,9 +34,9 @@ interface IMultiwrapEvents {
 
 contract MockERC20Reentrancy is MockERC20 {
     uint256 targetTokenId;
-    Multiwrap multiwrap;
+    Multiwrap internal multiwrap;
 
-    bool toReenter;
+    bool internal toReenter;
 
     constructor(address _multiwrap) MockERC20() {
         multiwrap = Multiwrap(_multiwrap);
@@ -52,7 +52,7 @@ contract MockERC20Reentrancy is MockERC20 {
         uint256 amount
     ) public virtual override returns (bool) {
         if (_msgSender() == address(multiwrap) && toReenter) {
-            multiwrap.unwrap(targetTokenId, amount);
+            multiwrap.unwrap(targetTokenId, amount, msg.sender);
         } else {
             _transfer(sender, recipient, amount);
 
@@ -68,7 +68,7 @@ contract MockERC20Reentrancy is MockERC20 {
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         if (_msgSender() == address(multiwrap)) {
-            multiwrap.unwrap(targetTokenId, amount);
+            multiwrap.unwrap(targetTokenId, amount, msg.sender);
         } else {
             _transfer(_msgSender(), recipient, amount);
         }
@@ -99,6 +99,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
     //  =====   Set up  =====
 
     function setUp() public override {
+        super.setUp();
         vm.startPrank(deployer);
 
         Forwarder trustedForwarder = new Forwarder();
@@ -146,18 +147,18 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
     uint256[] internal erc1155TokensToWrap = [0, 1, 2, 3];
     uint256[] internal erc1155AmountsToWrap = [20, 40, 60, 80];
 
-    IMultiwrap.WrappedContents wrappedContents;
+    IMultiwrap.WrappedContents internal wrappedContents;
 
     function _setup_wrap() internal {
         vm.startPrank(tokenOwner);
 
-        mockERC20 = new MockERC20();
+        mockERC20 = erc20;
         mockERC20.mint(tokenOwner, erc20AmountToWrap);
 
-        mockERC721 = new MockERC721();
+        mockERC721 = erc721;
         mockERC721.mint(erc721TokensToWrap.length);
 
-        mockERC1155 = new MockERC1155();
+        mockERC1155 = erc1155;
         mockERC1155.mintBatch(tokenOwner, erc1155TokensToWrap, erc1155AmountsToWrap, "");
 
         vm.stopPrank();
@@ -222,7 +223,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
         }
     }
 
-    function getDefaultWrappedContents() internal returns (IMultiwrap.WrappedContents memory wrappedContents) {
+    function getDefaultWrappedContents() internal view returns (IMultiwrap.WrappedContents memory) {
         address[] memory erc1155AssetContracts_ = new address[](1);
         erc1155AssetContracts_[0] = address(mockERC1155);
 
@@ -419,7 +420,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
         uint256 ownerBalBeforeERC20 = mockERC20.balanceOf(tokenOwner);
 
         vm.prank(tokenOwner);
-        multiwrap.unwrap(tokenIdOfWrapped, 1);
+        multiwrap.unwrap(tokenIdOfWrapped, 1, tokenOwner);
 
         assertEq(multiwrap.totalSupply(tokenIdOfWrapped), 0);
         assertEq(multiwrap.balanceOf(tokenOwner, tokenIdOfWrapped), 0);
@@ -452,7 +453,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
         vm.expectRevert("invalid tokenId");
 
         vm.prank(tokenOwner);
-        multiwrap.unwrap(invalidId, 1);
+        multiwrap.unwrap(invalidId, 1, tokenOwner);
     }
 
     function test_unwrap_revert_insufficientShares() public {
@@ -464,7 +465,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
         vm.expectRevert("must own all shares to unwrap");
 
         vm.prank(tokenOwner);
-        multiwrap.unwrap(tokenIdOfWrapped, 1);
+        multiwrap.unwrap(tokenIdOfWrapped, 1, tokenOwner);
     }
 
     function test_unwrap_emit_Unwrapped() public {
@@ -475,7 +476,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
         emit TokensUnwrapped(tokenOwner, tokenIdOfWrapped, totalShares, wrappedContents);
 
         vm.prank(tokenOwner);
-        multiwrap.unwrap(tokenIdOfWrapped, totalShares);
+        multiwrap.unwrap(tokenIdOfWrapped, totalShares, tokenOwner);
     }
 
     //  =====   Attack vectors  =====
@@ -554,7 +555,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapEvents {
         vm.expectRevert("ReentrancyGuard: reentrant call");
 
         vm.prank(tokenOwner);
-        multiwrap.unwrap(tokenIdOfWrapped, 1);
+        multiwrap.unwrap(tokenIdOfWrapped, 1, tokenOwner);
     }
 
     function _get_onlyWrapERC20_fuzz(uint256 _erc20AmountToWrap)

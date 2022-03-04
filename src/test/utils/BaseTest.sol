@@ -64,14 +64,14 @@ abstract contract BaseTest is DSTest, stdCheats {
         factory = address(new TWFactory(forwarder, registry));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         fee = address(new TWFee(forwarder, factory));
-        TWFactory(factory).addImplementation(address(new TokenERC20()));
+        TWFactory(factory).addImplementation(address(new TokenERC20(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC721(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC1155(fee)));
-        // TWFactory(factory).addImplementation(address(new DropERC20(fee)));
+        TWFactory(factory).addImplementation(address(new DropERC20(fee)));
         TWFactory(factory).addImplementation(address(new DropERC721(fee)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
         TWFactory(factory).addImplementation(address(new Marketplace(weth, fee)));
-        // TWFactory(factory).addImplementation(address(new Split(fee)));
+        TWFactory(factory).addImplementation(address(new Split(fee)));
         // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
         TWFactory(factory).addImplementation(address(new Multiwrap()));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
@@ -81,7 +81,10 @@ abstract contract BaseTest is DSTest, stdCheats {
         vm.startPrank(deployer);
         deployContractProxy(
             "TokenERC20",
-            abi.encodeCall(TokenERC20.initialize, (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder))
+            abi.encodeCall(
+                TokenERC20.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, saleRecipient, platformFeeRecipient, platformFeeBps)
+            )
         );
         deployContractProxy(
             "TokenERC721",
@@ -117,6 +120,13 @@ abstract contract BaseTest is DSTest, stdCheats {
                     platformFeeBps,
                     platformFeeRecipient
                 )
+            )
+        );
+        deployContractProxy(
+            "DropERC20",
+            abi.encodeCall(
+                DropERC20.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, saleRecipient, platformFeeBps, platformFeeRecipient)
             )
         );
         deployContractProxy(
@@ -169,7 +179,6 @@ abstract contract BaseTest is DSTest, stdCheats {
                 (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, royaltyRecipient, royaltyBps)
             )
         );
-
         vm.stopPrank();
     }
 
@@ -183,11 +192,11 @@ abstract contract BaseTest is DSTest, stdCheats {
         vm.stopPrank();
     }
 
-    function getContract(string memory _name) public returns (address) {
+    function getContract(string memory _name) public view returns (address) {
         return contracts[bytes32(bytes(_name))];
     }
 
-    function getActor(uint160 _index) public returns (address) {
+    function getActor(uint160 _index) public pure returns (address) {
         return address(uint160(0x50000 + _index));
     }
 }
