@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
+import "@primitivefi/hardhat-dodoc";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
 
@@ -109,6 +110,9 @@ const config: HardhatUserConfig = {
     coinmarketcap: process.env.REPORT_GAS_COINMARKETCAP_API_KEY,
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,
+  },
+  dodoc: {
+    runOnCompile: true,
   },
 };
 
