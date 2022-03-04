@@ -4,20 +4,12 @@ pragma solidity ^0.8.11;
 import "./IThirdwebContract.sol";
 import "./IThirdwebRoyalty.sol";
 import "./IThirdwebOwnable.sol";
+import "../lib/MultiTokenTransferLib.sol";
 
 interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
-    struct WrappedContents {
-        address[] erc1155AssetContracts;
-        uint256[][] erc1155TokensToWrap;
-        uint256[][] erc1155AmountsToWrap;
-        address[] erc721AssetContracts;
-        uint256[][] erc721TokensToWrap;
-        address[] erc20AssetContracts;
-        uint256[] erc20AmountsToWrap;
-    }
 
     /// @dev Emitted when tokens are wrapped.
-    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, WrappedContents wrappedContents);
+    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.Bundle wrappedContents);
 
     /// @dev Emitted when tokens are unwrapped.
     event TokensUnwrapped(
@@ -25,7 +17,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
         address sentTo,
         uint256 indexed tokenIdOfShares,
         uint256 sharesUnwrapped,
-        WrappedContents wrappedContents
+        MultiTokenTransferLib.Bundle wrappedContents
     );
 
     /// @dev Emitted when a new Owner is set.
@@ -39,7 +31,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param uriForShares The URI for the shares i.e. wrapped token.
      */
     function wrap(
-        WrappedContents calldata wrappedContents,
+        MultiTokenTransferLib.Bundle calldata wrappedContents,
         uint256 shares,
         string calldata uriForShares
     ) external payable returns (uint256 tokenId);
