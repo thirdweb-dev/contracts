@@ -74,7 +74,16 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     }
 
     //  =====   Functionality tests   =====
-    function test_remove() public {
+    function test_removeFromFactory() public {
+        setUp_remove();
+        vm.prank(factory);
+        _registry.remove(actor, mockModuleAddress);
+
+        address[] memory modules = _registry.getAll(actor);
+        assertEq(modules.length, 0);
+    }
+
+    function test_removeFromSelf() public {
         setUp_remove();
         vm.prank(actor);
         _registry.remove(actor, mockModuleAddress);
