@@ -21,7 +21,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         address to,
         uint256 tokenId
     ) public {
-        IERC721(token).transferFrom(msg.sender, to, tokenId);
+        IERC721(token).transferFrom(address(this), to, tokenId);
     }
 
     function transferERC1155(
@@ -31,6 +31,6 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         uint256 amount,
         bytes calldata data
     ) external {
-        IERC1155(token).safeTransferFrom(msg.sender, to, tokenId, amount, data);
+        IERC1155(token).safeTransferFrom(address(this), to, tokenId, amount, data);
     }
 }
