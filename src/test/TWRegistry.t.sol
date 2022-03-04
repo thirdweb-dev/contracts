@@ -50,6 +50,12 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     function test_addFromSelf() public {
         vm.prank(actor);
         _registry.add(actor, mockModuleAddress);
+
+        address[] memory modules = _registry.getAll(actor);
+
+        assertEq(modules.length, 1);
+        assertEq(modules[0], mockModuleAddress);
+        assertEq(_registry.count(actor), 1);
     }
 
     function test_add_emit_Added() public {
