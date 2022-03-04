@@ -4,6 +4,7 @@ pragma solidity ^0.8.11;
 import "@std/stdlib.sol";
 import "@ds-test/test.sol";
 import "./Console.sol";
+import "./Wallet.sol";
 import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
@@ -78,7 +79,6 @@ abstract contract BaseTest is DSTest, stdCheats {
         vm.stopPrank();
 
         /// deploy proxy for tests
-        vm.startPrank(deployer);
         deployContractProxy(
             "TokenERC20",
             abi.encodeCall(
@@ -179,7 +179,6 @@ abstract contract BaseTest is DSTest, stdCheats {
                 (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, royaltyRecipient, royaltyBps)
             )
         );
-        vm.stopPrank();
     }
 
     function deployContractProxy(string memory _contractType, bytes memory _initializer)
@@ -198,5 +197,9 @@ abstract contract BaseTest is DSTest, stdCheats {
 
     function getActor(uint160 _index) public pure returns (address) {
         return address(uint160(0x50000 + _index));
+    }
+
+    function getWallet() public returns (Wallet wallet) {
+        wallet = new Wallet();
     }
 }
