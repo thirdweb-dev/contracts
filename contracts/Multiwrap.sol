@@ -84,7 +84,7 @@ contract Multiwrap is
     mapping(uint256 => string) private uriForShares;
 
     /// @dev Mapping from tokenId => wrapped contents of the token.
-    mapping(uint256 => MultiTokenTransferLib.Bundle) private wrappedContents;
+    mapping(uint256 => MultiTokenTransferLib.MultiToken) private wrappedContents;
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -142,7 +142,7 @@ contract Multiwrap is
 
     /// @dev Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
     function wrap(
-        MultiTokenTransferLib.Bundle calldata _wrappedContents,
+        MultiTokenTransferLib.MultiToken calldata _wrappedContents,
         uint256 _shares,
         string calldata _uriForShares
     ) external payable nonReentrant returns (uint256 tokenId) {
@@ -155,7 +155,7 @@ contract Multiwrap is
         _mint(_msgSender(), tokenId, _shares, "");
         totalShares[tokenId] = _shares;
 
-        MultiTokenTransferLib.transferBundle(_msgSender(), address(this), _wrappedContents);
+        MultiTokenTransferLib.transferAll(_msgSender(), address(this), _wrappedContents);
 
         emit TokensWrapped(_msgSender(), tokenId, _wrappedContents);
     }
@@ -172,7 +172,7 @@ contract Multiwrap is
         uint256 totalSharesOfToken = totalShares[_tokenId];
         bool isTotalRedemption = _amountToRedeem == totalSharesOfToken;
         
-        MultiTokenTransferLib.Bundle memory wrappedContents_ = wrappedContents[_tokenId];
+        MultiTokenTransferLib.MultiToken memory wrappedContents_ = wrappedContents[_tokenId];
 
         burn(_msgSender(), _tokenId, _amountToRedeem);
 
@@ -181,7 +181,7 @@ contract Multiwrap is
         }
 
         if (isTotalRedemption) {
-            MultiTokenTransferLib.transferBundle(address(this), _sendTo, wrappedContents_);
+            MultiTokenTransferLib.transferAll(address(this), _sendTo, wrappedContents_);
         } else {
             transfer20ByShares(address(this), _sendTo, wrappedContents_, _amountToRedeem, totalSharesOfToken);
         }
@@ -247,7 +247,7 @@ contract Multiwrap is
     function transfer20ByShares(
         address _from,
         address _to,
-        MultiTokenTransferLib.Bundle memory _wrappedContents,
+        MultiTokenTransferLib.MultiToken memory _wrappedContents,
         uint256 _sharesToAccount,
         uint256 _totalShares
     ) internal {

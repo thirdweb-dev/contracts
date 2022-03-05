@@ -14,7 +14,7 @@ import "contracts/lib/MultiTokenTransferLib.sol";
 
 interface IMultiwrapData {
     /// @dev Emitted when tokens are wrapped.
-    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.Bundle wrappedContents);
+    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.MultiToken wrappedContents);
 
     /// @dev Emitted when tokens are unwrapped.
     event TokensUnwrapped(
@@ -22,7 +22,7 @@ interface IMultiwrapData {
         address sentTo,
         uint256 indexed tokenIdOfShares,
         uint256 sharesUnwrapped,
-        MultiTokenTransferLib.Bundle wrappedContents
+        MultiTokenTransferLib.MultiToken wrappedContents
     );
 }
 
@@ -116,9 +116,9 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     uint256[] internal erc1155TokensToWrap = [0, 1, 2, 3];
     uint256[] internal erc1155AmountsToWrap = [20, 40, 60, 80];
 
-    MultiTokenTransferLib.Bundle internal wrappedContents;
+    MultiTokenTransferLib.MultiToken internal wrappedContents;
 
-    function getDefaultWrappedContents() internal view returns (MultiTokenTransferLib.Bundle memory) {
+    function getDefaultWrappedContents() internal view returns (MultiTokenTransferLib.MultiToken memory) {
         address[] memory erc1155AssetContracts_ = new address[](1);
         erc1155AssetContracts_[0] = address(erc1155);
 
@@ -141,7 +141,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         erc20AmountsToWrap_[0] = erc20AmountToWrap;
 
         return
-            MultiTokenTransferLib.Bundle({
+            MultiTokenTransferLib.MultiToken({
                 erc1155AssetContracts: erc1155AssetContracts_,
                 erc1155TokensToWrap: erc1155TokensToWrap_,
                 erc1155AmountsToWrap: erc1155AmountsToWrap_,
@@ -420,7 +420,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
 
     //     vm.stopPrank();
 
-    //     MultiTokenTransferLib.Bundle memory onlyERC20Wrapped = _get_onlyWrapERC20Reentrancy();
+    //     MultiTokenTransferLib.MultiToken memory onlyERC20Wrapped = _get_onlyWrapERC20Reentrancy();
 
     //     setApproval20(
     //         onlyERC20Wrapped.erc20AssetContracts,
@@ -439,7 +439,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     //     multiwrap.wrap(onlyERC20Wrapped, sharesToMint, uriForShares);
     // }
 
-    // function _get_onlyWrapERC20Reentrancy() internal view returns (MultiTokenTransferLib.Bundle memory onlyERC20Wrapped) {
+    // function _get_onlyWrapERC20Reentrancy() internal view returns (MultiTokenTransferLib.MultiToken memory onlyERC20Wrapped) {
     //     address[] memory erc1155AssetContracts_;
     //     uint256[][] memory erc1155TokensToWrap_;
     //     uint256[][] memory erc1155AmountsToWrap_;
@@ -454,7 +454,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     //     erc20AmountsToWrap_[0] = erc20AmountToWrap;
 
     //     return
-    //         MultiTokenTransferLib.Bundle({
+    //         MultiTokenTransferLib.MultiToken({
     //             erc1155AssetContracts: erc1155AssetContracts_,
     //             erc1155TokensToWrap: erc1155TokensToWrap_,
     //             erc1155AmountsToWrap: erc1155AmountsToWrap_,
@@ -479,7 +479,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     // function _get_onlyWrapERC20_fuzz(uint256 _erc20AmountToWrap)
     //     internal
     //     view
-    //     returns (MultiTokenTransferLib.Bundle memory onlyERC20Wrapped)
+    //     returns (MultiTokenTransferLib.MultiToken memory onlyERC20Wrapped)
     // {
     //     address[] memory erc1155AssetContracts_;
     //     uint256[][] memory erc1155TokensToWrap_;
@@ -495,7 +495,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     //     erc20AmountsToWrap_[0] = _erc20AmountToWrap;
 
     //     return
-    //         MultiTokenTransferLib.Bundle({
+    //         MultiTokenTransferLib.MultiToken({
     //             erc1155AssetContracts: erc1155AssetContracts_,
     //             erc1155TokensToWrap: erc1155TokensToWrap_,
     //             erc1155AmountsToWrap: erc1155AmountsToWrap_,

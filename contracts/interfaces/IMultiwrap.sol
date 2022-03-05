@@ -9,7 +9,7 @@ import "../lib/MultiTokenTransferLib.sol";
 interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
 
     /// @dev Emitted when tokens are wrapped.
-    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.Bundle wrappedContents);
+    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.MultiToken wrappedContents);
 
     /// @dev Emitted when tokens are unwrapped.
     event TokensUnwrapped(
@@ -17,7 +17,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
         address sentTo,
         uint256 indexed tokenIdOfShares,
         uint256 sharesUnwrapped,
-        MultiTokenTransferLib.Bundle wrappedContents
+        MultiTokenTransferLib.MultiToken wrappedContents
     );
 
     /// @dev Emitted when a new Owner is set.
@@ -31,7 +31,7 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param uriForShares The URI for the shares i.e. wrapped token.
      */
     function wrap(
-        MultiTokenTransferLib.Bundle calldata wrappedContents,
+        MultiTokenTransferLib.MultiToken calldata wrappedContents,
         uint256 shares,
         string calldata uriForShares
     ) external payable returns (uint256 tokenId);
