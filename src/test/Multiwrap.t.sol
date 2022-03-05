@@ -158,11 +158,9 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         erc721.mint(address(tokenOwner), erc721TokensToWrap.length);
         erc1155.mintBatch(address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
         
-        vm.startPrank(address(tokenOwner));
         tokenOwner.setAllowance20(address(erc20), address(multiwrap), erc20AmountToWrap);
         tokenOwner.setApprovalForAll721(address(erc721), address(multiwrap), true);
         tokenOwner.setApprovalForAll1155(address(erc1155), address(multiwrap), true);
-        vm.stopPrank();
 
         wrappedContents = getDefaultWrappedContents();
     }
@@ -229,7 +227,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     //     uint256 sharesToMint = 10;
     //     string memory uriForShares = "ipfs://shares";
 
-    //     vm.prank(tokenOwner);
+    //     vm.prank(address(tokenOwner));
     //     erc1155.burn(tokenOwner, 0, 1);
 
     //     vm.expectRevert("ERC1155: insufficient balance for transfer");
