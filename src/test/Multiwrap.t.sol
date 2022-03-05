@@ -158,9 +158,9 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         erc721.mint(address(tokenOwner), erc721TokensToWrap.length);
         erc1155.mintBatch(address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
         
-        tokenOwner.setAllowance20(address(erc20), address(multiwrap), erc20AmountToWrap);
-        tokenOwner.setApprovalForAll721(address(erc721), address(multiwrap), true);
-        tokenOwner.setApprovalForAll1155(address(erc1155), address(multiwrap), true);
+        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), erc20AmountToWrap);
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), true);
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);
 
         wrappedContents = getDefaultWrappedContents();
     }
@@ -227,7 +227,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 sharesToMint = 10;
         string memory uriForShares = "ipfs://shares";
 
-        tokenOwner.burn1155(address(erc1155), 0, 1);
+        tokenOwner.burnERC1155(address(erc1155), 0, 1);
 
         vm.expectRevert("ERC1155: insufficient balance for transfer");
 
@@ -241,7 +241,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 sharesToMint = 10;
         string memory uriForShares = "ipfs://shares";
 
-        tokenOwner.burn721(address(erc721), 0);
+        tokenOwner.burnERC721(address(erc721), 0);
 
         vm.expectRevert("ERC721: operator query for nonexistent token");
 
@@ -255,7 +255,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 sharesToMint = 10;
         string memory uriForShares = "ipfs://shares";
 
-        tokenOwner.burn20(address(erc20), 1);
+        tokenOwner.burnERC20(address(erc20), 1);
 
         vm.expectRevert("ERC20: transfer amount exceeds balance");
 
@@ -269,7 +269,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 sharesToMint = 10;
         string memory uriForShares = "ipfs://shares";
 
-        tokenOwner.setApprovalForAll1155(address(erc1155), address(multiwrap), false);
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), false);
 
         vm.expectRevert("ERC1155: caller is not owner nor approved");
 
@@ -283,7 +283,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 sharesToMint = 10;
         string memory uriForShares = "ipfs://shares";
 
-        tokenOwner.setApprovalForAll721(address(erc721), address(multiwrap), false);
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), false);
 
         vm.expectRevert("ERC721: transfer caller is not owner nor approved");
 
@@ -297,7 +297,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 sharesToMint = 10;
         string memory uriForShares = "ipfs://shares";
 
-        tokenOwner.setAllowance20(address(erc20), address(multiwrap), 0);
+        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), 0);
 
         vm.expectRevert("ERC20: insufficient allowance");
 

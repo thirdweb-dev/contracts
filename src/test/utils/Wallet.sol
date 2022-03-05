@@ -17,7 +17,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC20(token).transfer(to, amount);
     }
 
-    function setAllowance20(
+    function setAllowanceERC20(
         address token,
         address spender,
         uint256 allowanceAmount
@@ -25,7 +25,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC20(token).approve(spender, allowanceAmount);
     }
 
-    function burn20(address token, uint256 amount) public {
+    function burnERC20(address token, uint256 amount) public {
         MockERC20(token).burn(amount);
     }
 
@@ -37,7 +37,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC721(token).transferFrom(address(this), to, tokenId);
     }
 
-    function setApprovalForAll721(
+    function setApprovalForAllERC721(
         address token,
         address operator,
         bool toApprove
@@ -45,7 +45,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC721(token).setApprovalForAll(operator, toApprove);
     }
 
-    function burn721(address token, uint256 tokenId) public {
+    function burnERC721(address token, uint256 tokenId) public {
         MockERC721(token).burn(tokenId);
     }
 
@@ -59,7 +59,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC1155(token).safeTransferFrom(address(this), to, tokenId, amount, data);
     }
 
-    function setApprovalForAll1155(
+    function setApprovalForAllERC1155(
         address token,
         address operator,
         bool toApprove
@@ -67,7 +67,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC1155(token).setApprovalForAll(operator, toApprove);
     }
 
-    function burn1155(
+    function burnERC1155(
         address token,
         uint256 tokenId,
         uint256 amount
