@@ -209,10 +209,10 @@ abstract contract BaseTest is DSTest, stdCheats {
         uint256[] memory _tokenIds,
         bool _assertIsOwner
     ) internal {
-        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             bool isOwnerOfToken = MockERC721(_token).ownerOf(_tokenIds[i]) == _owner;
-            
-            if(_assertIsOwner) {
+
+            if (_assertIsOwner) {
                 assertTrue(isOwnerOfToken);
             } else {
                 assertTrue(!isOwnerOfToken);
@@ -226,10 +226,9 @@ abstract contract BaseTest is DSTest, stdCheats {
         uint256[] memory _tokenIds,
         uint256[] memory _amounts
     ) internal {
-
         require(_tokenIds.length == _amounts.length, "unequal lengths");
 
-        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             assertEq(MockERC1155(_token).balanceOf(_owner, _tokenIds[i]), _amounts[i]);
         }
     }
@@ -240,10 +239,9 @@ abstract contract BaseTest is DSTest, stdCheats {
         uint256[] memory _tokenIds,
         uint256[] memory _amounts
     ) internal {
-
         require(_tokenIds.length == _amounts.length, "unequal lengths");
 
-        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             assertTrue(MockERC1155(_token).balanceOf(_owner, _tokenIds[i]) >= _amounts[i]);
         }
     }

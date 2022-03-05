@@ -12,7 +12,11 @@ import "contracts/lib/MultiTokenTransferLib.sol";
 
 interface IMultiwrapData {
     /// @dev Emitted when tokens are wrapped.
-    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.MultiToken wrappedContents);
+    event TokensWrapped(
+        address indexed wrapper,
+        uint256 indexed tokenIdOfShares,
+        MultiTokenTransferLib.MultiToken wrappedContents
+    );
 
     /// @dev Emitted when tokens are unwrapped.
     event TokensUnwrapped(
@@ -151,11 +155,10 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     }
 
     function _setup_wrap() internal {
-
         erc20.mint(address(tokenOwner), erc20AmountToWrap);
         erc721.mint(address(tokenOwner), erc721TokensToWrap.length);
         erc1155.mintBatch(address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
-        
+
         tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), erc20AmountToWrap);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), true);
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);
@@ -163,26 +166,19 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         wrappedContents = getDefaultWrappedContents();
     }
 
-    
-
     /// @dev Test `wrap`
     function test_wrap() public {
         _setup_wrap();
 
         assertBal20Strict(address(erc20), address(tokenOwner), erc20AmountToWrap);
         assertBal721(address(erc721), address(tokenOwner), erc721TokensToWrap, true);
-        assertBal1155Strict(
-            address(erc1155),
-            address(tokenOwner), 
-            erc1155TokensToWrap,
-            erc1155AmountsToWrap
-        );
+        assertBal1155Strict(address(erc1155), address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
 
         assertBal20Strict(address(erc20), address(multiwrap), 0);
         assertBal721(address(erc721), address(multiwrap), erc721TokensToWrap, false);
         assertBal1155Strict(
             address(erc1155),
-            address(multiwrap), 
+            address(multiwrap),
             erc1155TokensToWrap,
             new uint256[](erc1155AmountsToWrap.length)
         );
@@ -202,18 +198,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
 
         assertBal20Strict(address(erc20), address(multiwrap), erc20AmountToWrap);
         assertBal721(address(erc721), address(multiwrap), erc721TokensToWrap, true);
-        assertBal1155Strict(
-            address(erc1155),
-            address(multiwrap), 
-            erc1155TokensToWrap,
-            erc1155AmountsToWrap
-        );
+        assertBal1155Strict(address(erc1155), address(multiwrap), erc1155TokensToWrap, erc1155AmountsToWrap);
 
         assertBal20Strict(address(erc20), address(tokenOwner), 0);
         assertBal721(address(erc721), address(tokenOwner), erc721TokensToWrap, false);
         assertBal1155Strict(
             address(erc1155),
-            address(tokenOwner), 
+            address(tokenOwner),
             erc1155TokensToWrap,
             new uint256[](erc1155AmountsToWrap.length)
         );
@@ -323,7 +314,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         erc20.mint(address(tokenOwner), erc20AmountToWrap);
         erc721.mint(address(tokenOwner), erc721TokensToWrap.length);
         erc1155.mintBatch(address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
-        
+
         tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), erc20AmountToWrap);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), true);
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);
@@ -344,18 +335,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
 
         assertBal20Strict(address(erc20), address(multiwrap), erc20AmountToWrap);
         assertBal721(address(erc721), address(multiwrap), erc721TokensToWrap, true);
-        assertBal1155Strict(
-            address(erc1155),
-            address(multiwrap), 
-            erc1155TokensToWrap,
-            erc1155AmountsToWrap
-        );
+        assertBal1155Strict(address(erc1155), address(multiwrap), erc1155TokensToWrap, erc1155AmountsToWrap);
 
         assertBal20Strict(address(erc20), address(tokenOwner), 0);
         assertBal721(address(erc721), address(tokenOwner), erc721TokensToWrap, false);
         assertBal1155Strict(
             address(erc1155),
-            address(tokenOwner), 
+            address(tokenOwner),
             erc1155TokensToWrap,
             new uint256[](erc1155AmountsToWrap.length)
         );
@@ -368,18 +354,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
 
         assertBal20Strict(address(erc20), address(tokenOwner), erc20AmountToWrap);
         assertBal721(address(erc721), address(tokenOwner), erc721TokensToWrap, true);
-        assertBal1155Strict(
-            address(erc1155),
-            address(tokenOwner), 
-            erc1155TokensToWrap,
-            erc1155AmountsToWrap
-        );
+        assertBal1155Strict(address(erc1155), address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
 
         assertBal20Strict(address(erc20), address(multiwrap), 0);
         assertBal721(address(erc721), address(multiwrap), erc721TokensToWrap, false);
         assertBal1155Strict(
             address(erc1155),
-            address(multiwrap), 
+            address(multiwrap),
             erc1155TokensToWrap,
             new uint256[](erc1155AmountsToWrap.length)
         );
@@ -428,7 +409,11 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
 
     MockERC20Reentrancy erc20Reentrancy;
 
-    function getReentrantWrappedContents() internal view returns (MultiTokenTransferLib.MultiToken memory onlyERC20Wrapped) {
+    function getReentrantWrappedContents()
+        internal
+        view
+        returns (MultiTokenTransferLib.MultiToken memory onlyERC20Wrapped)
+    {
         address[] memory erc1155AssetContracts_ = new address[](1);
         erc1155AssetContracts_[0] = address(erc1155);
 
@@ -463,13 +448,12 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     }
 
     function _setup_unwrap_reentrancy() internal returns (uint256 tokenIdOfWrapped) {
-
         erc20Reentrancy = new MockERC20Reentrancy(address(multiwrap));
 
         erc20Reentrancy.mint(address(tokenOwner), erc20AmountToWrap);
         erc721.mint(address(tokenOwner), erc721TokensToWrap.length);
         erc1155.mintBatch(address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
-        
+
         tokenOwner.setAllowanceERC20(address(erc20Reentrancy), address(multiwrap), erc20AmountToWrap);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), true);
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);

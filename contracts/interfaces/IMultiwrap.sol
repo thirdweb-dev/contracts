@@ -7,9 +7,12 @@ import "./IThirdwebOwnable.sol";
 import "../lib/MultiTokenTransferLib.sol";
 
 interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
-
     /// @dev Emitted when tokens are wrapped.
-    event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.MultiToken wrappedContents);
+    event TokensWrapped(
+        address indexed wrapper,
+        uint256 indexed tokenIdOfShares,
+        MultiTokenTransferLib.MultiToken wrappedContents
+    );
 
     /// @dev Emitted when tokens are unwrapped.
     event TokensUnwrapped(

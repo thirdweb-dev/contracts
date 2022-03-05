@@ -171,7 +171,7 @@ contract Multiwrap is
 
         uint256 totalSharesOfToken = totalShares[_tokenId];
         bool isTotalRedemption = _amountToRedeem == totalSharesOfToken;
-        
+
         MultiTokenTransferLib.MultiToken memory wrappedContents_ = wrappedContents[_tokenId];
 
         burn(_msgSender(), _tokenId, _amountToRedeem);
@@ -251,7 +251,6 @@ contract Multiwrap is
         uint256 _sharesToAccount,
         uint256 _totalShares
     ) internal {
-
         require(
             _wrappedContents.erc1155AssetContracts.length == 0 && _wrappedContents.erc721AssetContracts.length == 0,
             "cannot unwrap by shares"

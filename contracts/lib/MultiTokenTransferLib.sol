@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 library MultiTokenTransferLib {
-
     struct MultiToken {
         address[] erc1155AssetContracts;
         uint256[][] erc1155TokensToWrap;
@@ -75,14 +74,12 @@ library MultiTokenTransferLib {
         uint256 i;
         uint256 j;
 
-        bool isValidData = _multiToken.erc1155AssetContracts.length ==
-            _multiToken.erc1155TokensToWrap.length &&
+        bool isValidData = _multiToken.erc1155AssetContracts.length == _multiToken.erc1155TokensToWrap.length &&
             _multiToken.erc1155AssetContracts.length == _multiToken.erc1155AmountsToWrap.length;
 
         if (isValidData) {
             for (i = 0; i < _multiToken.erc1155AssetContracts.length; i += 1) {
-                isValidData =
-                    _multiToken.erc1155TokensToWrap[i].length == _multiToken.erc1155AmountsToWrap[i].length;
+                isValidData = _multiToken.erc1155TokensToWrap[i].length == _multiToken.erc1155AmountsToWrap[i].length;
 
                 if (!isValidData) {
                     break;
@@ -103,5 +100,4 @@ library MultiTokenTransferLib {
         }
         require(isValidData, "invalid erc1155 wrap");
     }
-
 }
