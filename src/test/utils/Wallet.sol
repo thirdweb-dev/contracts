@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+
+import "../mocks/MockERC20.sol";
+import "../mocks/MockERC721.sol";
+import "../mocks/MockERC1155.sol";
 
 contract Wallet is ERC721Holder, ERC1155Holder {
     function transferERC20(
@@ -13,7 +14,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         address to,
         uint256 amount
     ) public {
-        IERC20(token).transfer(to, amount);
+        MockERC20(token).transfer(to, amount);
     }
 
     function setAllowance20(
@@ -21,7 +22,11 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         address spender,
         uint256 allowanceAmount
     ) public {
-        IERC20(token).approve(spender, allowanceAmount);
+        MockERC20(token).approve(spender, allowanceAmount);
+    }
+
+    function burn20(address token, uint256 amount) public {
+        MockERC20(token).burn(amount);
     }
 
     function transferERC721(
@@ -29,7 +34,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         address to,
         uint256 tokenId
     ) public {
-        IERC721(token).transferFrom(address(this), to, tokenId);
+        MockERC721(token).transferFrom(address(this), to, tokenId);
     }
 
     function setApprovalForAll721(
@@ -37,7 +42,11 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         address operator,
         bool toApprove
     ) public {
-        IERC721(token).setApprovalForAll(operator, toApprove);
+        MockERC721(token).setApprovalForAll(operator, toApprove);
+    }
+
+    function burn721(address token, uint256 tokenId) public {
+        MockERC721(token).burn(tokenId);
     }
 
     function transferERC1155(
@@ -47,7 +56,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         uint256 amount,
         bytes calldata data
     ) external {
-        IERC1155(token).safeTransferFrom(address(this), to, tokenId, amount, data);
+        MockERC1155(token).safeTransferFrom(address(this), to, tokenId, amount, data);
     }
 
     function setApprovalForAll1155(
@@ -55,6 +64,14 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         address operator,
         bool toApprove
     ) public {
-        IERC1155(token).setApprovalForAll(operator, toApprove);
+        MockERC1155(token).setApprovalForAll(operator, toApprove);
+    }
+
+    function burn1155(
+        address token,
+        uint256 tokenId,
+        uint256 amount
+    ) public {
+        MockERC1155(token).burn(address(this), tokenId, amount);
     }
 }
