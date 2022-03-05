@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.so
 
 library MultiTokenTransferLib {
 
-    struct Bundle {
+    struct MultiToken {
         address[] erc1155AssetContracts;
         uint256[][] erc1155TokensToWrap;
         uint256[][] erc1155AmountsToWrap;
@@ -17,85 +17,85 @@ library MultiTokenTransferLib {
         uint256[] erc20AmountsToWrap;
     }
 
-    function transferBundle(
+    function transferAll(
         address _from,
         address _to,
-        Bundle memory _bundle
+        MultiToken memory _multiToken
     ) internal {
-        transfer1155(_from, _to, _bundle);
-        transfer721(_from, _to, _bundle);
-        transfer20(_from, _to, _bundle);
+        transferERC1155(_from, _to, _multiToken);
+        transferERC721(_from, _to, _multiToken);
+        transferERC20(_from, _to, _multiToken);
     }
 
-    function transfer20(
+    function transferERC20(
         address _from,
         address _to,
-        Bundle memory _bundle
+        MultiToken memory _multiToken
     ) internal {
         uint256 i;
 
-        bool isValidData = _bundle.erc20AssetContracts.length == _bundle.erc20AmountsToWrap.length;
+        bool isValidData = _multiToken.erc20AssetContracts.length == _multiToken.erc20AmountsToWrap.length;
         require(isValidData, "invalid erc20 wrap");
-        for (i = 0; i < _bundle.erc20AssetContracts.length; i += 1) {
+        for (i = 0; i < _multiToken.erc20AssetContracts.length; i += 1) {
             CurrencyTransferLib.transferCurrency(
-                _bundle.erc20AssetContracts[i],
+                _multiToken.erc20AssetContracts[i],
                 _from,
                 _to,
-                _bundle.erc20AmountsToWrap[i]
+                _multiToken.erc20AmountsToWrap[i]
             );
         }
     }
 
-    function transfer721(
+    function transferERC721(
         address _from,
         address _to,
-        Bundle memory _bundle
+        MultiToken memory _multiToken
     ) internal {
         uint256 i;
         uint256 j;
 
-        bool isValidData = _bundle.erc721AssetContracts.length == _bundle.erc721TokensToWrap.length;
+        bool isValidData = _multiToken.erc721AssetContracts.length == _multiToken.erc721TokensToWrap.length;
         if (isValidData) {
-            for (i = 0; i < _bundle.erc721AssetContracts.length; i += 1) {
-                IERC721Upgradeable assetContract = IERC721Upgradeable(_bundle.erc721AssetContracts[i]);
+            for (i = 0; i < _multiToken.erc721AssetContracts.length; i += 1) {
+                IERC721Upgradeable assetContract = IERC721Upgradeable(_multiToken.erc721AssetContracts[i]);
 
-                for (j = 0; j < _bundle.erc721TokensToWrap[i].length; j += 1) {
-                    assetContract.safeTransferFrom(_from, _to, _bundle.erc721TokensToWrap[i][j]);
+                for (j = 0; j < _multiToken.erc721TokensToWrap[i].length; j += 1) {
+                    assetContract.safeTransferFrom(_from, _to, _multiToken.erc721TokensToWrap[i][j]);
                 }
             }
         }
         require(isValidData, "invalid erc721 wrap");
     }
 
-    function transfer1155(
+    function transferERC1155(
         address _from,
         address _to,
-        Bundle memory _bundle
+        MultiToken memory _multiToken
     ) internal {
         uint256 i;
         uint256 j;
 
-        bool isValidData = _bundle.erc1155AssetContracts.length ==
-            _bundle.erc1155TokensToWrap.length &&
-            _bundle.erc1155AssetContracts.length == _bundle.erc1155AmountsToWrap.length;
+        bool isValidData = _multiToken.erc1155AssetContracts.length ==
+            _multiToken.erc1155TokensToWrap.length &&
+            _multiToken.erc1155AssetContracts.length == _multiToken.erc1155AmountsToWrap.length;
 
         if (isValidData) {
-            for (i = 0; i < _bundle.erc1155AssetContracts.length; i += 1) {
+            for (i = 0; i < _multiToken.erc1155AssetContracts.length; i += 1) {
                 isValidData =
-                    _bundle.erc1155TokensToWrap[i].length == _bundle.erc1155AmountsToWrap[i].length;
+                    _multiToken.erc1155TokensToWrap[i].length == _multiToken.erc1155AmountsToWrap[i].length;
 
                 if (!isValidData) {
                     break;
                 }
 
-                IERC1155Upgradeable assetContract = IERC1155Upgradeable(_bundle.erc1155AssetContracts[i]);
+                IERC1155Upgradeable assetContract = IERC1155Upgradeable(_multiToken.erc1155AssetContracts[i]);
 
-                for (j = 0; j < _bundle.erc1155TokensToWrap[i].length; j += 1) {
+                for (j = 0; j < _multiToken.erc1155TokensToWrap[i].length; j += 1) {
                     assetContract.safeTransferFrom(
                         _from,
                         _to,
-                        _bundle.erc1155TokensToWrap[i][j],
-                        _bundle.erc1155AmountsToWrap[i][j],
+                        _multiToken.erc1155TokensToWrap[i][j],
+                        _multiToken.erc1155AmountsToWrap[i][j],
                         ""
                     );
                 }
