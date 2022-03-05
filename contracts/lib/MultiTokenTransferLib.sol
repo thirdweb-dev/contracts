@@ -21,7 +21,7 @@ library MultiTokenTransferLib {
         address _from,
         address _to,
         Bundle memory _bundle
-    ) public {
+    ) internal {
         transfer1155(_from, _to, _bundle);
         transfer721(_from, _to, _bundle);
         transfer20(_from, _to, _bundle);
@@ -31,7 +31,7 @@ library MultiTokenTransferLib {
         address _from,
         address _to,
         Bundle memory _bundle
-    ) public {
+    ) internal {
         uint256 i;
 
         bool isValidData = _bundle.erc20AssetContracts.length == _bundle.erc20AmountsToWrap.length;
@@ -50,7 +50,7 @@ library MultiTokenTransferLib {
         address _from,
         address _to,
         Bundle memory _bundle
-    ) public {
+    ) internal {
         uint256 i;
         uint256 j;
 
@@ -71,7 +71,7 @@ library MultiTokenTransferLib {
         address _from,
         address _to,
         Bundle memory _bundle
-    ) public {
+    ) internal {
         uint256 i;
         uint256 j;
 
