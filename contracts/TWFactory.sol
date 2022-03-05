@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./TWProxy.sol";
 import "./TWRegistry.sol";
 import "./interfaces/IThirdwebContract.sol";
 
@@ -9,6 +8,7 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
@@ -67,16 +67,16 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     ) public returns (address deployedProxy) {
         require(approval[_implementation], "implementation not approved");
 
-        // slither-disable-next-line too-many-digits
-        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(_implementation, _data));
-
-        deployedProxy = Create2.deploy(0, _salt, proxyBytecode);
+        deployedProxy = Clones.cloneDeterministic(_implementation, _salt);
 
         deployer[deployedProxy] = _msgSender();
 
         emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
 
         registry.add(_msgSender(), deployedProxy);
+
+        // slither-disable-next-line unused-return
+        Address.functionCall(deployedProxy, _data);
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
