@@ -7,8 +7,9 @@ import "contracts/TWFactory.sol";
 import "contracts/TWRegistry.sol";
 
 // Helpers
-import "contracts/TWProxy.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
+import "contracts/TWProxy.sol";
 import "./utils/Console.sol";
 import "./mocks/MockThirdwebContract.sol";
 
@@ -73,7 +74,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     }
 
     function test_addImplementation_newImpl() public {
-
         vm.prank(factoryAdmin);
         _factory.addImplementation(address(mockModule));
 
@@ -82,7 +82,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bytes32 contractType = mockModuleV2.contractType();
         uint256 moduleVersion = mockModuleV2.contractVersion();
         uint256 moduleVersionOnFactory = _factory.currentVersion(contractType);
-        
+
         vm.prank(factoryAdmin);
         _factory.addImplementation(address(mockModuleV2));
 
@@ -160,13 +160,16 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     function test_deployProxyByImplementation(bytes32 _salt) public {
         setUp_deployProxyByImplementation();
 
-        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
-
-        address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(_factory));
+        address computedProxyAddr = Clones.predictDeterministicAddress(
+            address(mockModule),
+            keccak256(abi.encodePacked(proxyDeployer, _salt)),
+            factory
+        );
 
         vm.prank(proxyDeployer);
-        _factory.deployProxyByImplementation(address(mockModule), "", _salt);
+        address deployedAddr = _factory.deployProxyByImplementation(address(mockModule), "", _salt);
 
+        assertEq(deployedAddr, computedProxyAddr);
         assertEq(mockModule.contractType(), MockThirdwebContract(computedProxyAddr).contractType());
     }
 
@@ -181,8 +184,11 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         setUp_deployProxyByImplementation();
 
         bytes32 salt = bytes32("Random");
-        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
-        address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(_factory));
+        address computedProxyAddr = Clones.predictDeterministicAddress(
+            address(mockModule),
+            keccak256(abi.encodePacked(proxyDeployer, salt)),
+            factory
+        );
 
         vm.expectEmit(true, true, false, true);
         emit ProxyDeployed(address(mockModule), computedProxyAddr, proxyDeployer);
@@ -203,12 +209,16 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
 
         bytes32 contractType = mockModule.contractType();
 
-        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
-        address computedProxyAddr = Create2.computeAddress(_salt, keccak256(proxyBytecode), address(_factory));
+        address computedProxyAddr = Clones.predictDeterministicAddress(
+            address(mockModule),
+            keccak256(abi.encodePacked(proxyDeployer, _salt)),
+            factory
+        );
 
         vm.prank(proxyDeployer);
-        _factory.deployProxyDeterministic(contractType, "", _salt);
+        address proxyAddr = _factory.deployProxyDeterministic(contractType, "", _salt);
 
+        assertEq(proxyAddr, computedProxyAddr);
         assertEq(mockModule.contractType(), MockThirdwebContract(computedProxyAddr).contractType());
     }
 

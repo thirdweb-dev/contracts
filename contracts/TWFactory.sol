@@ -42,7 +42,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /// @dev Deploys a proxy that points to the latest version of the given module type.
     function deployProxy(bytes32 _type, bytes memory _data) external returns (address) {
-        bytes32 salt = keccak256(abi.encodePacked(_msgSender(), registry.count(_msgSender())));
+        bytes32 salt = bytes32(registry.count(_msgSender()));
         return deployProxyDeterministic(_type, _data, salt);
     }
 
@@ -67,7 +67,8 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
     ) public returns (address deployedProxy) {
         require(approval[_implementation], "implementation not approved");
 
-        deployedProxy = Clones.cloneDeterministic(_implementation, _salt);
+        bytes32 salthash = keccak256(abi.encodePacked(_msgSender(), _salt));
+        deployedProxy = Clones.cloneDeterministic(_implementation, salthash);
 
         deployer[deployedProxy] = _msgSender();
 
@@ -75,8 +76,10 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
         registry.add(_msgSender(), deployedProxy);
 
-        // slither-disable-next-line unused-return
-        Address.functionCall(deployedProxy, _data);
+        if (_data.length > 0) {
+            // slither-disable-next-line unused-return
+            Address.functionCall(deployedProxy, _data);
+        }
     }
 
     /// @dev Lets a contract admin set the address of a module type x version.
