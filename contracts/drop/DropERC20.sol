@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
+import "../interfaces/drop/IDropERC20.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -406,6 +406,10 @@ contract DropERC20 is
         contractURI = _uri;
     }
 
+    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(_forwarder);
+    }
+
     //      =====   Internal functions  =====
 
     function _mint(address account, uint256 amount) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
@@ -493,5 +497,14 @@ contract DropERC20 is
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
+        returns (bool)
+    {
+        return super.isTrustedForwarder(forwarder);
     }
 }

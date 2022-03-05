@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../IThirdwebContract.sol";
+import "../IThirdwebForwarder.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
@@ -18,6 +19,7 @@ interface ITokenERC721 is
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
+    IThirdwebForwarder,
     IERC721Upgradeable
 {
     /**

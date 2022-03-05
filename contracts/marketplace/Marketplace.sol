@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
+import "../interfaces/marketplace/IMarketplace.sol";
 
 // Tokens
 import "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
@@ -817,6 +817,10 @@ contract Marketplace is
         contractURI = _uri;
     }
 
+    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(_forwarder);
+    }
+
     /**
      *   ERC 1155 and ERC 721 Receiver functions.
      **/
@@ -861,5 +865,14 @@ contract Marketplace is
             interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
             interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
+        returns (bool)
+    {
+        return super.isTrustedForwarder(forwarder);
     }
 }

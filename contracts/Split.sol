@@ -7,6 +7,7 @@ import "./interfaces/ITWFee.sol";
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
+import "./interfaces/IThirdwebForwarder.sol";
 
 // Meta-tx
 import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
@@ -20,6 +21,7 @@ import "./lib/FeeType.sol";
 
 contract Split is
     IThirdwebContract,
+    IThirdwebForwarder,
     Initializable,
     MulticallUpgradeable,
     ERC2771ContextUpgradeable,
@@ -166,6 +168,15 @@ contract Split is
         }
     }
 
+    /// @dev Sets contract URI for the contract-level metadata of the contract.
+    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        contractURI = _uri;
+    }
+
+    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(_forwarder);
+    }
+
     /// @dev See ERC2771
     function _msgSender()
         internal
@@ -188,8 +199,12 @@ contract Split is
         return ERC2771ContextUpgradeable._msgData();
     }
 
-    /// @dev Sets contract URI for the contract-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        contractURI = _uri;
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
+        returns (bool)
+    {
+        return super.isTrustedForwarder(forwarder);
     }
 }
