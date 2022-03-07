@@ -203,24 +203,29 @@ abstract contract BaseTest is DSTest, stdCheats {
         wallet = new Wallet();
     }
 
-    function assertBal721(
+    function assertIsOwnerERC721(
         address _token,
         address _owner,
-        uint256[] memory _tokenIds,
-        bool _assertIsOwner
+        uint256[] memory _tokenIds
     ) internal {
         for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             bool isOwnerOfToken = MockERC721(_token).ownerOf(_tokenIds[i]) == _owner;
-
-            if (_assertIsOwner) {
-                assertTrue(isOwnerOfToken);
-            } else {
-                assertTrue(!isOwnerOfToken);
-            }
+            assertTrue(isOwnerOfToken);
         }
     }
 
-    function assertBal1155Strict(
+    function assertIsNotOwnerERC721(
+        address _token,
+        address _owner,
+        uint256[] memory _tokenIds
+    ) internal {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+            bool isOwnerOfToken = MockERC721(_token).ownerOf(_tokenIds[i]) == _owner;
+            assertTrue(!isOwnerOfToken);
+        }
+    }
+
+    function assertBalEqERC1155(
         address _token,
         address _owner,
         uint256[] memory _tokenIds,
@@ -233,7 +238,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         }
     }
 
-    function assertBal1155(
+    function assertBalGteERC1155(
         address _token,
         address _owner,
         uint256[] memory _tokenIds,
@@ -246,7 +251,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         }
     }
 
-    function assertBal20Strict(
+    function assertBalEqERC20(
         address _token,
         address _owner,
         uint256 _amount
@@ -254,7 +259,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         assertEq(MockERC20(_token).balanceOf(_owner), _amount);
     }
 
-    function assertBal20(
+    function assertBalGteERC20(
         address _token,
         address _owner,
         uint256 _amount
