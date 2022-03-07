@@ -225,7 +225,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         }
     }
 
-    function assertBalEqERC1155(
+    function assertBalERC1155Eq(
         address _token,
         address _owner,
         uint256[] memory _tokenIds,
@@ -238,7 +238,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         }
     }
 
-    function assertBalGteERC1155(
+    function assertBalERC1155Gte(
         address _token,
         address _owner,
         uint256[] memory _tokenIds,
@@ -251,7 +251,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         }
     }
 
-    function assertBalEqERC20(
+    function assertBalERC20Eq(
         address _token,
         address _owner,
         uint256 _amount
@@ -259,7 +259,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         assertEq(MockERC20(_token).balanceOf(_owner), _amount);
     }
 
-    function assertBalGteERC20(
+    function assertBalERC20Gte(
         address _token,
         address _owner,
         uint256 _amount

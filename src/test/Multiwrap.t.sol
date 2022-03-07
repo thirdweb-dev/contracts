@@ -170,13 +170,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     function test_wrap() public {
         _setup_wrap();
 
-        assertBalEqERC20(address(erc20), address(tokenOwner), erc20AmountToWrap);
+        assertBalERC20Eq(address(erc20), address(tokenOwner), erc20AmountToWrap);
         assertIsOwnerERC721(address(erc721), address(tokenOwner), erc721TokensToWrap);
-        assertBalEqERC1155(address(erc1155), address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
+        assertBalERC1155Eq(address(erc1155), address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
 
-        assertBalEqERC20(address(erc20), address(multiwrap), 0);
+        assertBalERC20Eq(address(erc20), address(multiwrap), 0);
         assertIsNotOwnerERC721(address(erc721), address(multiwrap), erc721TokensToWrap);
-        assertBalEqERC1155(
+        assertBalERC1155Eq(
             address(erc1155),
             address(multiwrap),
             erc1155TokensToWrap,
@@ -196,13 +196,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         assertEq(multiwrap.totalShares(tokenIdOfWrapped), sharesToMint);
         assertEq(multiwrap.balanceOf(address(tokenOwner), tokenIdOfWrapped), sharesToMint);
 
-        assertBalEqERC20(address(erc20), address(multiwrap), erc20AmountToWrap);
+        assertBalERC20Eq(address(erc20), address(multiwrap), erc20AmountToWrap);
         assertIsOwnerERC721(address(erc721), address(multiwrap), erc721TokensToWrap);
-        assertBalEqERC1155(address(erc1155), address(multiwrap), erc1155TokensToWrap, erc1155AmountsToWrap);
+        assertBalERC1155Eq(address(erc1155), address(multiwrap), erc1155TokensToWrap, erc1155AmountsToWrap);
 
-        assertBalEqERC20(address(erc20), address(tokenOwner), 0);
+        assertBalERC20Eq(address(erc20), address(tokenOwner), 0);
         assertIsNotOwnerERC721(address(erc721), address(tokenOwner), erc721TokensToWrap);
-        assertBalEqERC1155(
+        assertBalERC1155Eq(
             address(erc1155),
             address(tokenOwner),
             erc1155TokensToWrap,
@@ -333,13 +333,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     function test_unwrap() public {
         uint256 tokenIdOfWrapped = _setup_unwrap();
 
-        assertBalEqERC20(address(erc20), address(multiwrap), erc20AmountToWrap);
+        assertBalERC20Eq(address(erc20), address(multiwrap), erc20AmountToWrap);
         assertIsOwnerERC721(address(erc721), address(multiwrap), erc721TokensToWrap);
-        assertBalEqERC1155(address(erc1155), address(multiwrap), erc1155TokensToWrap, erc1155AmountsToWrap);
+        assertBalERC1155Eq(address(erc1155), address(multiwrap), erc1155TokensToWrap, erc1155AmountsToWrap);
 
-        assertBalEqERC20(address(erc20), address(tokenOwner), 0);
+        assertBalERC20Eq(address(erc20), address(tokenOwner), 0);
         assertIsNotOwnerERC721(address(erc721), address(tokenOwner), erc721TokensToWrap);
-        assertBalEqERC1155(
+        assertBalERC1155Eq(
             address(erc1155),
             address(tokenOwner),
             erc1155TokensToWrap,
@@ -352,13 +352,13 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         assertEq(multiwrap.totalSupply(tokenIdOfWrapped), 0);
         assertEq(multiwrap.balanceOf(address(tokenOwner), tokenIdOfWrapped), 0);
 
-        assertBalEqERC20(address(erc20), address(tokenOwner), erc20AmountToWrap);
+        assertBalERC20Eq(address(erc20), address(tokenOwner), erc20AmountToWrap);
         assertIsOwnerERC721(address(erc721), address(tokenOwner), erc721TokensToWrap);
-        assertBalEqERC1155(address(erc1155), address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
+        assertBalERC1155Eq(address(erc1155), address(tokenOwner), erc1155TokensToWrap, erc1155AmountsToWrap);
 
-        assertBalEqERC20(address(erc20), address(multiwrap), 0);
+        assertBalERC20Eq(address(erc20), address(multiwrap), 0);
         assertIsNotOwnerERC721(address(erc721), address(multiwrap), erc721TokensToWrap);
-        assertBalEqERC1155(
+        assertBalERC1155Eq(
             address(erc1155),
             address(multiwrap),
             erc1155TokensToWrap,
