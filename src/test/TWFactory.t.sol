@@ -73,7 +73,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
     }
 
     function test_addImplementation_newImpl() public {
-
         vm.prank(factoryAdmin);
         _factory.addImplementation(address(mockModule));
 
@@ -82,7 +81,7 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bytes32 contractType = mockModuleV2.contractType();
         uint256 moduleVersion = mockModuleV2.contractVersion();
         uint256 moduleVersionOnFactory = _factory.currentVersion(contractType);
-        
+
         vm.prank(factoryAdmin);
         _factory.addImplementation(address(mockModuleV2));
 
