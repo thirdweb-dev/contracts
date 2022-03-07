@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import "../interfaces/token/ITokenERC1155.sol";
+import { ITokenERC1155 } from "../interfaces/token/ITokenERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -300,10 +300,6 @@ contract TokenERC1155 is
         contractURI = _uri;
     }
 
-    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTrustedForwarder(_forwarder);
-    }
-
     ///     =====   Getter functions    =====
 
     /// @dev Returns the platform fee bps and recipient.
@@ -486,15 +482,6 @@ contract TokenERC1155 is
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
             interfaceId == type(IERC2981Upgradeable).interfaceId;
-    }
-
-    function isTrustedForwarder(address forwarder)
-        public
-        view
-        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
-        returns (bool)
-    {
-        return super.isTrustedForwarder(forwarder);
     }
 
     function _msgSender()

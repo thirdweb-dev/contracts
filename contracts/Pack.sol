@@ -6,7 +6,6 @@ import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
 import "./interfaces/IThirdwebOwnable.sol";
 import "./interfaces/IThirdwebRoyalty.sol";
-import "./interfaces/IThirdwebForwarder.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -30,7 +29,6 @@ contract Pack is
     IThirdwebContract,
     IThirdwebOwnable,
     IThirdwebRoyalty,
-    IThirdwebForwarder,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -360,10 +358,6 @@ contract Pack is
         contractURI = _uri;
     }
 
-    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTrustedForwarder(_forwarder);
-    }
-
     /**
      *   Internal functions.
      **/
@@ -529,15 +523,6 @@ contract Pack is
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();
-    }
-
-    function isTrustedForwarder(address forwarder)
-        public
-        view
-        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
-        returns (bool)
-    {
-        return super.isTrustedForwarder(forwarder);
     }
 
     /**

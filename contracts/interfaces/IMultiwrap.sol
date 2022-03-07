@@ -2,11 +2,10 @@
 pragma solidity ^0.8.11;
 
 import "./IThirdwebContract.sol";
-import "./IThirdwebForwarder.sol";
-import "./IThirdwebOwnable.sol";
 import "./IThirdwebRoyalty.sol";
+import "./IThirdwebOwnable.sol";
 
-interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty, IThirdwebForwarder {
+interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
     struct WrappedContents {
         address[] erc1155AssetContracts;
         uint256[][] erc1155TokensToWrap;

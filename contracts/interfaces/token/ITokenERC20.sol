@@ -3,17 +3,10 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../IThirdwebContract.sol";
-import "../IThirdwebForwarder.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 
-interface ITokenERC20 is
-    IThirdwebContract,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IThirdwebForwarder,
-    IERC20Upgradeable
-{
+interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IERC20Upgradeable {
     /**
      *  @notice The body of a request to mint tokens.
      *

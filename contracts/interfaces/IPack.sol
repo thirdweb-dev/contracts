@@ -2,11 +2,10 @@
 pragma solidity ^0.8.11;
 
 import "./IThirdwebContract.sol";
-import "./IThirdwebForwarder.sol";
 import "./IThirdwebOwnable.sol";
 import "./IThirdwebRoyalty.sol";
 
-interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty, IThirdwebForwarder {
+interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
     /**
      *  @notice A pack can contain ERC1155 tokens from n number of ERC1155 contracts.
      *          You can add any kinds of tokens to a pack via Multiwrap.

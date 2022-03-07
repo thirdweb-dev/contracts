@@ -243,10 +243,6 @@ contract Multiwrap is
         contractURI = _uri;
     }
 
-    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTrustedForwarder(_forwarder);
-    }
-
     ///     =====   Internal functions  =====
 
     function transfer20(
@@ -460,14 +456,5 @@ contract Multiwrap is
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();
-    }
-
-    function isTrustedForwarder(address forwarder)
-        public
-        view
-        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
-        returns (bool)
-    {
-        return super.isTrustedForwarder(forwarder);
     }
 }

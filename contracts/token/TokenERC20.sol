@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 //Interface
-import "../interfaces/token/ITokenERC20.sol";
+import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -345,19 +345,6 @@ contract TokenERC20 is
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
     function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
-    }
-
-    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTrustedForwarder(_forwarder);
-    }
-
-    function isTrustedForwarder(address forwarder)
-        public
-        view
-        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
-        returns (bool)
-    {
-        return super.isTrustedForwarder(forwarder);
     }
 
     function _msgSender()

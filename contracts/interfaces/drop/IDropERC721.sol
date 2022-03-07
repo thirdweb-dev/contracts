@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "../IThirdwebContract.sol";
-import "../IThirdwebForwarder.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "../IThirdwebRoyalty.sol";
@@ -27,7 +26,6 @@ interface IDropERC721 is
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
-    IThirdwebForwarder,
     IDropClaimCondition
 {
     /// @dev Emitted when tokens are claimed.

@@ -3,9 +3,8 @@ pragma solidity ^0.8.11;
 
 import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebForwarder.sol";
 
-interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee, IThirdwebForwarder {
+interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
     /// @notice Type of the tokens that can be listed for sale.
     enum TokenType {
         ERC1155,

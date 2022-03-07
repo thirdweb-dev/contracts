@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "../IThirdwebContract.sol";
-import "../IThirdwebForwarder.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 import "./IDropClaimCondition.sol";
@@ -15,13 +14,7 @@ import "./IDropClaimCondition.sol";
  *  defined in that time window's claim conditions.
  */
 
-interface IDropERC20 is
-    IThirdwebContract,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IThirdwebForwarder,
-    IDropClaimCondition
-{
+interface IDropERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IDropClaimCondition {
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,

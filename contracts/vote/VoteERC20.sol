@@ -131,10 +131,6 @@ contract VoteERC20 is
         contractURI = uri;
     }
 
-    function setTrustedForwarder(address _forwarder) external onlyGovernance {
-        _setTrustedForwarder(_forwarder);
-    }
-
     function proposalThreshold()
         public
         view

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import "../interfaces/drop/IDropERC1155.sol";
+import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -405,10 +405,6 @@ contract DropERC1155 is
         contractURI = _uri;
     }
 
-    function setTrustedForwarder(address _forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTrustedForwarder(_forwarder);
-    }
-
     //      =====   Getter functions  =====
 
     /// @dev Returns the platform fee bps and recipient.
@@ -667,14 +663,5 @@ contract DropERC1155 is
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();
-    }
-
-    function isTrustedForwarder(address forwarder)
-        public
-        view
-        override(IThirdwebForwarder, ERC2771ContextUpgradeable)
-        returns (bool)
-    {
-        return super.isTrustedForwarder(forwarder);
     }
 }
