@@ -23,6 +23,7 @@ import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
+import "./lib/MultiTokenTransferLib.sol";
 
 /**
  *      - Wrap multiple ERC721 and ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
@@ -83,7 +84,7 @@ contract Multiwrap is
     mapping(uint256 => string) private uriForShares;
 
     /// @dev Mapping from tokenId => wrapped contents of the token.
-    mapping(uint256 => WrappedContents) private wrappedContents;
+    mapping(uint256 => MultiTokenTransferLib.MultiToken) private wrappedContents;
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -141,7 +142,7 @@ contract Multiwrap is
 
     /// @dev Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
     function wrap(
-        WrappedContents calldata _wrappedContents,
+        MultiTokenTransferLib.MultiToken calldata _wrappedContents,
         uint256 _shares,
         string calldata _uriForShares
     ) external payable nonReentrant returns (uint256 tokenId) {
@@ -154,9 +155,7 @@ contract Multiwrap is
         _mint(_msgSender(), tokenId, _shares, "");
         totalShares[tokenId] = _shares;
 
-        transfer1155(_msgSender(), address(this), _wrappedContents);
-        transfer721(_msgSender(), address(this), _wrappedContents);
-        transfer20(_msgSender(), address(this), _wrappedContents);
+        MultiTokenTransferLib.transferAll(_msgSender(), address(this), _wrappedContents);
 
         emit TokensWrapped(_msgSender(), tokenId, _wrappedContents);
     }
@@ -172,7 +171,8 @@ contract Multiwrap is
 
         uint256 totalSharesOfToken = totalShares[_tokenId];
         bool isTotalRedemption = _amountToRedeem == totalSharesOfToken;
-        WrappedContents memory wrappedContents_ = wrappedContents[_tokenId];
+
+        MultiTokenTransferLib.MultiToken memory wrappedContents_ = wrappedContents[_tokenId];
 
         burn(_msgSender(), _tokenId, _amountToRedeem);
 
@@ -181,11 +181,10 @@ contract Multiwrap is
         }
 
         if (isTotalRedemption) {
-            transfer1155(address(this), _sendTo, wrappedContents_);
-            transfer721(address(this), _sendTo, wrappedContents_);
+            MultiTokenTransferLib.transferAll(address(this), _sendTo, wrappedContents_);
+        } else {
+            transfer20ByShares(address(this), _sendTo, wrappedContents_, _amountToRedeem, totalSharesOfToken);
         }
-
-        transfer20ByShares(address(this), _sendTo, wrappedContents_, _amountToRedeem, totalSharesOfToken);
 
         emit TokensUnwrapped(_msgSender(), _sendTo, _tokenId, _amountToRedeem, wrappedContents_);
     }
@@ -245,37 +244,21 @@ contract Multiwrap is
 
     ///     =====   Internal functions  =====
 
-    function transfer20(
-        address _from,
-        address _to,
-        WrappedContents memory _wrappedContents
-    ) internal {
-        uint256 i;
-
-        bool isValidData = _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
-        require(isValidData, "invalid erc20 wrap");
-        for (i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
-            CurrencyTransferLib.transferCurrency(
-                _wrappedContents.erc20AssetContracts[i],
-                _from,
-                _to,
-                _wrappedContents.erc20AmountsToWrap[i]
-            );
-        }
-    }
-
     function transfer20ByShares(
         address _from,
         address _to,
-        WrappedContents memory _wrappedContents,
+        MultiTokenTransferLib.MultiToken memory _wrappedContents,
         uint256 _sharesToAccount,
         uint256 _totalShares
     ) internal {
-        uint256 i;
+        require(
+            _wrappedContents.erc1155AssetContracts.length == 0 && _wrappedContents.erc721AssetContracts.length == 0,
+            "cannot unwrap by shares"
+        );
 
         bool isValidData = _wrappedContents.erc20AssetContracts.length == _wrappedContents.erc20AmountsToWrap.length;
         if (isValidData) {
-            for (i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
+            for (uint256 i = 0; i < _wrappedContents.erc20AssetContracts.length; i += 1) {
                 isValidData = _wrappedContents.erc20AmountsToWrap[i] % _totalShares == 0;
 
                 if (!isValidData) {
@@ -292,64 +275,6 @@ contract Multiwrap is
             }
         }
         require(isValidData, "invalid erc20 wrap");
-    }
-
-    function transfer721(
-        address _from,
-        address _to,
-        WrappedContents memory _wrappedContents
-    ) internal {
-        uint256 i;
-        uint256 j;
-
-        bool isValidData = _wrappedContents.erc721AssetContracts.length == _wrappedContents.erc721TokensToWrap.length;
-        if (isValidData) {
-            for (i = 0; i < _wrappedContents.erc721AssetContracts.length; i += 1) {
-                IERC721Upgradeable assetContract = IERC721Upgradeable(_wrappedContents.erc721AssetContracts[i]);
-
-                for (j = 0; j < _wrappedContents.erc721TokensToWrap[i].length; j += 1) {
-                    assetContract.safeTransferFrom(_from, _to, _wrappedContents.erc721TokensToWrap[i][j]);
-                }
-            }
-        }
-        require(isValidData, "invalid erc721 wrap");
-    }
-
-    function transfer1155(
-        address _from,
-        address _to,
-        WrappedContents memory _wrappedContents
-    ) internal {
-        uint256 i;
-        uint256 j;
-
-        bool isValidData = _wrappedContents.erc1155AssetContracts.length ==
-            _wrappedContents.erc1155TokensToWrap.length &&
-            _wrappedContents.erc1155AssetContracts.length == _wrappedContents.erc1155AmountsToWrap.length;
-
-        if (isValidData) {
-            for (i = 0; i < _wrappedContents.erc1155AssetContracts.length; i += 1) {
-                isValidData =
-                    _wrappedContents.erc1155TokensToWrap[i].length == _wrappedContents.erc1155AmountsToWrap[i].length;
-
-                if (!isValidData) {
-                    break;
-                }
-
-                IERC1155Upgradeable assetContract = IERC1155Upgradeable(_wrappedContents.erc1155AssetContracts[i]);
-
-                for (j = 0; j < _wrappedContents.erc1155TokensToWrap[i].length; j += 1) {
-                    assetContract.safeTransferFrom(
-                        _from,
-                        _to,
-                        _wrappedContents.erc1155TokensToWrap[i][j],
-                        _wrappedContents.erc1155AmountsToWrap[i][j],
-                        ""
-                    );
-                }
-            }
-        }
-        require(isValidData, "invalid erc1155 wrap");
     }
 
     /// @dev See EIP-2981
