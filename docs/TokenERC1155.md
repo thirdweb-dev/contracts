@@ -329,7 +329,7 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address _trustedForwarder, address _primarySaleRecipient, address _royaltyRecipient, uint128 _royaltyBps, uint128 _platformFeeBps, address _platformFeeRecipient) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _primarySaleRecipient, address _royaltyRecipient, uint128 _royaltyBps, uint128 _platformFeeBps, address _platformFeeRecipient) external nonpayable
 ```
 
 
@@ -344,7 +344,7 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _name | string | undefined
 | _symbol | string | undefined
 | _contractURI | string | undefined
-| _trustedForwarder | address | undefined
+| _trustedForwarders | address[] | undefined
 | _primarySaleRecipient | address | undefined
 | _royaltyRecipient | address | undefined
 | _royaltyBps | uint128 | undefined

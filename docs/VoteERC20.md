@@ -284,7 +284,7 @@ function hashProposal(address[] targets, uint256[] values, bytes[] calldatas, by
 ### initialize
 
 ```solidity
-function initialize(string _name, string _contractURI, address _trustedForwarder, address _token, uint256 _initialVotingDelay, uint256 _initialVotingPeriod, uint256 _initialProposalThreshold, uint256 _initialVoteQuorumFraction) external nonpayable
+function initialize(string _name, string _contractURI, address[] _trustedForwarders, address _token, uint256 _initialVotingDelay, uint256 _initialVotingPeriod, uint256 _initialProposalThreshold, uint256 _initialVoteQuorumFraction) external nonpayable
 ```
 
 
@@ -297,7 +297,7 @@ function initialize(string _name, string _contractURI, address _trustedForwarder
 |---|---|---|
 | _name | string | undefined
 | _contractURI | string | undefined
-| _trustedForwarder | address | undefined
+| _trustedForwarders | address[] | undefined
 | _token | address | undefined
 | _initialVotingDelay | uint256 | undefined
 | _initialVotingPeriod | uint256 | undefined
