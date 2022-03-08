@@ -5,31 +5,40 @@ import "./IThirdwebContract.sol";
 import "./IThirdwebOwnable.sol";
 import "./IThirdwebRoyalty.sol";
 
+import "../lib/MultiTokenTransferLib.sol";
+
 interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
+
     /**
-     *  @notice A pack can contain ERC1155 tokens from n number of ERC1155 contracts.
-     *          You can add any kinds of tokens to a pack via Multiwrap.
+     *  @notice The number of fungible tokens to distribute as a unit, on a pack open.
      */
-    struct PackContents {
-        address[] erc1155AssetContracts;
-        uint256[][] erc1155TokensToWrap;
-        uint256[][] erc1155AmountsToWrap;
+    struct TokensPerOpen {
+        uint256[] erc20TokensPerOpen;
+        uint256[][] erc1155TokensPerOpen;
+    }
+
+    /// @dev The state of packs with a unique tokenId.
+    struct PackState {
+        string uri;
+        uint256 openStartTimestamp;
+        TokensPerOpen tokensPerOpen;
+        MultiTokenTransferLib.MultiToken tokensPacked;
     }
 
     /**
      *  @notice Creates a pack with the stated contents.
      *
-     *  @param contents The contents of the packs to be created.
+     *  @param tokensToPack The contents of the packs to be created.
+     *  @param tokensPerOpen The number of erc20 and erc1155 tokens to distribute as a unit per pack open.
      *  @param uri The (metadata) URI assigned to the packs created.
      *  @param openStartTimestamp The timestamp after which a pack is opened.
-     *  @param nftsPerOpen The number of NFTs received on opening one pack.
      */
     function createPack(
-        PackContents calldata contents,
+        MultiTokenTransferLib.MultiToken calldata tokensToPack,
+        TokensPerOpen calldata tokensPerOpen,
         string calldata uri,
-        uint128 openStartTimestamp,
-        uint128 nftsPerOpen
-    ) external;
+        uint256 openStartTimestamp
+    ) external returns (uint256 packId, uint256 packAmount);
 
     /**
      *  @notice Lets a pack owner open a pack and receive the pack's NFTs.
@@ -37,5 +46,5 @@ interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param packId The identifier of the pack to open.
      *  @param amountToOpen The number of packs to open at once.
      */
-    function openPack(uint256 packId, uint256 amountToOpen) external;
+    function openPack(uint256 packId, uint256 amountToOpen, address receiver) external;
 }
