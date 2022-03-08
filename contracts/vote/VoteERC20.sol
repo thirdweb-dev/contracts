@@ -63,7 +63,7 @@ contract VoteERC20 is
     function initialize(
         string memory _name,
         string memory _contractURI,
-        address[] calldata _trustedForwarders,
+        address[] memory _trustedForwarders,
         address _token,
         uint256 _initialVotingDelay,
         uint256 _initialVotingPeriod,

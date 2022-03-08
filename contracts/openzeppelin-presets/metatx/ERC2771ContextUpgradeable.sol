@@ -12,12 +12,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 abstract contract ERC2771ContextUpgradeable is Initializable, ContextUpgradeable {
     mapping(address => bool) private _trustedForwarder;
 
-    function __ERC2771Context_init(address[] calldata trustedForwarder) internal onlyInitializing {
+    function __ERC2771Context_init(address[] memory trustedForwarder) internal onlyInitializing {
         __Context_init_unchained();
         __ERC2771Context_init_unchained(trustedForwarder);
     }
 
-    function __ERC2771Context_init_unchained(address[] calldata trustedForwarder) internal onlyInitializing {
+    function __ERC2771Context_init_unchained(address[] memory trustedForwarder) internal onlyInitializing {
         for (uint256 i = 0; i < trustedForwarder.length; i++) {
             _trustedForwarder[trustedForwarder[i]] = true;
         }

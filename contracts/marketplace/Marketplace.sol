@@ -106,7 +106,7 @@ contract Marketplace is
     function initialize(
         address _defaultAdmin,
         string memory _contractURI,
-        address[] calldata _trustedForwarders,
+        address[] memory _trustedForwarders,
         address _platformFeeRecipient,
         uint256 _platformFeeBps
     ) external initializer {
@@ -123,7 +123,6 @@ contract Marketplace is
         platformFeeRecipient = _platformFeeRecipient;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(LISTER_ROLE, _defaultAdmin);
         _setupRole(LISTER_ROLE, address(0));
         _setupRole(ASSET_ROLE, address(0));
     }
@@ -142,7 +141,7 @@ contract Marketplace is
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(ListingParameters memory _params) external override {
-        require(_params.secondsUntilEndTime > 0, "secondsUntilEndTime must > 0.");
+        require(_params.secondsUntilEndTime > 0, "end time must > 0.");
 
         // Get values to populate `Listing`.
         uint256 listingId = getNextListingId();
@@ -152,10 +151,7 @@ contract Marketplace is
 
         require(tokenAmountToList > 0, "listing invalid quantity.");
         require(hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()), "does not have LISTER_ROLE.");
-        require(
-            hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract),
-            "listing unapproved asset."
-        );
+        require(hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract), "unapproved asset.");
 
         validateOwnershipAndApproval(
             tokenOwner,

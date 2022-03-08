@@ -86,7 +86,7 @@ contract DropERC20 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] calldata _trustedForwarders,
+        address[] memory _trustedForwarders,
         address _primarySaleRecipient,
         uint256 _platformFeeBps,
         address _platformFeeRecipient

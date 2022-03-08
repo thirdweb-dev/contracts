@@ -83,7 +83,16 @@ abstract contract BaseTest is DSTest, stdCheats {
             "TokenERC20",
             abi.encodeCall(
                 TokenERC20.initialize,
-                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, saleRecipient, platformFeeRecipient, platformFeeBps)
+                (
+                    deployer,
+                    NAME,
+                    SYMBOL,
+                    CONTRACT_URI,
+                    forwarders(),
+                    saleRecipient,
+                    platformFeeRecipient,
+                    platformFeeBps
+                )
             )
         );
         deployContractProxy(
@@ -95,7 +104,7 @@ abstract contract BaseTest is DSTest, stdCheats {
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
-                    forwarder,
+                    forwarders(),
                     saleRecipient,
                     royaltyRecipient,
                     royaltyBps,
@@ -113,7 +122,7 @@ abstract contract BaseTest is DSTest, stdCheats {
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
-                    forwarder,
+                    forwarders(),
                     saleRecipient,
                     royaltyRecipient,
                     royaltyBps,
@@ -126,7 +135,16 @@ abstract contract BaseTest is DSTest, stdCheats {
             "DropERC20",
             abi.encodeCall(
                 DropERC20.initialize,
-                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, saleRecipient, platformFeeBps, platformFeeRecipient)
+                (
+                    deployer,
+                    NAME,
+                    SYMBOL,
+                    CONTRACT_URI,
+                    forwarders(),
+                    saleRecipient,
+                    platformFeeBps,
+                    platformFeeRecipient
+                )
             )
         );
         deployContractProxy(
@@ -138,7 +156,7 @@ abstract contract BaseTest is DSTest, stdCheats {
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
-                    forwarder,
+                    forwarders(),
                     saleRecipient,
                     royaltyRecipient,
                     royaltyBps,
@@ -156,7 +174,7 @@ abstract contract BaseTest is DSTest, stdCheats {
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
-                    forwarder,
+                    forwarders(),
                     saleRecipient,
                     royaltyRecipient,
                     royaltyBps,
@@ -169,14 +187,14 @@ abstract contract BaseTest is DSTest, stdCheats {
             "Marketplace",
             abi.encodeCall(
                 Marketplace.initialize,
-                (deployer, CONTRACT_URI, forwarder, platformFeeRecipient, platformFeeBps)
+                (deployer, CONTRACT_URI, forwarders(), platformFeeRecipient, platformFeeBps)
             )
         );
         deployContractProxy(
             "Multiwrap",
             abi.encodeCall(
                 Multiwrap.initialize,
-                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarder, royaltyRecipient, royaltyBps)
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
             )
         );
     }
@@ -265,5 +283,11 @@ abstract contract BaseTest is DSTest, stdCheats {
         uint256 _amount
     ) internal {
         assertTrue(MockERC20(_token).balanceOf(_owner) >= _amount);
+    }
+
+    function forwarders() public view returns (address[] memory) {
+        address[] memory _forwarders = new address[](1);
+        _forwarders[0] = forwarder;
+        return _forwarders;
     }
 }

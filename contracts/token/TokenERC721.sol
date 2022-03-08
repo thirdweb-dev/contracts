@@ -108,7 +108,7 @@ contract TokenERC721 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] calldata _trustedForwarders,
+        address[] memory _trustedForwarders,
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,

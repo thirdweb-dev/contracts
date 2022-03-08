@@ -92,7 +92,7 @@ contract Multiwrap is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] calldata _trustedForwarders,
+        address[] memory _trustedForwarders,
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {

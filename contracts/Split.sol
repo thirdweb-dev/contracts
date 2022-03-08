@@ -47,7 +47,7 @@ contract Split is
     function initialize(
         address _defaultAdmin,
         string memory _contractURI,
-        address[] calldata _trustedForwarders,
+        address[] memory _trustedForwarders,
         address[] memory _payees,
         uint256[] memory _shares
     ) external initializer {
