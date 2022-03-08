@@ -47,12 +47,12 @@ contract Split is
     function initialize(
         address _defaultAdmin,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] calldata _trustedForwarders,
         address[] memory _payees,
         uint256[] memory _shares
     ) external initializer {
         // Initialize inherited contracts: most base -> most derived
-        __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarders);
         __PaymentSplitter_init(_payees, _shares);
 
         contractURI = _contractURI;

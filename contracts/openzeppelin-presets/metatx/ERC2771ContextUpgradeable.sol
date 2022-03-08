@@ -10,19 +10,21 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * @dev Context variant with ERC2771 support.
  */
 abstract contract ERC2771ContextUpgradeable is Initializable, ContextUpgradeable {
-    address private _trustedForwarder;
+    mapping(address => bool) private _trustedForwarder;
 
-    function __ERC2771Context_init(address trustedForwarder) internal onlyInitializing {
+    function __ERC2771Context_init(address[] calldata trustedForwarder) internal onlyInitializing {
         __Context_init_unchained();
         __ERC2771Context_init_unchained(trustedForwarder);
     }
 
-    function __ERC2771Context_init_unchained(address trustedForwarder) internal onlyInitializing {
-        _trustedForwarder = trustedForwarder;
+    function __ERC2771Context_init_unchained(address[] calldata trustedForwarder) internal onlyInitializing {
+        for (uint256 i = 0; i < trustedForwarder.length; i++) {
+            _trustedForwarder[trustedForwarder[i]] = true;
+        }
     }
 
     function isTrustedForwarder(address forwarder) public view virtual returns (bool) {
-        return forwarder == _trustedForwarder;
+        return _trustedForwarder[forwarder];
     }
 
     function _msgSender() internal view virtual override returns (address sender) {

@@ -92,13 +92,13 @@ contract Multiwrap is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] calldata _trustedForwarders,
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init("");
 
         // Initialize this contract's state.

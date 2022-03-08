@@ -126,7 +126,7 @@ contract DropERC1155 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] calldata _trustedForwarders,
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
@@ -135,7 +135,7 @@ contract DropERC1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __ERC2771Context_init_unchained(_trustedForwarder);
+        __ERC2771Context_init_unchained(_trustedForwarders);
         __ERC1155_init_unchained("");
 
         // Initialize this contract's state.

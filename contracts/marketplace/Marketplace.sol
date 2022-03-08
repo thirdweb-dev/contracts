@@ -106,13 +106,13 @@ contract Marketplace is
     function initialize(
         address _defaultAdmin,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] calldata _trustedForwarders,
         address _platformFeeRecipient,
         uint256 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarders);
 
         timeBuffer = 15 minutes;
         bidBufferBps = 500;

@@ -63,7 +63,7 @@ contract VoteERC20 is
     function initialize(
         string memory _name,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] calldata _trustedForwarders,
         address _token,
         uint256 _initialVotingDelay,
         uint256 _initialVotingPeriod,
@@ -71,7 +71,7 @@ contract VoteERC20 is
         uint256 _initialVoteQuorumFraction
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarders);
         __Governor_init(_name);
         __GovernorSettings_init(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold);
         __GovernorVotes_init(IVotesUpgradeable(_token));
