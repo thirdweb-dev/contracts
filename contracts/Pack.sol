@@ -149,14 +149,14 @@ contract Pack is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] memory _trustedForwarders,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _fees,
         bytes32 _keyHash
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarders);
         __ERC1155Preset_init(_defaultAdmin, _contractURI);
 
         // Initialize this contract's state.

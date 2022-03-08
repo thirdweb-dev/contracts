@@ -84,55 +84,15 @@ contract TokenERC20 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] memory _trustedForwarders,
         address _primarySaleRecipient,
         address _platformFeeRecipient,
         uint256 _platformFeeBps
     ) external initializer {
-        __TokenERC20_init(
-            _defaultAdmin,
-            _name,
-            _symbol,
-            _contractURI,
-            _trustedForwarder,
-            _primarySaleRecipient,
-            _platformFeeRecipient,
-            _platformFeeBps
-        );
-    }
-
-    function __TokenERC20_init(
-        address _defaultAdmin,
-        string memory _name,
-        string memory _symbol,
-        string memory _contractURI,
-        address _trustedForwarder,
-        address _primarySaleRecipient,
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) internal onlyInitializing {
-        // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init_unchained(_trustedForwarder);
+        __ERC2771Context_init_unchained(_trustedForwarders);
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
 
-        __TokenERC20_init_unchained(
-            _defaultAdmin,
-            _contractURI,
-            _primarySaleRecipient,
-            _platformFeeRecipient,
-            _platformFeeBps
-        );
-    }
-
-    function __TokenERC20_init_unchained(
-        address _defaultAdmin,
-        string memory _contractURI,
-        address _primarySaleRecipient,
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) internal onlyInitializing {
-        // Initialize this contract's state.
         contractURI = _contractURI;
         primarySaleRecipient = _primarySaleRecipient;
         platformFeeRecipient = _platformFeeRecipient;
@@ -142,7 +102,6 @@ contract TokenERC20 is
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(PAUSER_ROLE, _defaultAdmin);
-
         _setupRole(TRANSFER_ROLE, address(0));
     }
 

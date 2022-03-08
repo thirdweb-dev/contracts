@@ -117,7 +117,7 @@ contract TokenERC1155 is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _trustedForwarder,
+        address[] memory _trustedForwarders,
         address _primarySaleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
@@ -127,7 +127,7 @@ contract TokenERC1155 is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __EIP712_init("TokenERC1155", "1");
-        __ERC2771Context_init(_trustedForwarder);
+        __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init("");
 
         // Initialize this contract's state.
