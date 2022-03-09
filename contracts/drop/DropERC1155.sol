@@ -279,15 +279,16 @@ contract DropERC1155 is
 
         // if it's to reset restriction, all new claim phases would start at the end of the existing batch.
         // otherwise, the new claim phases would override the existing phases and limits from the existing start index
-        uint256 newStartIndex = existingPhaseCount;
+        uint256 newStartIndex = existingStartIndex;
         if (_resetLimitRestriction) {
             newStartIndex = existingStartIndex + existingPhaseCount;
         }
 
         uint256 lastConditionStartTimestamp;
         for (uint256 i = 0; i < _phases.length; i++) {
+            // only compare the 2nd++ phase start timestamp to the previous start timestamp
             require(
-                lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
+                i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."
             );
 
@@ -297,24 +298,25 @@ contract DropERC1155 is
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
 
-        // freeing up claim phases and claim limit
-        // if we are resetting restriction, then we'd clean up previous batch maps
-        // if we are not, then we'd only clean up unused claim phases and limits.
+        // freeing up claim phases and claim limit (gas refund)
+        // if we are resetting restriction, then we'd clean up previous batch map up to the new start index.
+        // if we are not, it means that we're updating, then we'd only clean up unused claim phases and limits.
+        // not deleting last claim timestamp maps because we don't have access to addresses. it's fine to not clean it up
+        // because the currentStartId decides which claim timestamp map to use.
         if (_resetLimitRestriction) {
-            for (uint256 i = 0; i < existingPhaseCount; i++) {
-                delete condition.phases[existingStartIndex + i];
-                delete condition.limitMerkleProofClaim[existingStartIndex + i];
-                // can't delete limitLastClaimTimestamp because we don't have addresses
+            for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
+                delete condition.phases[i];
+                delete condition.limitMerkleProofClaim[i];
             }
         } else {
+            // in the update scenario:
             // if there are more old (existing) phases than the newly set ones, delete all the remaining
-            // unused phases and limits
-            // if there are more new phases than old phases, then we'd only need to set the `length` properly
+            // unused phases and limits.
+            // if there are more new phases than old phases, then there's no excess claim condition to clean up.
             if (existingPhaseCount > _phases.length) {
                 for (uint256 i = _phases.length; i < existingPhaseCount; i++) {
                     delete condition.phases[newStartIndex + i];
                     delete condition.limitMerkleProofClaim[newStartIndex + i];
-                    // can't delete limitLastClaimTimestamp because we don't have addresses
                 }
             }
         }

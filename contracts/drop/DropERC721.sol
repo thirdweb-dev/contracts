@@ -392,15 +392,16 @@ contract DropERC721 is
 
         // if it's to reset restriction, all new claim phases would start at the end of the existing batch.
         // otherwise, the new claim phases would override the existing phases and limits from the existing start index
-        uint256 newStartIndex = existingPhaseCount;
+        uint256 newStartIndex = existingStartIndex;
         if (_resetLimitRestriction) {
             newStartIndex = existingStartIndex + existingPhaseCount;
         }
 
         uint256 lastConditionStartTimestamp;
         for (uint256 i = 0; i < _phases.length; i++) {
+            // only compare the 2nd++ phase start timestamp to the previous start timestamp
             require(
-                lastConditionStartTimestamp == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
+                i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."
             );
 
@@ -410,24 +411,25 @@ contract DropERC721 is
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
 
-        // freeing up claim phases and claim limit
-        // if we are resetting restriction, then we'd clean up previous batch maps
-        // if we are not, then we'd only clean up unused claim phases and limits.
+        // freeing up claim phases and claim limit (gas refund)
+        // if we are resetting restriction, then we'd clean up previous batch map up to the new start index.
+        // if we are not, it means that we're updating, then we'd only clean up unused claim phases and limits.
+        // not deleting last claim timestamp maps because we don't have access to addresses. it's fine to not clean it up
+        // because the currentStartId decides which claim timestamp map to use.
         if (_resetLimitRestriction) {
-            for (uint256 i = 0; i < existingPhaseCount; i++) {
-                delete claimCondition.phases[existingStartIndex + i];
-                delete claimCondition.limitMerkleProofClaim[existingStartIndex + i];
-                // can't delete limitLastClaimTimestamp because we don't have addresses
+            for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
+                delete claimCondition.phases[i];
+                delete claimCondition.limitMerkleProofClaim[i];
             }
         } else {
+            // in the update scenario:
             // if there are more old (existing) phases than the newly set ones, delete all the remaining
-            // unused phases and limits
-            // if there are more new phases than old phases, then we'd only need to set the `length` properly
+            // unused phases and limits.
+            // if there are more new phases than old phases, then there's no excess claim condition to clean up.
             if (existingPhaseCount > _phases.length) {
                 for (uint256 i = _phases.length; i < existingPhaseCount; i++) {
                     delete claimCondition.phases[newStartIndex + i];
                     delete claimCondition.limitMerkleProofClaim[newStartIndex + i];
-                    // can't delete limitLastClaimTimestamp because we don't have addresses
                 }
             }
         }
@@ -608,11 +610,9 @@ contract DropERC721 is
         // Update the supply minted under mint condition.
         claimCondition.phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
 
-        // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
-        // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
+        // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
+        // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         claimCondition.limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
-
-        // wallet count limit is global, not scoped to the phases
         walletClaimCount[_msgSender()] += _quantityBeingClaimed;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
