@@ -15,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
+import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
@@ -23,7 +24,6 @@ import "../lib/MerkleProof.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 // Thirdweb top-level
 import "../interfaces/ITWFee.sol";
