@@ -27,7 +27,6 @@ import "../lib/FeeType.sol";
 import "../interfaces/ITWFee.sol";
 
 contract DropERC20 is
-    IDropERC20,
     Initializable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
@@ -35,6 +34,7 @@ contract DropERC20 is
     ERC20BurnableUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
+    IDropERC20,
     AccessControlEnumerableUpgradeable
 {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
