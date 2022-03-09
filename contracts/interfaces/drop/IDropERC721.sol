@@ -113,8 +113,10 @@ interface IDropERC721 is
     /**
      *  @notice Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param _phases Claim conditions in ascending order by `startTimestamp`.
-     *  @param _resetLimitRestriction Whether to reset claim phases limit restriction. // TODO: clarify
+     *  @param phases                Claim conditions in ascending order by `startTimestamp`.
+     *  @param resetClaimEligibility Whether to reset `limitLastClaimTimestamp` and
+     *                               `limitMerkleProofClaim` values when setting new
+     *                               claim conditions.
      */
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetLimitRestriction) external;
+    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }
