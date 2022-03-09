@@ -260,8 +260,8 @@ contract DropERC20 is
 
         // if the current claim condition and has a merkle root and the provided proof is valid
         // if validMerkleProof is false, it means that claim condition does not have a merkle root
-        // if invalid proof is provided, the verifyClaimMerkleProof would fail on require.
-        if (validMerkleProof) {
+        // if invalid proofs are provided, the verifyClaimMerkleProof would revert.
+        if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
             claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
