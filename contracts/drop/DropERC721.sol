@@ -43,16 +43,13 @@ contract DropERC721 is
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
     uint256 private constant VERSION = 1;
 
-    /// @dev Only TRANSFER_ROLE holders can participate in transfers, when transfers are restricted.
+    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    /// @dev Max bps in the thirdweb system
+    /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
-
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The thirdweb contract with fee related information.
     ITWFee public immutable thirdwebFee;
@@ -587,7 +584,7 @@ contract DropERC721 is
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
-        if (_currency == NATIVE_TOKEN) {
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
