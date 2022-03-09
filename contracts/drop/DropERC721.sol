@@ -54,7 +54,7 @@ contract DropERC721 is
     /// @dev The thirdweb contract with fee related information.
     ITWFee public immutable thirdwebFee;
 
-    /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
+    /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
 
     /// @dev The next token ID of the NFT to "lazy mint".
@@ -63,45 +63,52 @@ contract DropERC721 is
     /// @dev The next token ID of the NFT that can be claimed.
     uint256 public nextTokenIdToClaim;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
-    /// @dev The max number of claim per wallet.
+    /// @dev The max number of NFTs a wallet can claim.
     uint256 public maxWalletClaimCount;
 
-    /// @dev Token max total supply for the collection.
+    /// @dev Global max total supply of NFTs.
     uint256 public maxTotalSupply;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all primary sales value.
     address private platformFeeRecipient;
 
-    /// @dev The recipient of who gets the royalty.
+    /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
 
-    /// @dev The percentage of royalty how much royalty in basis points.
+    /// @dev The (default) % of a sale to take as royalty (in basis points).
     uint128 private royaltyBps;
 
-    /// @dev The % of primary sales collected by the contract as fees.
+    /// @dev The % of primary sales collected as platform fees.
     uint128 private platformFeeBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
 
-    /// @dev end indices of each batch of tokens with the same baseURI
+    /// @dev Largest tokenId of each batch of tokens with the same baseURI
     uint256[] public baseURIIndices;
 
-    /// @dev Mapping from 'end token Id' => URI that overrides `baseURI + tokenId` convention.
+    /**
+     *  @dev Mapping from 'Largest tokenId of a batch of tokens with the same baseURI'
+     *       to base URI for the respective batch of tokens.
+    **/
     mapping(uint256 => string) private baseURI;
 
-    /// @dev End token Id => info related to the delayed reveal of the baseURI
+    /**
+     *  @dev Mapping from 'Largest tokenId of a batch of 'delayed-reveal' tokens with
+     *       the same baseURI' to encrypted base URI for the respective batch of tokens.
+    **/
     mapping(uint256 => bytes) public encryptedBaseURI;
 
-    /// @dev Mapping from address => number of NFTs a wallet claimed.
+    /// @dev Mapping from address => total number of NFTs a wallet has claimed.
     mapping(address => uint256) public walletClaimCount;
 
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
+    /// @dev The set of all claim conditions, at any given moment.
     ClaimConditionList public claimCondition;
 
     constructor(address _thirdwebFee) initializer {
@@ -133,8 +140,8 @@ contract DropERC721 is
         platformFeeBps = _platformFeeBps;
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-
         _owner = _defaultAdmin;
+
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
