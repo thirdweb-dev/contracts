@@ -104,13 +104,13 @@ contract DropERC721 is
     /**
      *  @dev Mapping from 'Largest tokenId of a batch of tokens with the same baseURI'
      *       to base URI for the respective batch of tokens.
-    **/
+     **/
     mapping(uint256 => string) private baseURI;
 
     /**
      *  @dev Mapping from 'Largest tokenId of a batch of 'delayed-reveal' tokens with
      *       the same baseURI' to encrypted base URI for the respective batch of tokens.
-    **/
+     **/
     mapping(uint256 => bytes) public encryptedBaseURI;
 
     /// @dev Mapping from address => total number of NFTs a wallet has claimed.
@@ -378,7 +378,6 @@ contract DropERC721 is
 
         uint256 lastConditionStartTimestamp;
         for (uint256 i = 0; i < _phases.length; i++) {
-
             require(
                 i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."

@@ -57,7 +57,7 @@ interface IDropClaimCondition {
      *  @param currentStartId           Acts as the uid for each claim condition. Incremented
      *                                  by one every time a claim condition is created.
      *
-     *  @param count                    The total number of phases / claim conditions in the list 
+     *  @param count                    The total number of phases / claim conditions in the list
      *                                  of claim conditions.
      *
      *  @param phases                   The claim conditions at a given uid. Claim conditions

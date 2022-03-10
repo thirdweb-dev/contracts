@@ -13,15 +13,15 @@ import "./IDropClaimCondition.sol";
  *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens. The
  *  `DropERC721` contract is a distribution mechanism for ERC721 tokens.
  *
- *  A minter wallet (i.e. holder of `MINTER_ROLE`) can (lazy)mint 'n' tokens 
+ *  A minter wallet (i.e. holder of `MINTER_ROLE`) can (lazy)mint 'n' tokens
  *  at once by providing a single base URI for all tokens being lazy minted.
- *  The URI for each of the 'n' tokens lazy minted is the provided base URI + 
+ *  The URI for each of the 'n' tokens lazy minted is the provided base URI +
  *  `{tokenId}` of the respective token. (e.g. "ipsf://Qmece.../1").
  *
  *  A minter can choose to lazy mint 'delayed-reveal' tokens. More on 'delayed-reveal'
  *  tokens in [this article](https://blog.thirdweb.com/delayed-reveal-nfts).
  *
- *  A contract admin (i.e. holder of `DEFAULT_ADMIN_ROLE`) can create claim conditions 
+ *  A contract admin (i.e. holder of `DEFAULT_ADMIN_ROLE`) can create claim conditions
  *  with non-overlapping time windows, and accounts can claim the tokens according to
  *  restrictions defined in the claim condition that is active at the time of the transaction.
  */
