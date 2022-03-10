@@ -10,15 +10,20 @@ import "../IThirdwebOwnable.sol";
 import "./IDropClaimCondition.sol";
 
 /**
- *  `LazyMintERC721` is an ERC 721 contract.
+ *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens. The
+ *  `DropERC721` contract is a distribution mechanism for ERC721 tokens.
  *
- *  It takes in a base URI for every `n` tokens lazy minted at once. The URI
- *  for each of the `n` tokens lazy minted is the provided baseURI + `${tokenId}`
- *  (e.g. "ipsf://Qmece.../1").
+ *  A minter wallet (i.e. holder of `MINTER_ROLE`) can (lazy)mint 'n' tokens
+ *  at once by providing a single base URI for all tokens being lazy minted.
+ *  The URI for each of the 'n' tokens lazy minted is the provided base URI +
+ *  `{tokenId}` of the respective token. (e.g. "ipsf://Qmece.../1").
  *
- *  The module admin can create claim conditions with non-overlapping time windows,
- *  and accounts can claim the tokens, in a given time window, according to restrictions
- *  defined in that time window's claim conditions.
+ *  A minter can choose to lazy mint 'delayed-reveal' tokens. More on 'delayed-reveal'
+ *  tokens in [this article](https://blog.thirdweb.com/delayed-reveal-nfts).
+ *
+ *  A contract admin (i.e. holder of `DEFAULT_ADMIN_ROLE`) can create claim conditions
+ *  with non-overlapping time windows, and accounts can claim the tokens according to
+ *  restrictions defined in the claim condition that is active at the time of the transaction.
  */
 
 interface IDropERC721 is
@@ -42,69 +47,76 @@ interface IDropERC721 is
     /// @dev Emitted when tokens are lazy minted.
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 
-    /// @dev Emitted when the URI for a batch of NFTs is revealed.
+    /// @dev Emitted when the URI for a batch of 'delayed-reveal' NFTs is revealed.
     event NFTRevealed(uint256 endTokenId, string revealedURI);
 
-    /// @dev Emitted when new mint conditions are set for a token.
+    /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
-    /// @dev Emitted when a new sale recipient is set.
+    /// @dev Emitted when a new primary sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
-    /// @dev Emitted when fee on primary sales is updated.
+    /// @dev Emitted when fee platform fee recipient or bps is updated.
     event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
-    /// @dev Emitted when a new Owner is set.
+    /// @dev Emitted when a new owner is set.
     event OwnerUpdated(address prevOwner, address newOwner);
 
-    /// @dev Emitted when a max total supply is set for a token.
+    /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
-    /// @dev Emitted when a wallet claim count is updated.
+    /// @dev Emitted when the wallet claim count for an address is updated.
     event WalletClaimCountUpdated(address indexed wallet, uint256 count);
 
-    /// @dev Emitted when the max wallet claim count is updated.
+    /// @dev Emitted when the global max wallet claim count is updated.
     event MaxWalletClaimCountUpdated(uint256 count);
 
     /**
-     *  @notice Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
-     *          to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
+     *  @notice Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
+     *          The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
      *
-     *  @param _amount The amount of tokens (each with a unique tokenId) to lazy mint.
-     *  @param _baseURIForTokens The URI for the tokenIds of NFTs minted is baseURI + `${tokenId}`.
-     *  @param _encryptedBaseURI Optional -- for delayed-reveal NFTs.
+     *  @param amount           The amount of NFTs to lazy mint.
+     *  @param baseURIForTokens The URI for the NFTs to lazy mint. If lazy minting
+     *                           'delayed-reveal' NFTs, the is a URI for NFTs in the
+     *                           un-revealed state.
+     *  @param encryptedBaseURI If lazy minting 'delayed-reveal' NFTs, this is the
+     *                           result of encrypting the URI of the NFTs in the revealed
+     *                           state.
      */
     function lazyMint(
-        uint256 _amount,
-        string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        uint256 amount,
+        string calldata baseURIForTokens,
+        bytes calldata encryptedBaseURI
     ) external;
 
     /**
-     *  @notice Lets an account claim a given quantity of tokens.
+     *  @notice Lets an account claim a given quantity of NFTs.
      *
-     *  @param _receiver The receiver of the NFTs to claim.
-     *  @param _quantity The quantity of tokens to claim.
-     *  @param _currency The currency in which to pay for the claim.
-     *  @param _pricePerToken The price per token to pay for the claim.
-     *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
-     *                 of the mint conditions that apply.
-     *  @param _proofMaxQuantityPerTransaction The maximum claim quantity per transactions that included in the merkle proof.
+     *  @param receiver                       The receiver of the NFTs to claim.
+     *  @param quantity                       The quantity of NFTs to claim.
+     *  @param currency                       The currency in which to pay for the claim.
+     *  @param pricePerToken                  The price per token to pay for the claim.
+     *  @param proofs                         The proof of the claimer's inclusion in the merkle root allowlist
+     *                                        of the claim conditions that apply.
+     *  @param proofMaxQuantityPerTransaction (Optional) The maximum number of NFTs an address included in an
+     *                                        allowlist can claim.
      */
     function claim(
-        address _receiver,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction
+        address receiver,
+        uint256 quantity,
+        address currency,
+        uint256 pricePerToken,
+        bytes32[] calldata proofs,
+        uint256 proofMaxQuantityPerTransaction
     ) external payable;
 
     /**
-     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+     *  @notice Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param _phases Mint conditions in ascending order by `startTimestamp`.
-     *  @param _resetLimitRestriction To reset claim phases limit restriction.
+     *  @param phases                Claim conditions in ascending order by `startTimestamp`.
+     *  @param resetClaimEligibility Whether to reset `limitLastClaimTimestamp` and
+     *                               `limitMerkleProofClaim` values when setting new
+     *                               claim conditions.
      */
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetLimitRestriction) external;
+    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }

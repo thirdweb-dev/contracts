@@ -12,6 +12,8 @@ pragma solidity ^0.8.11;
  * Note: the hashing algorithm should be keccak256 and pair sorting should be enabled.
  *
  * See `test/utils/cryptography/MerkleProof.test.js` for some examples.
+ *
+ * Source: https://github.com/ensdomains/governance/blob/master/contracts/MerkleProof.sol
  */
 library MerkleProof {
     /**
