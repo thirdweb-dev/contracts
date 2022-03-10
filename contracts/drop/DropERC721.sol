@@ -353,7 +353,7 @@ contract DropERC721 is
     }
 
     /// @dev Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetLimitRestriction)
+    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetClaimEligibility)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
@@ -364,12 +364,12 @@ contract DropERC721 is
          *  `limitLastClaimTimestamp` and `limitMerkleProofClaim` are mappings that use a
          *  claim condition's UID as a key.
          *
-         *  If `_resetLimitRestriction == true`, we assign completely new UIDs to the claim
+         *  If `_resetClaimEligibility == true`, we assign completely new UIDs to the claim
          *  conditions in `_phases`, effectively resetting the restrictions on claims expressed
          *  by `limitLastClaimTimestamp` and `limitMerkleProofClaim`.
          */
         uint256 newStartIndex = existingStartIndex;
-        if (_resetLimitRestriction) {
+        if (_resetClaimEligibility) {
             newStartIndex = existingStartIndex + existingPhaseCount;
         }
 
@@ -392,14 +392,14 @@ contract DropERC721 is
         /**
          *  Gas refunds (as much as possible)
          *
-         *  If `_resetLimitRestriction == true`, we assign completely new UIDs to the claim
+         *  If `_resetClaimEligibility == true`, we assign completely new UIDs to the claim
          *  conditions in `_phases`. So, we delete claim conditions with UID < `newStartIndex`.
          *
-         *  If `_resetLimitRestriction == false`, and there are more existing claim conditions
+         *  If `_resetClaimEligibility == false`, and there are more existing claim conditions
          *  than in `_phases`, we delete the existing claim conditions that don't get replaced
          *  by the conditions in `_phases`.
          */
-        if (_resetLimitRestriction) {
+        if (_resetClaimEligibility) {
             for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
                 delete claimCondition.phases[i];
                 delete claimCondition.limitMerkleProofClaim[i];
