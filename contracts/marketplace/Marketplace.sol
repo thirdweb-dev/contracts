@@ -102,6 +102,9 @@ contract Marketplace is
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
+    /// @dev Lets the contract receives native tokens from `nativeTokenWrapper` withdraw.
+    receive() external payable {}
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,

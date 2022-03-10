@@ -9,6 +9,10 @@ contract WETH9 is ERC20 {
 
     constructor() ERC20("Wrapped Ether", "WETH") {}
 
+    receive() external payable virtual {
+        deposit();
+    }
+
     function deposit() public payable {
         _mint(msg.sender, msg.value);
         emit Deposit(msg.sender, msg.value);
