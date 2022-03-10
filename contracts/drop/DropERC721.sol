@@ -361,16 +361,25 @@ contract DropERC721 is
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
-        // if it's to reset restriction, all new claim phases would start at the end of the existing batch.
-        // otherwise, the new claim phases would override the existing phases and limits from the existing start index
+        /**
+         *  `limitLastClaimTimestamp` and `limitMerkleProofClaim` are mappings that use a
+         *  claim condition's UID as a key.
+         *
+         *  If `_resetLimitRestriction == true`, we assign completely new UIDs to the claim
+         *  conditions in `_phases`, effectively resetting the restrictions on claims expressed
+         *  by `limitLastClaimTimestamp` and `limitMerkleProofClaim`.
+         */
         uint256 newStartIndex = existingStartIndex;
         if (_resetLimitRestriction) {
             newStartIndex = existingStartIndex + existingPhaseCount;
         }
 
+        claimCondition.count = _phases.length;
+        claimCondition.currentStartId = newStartIndex;
+
         uint256 lastConditionStartTimestamp;
         for (uint256 i = 0; i < _phases.length; i++) {
-            // only compare the 2nd++ phase start timestamp to the previous start timestamp
+
             require(
                 i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."
@@ -381,22 +390,23 @@ contract DropERC721 is
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
-
-        // freeing up claim phases and claim limit (gas refund)
-        // if we are resetting restriction, then we'd clean up previous batch map up to the new start index.
-        // if we are not, it means that we're updating, then we'd only clean up unused claim phases and limits.
-        // not deleting last claim timestamp maps because we don't have access to addresses. it's fine to not clean it up
-        // because the currentStartId decides which claim timestamp map to use.
+        
+        /**
+         *  Gas refunds (as much as possible)
+         *
+         *  If `_resetLimitRestriction == true`, we assign completely new UIDs to the claim
+         *  conditions in `_phases`. So, we delete claim conditions with UID < `newStartIndex`.
+         *
+         *  If `_resetLimitRestriction == false`, and there are more existing claim conditions
+         *  than in `_phases`, we delete the existing claim conditions that don't get replaced
+         *  by the conditions in `_phases`.
+         */
         if (_resetLimitRestriction) {
             for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
                 delete claimCondition.phases[i];
                 delete claimCondition.limitMerkleProofClaim[i];
             }
         } else {
-            // in the update scenario:
-            // if there are more old (existing) phases than the newly set ones, delete all the remaining
-            // unused phases and limits.
-            // if there are more new phases than old phases, then there's no excess claim condition to clean up.
             if (existingPhaseCount > _phases.length) {
                 for (uint256 i = _phases.length; i < existingPhaseCount; i++) {
                     delete claimCondition.phases[newStartIndex + i];
@@ -404,9 +414,6 @@ contract DropERC721 is
                 }
             }
         }
-
-        claimCondition.count = _phases.length;
-        claimCondition.currentStartId = newStartIndex;
 
         emit ClaimConditionsUpdated(_phases);
     }
