@@ -329,6 +329,7 @@ contract DropERC721 is
         // Verify claim validity. If not valid, revert.
         verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken);
 
+        // Verify inclusion in allowlist
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
@@ -337,17 +338,15 @@ contract DropERC721 is
             _proofMaxQuantityPerTransaction
         );
 
-        // if the current claim condition and has a merkle root and the provided proof is valid
-        // if validMerkleProof is false, it means that claim condition does not have a merkle root
-        // if invalid proof is provided, the verifyClaimMerkleProof would fail on require.
         if (validMerkleProof) {
+            // Mark the claimer's use of their position in the allowlist.
             claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken);
 
-        // Mint the relevant tokens to claimer.
+        // Mint the relevant NFTs to claimer.
         transferClaimedTokens(_receiver, activeConditionId, _quantity);
 
         emit TokensClaimed(activeConditionId, _msgSender(), _receiver, tokenIdToClaim, _quantity);
@@ -390,7 +389,7 @@ contract DropERC721 is
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
-        
+
         /**
          *  Gas refunds (as much as possible)
          *
