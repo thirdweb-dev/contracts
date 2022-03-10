@@ -228,8 +228,8 @@ contract DropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
-     *       to `nextTokenIdToMint + _amount - 1`. The URIs for these tokenIds is baseURI + `${tokenId}`.
+     *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
+     *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
      */
     function lazyMint(
         uint256 _amount,
@@ -250,7 +250,7 @@ contract DropERC721 is
         emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
     }
 
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for the relevant NFTs.
+    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 index, bytes calldata _key)
         external
         onlyRole(MINTER_ROLE)
@@ -312,7 +312,7 @@ contract DropERC721 is
                             Claim logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets an account claim a given quantity of tokens, of a single tokenId, according to claim conditions.
+    /// @dev Lets an account claim NFTs.
     function claim(
         address _receiver,
         uint256 _quantity,
@@ -353,7 +353,7 @@ contract DropERC721 is
         emit TokensClaimed(activeConditionId, _msgSender(), _receiver, tokenIdToClaim, _quantity);
     }
 
-    /// @dev Lets a module admin set claim conditions.
+    /// @dev Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
     function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetLimitRestriction)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -411,7 +411,7 @@ contract DropERC721 is
         emit ClaimConditionsUpdated(_phases);
     }
 
-    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectClaimPrice(
         uint256 _quantityToClaim,
         address _currency,
@@ -440,7 +440,7 @@ contract DropERC721 is
         );
     }
 
-    /// @dev Transfers the tokens being claimed.
+    /// @dev Transfers the NFTs being claimed.
     function transferClaimedTokens(
         address _to,
         uint256 _conditionId,
@@ -464,7 +464,7 @@ contract DropERC721 is
         nextTokenIdToClaim = tokenIdToClaim;
     }
 
-    /// @dev Checks whether a request to claim tokens obeys the active mint condition.
+    /// @dev Checks a request to claim NFTs against the active claim condition's criteria.
     function verifyClaim(
         uint256 _conditionId,
         address _claimer,
@@ -497,6 +497,7 @@ contract DropERC721 is
         require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
     }
 
+    /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
     function verifyClaimMerkleProof(
         uint256 _conditionId,
         address _claimer,
@@ -536,7 +537,7 @@ contract DropERC721 is
         revert("no active mint condition.");
     }
 
-    /// @dev Returns the royalty recipient for a particular token Id.
+    /// @dev Returns the royalty recipient and bps for a particular token Id.
     function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
@@ -546,17 +547,17 @@ contract DropERC721 is
                 : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() external view returns (address, uint16) {
         return (platformFeeRecipient, uint16(platformFeeBps));
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns the default royalty recipient and bps.
     function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
-    /// @dev Returns the timestamp for next available claim for a claimer address
+    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
     function getClaimTimestamp(uint256 _conditionId, address _claimer)
         public
         view
@@ -575,7 +576,7 @@ contract DropERC721 is
         }
     }
 
-    /// @dev Returns the  mint condition for a given tokenId, at the given index.
+    /// @dev Returns the claim condition at the given uid.
     function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
         condition = claimCondition.phases[_conditionId];
     }
@@ -589,31 +590,32 @@ contract DropERC721 is
                         Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets a module admin set a claim limit on a wallet.
+    /// @dev Lets a contract admin set a claim count for a wallet.
     function setWalletClaimCount(address _claimer, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
         walletClaimCount[_claimer] = _count;
         emit WalletClaimCountUpdated(_claimer, _count);
     }
 
-    /// @dev Lets a module admin set a maximum number of claim per wallet.
+    /// @dev Lets a contract admin set a maximum number of NFTs that can be claimed by any wallet.
     function setMaxWalletClaimCount(uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxWalletClaimCount = _count;
         emit MaxWalletClaimCountUpdated(_count);
     }
 
-    /// @dev Lets a module admin set the maximum number of supply for the collection.
+    /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_maxTotalSupply < nextTokenIdToMint, "already minted more than desired max supply");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
 
-    /// @dev Lets a module admin set the default recipient of all primary sales.
+    /// @dev Lets a contract admin set the recipient for all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 
-    /// @dev Lets a module admin update the royalty bps and recipient.
+    /// @dev Lets a contract admin update the default royalty recipient and bps.
     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -626,7 +628,7 @@ contract DropERC721 is
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
-    /// @dev Lets a module admin set the royalty recipient for a particular token Id.
+    /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
     function setRoyaltyInfoForToken(
         uint256 _tokenId,
         address _recipient,
@@ -639,7 +641,7 @@ contract DropERC721 is
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
-    /// @dev Lets a module admin update the fees on primary sales.
+    /// @dev Lets a contract admin update the platform fee recipient and bps
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -652,16 +654,16 @@ contract DropERC721 is
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
-    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
+    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not contract admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
 
         emit OwnerUpdated(_prevOwner, _newOwner);
     }
 
-    /// @dev Lets a module admin set the URI for contract-level metadata.
+    /// @dev Lets a contract admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
@@ -673,7 +675,7 @@ contract DropERC721 is
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "caller is not owner nor approved");
         _burn(tokenId);
     }
 

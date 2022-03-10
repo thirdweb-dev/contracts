@@ -74,7 +74,7 @@ function baseURIIndices(uint256) external view returns (uint256)
 
 
 
-*end indices of each batch of tokens with the same baseURI*
+*Largest tokenId of each batch of tokens with the same baseURI*
 
 #### Parameters
 
@@ -133,7 +133,7 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 
 
-
+*The set of all claim conditions, at any given moment.*
 
 
 #### Returns
@@ -151,7 +151,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-*Returns the module type of the contract.*
+*Returns the type of the contract.*
 
 
 #### Returns
@@ -225,7 +225,7 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 
 
 
-*End token Id =&gt; info related to the delayed reveal of the baseURI*
+*Mapping from &#39;Largest tokenId of a batch of &#39;delayed-reveal&#39; tokens with       the same baseURI&#39; to encrypted base URI for the respective batch of tokens.**
 
 #### Parameters
 
@@ -603,7 +603,7 @@ function maxTotalSupply() external view returns (uint256)
 
 
 
-*Token max total supply for the collection.*
+*Global max total supply of NFTs.*
 
 
 #### Returns
@@ -620,7 +620,7 @@ function maxWalletClaimCount() external view returns (uint256)
 
 
 
-*The max number of claim per wallet.*
+*The max number of NFTs a wallet can claim.*
 
 
 #### Returns
@@ -749,7 +749,7 @@ function primarySaleRecipient() external view returns (address)
 
 
 
-*The adress that receives all primary sales value.*
+*The address that receives all primary sales value.*
 
 
 #### Returns
@@ -823,7 +823,7 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 
 
-*See EIP-2981*
+*Returns the royalty recipient and amount, given a tokenId and sale price.*
 
 #### Parameters
 
@@ -1254,7 +1254,7 @@ function walletClaimCount(address) external view returns (uint256)
 
 
 
-*Mapping from address =&gt; number of NFTs a wallet claimed.*
+*Mapping from address =&gt; total number of NFTs a wallet has claimed.*
 
 #### Parameters
 
