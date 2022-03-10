@@ -561,7 +561,7 @@ contract Marketplace is
         }
     }
 
-    /// @dev Checks whether an incoming bid should be the new current highest bid.
+    /// @dev Checks whether an incoming bid is the new current highest bid.
     function isNewWinningBid(
         uint256 _reserveAmount,
         uint256 _currentWinningBidAmount,
@@ -684,7 +684,7 @@ contract Marketplace is
         }
     }
 
-    /// @dev Payout stakeholders on sale
+    /// @dev Pays out stakeholders in a sale.
     function payout(
         address _payer,
         address _payee,
@@ -758,7 +758,7 @@ contract Marketplace is
         );
     }
 
-    /// @dev Validates that `_tokenOwner` owns and has approved Market to transfer tokens.
+    /// @dev Validates that `_tokenOwner` owns and has approved Market to transfer NFTs.
     function validateOwnershipAndApproval(
         address _tokenOwner,
         address _assetContract,
@@ -808,7 +808,7 @@ contract Marketplace is
             validateERC20BalAndAllowance(_payer, _listing.currency, settledTotalPrice);
         }
 
-        // Check iwhether token owner owns and has approved `quantityToBuy` amount of listing tokens from the listing.
+        // Check whether token owner owns and has approved `quantityToBuy` amount of listing tokens from the listing.
         validateOwnershipAndApproval(
             _listing.tokenOwner,
             _listing.assetContract,
@@ -852,7 +852,7 @@ contract Marketplace is
         totalListings += 1;
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() external view returns (address, uint16) {
         return (platformFeeRecipient, uint16(platformFeeBps));
     }
@@ -861,7 +861,7 @@ contract Marketplace is
                             Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets a module admin update the fees on platform fee
+    /// @dev Lets a contract admin update platform fee recipient and bps.
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -874,7 +874,7 @@ contract Marketplace is
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
-    /// @dev Lets a module admin set auction buffers
+    /// @dev Lets a contract admin set auction buffers.
     function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bidBufferBps < MAX_BPS, "invalid BPS.");
 
@@ -884,7 +884,7 @@ contract Marketplace is
         emit AuctionBuffersUpdated(_timeBuffer, _bidBufferBps);
     }
 
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
+    /// @dev Lets a contract admin set the URI for the contract-level metadata.
     function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         contractURI = _uri;
     }
