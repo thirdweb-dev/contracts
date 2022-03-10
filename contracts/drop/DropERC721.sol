@@ -338,7 +338,7 @@ contract DropERC721 is
             _proofMaxQuantityPerTransaction
         );
 
-        if (validMerkleProof) {
+        if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
             // Mark the claimer's use of their position in the allowlist.
             claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }

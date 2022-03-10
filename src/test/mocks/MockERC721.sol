@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 contract MockERC721 is ERC721Burnable {
-    uint256 nextTokenIdToMint;
+    uint256 public nextTokenIdToMint;
 
     constructor() ERC721("MockERC721", "MOCK") {}
 
