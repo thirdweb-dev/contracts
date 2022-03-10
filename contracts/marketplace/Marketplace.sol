@@ -30,6 +30,8 @@ import "../lib/FeeType.sol";
 // Thirdweb top-level
 import "../interfaces/ITWFee.sol";
 
+// TODO: format imports as external / internal -- even for DropERC721.
+
 contract Marketplace is
     Initializable,
     IMarketplace,
@@ -40,50 +42,65 @@ contract Marketplace is
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable
 {
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
+
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
     uint256 private constant VERSION = 1;
 
-    /// @dev Access control: aditional roles.
+    /// @dev Only lister role holders can create listings, when listings are restricted by lister address.
     bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
+    /// @dev Only assets from NFT contracts with asset role can be listed, when listings are restricted by asset address.
     bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
-
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
+    /// @dev The thirdweb contract with fee related information.
     ITWFee public immutable thirdwebFee;
 
-    /// @dev Total number of listings on market.
+    /// @dev Total number of listings ever created in the marketplace.
     uint256 public totalListings;
 
-    /// @dev Collection level metadata.
+    /// @dev Contract level metadata.
     string public contractURI;
 
-    /// @dev The address of which the marketplace fee goes to.
+    /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
 
-    /// @dev The marketplace fee.
+    /// @dev The % of primary sales collected as platform fees.
     uint64 private platformFeeBps;
 
-    /// @dev The minimum amount of time left in an auction after a new bid is created. Default: 15 minutes.
+    /// @dev 
+    /**
+     *  @dev The amount of time added to an auction's 'endTime', if a bid is made within `timeBuffer`
+     *       seconds of the existing `endTime`. Default: 15 minutes.
+     */
     uint64 public timeBuffer;
 
     /// @dev The minimum % increase required from the previous winning bid. Default: 5%.
     uint64 public bidBufferBps;
 
-    /// @dev listingId => listing info.
+    /*///////////////////////////////////////////////////////////////
+                                Mappings
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Mapping from uid of listing => listing info.
     mapping(uint256 => Listing) public listings;
 
-    /// @dev listingId => address => info related to offers on a direct listing.
+    /// @dev Mapping from uid of a direct listing => offeror address => offer made to the direct listing by the respective offeror.
     mapping(uint256 => mapping(address => Offer)) public offers;
 
-    /// @dev listingId => current winning bid in an auction.
+    /// @dev Mapping from uid of an auction listing => current winning bid in an auction.
     mapping(uint256 => Offer) public winningBid;
+
+    /*///////////////////////////////////////////////////////////////
+                                Modifiers
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
@@ -97,13 +114,14 @@ contract Marketplace is
         _;
     }
 
+    /*///////////////////////////////////////////////////////////////
+                    Constructor + initializer logic
+    //////////////////////////////////////////////////////////////*/
+
     constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
         nativeTokenWrapper = _nativeTokenWrapper;
     }
-
-    /// @dev Lets the contract receives native tokens from `nativeTokenWrapper` withdraw.
-    receive() external payable {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -117,10 +135,10 @@ contract Marketplace is
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
 
+        // Initialize this contract's state.
         timeBuffer = 15 minutes;
         bidBufferBps = 500;
 
-        // Initialize this contract's state.
         contractURI = _contractURI;
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
@@ -130,7 +148,14 @@ contract Marketplace is
         _setupRole(ASSET_ROLE, address(0));
     }
 
-    /// @dev Returns the module type of the contract.
+    /*///////////////////////////////////////////////////////////////
+                        Generic contract logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Lets the contract receives native tokens from `nativeTokenWrapper` withdraw.
+    receive() external payable {}
+
+    /// @dev Returns the type of the contract.
     function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
@@ -140,7 +165,55 @@ contract Marketplace is
         return uint8(VERSION);
     }
 
-    //  =====   External functions  =====
+    /*///////////////////////////////////////////////////////////////
+                        ERC 165 / 721 / 1155 logic
+    //////////////////////////////////////////////////////////////*/
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AccessControlEnumerableUpgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
+            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Listing (create-update-delete) logic
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(ListingParameters memory _params) external override {
@@ -268,6 +341,10 @@ contract Marketplace is
         emit ListingRemoved(_listingId, targetListing.tokenOwner);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                    Direct lisitngs sales logic
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Lets an account buy a given quantity of tokens from a listing.
     function buy(
         uint256 _listingId,
@@ -322,6 +399,37 @@ contract Marketplace is
         );
     }
 
+    /// @dev Performs a direct listing sale.
+    function executeSale(
+        Listing memory _targetListing,
+        address _payer,
+        address _receiver,
+        address _currency,
+        uint256 _currencyAmountToTransfer,
+        uint256 _listingTokenAmountToTransfer
+    ) internal {
+        validateDirectListingSale(_targetListing, _payer, _listingTokenAmountToTransfer, _currencyAmountToTransfer);
+
+        _targetListing.quantity -= _listingTokenAmountToTransfer;
+        listings[_targetListing.listingId] = _targetListing;
+
+        payout(_payer, _targetListing.tokenOwner, _currency, _currencyAmountToTransfer, _targetListing);
+        transferListingTokens(_targetListing.tokenOwner, _receiver, _listingTokenAmountToTransfer, _targetListing);
+
+        emit NewSale(
+            _targetListing.listingId,
+            _targetListing.assetContract,
+            _targetListing.tokenOwner,
+            _receiver,
+            _listingTokenAmountToTransfer,
+            _currencyAmountToTransfer
+        );
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Offer/bid logic
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Lets an account (1) make an offer to a direct listing, or (2) make a bid in an auction.
     function offer(
         uint256 _listingId,
@@ -354,78 +462,11 @@ contract Marketplace is
             handleBid(targetListing, newOffer);
         } else if (targetListing.listingType == ListingType.Direct) {
             // Offers to direct listings cannot be made directly in native tokens.
-            newOffer.currency = _currency == NATIVE_TOKEN ? nativeTokenWrapper : _currency;
+            newOffer.currency = _currency == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : _currency;
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, _quantityWanted);
 
             handleOffer(targetListing, newOffer);
         }
-    }
-
-    /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
-    function closeAuction(uint256 _listingId, address _closeFor)
-        external
-        override
-        nonReentrant
-        onlyExistingListing(_listingId)
-    {
-        Listing memory targetListing = listings[_listingId];
-
-        require(targetListing.listingType == ListingType.Auction, "not an auction.");
-
-        Offer memory targetBid = winningBid[_listingId];
-
-        // Cancel auction if (1) auction hasn't started, or (2) auction doesn't have any bids.
-        bool toCancel = targetListing.startTime > block.timestamp || targetBid.offeror == address(0);
-
-        if (toCancel) {
-            // cancel auction listing owner check
-            _cancelAuction(targetListing);
-        } else {
-            require(targetListing.endTime < block.timestamp, "cannot close auction before it has ended.");
-
-            // No `else if` to let auction close in 1 tx when targetListing.tokenOwner == targetBid.offeror.
-            if (_closeFor == targetListing.tokenOwner) {
-                _closeAuctionForAuctionCreator(targetListing, targetBid);
-            }
-
-            if (_closeFor == targetBid.offeror) {
-                _closeAuctionForBidder(targetListing, targetBid);
-            }
-        }
-    }
-
-    /// @dev Returns the platform fee bps and recipient.
-    function getPlatformFeeInfo() external view returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
-    }
-
-    //  =====   Internal functions  =====
-
-    /// @dev Performs a direct listing sale.
-    function executeSale(
-        Listing memory _targetListing,
-        address _payer,
-        address _receiver,
-        address _currency,
-        uint256 _currencyAmountToTransfer,
-        uint256 _listingTokenAmountToTransfer
-    ) internal {
-        validateDirectListingSale(_targetListing, _payer, _listingTokenAmountToTransfer, _currencyAmountToTransfer);
-
-        _targetListing.quantity -= _listingTokenAmountToTransfer;
-        listings[_targetListing.listingId] = _targetListing;
-
-        payout(_payer, _targetListing.tokenOwner, _currency, _currencyAmountToTransfer, _targetListing);
-        transferListingTokens(_targetListing.tokenOwner, _receiver, _listingTokenAmountToTransfer, _targetListing);
-
-        emit NewSale(
-            _targetListing.listingId,
-            _targetListing.assetContract,
-            _targetListing.tokenOwner,
-            _receiver,
-            _listingTokenAmountToTransfer,
-            _currencyAmountToTransfer
-        );
     }
 
     /// @dev Processes a new offer to a direct listing.
@@ -520,6 +561,57 @@ contract Marketplace is
         }
     }
 
+    /// @dev Checks whether an incoming bid should be the new current highest bid.
+    function isNewWinningBid(
+        uint256 _reserveAmount,
+        uint256 _currentWinningBidAmount,
+        uint256 _incomingBidAmount
+    ) internal view returns (bool isValidNewBid) {
+        if (_currentWinningBidAmount == 0) {
+            isValidNewBid = _incomingBidAmount >= _reserveAmount;
+        } else {
+            isValidNewBid = (_incomingBidAmount > _currentWinningBidAmount &&
+                ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >= bidBufferBps);
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Auction lisitngs sales logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
+    function closeAuction(uint256 _listingId, address _closeFor)
+        external
+        override
+        nonReentrant
+        onlyExistingListing(_listingId)
+    {
+        Listing memory targetListing = listings[_listingId];
+
+        require(targetListing.listingType == ListingType.Auction, "not an auction.");
+
+        Offer memory targetBid = winningBid[_listingId];
+
+        // Cancel auction if (1) auction hasn't started, or (2) auction doesn't have any bids.
+        bool toCancel = targetListing.startTime > block.timestamp || targetBid.offeror == address(0);
+
+        if (toCancel) {
+            // cancel auction listing owner check
+            _cancelAuction(targetListing);
+        } else {
+            require(targetListing.endTime < block.timestamp, "cannot close auction before it has ended.");
+
+            // No `else if` to let auction close in 1 tx when targetListing.tokenOwner == targetBid.offeror.
+            if (_closeFor == targetListing.tokenOwner) {
+                _closeAuctionForAuctionCreator(targetListing, targetBid);
+            }
+
+            if (_closeFor == targetBid.offeror) {
+                _closeAuctionForBidder(targetListing, targetBid);
+            }
+        }
+    }
+
     /// @dev Cancels an auction.
     function _cancelAuction(Listing memory _targetListing) internal {
         require(listings[_targetListing.listingId].tokenOwner == _msgSender(), "caller is not the listing creator.");
@@ -573,6 +665,10 @@ contract Marketplace is
             _winningBid.offeror
         );
     }
+
+    /*///////////////////////////////////////////////////////////////
+            Shared (direct+auction listings) internal functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
     function transferListingTokens(
@@ -649,20 +745,6 @@ contract Marketplace is
         );
     }
 
-    /// @dev Checks whether an incoming bid should be the new current highest bid.
-    function isNewWinningBid(
-        uint256 _reserveAmount,
-        uint256 _currentWinningBidAmount,
-        uint256 _incomingBidAmount
-    ) internal view returns (bool isValidNewBid) {
-        if (_currentWinningBidAmount == 0) {
-            isValidNewBid = _incomingBidAmount >= _reserveAmount;
-        } else {
-            isValidNewBid = (_incomingBidAmount > _currentWinningBidAmount &&
-                ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >= bidBufferBps);
-        }
-    }
-
     /// @dev Validates that `_addrToCheck` owns and has approved markeplace to transfer the appropriate amount of currency
     function validateERC20BalAndAllowance(
         address _addrToCheck,
@@ -720,7 +802,7 @@ contract Marketplace is
         require(block.timestamp < _listing.endTime && block.timestamp > _listing.startTime, "not within sale window.");
 
         // Check: buyer owns and has approved sufficient currency for sale.
-        if (_listing.currency == NATIVE_TOKEN) {
+        if (_listing.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == settledTotalPrice, "msg.value != price");
         } else {
             validateERC20BalAndAllowance(_payer, _listing.currency, settledTotalPrice);
@@ -735,6 +817,10 @@ contract Marketplace is
             _listing.tokenType
         );
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Getter functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Enforces quantity == 1 if tokenType is TokenType.ERC721.
     function getSafeQuantity(TokenType _tokenType, uint256 _quantityToCheck)
@@ -766,27 +852,14 @@ contract Marketplace is
         totalListings += 1;
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
-        return ERC2771ContextUpgradeable._msgSender();
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
-        return ERC2771ContextUpgradeable._msgData();
-    }
-
-    //  ===== Setter functions  =====
+    /*///////////////////////////////////////////////////////////////
+                            Setter functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a module admin update the fees on platform fee
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
@@ -816,49 +889,27 @@ contract Marketplace is
         contractURI = _uri;
     }
 
-    /**
-     *   ERC 1155 and ERC 721 Receiver functions.
-     **/
+    /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
+    function _msgSender()
+        internal
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, IERC165Upgradeable)
-        returns (bool)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
     {
-        return
-            interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
-            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
-            super.supportsInterface(interfaceId);
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }

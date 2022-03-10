@@ -76,7 +76,7 @@ contract DropERC721 is
     /// @dev Global max total supply of NFTs.
     uint256 public maxTotalSupply;
 
-    /// @dev The address that receives all primary sales value.
+    /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
     /// @dev The (default) address that receives all royalty value.
