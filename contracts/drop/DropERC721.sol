@@ -40,6 +40,10 @@ contract DropERC721 is
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;
 
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
+
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
     uint256 private constant VERSION = 1;
 
@@ -90,6 +94,13 @@ contract DropERC721 is
     /// @dev Largest tokenId of each batch of tokens with the same baseURI
     uint256[] public baseURIIndices;
 
+    /// @dev The set of all claim conditions, at any given moment.
+    ClaimConditionList public claimCondition;
+
+    /*///////////////////////////////////////////////////////////////
+                                Mappings
+    //////////////////////////////////////////////////////////////*/
+
     /**
      *  @dev Mapping from 'Largest tokenId of a batch of tokens with the same baseURI'
      *       to base URI for the respective batch of tokens.
@@ -108,8 +119,9 @@ contract DropERC721 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
-    /// @dev The set of all claim conditions, at any given moment.
-    ClaimConditionList public claimCondition;
+    /*///////////////////////////////////////////////////////////////
+                    Constructor + initializer logic
+    //////////////////////////////////////////////////////////////*/
 
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
@@ -148,9 +160,11 @@ contract DropERC721 is
         _setupRole(TRANSFER_ROLE, address(0));
     }
 
-    ///     =====   Public functions  =====
+    /*///////////////////////////////////////////////////////////////
+                        Generic contract logic
+    //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the module type of the contract.
+    /// @dev Returns the type of the contract.
     function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
     }
@@ -167,6 +181,10 @@ contract DropERC721 is
         return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        ERC 165 / 721 / 2981 logic
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
@@ -182,113 +200,18 @@ contract DropERC721 is
         return "";
     }
 
-    /// @dev At any given moment, returns the uid for the active claim condition.
-    function getActiveClaimConditionId() public view returns (uint256) {
-        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.currentStartId; i--) {
-            if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
-                return i - 1;
-            }
-        }
-
-        revert("no active mint condition.");
+    /// @dev See ERC 165
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
-    /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
-        // Store data length on stack for later use
-        uint256 length = data.length;
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Set result to free memory pointer
-            result := mload(0x40)
-            // Increase free memory pointer by lenght + 32
-            mstore(0x40, add(add(result, length), 32))
-            // Set result length
-            mstore(result, length)
-        }
-
-        // Iterate over the data stepping by 32 bytes
-        for (uint256 i = 0; i < length; i += 32) {
-            // Generate hash of the key and offset
-            bytes32 hash = keccak256(abi.encodePacked(key, i));
-
-            bytes32 chunk;
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                // Read 32-bytes data chunk
-                chunk := mload(add(data, add(i, 32)))
-            }
-            // XOR the chunk with hash
-            chunk ^= hash;
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                // Write 32-byte encrypted chunk
-                mstore(add(result, add(i, 32)), chunk)
-            }
-        }
-    }
-
-    /// @dev Checks whether a request to claim tokens obeys the active mint condition.
-    function verifyClaim(
-        uint256 _conditionId,
-        address _claimer,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken
-    ) public view {
-        ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
-
-        require(
-            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price specified."
-        );
-        require(
-            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
-            "invalid quantity claimed."
-        );
-        require(
-            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max mint supply."
-        );
-        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
-        require(
-            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
-            "exceed claim limit for wallet"
-        );
-
-        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
-    }
-
-    function verifyClaimMerkleProof(
-        uint256 _conditionId,
-        address _claimer,
-        uint256 _quantity,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
-
-        if (currentClaimPhase.merkleRoot != bytes32(0)) {
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
-                _proofs,
-                currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
-            );
-            require(validMerkleProof, "not in whitelist.");
-            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
-            require(
-                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
-                "invalid quantity proof."
-            );
-        }
-    }
-
-    ///     =====   External functions  =====
-
-    /// @dev See EIP-2981
+    /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
@@ -299,6 +222,10 @@ contract DropERC721 is
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
+
+    /*///////////////////////////////////////////////////////////////
+                    Minting + delayed-reveal logic
+    //////////////////////////////////////////////////////////////*/
 
     /**
      *  @dev Lets an account with `MINTER_ROLE` mint tokens of ID from `nextTokenIdToMint`
@@ -344,6 +271,46 @@ contract DropERC721 is
 
         return revealedURI;
     }
+
+    /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
+    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
+        // Store data length on stack for later use
+        uint256 length = data.length;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // Set result to free memory pointer
+            result := mload(0x40)
+            // Increase free memory pointer by lenght + 32
+            mstore(0x40, add(add(result, length), 32))
+            // Set result length
+            mstore(result, length)
+        }
+
+        // Iterate over the data stepping by 32 bytes
+        for (uint256 i = 0; i < length; i += 32) {
+            // Generate hash of the key and offset
+            bytes32 hash = keccak256(abi.encodePacked(key, i));
+
+            bytes32 chunk;
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                // Read 32-bytes data chunk
+                chunk := mload(add(data, add(i, 32)))
+            }
+            // XOR the chunk with hash
+            chunk ^= hash;
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                // Write 32-byte encrypted chunk
+                mstore(add(result, add(i, 32)), chunk)
+            }
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Claim logic
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets an account claim a given quantity of tokens, of a single tokenId, according to claim conditions.
     function claim(
@@ -444,7 +411,183 @@ contract DropERC721 is
         emit ClaimConditionsUpdated(_phases);
     }
 
-    //      =====   Setter functions  =====
+    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    function collectClaimPrice(
+        uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken
+    ) internal {
+        if (_pricePerToken == 0) {
+            return;
+        }
+
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
+        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
+
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == totalPrice, "must send total price.");
+        }
+
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            primarySaleRecipient,
+            totalPrice - platformFees - twFee
+        );
+    }
+
+    /// @dev Transfers the tokens being claimed.
+    function transferClaimedTokens(
+        address _to,
+        uint256 _conditionId,
+        uint256 _quantityBeingClaimed
+    ) internal {
+        // Update the supply minted under mint condition.
+        claimCondition.phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
+
+        // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
+        // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
+        claimCondition.limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
+        walletClaimCount[_msgSender()] += _quantityBeingClaimed;
+
+        uint256 tokenIdToClaim = nextTokenIdToClaim;
+
+        for (uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
+            _mint(_to, tokenIdToClaim);
+            tokenIdToClaim += 1;
+        }
+
+        nextTokenIdToClaim = tokenIdToClaim;
+    }
+
+    /// @dev Checks whether a request to claim tokens obeys the active mint condition.
+    function verifyClaim(
+        uint256 _conditionId,
+        address _claimer,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken
+    ) public view {
+        ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
+
+        require(
+            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
+            "invalid currency or price specified."
+        );
+        require(
+            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            "invalid quantity claimed."
+        );
+        require(
+            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
+            "exceed max mint supply."
+        );
+        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
+        require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
+        require(
+            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
+            "exceed claim limit for wallet"
+        );
+
+        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
+        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
+    }
+
+    function verifyClaimMerkleProof(
+        uint256 _conditionId,
+        address _claimer,
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityPerTransaction
+    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
+        ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
+
+        if (currentClaimPhase.merkleRoot != bytes32(0)) {
+            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
+                _proofs,
+                currentClaimPhase.merkleRoot,
+                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
+            );
+            require(validMerkleProof, "not in whitelist.");
+            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
+            require(
+                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
+                "invalid quantity proof."
+            );
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Getter functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev At any given moment, returns the uid for the active claim condition.
+    function getActiveClaimConditionId() public view returns (uint256) {
+        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.currentStartId; i--) {
+            if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
+                return i - 1;
+            }
+        }
+
+        revert("no active mint condition.");
+    }
+
+    /// @dev Returns the royalty recipient for a particular token Id.
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+
+        return
+            royaltyForToken.recipient == address(0)
+                ? (royaltyRecipient, uint16(royaltyBps))
+                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeInfo() external view returns (address, uint16) {
+        return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
+        return (royaltyRecipient, uint16(royaltyBps));
+    }
+
+    /// @dev Returns the timestamp for next available claim for a claimer address
+    function getClaimTimestamp(uint256 _conditionId, address _claimer)
+        public
+        view
+        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
+    {
+        lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
+
+        unchecked {
+            nextValidClaimTimestamp =
+                lastClaimTimestamp +
+                claimCondition.phases[_conditionId].waitTimeInSecondsBetweenClaims;
+
+            if (nextValidClaimTimestamp < lastClaimTimestamp) {
+                nextValidClaimTimestamp = type(uint256).max;
+            }
+        }
+    }
+
+    /// @dev Returns the  mint condition for a given tokenId, at the given index.
+    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+        condition = claimCondition.phases[_conditionId];
+    }
+
+    /// @dev Returns the amount of stored baseURIs
+    function getBaseURICount() external view returns (uint256) {
+        return baseURIIndices.length;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Setter functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a module admin set a claim limit on a wallet.
     function setWalletClaimCount(address _claimer, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -523,113 +666,9 @@ contract DropERC721 is
         contractURI = _uri;
     }
 
-    //      =====   Getter functions  =====
-
-    /// @dev Returns the platform fee bps and recipient.
-    function getPlatformFeeInfo() external view returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
-    }
-
-    /// @dev Returns the platform fee bps and recipient.
-    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
-        return (royaltyRecipient, uint16(royaltyBps));
-    }
-
-    /// @dev Returns the royalty recipient for a particular token Id.
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
-
-        return
-            royaltyForToken.recipient == address(0)
-                ? (royaltyRecipient, uint16(royaltyBps))
-                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
-    }
-
-    /// @dev Returns the timestamp for next available claim for a claimer address
-    function getClaimTimestamp(uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-    {
-        lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
-
-        unchecked {
-            nextValidClaimTimestamp =
-                lastClaimTimestamp +
-                claimCondition.phases[_conditionId].waitTimeInSecondsBetweenClaims;
-
-            if (nextValidClaimTimestamp < lastClaimTimestamp) {
-                nextValidClaimTimestamp = type(uint256).max;
-            }
-        }
-    }
-
-    /// @dev Returns the  mint condition for a given tokenId, at the given index.
-    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
-        condition = claimCondition.phases[_conditionId];
-    }
-
-    /// @dev Returns the amount of stored baseURIs
-    function getBaseURICount() external view returns (uint256) {
-        return baseURIIndices.length;
-    }
-
-    //      =====   Internal functions  =====
-
-    /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectClaimPrice(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal {
-        if (_pricePerToken == 0) {
-            return;
-        }
-
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
-
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
-        }
-
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            primarySaleRecipient,
-            totalPrice - platformFees - twFee
-        );
-    }
-
-    /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(
-        address _to,
-        uint256 _conditionId,
-        uint256 _quantityBeingClaimed
-    ) internal {
-        // Update the supply minted under mint condition.
-        claimCondition.phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
-
-        // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
-        // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
-        claimCondition.limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
-        walletClaimCount[_msgSender()] += _quantityBeingClaimed;
-
-        uint256 tokenIdToClaim = nextTokenIdToClaim;
-
-        for (uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
-            _mint(_to, tokenIdToClaim);
-            tokenIdToClaim += 1;
-        }
-
-        nextTokenIdToClaim = tokenIdToClaim;
-    }
-
-    ///     =====   ERC 721 functions  =====
+    /*///////////////////////////////////////////////////////////////
+                        Miscellaneous
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
@@ -650,17 +689,6 @@ contract DropERC721 is
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
-    }
-
-    /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     function _msgSender()
