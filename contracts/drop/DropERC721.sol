@@ -1,32 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-// Interface
-import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
+//  ==========  External imports    ==========
 
-// Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
-// Access Control + security
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-// Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-
-// Utils
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+
+//  ==========  Internal imports    ==========
+
+import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
+import { ITWFee } from "../interfaces/ITWFee.sol";
+
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 import "../lib/MerkleProof.sol";
-
-// Helper interfaces
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
-
-// Thirdweb top-level
-import "../interfaces/ITWFee.sol";
 
 contract DropERC721 is
     Initializable,

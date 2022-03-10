@@ -1,36 +1,31 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-// Interface
-import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
+//  ==========  External imports    ==========
 
-// Tokens
-import "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
-// Access Control + security
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-// Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-
-// Royalties
+import "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-// Utils
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+
+//  ==========  Internal imports    ==========
+
+import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
+import { ITWFee } from "../interfaces/ITWFee.sol";
+
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
-
-// Thirdweb top-level
-import "../interfaces/ITWFee.sol";
-
-// TODO: format imports as external / internal -- even for DropERC721.
 
 contract Marketplace is
     Initializable,
