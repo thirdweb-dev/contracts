@@ -288,7 +288,7 @@ contract DropERC1155 is
     function setClaimConditions(
         uint256 _tokenId,
         ClaimCondition[] calldata _phases,
-        bool _resetLimitRestriction
+        bool _resetClaimEligibility
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         ClaimConditionList storage condition = claimCondition[_tokenId];
         uint256 existingStartIndex = condition.currentStartId;
@@ -303,7 +303,7 @@ contract DropERC1155 is
          *  by `limitLastClaimTimestamp` and `limitMerkleProofClaim`.
          */
         uint256 newStartIndex = existingStartIndex;
-        if (_resetLimitRestriction) {
+        if (_resetClaimEligibility) {
             newStartIndex = existingStartIndex + existingPhaseCount;
         }
 
@@ -333,7 +333,7 @@ contract DropERC1155 is
          *  than in `_phases`, we delete the existing claim conditions that don't get replaced
          *  by the conditions in `_phases`.
          */
-        if (_resetLimitRestriction) {
+        if (_resetClaimEligibility) {
             for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
                 delete condition.phases[i];
                 delete condition.limitMerkleProofClaim[i];
