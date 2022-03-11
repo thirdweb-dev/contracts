@@ -1,10 +1,5 @@
 # Drop design document.
 
-Author: Krishang
-Created: March 11, 2022 7:23 AM
-Status: Review
-Tags: Contracts
-
 This is a live document that explains what the [thirdweb](https://thirdweb.com/) `Drop` smart contracts are, how they work and can be used, and why they are written the way they are.
 
 The document is written for technical and non-technical readers. To ask further questions about any of thirdweb’s `Drop`, please join the [thirdweb discord](https://discord.gg/thirdweb) or create a github issue.
