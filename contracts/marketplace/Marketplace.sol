@@ -70,7 +70,7 @@ contract Marketplace is
     /// @dev The % of primary sales collected as platform fees.
     uint64 private platformFeeBps;
 
-    /// @dev 
+    /// @dev
     /**
      *  @dev The amount of time added to an auction's 'endTime', if a bid is made within `timeBuffer`
      *       seconds of the existing `endTime`. Default: 15 minutes.
