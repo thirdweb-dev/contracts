@@ -54,8 +54,9 @@ interface IDropClaimCondition {
      *  @notice The set of all claim conditions, at any given moment.
      *  Claim Phase ID = [currentStartId, currentStartId + length - 1];
      *
-     *  @param currentStartId           Acts as the uid for each claim condition. Incremented
-     *                                  by one every time a claim condition is created.
+     *  @param currentStartId           The uid for the first claim condition amongst the current set of
+     *                                  claim conditions. The uid for each next claim condition is one
+     *                                  more than the previous claim condition's uid.
      *
      *  @param count                    The total number of phases / claim conditions in the list
      *                                  of claim conditions.
