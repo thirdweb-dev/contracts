@@ -1,6 +1,4 @@
-# Thirdweb Contracts v2 (nightly)
-
-> This is an **nightly** version of Thirdweb Contracts v2. It is not ready for production use, but it is ready to be taste-tested!
+# Thirdweb Contracts v2
 
 > [Looking for version 1? Click here!](https://github.com/thirdweb-dev/contracts/tree/v1)
 
