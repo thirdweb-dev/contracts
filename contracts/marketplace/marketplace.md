@@ -1,16 +1,16 @@
-# Marketplace
+# Marketplace design document.
 
-This is a live document that explains what the [thirdweb](https://thirdweb.com/) `Marketplace` smart contract is, and how it works and can be used, and why it is written the way it is. 
+This is a live document that explains what the [thirdweb](https://thirdweb.com/) `Marketplace` smart contract is, how it works and can be used, and why it is written the way it is. 
 
 The document is written for technical and non-technical readers. To ask further questions about `Marketplace`, please join the [thirdweb discord](https://discord.gg/thirdweb) or create a github issue.
 
 ---
 ## Background
 
-The [thirdweb](https://thirdweb.com/) `Marketplace` is a market where where people can either sell NFTs — [ERC 721](https://eips.ethereum.org/EIPS/eip-721) or [ERC 1155](https://eips.ethereum.org/EIPS/eip-1155) tokens — at a fixed price ( what we'll refer to as a "Direct listing"), or auction them (what we'll refer to as an "Auction listing").
+The [thirdweb](https://thirdweb.com/) `Marketplace` is a market where where people can sell NFTs — [ERC 721](https://eips.ethereum.org/EIPS/eip-721) or [ERC 1155](https://eips.ethereum.org/EIPS/eip-1155) tokens — at a fixed price ( what we'll refer to as a "Direct listing"), or auction them (what we'll refer to as an "Auction listing").
 
 ### Direct Listings
-An NFT owner (or 'lister') can list their NFTs for sale at a fixed price. A potential buyer can buy the NFT for the specified price, or make an offer to buy the listed NFTs at a different price, which the lister can choose to accept.
+An NFT owner (or 'lister') can list their NFTs for sale at a fixed price. A potential buyer can buy the NFT for the specified price, or make an offer to buy the listed NFTs for a different price or currency, which the lister can choose to accept.
 
 To list NFTs for sale, the lister specifies —
 
@@ -19,7 +19,7 @@ To list NFTs for sale, the lister specifies —
 | `assetContract` | The contract address of the NFTs being listed for sale |
 | `tokenId` | The token ID on the 'assetContract' of the NFTs to list for sale. |
 | `startTime` | The unix timestamp after which NFTs can be bought from the listing. |
-| `secondsUntilEndTime` | The number of seconds after which NFTs can no longer be bought from the listing. |
+| `secondsUntilEndTime` | No. of seconds after `startTime`, after which NFTs can no longer be bought from the listing. |
 | `quantityToList` | The amount of NFTs of the given 'assetContract' and 'tokenId' to list for sale. For ERC721 NFTs, this is always 1.  |
 | `currencyToAccept` | The address of the currency accepted by the listing. Either an ERC20 token or the chain's native token (e.g. ether on Ethereum mainnet). |
 | `buyoutPricePerToken` | The price per unit of NFT listed for sale. |
@@ -50,7 +50,7 @@ To list NFTs in an auction, a lister specifies —
 | `assetContract` | The contract address of the NFTs being auctioned. |
 | `tokenId` | The token ID on the 'assetContract' of the NFTs being auctioned. |
 | `startTime` | The unix timestamp after which NFTs can be bought from the listing. |
-| `secondsUntilEndTime` | The number of seconds after which buyers can no longer make bids to the auction. |
+| `secondsUntilEndTime` | The number of seconds after `startTime`, after which buyers can no longer make bids to the auction. |
 | `quantityToList` | The amount of NFTs of the given 'assetContract' and 'tokenId' to put up for auction. For ERC721 NFTs, this is always 1.  |
 | `currencyToAccept` | The address of the currency accepted by the auction. Either an ERC20 token or the chain's native token (e.g. ether on Ethereum mainnet). |
 | `rerservePricePerToken` | All bids made to this auction must be at least as great as the reserve price per unit of NFTs auctioned, times the total number of NFTs put up for auction. |
@@ -61,11 +61,13 @@ Every auction listing obeys two 'buffers' to make it a fair auction:
 1. **Time buffer**: this is measured in seconds (e.g. 15 minutes or 900 seconds). If a winning bid is made within the buffer of the auction closing (e.g. 15 minutes within the auction closing), the auction's closing time is increased by the buffer to prevent buyers from making last minute winning bids, and to give time to other buyers to make a higher bid if they wish to.
 2. **Bid buffer**: this is a percentage (e.g. 5%). A new bid is considered to be a winning bid only if its bid amount is at least the bid buffer (e.g. 5%) greater than the previous winning bid. This prevents buyers from making *very slightly* higher bids to win the auctioned items.
 
-These buffer values are contract-wide, which means every auction conduction in the Marketplace obeys, at any given moment, the same buffers. These buffers can be configured by accounts with the `DEFAULT_ADMIN_ROLE` role.
+These buffer values are contract-wide, which means every auction conducted in the Marketplace obeys, at any given moment, the same buffers. These buffers can be configured by accounts with the `DEFAULT_ADMIN_ROLE` role.
 
 The NFTs to list in an auction *do* leave the wallet of the lister, and are escrowed in the market until the closing of the auction. Whenever a new winning bid is made by a buyer, the buyer deposits this bid amount into the market; this bid amount is escrowed in the market until a new winning bid is made. The previous winning bid amount is automatically refunded to the respective bidder. 
 
 **Note:** As a result, the new winning bidder pays for the gas used in refunding the previous winning bidder. This trade-off is made for better UX for bidders — a bidder that has been outbid is automatically refunded, and does not need to pull out their deposited bid manually. This reduces bidding to a single action, instead of two actions — bidding, and pulling out the bid on being outbid.
+
+If the lister sets a `buyoutPricePerToken`, the marketplace expects the `buyoutPricePerToken` to be greater than or equal to the `rerservePricePerToken` of the auction.
 
 Once the auction window ends, the seller collects the highest bid, and the buyer collects the auctioned NFT.
 
@@ -99,8 +101,8 @@ To thirdweb customers, the `Marketplace` can be set up like any of the other thi
 To the end users of thirdweb customers, the experience of using the marketplace will feel familiar to popular marketplace platforms like OpenSea and Zora. The biggest difference in user experience will be that performing any action on the marketplace requires gas fees.
 
 - Thirdweb's customers
-    - Deploy the market like any other thirdweb module.
-    - Can set a % 'market fee'. This % is collected on every sale — when a buyer buys tokens from a direct listing, and when a seller collects the highest bid on auction closing. This market fee is distributed to the royalty treasury of the Marketplace, which is set in the project (the top level [`ProtocolControl`](https://github.com/nftlabs/nftlabs-protocols/blob/main/contracts/ProtocolControl.sol) contract) that the Marketplace belongs to.
+    - Deploy the market like any other thirdweb contract.
+    - Can set a % 'platform fee'. This % is collected on every sale — when a buyer buys tokens from a direct listing, and when a seller collects the highest bid on auction closing. This platform fee is distributed to the platform fee recipeitn set in the Marketplace.
     - Can set auction buffers. These auction buffers apply to all auctions being conducted in the market.
 - End users of thirdweb customers
     - Can list NFTs for sale at a fixed price.
@@ -112,7 +114,7 @@ To the end users of thirdweb customers, the experience of using the marketplace 
 
 ## Technical details
 
-At a high level, we want `Marketplace` to be a single, compact smart contract that supports all features related to both direct listings *and* auction listings.
+At a high level, we want `Marketplace` to be a single smart contract that supports all features related to both direct listings *and* auction listings.
 
 To write the feature-rich Marketplace contract without exceeding the code size limit of smart contracts, we leverage the similarity in the concepts required by direct and auction listings.
 
@@ -132,7 +134,7 @@ The same goes for offers to direct listings, and bids made in an auction. The pa
 | Bid | ✅ | ✅ | ✅ | ✅ |
 | Offer to direct listing | ✅ | ✅ | ✅ | ✅ |
 
-An so, we use common data structures and functions to handle offers to direct listings and bids to auctions. Though the two types of offers share the same concepts, they require different logic. This again means e.g. a single function can have multiple behaviors based on which actor calls it, when they call it, and the listing type of the listing in question.
+And so, we use common data structures and functions to handle offers to direct listings and bids to auctions. Though the two types of offers share the same concepts, they require different logic. This again means e.g. a single function can have multiple behaviors based on which actor calls it, when they call it, and the listing type of the listing in question.
 
 ### Design strategy for `Marketplace`
 
@@ -142,12 +144,27 @@ We use common functions and data structures wherever an (1) action is common to 
 
 **Example**: Common action and data handled.
 
-- Action: creating a listing | Data: `ListingParameters` ([code](https://github.com/nftlabs/nftlabs-protocols/blob/v2-market/contracts/v2/IMarket.sol#L26))
-- There is a single [`createListing`](https://github.com/nftlabs/nftlabs-protocols/blob/v2-market/contracts/v2/MarketWithAuction.sol#L131) function to create both a direct listing, or an auction.
+- Action: creating a listing | Data: `ListingParameters`
+  
+```solidity
+struct ListingParameters {
+    address assetContract;
+    uint256 tokenId;
+    uint256 startTime;
+    uint256 secondsUntilEndTime;
+    uint256 quantityToList;
+    address currencyToAccept;
+    uint256 reservePricePerToken;
+    uint256 buyoutPricePerToken;
+    ListingType listingType;
+}
+```
 
-Although the concepts used for (1) direct listings + offers, and (2) auctions + bids is similar, the logic required to the two is generally different. For example —
+- There is a single `createListing` function to create both a direct listing, or an auction.
 
-- One calls the *same* `offer` function to make an offer to a direct listing, or to make a bid in an auction. Internally, the smart contract uses different logic to handle each of the two cases.
+**Example**: Distinct action or data handled.
+
+- Although the concepts used for (1) offers (to direct listings), and (2) bids is similar, the logic required to handle the two is generally different. As a result — one calls the *same* `offer` function to make an offer to a direct listing, or to make a bid in an auction. Internally, the smart contract uses different logic to handle each of the two cases.
 - An auction has the concept of formally being closed whereas a direct listing does not. On auction closing, both the lister and winning bidder call can call `closeAuction` to collect the winning bid, and the auctioned items, respectively. There is no such corollary in the case of direct listings.
 
 ### EIPs implemented / supported
@@ -156,7 +173,7 @@ To be able to escrow NFTs in the case of auctions, Marketplace implements the re
 
 To enable meta-transactions (gasless) for all external+public functions of the contract, Marketplace implements [ERC2771](https://eips.ethereum.org/EIPS/eip-2771). 
 
-Marketplace also implements [ERC2981](https://eips.ethereum.org/EIPS/eip-2981) for the distribution of royalties on direct and auction listings.
+Marketplace also honors [ERC2981](https://eips.ethereum.org/EIPS/eip-2981) for the distribution of royalties on direct and auction listings.
 
 ### Events emitted
 
