@@ -10,7 +10,7 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 
 - `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
 
-- `TWFactory`: [0xd24b3de085CFd8c54b94feAD08a7962D343E6DE0](https://blockscan.com/address/0xd24b3de085CFd8c54b94feAD08a7962D343E6DE0#code)
+- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
 
 ## Feedback
 
