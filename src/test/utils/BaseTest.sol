@@ -36,12 +36,12 @@ abstract contract BaseTest is DSTest, stdCheats {
     MockERC20 public erc20;
     MockERC721 public erc721;
     MockERC1155 public erc1155;
+    WETH9 public weth;
 
     address public forwarder;
     address public registry;
     address public factory;
     address public fee;
-    address public weth;
 
     address public factoryAdmin = address(0x10000);
     address public deployer = address(0x20000);
@@ -50,6 +50,7 @@ abstract contract BaseTest is DSTest, stdCheats {
     address public platformFeeRecipient = address(0x30002);
     uint128 public royaltyBps = 500; // 5%
     uint128 public platformFeeBps = 500; // 5%
+    uint256 public constant MAX_BPS = 10_000; // 100%
 
     mapping(bytes32 => address) public contracts;
 
@@ -59,7 +60,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         erc20 = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
-        weth = address(new WETH9());
+        weth = new WETH9();
         forwarder = address(new Forwarder());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
@@ -71,7 +72,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         TWFactory(factory).addImplementation(address(new DropERC20(fee)));
         TWFactory(factory).addImplementation(address(new DropERC721(fee)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
-        TWFactory(factory).addImplementation(address(new Marketplace(weth, fee)));
+        TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
         // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
         TWFactory(factory).addImplementation(address(new Multiwrap()));
