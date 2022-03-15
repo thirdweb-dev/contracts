@@ -494,19 +494,7 @@ contract Marketplace is
         Offer memory currentWinningBid = winningBid[_targetListing.listingId];
         uint256 currentOfferAmount = currentWinningBid.pricePerToken * currentWinningBid.quantityWanted;
         uint256 incomingOfferAmount = _incomingBid.pricePerToken * _incomingBid.quantityWanted;
-
-        /**
-         *      If there's an exisitng winning bid, incoming bid amount must be bid buffer % greater.
-         *      Else, bid amount must be at least as great as reserve price
-         */
-        require(
-            isNewWinningBid(
-                _targetListing.reservePricePerToken * _targetListing.quantity,
-                currentOfferAmount,
-                incomingOfferAmount
-            ),
-            "not winning bid."
-        );
+        address _nativeTokenWrapper = nativeTokenWrapper;
 
         // Close auction and execute sale if there's a buyout price and incoming offer amount is buyout price.
         if (
@@ -515,6 +503,19 @@ contract Marketplace is
         ) {
             _closeAuctionForBidder(_targetListing, _incomingBid);
         } else {
+            /**
+            *      If there's an exisitng winning bid, incoming bid amount must be bid buffer % greater.
+            *      Else, bid amount must be at least as great as reserve price
+            */
+            require(
+                isNewWinningBid(
+                    _targetListing.reservePricePerToken * _targetListing.quantity,
+                    currentOfferAmount,
+                    incomingOfferAmount
+                ),
+                "not winning bid."
+            );
+            
             // Update the winning bid and listing's end time before external contract calls.
             winningBid[_targetListing.listingId] = _incomingBid;
 
@@ -522,8 +523,6 @@ contract Marketplace is
                 _targetListing.endTime += timeBuffer;
                 listings[_targetListing.listingId] = _targetListing;
             }
-
-            address _nativeTokenWrapper = nativeTokenWrapper;
 
             // Payout previous highest bid.
             if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
@@ -535,8 +534,9 @@ contract Marketplace is
                     _nativeTokenWrapper
                 );
             }
+        }
 
-            // Collect incoming bid
+        // Collect incoming bid
             CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
                 _targetListing.currency,
                 _incomingBid.offeror,
@@ -553,7 +553,6 @@ contract Marketplace is
                 _incomingBid.pricePerToken * _incomingBid.quantityWanted,
                 _incomingBid.currency
             );
-        }
     }
 
     /// @dev Checks whether an incoming bid is the new current highest bid.
