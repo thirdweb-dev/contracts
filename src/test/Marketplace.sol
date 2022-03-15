@@ -145,7 +145,6 @@ contract MarketplaceTest is BaseTest {
     }
 
     function test_closeAuctionForCreator_afterBuyout() public {
-        
         vm.deal(getActor(0), 100 ether);
         vm.deal(getActor(1), 100 ether);
 
@@ -178,12 +177,12 @@ contract MarketplaceTest is BaseTest {
          *  Auction is closed for the auction creator i.e. Actor-0. Outcome:
          *      - Actor-0 receives the escrowed buyout amount.
          */
-        
+
         uint256 listerBalBefore = getActor(0).balance;
 
         vm.warp(2);
         marketplace.closeAuction(listingId, getActor(0));
-        
+
         uint256 listerBalAfter = getActor(0).balance;
         uint256 winningBidPostFee = (5 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
 

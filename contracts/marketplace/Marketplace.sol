@@ -504,9 +504,9 @@ contract Marketplace is
             _closeAuctionForBidder(_targetListing, _incomingBid);
         } else {
             /**
-            *      If there's an exisitng winning bid, incoming bid amount must be bid buffer % greater.
-            *      Else, bid amount must be at least as great as reserve price
-            */
+             *      If there's an exisitng winning bid, incoming bid amount must be bid buffer % greater.
+             *      Else, bid amount must be at least as great as reserve price
+             */
             require(
                 isNewWinningBid(
                     _targetListing.reservePricePerToken * _targetListing.quantity,
@@ -515,7 +515,7 @@ contract Marketplace is
                 ),
                 "not winning bid."
             );
-            
+
             // Update the winning bid and listing's end time before external contract calls.
             winningBid[_targetListing.listingId] = _incomingBid;
 
@@ -537,22 +537,22 @@ contract Marketplace is
         }
 
         // Collect incoming bid
-            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
-                _targetListing.currency,
-                _incomingBid.offeror,
-                address(this),
-                incomingOfferAmount,
-                _nativeTokenWrapper
-            );
+        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+            _targetListing.currency,
+            _incomingBid.offeror,
+            address(this),
+            incomingOfferAmount,
+            _nativeTokenWrapper
+        );
 
-            emit NewOffer(
-                _targetListing.listingId,
-                _incomingBid.offeror,
-                _targetListing.listingType,
-                _incomingBid.quantityWanted,
-                _incomingBid.pricePerToken * _incomingBid.quantityWanted,
-                _incomingBid.currency
-            );
+        emit NewOffer(
+            _targetListing.listingId,
+            _incomingBid.offeror,
+            _targetListing.listingType,
+            _incomingBid.quantityWanted,
+            _incomingBid.pricePerToken * _incomingBid.quantityWanted,
+            _incomingBid.currency
+        );
     }
 
     /// @dev Checks whether an incoming bid is the new current highest bid.
