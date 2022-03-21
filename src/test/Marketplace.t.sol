@@ -226,10 +226,12 @@ contract MarketplaceTest is BaseTest {
         assertEq(weth.balanceOf(getActor(0)), 0);
         assertEq(weth.balanceOf(getActor(1)), 4 ether);
 
+        uint256 offerValuePostFee = (4 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
+
         vm.prank(getActor(0));
         marketplace.acceptOffer(listingId, getActor(1), address(weth), 4 ether);
         assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
-        assertEq(weth.balanceOf(getActor(0)), 4 ether);
+        assertEq(weth.balanceOf(getActor(0)), offerValuePostFee);
         assertEq(weth.balanceOf(getActor(1)), 0);
     }
 }
