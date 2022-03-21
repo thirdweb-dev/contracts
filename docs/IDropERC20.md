@@ -4,7 +4,7 @@
 
 
 
-`LazyMintERC20` is an ERC 20 contract.  The module admin can create claim conditions with non-overlapping time windows,  and accounts can claim the tokens, in a given time window, according to restrictions  defined in that time window&#39;s claim conditions.
+Thirdweb&#39;s &#39;Drop&#39; contracts are distribution mechanisms for tokens. The  `DropERC20` contract is a distribution mechanism for ERC20 tokens.  A contract admin (i.e. holder of `DEFAULT_ADMIN_ROLE`) can create claim conditions  with non-overlapping time windows, and accounts can claim the tokens according to  restrictions defined in the claim condition that is active at the time of the transaction.
 
 
 
@@ -81,7 +81,7 @@ function balanceOf(address account) external view returns (uint256)
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, bytes32[] _proofs, uint256 _proofMaxQuantityPerTransaction) external payable
+function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, bytes32[] proofs, uint256 proofMaxQuantityPerTransaction) external payable
 ```
 
 Lets an account claim a given quantity of tokens.
@@ -92,12 +92,12 @@ Lets an account claim a given quantity of tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| _receiver | address | The receiver of the NFTs to claim.
-| _quantity | uint256 | The quantity of tokens to claim.
-| _currency | address | The currency in which to pay for the claim.
-| _pricePerToken | uint256 | The price per token to pay for the claim.
-| _proofs | bytes32[] | The proof required to prove the account&#39;s inclusion in the merkle root whitelist                 of the mint conditions that apply.
-| _proofMaxQuantityPerTransaction | uint256 | The maximum claim quantity per transactions that included in the merkle proof.
+| receiver | address | The receiver of the tokens to claim.
+| quantity | uint256 | The quantity of tokens to claim.
+| currency | address | The currency in which to pay for the claim.
+| pricePerToken | uint256 | The price per token (i.e. price per 1 ether unit of the token)                                         to pay for the claim.
+| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
+| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of tokens an address included in an                                        allowlist can claim.
 
 ### contractType
 
@@ -188,10 +188,10 @@ function primarySaleRecipient() external view returns (address)
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IDropClaimCondition.ClaimCondition[] _phases, bool _resetLimitRestriction) external nonpayable
+function setClaimConditions(IDropClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
 ```
 
-Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 
 
@@ -199,8 +199,8 @@ Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 | Name | Type | Description |
 |---|---|---|
-| _phases | IDropClaimCondition.ClaimCondition[] | Mint conditions in ascending order by `startTimestamp`.
-| _resetLimitRestriction | bool | To reset claim phases limit restriction.
+| phases | IDropClaimCondition.ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`.
+| resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and                               `limitMerkleProofClaim` values when setting new                               claim conditions.
 
 ### setContractURI
 
@@ -361,7 +361,7 @@ event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
 
 
 
-*Emitted when a max total supply is set for a token.*
+*Emitted when the global max supply of tokens is updated.*
 
 #### Parameters
 
@@ -377,7 +377,7 @@ event MaxWalletClaimCountUpdated(uint256 count)
 
 
 
-*Emitted when the max wallet claim count is updated.*
+*Emitted when the global max wallet claim count is updated.*
 
 #### Parameters
 
@@ -393,7 +393,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 
 
-*Emitted when fee on primary sales is updated.*
+*Emitted when fee platform fee recipient or bps is updated.*
 
 #### Parameters
 
@@ -410,7 +410,7 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 
 
 
-*Emitted when a new sale recipient is set.*
+*Emitted when a new primary sale recipient is set.*
 
 #### Parameters
 
@@ -463,7 +463,7 @@ event WalletClaimCountUpdated(address indexed wallet, uint256 count)
 
 
 
-*Emitted when a wallet claim count is updated.*
+*Emitted when the wallet claim count for an address is updated.*
 
 #### Parameters
 
