@@ -332,6 +332,11 @@ contract DropERC20 is
         emit ClaimConditionsUpdated(_phases);
     }
 
+    /// @dev Returns the claim condition at the given uid.
+    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+        condition = claimCondition.phases[_conditionId];
+    }
+
     //      =====   Setter functions  =====
 
     /// @dev Lets a module admin set a claim limit on a wallet.
