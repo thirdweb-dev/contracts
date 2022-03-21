@@ -401,7 +401,7 @@ contract DropERC20 is
             return;
         }
 
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+        uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
