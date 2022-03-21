@@ -6,6 +6,17 @@ import "./IThirdwebOwnable.sol";
 import "./IThirdwebRoyalty.sol";
 
 interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
+
+    enum TokenType { ERC20, ERC721, ERC1155 }
+
+    struct PackContent {
+        address assetContract;
+        TokenType tokentype;
+        uint256 tokenId;
+        uint256 totalAmountToPack;
+        uint256 amountDistributedPerOpen;
+    }
+
     /**
      *  @notice A pack can contain ERC1155 tokens from n number of ERC1155 contracts.
      *          You can add any kinds of tokens to a pack via Multiwrap.
