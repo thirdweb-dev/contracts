@@ -403,7 +403,13 @@ contract Marketplace is
         uint256 _currencyAmountToTransfer,
         uint256 _listingTokenAmountToTransfer
     ) internal {
-        validateDirectListingSale(_targetListing, _payer, _listingTokenAmountToTransfer, _currency, _currencyAmountToTransfer);
+        validateDirectListingSale(
+            _targetListing,
+            _payer,
+            _listingTokenAmountToTransfer,
+            _currency,
+            _currencyAmountToTransfer
+        );
 
         _targetListing.quantity -= _listingTokenAmountToTransfer;
         listings[_targetListing.listingId] = _targetListing;
