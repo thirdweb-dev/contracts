@@ -10,9 +10,16 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 
 - `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
 
+## Running Tests
+1. `yarn`: install contracts dependencies
+2. `forge install`: install tests dependencies
+3. `forge test`: run the tests
+
 ## Feedback
 
 If you have any feedback, please reach out to us at support@thirdweb.com.
+
+
 
 ## Authors
 
