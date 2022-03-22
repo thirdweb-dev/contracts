@@ -7,39 +7,53 @@ import "./IThirdwebRoyalty.sol";
 
 interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
 
+    /// @notice The types of tokens that can be added to packs.
     enum TokenType { ERC20, ERC721, ERC1155 }
 
+    /**
+     *  @notice A unit of content i.e. a token in a pack.
+     *
+     *  @param assetContract            The contract address of the token.
+     *  @param tokenType                The type of the token -- ERC20 / ERC721 / ERC1155
+     *  @param tokenId                  The tokenId of the the token, if applicable.
+     *  @param totalAmountPacked        The total amount of this token packed in the pack.
+     *  @param amountDistributedPerOpen The amount of this token to distribute as a unit,
+     *                                  on opening a pack.
+     */
     struct PackContent {
         address assetContract;
-        TokenType tokentype;
+        TokenType tokenType;
         uint256 tokenId;
-        uint256 totalAmountToPack;
+        uint256 totalAmountPacked;
         uint256 amountDistributedPerOpen;
     }
 
     /**
-     *  @notice A pack can contain ERC1155 tokens from n number of ERC1155 contracts.
-     *          You can add any kinds of tokens to a pack via Multiwrap.
+     *  @notice All info relevant to packs.
+     *  
+     *  @param contents The tokens packed in the packs.
+     *  @param openStartTimestamp The timestamp after which packs can be opened.
+     *  @param packUri The metadata URI for packs.
+     *  @param totalCirculatingSupply The total amount of unopened packs.
      */
-    struct PackContents {
-        address[] erc1155AssetContracts;
-        uint256[][] erc1155TokensToWrap;
-        uint256[][] erc1155AmountsToWrap;
+    struct PackInfo {
+        PackContent[] contents;
+        uint256 openStartTimestamp;
+        string packUri;
+        uint256 totalCirculatingSupply;
     }
 
     /**
      *  @notice Creates a pack with the stated contents.
      *
      *  @param contents The contents of the packs to be created.
-     *  @param uri The (metadata) URI assigned to the packs created.
-     *  @param openStartTimestamp The timestamp after which a pack is opened.
-     *  @param nftsPerOpen The number of NFTs received on opening one pack.
+     *  @param packUri The (metadata) URI assigned to the packs created.
+     *  @param openStartTimestamp The timestamp after which packs can be opened.
      */
     function createPack(
-        PackContents calldata contents,
-        string calldata uri,
-        uint128 openStartTimestamp,
-        uint128 nftsPerOpen
+        PackContent[] calldata contents,
+        string calldata packUri,
+        uint128 openStartTimestamp
     ) external;
 
     /**
