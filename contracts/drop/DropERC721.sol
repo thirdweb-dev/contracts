@@ -322,10 +322,14 @@ contract DropERC721 is
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
-        // Verify claim validity. If not valid, revert.
-        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken);
-
-        // Verify inclusion in allowlist
+        /**
+         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
+         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
+         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction.
+         */
+        
+        // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
@@ -334,8 +338,14 @@ contract DropERC721 is
             _proofMaxQuantityPerTransaction
         );
 
+        // Verify claim validity. If not valid, revert.
+        verifyClaim(activeConditionId, _msgSender(), _quantity, _proofMaxQuantityPerTransaction, _currency, _pricePerToken);
+
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            // Mark the claimer's use of their position in the allowlist.
+            /**
+             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+             *  can be used only once.
+             */
             claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
@@ -470,6 +480,7 @@ contract DropERC721 is
         uint256 _conditionId,
         address _claimer,
         uint256 _quantity,
+        uint256 _proofMaxQuantityPerTransaction,
         address _currency,
         uint256 _pricePerToken
     ) public view {
@@ -479,8 +490,10 @@ contract DropERC721 is
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
+
+        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            _quantity > 0 && (_proofMaxQuantityPerTransaction > 0 || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(
