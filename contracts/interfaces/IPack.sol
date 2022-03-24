@@ -17,7 +17,7 @@ interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param tokenType                The type of the token -- ERC20 / ERC721 / ERC1155
      *  @param tokenId                  The tokenId of the the token, if applicable.
      *  @param totalAmountPacked        The total amount of this token packed in the pack.
-     *  @param amountDistributedPerOpen The amount of this token to distribute as a unit,
+     *  @param amountPerUnit The amount of this token to distribute as a unit,
      *                                  on opening a pack.
      */
     struct PackContent {
@@ -25,35 +25,39 @@ interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
         TokenType tokenType;
         uint256 tokenId;
         uint256 totalAmountPacked;
-        uint256 amountDistributedPerOpen;
+        uint256 amountPerUnit;
     }
 
     /**
      *  @notice All info relevant to packs.
      *  
-     *  @param contents The tokens packed in the packs.
+     *  @param contents The reward units packed in the packs.
      *  @param openStartTimestamp The timestamp after which packs can be opened.
-     *  @param packUri The metadata URI for packs.
+     *  @param amountDistributedPerOpen The number of reward units distributed per open.
      *  @param totalCirculatingSupply The total amount of unopened packs.
+     *  @param packUri The metadata URI for packs.
      */
     struct PackInfo {
         PackContent[] contents;
-        uint256 openStartTimestamp;
-        string packUri;
+        uint128 openStartTimestamp;
+        uint128 amountDistributedPerOpen;
         uint256 totalCirculatingSupply;
+        string uri;
     }
 
     /**
      *  @notice Creates a pack with the stated contents.
      *
-     *  @param contents The contents of the packs to be created.
+     *  @param contents The reward units to pack in the packs.
      *  @param packUri The (metadata) URI assigned to the packs created.
      *  @param openStartTimestamp The timestamp after which packs can be opened.
+     *  @param amountDistributedPerOpen The number of reward units distributed per open.
      */
     function createPack(
         PackContent[] calldata contents,
         string calldata packUri,
-        uint128 openStartTimestamp
+        uint128 openStartTimestamp,
+        uint128 amountDistributedPerOpen
     ) external;
 
     /**

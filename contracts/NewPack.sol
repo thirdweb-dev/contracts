@@ -21,7 +21,8 @@ contract NewPack {
 
     struct PackInfo {
         PackContent[] contents;
-        uint256 openStartTimestamp;
+        uint128 openStartTimestamp;
+        uint128 amountDistributedPerOpen;
         string uri;
     }
 
@@ -30,7 +31,8 @@ contract NewPack {
     function createPack(
         PackContent[] calldata _contents,
         string calldata _packUri,
-        uint128 _openStartTimestamp
+        uint128 _openStartTimestamp,
+        uint128 _amountDistributedPerOpen
     ) 
         external
     {
@@ -42,6 +44,7 @@ contract NewPack {
         packInfo[packId] = PackInfo({
             contents: _contents,
             openStartTimestamp: _openStartTimestamp,
+            amountDistributedPerOpen: _amountDistributedPerOpen,
             uri: _packUri
         });
 
@@ -90,23 +93,25 @@ contract NewPack {
         uint256 base; // base == total supply of packs
 
         for(uint256 i = 0; i < _amountToOpen; i += 1) {
-            
-            // Get random value for this iteration.
-            uint256 randomValue = uint256(keccak256(abi.encode(randomNumber, i)));
 
-            // Get target index.
-            uint256 targetIndex = randomValue % base;
+            for(uint256 k = 0; k < pack.amountDistributedPerOpen; k += 1) {
+                // Get random value for this iteration.
+                uint256 randomValue = uint256(keccak256(abi.encode(randomNumber, i, k)));
 
-            // Track step
-            uint256 step;
+                // Get target index.
+                uint256 targetIndex = randomValue % base;
 
-            for(uint256 j = 0; j < pack.contents.length; j += 1) {
-                if(targetIndex < pack.contents[j].totalAmountPacked) {
-                    // TODO: transfer pack content at index j
+                // Track step
+                uint256 step;
 
-                    pack.contents[j].totalAmountPacked -= pack.contents[j].amountToDistributePerOpen;
-                } else {
-                    step += pack.contents[j].totalAmountPacked;
+                for(uint256 j = 0; j < pack.contents.length; j += 1) {
+                    if(targetIndex < pack.contents[j].totalAmountPacked) {
+                        // TODO: transfer pack content at index j
+
+                        pack.contents[j].totalAmountPacked -= pack.contents[j].amountToDistributePerOpen;
+                    } else {
+                        step += pack.contents[j].totalAmountPacked;
+                    }
                 }
             }
         }
