@@ -75,14 +75,14 @@ contract DropERC721 is
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
+    /// @dev The % of primary sales collected as platform fees.
+    uint16 private platformFeeBps;
+
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
 
     /// @dev The (default) % of a sale to take as royalty (in basis points).
-    uint128 private royaltyBps;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 private platformFeeBps;
+    uint16 private royaltyBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -143,9 +143,9 @@ contract DropERC721 is
 
         // Initialize this contract's state.
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint16(_royaltyBps);
         platformFeeRecipient = _platformFeeRecipient;
-        platformFeeBps = _platformFeeBps;
+        platformFeeBps = uint16(_platformFeeBps);
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
         _owner = _defaultAdmin;
@@ -624,7 +624,7 @@ contract DropERC721 is
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
@@ -649,7 +649,7 @@ contract DropERC721 is
     {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
