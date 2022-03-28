@@ -529,17 +529,17 @@ contract Marketplace is
                 _targetListing.endTime += timeBuffer;
                 listings[_targetListing.listingId] = _targetListing;
             }
+        }
 
-            // Payout previous highest bid.
-            if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
-                CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
-                    _targetListing.currency,
-                    address(this),
-                    currentWinningBid.offeror,
-                    currentOfferAmount,
-                    _nativeTokenWrapper
-                );
-            }
+        // Payout previous highest bid.
+        if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
+            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+                _targetListing.currency,
+                address(this),
+                currentWinningBid.offeror,
+                currentOfferAmount,
+                _nativeTokenWrapper
+            );
         }
 
         // Collect incoming bid
