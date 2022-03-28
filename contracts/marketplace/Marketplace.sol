@@ -455,8 +455,10 @@ contract Marketplace is
         });
 
         if (targetListing.listingType == ListingType.Auction) {
+
             // A bid to an auction must be made in the auction's desired currency.
-            newOffer.currency = targetListing.currency;
+            require(newOffer.currency == targetListing.currency, "must use approved currency to bid");
+            
             // A bid must be made for all auction items.
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, targetListing.quantity);
 
