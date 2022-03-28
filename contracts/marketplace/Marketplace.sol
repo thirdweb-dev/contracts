@@ -462,6 +462,10 @@ contract Marketplace is
 
             handleBid(targetListing, newOffer);
         } else if (targetListing.listingType == ListingType.Direct) {
+            
+            // Prevent potentially lost/locked native token.
+            require(msg.value == 0, "no value needed");
+
             // Offers to direct listings cannot be made directly in native tokens.
             newOffer.currency = _currency == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : _currency;
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, _quantityWanted);
