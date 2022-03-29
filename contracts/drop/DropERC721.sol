@@ -339,7 +339,8 @@ contract DropERC721 is
         );
 
         // Verify claim validity. If not valid, revert.
-        verifyClaim(activeConditionId, _msgSender(), _quantity, _proofMaxQuantityPerTransaction, _currency, _pricePerToken);
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
             /**
@@ -480,9 +481,9 @@ contract DropERC721 is
         uint256 _conditionId,
         address _claimer,
         uint256 _quantity,
-        uint256 _proofMaxQuantityPerTransaction,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        bool verifyMaxQuantityPerTransaction
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
 
@@ -493,7 +494,7 @@ contract DropERC721 is
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && (_proofMaxQuantityPerTransaction > 0 || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
+            _quantity > 0 && (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(

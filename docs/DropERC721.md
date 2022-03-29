@@ -1202,7 +1202,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, uint256 _proofMaxQuantityPerTransaction, address _currency, uint256 _pricePerToken) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
 ```
 
 
@@ -1216,9 +1216,9 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 | _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
-| _proofMaxQuantityPerTransaction | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
+| verifyMaxQuantityPerTransaction | bool | undefined
 
 ### verifyClaimMerkleProof
 
