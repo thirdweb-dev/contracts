@@ -150,7 +150,7 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 ### getPlatformFeeInfo
 
 ```solidity
-function getPlatformFeeInfo() external view returns (address platformFeeRecipient, uint16 platformFeeBps)
+function getPlatformFeeInfo() external view returns (address, uint16)
 ```
 
 
@@ -162,8 +162,8 @@ function getPlatformFeeInfo() external view returns (address platformFeeRecipien
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient | address | undefined
-| platformFeeBps | uint16 | undefined
+| _0 | address | undefined
+| _1 | uint16 | undefined
 
 ### getRoyaltyInfoForToken
 
