@@ -31,7 +31,6 @@ contract DropERC20 is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
     ERC20BurnableUpgradeable,
-    ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     IDropERC20
 {
@@ -46,8 +45,6 @@ contract DropERC20 is
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    /// @dev Only PAUSER_ROLE holders can pause ERC20 token transfers.
-    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /// @dev The thirdweb contract with fee related information.
     ITWFee internal immutable thirdwebFee;
@@ -115,7 +112,6 @@ contract DropERC20 is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(PAUSER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
     }
 
@@ -161,7 +157,7 @@ contract DropERC20 is
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
+    ) internal override(ERC20Upgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
