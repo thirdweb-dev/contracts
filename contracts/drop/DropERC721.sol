@@ -390,8 +390,11 @@ contract DropERC721 is
                 "startTimestamp must be in ascending order."
             );
 
+            uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
+            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+
             claimCondition.phases[newStartIndex + i] = _phases[i];
-            claimCondition.phases[newStartIndex + i].supplyClaimed = 0;
+            claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
