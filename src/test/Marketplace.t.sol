@@ -88,7 +88,6 @@ contract MarketplaceTest is BaseTest {
     }
 
     function test_createListing_auctionListing() public {
-        vm.startPrank(getActor(0));
         (uint256 createdListingId, Marketplace.ListingParameters memory createdListing) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
@@ -112,7 +111,6 @@ contract MarketplaceTest is BaseTest {
 
     function test_offer_bidAuctionNativeToken() public {
         vm.deal(getActor(0), 100 ether);
-        vm.startPrank(getActor(0));
 
         Marketplace.Offer memory winningBid;
         (uint256 listingId, ) = createERC721Listing(
@@ -123,6 +121,8 @@ contract MarketplaceTest is BaseTest {
         );
 
         assertEq(getActor(0).balance, 100 ether);
+
+        vm.startPrank(getActor(0));
 
         vm.warp(1);
         marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether);
