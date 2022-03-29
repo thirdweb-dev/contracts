@@ -39,6 +39,7 @@ contract MarketplaceTest is BaseTest {
         listing.listingType = listingType;
 
         listingId = marketplace.totalListings();
+        vm.prank(to);
         marketplace.createListing(listing);
     }
 
@@ -149,7 +150,7 @@ contract MarketplaceTest is BaseTest {
         vm.deal(getActor(1), 100 ether);
 
         // Actor-0 creates an auction listing.
-        vm.startPrank(getActor(0));
+        vm.prank(getActor(0));
         (uint256 listingId, ) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
@@ -181,6 +182,7 @@ contract MarketplaceTest is BaseTest {
         uint256 listerBalBefore = getActor(0).balance;
 
         vm.warp(2);
+        vm.prank(getActor(2));
         marketplace.closeAuction(listingId, getActor(0));
 
         uint256 listerBalAfter = getActor(0).balance;
@@ -188,5 +190,48 @@ contract MarketplaceTest is BaseTest {
 
         assertEq(listerBalAfter - listerBalBefore, winningBidPostFee);
         assertEq(weth.balanceOf(address(marketplace)), 0);
+    }
+
+    function test_acceptOffer_whenListingAcceptsNativeToken() public {
+        vm.deal(getActor(0), 100 ether);
+        vm.deal(getActor(1), 100 ether);
+
+        // Actor-0 creates a direct listing with NATIVE_TOKEN as accepted currency.
+        vm.prank(getActor(0));
+        (uint256 listingId, ) = createERC721Listing(
+            getActor(0),
+            NATIVE_TOKEN,
+            5 ether,
+            IMarketplace.ListingType.Direct
+        );
+
+        vm.warp(1);
+        vm.startPrank(getActor(1));
+
+        // Actor-1 mints 4 ether worth of WETH
+        assertEq(weth.balanceOf(getActor(1)), 0);
+        weth.deposit{ value: 4 ether }();
+        assertEq(weth.balanceOf(getActor(1)), 4 ether);
+
+        // Actor-1 makes an offer to the direct listing for 4 WETH.
+        weth.approve(address(marketplace), 4 ether);
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether);
+
+        vm.stopPrank();
+
+        // Actor-0 successfully accepts the offer.
+        vm.warp(2);
+        Marketplace.Listing memory listing = getListing(listingId);
+        assertEq(erc721.ownerOf(listing.tokenId), getActor(0));
+        assertEq(weth.balanceOf(getActor(0)), 0);
+        assertEq(weth.balanceOf(getActor(1)), 4 ether);
+
+        uint256 offerValuePostFee = (4 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
+
+        vm.prank(getActor(0));
+        marketplace.acceptOffer(listingId, getActor(1), address(weth), 4 ether);
+        assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
+        assertEq(weth.balanceOf(getActor(0)), offerValuePostFee);
+        assertEq(weth.balanceOf(getActor(1)), 0);
     }
 }
