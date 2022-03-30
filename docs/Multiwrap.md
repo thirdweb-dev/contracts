@@ -4,7 +4,7 @@
 
 
 
-- Wrap multiple ERC721 and ERC20 tokens into &#39;n&#39; shares (i.e. variable supply of 1 ERC 1155 token)
+
 
 
 
@@ -27,87 +27,44 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
-### balanceOf
+### approve
 
 ```solidity
-function balanceOf(address account, uint256 id) external view returns (uint256)
+function approve(address to, uint256 tokenId) external nonpayable
 ```
 
 
 
-*See {IERC1155-balanceOf}. Requirements: - `account` cannot be the zero address.*
+*See {IERC721-approve}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
+| to | address | undefined
+| tokenId | uint256 | undefined
+
+### balanceOf
+
+```solidity
+function balanceOf(address owner) external view returns (uint256)
+```
+
+
+
+*See {IERC721-balanceOf}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
-
-### balanceOfBatch
-
-```solidity
-function balanceOfBatch(address[] accounts, uint256[] ids) external view returns (uint256[])
-```
-
-
-
-*See {IERC1155-balanceOfBatch}. Requirements: - `accounts` and `ids` must have the same length.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| accounts | address[] | undefined
-| ids | uint256[] | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256[] | undefined
-
-### burn
-
-```solidity
-function burn(address account, uint256 id, uint256 value) external nonpayable
-```
-
-
-
-*Lets a token owner burn the tokens they own (i.e. destroy for good)*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
-| value | uint256 | undefined
-
-### burnBatch
-
-```solidity
-function burnBatch(address account, uint256[] ids, uint256[] values) external nonpayable
-```
-
-
-
-*Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined
-| ids | uint256[] | undefined
-| values | uint256[] | undefined
 
 ### contractType
 
@@ -117,7 +74,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-*Returns the module type of the contract.*
+*Returns the type of the contract.*
 
 
 #### Returns
@@ -159,6 +116,28 @@ function contractVersion() external pure returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined
+
+### getApproved
+
+```solidity
+function getApproved(uint256 tokenId) external view returns (address)
+```
+
+
+
+*See {IERC721-getApproved}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
 
 ### getDefaultRoyaltyInfo
 
@@ -333,18 +312,18 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 ### isApprovedForAll
 
 ```solidity
-function isApprovedForAll(address account, address operator) external view returns (bool)
+function isApprovedForAll(address owner, address operator) external view returns (bool)
 ```
 
 
 
-*See {IERC1155-isApprovedForAll}.*
+*See {IERC721-isApprovedForAll}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| owner | address | undefined
 | operator | address | undefined
 
 #### Returns
@@ -405,7 +384,7 @@ function name() external view returns (string)
 
 
 
-
+*See {IERC721Metadata-name}.*
 
 
 #### Returns
@@ -525,6 +504,28 @@ function owner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
+### ownerOf
+
+```solidity
+function ownerOf(uint256 tokenId) external view returns (address)
+```
+
+
+
+*See {IERC721-ownerOf}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### renounceRole
 
 ```solidity
@@ -567,7 +568,7 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 
 
-*See EIP-2981*
+*Returns the royalty recipient and amount, given a tokenId and sale price.*
 
 #### Parameters
 
@@ -583,35 +584,15 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 | receiver | address | undefined
 | royaltyAmount | uint256 | undefined
 
-### safeBatchTransferFrom
-
-```solidity
-function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[] amounts, bytes data) external nonpayable
-```
-
-
-
-*See {IERC1155-safeBatchTransferFrom}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| from | address | undefined
-| to | address | undefined
-| ids | uint256[] | undefined
-| amounts | uint256[] | undefined
-| data | bytes | undefined
-
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
 ```
 
 
 
-*See {IERC1155-safeTransferFrom}.*
+*See {IERC721-safeTransferFrom}.*
 
 #### Parameters
 
@@ -619,9 +600,8 @@ function safeTransferFrom(address from, address to, uint256 id, uint256 amount, 
 |---|---|---|
 | from | address | undefined
 | to | address | undefined
-| id | uint256 | undefined
-| amount | uint256 | undefined
-| data | bytes | undefined
+| tokenId | uint256 | undefined
+| _data | bytes | undefined
 
 ### setApprovalForAll
 
@@ -631,7 +611,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-*See {IERC1155-setApprovalForAll}.*
+*See {IERC721-setApprovalForAll}.*
 
 #### Parameters
 
@@ -715,7 +695,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-
+*See ERC 165*
 
 #### Parameters
 
@@ -737,7 +717,7 @@ function symbol() external view returns (string)
 
 
 
-
+*See {IERC721Metadata-symbol}.*
 
 
 #### Returns
@@ -746,107 +726,80 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### totalShares
+### tokenURI
 
 ```solidity
-function totalShares(uint256) external view returns (uint256)
+function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
 
 
-*Token ID =&gt; total circulating supply of tokens with that ID.*
+*Returns the URI for a given tokenId.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | string | undefined
 
-### totalSupply
+### transferFrom
 
 ```solidity
-function totalSupply(uint256) external view returns (uint256)
+function transferFrom(address from, address to, uint256 tokenId) external nonpayable
 ```
 
 
 
-*Token ID =&gt; total circulating supply of tokens with that ID.*
+*See {IERC721-transferFrom}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
+| from | address | undefined
+| to | address | undefined
+| tokenId | uint256 | undefined
 
 ### unwrap
 
 ```solidity
-function unwrap(uint256 _tokenId, uint256 _amountToRedeem, address _sendTo) external nonpayable
+function unwrap(uint256 _tokenId, address _recipient) external nonpayable
 ```
 
 
 
-*Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.*
+*Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _tokenId | uint256 | undefined
-| _amountToRedeem | uint256 | undefined
-| _sendTo | address | undefined
-
-### uri
-
-```solidity
-function uri(uint256 _tokenId) external view returns (string)
-```
-
-
-
-*See ERC1155 - returns the metadata for a token.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined
+| _recipient | address | undefined
 
 ### wrap
 
 ```solidity
-function wrap(MultiTokenTransferLib.MultiToken _wrappedContents, uint256 _shares, string _uriForShares) external payable returns (uint256 tokenId)
+function wrap(IMultiwrap.Token[] _wrappedContents, string _uriForWrappedToken, address _recipient) external payable returns (uint256 tokenId)
 ```
 
 
 
-*Wrap multiple ERC1155, ERC721, ERC20 tokens into &#39;n&#39; shares (i.e. variable supply of 1 ERC 1155 token)*
+*Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _wrappedContents | MultiTokenTransferLib.MultiToken | undefined
-| _shares | uint256 | undefined
-| _uriForShares | string | undefined
+| _wrappedContents | IMultiwrap.Token[] | undefined
+| _uriForWrappedToken | string | undefined
+| _recipient | address | undefined
 
 #### Returns
 
@@ -858,10 +811,10 @@ function wrap(MultiTokenTransferLib.MultiToken _wrappedContents, uint256 _shares
 
 ## Events
 
-### ApprovalForAll
+### Approval
 
 ```solidity
-event ApprovalForAll(address indexed account, address indexed operator, bool approved)
+event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)
 ```
 
 
@@ -872,7 +825,25 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 
 | Name | Type | Description |
 |---|---|---|
-| account `indexed` | address | undefined |
+| owner `indexed` | address | undefined |
+| approved `indexed` | address | undefined |
+| tokenId `indexed` | uint256 | undefined |
+
+### ApprovalForAll
+
+```solidity
+event ApprovalForAll(address indexed owner, address indexed operator, bool approved)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
@@ -985,7 +956,7 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 ### TokensUnwrapped
 
 ```solidity
-event TokensUnwrapped(address indexed wrapper, address sentTo, uint256 indexed tokenIdOfShares, uint256 sharesUnwrapped, MultiTokenTransferLib.MultiToken wrappedContents)
+event TokensUnwrapped(address indexed unwrapper, address indexed recipientOfWrappedContents, uint256 indexed tokenIdOfWrappedToken, IMultiwrap.Token[] wrappedContents)
 ```
 
 
@@ -996,16 +967,15 @@ event TokensUnwrapped(address indexed wrapper, address sentTo, uint256 indexed t
 
 | Name | Type | Description |
 |---|---|---|
-| wrapper `indexed` | address | undefined |
-| sentTo  | address | undefined |
-| tokenIdOfShares `indexed` | uint256 | undefined |
-| sharesUnwrapped  | uint256 | undefined |
-| wrappedContents  | MultiTokenTransferLib.MultiToken | undefined |
+| unwrapper `indexed` | address | undefined |
+| recipientOfWrappedContents `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| wrappedContents  | IMultiwrap.Token[] | undefined |
 
 ### TokensWrapped
 
 ```solidity
-event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.MultiToken wrappedContents)
+event TokensWrapped(address indexed wrapper, address indexed recipientOfWrappedToken, uint256 indexed tokenIdOfWrappedToken, IMultiwrap.Token[] wrappedContents)
 ```
 
 
@@ -1017,13 +987,14 @@ event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, Mu
 | Name | Type | Description |
 |---|---|---|
 | wrapper `indexed` | address | undefined |
-| tokenIdOfShares `indexed` | uint256 | undefined |
-| wrappedContents  | MultiTokenTransferLib.MultiToken | undefined |
+| recipientOfWrappedToken `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| wrappedContents  | IMultiwrap.Token[] | undefined |
 
-### TransferBatch
+### Transfer
 
 ```solidity
-event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)
+event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
 ```
 
 
@@ -1034,48 +1005,9 @@ event TransferBatch(address indexed operator, address indexed from, address inde
 
 | Name | Type | Description |
 |---|---|---|
-| operator `indexed` | address | undefined |
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
-| ids  | uint256[] | undefined |
-| values  | uint256[] | undefined |
-
-### TransferSingle
-
-```solidity
-event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| operator `indexed` | address | undefined |
-| from `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| id  | uint256 | undefined |
-| value  | uint256 | undefined |
-
-### URI
-
-```solidity
-event URI(string value, uint256 indexed id)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| value  | string | undefined |
-| id `indexed` | uint256 | undefined |
+| tokenId `indexed` | uint256 | undefined |
 
 
 

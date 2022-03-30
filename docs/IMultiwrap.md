@@ -4,7 +4,7 @@
 
 
 
-
+Thirdweb&#39;s Multiwrap contract lets you wrap arbitrary ERC20, ERC721 and ERC1155  tokens you own into a single wrapped token / NFT.  A wrapped NFT can be unwrapped i.e. burned in exchange for its underlying contents. 
 
 
 
@@ -235,10 +235,10 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### unwrap
 
 ```solidity
-function unwrap(uint256 tokenId, uint256 amountToRedeem, address _sendTo) external nonpayable
+function unwrap(uint256 tokenId, address recipient) external nonpayable
 ```
 
-Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
+Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
 
 
 
@@ -246,17 +246,16 @@ Unwrap shares to retrieve underlying ERC1155, ERC721, ERC20 tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | The token Id of the tokens to unwrap.
-| amountToRedeem | uint256 | The amount of shares to unwrap
-| _sendTo | address | undefined
+| tokenId | uint256 | The token Id of the wrapped NFT to unwrap.
+| recipient | address | The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
 
 ### wrap
 
 ```solidity
-function wrap(MultiTokenTransferLib.MultiToken wrappedContents, uint256 shares, string uriForShares) external payable returns (uint256 tokenId)
+function wrap(IMultiwrap.Token[] wrappedContents, string uriForWrappedToken, address recipient) external payable returns (uint256 tokenId)
 ```
 
-Wrap multiple ERC1155, ERC721, ERC20 tokens into &#39;n&#39; shares (i.e. variable supply of 1 ERC 1155 token)
+Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.
 
 
 
@@ -264,9 +263,9 @@ Wrap multiple ERC1155, ERC721, ERC20 tokens into &#39;n&#39; shares (i.e. variab
 
 | Name | Type | Description |
 |---|---|---|
-| wrappedContents | MultiTokenTransferLib.MultiToken | The tokens to wrap.
-| shares | uint256 | The number of shares to issue for the wrapped contents.
-| uriForShares | string | The URI for the shares i.e. wrapped token.
+| wrappedContents | IMultiwrap.Token[] | The tokens to wrap.
+| uriForWrappedToken | string | The metadata URI for the wrapped NFT.
+| recipient | address | The recipient of the wrapped NFT.
 
 #### Returns
 
@@ -303,7 +302,7 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 
 
-*Emitted when a new Owner is set.*
+*Emitted when the contract owner is updated.*
 
 #### Parameters
 
@@ -333,7 +332,7 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 ### TokensUnwrapped
 
 ```solidity
-event TokensUnwrapped(address indexed wrapper, address sentTo, uint256 indexed tokenIdOfShares, uint256 sharesUnwrapped, MultiTokenTransferLib.MultiToken wrappedContents)
+event TokensUnwrapped(address indexed unwrapper, address indexed recipientOfWrappedContents, uint256 indexed tokenIdOfWrappedToken, IMultiwrap.Token[] wrappedContents)
 ```
 
 
@@ -344,16 +343,15 @@ event TokensUnwrapped(address indexed wrapper, address sentTo, uint256 indexed t
 
 | Name | Type | Description |
 |---|---|---|
-| wrapper `indexed` | address | undefined |
-| sentTo  | address | undefined |
-| tokenIdOfShares `indexed` | uint256 | undefined |
-| sharesUnwrapped  | uint256 | undefined |
-| wrappedContents  | MultiTokenTransferLib.MultiToken | undefined |
+| unwrapper `indexed` | address | undefined |
+| recipientOfWrappedContents `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| wrappedContents  | IMultiwrap.Token[] | undefined |
 
 ### TokensWrapped
 
 ```solidity
-event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, MultiTokenTransferLib.MultiToken wrappedContents)
+event TokensWrapped(address indexed wrapper, address indexed recipientOfWrappedToken, uint256 indexed tokenIdOfWrappedToken, IMultiwrap.Token[] wrappedContents)
 ```
 
 
@@ -365,8 +363,9 @@ event TokensWrapped(address indexed wrapper, uint256 indexed tokenIdOfShares, Mu
 | Name | Type | Description |
 |---|---|---|
 | wrapper `indexed` | address | undefined |
-| tokenIdOfShares `indexed` | uint256 | undefined |
-| wrappedContents  | MultiTokenTransferLib.MultiToken | undefined |
+| recipientOfWrappedToken `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| wrappedContents  | IMultiwrap.Token[] | undefined |
 
 
 
