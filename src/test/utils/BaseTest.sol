@@ -75,7 +75,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
         // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
-        TWFactory(factory).addImplementation(address(new Multiwrap()));
+        TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
