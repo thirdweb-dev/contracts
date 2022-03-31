@@ -539,7 +539,7 @@ contract Marketplace is
 
         // Payout previous highest bid.
         if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
-            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+            CurrencyTransferLib.transferCurrencyWithWrapper(
                 _targetListing.currency,
                 address(this),
                 currentWinningBid.offeror,
@@ -549,7 +549,7 @@ contract Marketplace is
         }
 
         // Collect incoming bid
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _targetListing.currency,
             _incomingBid.offeror,
             address(this),
@@ -721,28 +721,28 @@ contract Marketplace is
         // Distribute price to token owner
         address _nativeTokenWrapper = nativeTokenWrapper;
 
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             platformFeeRecipient,
             platformFeeCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             royaltyRecipient,
             royaltyCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             twFeeRecipient,
             twFeeCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             _payee,
