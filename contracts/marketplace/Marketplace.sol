@@ -381,10 +381,7 @@ contract Marketplace is
             _currency == targetOffer.currency && _pricePerToken == targetOffer.pricePerToken,
             "invalid currency or price"
         );
-        require(
-            targetOffer.expirationTimestamp > block.timestamp,
-            "offer expired"
-        );
+        require(targetOffer.expirationTimestamp > block.timestamp, "offer expired");
 
         delete offers[_listingId][_offeror];
 
@@ -461,16 +458,14 @@ contract Marketplace is
         });
 
         if (targetListing.listingType == ListingType.Auction) {
-
             // A bid to an auction must be made in the auction's desired currency.
             require(newOffer.currency == targetListing.currency, "must use approved currency to bid");
-            
+
             // A bid must be made for all auction items.
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, targetListing.quantity);
 
             handleBid(targetListing, newOffer);
         } else if (targetListing.listingType == ListingType.Direct) {
-            
             // Prevent potentially lost/locked native token.
             require(msg.value == 0, "no value needed");
 
