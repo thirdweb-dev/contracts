@@ -381,6 +381,10 @@ contract Marketplace is
             _currency == targetOffer.currency && _pricePerToken == targetOffer.pricePerToken,
             "invalid currency or price"
         );
+        require(
+            targetOffer.expirationTimestamp > block.timestamp,
+            "offer expired"
+        );
 
         delete offers[_listingId][_offeror];
 
@@ -436,7 +440,8 @@ contract Marketplace is
         uint256 _listingId,
         uint256 _quantityWanted,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        uint256 _expirationTimestamp
     ) external payable override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
 
@@ -451,7 +456,8 @@ contract Marketplace is
             offeror: _msgSender(),
             quantityWanted: _quantityWanted,
             currency: _currency,
-            pricePerToken: _pricePerToken
+            pricePerToken: _pricePerToken,
+            expirationTimestamp: _expirationTimestamp
         });
 
         if (targetListing.listingType == ListingType.Auction) {
