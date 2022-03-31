@@ -212,10 +212,10 @@ contract Marketplace is
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(ListingParameters memory _params) external override {
-        require(_params.secondsUntilEndTime > 0, "end time must > 0.");
-
         // Get values to populate `Listing`.
-        uint256 listingId = getNextListingId();
+        uint256 listingId = totalListings;
+        totalListings += 1;
+
         address tokenOwner = _msgSender();
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
@@ -857,12 +857,6 @@ contract Marketplace is
         } else {
             revert("token must be ERC1155 or ERC721.");
         }
-    }
-
-    /// @dev Returns the next listing Id to use.
-    function getNextListingId() internal returns (uint256 nextId) {
-        nextId = totalListings;
-        totalListings += 1;
     }
 
     /// @dev Returns the platform fee recipient and bps.
