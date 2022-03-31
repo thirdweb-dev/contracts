@@ -328,7 +328,7 @@ contract DropERC721 is
          *  restriction over the check of the general claim condition's quantityLimitPerTransaction
          *  restriction.
          */
-        
+
         // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
@@ -340,7 +340,14 @@ contract DropERC721 is
 
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
-        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(
+            activeConditionId,
+            _msgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
 
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
             /**
@@ -497,7 +504,8 @@ contract DropERC721 is
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
+            _quantity > 0 &&
+                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(

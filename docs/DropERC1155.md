@@ -1072,7 +1072,7 @@ function uri(uint256 _tokenId) external view returns (string _tokenURI)
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
 ```
 
 
@@ -1089,6 +1089,7 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, u
 | _quantity | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
+| verifyMaxQuantityPerTransaction | bool | undefined
 
 ### verifyClaimMerkleProof
 

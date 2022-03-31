@@ -7,7 +7,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 library CurrencyTransferLib {
-
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /// @dev The address interpreted as native token of the chain.
@@ -71,7 +70,7 @@ library CurrencyTransferLib {
             return;
         }
 
-        if(_from == address(this)) {
+        if (_from == address(this)) {
             IERC20Upgradeable(_currency).safeTransfer(_to, _amount);
         } else {
             IERC20Upgradeable(_currency).safeTransferFrom(_from, _to, _amount);
@@ -90,8 +89,8 @@ library CurrencyTransferLib {
         }
 
         uint256 balBefore = IERC20Upgradeable(_currency).balanceOf(_to);
-        
-        if(_from == address(this)) {
+
+        if (_from == address(this)) {
             IERC20Upgradeable(_currency).safeTransfer(_to, _amount);
         } else {
             IERC20Upgradeable(_currency).safeTransferFrom(_from, _to, _amount);
