@@ -73,14 +73,14 @@ contract DropERC1155 is
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
+    /// @dev The % of primary sales collected as platform fees.
+    uint16 private platformFeeBps;
+
     /// @dev The recipient of who gets the royalty.
     address private royaltyRecipient;
 
     /// @dev The (default) address that receives all royalty value.
-    uint128 private royaltyBps;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 private platformFeeBps;
+    uint16 private royaltyBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -149,11 +149,11 @@ contract DropERC1155 is
         name = _name;
         symbol = _symbol;
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint16(_royaltyBps);
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        platformFeeBps = _platformFeeBps;
+        platformFeeBps = uint16(_platformFeeBps);
         _owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -569,7 +569,7 @@ contract DropERC1155 is
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
@@ -594,7 +594,7 @@ contract DropERC1155 is
     {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
