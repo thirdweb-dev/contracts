@@ -78,7 +78,8 @@ contract MarketplaceTest is BaseTest {
             address offeror,
             uint256 quantityWanted,
             address currency,
-            uint256 pricePerToken
+            uint256 pricePerToken,
+
         ) = marketplace.winningBid(_listingId);
         winningBid.listingId = listingId;
         winningBid.offeror = offeror;
@@ -125,7 +126,8 @@ contract MarketplaceTest is BaseTest {
         vm.startPrank(getActor(0));
 
         vm.warp(1);
-        marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether);
+        vm.prank(getActor(0));
+        marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether, type(uint256).max);
         winningBid = getWinningBid(listingId);
         assertEq(getActor(0).balance, 99 ether);
         assertEq(winningBid.listingId, listingId);
@@ -135,7 +137,8 @@ contract MarketplaceTest is BaseTest {
         assertEq(winningBid.pricePerToken, 1 ether);
 
         vm.warp(2);
-        marketplace.offer{ value: 2 ether }(listingId, 1, NATIVE_TOKEN, 2 ether);
+        vm.prank(getActor(0));
+        marketplace.offer{ value: 2 ether }(listingId, 1, NATIVE_TOKEN, 2 ether, type(uint256).max);
         winningBid = getWinningBid(listingId);
         assertEq(getActor(0).balance, 98 ether);
         assertEq(winningBid.listingId, listingId);
@@ -169,7 +172,7 @@ contract MarketplaceTest is BaseTest {
          */
         vm.warp(1);
         vm.prank(getActor(1));
-        marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether);
+        marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
 
         assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
         assertEq(weth.balanceOf(address(marketplace)), 5 ether);
@@ -215,7 +218,7 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-1 makes an offer to the direct listing for 4 WETH.
         weth.approve(address(marketplace), 4 ether);
-        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether);
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, type(uint256).max);
 
         vm.stopPrank();
 
