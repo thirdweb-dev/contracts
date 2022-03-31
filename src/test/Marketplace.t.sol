@@ -123,8 +123,6 @@ contract MarketplaceTest is BaseTest {
 
         assertEq(getActor(0).balance, 100 ether);
 
-        vm.startPrank(getActor(0));
-
         vm.warp(1);
         vm.prank(getActor(0));
         marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether, type(uint256).max);
