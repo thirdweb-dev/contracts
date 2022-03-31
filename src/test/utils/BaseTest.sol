@@ -143,8 +143,8 @@ abstract contract BaseTest is DSTest, stdCheats {
                     CONTRACT_URI,
                     forwarders(),
                     saleRecipient,
-                    platformFeeBps,
-                    platformFeeRecipient
+                    platformFeeRecipient,
+                    platformFeeBps
                 )
             )
         );
