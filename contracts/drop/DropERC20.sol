@@ -96,8 +96,8 @@ contract DropERC20 is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _primarySaleRecipient,
-        uint256 _platformFeeBps,
-        address _platformFeeRecipient
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init_unchained(_trustedForwarders);

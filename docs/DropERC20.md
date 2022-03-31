@@ -638,7 +638,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _primarySaleRecipient, uint256 _platformFeeBps, address _platformFeeRecipient) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _primarySaleRecipient, address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
 ```
 
 
@@ -655,8 +655,8 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _contractURI | string | undefined
 | _trustedForwarders | address[] | undefined
 | _primarySaleRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
 | _platformFeeRecipient | address | undefined
+| _platformFeeBps | uint256 | undefined
 
 ### isTrustedForwarder
 
