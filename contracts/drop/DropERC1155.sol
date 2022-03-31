@@ -257,10 +257,14 @@ contract DropERC1155 is
         // Get the active claim condition index.
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
-        // Verify claim validity. If not valid, revert.
-        verifyClaim(activeConditionId, _msgSender(), _tokenId, _quantity, _currency, _pricePerToken);
-
-        // Verify inclusion in allowlist
+        /**
+         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
+         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
+         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction.
+         */
+        
+        // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
@@ -270,8 +274,15 @@ contract DropERC1155 is
             _proofMaxQuantityPerTransaction
         );
 
+        // Verify claim validity. If not valid, revert.
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        verifyClaim(activeConditionId, _msgSender(), _tokenId, _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            // Mark the claimer's use of their position in the allowlist.
+            /**
+             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+             *  can be used only once.
+             */
             claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
@@ -402,7 +413,8 @@ contract DropERC1155 is
         uint256 _tokenId,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        bool verifyMaxQuantityPerTransaction
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
 
@@ -410,8 +422,9 @@ contract DropERC1155 is
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
+        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            _quantity > 0 && (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(
