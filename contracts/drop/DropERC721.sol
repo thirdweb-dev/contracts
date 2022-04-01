@@ -41,7 +41,7 @@ contract DropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -75,14 +75,14 @@ contract DropERC721 is
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
+    /// @dev The % of primary sales collected as platform fees.
+    uint16 private platformFeeBps;
+
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
 
     /// @dev The (default) % of a sale to take as royalty (in basis points).
-    uint128 private royaltyBps;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 private platformFeeBps;
+    uint16 private royaltyBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -143,9 +143,9 @@ contract DropERC721 is
 
         // Initialize this contract's state.
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint16(_royaltyBps);
         platformFeeRecipient = _platformFeeRecipient;
-        platformFeeBps = _platformFeeBps;
+        platformFeeBps = uint16(_platformFeeBps);
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
         _owner = _defaultAdmin;
@@ -322,10 +322,14 @@ contract DropERC721 is
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
-        // Verify claim validity. If not valid, revert.
-        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken);
+        /**
+         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
+         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
+         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction.
+         */
 
-        // Verify inclusion in allowlist
+        // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
@@ -334,8 +338,22 @@ contract DropERC721 is
             _proofMaxQuantityPerTransaction
         );
 
+        // Verify claim validity. If not valid, revert.
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        verifyClaim(
+            activeConditionId,
+            _msgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
+
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            // Mark the claimer's use of their position in the allowlist.
+            /**
+             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+             *  can be used only once.
+             */
             claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
@@ -374,13 +392,13 @@ contract DropERC721 is
 
         uint256 lastConditionStartTimestamp;
         for (uint256 i = 0; i < _phases.length; i++) {
-            require(
-                i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
-                "startTimestamp must be in ascending order."
-            );
+            require(i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp, "ST");
+
+            uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
+            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "MS");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
-            claimCondition.phases[newStartIndex + i].supplyClaimed = 0;
+            claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
@@ -471,7 +489,8 @@ contract DropERC721 is
         address _claimer,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        bool verifyMaxQuantityPerTransaction
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
 
@@ -479,8 +498,11 @@ contract DropERC721 is
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
+
+        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            _quantity > 0 &&
+                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(
@@ -605,7 +627,7 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxTotalSupply < nextTokenIdToMint, "already minted more than desired max supply");
+        require(_maxTotalSupply < nextTokenIdToMint, "MAX");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
@@ -621,10 +643,10 @@ contract DropERC721 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+        require(_royaltyBps <= MAX_BPS, "MAX_BPS");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
@@ -635,7 +657,7 @@ contract DropERC721 is
         address _recipient,
         uint256 _bps
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "exceed royalty bps");
+        require(_bps <= MAX_BPS, "MAX_BPS");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
@@ -649,7 +671,7 @@ contract DropERC721 is
     {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
@@ -657,7 +679,7 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not contract admin.");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "!ADMIN");
         address _prevOwner = _owner;
         _owner = _newOwner;
 
@@ -690,7 +712,7 @@ contract DropERC721 is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
     }
 

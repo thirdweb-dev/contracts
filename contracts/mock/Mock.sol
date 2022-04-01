@@ -13,3 +13,23 @@ contract Mock {
     IERC721 public erc721;
     IERC1155 public erc1155;
 }
+
+contract MockContract {
+    bytes32 private name;
+    uint8 private version;
+
+    constructor(bytes32 _name, uint8 _version) {
+        name = _name;
+        version = _version;
+    }
+
+    /// @dev Returns the module type of the contract.
+    function contractType() external view returns (bytes32) {
+        return name;
+    }
+
+    /// @dev Returns the version of the contract.
+    function contractVersion() external view returns (uint8) {
+        return version;
+    }
+}

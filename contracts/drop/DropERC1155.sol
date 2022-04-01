@@ -42,7 +42,7 @@ contract DropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     // Token name
     string public name;
@@ -73,14 +73,14 @@ contract DropERC1155 is
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
+    /// @dev The % of primary sales collected as platform fees.
+    uint16 private platformFeeBps;
+
     /// @dev The recipient of who gets the royalty.
     address private royaltyRecipient;
 
     /// @dev The (default) address that receives all royalty value.
-    uint128 private royaltyBps;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint128 private platformFeeBps;
+    uint16 private royaltyBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -149,11 +149,11 @@ contract DropERC1155 is
         name = _name;
         symbol = _symbol;
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
+        royaltyBps = uint16(_royaltyBps);
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        platformFeeBps = _platformFeeBps;
+        platformFeeBps = uint16(_platformFeeBps);
         _owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -257,10 +257,14 @@ contract DropERC1155 is
         // Get the active claim condition index.
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
-        // Verify claim validity. If not valid, revert.
-        verifyClaim(activeConditionId, _msgSender(), _tokenId, _quantity, _currency, _pricePerToken);
+        /**
+         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
+         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
+         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction.
+         */
 
-        // Verify inclusion in allowlist
+        // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
@@ -270,8 +274,23 @@ contract DropERC1155 is
             _proofMaxQuantityPerTransaction
         );
 
+        // Verify claim validity. If not valid, revert.
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        verifyClaim(
+            activeConditionId,
+            _msgSender(),
+            _tokenId,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
+
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            // Mark the claimer's use of their position in the allowlist.
+            /**
+             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+             *  can be used only once.
+             */
             claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
@@ -317,8 +336,11 @@ contract DropERC1155 is
                 "startTimestamp must be in ascending order."
             );
 
+            uint256 supplyClaimedAlready = condition.phases[newStartIndex + i].supplyClaimed;
+            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+
             condition.phases[newStartIndex + i] = _phases[i];
-            condition.phases[newStartIndex + i].supplyClaimed = 0;
+            condition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
@@ -402,7 +424,8 @@ contract DropERC1155 is
         uint256 _tokenId,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        bool verifyMaxQuantityPerTransaction
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
 
@@ -410,8 +433,10 @@ contract DropERC1155 is
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
+        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            _quantity > 0 &&
+                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(
@@ -569,7 +594,7 @@ contract DropERC1155 is
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
+        royaltyBps = uint16(_royaltyBps);
 
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
@@ -594,7 +619,7 @@ contract DropERC1155 is
     {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
-        platformFeeBps = uint64(_platformFeeBps);
+        platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);

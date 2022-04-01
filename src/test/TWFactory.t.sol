@@ -309,19 +309,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
      *  - No proxy should be able to point to an unapproved implementation.
      *  - No non-admin should be able to approve an implementation.
      **/
-
-    function testNoUnapprovedImpl(address _implementation) public {
-        vm.prank(factoryAdmin);
-        _factory.approveImplementation(address(mockModule), true);
-
-        if (_implementation != address(mockModule)) {
-            vm.expectRevert("implementation not approved");
-
-            vm.prank(proxyDeployer);
-            _factory.deployProxyByImplementation(_implementation, "", "");
-        }
-    }
-
     function testNoNonAdmin(address _implementation, address _deployer) public {
         bool toApprove = true;
 

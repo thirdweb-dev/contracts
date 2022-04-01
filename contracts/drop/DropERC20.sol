@@ -96,8 +96,8 @@ contract DropERC20 is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _primarySaleRecipient,
-        uint256 _platformFeeBps,
-        address _platformFeeRecipient
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init_unchained(_trustedForwarders);
@@ -181,10 +181,14 @@ contract DropERC20 is
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
-        // Verify claim validity. If not valid, revert.
-        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken);
+        /**
+         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
+         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
+         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction.
+         */
 
-        // Verify inclusion in allowlist
+        // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
@@ -193,8 +197,22 @@ contract DropERC20 is
             _proofMaxQuantityPerTransaction
         );
 
+        // Verify claim validity. If not valid, revert.
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        verifyClaim(
+            activeConditionId,
+            _msgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
+
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            // Mark the claimer's use of their position in the allowlist.
+            /**
+             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+             *  can be used only once.
+             */
             claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
         }
 
@@ -238,8 +256,11 @@ contract DropERC20 is
                 "startTimestamp must be in ascending order."
             );
 
+            uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
+            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+
             claimCondition.phases[newStartIndex + i] = _phases[i];
-            claimCondition.phases[newStartIndex + i].supplyClaimed = 0;
+            claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
         }
@@ -324,7 +345,8 @@ contract DropERC20 is
         address _claimer,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        bool verifyMaxQuantityPerTransaction
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
 
@@ -332,8 +354,10 @@ contract DropERC20 is
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
+        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
-            _quantity > 0 && _quantity <= currentClaimPhase.quantityLimitPerTransaction,
+            _quantity > 0 &&
+                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(
