@@ -220,9 +220,10 @@ contract Marketplace is
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
-        require(tokenAmountToList > 0, "listing invalid quantity.");
-        require(hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()), "does not have LISTER_ROLE.");
-        require(hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract), "unapproved asset.");
+        require(tokenAmountToList > 0, "QUANTITY");
+        require(hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()), "!LISTER");
+        require(hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract), "!ASSET");
+
         uint256 startTime = _params.startTime;
         if (startTime < block.timestamp) {
             // do not allow listing to start in the past (1 hour buffer)
@@ -257,10 +258,7 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
-            require(
-                newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
-                "reserve price exceeds buyout price."
-            );
+            require(newListing.buyoutPricePerToken >= newListing.reservePricePerToken, "RESERVE");
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
@@ -281,12 +279,14 @@ contract Marketplace is
         uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
         bool isAuction = targetListing.listingType == ListingType.Auction;
 
-        require(safeNewQuantity != 0, "cannot update to 0 quantity");
+        require(safeNewQuantity != 0, "QUANTITY");
 
         // Can only edit auction listing before it starts.
         if (isAuction) {
-            require(block.timestamp < targetListing.startTime, "auction already started.");
-            require(_buyoutPricePerToken >= _reservePricePerToken, "reserve price exceeds buyout price.");
+            require(block.timestamp < targetListing.startTime, "STARTED");
+            require(_buyoutPricePerToken >= _reservePricePerToken, "RESERVE");
+        }
+
         // validate start time if it's being updated
         if (_startTime > 0 && _startTime < block.timestamp) {
             // do not allow listing to start in the past (1 hour buffer)
@@ -770,7 +770,7 @@ contract Marketplace is
         require(
             IERC20Upgradeable(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
                 IERC20Upgradeable(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient balance or allowance."
+            "!BAL20"
         );
     }
 
@@ -796,7 +796,7 @@ contract Marketplace is
                     IERC721Upgradeable(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
 
-        require(isValid, "insufficient token balance or approval.");
+        require(isValid, "!BALNFT");
     }
 
     /// @dev Validates conditions of a direct listing sale.
