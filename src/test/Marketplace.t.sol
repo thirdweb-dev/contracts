@@ -317,12 +317,12 @@ contract MarketplaceTest is BaseTest {
         erc721.setApprovalForAll(address(marketplace), true);
 
         // initial block.timestamp
-        vm.warp(365 days);
+        vm.warp(100 days);
 
         Marketplace.ListingParameters memory listing;
         listing.assetContract = address(erc721);
         listing.tokenId = tokenId;
-        listing.startTime = 100 days;
+        listing.startTime = 200 days;
         listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
         listing.quantityToList = 1;
         listing.currencyToAccept = NATIVE_TOKEN;
