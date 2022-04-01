@@ -42,7 +42,7 @@ contract DropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     // Token name
     string public name;

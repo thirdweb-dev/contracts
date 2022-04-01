@@ -90,9 +90,9 @@ abstract contract BaseTest is DSTest, stdCheats {
         TWFactory(factory).addImplementation(address(new TokenERC721(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC1155(fee)));
         TWFactory(factory).addImplementation(address(new DropERC20(fee)));
-        //TWFactory(factory).addImplementation(address(new DummyContract(bytes32("DropERC721"), 1)));
+        TWFactory(factory).addImplementation(address(new DummyContract(bytes32("DropERC721"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC721(fee)));
-        //TWFactory(factory).addImplementation(address(new DummyContract(bytes32("DropERC1155"), 1)));
+        TWFactory(factory).addImplementation(address(new DummyContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
         TWFactory(factory).addImplementation(address(new DummyContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
