@@ -42,7 +42,7 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     /// @dev Only lister role holders can create listings, when listings are restricted by lister address.
     bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
