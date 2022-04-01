@@ -235,7 +235,7 @@ contract Multiwrap is
     /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
     function transferToken(address _from, address _to, Token memory _token) internal {
         if(_token.tokenType == TokenType.ERC20) {
-            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+            CurrencyTransferLib.transferCurrencyWithWrapper(
                 _token.assetContract,
                 _from,
                 _to,
