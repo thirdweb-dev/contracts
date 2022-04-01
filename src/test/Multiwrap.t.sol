@@ -71,24 +71,30 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);
 
         // Prepare wrapped contents.
-        wrappedContents.push(IMultiwrap.Token({
-            assetContract: address(erc20),
-            tokenType: IMultiwrap.TokenType.ERC20,
-            tokenId: 0,
-            amount: erc20Amount
-        }));
-        wrappedContents.push(IMultiwrap.Token({
-            assetContract: address(erc721),
-            tokenType: IMultiwrap.TokenType.ERC721,
-            tokenId: erc721TokenId,
-            amount: 1
-        }));
-        wrappedContents.push(IMultiwrap.Token({
-            assetContract: address(erc1155),
-            tokenType: IMultiwrap.TokenType.ERC1155,
-            tokenId: erc1155TokenId,
-            amount: erc1155Amount
-        }));
+        wrappedContents.push(
+            IMultiwrap.Token({
+                assetContract: address(erc20),
+                tokenType: IMultiwrap.TokenType.ERC20,
+                tokenId: 0,
+                amount: erc20Amount
+            })
+        );
+        wrappedContents.push(
+            IMultiwrap.Token({
+                assetContract: address(erc721),
+                tokenType: IMultiwrap.TokenType.ERC721,
+                tokenId: erc721TokenId,
+                amount: 1
+            })
+        );
+        wrappedContents.push(
+            IMultiwrap.Token({
+                assetContract: address(erc1155),
+                tokenType: IMultiwrap.TokenType.ERC1155,
+                tokenId: erc1155TokenId,
+                amount: erc1155Amount
+            })
+        );
     }
 
     //  =====   Initial state   =====
@@ -112,7 +118,6 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
 
     /// @dev Test `wrap`
     function test_wrap() public {
-
         assertEq(erc20.balanceOf(address(tokenOwner)), erc20Amount);
         assertEq(erc721.ownerOf(erc721TokenId), address(tokenOwner));
         assertEq(erc1155.balanceOf(address(tokenOwner), erc1155TokenId), erc1155Amount);
@@ -194,7 +199,7 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         uint256 tokenIdOfWrapped = multiwrap.nextTokenIdToMint();
 
         IMultiwrap.Token[] memory contents = new IMultiwrap.Token[](wrappedContents.length);
-        for(uint256 i = 0; i < wrappedContents.length; i += 1) {
+        for (uint256 i = 0; i < wrappedContents.length; i += 1) {
             contents[i] = wrappedContents[i];
         }
 
@@ -206,7 +211,6 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
     }
 
     /// @dev Test `unwrap`
-
 
     function test_unwrap() public {
         uint256 tokenIdOfWrapped = multiwrap.nextTokenIdToMint();
@@ -246,7 +250,6 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         multiwrap.unwrap(invalidId, address(wrappedTokenRecipient));
     }
 
-
     function test_unwrap_emit_Unwrapped() public {
         uint256 tokenIdOfWrapped = multiwrap.nextTokenIdToMint();
 
@@ -254,12 +257,17 @@ contract MultiwrapTest is BaseTest, IMultiwrapData {
         multiwrap.wrap(wrappedContents, uriForWrappedToken, address(wrappedTokenRecipient));
 
         IMultiwrap.Token[] memory contents = new IMultiwrap.Token[](wrappedContents.length);
-        for(uint256 i = 0; i < wrappedContents.length; i += 1) {
+        for (uint256 i = 0; i < wrappedContents.length; i += 1) {
             contents[i] = wrappedContents[i];
         }
 
         vm.expectEmit(true, true, true, true);
-        emit TokensUnwrapped(address(wrappedTokenRecipient), address(wrappedTokenRecipient), tokenIdOfWrapped, contents);
+        emit TokensUnwrapped(
+            address(wrappedTokenRecipient),
+            address(wrappedTokenRecipient),
+            tokenIdOfWrapped,
+            contents
+        );
 
         vm.prank(address(wrappedTokenRecipient));
         multiwrap.unwrap(tokenIdOfWrapped, address(wrappedTokenRecipient));

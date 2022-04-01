@@ -64,48 +64,59 @@ contract MultiwrapBenchmarkTest is BaseTest {
 
         // Prepare wrapped contents.
 
-        for(uint256 i = 0; i < 5; i += 1) {
-            fiveERC721NFts.push(IMultiwrap.Token({
-                assetContract: address(erc721),
-                tokenType: IMultiwrap.TokenType.ERC721,
-                tokenId: i,
-                amount: 1
-            }));
-
+        for (uint256 i = 0; i < 5; i += 1) {
+            fiveERC721NFts.push(
+                IMultiwrap.Token({
+                    assetContract: address(erc721),
+                    tokenType: IMultiwrap.TokenType.ERC721,
+                    tokenId: i,
+                    amount: 1
+                })
+            );
         }
 
-        wrappedContents.push(IMultiwrap.Token({
-            assetContract: address(erc20),
-            tokenType: IMultiwrap.TokenType.ERC20,
-            tokenId: 0,
-            amount: erc20Amount
-        }));
-        wrappedContents.push(IMultiwrap.Token({
-            assetContract: address(erc721),
-            tokenType: IMultiwrap.TokenType.ERC721,
-            tokenId: erc721TokenId,
-            amount: 1
-        }));
-        wrappedContents.push(IMultiwrap.Token({
-            assetContract: address(erc1155),
-            tokenType: IMultiwrap.TokenType.ERC1155,
-            tokenId: erc1155TokenId,
-            amount: erc1155Amount
-        }));
-        
-        oneERC721NFTWithERC20Token.push(IMultiwrap.Token({
-            assetContract: address(erc20),
-            tokenType: IMultiwrap.TokenType.ERC20,
-            tokenId: 0,
-            amount: erc20Amount
-        }));
-        oneERC721NFTWithERC20Token.push(IMultiwrap.Token({
-            assetContract: address(erc721),
-            tokenType: IMultiwrap.TokenType.ERC721,
-            tokenId: erc721TokenId,
-            amount: 1
-        }));
-        
+        wrappedContents.push(
+            IMultiwrap.Token({
+                assetContract: address(erc20),
+                tokenType: IMultiwrap.TokenType.ERC20,
+                tokenId: 0,
+                amount: erc20Amount
+            })
+        );
+        wrappedContents.push(
+            IMultiwrap.Token({
+                assetContract: address(erc721),
+                tokenType: IMultiwrap.TokenType.ERC721,
+                tokenId: erc721TokenId,
+                amount: 1
+            })
+        );
+        wrappedContents.push(
+            IMultiwrap.Token({
+                assetContract: address(erc1155),
+                tokenType: IMultiwrap.TokenType.ERC1155,
+                tokenId: erc1155TokenId,
+                amount: erc1155Amount
+            })
+        );
+
+        oneERC721NFTWithERC20Token.push(
+            IMultiwrap.Token({
+                assetContract: address(erc20),
+                tokenType: IMultiwrap.TokenType.ERC20,
+                tokenId: 0,
+                amount: erc20Amount
+            })
+        );
+        oneERC721NFTWithERC20Token.push(
+            IMultiwrap.Token({
+                assetContract: address(erc721),
+                tokenType: IMultiwrap.TokenType.ERC721,
+                tokenId: erc721TokenId,
+                amount: 1
+            })
+        );
+
         vm.startPrank(address(tokenOwner));
     }
 

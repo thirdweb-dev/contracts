@@ -9,13 +9,16 @@ import "./IThirdwebOwnable.sol";
  *  Thirdweb's Multiwrap contract lets you wrap arbitrary ERC20, ERC721 and ERC1155
  *  tokens you own into a single wrapped token / NFT.
  *
- *  A wrapped NFT can be unwrapped i.e. burned in exchange for its underlying contents. 
+ *  A wrapped NFT can be unwrapped i.e. burned in exchange for its underlying contents.
  */
 
 interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
-
     /// @notice The type of assets that can be wrapped.
-    enum TokenType { ERC20, ERC721, ERC1155 }
+    enum TokenType {
+        ERC20,
+        ERC721,
+        ERC1155
+    }
 
     /**
      *  @notice A generic interface to describe a token to wrap.
@@ -81,8 +84,5 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
      *  @param tokenId   The token Id of the wrapped NFT to unwrap.
      *  @param recipient The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
      */
-    function unwrap(
-        uint256 tokenId,
-        address recipient
-    ) external;
+    function unwrap(uint256 tokenId, address recipient) external;
 }

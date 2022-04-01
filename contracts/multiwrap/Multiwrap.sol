@@ -120,7 +120,7 @@ contract Multiwrap is
     modifier onlyMinter() {
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(MINTER_ROLE, address(0))) {
-            require(hasRole(MINTER_ROLE, _msgSender()) , "restricted to MINTER_ROLE holders.");
+            require(hasRole(MINTER_ROLE, _msgSender()), "restricted to MINTER_ROLE holders.");
         }
 
         _;
@@ -195,7 +195,7 @@ contract Multiwrap is
         tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
-        for(uint256 i = 0; i < _wrappedContents.length; i += 1) {
+        for (uint256 i = 0; i < _wrappedContents.length; i += 1) {
             wrappedContents[tokenId].token[i] = _wrappedContents[i];
         }
         wrappedContents[tokenId].count = _wrappedContents.length;
@@ -210,10 +210,7 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(
-        uint256 _tokenId,
-        address _recipient
-    ) external nonReentrant {
+    function unwrap(uint256 _tokenId, address _recipient) external nonReentrant {
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "unapproved called");
 
@@ -222,7 +219,7 @@ contract Multiwrap is
         uint256 count = wrappedContents[_tokenId].count;
         Token[] memory tokensUnwrapped = new Token[](count);
 
-        for(uint256 i = 0; i < count; i += 1) {
+        for (uint256 i = 0; i < count; i += 1) {
             tokensUnwrapped[i] = wrappedContents[_tokenId].token[i];
             transferToken(address(this), _recipient, tokensUnwrapped[i]);
         }
@@ -233,8 +230,12 @@ contract Multiwrap is
     }
 
     /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
-    function transferToken(address _from, address _to, Token memory _token) internal {
-        if(_token.tokenType == TokenType.ERC20) {
+    function transferToken(
+        address _from,
+        address _to,
+        Token memory _token
+    ) internal {
+        if (_token.tokenType == TokenType.ERC20) {
             CurrencyTransferLib.transferCurrencyWithWrapper(
                 _token.assetContract,
                 _from,
@@ -242,16 +243,20 @@ contract Multiwrap is
                 _token.amount,
                 nativeTokenWrapper
             );
-        } else if(_token.tokenType == TokenType.ERC721) {
+        } else if (_token.tokenType == TokenType.ERC721) {
             IERC721Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId);
-        } else if(_token.tokenType == TokenType.ERC1155) {
+        } else if (_token.tokenType == TokenType.ERC1155) {
             IERC1155Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId, _token.amount, "");
         }
     }
 
     /// @dev Transfers multiple arbitrary ERC20 / ERC721 / ERC1155 tokens.
-    function transferTokenBatch(address _from, address _to, Token[] memory _tokens) internal {
-        for(uint256 i = 0; i < _tokens.length; i += 1) {
+    function transferTokenBatch(
+        address _from,
+        address _to,
+        Token[] memory _tokens
+    ) internal {
+        for (uint256 i = 0; i < _tokens.length; i += 1) {
             transferToken(_from, _to, _tokens[i]);
         }
     }
