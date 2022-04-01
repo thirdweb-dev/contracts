@@ -24,26 +24,7 @@ import "contracts/token/TokenERC721.sol";
 import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
-
-contract DummyContract {
-    bytes32 private name;
-    uint8 private version;
-
-    constructor(bytes32 _name, uint8 _version) {
-        name = _name;
-        version = _version;
-    }
-
-    /// @dev Returns the module type of the contract.
-    function contractType() external view returns (bytes32) {
-        return name;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external view returns (uint8) {
-        return version;
-    }
-}
+import "contracts/mock/Mock.sol";
 
 abstract contract BaseTest is DSTest, stdCheats {
     string public constant NAME = "NAME";
@@ -90,11 +71,11 @@ abstract contract BaseTest is DSTest, stdCheats {
         TWFactory(factory).addImplementation(address(new TokenERC721(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC1155(fee)));
         TWFactory(factory).addImplementation(address(new DropERC20(fee)));
-        TWFactory(factory).addImplementation(address(new DummyContract(bytes32("DropERC721"), 1)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC721"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC721(fee)));
-        TWFactory(factory).addImplementation(address(new DummyContract(bytes32("DropERC1155"), 1)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
-        TWFactory(factory).addImplementation(address(new DummyContract(bytes32("Marketplace"), 1)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
         // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
