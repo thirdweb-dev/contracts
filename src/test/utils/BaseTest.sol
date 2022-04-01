@@ -13,7 +13,7 @@ import "contracts/Forwarder.sol";
 import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
-import "contracts/Multiwrap.sol";
+import "contracts/multiwrap/Multiwrap.sol";
 import "contracts/Pack.sol";
 import "contracts/Split.sol";
 import "contracts/drop/DropERC20.sol";
