@@ -392,13 +392,10 @@ contract DropERC721 is
 
         uint256 lastConditionStartTimestamp;
         for (uint256 i = 0; i < _phases.length; i++) {
-            require(
-                i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
-                "startTimestamp must be in ascending order."
-            );
+            require(i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp, "ST");
 
             uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "MS");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
@@ -630,7 +627,7 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxTotalSupply < nextTokenIdToMint, "already minted more than desired max supply");
+        require(_maxTotalSupply < nextTokenIdToMint, "MAX");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
@@ -646,7 +643,7 @@ contract DropERC721 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
+        require(_royaltyBps <= MAX_BPS, "MAX_BPS");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint16(_royaltyBps);
@@ -660,7 +657,7 @@ contract DropERC721 is
         address _recipient,
         uint256 _bps
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "exceed royalty bps");
+        require(_bps <= MAX_BPS, "MAX_BPS");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
@@ -682,7 +679,7 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not contract admin.");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "!ADMIN");
         address _prevOwner = _owner;
         _owner = _newOwner;
 
@@ -715,7 +712,7 @@ contract DropERC721 is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
     }
 

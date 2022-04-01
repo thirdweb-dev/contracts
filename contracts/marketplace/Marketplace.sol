@@ -99,13 +99,13 @@ contract Marketplace is
 
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
-        require(listings[_listingId].tokenOwner == _msgSender(), "caller != listing owner");
+        require(listings[_listingId].tokenOwner == _msgSender(), "!OWNER");
         _;
     }
 
     /// @dev Checks whether a listing exists.
     modifier onlyExistingListing(uint256 _listingId) {
-        require(listings[_listingId].assetContract != address(0), "listing DNE");
+        require(listings[_listingId].assetContract != address(0), "DNE");
         _;
     }
 
@@ -338,7 +338,7 @@ contract Marketplace is
     function cancelDirectListing(uint256 _listingId) external onlyListingCreator(_listingId) {
         Listing memory targetListing = listings[_listingId];
 
-        require(targetListing.listingType == ListingType.Direct, "not direct listing");
+        require(targetListing.listingType == ListingType.Direct, "!DIRECT");
 
         delete listings[_listingId];
 
@@ -363,7 +363,7 @@ contract Marketplace is
         // Check whether the settled total price and currency to use are correct.
         require(
             _currency == targetListing.currency && _totalPrice == (targetListing.buyoutPricePerToken * _quantityToBuy),
-            "invalid currency or price"
+            "!PRICE"
         );
 
         executeSale(
@@ -386,11 +386,8 @@ contract Marketplace is
         Offer memory targetOffer = offers[_listingId][_offeror];
         Listing memory targetListing = listings[_listingId];
 
-        require(
-            _currency == targetOffer.currency && _pricePerToken == targetOffer.pricePerToken,
-            "invalid currency or price"
-        );
-        require(targetOffer.expirationTimestamp > block.timestamp, "offer expired");
+        require(_currency == targetOffer.currency && _pricePerToken == targetOffer.pricePerToken, "!PRICE");
+        require(targetOffer.expirationTimestamp > block.timestamp, "EXPIRED");
 
         delete offers[_listingId][_offeror];
 
