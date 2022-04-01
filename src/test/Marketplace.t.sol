@@ -78,7 +78,8 @@ contract MarketplaceTest is BaseTest {
             address offeror,
             uint256 quantityWanted,
             address currency,
-            uint256 pricePerToken
+            uint256 pricePerToken,
+
         ) = marketplace.winningBid(_listingId);
         winningBid.listingId = listingId;
         winningBid.offeror = offeror;
@@ -122,10 +123,9 @@ contract MarketplaceTest is BaseTest {
 
         assertEq(getActor(0).balance, 100 ether);
 
-        vm.startPrank(getActor(0));
-
         vm.warp(1);
-        marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether);
+        vm.prank(getActor(0));
+        marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether, type(uint256).max);
         winningBid = getWinningBid(listingId);
         assertEq(getActor(0).balance, 99 ether);
         assertEq(winningBid.listingId, listingId);
@@ -135,7 +135,8 @@ contract MarketplaceTest is BaseTest {
         assertEq(winningBid.pricePerToken, 1 ether);
 
         vm.warp(2);
-        marketplace.offer{ value: 2 ether }(listingId, 1, NATIVE_TOKEN, 2 ether);
+        vm.prank(getActor(0));
+        marketplace.offer{ value: 2 ether }(listingId, 1, NATIVE_TOKEN, 2 ether, type(uint256).max);
         winningBid = getWinningBid(listingId);
         assertEq(getActor(0).balance, 98 ether);
         assertEq(winningBid.listingId, listingId);
@@ -169,7 +170,7 @@ contract MarketplaceTest is BaseTest {
          */
         vm.warp(1);
         vm.prank(getActor(1));
-        marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether);
+        marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
 
         assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
         assertEq(weth.balanceOf(address(marketplace)), 5 ether);
@@ -215,7 +216,7 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-1 makes an offer to the direct listing for 4 WETH.
         weth.approve(address(marketplace), 4 ether);
-        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether);
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, type(uint256).max);
 
         vm.stopPrank();
 
@@ -233,5 +234,184 @@ contract MarketplaceTest is BaseTest {
         assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
         assertEq(weth.balanceOf(getActor(0)), offerValuePostFee);
         assertEq(weth.balanceOf(getActor(1)), 0);
+    }
+
+    function test_createListing_startTime_past() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        // initial block.timestamp
+        vm.warp(100 days);
+
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 0;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+
+        vm.expectRevert(bytes("ST"));
+        marketplace.createListing(listing);
+    }
+
+    function test_createListing_startTime_pastWithBuffer() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        // initial block.timestamp
+        vm.warp(100 days);
+
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = block.timestamp - 30 minutes;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+
+        marketplace.createListing(listing);
+    }
+
+    function test_createListing_startTime_now() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        // initial block.timestamp
+        vm.warp(100 days);
+
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = block.timestamp;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+
+        marketplace.createListing(listing);
+    }
+
+    function test_createListing_startTime_future() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        // initial block.timestamp
+        vm.warp(100 days);
+
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 200 days;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+
+        marketplace.createListing(listing);
+    }
+
+    function test_updateListing_startTime_past() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        vm.warp(100 days);
+
+        // future listing
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 200 days;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+        marketplace.createListing(listing);
+
+        // update into the past
+        vm.expectRevert(bytes("ST"));
+        marketplace.updateListing(0, 1, 0, 1 ether, NATIVE_TOKEN, 99 days, 0);
+    }
+
+    function test_updateListing_startTime_future() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        vm.warp(100 days);
+
+        // future listing
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 200 days;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+        marketplace.createListing(listing);
+
+        // future time
+        marketplace.updateListing(0, 1, 0, 1 ether, NATIVE_TOKEN, 205 days, 0);
+    }
+
+    function test_updateListing_startTimeAndEndTime() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        vm.startPrank(to);
+        erc721.mint(to, 1);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        vm.warp(100 days);
+
+        // future listing
+        Marketplace.ListingParameters memory listing;
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 200 days;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 1 ether;
+        listing.listingType = IMarketplace.ListingType.Direct;
+        marketplace.createListing(listing);
+
+        // future time
+        marketplace.updateListing(0, 1, 0, 1 ether, NATIVE_TOKEN, 205 days, 1 days);
+        Marketplace.Listing memory updatedListing = getListing(0);
+        assertEq(205 days, updatedListing.startTime);
+        assertEq(205 days + 1 days, updatedListing.endTime);
     }
 }
