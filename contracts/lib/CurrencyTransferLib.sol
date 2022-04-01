@@ -31,7 +31,7 @@ library CurrencyTransferLib {
     }
 
     /// @dev Transfers a given amount of currency. (With native token wrapping)
-    function transferCurrencyWithWrapperAndBalanceCheck(
+    function transferCurrencyWithWrapper(
         address _currency,
         address _from,
         address _to,
@@ -55,7 +55,7 @@ library CurrencyTransferLib {
                 safeTransferNativeTokenWithWrapper(_to, _amount, _nativeTokenWrapper);
             }
         } else {
-            safeTransferERC20WithBalanceCheck(_currency, _from, _to, _amount);
+            safeTransferERC20(_currency, _from, _to, _amount);
         }
     }
 
@@ -75,30 +75,6 @@ library CurrencyTransferLib {
         } else {
             IERC20Upgradeable(_currency).safeTransferFrom(_from, _to, _amount);
         }
-    }
-
-    /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20WithBalanceCheck(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        if (_from == _to) {
-            return;
-        }
-
-        uint256 balBefore = IERC20Upgradeable(_currency).balanceOf(_to);
-
-        if (_from == address(this)) {
-            IERC20Upgradeable(_currency).safeTransfer(_to, _amount);
-        } else {
-            IERC20Upgradeable(_currency).safeTransferFrom(_from, _to, _amount);
-        }
-
-        uint256 balAfter = IERC20Upgradeable(_currency).balanceOf(_to);
-
-        require(balAfter == balBefore + _amount, "currency transfer failed.");
     }
 
     /// @dev Transfers `amount` of native token to `to`.

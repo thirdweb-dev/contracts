@@ -425,7 +425,7 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ### offer
 
 ```solidity
-function offer(uint256 _listingId, uint256 _quantityWanted, address _currency, uint256 _pricePerToken) external payable
+function offer(uint256 _listingId, uint256 _quantityWanted, address _currency, uint256 _pricePerToken, uint256 _expirationTimestamp) external payable
 ```
 
 
@@ -440,11 +440,12 @@ function offer(uint256 _listingId, uint256 _quantityWanted, address _currency, u
 | _quantityWanted | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
+| _expirationTimestamp | uint256 | undefined
 
 ### offers
 
 ```solidity
-function offers(uint256, address) external view returns (uint256 listingId, address offeror, uint256 quantityWanted, address currency, uint256 pricePerToken)
+function offers(uint256, address) external view returns (uint256 listingId, address offeror, uint256 quantityWanted, address currency, uint256 pricePerToken, uint256 expirationTimestamp)
 ```
 
 
@@ -467,6 +468,7 @@ function offers(uint256, address) external view returns (uint256 listingId, addr
 | quantityWanted | uint256 | undefined
 | currency | address | undefined
 | pricePerToken | uint256 | undefined
+| expirationTimestamp | uint256 | undefined
 
 ### onERC1155BatchReceived
 
@@ -727,7 +729,7 @@ function updateListing(uint256 _listingId, uint256 _quantityToList, uint256 _res
 ### winningBid
 
 ```solidity
-function winningBid(uint256) external view returns (uint256 listingId, address offeror, uint256 quantityWanted, address currency, uint256 pricePerToken)
+function winningBid(uint256) external view returns (uint256 listingId, address offeror, uint256 quantityWanted, address currency, uint256 pricePerToken, uint256 expirationTimestamp)
 ```
 
 
@@ -749,6 +751,7 @@ function winningBid(uint256) external view returns (uint256 listingId, address o
 | quantityWanted | uint256 | undefined
 | currency | address | undefined
 | pricePerToken | uint256 | undefined
+| expirationTimestamp | uint256 | undefined
 
 
 
