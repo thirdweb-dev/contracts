@@ -18,9 +18,9 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 //  ==========  Internal imports    ==========
 
-import "./interfaces/IMultiwrap.sol";
-import "./lib/CurrencyTransferLib.sol";
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../interfaces/IMultiwrap.sol";
+import "../lib/CurrencyTransferLib.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 contract Multiwrap is
     IMultiwrap,

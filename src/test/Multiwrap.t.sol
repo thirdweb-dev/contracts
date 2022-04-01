@@ -7,7 +7,7 @@ import "./mocks/MockERC20.sol";
 import "./mocks/MockERC721.sol";
 import "./mocks/MockERC1155.sol";
 
-import "contracts/Multiwrap.sol";
+import "contracts/multiwrap/Multiwrap.sol";
 import "contracts/interfaces/IMultiwrap.sol";
 
 interface IMultiwrapData {
