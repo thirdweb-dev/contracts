@@ -4,8 +4,11 @@ pragma solidity ^0.8.11;
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 library CurrencyTransferLib {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+
     /// @dev The address interpreted as native token of the chain.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -67,11 +70,11 @@ library CurrencyTransferLib {
             return;
         }
 
-        bool success = _from == address(this)
-            ? IERC20Upgradeable(_currency).transfer(_to, _amount)
-            : IERC20Upgradeable(_currency).transferFrom(_from, _to, _amount);
-
-        require(success, "currency transfer failed.");
+        if (_from == address(this)) {
+            IERC20Upgradeable(_currency).safeTransfer(_to, _amount);
+        } else {
+            IERC20Upgradeable(_currency).safeTransferFrom(_from, _to, _amount);
+        }
     }
 
     /// @dev Transfers `amount` of native token to `to`.
@@ -93,7 +96,7 @@ library CurrencyTransferLib {
         (bool success, ) = to.call{ value: value }("");
         if (!success) {
             IWETH(_nativeTokenWrapper).deposit{ value: value }();
-            require(IERC20Upgradeable(_nativeTokenWrapper).transfer(to, value), "transfer failed");
+            IERC20Upgradeable(_nativeTokenWrapper).safeTransfer(to, value);
         }
     }
 }

@@ -22,7 +22,9 @@ contract BaseDropERC721Test is BaseTest {
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](2);
         conditions[0].startTimestamp = 0;
+        conditions[0].maxClaimableSupply = 10;
         conditions[1].startTimestamp = 1;
+        conditions[1].maxClaimableSupply = 10;
 
         drop.setClaimConditions(conditions, false);
         (currentStartId, count) = drop.claimCondition();
