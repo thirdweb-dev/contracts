@@ -223,6 +223,12 @@ contract Marketplace is
         require(tokenAmountToList > 0, "listing invalid quantity.");
         require(hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()), "does not have LISTER_ROLE.");
         require(hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract), "unapproved asset.");
+        uint256 startTime = _params.startTime;
+        if (startTime < block.timestamp) {
+            // do not allow listing to start in the past (1 hour buffer)
+            require(block.timestamp - startTime < 1 hours, "ST");
+            startTime = block.timestamp;
+        }
 
         validateOwnershipAndApproval(
             tokenOwner,
@@ -232,7 +238,6 @@ contract Marketplace is
             tokenTypeOfListing
         );
 
-        uint256 startTime = _params.startTime < block.timestamp ? block.timestamp : _params.startTime;
         Listing memory newListing = Listing({
             listingId: listingId,
             tokenOwner: tokenOwner,
@@ -282,6 +287,10 @@ contract Marketplace is
         if (isAuction) {
             require(block.timestamp < targetListing.startTime, "auction already started.");
             require(_buyoutPricePerToken >= _reservePricePerToken, "reserve price exceeds buyout price.");
+        // validate start time if it's being updated
+        if (_startTime > 0 && _startTime < block.timestamp) {
+            // do not allow listing to start in the past (1 hour buffer)
+            require(block.timestamp - _startTime < 1 hours, "ST");
         }
 
         uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;
