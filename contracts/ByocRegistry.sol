@@ -53,12 +53,18 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         external 
         returns (uint256 contractId)
     {
+
+        // creationCode => bytecode
+        // data => constructorArgs
+        // Additional method to associate implementation => publishContract.
+
         require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
 
         contractId = publishedContracts[msg.sender].id;
         publishedContracts[msg.sender].id += 1;
 
         CustomContract memory publishedContract = CustomContract({
+            contractId: contractId,
             publishMetadataHash: _publishMetadataHash,
             creationCodeHash: _creationCodeHash,
             implementation: _implementation
@@ -96,7 +102,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
     {
         require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
         require(
-            keccak256(_creationCode) == keccak256(publishedContracts[_publisher].contractAtId[_contractId].creationCodeHash),
+            keccak256(_creationCode) == publishedContracts[_publisher].contractAtId[_contractId].creationCodeHash,
             "Creation code mismatch"
         );
 
