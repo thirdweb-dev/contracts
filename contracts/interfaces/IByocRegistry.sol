@@ -26,14 +26,35 @@ interface IByocRegistry {
         mapping(uint256 => CustomContract) contractAtId;
     }
 
-    /// @dev Emitted when the registry is paused. Only unpublishing is allowed when the registry is paused.
+    /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
+    /// @dev Emitted when a publisher's approval of an operator is updated.
+    event Approved(address indexed publisher, address indexed operator, bool isApproved);
     /// @dev Emitted when a contract is published.
-    event ContractPublished(address indexed publisher, uint256 indexed contractId, CustomContract publishedContract);
+    event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, CustomContract publishedContract);
     /// @dev Emitted when a contract is unpublished.
-    event ContractUnpublished(address indexed caller, address indexed publisher, uint256 indexed contractId);
+    event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
     /// @dev Emitted when a contract is deployed.
     event ContractDeployed(address indexed deployer, address indexed publisher, uint256 indexed contractId, address deployedContract);
+
+
+    /**
+     *  @notice Returns whether a publisher has approved an operator to publish / unpublish contracts on their behalf.
+     *
+     *  @param publisher The address of the publisher.
+     *  @param operator The address of the operator who publishes/unpublishes on behalf of the publisher.
+     *
+     *  @return isApproved Whether the publisher has approved the operator to publish / unpublish contracts on their behalf.
+     */
+    function isApprovedByPublisher(address publisher, address operator) external view returns (bool isApproved);
+
+    /**
+     *  @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
+     *
+     *  @param operator The address of the operator who publishes/unpublishes on behalf of the publisher.
+     *  @param toApprove whether to an operator to publish / unpublish contracts on the publisher's behalf.
+     */
+    function approveOperator(address operator, bool toApprove) external;
 
     /**
      *  @notice Returns all contracts published by a publisher.
@@ -55,7 +76,7 @@ interface IByocRegistry {
      *
      *  @return contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
-    function publishContract(address publisher, string memory publishMetadataUri, bytes memory bytecodeHash, address implementation) external returns (uint256 contractId);
+    function publishContract(address publisher, string memory publishMetadataUri, bytes32 bytecodeHash, address implementation) external returns (uint256 contractId);
 
     /**
      *  @notice Let's an account unpublish a contract. The account must be approved by the publisher, or be the publisher.
@@ -91,7 +112,7 @@ interface IByocRegistry {
      *
      *  @param publisher The address of the publisher. 
      *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
-     *  @param initializeArgs The encoded args to initialize the contract with.
+     *  @param initializeData The encoded function call to initialize the contract with.
      *  @param salt The salt to use in the CREATE2 contract deployment.
      *  @param value The native token value to pass to the contract on deployment.
      *
@@ -100,7 +121,7 @@ interface IByocRegistry {
     function deployInstanceProxy(
         address publisher,
         uint256 contractId,
-        bytes memory initializeArgs,
+        bytes memory initializeData,
         bytes32 salt,
         uint256 value
     ) external returns (address deployedAddress);

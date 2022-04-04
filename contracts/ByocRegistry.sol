@@ -15,15 +15,47 @@ import "./TWRegistry.sol";
 
 contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
+    /// @dev The main thirdweb registry.
     TWRegistry private immutable registry;
 
+    /// @dev Whether the registry is paused.
     bool public isPaused;
     
+    /// @dev Mapping from publisher address => set of published contracts.
     mapping(address => CustomContractSet) private publishedContracts;
-    mapping(address => mapping(address => bool)) public isApproved;
+
+    /**
+     *  @dev Mapping from publisher address => operator address => whether publisher has approved operator
+     *       to publish / unpublish contracts on their behalf.
+     */
+    mapping(address => mapping(address => bool)) public isApprovedByPublisher;
+
+    /// @dev Mapping from publisher address => publish metadata URI => contractId.
+    mapping(address => mapping(string => uint256)) public contractId;
+
+    modifier onlyApprovedOrPublisher(address _publisher) {
+        require(
+            msg.sender == _publisher || isApprovedByPublisher[_publisher][msg.sender],
+            "unapproved caller"
+        );
+
+        _;
+    }
+
+    modifier onlyUnpausedOrAdmin() {
+        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
+
+        _;
+    }
 
     constructor(address _twRegistry) {
         registry = TWRegistry(_twRegistry);
+    }
+
+    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
+    function approveOperator(address _operator, bool _toApprove) external {
+        isApprovedByPublisher[msg.sender][_operator] = _toApprove;
+        emit Approved(msg.sender, _operator, _toApprove);
     }
 
     /// @notice Returns all contracts published by a publisher.
@@ -35,7 +67,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
         uint256 publishedIndex;
         for(uint256 i = 0; i < total; i += 1) {
-            if((publishedContracts[_publisher].contractAtId[i].creationCodeHash).length == 0) {
+            if((publishedContracts[_publisher].contractAtId[i].bytecodeHash).length == 0) {
                 continue;
             }
 
@@ -44,44 +76,43 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         }
     }
 
-    /// @notice Add a contract to a publisher's set of published contracts.
+    /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
     function publishContract(
-        string memory _publishMetadataHash,
-        bytes memory _creationCodeHash,
+        address _publisher,
+        string memory _publishMetadataUri,
+        bytes32 _bytecodeHash,
         address _implementation
     )
-        external 
-        returns (uint256 contractId)
+        external
+        onlyApprovedOrPublisher(_publisher)
+        onlyUnpausedOrAdmin
+        returns (uint256 contractIdOfPublished)
     {
-
-        // creationCode => bytecode
-        // data => constructorArgs
-        // Additional method to associate implementation => publishContract.
-
-        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
-
-        contractId = publishedContracts[msg.sender].id;
-        publishedContracts[msg.sender].id += 1;
+        contractIdOfPublished = publishedContracts[_publisher].id;
+        publishedContracts[_publisher].id += 1;
 
         CustomContract memory publishedContract = CustomContract({
-            contractId: contractId,
-            publishMetadataHash: _publishMetadataHash,
-            creationCodeHash: _creationCodeHash,
+            contractId: contractIdOfPublished,
+            publishMetadataUri: _publishMetadataUri,
+            bytecodeHash: _bytecodeHash,
             implementation: _implementation
         });
 
-        publishedContracts[msg.sender].contractAtId[contractId] = publishedContract;
+        publishedContracts[_publisher].contractAtId[contractIdOfPublished] = publishedContract;
+        contractId[_publisher][_publishMetadataUri] = contractIdOfPublished;
 
-        emit ContractPublished(msg.sender, contractId, publishedContract);
+        emit ContractPublished(msg.sender, _publisher, contractIdOfPublished, publishedContract);
     }
 
     /// @notice Remove a contract from a publisher's set of published contracts.
-    function unpublishContract(address _publisher, uint256 _contractId) external {
-        require(
-            msg.sender == _publisher || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "unapproved caller"
-        );
-
+    function unpublishContract(
+        address _publisher,
+        uint256 _contractId
+    ) 
+        external
+        onlyApprovedOrPublisher(_publisher)
+        onlyUnpausedOrAdmin
+    {
         delete publishedContracts[_publisher].contractAtId[_contractId];
         publishedContracts[_publisher].removed += 1;
 
@@ -92,21 +123,21 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
     function deployInstance(
         address _publisher,
         uint256 _contractId,
-        bytes memory _creationCode,
-        bytes memory _data,
+        bytes memory _contractBytecode,
+        bytes memory _constructorArgs,
         bytes32 _salt,
         uint256 _value
     ) 
         external 
+        onlyUnpausedOrAdmin
         returns (address deployedAddress)        
     {
-        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
         require(
-            keccak256(_creationCode) == publishedContracts[_publisher].contractAtId[_contractId].creationCodeHash,
-            "Creation code mismatch"
+            keccak256(_contractBytecode) == publishedContracts[_publisher].contractAtId[_contractId].bytecodeHash,
+            "bytecode hash mismatch"
         );
 
-        bytes memory contractBytecode = abi.encodePacked(_creationCode, _data);
+        bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
         deployedAddress = Create2.deploy(_value, _salt, contractBytecode);
 
         registry.add(_publisher, deployedAddress);
@@ -118,32 +149,33 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
     function deployInstanceProxy(
         address _publisher,
         uint256 _contractId,
-        bytes memory _data,
-        bytes32 _salt
+        bytes memory _initializeData,
+        bytes32 _salt,
+        uint256 _value
     )
         external
+        onlyUnpausedOrAdmin
         returns (address deployedAddress)
     {
-        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
-
         address implementation = publishedContracts[_publisher].contractAtId[_contractId].implementation;
         require(implementation != address(0), "implementation DNE");
 
         deployedAddress = Clones.cloneDeterministic(
             implementation,
-            _salt
+            keccak256(abi.encodePacked(msg.sender, _salt))
         );
 
         registry.add(_publisher, deployedAddress);
 
-        if (_data.length > 0) {
+        if (_initializeData.length > 0) {
             // slither-disable-next-line unused-return
-            Address.functionCall(deployedAddress, _data);
+            Address.functionCallWithValue(deployedAddress, _initializeData, _value);
         }
 
         emit ContractDeployed(msg.sender, _publisher, _contractId, deployedAddress);
     }
 
+    /// @dev Lets a contract admin pause the registry.
     function setPause(bool _pause) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "unapproved caller");
         isPaused = _pause;
