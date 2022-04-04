@@ -6,21 +6,27 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
 //  ==========  Internal imports    ==========
 
 import "./interfaces/IByocRegistry.sol";
 import "./TWRegistry.sol";
 
-contract ByocRegistry is IByocRegistry {
+contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
     TWRegistry private immutable registry;
+
+    bool public isPaused;
     
     mapping(address => CustomContractSet) private publishedContracts;
+    mapping(address => mapping(address => bool)) public isApproved;
 
     constructor(address _twRegistry) {
         registry = TWRegistry(_twRegistry);
     }
 
+    /// @notice Returns all contracts published by a publisher.
     function getPublishedContracts(address _publisher) external view returns (CustomContract[] memory published) {
         uint256 total = publishedContracts[_publisher].id;
         uint256 net  = total - publishedContracts[_publisher].removed;
@@ -38,29 +44,42 @@ contract ByocRegistry is IByocRegistry {
         }
     }
 
-    function publishContract(address _publisher, string memory _publishMetadataHash, bytes memory _creationCodeHash, address _implementation) external returns (uint256 contractId) {
-        
-        // TODO: add require statements
+    /// @notice Add a contract to a publisher's set of published contracts.
+    function publishContract(
+        string memory _publishMetadataHash,
+        bytes memory _creationCodeHash,
+        address _implementation
+    )
+        external 
+        returns (uint256 contractId)
+    {
+        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
 
-        contractId = publishedContracts[_publisher].id;
-        publishedContracts[_publisher].id += 1;
+        contractId = publishedContracts[msg.sender].id;
+        publishedContracts[msg.sender].id += 1;
 
-        publishedContracts[_publisher].contractAtId[contractId] = CustomContract({
+        CustomContract memory publishedContract = CustomContract({
             publishMetadataHash: _publishMetadataHash,
             creationCodeHash: _creationCodeHash,
             implementation: _implementation
         });
 
-        // TODO: emit event.
+        publishedContracts[msg.sender].contractAtId[contractId] = publishedContract;
+
+        emit ContractPublished(msg.sender, contractId, publishedContract);
     }
 
+    /// @notice Remove a contract from a publisher's set of published contracts.
     function unpublishContract(address _publisher, uint256 _contractId) external {
-        // TODO: add require statements
+        require(
+            msg.sender == _publisher || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "unapproved caller"
+        );
 
         delete publishedContracts[_publisher].contractAtId[_contractId];
         publishedContracts[_publisher].removed += 1;
 
-        // TODO: emit event.
+        emit ContractUnpublished(msg.sender, _publisher, _contractId);
     }
 
     /// @notice Deploys an instance of a published contract directly.
@@ -75,7 +94,7 @@ contract ByocRegistry is IByocRegistry {
         external 
         returns (address deployedAddress)        
     {
-        // TODO: other require statments
+        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
         require(
             keccak256(_creationCode) == keccak256(publishedContracts[_publisher].contractAtId[_contractId].creationCodeHash),
             "Creation code mismatch"
@@ -86,9 +105,10 @@ contract ByocRegistry is IByocRegistry {
 
         registry.add(_publisher, deployedAddress);
 
-        // TODO: emit event
+        emit ContractDeployed(msg.sender, _publisher, _contractId, deployedAddress);
     }
 
+    /// @notice Deploys a clone pointing to an implementation of a published contract.
     function deployInstanceProxy(
         address _publisher,
         uint256 _contractId,
@@ -98,9 +118,10 @@ contract ByocRegistry is IByocRegistry {
         external
         returns (address deployedAddress)
     {
-        // TODO: add require statements
+        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
 
         address implementation = publishedContracts[_publisher].contractAtId[_contractId].implementation;
+        require(implementation != address(0), "implementation DNE");
 
         deployedAddress = Clones.cloneDeterministic(
             implementation,
@@ -114,6 +135,12 @@ contract ByocRegistry is IByocRegistry {
             Address.functionCall(deployedAddress, _data);
         }
 
-        // TODO: emit events
+        emit ContractDeployed(msg.sender, _publisher, _contractId, deployedAddress);
+    }
+
+    function setPause(bool _pause) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "unapproved caller");
+        isPaused = _pause;
+        emit Paused(_pause);
     }
 }
