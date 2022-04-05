@@ -15,11 +15,19 @@ import "./TWRegistry.sol";
 
 contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev The main thirdweb registry.
     TWRegistry private immutable registry;
 
     /// @dev Whether the registry is paused.
     bool public isPaused;
+
+    /*///////////////////////////////////////////////////////////////
+                                Mappings
+    //////////////////////////////////////////////////////////////*/
     
     /// @dev Mapping from publisher address => set of published contracts.
     mapping(address => CustomContractSet) private publishedContracts;
@@ -33,6 +41,11 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
     /// @dev Mapping from publisher address => publish metadata URI => contractId.
     mapping(address => mapping(string => uint256)) public contractId;
 
+    /*///////////////////////////////////////////////////////////////
+                    Constructor + modifiers
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Checks whether caller is publisher or approved by publisher.
     modifier onlyApprovedOrPublisher(address _publisher) {
         require(
             msg.sender == _publisher || isApprovedByPublisher[_publisher][msg.sender],
@@ -42,6 +55,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         _;
     }
 
+    /// @dev Checks whether contract is unpaused or the caller is a contract admin.
     modifier onlyUnpausedOrAdmin() {
         require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
 
@@ -50,13 +64,12 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
     constructor(address _twRegistry) {
         registry = TWRegistry(_twRegistry);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-    function approveOperator(address _operator, bool _toApprove) external {
-        isApprovedByPublisher[msg.sender][_operator] = _toApprove;
-        emit Approved(msg.sender, _operator, _toApprove);
-    }
+    /*///////////////////////////////////////////////////////////////
+                            Publish logic
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns all contracts published by a publisher.
     function getAllPublishedContracts(address _publisher) external view returns (CustomContract[] memory published) {
@@ -124,6 +137,10 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         emit ContractUnpublished(msg.sender, _publisher, _contractId);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                            Deploy logic
+    //////////////////////////////////////////////////////////////*/
+
     /// @notice Deploys an instance of a published contract directly.
     function deployInstance(
         address _publisher,
@@ -180,10 +197,20 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         emit ContractDeployed(msg.sender, _publisher, _contractId, deployedAddress);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Miscellaneous 
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Lets a contract admin pause the registry.
     function setPause(bool _pause) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "unapproved caller");
         isPaused = _pause;
         emit Paused(_pause);
+    }
+
+    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
+    function approveOperator(address _operator, bool _toApprove) external {
+        isApprovedByPublisher[msg.sender][_operator] = _toApprove;
+        emit Approved(msg.sender, _operator, _toApprove);
     }
 }
