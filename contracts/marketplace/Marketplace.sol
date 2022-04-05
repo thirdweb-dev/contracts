@@ -207,7 +207,7 @@ contract Marketplace is
     }
 
     /*///////////////////////////////////////////////////////////////
-                Listing (create-update-delete) logic
+                Listing (create-read-update-delete) logic
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
@@ -343,6 +343,18 @@ contract Marketplace is
         delete listings[_listingId];
 
         emit ListingRemoved(_listingId, targetListing.tokenOwner);
+    }
+    
+        
+    /// @dev Returns all marketplace listings.
+    function getAllListing() external view returns (Listing[] memory) {
+        uint256 listingCount = totalListings;
+        Listing[] memory allListings = new Listing[](listingCount);
+        
+        for (uint index=0; index < listingCount; index++){
+            allListings[index] = listings[index];
+        }
+        return allListings;
     }
 
     /*///////////////////////////////////////////////////////////////
