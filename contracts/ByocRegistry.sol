@@ -59,7 +59,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
     }
 
     /// @notice Returns all contracts published by a publisher.
-    function getPublishedContracts(address _publisher) external view returns (CustomContract[] memory published) {
+    function getAllPublishedContracts(address _publisher) external view returns (CustomContract[] memory published) {
         uint256 total = publishedContracts[_publisher].id;
         uint256 net  = total - publishedContracts[_publisher].removed;
 
@@ -74,6 +74,11 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
             published[publishedIndex] = publishedContracts[_publisher].contractAtId[i];
             publishedIndex += 1;
         }
+    }
+
+    /// @notice Returns a given contract published by a publisher.
+    function getPublishedContract(address _publisher, uint256 _contractId) external view returns (CustomContract memory) {
+        return publishedContracts[_publisher].contractAtId[_contractId];
     }
 
     /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.

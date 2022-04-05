@@ -120,10 +120,10 @@ Deploys a clone pointing to an implementation of a published contract.
 |---|---|---|
 | deployedAddress | address | undefined
 
-### getPublishedContracts
+### getAllPublishedContracts
 
 ```solidity
-function getPublishedContracts(address _publisher) external view returns (struct IByocRegistry.CustomContract[] published)
+function getAllPublishedContracts(address _publisher) external view returns (struct IByocRegistry.CustomContract[] published)
 ```
 
 Returns all contracts published by a publisher.
@@ -141,6 +141,29 @@ Returns all contracts published by a publisher.
 | Name | Type | Description |
 |---|---|---|
 | published | IByocRegistry.CustomContract[] | undefined
+
+### getPublishedContract
+
+```solidity
+function getPublishedContract(address _publisher, uint256 _contractId) external view returns (struct IByocRegistry.CustomContract)
+```
+
+Returns a given contract published by a publisher.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _publisher | address | undefined
+| _contractId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | IByocRegistry.CustomContract | undefined
 
 ### getRoleAdmin
 

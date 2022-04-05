@@ -80,10 +80,10 @@ Deploys a clone pointing to an implementation of a published contract.
 |---|---|---|
 | deployedAddress | address | The address of the contract deployed.
 
-### getPublishedContracts
+### getAllPublishedContracts
 
 ```solidity
-function getPublishedContracts(address publisher) external view returns (struct IByocRegistry.CustomContract[] published)
+function getAllPublishedContracts(address publisher) external view returns (struct IByocRegistry.CustomContract[] published)
 ```
 
 Returns all contracts published by a publisher.
@@ -101,6 +101,29 @@ Returns all contracts published by a publisher.
 | Name | Type | Description |
 |---|---|---|
 | published | IByocRegistry.CustomContract[] | An array of all contracts published by the publisher.
+
+### getPublishedContract
+
+```solidity
+function getPublishedContract(address publisher, uint256 contractId) external view returns (struct IByocRegistry.CustomContract published)
+```
+
+Returns a given contract published by a publisher.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| publisher | address | The address of the publisher.
+| contractId | uint256 | The unique integer identifier of the published contract. (publisher address, contractId) =&gt; published contract.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| published | IByocRegistry.CustomContract | The desired contract published by the publisher.
 
 ### isApprovedByPublisher
 

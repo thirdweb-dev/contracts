@@ -63,7 +63,17 @@ interface IByocRegistry {
      *
      *  @return published An array of all contracts published by the publisher.
      */
-    function getPublishedContracts(address publisher) external view returns (CustomContract[] memory published);
+    function getAllPublishedContracts(address publisher) external view returns (CustomContract[] memory published);
+
+    /**
+     *  @notice Returns a given contract published by a publisher.
+     *
+     *  @param publisher The address of the publisher.
+     *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
+     *
+     *  @return published The desired contract published by the publisher.
+     */
+    function getPublishedContract(address publisher, uint256 contractId) external view returns (CustomContract memory published);
 
     /**
      *  @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
