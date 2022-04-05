@@ -69,6 +69,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         factory = address(new TWFactory(forwarder, registry));
         byocRegistry = address(new ByocRegistry(registry));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
+        TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), byocRegistry);
         fee = address(new TWFee(forwarder, factory));
         TWFactory(factory).addImplementation(address(new TokenERC20(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC721(fee)));
