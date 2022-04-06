@@ -7,13 +7,13 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "./openzeppelin-presets/metatx/ERC2771Context.sol";
 
 //  ==========  Internal imports    ==========
+import {IByocRegistry} from "./interfaces/IByocRegistry.sol";
+import {TWRegistry} from "./TWRegistry.sol";
 
-import "./interfaces/IByocRegistry.sol";
-import "./TWRegistry.sol";
-
-contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
+contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable {
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -48,7 +48,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
     /// @dev Checks whether caller is publisher or approved by publisher.
     modifier onlyApprovedOrPublisher(address _publisher) {
         require(
-            msg.sender == _publisher || isApprovedByPublisher[_publisher][msg.sender],
+            _msgSender() == _publisher || isApprovedByPublisher[_publisher][_msgSender()],
             "unapproved caller"
         );
 
@@ -57,14 +57,14 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
     /// @dev Checks whether contract is unpaused or the caller is a contract admin.
     modifier onlyUnpausedOrAdmin() {
-        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "registry paused");
+        require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "registry paused");
 
         _;
     }
 
-    constructor(address _twRegistry) {
+    constructor(address _twRegistry, address[] memory _trustedForwarders) ERC2771Context(_trustedForwarders) {
         registry = TWRegistry(_twRegistry);
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -119,7 +119,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         publishedContracts[_publisher].contractAtId[contractIdOfPublished] = publishedContract;
         contractId[_publisher][_publishMetadataUri] = contractIdOfPublished;
 
-        emit ContractPublished(msg.sender, _publisher, contractIdOfPublished, publishedContract);
+        emit ContractPublished(_msgSender(), _publisher, contractIdOfPublished, publishedContract);
     }
 
     /// @notice Remove a contract from a publisher's set of published contracts.
@@ -134,7 +134,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
         delete publishedContracts[_publisher].contractAtId[_contractId];
         publishedContracts[_publisher].removed += 1;
 
-        emit ContractUnpublished(msg.sender, _publisher, _contractId);
+        emit ContractUnpublished(_msgSender(), _publisher, _contractId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -164,7 +164,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
         registry.add(_publisher, deployedAddress);
 
-        emit ContractDeployed(msg.sender, _publisher, _contractId, deployedAddress);
+        emit ContractDeployed(_msgSender(), _publisher, _contractId, deployedAddress);
     }
 
     /// @notice Deploys a clone pointing to an implementation of a published contract.
@@ -184,7 +184,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
         deployedAddress = Clones.cloneDeterministic(
             implementation,
-            keccak256(abi.encodePacked(msg.sender, _salt))
+            keccak256(abi.encodePacked(_msgSender(), _salt))
         );
 
         registry.add(_publisher, deployedAddress);
@@ -194,7 +194,7 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
             Address.functionCallWithValue(deployedAddress, _initializeData, _value);
         }
 
-        emit ContractDeployed(msg.sender, _publisher, _contractId, deployedAddress);
+        emit ContractDeployed(_msgSender(), _publisher, _contractId, deployedAddress);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -203,14 +203,34 @@ contract ByocRegistry is IByocRegistry, AccessControlEnumerable {
 
     /// @dev Lets a contract admin pause the registry.
     function setPause(bool _pause) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "unapproved caller");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "unapproved caller");
         isPaused = _pause;
         emit Paused(_pause);
     }
 
     /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
     function approveOperator(address _operator, bool _toApprove) external {
-        isApprovedByPublisher[msg.sender][_operator] = _toApprove;
-        emit Approved(msg.sender, _operator, _toApprove);
+        isApprovedByPublisher[_msgSender()][_operator] = _toApprove;
+        emit Approved(_msgSender(), _operator, _toApprove);
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }
