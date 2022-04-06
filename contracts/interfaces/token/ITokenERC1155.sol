@@ -25,6 +25,7 @@ interface ITokenERC1155 is
      *
      *  @param to The receiver of the NFTs to mint.
      *  @param royaltyRecipient The recipient of the minted NFT's secondary sales royalties.
+     *  @param royaltyBpsThe percentage of the minted NFT's secondary sales to take as royalties.
      *  @param primarySaleRecipient The recipient of the minted NFT's primary sales proceeds.
      *  @param tokenId Optional: specify only if not first mint.
      *  @param uri The URI of the NFT to mint.
@@ -104,7 +105,7 @@ interface ITokenERC1155 is
      *  @notice Mints an NFT according to the provided mint request.
      *
      *  @param req The mint request.
-     *  @param signature he signature produced by an account signing the mint request.
+     *  @param signature The signature produced by an account signing the mint request.
      */
     function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable;
 }
