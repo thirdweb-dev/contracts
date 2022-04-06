@@ -312,6 +312,28 @@ function isPaused() external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### publishContract
 
 ```solidity
