@@ -12,14 +12,7 @@ import "../IThirdwebOwnable.sol";
  *  `SignatureMint` is an ERC 721 contract. It lets anyone mint NFTs by producing a mint request
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
-interface ITokenERC721 is
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IERC721Upgradeable
-{
+interface ITokenERC721 is IERC721Upgradeable {
     /**
      *  @notice The body of a request to mint NFTs.
      *
@@ -53,14 +46,6 @@ interface ITokenERC721 is
         address indexed mintedTo,
         uint256 indexed tokenIdMinted,
         MintRequest mintRequest
-    );
-
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
     );
 
     /**
