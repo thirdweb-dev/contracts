@@ -17,21 +17,23 @@ abstract contract SignatureMintUpgradeable is Initializable, AccessControlEnumer
         );
     
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
-    mapping(bytes32 => bool) private minted;
+    mapping(bytes32 => bool) internal minted;
 
      /**
      * @dev See {_setURI}.
      */
-    function __SignatureMint_init(string memory eip721Name, string memory eip712Version) internal onlyInitializing {
+    function __SignatureMint_init(string memory eip721Name, string memory eip712Version, address minter) internal onlyInitializing {
         __EIP712_init(eip721Name, eip712Version);
 
-        __SignatureMint_init_unchained();
+        __SignatureMint_init_unchained(minter);
     }
 
-    function __SignatureMint_init_unchained() internal onlyInitializing {}
+    function __SignatureMint_init_unchained(address minter) internal onlyInitializing {
+        _setupRole(MINTER_ROLE, minter);
+    }
     
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(MintRequest calldata _req, bytes calldata _signature)
