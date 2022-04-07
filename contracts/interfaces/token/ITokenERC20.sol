@@ -6,7 +6,7 @@ import "../IThirdwebContract.sol";
 import "../IThirdwebPlatformFee.sol";
 import "../IThirdwebPrimarySale.sol";
 
-interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IERC20Upgradeable {
+interface ITokenERC20 is IERC20Upgradeable {
     /**
      *  @notice The body of a request to mint tokens.
      *

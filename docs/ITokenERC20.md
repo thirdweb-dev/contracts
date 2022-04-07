@@ -78,75 +78,6 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-*Returns the module type of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
-
-### contractURI
-
-```solidity
-function contractURI() external view returns (string)
-```
-
-
-
-*Returns the metadata URI of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the version of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined
-
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee bps and recipient.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
 ### mintTo
 
 ```solidity
@@ -180,72 +111,6 @@ Mints an NFT according to the provided mint request.
 |---|---|---|
 | req | ITokenERC20.MintRequest | The mint request.
 | signature | bytes | he signature produced by an account signing the mint request.
-
-### primarySaleRecipient
-
-```solidity
-function primarySaleRecipient() external view returns (address)
-```
-
-
-
-*The adress that receives all primary sales value.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
-### setContractURI
-
-```solidity
-function setContractURI(string _uri) external nonpayable
-```
-
-
-
-*Sets contract URI for the storefront-level metadata of the contract.       Only module admin can call this function.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _uri | string | undefined
-
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
-
-
-
-*Lets a module admin update the fees on primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
-
-### setPrimarySaleRecipient
-
-```solidity
-function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
-```
-
-
-
-*Lets a module admin set the default recipient of all primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _saleRecipient | address | undefined
 
 ### totalSupply
 
@@ -356,39 +221,6 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient  | address | undefined |
-| platformFeeBps  | uint256 | undefined |
-
-### PrimarySaleRecipientUpdated
-
-```solidity
-event PrimarySaleRecipientUpdated(address indexed recipient)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
 
 ### TokensMinted
 
