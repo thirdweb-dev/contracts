@@ -167,9 +167,9 @@ contract TokenERC721 is
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool, address) {
-        address signer = recoverAddress(_req, _signature);
-        return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
+    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool success, address signer) {
+        signer = recoverAddress(_req, _signature);
+        success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
     }
 
     /// @dev Returns the URI for a tokenId

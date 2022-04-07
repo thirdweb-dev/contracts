@@ -896,7 +896,7 @@ function uri(uint256 _tokenId) external view returns (string)
 ### verify
 
 ```solidity
-function verify(ITokenERC1155.MintRequest _req, bytes _signature) external view returns (bool, address)
+function verify(ITokenERC1155.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
 ```
 
 
@@ -914,8 +914,8 @@ function verify(ITokenERC1155.MintRequest _req, bytes _signature) external view 
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
-| _1 | address | undefined
+| success | bool | undefined
+| signer | address | undefined
 
 
 

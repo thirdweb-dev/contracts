@@ -938,7 +938,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 ### verify
 
 ```solidity
-function verify(ITokenERC721.MintRequest _req, bytes _signature) external view returns (bool, address)
+function verify(ITokenERC721.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
 ```
 
 
@@ -956,8 +956,8 @@ function verify(ITokenERC721.MintRequest _req, bytes _signature) external view r
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
-| _1 | address | undefined
+| success | bool | undefined
+| signer | address | undefined
 
 
 
