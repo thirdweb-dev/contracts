@@ -41,7 +41,7 @@ Deploys an instance of a published contract directly.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher. 
+| publisher | address | The address of the publisher.
 | contractId | uint256 | The unique integer identifier of the published contract. (publisher address, contractId) =&gt; published contract.
 | contractBytecode | bytes | The bytecode of the contract to deploy.
 | constructorArgs | bytes | The encoded constructor args to deploy the contract with.
@@ -68,7 +68,7 @@ Deploys a clone pointing to an implementation of a published contract.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher. 
+| publisher | address | The address of the publisher.
 | contractId | uint256 | The unique integer identifier of the published contract. (publisher address, contractId) =&gt; published contract.
 | initializeData | bytes | The encoded function call to initialize the contract with.
 | salt | bytes32 | The salt to use in the CREATE2 contract deployment.
@@ -187,7 +187,7 @@ Let&#39;s an account unpublish a contract. The account must be approved by the p
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher. 
+| publisher | address | The address of the publisher.
 | contractId | uint256 | The unique integer identifier of the published contract. (publisher address, contractId) =&gt; published contract.
 
 
