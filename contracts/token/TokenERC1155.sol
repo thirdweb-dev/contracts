@@ -4,6 +4,12 @@ pragma solidity ^0.8.11;
 // Interface
 import { ITokenERC1155 } from "../interfaces/token/ITokenERC1155.sol";
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebOwnable.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
@@ -30,6 +36,11 @@ import "../interfaces/ITWFee.sol";
 
 contract TokenERC1155 is
     Initializable,
+    IThirdwebContract,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
