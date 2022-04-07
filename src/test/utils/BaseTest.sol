@@ -24,7 +24,7 @@ import "contracts/token/TokenERC721.sol";
 import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
-import "contracts/ByocRegistry.sol";
+import {ByocRegistry} from "contracts/ByocRegistry.sol";
 import "contracts/mock/Mock.sol";
 
 abstract contract BaseTest is DSTest, stdCheats {
@@ -67,7 +67,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         forwarder = address(new Forwarder());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
-        byocRegistry = address(new ByocRegistry(registry));
+        byocRegistry = address(new ByocRegistry(registry, forwarders()));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), byocRegistry);
         fee = address(new TWFee(forwarder, factory));
