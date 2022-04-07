@@ -65,9 +65,6 @@ interface ITokenERC1155 is
     /// @dev Emitted when a new sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
     /// @dev Emitted when a new Owner is set.
     event OwnerUpdated(address prevOwner, address newOwner);
 

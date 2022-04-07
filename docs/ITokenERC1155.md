@@ -223,7 +223,7 @@ Mints an NFT according to the provided mint request.
 | Name | Type | Description |
 |---|---|---|
 | req | ITokenERC1155.MintRequest | The mint request.
-| signature | bytes | he signature produced by an account signing the mint request.
+| signature | bytes | The signature produced by an account signing the mint request.
 
 ### owner
 
@@ -550,7 +550,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 
 
-*Emitted when fee on primary sales is updated.*
+
 
 #### Parameters
 

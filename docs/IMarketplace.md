@@ -386,7 +386,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 
 
-*Emitted when fee on primary sales is updated.*
+
 
 #### Parameters
 

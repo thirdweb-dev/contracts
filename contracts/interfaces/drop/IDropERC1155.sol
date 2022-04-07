@@ -53,9 +53,6 @@ interface IDropERC1155 is
     /// @dev Emitted when a new primary sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
-    /// @dev Emitted when fee platform fee recipient or bps is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
     /// @dev Emitted when a new owner is set.
     event OwnerUpdated(address prevOwner, address newOwner);
 

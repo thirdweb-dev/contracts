@@ -39,9 +39,6 @@ interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatf
     /// @dev Emitted when a new sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
     /**
      *  @notice Verifies that a mint request is signed by an account holding
      *         MINTER_ROLE (at the time of the function call).
