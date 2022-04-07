@@ -36,9 +36,6 @@ interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatf
     /// @dev Emitted when tokens are minted.
     event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
 
-    /// @dev Emitted when a new sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
     /**
      *  @notice Verifies that a mint request is signed by an account holding
      *         MINTER_ROLE (at the time of the function call).

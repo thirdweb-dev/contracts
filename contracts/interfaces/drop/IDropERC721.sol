@@ -53,9 +53,6 @@ interface IDropERC721 is
     /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
-    /// @dev Emitted when a new primary sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
     /// @dev Emitted when a new owner is set.
     event OwnerUpdated(address prevOwner, address newOwner);
 

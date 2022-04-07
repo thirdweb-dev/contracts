@@ -55,9 +55,6 @@ interface ITokenERC721 is
         MintRequest mintRequest
     );
 
-    /// @dev Emitted when a new sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
     /// @dev Emitted when a new Owner is set.
     event OwnerUpdated(address prevOwner, address newOwner);
 

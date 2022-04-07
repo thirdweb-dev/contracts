@@ -410,7 +410,7 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 
 
 
-*Emitted when a new primary sale recipient is set.*
+
 
 #### Parameters
 

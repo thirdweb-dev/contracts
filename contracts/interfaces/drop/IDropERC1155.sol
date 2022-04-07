@@ -50,9 +50,6 @@ interface IDropERC1155 is
     /// @dev Emitted when new claim conditions are set for a token.
     event ClaimConditionsUpdated(uint256 indexed tokenId, ClaimCondition[] claimConditions);
 
-    /// @dev Emitted when a new primary sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
     /// @dev Emitted when a new owner is set.
     event OwnerUpdated(address prevOwner, address newOwner);
 
