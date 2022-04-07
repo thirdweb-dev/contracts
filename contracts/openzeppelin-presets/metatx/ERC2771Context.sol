@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * @dev Context variant with ERC2771 support.
  */
 abstract contract ERC2771Context is Context {
-    
     mapping(address => bool) private _trustedForwarder;
 
     constructor(address[] memory trustedForwarder) {

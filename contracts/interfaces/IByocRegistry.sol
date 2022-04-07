@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 interface IByocRegistry {
-
     /**
      *  @notice The data stored for a published contract.
      *
@@ -31,12 +30,21 @@ interface IByocRegistry {
     /// @dev Emitted when a publisher's approval of an operator is updated.
     event Approved(address indexed publisher, address indexed operator, bool isApproved);
     /// @dev Emitted when a contract is published.
-    event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, CustomContract publishedContract);
+    event ContractPublished(
+        address indexed operator,
+        address indexed publisher,
+        uint256 indexed contractId,
+        CustomContract publishedContract
+    );
     /// @dev Emitted when a contract is unpublished.
     event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
     /// @dev Emitted when a contract is deployed.
-    event ContractDeployed(address indexed deployer, address indexed publisher, uint256 indexed contractId, address deployedContract);
-
+    event ContractDeployed(
+        address indexed deployer,
+        address indexed publisher,
+        uint256 indexed contractId,
+        address deployedContract
+    );
 
     /**
      *  @notice Returns whether a publisher has approved an operator to publish / unpublish contracts on their behalf.
@@ -73,7 +81,10 @@ interface IByocRegistry {
      *
      *  @return published The desired contract published by the publisher.
      */
-    function getPublishedContract(address publisher, uint256 contractId) external view returns (CustomContract memory published);
+    function getPublishedContract(address publisher, uint256 contractId)
+        external
+        view
+        returns (CustomContract memory published);
 
     /**
      *  @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
@@ -86,12 +97,17 @@ interface IByocRegistry {
      *
      *  @return contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
-    function publishContract(address publisher, string memory publishMetadataUri, bytes32 bytecodeHash, address implementation) external returns (uint256 contractId);
+    function publishContract(
+        address publisher,
+        string memory publishMetadataUri,
+        bytes32 bytecodeHash,
+        address implementation
+    ) external returns (uint256 contractId);
 
     /**
      *  @notice Let's an account unpublish a contract. The account must be approved by the publisher, or be the publisher.
      *
-     *  @param publisher The address of the publisher. 
+     *  @param publisher The address of the publisher.
      *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
     function unpublishContract(address publisher, uint256 contractId) external;
@@ -99,7 +115,7 @@ interface IByocRegistry {
     /**
      *  @notice Deploys an instance of a published contract directly.
      *
-     *  @param publisher The address of the publisher. 
+     *  @param publisher The address of the publisher.
      *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      *  @param contractBytecode The bytecode of the contract to deploy.
      *  @param constructorArgs The encoded constructor args to deploy the contract with.
@@ -120,7 +136,7 @@ interface IByocRegistry {
     /**
      *  @notice Deploys a clone pointing to an implementation of a published contract.
      *
-     *  @param publisher The address of the publisher. 
+     *  @param publisher The address of the publisher.
      *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      *  @param initializeData The encoded function call to initialize the contract with.
      *  @param salt The salt to use in the CREATE2 contract deployment.

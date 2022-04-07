@@ -10,11 +10,10 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./openzeppelin-presets/metatx/ERC2771Context.sol";
 
 //  ==========  Internal imports    ==========
-import {IByocRegistry} from "./interfaces/IByocRegistry.sol";
-import {TWRegistry} from "./TWRegistry.sol";
+import { IByocRegistry } from "./interfaces/IByocRegistry.sol";
+import { TWRegistry } from "./TWRegistry.sol";
 
 contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -28,7 +27,7 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
     //////////////////////////////////////////////////////////////*/
-    
+
     /// @dev Mapping from publisher address => set of published contracts.
     mapping(address => CustomContractSet) private publishedContracts;
 
@@ -47,10 +46,7 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
 
     /// @dev Checks whether caller is publisher or approved by publisher.
     modifier onlyApprovedOrPublisher(address _publisher) {
-        require(
-            _msgSender() == _publisher || isApprovedByPublisher[_publisher][_msgSender()],
-            "unapproved caller"
-        );
+        require(_msgSender() == _publisher || isApprovedByPublisher[_publisher][_msgSender()], "unapproved caller");
 
         _;
     }
@@ -74,13 +70,13 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
     /// @notice Returns all contracts published by a publisher.
     function getAllPublishedContracts(address _publisher) external view returns (CustomContract[] memory published) {
         uint256 total = publishedContracts[_publisher].id;
-        uint256 net  = total - publishedContracts[_publisher].removed;
+        uint256 net = total - publishedContracts[_publisher].removed;
 
         published = new CustomContract[](net);
 
         uint256 publishedIndex;
-        for(uint256 i = 0; i < total; i += 1) {
-            if((publishedContracts[_publisher].contractAtId[i].bytecodeHash).length == 0) {
+        for (uint256 i = 0; i < total; i += 1) {
+            if ((publishedContracts[_publisher].contractAtId[i].bytecodeHash).length == 0) {
                 continue;
             }
 
@@ -90,7 +86,11 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
     }
 
     /// @notice Returns a given contract published by a publisher.
-    function getPublishedContract(address _publisher, uint256 _contractId) external view returns (CustomContract memory) {
+    function getPublishedContract(address _publisher, uint256 _contractId)
+        external
+        view
+        returns (CustomContract memory)
+    {
         return publishedContracts[_publisher].contractAtId[_contractId];
     }
 
@@ -100,12 +100,7 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         string memory _publishMetadataUri,
         bytes32 _bytecodeHash,
         address _implementation
-    )
-        external
-        onlyApprovedOrPublisher(_publisher)
-        onlyUnpausedOrAdmin
-        returns (uint256 contractIdOfPublished)
-    {
+    ) external onlyApprovedOrPublisher(_publisher) onlyUnpausedOrAdmin returns (uint256 contractIdOfPublished) {
         contractIdOfPublished = publishedContracts[_publisher].id;
         publishedContracts[_publisher].id += 1;
 
@@ -123,10 +118,7 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
     }
 
     /// @notice Remove a contract from a publisher's set of published contracts.
-    function unpublishContract(
-        address _publisher,
-        uint256 _contractId
-    ) 
+    function unpublishContract(address _publisher, uint256 _contractId)
         external
         onlyApprovedOrPublisher(_publisher)
         onlyUnpausedOrAdmin
@@ -149,11 +141,7 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         bytes memory _constructorArgs,
         bytes32 _salt,
         uint256 _value
-    ) 
-        external 
-        onlyUnpausedOrAdmin
-        returns (address deployedAddress)        
-    {
+    ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
         require(
             keccak256(_contractBytecode) == publishedContracts[_publisher].contractAtId[_contractId].bytecodeHash,
             "bytecode hash mismatch"
@@ -174,18 +162,11 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         bytes memory _initializeData,
         bytes32 _salt,
         uint256 _value
-    )
-        external
-        onlyUnpausedOrAdmin
-        returns (address deployedAddress)
-    {
+    ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
         address implementation = publishedContracts[_publisher].contractAtId[_contractId].implementation;
         require(implementation != address(0), "implementation DNE");
 
-        deployedAddress = Clones.cloneDeterministic(
-            implementation,
-            keccak256(abi.encodePacked(_msgSender(), _salt))
-        );
+        deployedAddress = Clones.cloneDeterministic(implementation, keccak256(abi.encodePacked(_msgSender(), _salt)));
 
         registry.add(_publisher, deployedAddress);
 
@@ -214,23 +195,11 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         emit Approved(_msgSender(), _operator, _toApprove);
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }
