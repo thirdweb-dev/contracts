@@ -62,9 +62,6 @@ interface ITokenERC1155 is
         MintRequest mintRequest
     );
 
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     /**
      *  @notice Verifies that a mint request is signed by an account holding
      *         MINTER_ROLE (at the time of the function call).

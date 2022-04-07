@@ -646,7 +646,7 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 
 
-*Emitted when a new owner is set.*
+
 
 #### Parameters
 

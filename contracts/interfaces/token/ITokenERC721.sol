@@ -55,9 +55,6 @@ interface ITokenERC721 is
         MintRequest mintRequest
     );
 
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     /// @dev Emitted when accrued royalties are withdrawn from the contract.
     event FundsWithdrawn(
         address indexed paymentReceiver,

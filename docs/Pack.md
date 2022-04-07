@@ -1118,7 +1118,7 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 
 
-*Emitted when a new Owner is set.*
+
 
 #### Parameters
 

@@ -23,9 +23,6 @@ interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
         MultiTokenTransferLib.MultiToken wrappedContents
     );
 
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     /**
      *  @notice Wrap multiple ERC1155, ERC721, ERC20 tokens into 'n' shares (i.e. variable supply of 1 ERC 1155 token)
      *

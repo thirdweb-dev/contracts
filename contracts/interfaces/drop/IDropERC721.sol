@@ -53,9 +53,6 @@ interface IDropERC721 is
     /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
-    /// @dev Emitted when a new owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
