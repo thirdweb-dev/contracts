@@ -78,6 +78,56 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### burn
+
+```solidity
+function burn(uint256 amount) external nonpayable
+```
+
+
+
+*Destroys `amount` tokens from the caller. See {ERC20-_burn}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | undefined
+
+### burnFrom
+
+```solidity
+function burnFrom(address account, uint256 amount) external nonpayable
+```
+
+
+
+*Destroys `amount` tokens from `account`, deducting from the caller&#39;s allowance. See {ERC20-_burn} and {ERC20-allowance}. Requirements: - the caller must have allowance for ``accounts``&#39;s tokens of at least `amount`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+| amount | uint256 | undefined
+
+### decimals
+
+```solidity
+function decimals() external view returns (uint8)
+```
+
+
+
+*Returns the decimals places of the token.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint8 | undefined
+
 ### mintTo
 
 ```solidity
@@ -111,6 +161,40 @@ Mints an NFT according to the provided mint request.
 |---|---|---|
 | req | ITokenERC20.MintRequest | The mint request.
 | signature | bytes | he signature produced by an account signing the mint request.
+
+### name
+
+```solidity
+function name() external view returns (string)
+```
+
+
+
+*Returns the name of the token.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
+### symbol
+
+```solidity
+function symbol() external view returns (string)
+```
+
+
+
+*Returns the symbol of the token.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
 
 ### totalSupply
 

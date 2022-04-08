@@ -49,6 +49,22 @@ function balanceOf(address owner) external view returns (uint256 balance)
 |---|---|---|
 | balance | uint256 | undefined
 
+### burn
+
+```solidity
+function burn(uint256 tokenId) external nonpayable
+```
+
+
+
+*Burns `tokenId`. See {ERC721-_burn}. Requirements: - The caller must own `tokenId` or be an approved operator.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined
+
 ### getApproved
 
 ```solidity
@@ -140,6 +156,23 @@ Mints an NFT according to the provided mint request.
 |---|---|---|
 | _0 | uint256 | undefined
 
+### name
+
+```solidity
+function name() external view returns (string)
+```
+
+
+
+*Returns the token collection name.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### ownerOf
 
 ```solidity
@@ -219,6 +252,107 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
+
+### symbol
+
+```solidity
+function symbol() external view returns (string)
+```
+
+
+
+*Returns the token collection symbol.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
+### tokenByIndex
+
+```solidity
+function tokenByIndex(uint256 index) external view returns (uint256)
+```
+
+
+
+*Returns a token ID at a given `index` of all the tokens stored by the contract. Use along with {totalSupply} to enumerate all tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### tokenOfOwnerByIndex
+
+```solidity
+function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256)
+```
+
+
+
+*Returns a token ID owned by `owner` at a given `index` of its token list. Use along with {balanceOf} to enumerate all of ``owner``&#39;s tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### tokenURI
+
+```solidity
+function tokenURI(uint256 tokenId) external view returns (string)
+```
+
+
+
+*Returns the Uniform Resource Identifier (URI) for `tokenId` token.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
+### totalSupply
+
+```solidity
+function totalSupply() external view returns (uint256)
+```
+
+
+
+*Returns the total amount of tokens stored by the contract.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
 
 ### transferFrom
 

@@ -56,6 +56,42 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined
 
+### burn
+
+```solidity
+function burn(address account, uint256 id, uint256 value) external nonpayable
+```
+
+
+
+*Lets a token owner burn the tokens they own (i.e. destroy for good)*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+| id | uint256 | undefined
+| value | uint256 | undefined
+
+### burnBatch
+
+```solidity
+function burnBatch(address account, uint256[] ids, uint256[] values) external nonpayable
+```
+
+
+
+*Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+| ids | uint256[] | undefined
+| values | uint256[] | undefined
+
 ### isApprovedForAll
 
 ```solidity
@@ -193,6 +229,50 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
+
+### totalSupply
+
+```solidity
+function totalSupply(uint256 id) external view returns (uint256 supply)
+```
+
+
+
+*The total circulating supply of tokens of ID `tokenId`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supply | uint256 | undefined
+
+### uri
+
+```solidity
+function uri(uint256 id) external view returns (string)
+```
+
+
+
+*Returns the URI for token type `id`. If the `\{id\}` substring is present in the URI, it must be replaced by clients with the actual token type ID.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
 
 ### verify
 
