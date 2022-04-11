@@ -222,6 +222,7 @@ contract Pack is
 
         require(_contents.length > 0, "nothing to pack");
 
+        uint256 nativeTokenAmount;
         for(uint256 i = 0; i < _contents.length; i += 1) {
 
             require(_contents[i].totalAmountPacked % _contents[i].amountPerUnit == 0, "invalid reward units");
@@ -229,13 +230,28 @@ contract Pack is
 
             packTotalSupply += _contents[i].totalAmountPacked / _contents[i].amountPerUnit;
 
+            if(_contents[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN) {
+                nativeTokenAmount += _contents[i].totalAmountPacked;
+            } else {
+                transferPackContent(
+                    _contents[i].assetContract, 
+                    _contents[i].tokenType,
+                    _msgSender(),
+                    address(this),
+                    _contents[i].tokenId,
+                    _contents[i].totalAmountPacked
+                );
+            }
+        }
+
+        if(nativeTokenAmount > 0) {
             transferPackContent(
-                _contents[i].assetContract, 
-                _contents[i].tokenType,
+                CurrencyTransferLib.NATIVE_TOKEN, 
+                TokenType.ERC20,
                 _msgSender(),
                 address(this),
-                _contents[i].tokenId,
-                _contents[i].totalAmountPacked
+                0,
+                nativeTokenAmount
             );
         }
 
@@ -256,7 +272,13 @@ contract Pack is
         emit PackCreated(packId, _msgSender(), _recipient, pack, packTotalSupply);
     }
 
-    function openPack(uint256 packId, uint256 amountToOpen) external whenNotPaused {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external whenNotPaused {
+
+        address opener = _msgSender();
+
+        require(opener == tx.origin, "opener must be eoa");
+        require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
+
 
     }
 
