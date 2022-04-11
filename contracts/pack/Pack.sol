@@ -19,17 +19,17 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 //  ==========  Internal imports    ==========
 
-import "./interfaces/IPack.sol";
-import "./interfaces/ITWFee.sol";
+import "../interfaces/IPack.sol";
+import "../interfaces/ITWFee.sol";
 
-import "./interfaces/IThirdwebContract.sol";
-import "./interfaces/IThirdwebOwnable.sol";
-import "./interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebOwnable.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
 
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
-import "./lib/FeeType.sol";
-import "./lib/CurrencyTransferLib.sol";
+import "../lib/FeeType.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 contract Pack is
     Initializable,
