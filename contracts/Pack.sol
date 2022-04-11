@@ -222,8 +222,30 @@ contract Pack is
 
         require(_contents.length > 0, "nothing to pack");
 
+        packId = nextTokenId;
+        nextTokenId += 1;
+
+        (packTotalSupply) = escrowPackContents(_contents, packInfo[packId]);
+
+        packInfo[packId].uri = _packUri;
+        packInfo[packId].openStartTimestamp = _openStartTimestamp;
+        packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
+
+        PackInfo memory pack = packInfo[packId];
+
+        _mint(_recipient, packId, packTotalSupply, "");
+
+        emit PackCreated(packId, _msgSender(), _recipient, pack, packTotalSupply);
+    }
+
+    function escrowPackContents(
+        PackContent[] calldata _contents,
+        PackInfo storage pack
+    )
+        internal 
+        returns (uint256 packTotalSupply) 
+    {
         uint256 nativeTokenAmount;
-        PackContent[] memory packContents = new PackContent[](_contents.length);
 
         for(uint256 i = 0; i < _contents.length; i += 1) {
 
@@ -231,6 +253,7 @@ contract Pack is
             require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmountPacked == 1, "invalid erc721 rewards");
 
             packTotalSupply += _contents[i].totalAmountPacked / _contents[i].amountPerUnit;
+            pack.contents.push(_contents[i]);
 
             if(_contents[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].totalAmountPacked;
@@ -244,8 +267,6 @@ contract Pack is
                     _contents[i].totalAmountPacked
                 );
             }
-
-            packContents[i] = _contents[i];
         }
 
         if(nativeTokenAmount > 0) {
@@ -258,22 +279,6 @@ contract Pack is
                 nativeTokenAmount
             );
         }
-
-        packId = nextTokenId;
-        nextTokenId += 1;
-
-        PackInfo memory pack = PackInfo({
-            contents: packContents,
-            openStartTimestamp: _openStartTimestamp,
-            amountDistributedPerOpen: _amountDistributedPerOpen,
-            uri: _packUri
-        });
-
-        packInfo[packId] = pack;
-
-        _mint(_recipient, packId, packTotalSupply, "");
-
-        emit PackCreated(packId, _msgSender(), _recipient, pack, packTotalSupply);
     }
 
     function openPack(uint256 _packId, uint256 _amountToOpen) external whenNotPaused {
@@ -287,11 +292,9 @@ contract Pack is
         require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
 
         (
-            PackContent[] memory updatedPackContents,
             PackContent[] memory rewardUnits
         ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack.contents);
 
-        packInfo[_packId].contents = updatedPackContents;
         _burn(_msgSender(), _packId, _amountToOpen);
 
         for(uint256 i = 0; i < rewardUnits.length; i += 1) {
@@ -340,20 +343,16 @@ contract Pack is
         PackContent[] memory _availableRewardUnits
     )   
         internal
-        view
         returns (
-            PackContent[] memory updatedPackContents,
             PackContent[] memory rewardUnits
         ) 
     {
 
-        uint256 totalRewardsToDistrubte = _numOfPacksToOpen * _rewardUnitsPerOpen;
-
-        rewardUnits = new PackContent[](totalRewardsToDistrubte);
+        rewardUnits = new PackContent[](_numOfPacksToOpen * _rewardUnitsPerOpen);
         uint256 currentTotalSupply = totalSupply[_packId];
 
         uint256 random = uint(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
-        for(uint256 i = 0; i < totalRewardsToDistrubte; i += 1) {
+        for(uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
             
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
@@ -369,6 +368,7 @@ contract Pack is
                     rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
 
                     _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
+                    packInfo[_packId].contents[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
 
                     break;
 
@@ -377,8 +377,6 @@ contract Pack is
                 }
             }
         }
-
-        updatedPackContents = _availableRewardUnits;
     }
 
     /*///////////////////////////////////////////////////////////////
