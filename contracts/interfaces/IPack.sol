@@ -48,6 +48,9 @@ interface IPack {
     /// @notice Emitted when a set of packs is created.
     event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, PackInfo packInfo, uint256 totalPacksCreated);
 
+    /// @notice Emitted when a pack is opened.
+    event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, PackContent[] rewardUnitsDistributed);
+
     /// @dev Emitted when the owner is updated.
     event OwnerUpdated(address prevOwner, address newOwner);
 

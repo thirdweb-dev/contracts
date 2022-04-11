@@ -223,6 +223,8 @@ contract Pack is
         require(_contents.length > 0, "nothing to pack");
 
         uint256 nativeTokenAmount;
+        PackContent[] memory packContents = new PackContent[](_contents.length);
+
         for(uint256 i = 0; i < _contents.length; i += 1) {
 
             require(_contents[i].totalAmountPacked % _contents[i].amountPerUnit == 0, "invalid reward units");
@@ -242,6 +244,8 @@ contract Pack is
                     _contents[i].totalAmountPacked
                 );
             }
+
+            packContents[i] = _contents[i];
         }
 
         if(nativeTokenAmount > 0) {
@@ -259,7 +263,7 @@ contract Pack is
         nextTokenId += 1;
 
         PackInfo memory pack = PackInfo({
-            contents: _contents,
+            contents: packContents,
             openStartTimestamp: _openStartTimestamp,
             amountDistributedPerOpen: _amountDistributedPerOpen,
             uri: _packUri
@@ -279,7 +283,29 @@ contract Pack is
         require(opener == tx.origin, "opener must be eoa");
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
 
+        PackInfo memory pack = packInfo[_packId];
+        require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
 
+        (
+            PackContent[] memory updatedPackContents,
+            PackContent[] memory rewardUnits
+        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack.contents);
+
+        packInfo[_packId].contents = updatedPackContents;
+        _burn(_msgSender(), _packId, _amountToOpen);
+
+        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
+            transferPackContent(
+                rewardUnits[i].assetContract,
+                rewardUnits[i].tokenType,
+                address(this),
+                _msgSender(),
+                rewardUnits[i].tokenId,
+                rewardUnits[i].totalAmountPacked
+            );
+        }
+
+        emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
     }
 
     /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
@@ -304,6 +330,55 @@ contract Pack is
         } else if (_tokenType == TokenType.ERC1155) {
             IERC1155Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId, _amount, "");
         }
+    }
+
+    /// @dev Returns the reward units to distribute.
+    function getRewardUnits(
+        uint256 _packId,
+        uint256 _numOfPacksToOpen,
+        uint256 _rewardUnitsPerOpen,
+        PackContent[] memory _availableRewardUnits
+    )   
+        internal
+        view
+        returns (
+            PackContent[] memory updatedPackContents,
+            PackContent[] memory rewardUnits
+        ) 
+    {
+
+        uint256 totalRewardsToDistrubte = _numOfPacksToOpen * _rewardUnitsPerOpen;
+
+        rewardUnits = new PackContent[](totalRewardsToDistrubte);
+        uint256 currentTotalSupply = totalSupply[_packId];
+
+        uint256 random = uint(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
+        for(uint256 i = 0; i < totalRewardsToDistrubte; i += 1) {
+            
+            uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
+            uint256 target = randomVal % currentTotalSupply;
+            uint256 step;
+
+            for(uint256 j = 0; j < _availableRewardUnits.length; j += 1) {
+                
+                uint256 check = _availableRewardUnits[j].totalAmountPacked / _availableRewardUnits[j].amountPerUnit;
+
+                if(target < step + check) {
+
+                    rewardUnits[i] = _availableRewardUnits[j];
+                    rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
+
+                    _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
+
+                    break;
+
+                } else {
+                    step += check;
+                }
+            }
+        }
+
+        updatedPackContents = _availableRewardUnits;
     }
 
     /*///////////////////////////////////////////////////////////////
