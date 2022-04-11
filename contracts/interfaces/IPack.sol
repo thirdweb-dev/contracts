@@ -36,16 +36,20 @@ interface IPack {
      *  @param contents                 The reward units packed in the packs.
      *  @param openStartTimestamp       The timestamp after which packs can be opened.
      *  @param amountDistributedPerOpen The number of reward units distributed per open.
-     *  @param totalCirculatingSupply   The total amount of unopened packs.
      *  @param packUri                  The metadata URI for packs.
      */
     struct PackInfo {
         PackContent[] contents;
         uint128 openStartTimestamp;
         uint128 amountDistributedPerOpen;
-        uint256 totalCirculatingSupply;
         string uri;
     }
+
+    /// @notice Emitted when a set of packs is created.
+    event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, PackInfo packInfo, uint256 totalPacksCreated);
+
+    /// @dev Emitted when the owner is updated.
+    event OwnerUpdated(address prevOwner, address newOwner);
 
     /**
      *  @notice Creates a pack with the stated contents.
@@ -54,13 +58,18 @@ interface IPack {
      *  @param packUri                  The (metadata) URI assigned to the packs created.
      *  @param openStartTimestamp       The timestamp after which packs can be opened.
      *  @param amountDistributedPerOpen The number of reward units distributed per open.
+     *  @param recipient                 The recipient of the packs created.
+     *
+     *  @return packId The unique identifer of the created set of packs.
+     *  @return packTotalSupply The total number of packs created.
      */
     function createPack(
         PackContent[] calldata contents,
         string calldata packUri,
         uint128 openStartTimestamp,
-        uint128 amountDistributedPerOpen
-    ) external;
+        uint128 amountDistributedPerOpen,
+        address recipient
+    ) external returns (uint256 packId, uint256 packTotalSupply);
 
     /**
      *  @notice Lets a pack owner open a pack and receive the pack's reward unit.
