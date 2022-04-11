@@ -225,17 +225,46 @@ contract Pack is
         packId = nextTokenId;
         nextTokenId += 1;
 
-        (packTotalSupply) = escrowPackContents(_contents, packInfo[packId]);
+        packTotalSupply = escrowPackContents(_contents, packInfo[packId]);
 
         packInfo[packId].uri = _packUri;
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
 
-        PackInfo memory pack = packInfo[packId];
-
         _mint(_recipient, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _msgSender(), _recipient, pack, packTotalSupply);
+        emit PackCreated(packId, _msgSender(), _recipient, packInfo[packId], packTotalSupply);
+    }
+
+    /// @notice Lets a pack owner open packs and receive the packs' reward units.
+    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused {
+
+        address opener = _msgSender();
+
+        require(opener == tx.origin, "opener must be eoa");
+        require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
+
+        PackInfo memory pack = packInfo[_packId];
+        require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
+
+        (
+            PackContent[] memory rewardUnits
+        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack.contents);
+
+        _burn(_msgSender(), _packId, _amountToOpen);
+
+        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
+            transferPackContent(
+                rewardUnits[i].assetContract,
+                rewardUnits[i].tokenType,
+                address(this),
+                _msgSender(),
+                rewardUnits[i].tokenId,
+                rewardUnits[i].totalAmountPacked
+            );
+        }
+
+        emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
     }
 
     function escrowPackContents(
@@ -281,60 +310,6 @@ contract Pack is
         }
     }
 
-    function openPack(uint256 _packId, uint256 _amountToOpen) external whenNotPaused {
-
-        address opener = _msgSender();
-
-        require(opener == tx.origin, "opener must be eoa");
-        require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
-
-        PackInfo memory pack = packInfo[_packId];
-        require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
-
-        (
-            PackContent[] memory rewardUnits
-        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack.contents);
-
-        _burn(_msgSender(), _packId, _amountToOpen);
-
-        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
-            transferPackContent(
-                rewardUnits[i].assetContract,
-                rewardUnits[i].tokenType,
-                address(this),
-                _msgSender(),
-                rewardUnits[i].tokenId,
-                rewardUnits[i].totalAmountPacked
-            );
-        }
-
-        emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
-    }
-
-    /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
-    function transferPackContent(
-        address _assetContract,
-        TokenType _tokenType,
-        address _from,
-        address _to,
-        uint256 _tokenId,
-        uint256 _amount
-    ) internal {
-        if (_tokenType == TokenType.ERC20) {
-            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
-                _assetContract,
-                _from,
-                _to,
-                _amount,
-                nativeTokenWrapper
-            );
-        } else if (_tokenType == TokenType.ERC721) {
-            IERC721Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId);
-        } else if (_tokenType == TokenType.ERC1155) {
-            IERC1155Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId, _amount, "");
-        }
-    }
-
     /// @dev Returns the reward units to distribute.
     function getRewardUnits(
         uint256 _packId,
@@ -376,6 +351,30 @@ contract Pack is
                     step += check;
                 }
             }
+        }
+    }
+
+    /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
+    function transferPackContent(
+        address _assetContract,
+        TokenType _tokenType,
+        address _from,
+        address _to,
+        uint256 _tokenId,
+        uint256 _amount
+    ) internal {
+        if (_tokenType == TokenType.ERC20) {
+            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+                _assetContract,
+                _from,
+                _to,
+                _amount,
+                nativeTokenWrapper
+            );
+        } else if (_tokenType == TokenType.ERC721) {
+            IERC721Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId);
+        } else if (_tokenType == TokenType.ERC1155) {
+            IERC1155Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId, _amount, "");
         }
     }
 
