@@ -3,33 +3,45 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import {ERC1155PausableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {MulticallUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import {AccessControlEnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 
 //  ==========  Internal imports    ==========
 
-import {IPack} from "./interfaces/IPack.sol";
-import { ITWFee } from "./interfaces/ITWFee.sol";
-import {IThirdwebContract} from "./interfaces/IThirdwebContract.sol";
-import {IThirdwebOwnable} from "./interfaces/IThirdwebOwnable.sol";
-import {IThirdwebRoyalty, IERC2981Upgradeable} from "./interfaces/IThirdwebRoyalty.sol";
+import "./interfaces/IPack.sol";
+import "./interfaces/ITWFee.sol";
 
-import {ERC2771ContextUpgradeable, ContextUpgradeable} from "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "./interfaces/IThirdwebContract.sol";
+import "./interfaces/IThirdwebOwnable.sol";
+import "./interfaces/IThirdwebRoyalty.sol";
 
-import {FeeType} from "./lib/FeeType.sol";
+import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+
+import "./lib/FeeType.sol";
+import "./lib/CurrencyTransferLib.sol";
 
 contract Pack is
     Initializable,
     IThirdwebContract,
     IThirdwebOwnable,
     IThirdwebRoyalty,
+    ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
+    ERC721HolderUpgradeable,
+    ERC1155HolderUpgradeable,
     ERC1155PausableUpgradeable,
     IPack
 {
@@ -57,6 +69,9 @@ contract Pack is
 
     /// @dev The thirdweb contract with fee related information.
     ITWFee public immutable thirdwebFee;
+
+    /// @dev The address of the native token wrapper contract.
+    address private immutable nativeTokenWrapper;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
@@ -90,8 +105,9 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _thirdwebFee) initializer {
+    constructor(address _thirdwebFee, address _nativeTokenWrapper) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
+        nativeTokenWrapper = _nativeTokenWrapper;
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -105,6 +121,7 @@ contract Pack is
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
+        __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
         __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
@@ -166,7 +183,7 @@ contract Pack is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
+        override(ERC1155Upgradeable, ERC1155ReceiverUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -198,6 +215,7 @@ contract Pack is
     )
         external
         onlyRole(MINTER_ROLE)
+        nonReentrant
         whenNotPaused
         returns (uint256 packId, uint256 packTotalSupply)
     {
@@ -210,6 +228,15 @@ contract Pack is
             require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmountPacked == 1, "invalid erc721 rewards");
 
             packTotalSupply += _contents[i].totalAmountPacked / _contents[i].amountPerUnit;
+
+            transferPackContent(
+                _contents[i].assetContract, 
+                _contents[i].tokenType,
+                _msgSender(),
+                address(this),
+                _contents[i].tokenId,
+                _contents[i].totalAmountPacked
+            );
         }
 
         packId = nextTokenId;
@@ -231,6 +258,30 @@ contract Pack is
 
     function openPack(uint256 packId, uint256 amountToOpen) external whenNotPaused {
 
+    }
+
+    /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
+    function transferPackContent(
+        address _assetContract,
+        TokenType _tokenType,
+        address _from,
+        address _to,
+        uint256 _tokenId,
+        uint256 _amount
+    ) internal {
+        if (_tokenType == TokenType.ERC20) {
+            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+                _assetContract,
+                _from,
+                _to,
+                _amount,
+                nativeTokenWrapper
+            );
+        } else if (_tokenType == TokenType.ERC721) {
+            IERC721Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId);
+        } else if (_tokenType == TokenType.ERC1155) {
+            IERC1155Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId, _amount, "");
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
