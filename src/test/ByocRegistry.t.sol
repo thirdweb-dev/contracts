@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Target contracts
-import "contracts/ByocRegistry.sol";
+import {ByocRegistry} from "contracts/ByocRegistry.sol";
 import "contracts/interfaces/IByocRegistry.sol";
 import "contracts/TWRegistry.sol";
 
 // Test helpers
-import "./utils/BaseTest.sol";
+import {BaseTest} from "./utils/BaseTest.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract MockCustomContract {
@@ -24,15 +24,24 @@ contract IByocRegistryData {
     /// @dev Emitted when a publisher's approval of an operator is updated.
     event Approved(address indexed publisher, address indexed operator, bool isApproved);
     /// @dev Emitted when a contract is published.
-    event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, IByocRegistry.CustomContract publishedContract);
+    event ContractPublished(
+        address indexed operator,
+        address indexed publisher,
+        uint256 indexed contractId,
+        IByocRegistry.CustomContract publishedContract
+    );
     /// @dev Emitted when a contract is unpublished.
     event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
     /// @dev Emitted when a contract is deployed.
-    event ContractDeployed(address indexed deployer, address indexed publisher, uint256 indexed contractId, address deployedContract);
+    event ContractDeployed(
+        address indexed deployer,
+        address indexed publisher,
+        uint256 indexed contractId,
+        address deployedContract
+    );
 }
 
 contract ByocRegistryTest is BaseTest, IByocRegistryData {
-
     ByocRegistry internal byoc;
     TWRegistry internal twRegistry;
 
@@ -43,7 +52,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     string internal publishMetadataUri = "ipfs://QmeXyz";
 
     function setUp() public override {
-
         super.setUp();
 
         byoc = ByocRegistry(byocRegistry);
@@ -55,7 +63,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish() public {
-
         vm.prank(publisher);
         uint256 contractId = byoc.publishContract(
             publisher,
@@ -73,7 +80,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_viaOperator() public {
-
         vm.prank(publisher);
         byoc.approveOperator(operator, true);
 
@@ -94,7 +100,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_revert_unapprovedCaller() public {
-
         vm.expectRevert("unapproved caller");
 
         vm.prank(operator);
@@ -107,7 +112,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_revert_registryPaused() public {
-
         vm.prank(factoryAdmin);
         byoc.setPause(true);
 
@@ -123,7 +127,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_emit_ContractPublished() public {
-
         vm.prank(publisher);
         byoc.approveOperator(operator, true);
 
@@ -147,7 +150,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish() public {
-
         vm.prank(publisher);
         uint256 contractId = byoc.publishContract(
             publisher,
@@ -168,7 +170,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish_viaOperator() public {
-
         vm.prank(publisher);
         uint256 contractId = byoc.publishContract(
             publisher,
@@ -192,7 +193,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish_revert_unapprovedCaller() public {
-
         vm.prank(publisher);
         uint256 contractId = byoc.publishContract(
             publisher,
@@ -208,7 +208,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish_revert_registryPaused() public {
-
         vm.prank(publisher);
         uint256 contractId = byoc.publishContract(
             publisher,
@@ -227,7 +226,6 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish_emit_ContractUnpublished() public {
-
         vm.prank(publisher);
         uint256 contractId = byoc.publishContract(
             publisher,
@@ -264,10 +262,10 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
 
         vm.prank(deployerOfPublished);
         address deployedAddress = byoc.deployInstance(
-            publisher, 
-            contractId, 
-            type(MockCustomContract).creationCode, 
-            abi.encode(num), 
+            publisher,
+            contractId,
+            type(MockCustomContract).creationCode,
+            abi.encode(num),
             bytes32("hello"),
             0
         );

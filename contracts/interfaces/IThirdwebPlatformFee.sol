@@ -7,4 +7,7 @@ interface IThirdwebPlatformFee {
 
     /// @dev Lets a module admin update the fees on primary sales.
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external;
+
+    /// @dev Emitted when fee on primary sales is updated.
+    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 }

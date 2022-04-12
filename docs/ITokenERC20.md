@@ -78,49 +78,48 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### contractType
+### burn
 
 ```solidity
-function contractType() external pure returns (bytes32)
+function burn(uint256 amount) external nonpayable
 ```
 
 
 
-*Returns the module type of the contract.*
+*Destroys `amount` tokens from the caller. See {ERC20-_burn}.*
 
-
-#### Returns
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| amount | uint256 | undefined
 
-### contractURI
+### burnFrom
 
 ```solidity
-function contractURI() external view returns (string)
+function burnFrom(address account, uint256 amount) external nonpayable
 ```
 
 
 
-*Returns the metadata URI of the contract.*
+*Destroys `amount` tokens from `account`, deducting from the caller&#39;s allowance. See {ERC20-_burn} and {ERC20-allowance}. Requirements: - the caller must have allowance for ``accounts``&#39;s tokens of at least `amount`.*
 
-
-#### Returns
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| account | address | undefined
+| amount | uint256 | undefined
 
-### contractVersion
+### decimals
 
 ```solidity
-function contractVersion() external pure returns (uint8)
+function decimals() external view returns (uint8)
 ```
 
 
 
-*Returns the version of the contract.*
+*Returns the decimals places of the token.*
 
 
 #### Returns
@@ -128,24 +127,6 @@ function contractVersion() external pure returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined
-
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee bps and recipient.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
 
 ### mintTo
 
@@ -181,71 +162,39 @@ Mints an NFT according to the provided mint request.
 | req | ITokenERC20.MintRequest | The mint request.
 | signature | bytes | he signature produced by an account signing the mint request.
 
-### primarySaleRecipient
+### name
 
 ```solidity
-function primarySaleRecipient() external view returns (address)
+function name() external view returns (string)
 ```
 
 
 
-*The adress that receives all primary sales value.*
+*Returns the name of the token.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | string | undefined
 
-### setContractURI
+### symbol
 
 ```solidity
-function setContractURI(string _uri) external nonpayable
+function symbol() external view returns (string)
 ```
 
 
 
-*Sets contract URI for the storefront-level metadata of the contract.       Only module admin can call this function.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _uri | string | undefined
-
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
+*Returns the symbol of the token.*
 
 
-
-*Lets a module admin update the fees on primary sales.*
-
-#### Parameters
+#### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
-
-### setPrimarySaleRecipient
-
-```solidity
-function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
-```
-
-
-
-*Lets a module admin set the default recipient of all primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _saleRecipient | address | undefined
+| _0 | string | undefined
 
 ### totalSupply
 
@@ -356,39 +305,6 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-*Emitted when fee on primary sales is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient  | address | undefined |
-| platformFeeBps  | uint256 | undefined |
-
-### PrimarySaleRecipientUpdated
-
-```solidity
-event PrimarySaleRecipientUpdated(address indexed recipient)
-```
-
-
-
-*Emitted when a new sale recipient is set.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
 
 ### TokensMinted
 

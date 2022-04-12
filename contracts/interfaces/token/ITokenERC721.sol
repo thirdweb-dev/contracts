@@ -2,24 +2,27 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
-import "../IThirdwebRoyalty.sol";
-import "../IThirdwebOwnable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721EnumerableUpgradeable.sol";
 
 /**
  *  `SignatureMint` is an ERC 721 contract. It lets anyone mint NFTs by producing a mint request
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
-interface ITokenERC721 is
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IERC721Upgradeable
+interface ITokenERC721 is 
+    IERC721MetadataUpgradeable,
+    IERC721EnumerableUpgradeable
 {
+
+    /**
+     * @dev Burns `tokenId`. See {ERC721-_burn}.
+     *
+     * Requirements:
+     *
+     * - The caller must own `tokenId` or be an approved operator.
+     */
+    function burn(uint256 tokenId) external;
+    
     /**
      *  @notice The body of a request to mint NFTs.
      *
@@ -53,23 +56,6 @@ interface ITokenERC721 is
         address indexed mintedTo,
         uint256 indexed tokenIdMinted,
         MintRequest mintRequest
-    );
-
-    /// @dev Emitted when a new sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
     );
 
     /**

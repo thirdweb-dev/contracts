@@ -2,29 +2,40 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
-import "../IThirdwebRoyalty.sol";
-import "../IThirdwebOwnable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/IERC1155MetadataURIUpgradeable.sol";
 
 /**
  *  `SignatureMint1155` is an ERC 1155 contract. It lets anyone mint NFTs by producing a mint request
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
-interface ITokenERC1155 is
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IERC1155Upgradeable
+interface ITokenERC1155 is 
+    IERC1155Upgradeable,
+    IERC1155MetadataURIUpgradeable
 {
+
+    /// @dev The total circulating supply of tokens of ID `tokenId`
+    function totalSupply(uint256 id) external view returns(uint256 supply);
+
+    /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
+    function burn(
+        address account,
+        uint256 id,
+        uint256 value
+    ) external;
+
+    /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
+    function burnBatch(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory values
+    ) external;
+
     /**
      *  @notice The body of a request to mint NFTs.
      *
      *  @param to The receiver of the NFTs to mint.
      *  @param royaltyRecipient The recipient of the minted NFT's secondary sales royalties.
+     *  @param royaltyBpsThe percentage of the minted NFT's secondary sales to take as royalties.
      *  @param primarySaleRecipient The recipient of the minted NFT's primary sales proceeds.
      *  @param tokenId Optional: specify only if not first mint.
      *  @param uri The URI of the NFT to mint.
@@ -61,15 +72,6 @@ interface ITokenERC1155 is
         MintRequest mintRequest
     );
 
-    /// @dev Emitted when a new sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     /**
      *  @notice Verifies that a mint request is signed by an account holding
      *         MINTER_ROLE (at the time of the function call).
@@ -104,7 +106,7 @@ interface ITokenERC1155 is
      *  @notice Mints an NFT according to the provided mint request.
      *
      *  @param req The mint request.
-     *  @param signature he signature produced by an account signing the mint request.
+     *  @param signature The signature produced by an account signing the mint request.
      */
     function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable;
 }

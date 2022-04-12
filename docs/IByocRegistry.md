@@ -158,7 +158,7 @@ Let&#39;s an account unpublish a contract. The account must be approved by the p
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher. 
+| publisher | address | The address of the publisher.
 | contractId | uint256 | The unique integer identifier of the published contract. (publisher address, contractId) =&gt; published contract.
 
 

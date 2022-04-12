@@ -56,115 +56,41 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined
 
-### contractType
+### burn
 
 ```solidity
-function contractType() external pure returns (bytes32)
+function burn(address account, uint256 id, uint256 value) external nonpayable
 ```
 
 
 
-*Returns the module type of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
-
-### contractURI
-
-```solidity
-function contractURI() external view returns (string)
-```
-
-
-
-*Returns the metadata URI of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the version of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined
-
-### getDefaultRoyaltyInfo
-
-```solidity
-function getDefaultRoyaltyInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the royalty recipient and fee bps.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee bps and recipient.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
-### getRoyaltyInfoForToken
-
-```solidity
-function getRoyaltyInfoForToken(uint256 tokenId) external view returns (address, uint16)
-```
-
-
-
-*Returns the royalty recipient for a particular token Id.*
+*Lets a token owner burn the tokens they own (i.e. destroy for good)*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| account | address | undefined
+| id | uint256 | undefined
+| value | uint256 | undefined
 
-#### Returns
+### burnBatch
+
+```solidity
+function burnBatch(address account, uint256[] ids, uint256[] values) external nonpayable
+```
+
+
+
+*Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)*
+
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| account | address | undefined
+| ids | uint256[] | undefined
+| values | uint256[] | undefined
 
 ### isApprovedForAll
 
@@ -223,65 +149,7 @@ Mints an NFT according to the provided mint request.
 | Name | Type | Description |
 |---|---|---|
 | req | ITokenERC1155.MintRequest | The mint request.
-| signature | bytes | he signature produced by an account signing the mint request.
-
-### owner
-
-```solidity
-function owner() external view returns (address)
-```
-
-
-
-*Returns the owner of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
-### primarySaleRecipient
-
-```solidity
-function primarySaleRecipient() external view returns (address)
-```
-
-
-
-*The adress that receives all primary sales value.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
-### royaltyInfo
-
-```solidity
-function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount)
-```
-
-
-
-*Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of exchange. The royalty amount is denominated and should be payed in that same unit of exchange.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
+| signature | bytes | The signature produced by an account signing the mint request.
 
 ### safeBatchTransferFrom
 
@@ -340,106 +208,6 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined
 | approved | bool | undefined
 
-### setContractURI
-
-```solidity
-function setContractURI(string _uri) external nonpayable
-```
-
-
-
-*Sets contract URI for the storefront-level metadata of the contract.       Only module admin can call this function.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _uri | string | undefined
-
-### setDefaultRoyaltyInfo
-
-```solidity
-function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
-```
-
-
-
-*Lets a module admin update the royalty bps and recipient.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
-
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-
-
-*Lets a module admin set a new owner for the contract. The new owner must be a module admin.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | undefined
-
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
-
-
-
-*Lets a module admin update the fees on primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
-
-### setPrimarySaleRecipient
-
-```solidity
-function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
-```
-
-
-
-*Lets a module admin set the default recipient of all primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _saleRecipient | address | undefined
-
-### setRoyaltyInfoForToken
-
-```solidity
-function setRoyaltyInfoForToken(uint256 tokenId, address recipient, uint256 bps) external nonpayable
-```
-
-
-
-*Lets a module admin set the royalty recipient for a particular token Id.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
-| recipient | address | undefined
-| bps | uint256 | undefined
-
 ### supportsInterface
 
 ```solidity
@@ -461,6 +229,50 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
+
+### totalSupply
+
+```solidity
+function totalSupply(uint256 id) external view returns (uint256 supply)
+```
+
+
+
+*The total circulating supply of tokens of ID `tokenId`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supply | uint256 | undefined
+
+### uri
+
+```solidity
+function uri(uint256 id) external view returns (string)
+```
+
+
+
+*Returns the URI for token type `id`. If the `\{id\}` substring is present in the URI, it must be replaced by clients with the actual token type ID.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
 
 ### verify
 
@@ -507,91 +319,6 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 | account `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
-
-### DefaultRoyalty
-
-```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newRoyaltyRecipient  | address | undefined |
-| newRoyaltyBps  | uint256 | undefined |
-
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
-```
-
-
-
-*Emitted when a new Owner is set.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-*Emitted when fee on primary sales is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient  | address | undefined |
-| platformFeeBps  | uint256 | undefined |
-
-### PrimarySaleRecipientUpdated
-
-```solidity
-event PrimarySaleRecipientUpdated(address indexed recipient)
-```
-
-
-
-*Emitted when a new sale recipient is set.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
-
-### RoyaltyForToken
-
-```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
-| royaltyBps  | uint256 | undefined |
 
 ### TokensMinted
 

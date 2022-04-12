@@ -4,6 +4,10 @@ pragma solidity ^0.8.11;
 //Interface
 import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
@@ -29,11 +33,13 @@ import "../lib/FeeType.sol";
 import "../interfaces/ITWFee.sol";
 
 contract TokenERC20 is
+    IThirdwebContract,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee,
     Initializable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC20BurnableUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     ITokenERC20,
@@ -145,6 +151,31 @@ contract TokenERC20 is
     }
 
     /**
+     * @dev Destroys `amount` tokens from the caller.
+     *
+     * See {ERC20-_burn}.
+     */
+    function burn(uint256 amount) public virtual {
+        _burn(_msgSender(), amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, deducting from the caller's
+     * allowance.
+     *
+     * See {ERC20-_burn} and {ERC20-allowance}.
+     *
+     * Requirements:
+     *
+     * - the caller must have allowance for ``accounts``'s tokens of at least
+     * `amount`.
+     */
+    function burnFrom(address account, uint256 amount) public virtual {
+        _spendAllowance(account, _msgSender(), amount);
+        _burn(account, amount);
+    }
+
+    /**
      * @dev Creates `amount` new tokens for `to`.
      *
      * See {ERC20-_mint}.
@@ -159,9 +190,13 @@ contract TokenERC20 is
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool, address) {
-        address signer = recoverAddress(_req, _signature);
-        return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
+    function verify(MintRequest calldata _req, bytes calldata _signature)
+        public
+        view
+        returns (bool success, address signer)
+    {
+        signer = recoverAddress(_req, _signature);
+        success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
     }
 
     /// @dev Mints tokens according to the provided mint request.

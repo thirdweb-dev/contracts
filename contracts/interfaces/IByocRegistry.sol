@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 interface IByocRegistry {
-
     /**
      *  @notice The data stored for a published contract.
      *
@@ -33,7 +32,12 @@ interface IByocRegistry {
     /// @dev Emitted when a publisher's approval of an operator is updated.
     event Approved(address indexed publisher, address indexed operator, bool isApproved);
     /// @dev Emitted when a contract is published.
-    event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, CustomContract publishedContract);
+    event ContractPublished(
+        address indexed operator,
+        address indexed publisher,
+        uint256 indexed contractId,
+        CustomContract publishedContract
+    );
     /// @dev Emitted when a contract is unpublished.
     event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
 
@@ -82,7 +86,10 @@ interface IByocRegistry {
      *
      *  @return published The desired contract published by the publisher.
      */
-    function getPublishedContract(address publisher, uint256 contractId) external view returns (CustomContract memory published);
+    function getPublishedContract(address publisher, uint256 contractId)
+        external
+        view
+        returns (CustomContract memory published);
 
     /**
      *  @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
@@ -101,7 +108,7 @@ interface IByocRegistry {
     /**
      *  @notice Let's an account unpublish a contract. The account must be approved by the publisher, or be the publisher.
      *
-     *  @param publisher The address of the publisher. 
+     *  @param publisher The address of the publisher.
      *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
     function unpublishContract(address publisher, uint256 contractId) external;

@@ -581,7 +581,7 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 
 
-*Emitted when a new owner is set.*
+
 
 #### Parameters
 
@@ -598,7 +598,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 
 
-*Emitted when fee platform fee recipient or bps is updated.*
+
 
 #### Parameters
 
@@ -615,7 +615,7 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 
 
 
-*Emitted when a new primary sale recipient is set.*
+
 
 #### Parameters
 
