@@ -13,7 +13,7 @@
 ### deployInstance
 
 ```solidity
-function deployInstance(address publisher, bytes contractBytecode, bytes constructorArgs, bytes32 salt, uint256 value) external nonpayable returns (address deployedAddress)
+function deployInstance(address publisher, bytes contractBytecode, bytes constructorArgs, bytes32 salt, uint256 value, ThirdwebContract.ThirdwebInfo thirdwebInfo) external nonpayable returns (address deployedAddress)
 ```
 
 Deploys an instance of a published contract directly.
@@ -29,6 +29,7 @@ Deploys an instance of a published contract directly.
 | constructorArgs | bytes | The encoded constructor args to deploy the contract with.
 | salt | bytes32 | The salt to use in the CREATE2 contract deployment.
 | value | uint256 | The native token value to pass to the contract on deployment.
+| thirdwebInfo | ThirdwebContract.ThirdwebInfo | The publish metadata URI and contract URI for the contract to deploy.
 
 #### Returns
 
@@ -39,7 +40,7 @@ Deploys an instance of a published contract directly.
 ### deployInstanceProxy
 
 ```solidity
-function deployInstanceProxy(address publisher, address implementation, bytes initializeData, bytes32 salt, uint256 value) external nonpayable returns (address deployedAddress)
+function deployInstanceProxy(address publisher, address implementation, bytes initializeData, bytes32 salt, uint256 value, ThirdwebContract.ThirdwebInfo thirdwebInfo) external nonpayable returns (address deployedAddress)
 ```
 
 Deploys a clone pointing to an implementation of a published contract.
@@ -55,6 +56,7 @@ Deploys a clone pointing to an implementation of a published contract.
 | initializeData | bytes | The encoded function call to initialize the contract with.
 | salt | bytes32 | The salt to use in the CREATE2 contract deployment.
 | value | uint256 | The native token value to pass to the contract on deployment.
+| thirdwebInfo | ThirdwebContract.ThirdwebInfo | The publish metadata URI and contract URI for the contract to deploy.
 
 #### Returns
 

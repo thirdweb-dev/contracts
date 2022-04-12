@@ -18,7 +18,7 @@ function contractURI() external view returns (string)
 
 
 
-
+*The metadata for this contract.*
 
 
 #### Returns
@@ -35,7 +35,7 @@ function getPublishMetadataUri() external view returns (string)
 
 
 
-
+*Returns the publish metadata for this contract.*
 
 
 #### Returns
@@ -47,18 +47,24 @@ function getPublishMetadataUri() external view returns (string)
 ### setThirdwebInfo
 
 ```solidity
-function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable
+function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable returns (bool)
 ```
 
 
 
-
+*Initializes the publish metadata and contract metadata at deploy time.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
 
 
 
