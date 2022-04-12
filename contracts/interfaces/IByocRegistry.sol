@@ -7,6 +7,7 @@ interface IByocRegistry {
      *  @notice The data stored for a published contract.
      *
      *  @param contractId The integer identifier of this published contract. (publisher address, contractId) => published contract.
+     *  @param  groupId The identifier for the group of published contracts that this published contract belongs to.
      *  @param publishMetadataUri The IPFS URI of the publish metadata.
      *  @param bytecodeHash The keccak256 hash of the contract bytecode.
      *  @param implementation (Optional) An implementation address that proxy contracts / clones can point to. Default value
@@ -14,6 +15,7 @@ interface IByocRegistry {
      */
     struct CustomContract {
         uint256 contractId;
+        bytes32 groupId;
         string publishMetadataUri;
         bytes32 bytecodeHash;
         address implementation;
@@ -63,6 +65,16 @@ interface IByocRegistry {
     function getAllPublishedContracts(address publisher) external view returns (CustomContract[] memory published);
 
     /**
+     *  @notice Returns a group of contracts published by a publisher.
+     *
+     *  @param publisher The address of the publisher.
+     *  @param groupId The identifier for a group of published contracts.
+     *
+     *  @return published The desired contracts published by the publisher.
+     */
+    function getPublishedContractGroup(address publisher, bytes32 groupId) external view returns (CustomContract[] memory published);
+
+    /**
      *  @notice Returns a given contract published by a publisher.
      *
      *  @param publisher The address of the publisher.
@@ -80,10 +92,11 @@ interface IByocRegistry {
      *  @param bytecodeHash The keccak256 hash of the contract bytecode.
      *  @param implementation (Optional) An implementation address that proxy contracts / clones can point to. Default value
      *                        if such an implementation does not exist - address(0);
+     *  @param  groupId The identifier for the group of published contracts that the contract-to-publish belongs to.
      *
      *  @return contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
-    function publishContract(address publisher, string memory publishMetadataUri, bytes32 bytecodeHash, address implementation) external returns (uint256 contractId);
+    function publishContract(address publisher, string memory publishMetadataUri, bytes32 bytecodeHash, address implementation, bytes32 groupId) external returns (uint256 contractId);
 
     /**
      *  @notice Let's an account unpublish a contract. The account must be approved by the publisher, or be the publisher.

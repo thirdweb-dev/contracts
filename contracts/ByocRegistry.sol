@@ -88,12 +88,35 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         return publishedContracts[_publisher].contractAtId[_contractId];
     }
 
+    /// @notice Returns a group of contracts published by a publisher.
+    function getPublishedContractGroup(address _publisher, bytes32 _groupId) external view returns (CustomContract[] memory published) {
+        uint256 total = publishedContracts[_publisher].id;
+        uint256 net;
+
+        for(uint256 i = 0; i < total; i += 1) {
+            if(publishedContracts[_publisher].contractAtId[i].groupId == _groupId) {
+                net += 1;
+            }
+        }
+
+        published = new CustomContract[](net);
+
+        uint256 publishedIndex;
+        for(uint256 i = 0; i < total; i += 1) {
+            if(publishedContracts[_publisher].contractAtId[i].groupId == _groupId) {
+                published[publishedIndex] = publishedContracts[_publisher].contractAtId[i];
+                publishedIndex += 1;
+            }
+        }
+    }
+
     /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
     function publishContract(
         address _publisher,
         string memory _publishMetadataUri,
         bytes32 _bytecodeHash,
-        address _implementation
+        address _implementation,
+        bytes32 _groupId
     )
         external
         onlyApprovedOrPublisher(_publisher)
@@ -106,6 +129,7 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         CustomContract memory publishedContract = CustomContract({
             contractId: contractIdOfPublished,
             publishMetadataUri: _publishMetadataUri,
+            groupId: _groupId,
             bytecodeHash: _bytecodeHash,
             implementation: _implementation
         });
