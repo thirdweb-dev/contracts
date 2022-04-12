@@ -1,7 +1,7 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "",
-  "version": "2.2.1-4",
+  "version": "2.2.1-5",
   "license": "Apache-2.0",
   "dependencies": {},
   "source": "typechain/index.ts",
@@ -46,7 +46,7 @@
     "tslib": "^2.3.1",
     "tsup": "^5.11.11",
     "typechain": "^7.0.0",
-    "typescript": "^4.6.2"
+    "typescript": "^4.4.4"
   },
   "peerDependencies": {
     "ethers": "^5.0.0"
