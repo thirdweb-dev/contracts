@@ -1,4 +1,4 @@
-# ByocRegistry
+# ByocFactory
 
 
 
@@ -27,53 +27,13 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
-### approveOperator
+### deployInstance
 
 ```solidity
-function approveOperator(address _operator, bool _toApprove) external nonpayable
+function deployInstance(address _publisher, bytes _contractBytecode, bytes _constructorArgs, bytes32 _salt, uint256 _value) external nonpayable returns (address deployedAddress)
 ```
 
-Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _operator | address | undefined
-| _toApprove | bool | undefined
-
-### contractId
-
-```solidity
-function contractId(address, string) external view returns (uint256)
-```
-
-
-
-*Mapping from publisher address =&gt; publish metadata URI =&gt; contractId.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | string | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-### getAllPublishedContracts
-
-```solidity
-function getAllPublishedContracts(address _publisher) external view returns (struct IByocRegistry.CustomContract[] published)
-```
-
-Returns all contracts published by a publisher.
+Deploys an instance of a published contract directly.
 
 
 
@@ -82,20 +42,24 @@ Returns all contracts published by a publisher.
 | Name | Type | Description |
 |---|---|---|
 | _publisher | address | undefined
+| _contractBytecode | bytes | undefined
+| _constructorArgs | bytes | undefined
+| _salt | bytes32 | undefined
+| _value | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContract[] | undefined
+| deployedAddress | address | undefined
 
-### getPublishedContract
+### deployInstanceProxy
 
 ```solidity
-function getPublishedContract(address _publisher, uint256 _contractId) external view returns (struct IByocRegistry.CustomContract)
+function deployInstanceProxy(address _publisher, address _implementation, bytes _initializeData, bytes32 _salt, uint256 _value) external nonpayable returns (address deployedAddress)
 ```
 
-Returns a given contract published by a publisher.
+Deploys a clone pointing to an implementation of a published contract.
 
 
 
@@ -104,36 +68,16 @@ Returns a given contract published by a publisher.
 | Name | Type | Description |
 |---|---|---|
 | _publisher | address | undefined
-| _contractId | uint256 | undefined
+| _implementation | address | undefined
+| _initializeData | bytes | undefined
+| _salt | bytes32 | undefined
+| _value | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | IByocRegistry.CustomContract | undefined
-
-### getPublishedContractGroup
-
-```solidity
-function getPublishedContractGroup(address _publisher, bytes32 _groupId) external view returns (struct IByocRegistry.CustomContract[] published)
-```
-
-Returns a group of contracts published by a publisher.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _publisher | address | undefined
-| _groupId | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| published | IByocRegistry.CustomContract[] | undefined
+| deployedAddress | address | undefined
 
 ### getRoleAdmin
 
@@ -242,29 +186,6 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### isApprovedByPublisher
-
-```solidity
-function isApprovedByPublisher(address, address) external view returns (bool)
-```
-
-
-
-*Mapping from publisher address =&gt; operator address =&gt; whether publisher has approved operator       to publish / unpublish contracts on their behalf.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
 ### isPaused
 
 ```solidity
@@ -303,32 +224,6 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
-
-### publishContract
-
-```solidity
-function publishContract(address _publisher, string _publishMetadataUri, bytes32 _bytecodeHash, address _implementation, bytes32 _groupId) external nonpayable returns (uint256 contractIdOfPublished)
-```
-
-Let&#39;s an account publish a contract. The account must be approved by the publisher, or be the publisher.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _publisher | address | undefined
-| _publishMetadataUri | string | undefined
-| _bytecodeHash | bytes32 | undefined
-| _implementation | address | undefined
-| _groupId | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| contractIdOfPublished | uint256 | undefined
 
 ### renounceRole
 
@@ -402,31 +297,14 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### unpublishContract
-
-```solidity
-function unpublishContract(address _publisher, uint256 _contractId) external nonpayable
-```
-
-Remove a contract from a publisher&#39;s set of published contracts.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _publisher | address | undefined
-| _contractId | uint256 | undefined
-
 
 
 ## Events
 
-### Approved
+### ContractDeployed
 
 ```solidity
-event Approved(address indexed publisher, address indexed operator, bool isApproved)
+event ContractDeployed(address indexed deployer, address indexed publisher, address deployedContract)
 ```
 
 
@@ -437,46 +315,9 @@ event Approved(address indexed publisher, address indexed operator, bool isAppro
 
 | Name | Type | Description |
 |---|---|---|
+| deployer `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
-| operator `indexed` | address | undefined |
-| isApproved  | bool | undefined |
-
-### ContractPublished
-
-```solidity
-event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, IByocRegistry.CustomContract publishedContract)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| operator `indexed` | address | undefined |
-| publisher `indexed` | address | undefined |
-| contractId `indexed` | uint256 | undefined |
-| publishedContract  | IByocRegistry.CustomContract | undefined |
-
-### ContractUnpublished
-
-```solidity
-event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| operator `indexed` | address | undefined |
-| publisher `indexed` | address | undefined |
-| contractId `indexed` | uint256 | undefined |
+| deployedContract  | address | undefined |
 
 ### Paused
 
