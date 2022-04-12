@@ -30,7 +30,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 ### deployInstance
 
 ```solidity
-function deployInstance(address _publisher, bytes _contractBytecode, bytes _constructorArgs, bytes32 _salt, uint256 _value) external nonpayable returns (address deployedAddress)
+function deployInstance(address _publisher, bytes _contractBytecode, bytes _constructorArgs, bytes32 _salt, uint256 _value, ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable returns (address deployedAddress)
 ```
 
 Deploys an instance of a published contract directly.
@@ -46,6 +46,7 @@ Deploys an instance of a published contract directly.
 | _constructorArgs | bytes | undefined
 | _salt | bytes32 | undefined
 | _value | uint256 | undefined
+| _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
 
 #### Returns
 
@@ -56,7 +57,7 @@ Deploys an instance of a published contract directly.
 ### deployInstanceProxy
 
 ```solidity
-function deployInstanceProxy(address _publisher, address _implementation, bytes _initializeData, bytes32 _salt, uint256 _value) external nonpayable returns (address deployedAddress)
+function deployInstanceProxy(address _publisher, address _implementation, bytes _initializeData, bytes32 _salt, uint256 _value, ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable returns (address deployedAddress)
 ```
 
 Deploys a clone pointing to an implementation of a published contract.
@@ -72,6 +73,7 @@ Deploys a clone pointing to an implementation of a published contract.
 | _initializeData | bytes | undefined
 | _salt | bytes32 | undefined
 | _value | uint256 | undefined
+| _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
 
 #### Returns
 

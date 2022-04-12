@@ -60,8 +60,11 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         bytes32 salt = keccak256(abi.encodePacked(_msgSender(), _salt, block.number));
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
-        bool success = ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
-        require(success, "Not a thirdweb contract");
+        ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
+        require(
+            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) == keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
+            "Not a thirdweb contract"
+        );
 
         registry.add(_publisher, deployedAddress);
 
@@ -80,8 +83,11 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         
         deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt)));
 
-        bool success = ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
-        require(success, "Not a thirdweb contract");
+        ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
+        require(
+            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) == keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
+            "Not a thirdweb contract"
+        );
 
         registry.add(_publisher, deployedAddress);
 

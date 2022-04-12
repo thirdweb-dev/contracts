@@ -19,12 +19,10 @@ contract ThirdwebContract {
     }
 
     /// @dev Initializes the publish metadata and contract metadata at deploy time.
-    function setThirdwebInfo(ThirdwebInfo memory _thirdwebInfo) external returns (bool) {
+    function setThirdwebInfo(ThirdwebInfo memory _thirdwebInfo) external {
         require(bytes(publishMetadataUri).length == 0, "Already initialized");
 
         publishMetadataUri = _thirdwebInfo.publishMetadataUri;
         contractURI = _thirdwebInfo.contractURI;
-
-        return true;
     }
 }
