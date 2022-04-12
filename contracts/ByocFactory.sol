@@ -80,7 +80,7 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         uint256 _value,
         ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-        deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt)));
+        deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt, block.number)));
 
         ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
         require(
