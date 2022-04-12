@@ -34,9 +34,6 @@ interface IByocRegistry {
     event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, CustomContract publishedContract);
     /// @dev Emitted when a contract is unpublished.
     event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
-    /// @dev Emitted when a contract is deployed.
-    event ContractDeployed(address indexed deployer, address indexed publisher, uint256 indexed contractId, address deployedContract);
-
 
     /**
      *  @notice Returns whether a publisher has approved an operator to publish / unpublish contracts on their behalf.
@@ -95,44 +92,4 @@ interface IByocRegistry {
      *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
     function unpublishContract(address publisher, uint256 contractId) external;
-
-    /**
-     *  @notice Deploys an instance of a published contract directly.
-     *
-     *  @param publisher The address of the publisher. 
-     *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
-     *  @param contractBytecode The bytecode of the contract to deploy.
-     *  @param constructorArgs The encoded constructor args to deploy the contract with.
-     *  @param salt The salt to use in the CREATE2 contract deployment.
-     *  @param value The native token value to pass to the contract on deployment.
-     *
-     *  @return deployedAddress The address of the contract deployed.
-     */
-    function deployInstance(
-        address publisher,
-        uint256 contractId,
-        bytes memory contractBytecode,
-        bytes memory constructorArgs,
-        bytes32 salt,
-        uint256 value
-    ) external returns (address deployedAddress);
-
-    /**
-     *  @notice Deploys a clone pointing to an implementation of a published contract.
-     *
-     *  @param publisher The address of the publisher. 
-     *  @param contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
-     *  @param initializeData The encoded function call to initialize the contract with.
-     *  @param salt The salt to use in the CREATE2 contract deployment.
-     *  @param value The native token value to pass to the contract on deployment.
-     *
-     *  @return deployedAddress The address of the contract deployed.
-     */
-    function deployInstanceProxy(
-        address publisher,
-        uint256 contractId,
-        bytes memory initializeData,
-        bytes32 salt,
-        uint256 value
-    ) external returns (address deployedAddress);
 }
