@@ -47,7 +47,7 @@ function getPublishMetadataUri() external view returns (string)
 ### setThirdwebInfo
 
 ```solidity
-function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable returns (bool)
+function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable
 ```
 
 
@@ -59,12 +59,6 @@ function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external n
 | Name | Type | Description |
 |---|---|---|
 | _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
 
 
 

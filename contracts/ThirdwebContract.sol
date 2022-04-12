@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 contract ThirdwebContract {
-
     /// @dev The publish metadata of the contract of which this contract is an instance.
     string private publishMetadataUri;
     /// @dev The metadata for this contract.
@@ -14,7 +13,7 @@ contract ThirdwebContract {
     }
 
     /// @dev Returns the publish metadata for this contract.
-    function getPublishMetadataUri() external view returns(string memory) {
+    function getPublishMetadataUri() external view returns (string memory) {
         return publishMetadataUri;
     }
 

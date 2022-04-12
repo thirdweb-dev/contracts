@@ -53,7 +53,6 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         uint256 _value,
         ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-
         require(bytes(_thirdwebInfo.publishMetadataUri).length > 0, "No publish metadata");
 
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
@@ -62,7 +61,8 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
 
         ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
         require(
-            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) == keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
+            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) ==
+                keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
             "Not a thirdweb contract"
         );
 
@@ -80,12 +80,12 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         uint256 _value,
         ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-        
         deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt)));
 
         ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
         require(
-            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) == keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
+            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) ==
+                keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
             "Not a thirdweb contract"
         );
 
