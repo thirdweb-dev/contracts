@@ -4,11 +4,16 @@
 
 Lets anyone deploy their own copy of the smart contracts on the platform.
 
-### Deployments
+### BYOC Deployments - (new)
 
-- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
+### ByocRegistry - Mumbai
+- `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
 
-- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
+- `ByocRegistry`: [0x1AD609e107f631A60BcD0fCa31d45B67766DeE91](https://polygonscan.com/address/0x1AD609e107f631A60BcD0fCa31d45B67766DeE91#code)
+
+- `ByocFactory`: [0x49722F49D6Bd1149359Cc85017c173D45c65c742](https://polygonscan.com/address/0x49722F49D6Bd1149359Cc85017c173D45c65c742#code)
+
+### BYOC Deployments - (previous)
 
 ### ByocRegistry - Polygon
 - `TWRegistry`: [0xF6abb5014Fb6F1Aa615b960fc28bB9C180b6cc44](https://blockscan.com/address/0xF6abb5014Fb6F1Aa615b960fc28bB9C180b6cc44#code)
@@ -20,6 +25,11 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 - `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
 
 - `ByocRegistry` (Mumbai): [0xa9CBE73a575038103c3Baaaf7Db51374a60a5209](https://mumbai.polygonscan.com/address/0xa9CBE73a575038103c3Baaaf7Db51374a60a5209#code)
+
+### Deployments (prod)
+- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
+
+- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
 
 ## Running Tests
 1. `yarn`: install contracts dependencies
