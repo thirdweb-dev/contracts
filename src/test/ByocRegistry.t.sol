@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Target contracts
-import {ByocRegistry} from "contracts/ByocRegistry.sol";
+import { ByocRegistry } from "contracts/ByocRegistry.sol";
 import "contracts/interfaces/IByocRegistry.sol";
 import "contracts/TWRegistry.sol";
 
 // Test helpers
-import {BaseTest} from "./utils/BaseTest.sol";
+import { BaseTest } from "./utils/BaseTest.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract MockCustomContract {

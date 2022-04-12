@@ -9,11 +9,10 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./openzeppelin-presets/metatx/ERC2771Context.sol";
 
 //  ==========  Internal imports    ==========
-import {IByocFactory} from "./interfaces/IByocFactory.sol";
-import {TWRegistry} from "./TWRegistry.sol";
+import { IByocFactory } from "./interfaces/IByocFactory.sol";
+import { TWRegistry } from "./TWRegistry.sol";
 
 contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -51,12 +50,7 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         bytes memory _constructorArgs,
         bytes32 _salt,
         uint256 _value
-    ) 
-        external 
-        onlyUnpausedOrAdmin
-        returns (address deployedAddress)        
-    {
-
+    ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
         bytes32 salt = keccak256(abi.encodePacked(_msgSender(), _salt, block.number));
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
@@ -73,16 +67,8 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         bytes memory _initializeData,
         bytes32 _salt,
         uint256 _value
-    )
-        external
-        onlyUnpausedOrAdmin
-        returns (address deployedAddress)
-    {
-
-        deployedAddress = Clones.cloneDeterministic(
-            _implementation,
-            keccak256(abi.encodePacked(_msgSender(), _salt))
-        );
+    ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
+        deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt)));
 
         registry.add(_publisher, deployedAddress);
 
@@ -105,23 +91,11 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         emit Paused(_pause);
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }

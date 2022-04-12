@@ -5,11 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
-interface ITokenERC20 is 
-    IERC20Upgradeable, 
-    IERC20MetadataUpgradeable
-{
-
+interface ITokenERC20 is IERC20Upgradeable, IERC20MetadataUpgradeable {
     /**
      * @dev Destroys `amount` tokens from the caller.
      *

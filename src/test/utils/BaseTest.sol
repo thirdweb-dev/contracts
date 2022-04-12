@@ -24,7 +24,7 @@ import "contracts/token/TokenERC721.sol";
 import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
-import {ByocRegistry} from "contracts/ByocRegistry.sol";
+import { ByocRegistry } from "contracts/ByocRegistry.sol";
 import "contracts/mock/Mock.sol";
 
 abstract contract BaseTest is DSTest, stdCheats {

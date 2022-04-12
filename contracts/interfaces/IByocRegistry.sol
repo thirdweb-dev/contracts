@@ -76,7 +76,10 @@ interface IByocRegistry {
      *
      *  @return published The desired contracts published by the publisher.
      */
-    function getPublishedContractGroup(address publisher, bytes32 groupId) external view returns (CustomContract[] memory published);
+    function getPublishedContractGroup(address publisher, bytes32 groupId)
+        external
+        view
+        returns (CustomContract[] memory published);
 
     /**
      *  @notice Returns a given contract published by a publisher.
@@ -103,7 +106,13 @@ interface IByocRegistry {
      *
      *  @return contractId The unique integer identifier of the published contract. (publisher address, contractId) => published contract.
      */
-    function publishContract(address publisher, string memory publishMetadataUri, bytes32 bytecodeHash, address implementation, bytes32 groupId) external returns (uint256 contractId);
+    function publishContract(
+        address publisher,
+        string memory publishMetadataUri,
+        bytes32 bytecodeHash,
+        address implementation,
+        bytes32 groupId
+    ) external returns (uint256 contractId);
 
     /**
      *  @notice Let's an account unpublish a contract. The account must be approved by the publisher, or be the publisher.
