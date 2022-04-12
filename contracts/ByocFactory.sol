@@ -11,6 +11,7 @@ import "./openzeppelin-presets/metatx/ERC2771Context.sol";
 //  ==========  Internal imports    ==========
 import { IByocFactory } from "./interfaces/IByocFactory.sol";
 import { TWRegistry } from "./TWRegistry.sol";
+import { ThirdwebContract } from "./ThirdwebContract.sol";
 
 contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
     /*///////////////////////////////////////////////////////////////
@@ -49,11 +50,18 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         bytes memory _contractBytecode,
         bytes memory _constructorArgs,
         bytes32 _salt,
-        uint256 _value
+        uint256 _value,
+        ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
+
+        require(bytes(_thirdwebInfo.publishMetadataUri).length > 0, "No publish metadata");
+
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
         bytes32 salt = keccak256(abi.encodePacked(_msgSender(), _salt, block.number));
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
+
+        bool success = ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
+        require(success, "Not a thirdweb contract");
 
         registry.add(_publisher, deployedAddress);
 
@@ -66,9 +74,14 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         address _implementation,
         bytes memory _initializeData,
         bytes32 _salt,
-        uint256 _value
+        uint256 _value,
+        ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
+        
         deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt)));
+
+        bool success = ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
+        require(success, "Not a thirdweb contract");
 
         registry.add(_publisher, deployedAddress);
 

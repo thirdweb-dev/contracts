@@ -24,7 +24,7 @@ Deploys an instance of a published contract directly.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher. 
+| publisher | address | The address of the publisher.
 | contractBytecode | bytes | The bytecode of the contract to deploy.
 | constructorArgs | bytes | The encoded constructor args to deploy the contract with.
 | salt | bytes32 | The salt to use in the CREATE2 contract deployment.
@@ -50,7 +50,7 @@ Deploys a clone pointing to an implementation of a published contract.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher. 
+| publisher | address | The address of the publisher.
 | implementation | address | The contract implementation for the clone to point to.
 | initializeData | bytes | The encoded function call to initialize the contract with.
 | salt | bytes32 | The salt to use in the CREATE2 contract deployment.
