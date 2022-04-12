@@ -160,7 +160,8 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         );
 
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
-        deployedAddress = Create2.deploy(_value, _salt, contractBytecode);
+        bytes32 salt = keccak256(abi.encodePacked(_msgSender(), _salt, block.number));
+        deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
         registry.add(_publisher, deployedAddress);
 
