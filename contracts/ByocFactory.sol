@@ -56,7 +56,10 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         require(bytes(_thirdwebInfo.publishMetadataUri).length > 0, "No publish metadata");
 
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
-        bytes32 salt = keccak256(abi.encodePacked(_msgSender(), _salt, block.number));
+        bytes32 salt = _salt == "" 
+            ? keccak256(abi.encodePacked(_msgSender(), block.number))
+            : _salt;
+        
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
         ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
@@ -80,7 +83,11 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         uint256 _value,
         ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-        deployedAddress = Clones.cloneDeterministic(_implementation, keccak256(abi.encodePacked(_msgSender(), _salt, block.number)));
+
+        bytes32 salt = _salt == "" 
+            ? keccak256(abi.encodePacked(_msgSender(), block.number))
+            : _salt;
+        deployedAddress = Clones.cloneDeterministic(_implementation, salt);
 
         ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
         require(

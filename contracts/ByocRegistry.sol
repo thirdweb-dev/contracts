@@ -16,6 +16,9 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
                             State variables
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev The global Id for publicly published contracts.
+    uint256 public nextPublishId = 1;
+
     /// @dev Whether the registry is paused.
     bool public isPaused;
 
@@ -34,6 +37,8 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
 
     /// @dev Mapping from publisher address => publish metadata URI => contractId.
     mapping(address => mapping(string => uint256)) public contractId;
+
+    /// @dev Mapping from 
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
