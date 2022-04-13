@@ -11,7 +11,7 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 
 - `ByocRegistry`: [0x1AD609e107f631A60BcD0fCa31d45B67766DeE91](https://polygonscan.com/address/0x1AD609e107f631A60BcD0fCa31d45B67766DeE91#code)
 
-- `ByocFactory`: [0x49722F49D6Bd1149359Cc85017c173D45c65c742](https://polygonscan.com/address/0x49722F49D6Bd1149359Cc85017c173D45c65c742#code)
+- `ByocFactory`: [0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6](https://polygonscan.com/address/0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6#code)
 
 ### BYOC Deployments - (previous)
 

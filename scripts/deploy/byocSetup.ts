@@ -40,12 +40,12 @@ async function main() {
     const registry: TWRegistry = await ethers.getContractAt("TWRegistry", registryAddress);
     console.log("TWRegistry at: ", registry.address);
 
-    const byocRegsitry: ByocRegistry = await ethers.getContractFactory("ByocRegistry").then(f => f.deploy(
-        trustedForwarders
-    ));
-    console.log("Deploying ByocRegistry at tx: ", byocRegsitry.deployTransaction.hash, " address: ", byocRegsitry.address);
-    await byocRegsitry.deployTransaction.wait();
-    console.log("Deployed ByocRegistry")
+    // const byocRegsitry: ByocRegistry = await ethers.getContractFactory("ByocRegistry").then(f => f.deploy(
+    //     trustedForwarders
+    // ));
+    // console.log("Deploying ByocRegistry at tx: ", byocRegsitry.deployTransaction.hash, " address: ", byocRegsitry.address);
+    // await byocRegsitry.deployTransaction.wait();
+    // console.log("Deployed ByocRegistry")
 
     const byocFactory: ByocFactory = await ethers.getContractFactory("ByocFactory").then(f => f.deploy(
         registryAddress,
@@ -65,7 +65,7 @@ async function main() {
 
     console.log("Done. Now verifying contracts:");
 
-    await verify(byocRegsitry.address, [trustedForwarders]);
+    // await verify(byocRegsitry.address, [trustedForwarders]);
     await verify(byocFactory.address, [registryAddress, trustedForwarders]);
 }
 
