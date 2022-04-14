@@ -9,9 +9,9 @@ Lets anyone deploy their own copy of the smart contracts on the platform.
 ### ByocRegistry - Mumbai
 - `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
 
-- `ByocRegistry`: [0x1AD609e107f631A60BcD0fCa31d45B67766DeE91](https://polygonscan.com/address/0x1AD609e107f631A60BcD0fCa31d45B67766DeE91#code)
+- `ByocRegistry`: [0x61Bb02795b4fF5248169A54D9f149C4557B0B7de](https://mumbai.polygonscan.com/address/0x61Bb02795b4fF5248169A54D9f149C4557B0B7de#code)
 
-- `ByocFactory`: [0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6](https://polygonscan.com/address/0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6#code)
+- `ByocFactory`: [0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6](https://mumbai.polygonscan.com/address/0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6#code)
 
 ### BYOC Deployments - (previous)
 
