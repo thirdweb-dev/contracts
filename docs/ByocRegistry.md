@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### addToPublicList
+
+```solidity
+function addToPublicList(address _publisher, string _contractId) external nonpayable
+```
+
+Lets an account add a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _publisher | address | undefined
+| _contractId | string | undefined
+
 ### approveOperator
 
 ```solidity
@@ -44,36 +61,30 @@ Lets a publisher (caller) approve an operator to publish / unpublish contracts o
 | _operator | address | undefined
 | _toApprove | bool | undefined
 
-### contractId
+### getAllPublicPublishedContracts
 
 ```solidity
-function contractId(address, string) external view returns (uint256)
+function getAllPublicPublishedContracts() external view returns (struct IByocRegistry.CustomContractInstance[] published)
 ```
 
+Returns the latest version of all contracts published by a publisher.
 
 
-*Mapping from publisher address =&gt; publish metadata URI =&gt; contractId.*
 
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | string | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| published | IByocRegistry.CustomContractInstance[] | undefined
 
 ### getAllPublishedContracts
 
 ```solidity
-function getAllPublishedContracts(address _publisher) external view returns (struct IByocRegistry.CustomContract[] published)
+function getAllPublishedContracts(address _publisher) external view returns (struct IByocRegistry.CustomContractInstance[] published)
 ```
 
-Returns all contracts published by a publisher.
+Returns the latest version of all contracts published by a publisher.
 
 
 
@@ -87,15 +98,38 @@ Returns all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContract[] | undefined
+| published | IByocRegistry.CustomContractInstance[] | undefined
+
+### getPublicId
+
+```solidity
+function getPublicId(address _publisher, string _contractId) external view returns (uint256 publicId)
+```
+
+Returns the public id of a published contract, if it is public.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _publisher | address | undefined
+| _contractId | string | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| publicId | uint256 | undefined
 
 ### getPublishedContract
 
 ```solidity
-function getPublishedContract(address _publisher, uint256 _contractId) external view returns (struct IByocRegistry.CustomContract)
+function getPublishedContract(address _publisher, string _contractId) external view returns (struct IByocRegistry.CustomContractInstance published)
 ```
 
-Returns a given contract published by a publisher.
+Returns the latest version of a contract published by a publisher.
 
 
 
@@ -104,21 +138,21 @@ Returns a given contract published by a publisher.
 | Name | Type | Description |
 |---|---|---|
 | _publisher | address | undefined
-| _contractId | uint256 | undefined
+| _contractId | string | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | IByocRegistry.CustomContract | undefined
+| published | IByocRegistry.CustomContractInstance | undefined
 
-### getPublishedContractGroup
+### getPublishedContractVersions
 
 ```solidity
-function getPublishedContractGroup(address _publisher, bytes32 _groupId) external view returns (struct IByocRegistry.CustomContract[] published)
+function getPublishedContractVersions(address _publisher, string _contractId) external view returns (struct IByocRegistry.CustomContractInstance[] published)
 ```
 
-Returns a group of contracts published by a publisher.
+Returns all versions of a published contract.
 
 
 
@@ -127,13 +161,13 @@ Returns a group of contracts published by a publisher.
 | Name | Type | Description |
 |---|---|---|
 | _publisher | address | undefined
-| _groupId | bytes32 | undefined
+| _contractId | string | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContract[] | undefined
+| published | IByocRegistry.CustomContractInstance[] | undefined
 
 ### getRoleAdmin
 
@@ -304,10 +338,49 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | undefined
+
+### nextPublicId
+
+```solidity
+function nextPublicId() external view returns (uint256)
+```
+
+
+
+*The global Id for publicly published contracts.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### publishContract
 
 ```solidity
-function publishContract(address _publisher, string _publishMetadataUri, bytes32 _bytecodeHash, address _implementation, bytes32 _groupId) external nonpayable returns (uint256 contractIdOfPublished)
+function publishContract(address _publisher, string _publishMetadataUri, bytes32 _bytecodeHash, address _implementation, string _contractId) external nonpayable
 ```
 
 Let&#39;s an account publish a contract. The account must be approved by the publisher, or be the publisher.
@@ -322,13 +395,24 @@ Let&#39;s an account publish a contract. The account must be approved by the pub
 | _publishMetadataUri | string | undefined
 | _bytecodeHash | bytes32 | undefined
 | _implementation | address | undefined
-| _groupId | bytes32 | undefined
+| _contractId | string | undefined
 
-#### Returns
+### removeFromPublicList
+
+```solidity
+function removeFromPublicList(address _publisher, string _contractId) external nonpayable
+```
+
+Lets an account remove a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
+
+
+
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| contractIdOfPublished | uint256 | undefined
+| _publisher | address | undefined
+| _contractId | string | undefined
 
 ### renounceRole
 
@@ -405,10 +489,10 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### unpublishContract
 
 ```solidity
-function unpublishContract(address _publisher, uint256 _contractId) external nonpayable
+function unpublishContract(address _publisher, string _contractId) external nonpayable
 ```
 
-Remove a contract from a publisher&#39;s set of published contracts.
+Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
 
 
 
@@ -417,11 +501,28 @@ Remove a contract from a publisher&#39;s set of published contracts.
 | Name | Type | Description |
 |---|---|---|
 | _publisher | address | undefined
-| _contractId | uint256 | undefined
+| _contractId | string | undefined
 
 
 
 ## Events
+
+### AddedContractToPublicList
+
+```solidity
+event AddedContractToPublicList(address indexed publisher, string indexed contractId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| publisher `indexed` | address | undefined |
+| contractId `indexed` | string | undefined |
 
 ### Approved
 
@@ -444,7 +545,7 @@ event Approved(address indexed publisher, address indexed operator, bool isAppro
 ### ContractPublished
 
 ```solidity
-event ContractPublished(address indexed operator, address indexed publisher, uint256 indexed contractId, IByocRegistry.CustomContract publishedContract)
+event ContractPublished(address indexed operator, address indexed publisher, IByocRegistry.CustomContractInstance publishedContract)
 ```
 
 
@@ -457,13 +558,12 @@ event ContractPublished(address indexed operator, address indexed publisher, uin
 |---|---|---|
 | operator `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
-| contractId `indexed` | uint256 | undefined |
-| publishedContract  | IByocRegistry.CustomContract | undefined |
+| publishedContract  | IByocRegistry.CustomContractInstance | undefined |
 
 ### ContractUnpublished
 
 ```solidity
-event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId)
+event ContractUnpublished(address indexed operator, address indexed publisher, string indexed contractId)
 ```
 
 
@@ -476,7 +576,7 @@ event ContractUnpublished(address indexed operator, address indexed publisher, u
 |---|---|---|
 | operator `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
-| contractId `indexed` | uint256 | undefined |
+| contractId `indexed` | string | undefined |
 
 ### Paused
 
@@ -493,6 +593,23 @@ event Paused(bool isPaused)
 | Name | Type | Description |
 |---|---|---|
 | isPaused  | bool | undefined |
+
+### RemovedContractToPublicList
+
+```solidity
+event RemovedContractToPublicList(address indexed publisher, string indexed contractId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| publisher `indexed` | address | undefined |
+| contractId `indexed` | string | undefined |
 
 ### RoleAdminChanged
 

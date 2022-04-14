@@ -2,22 +2,29 @@
 pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
-import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./openzeppelin-presets/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 import { IByocRegistry } from "./interfaces/IByocRegistry.sol";
 
-contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable {
+contract ByocRegistry is
+    IByocRegistry,
+    ERC2771Context,
+    AccessControlEnumerable,
+    Multicall
+{
+
+    using EnumerableSet for EnumerableSet.Bytes32Set;
+
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
     /// @dev The global Id for publicly published contracts.
-    uint256 public nextPublishId = 1;
+    uint256 public nextPublicId = 1;
 
     /// @dev Whether the registry is paused.
     bool public isPaused;
@@ -26,19 +33,17 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
                                 Mappings
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Mapping from publisher address => set of published contracts.
-    mapping(address => CustomContractSet) private publishedContracts;
-
     /**
      *  @dev Mapping from publisher address => operator address => whether publisher has approved operator
      *       to publish / unpublish contracts on their behalf.
      */
     mapping(address => mapping(address => bool)) public isApprovedByPublisher;
 
-    /// @dev Mapping from publisher address => publish metadata URI => contractId.
-    mapping(address => mapping(string => uint256)) public contractId;
+    /// @dev Mapping from public Id => publicly published contract.
+    mapping(uint256 => PublicContract) private publicContracts;
 
-    /// @dev Mapping from 
+    /// @dev Mapping from publisher address => set of published contracts.
+    mapping(address => CustomContractSet) private contractsOfPublisher;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
@@ -63,60 +68,83 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Publish logic
+                            Getter logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns all contracts published by a publisher.
-    function getAllPublishedContracts(address _publisher) external view returns (CustomContract[] memory published) {
-        uint256 total = publishedContracts[_publisher].id;
-        uint256 net = total - publishedContracts[_publisher].removed;
-
-        published = new CustomContract[](net);
-
-        uint256 publishedIndex;
-        for (uint256 i = 0; i < total; i += 1) {
-            if ((publishedContracts[_publisher].contractAtId[i].bytecodeHash).length == 0) {
-                continue;
-            }
-
-            published[publishedIndex] = publishedContracts[_publisher].contractAtId[i];
-            publishedIndex += 1;
-        }
-    }
-
-    /// @notice Returns a given contract published by a publisher.
-    function getPublishedContract(address _publisher, uint256 _contractId)
-        external
-        view
-        returns (CustomContract memory)
-    {
-        return publishedContracts[_publisher].contractAtId[_contractId];
-    }
-
-    /// @notice Returns a group of contracts published by a publisher.
-    function getPublishedContractGroup(address _publisher, bytes32 _groupId)
-        external
-        view
-        returns (CustomContract[] memory published)
-    {
-        uint256 total = publishedContracts[_publisher].id;
+    /// @notice Returns the latest version of all contracts published by a publisher.
+    function getAllPublicPublishedContracts() external view returns (CustomContractInstance[] memory published) {
+        
         uint256 net;
 
-        for (uint256 i = 0; i < total; i += 1) {
-            if (publishedContracts[_publisher].contractAtId[i].groupId == _groupId) {
+        for(uint256 i = 0; i < nextPublicId; i += 1) {
+            PublicContract memory publicContract = publicContracts[i];
+            if(publicContract.publisher != address(0)) {
                 net += 1;
             }
         }
+        
+        published = new CustomContractInstance[](net);
 
-        published = new CustomContract[](net);
-
-        uint256 publishedIndex;
-        for (uint256 i = 0; i < total; i += 1) {
-            if (publishedContracts[_publisher].contractAtId[i].groupId == _groupId) {
-                published[publishedIndex] = publishedContracts[_publisher].contractAtId[i];
-                publishedIndex += 1;
+        for(uint256 i = 0; i < net; i += 1) {
+            PublicContract memory publicContract = publicContracts[i];
+            if(publicContract.publisher != address(0)) {
+                published[i] = contractsOfPublisher[publicContract.publisher].contracts[keccak256(bytes(publicContract.contractId))].latest;
             }
         }
+    }
+
+    /// @notice Returns the latest version of all contracts published by a publisher.
+    function getAllPublishedContracts(address _publisher) external view returns (CustomContractInstance[] memory published) {
+        uint256 total = EnumerableSet.length(contractsOfPublisher[_publisher].contractIds);
+
+        published = new CustomContractInstance[](total);
+
+        for(uint256 i = 0; i < total; i += 1) {
+            bytes32 contractId = EnumerableSet.at(contractsOfPublisher[_publisher].contractIds, i);
+            published[i] = contractsOfPublisher[_publisher].contracts[contractId].latest;
+        }
+    }
+
+    /// @notice Returns all versions of a published contract.
+    function getPublishedContractVersions(address _publisher, string memory _contractId)
+        external
+        view
+        returns (CustomContractInstance[] memory published) 
+    {
+        
+        bytes32 id = keccak256(bytes(_contractId));
+        uint256 total = contractsOfPublisher[_publisher].contracts[id].total;
+
+        published = new CustomContractInstance[](total);
+
+        for(uint256 i = 0; i < total; i += 1) {
+            published[i] = contractsOfPublisher[_publisher].contracts[id].instances[i];
+        }
+    }
+
+   /// @notice Returns the latest version of a contract published by a publisher.
+    function getPublishedContract(address _publisher, string memory _contractId)
+        external
+        view
+        returns (CustomContractInstance memory published)
+    {
+        published = contractsOfPublisher[_publisher].contracts[keccak256(bytes(_contractId))].latest;
+    }
+
+    /// @notice Returns the public id of a published contract, if it is public.
+    function getPublicId(address _publisher, string memory _contractId) external view returns(uint256 publicId) {
+        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
+        publicId = contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Publish logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
+    function approveOperator(address _operator, bool _toApprove) external {
+        isApprovedByPublisher[_msgSender()][_operator] = _toApprove;
+        emit Approved(_msgSender(), _operator, _toApprove);
     }
 
     /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
@@ -125,52 +153,88 @@ contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable 
         string memory _publishMetadataUri,
         bytes32 _bytecodeHash,
         address _implementation,
-        bytes32 _groupId
-    ) external onlyApprovedOrPublisher(_publisher) onlyUnpausedOrAdmin returns (uint256 contractIdOfPublished) {
-        contractIdOfPublished = publishedContracts[_publisher].id;
-        publishedContracts[_publisher].id += 1;
-
-        CustomContract memory publishedContract = CustomContract({
-            contractId: contractIdOfPublished,
-            publishMetadataUri: _publishMetadataUri,
-            groupId: _groupId,
-            bytecodeHash: _bytecodeHash,
-            implementation: _implementation
-        });
-
-        publishedContracts[_publisher].contractAtId[contractIdOfPublished] = publishedContract;
-        contractId[_publisher][_publishMetadataUri] = contractIdOfPublished;
-
-        emit ContractPublished(_msgSender(), _publisher, contractIdOfPublished, publishedContract);
-    }
-
-    /// @notice Remove a contract from a publisher's set of published contracts.
-    function unpublishContract(address _publisher, uint256 _contractId)
+        string memory _contractId
+    ) 
         external
         onlyApprovedOrPublisher(_publisher)
         onlyUnpausedOrAdmin
     {
-        delete publishedContracts[_publisher].contractAtId[_contractId];
-        publishedContracts[_publisher].removed += 1;
+
+        CustomContractInstance memory publishedContract = CustomContractInstance({
+            contractId: _contractId,
+            publishTimestamp: block.timestamp,
+
+            publishMetadataUri: _publishMetadataUri,
+            bytecodeHash: _bytecodeHash,
+            implementation: _implementation
+        });
+
+        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
+        EnumerableSet.add(contractsOfPublisher[_publisher].contractIds, contractIdInBytes);
+
+        contractsOfPublisher[_publisher].contracts[contractIdInBytes].latest = publishedContract;
+
+        uint256 index = contractsOfPublisher[_publisher].contracts[contractIdInBytes].total;
+        contractsOfPublisher[_publisher].contracts[contractIdInBytes].total += 1;
+
+        contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[index] = publishedContract;
+
+        emit ContractPublished(_msgSender(), _publisher, publishedContract);
+    }
+
+    /// @notice Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
+    function unpublishContract(address _publisher, string memory _contractId) external onlyApprovedOrPublisher(_publisher) onlyUnpausedOrAdmin {
+
+        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
+        
+        bool removed = EnumerableSet.remove(contractsOfPublisher[_publisher].contractIds, contractIdInBytes);
+        require(removed, "given contractId DNE");
+
+        delete contractsOfPublisher[_publisher].contracts[contractIdInBytes];
 
         emit ContractUnpublished(_msgSender(), _publisher, _contractId);
     }
 
+    /// @notice Lets an account add a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
+    function addToPublicList(address _publisher, string memory _contractId) external {
+        uint256 publicId = nextPublicId;
+        nextPublicId += 1;
+
+        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
+
+        PublicContract memory publicContract = PublicContract({
+            publisher: _publisher,
+            contractId: _contractId
+        });
+
+        contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId = publicId;
+        publicContracts[publicId] = publicContract;
+
+        emit AddedContractToPublicList(_publisher, _contractId);
+    }
+    
+    /// @notice Lets an account remove a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
+    function removeFromPublicList(address _publisher, string memory _contractId) external {
+
+        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
+        uint256 publicId = contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId;
+
+        delete contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId;
+
+        delete publicContracts[publicId];
+        
+        emit RemovedContractToPublicList(_publisher, _contractId);
+    }
+
     /*///////////////////////////////////////////////////////////////
-                        Miscellaneous 
+                            Miscellaneous 
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a contract admin pause the registry.
     function setPause(bool _pause) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "unapproved caller");
         isPaused = _pause;
-        emit Paused(_pause);
-    }
-
-    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-    function approveOperator(address _operator, bool _toApprove) external {
-        isApprovedByPublisher[_msgSender()][_operator] = _toApprove;
-        emit Approved(_msgSender(), _operator, _toApprove);
+        emit Paused(_pause); 
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

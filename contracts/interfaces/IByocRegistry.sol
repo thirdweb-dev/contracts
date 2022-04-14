@@ -1,20 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 interface IByocRegistry {
-    /**
-     *  @notice The data stored for a published contract.
-     *
-     *  @param publicId The identifier for this contract if it is published publicly.
-     *  @param contractId The identifier for a published contract (that can have multiple verisons).
-     *  @param publishTimestamp The timestamp at which this version of the contract was published.
-     *  @param publishMetadataUri The IPFS URI of the publish metadata.
-     *  @param bytecodeHash The keccak256 hash of the contract bytecode.
-     *  @param implementation (Optional) An implementation address that proxy contracts / clones can point to. Default value
-     *                        if such an implementation does not exist - address(0);
-     */
-    struct CustomContract {        
-        uint256 publicId;
+    
+    struct CustomContractInstance {  
         string contractId;
         uint256 publishTimestamp;
         
@@ -23,29 +14,23 @@ interface IByocRegistry {
         address implementation;
     }
 
-    /**
-     *  @notice The publisher address and contractId for a publicly published contract.
-     *
-     *  @param publisher  The address of the contract publisher.
-     *  @param contractId The identifier for a published contract (that can have multiple verisons).
-     */
-    struct PublicCustomContract {
-        address publisher;
-        string contractId;
+    struct CustomContract {
+        
+        uint256 publicId;
+        uint256 total;
+        CustomContractInstance latest;
+        
+        mapping(uint256 => CustomContractInstance) instances;
     }
 
-    // uint256 nextGlobalPublishId = 1;
-
-    // mapping(uint256 => PublicPublish) publiclyPublishedContracts;
-
-    // makePublic(...) 
-    // makePrivate(...)
-
-    /// @dev The set of all contracts published by a publisher.
     struct CustomContractSet {
-        uint256 id;
-        uint256 removed;
-        mapping(uint256 => CustomContract) contractAtId;
+        EnumerableSet.Bytes32Set contractIds;
+        mapping(bytes32 => CustomContract) contracts;
+    }
+
+    struct PublicContract {
+        address publisher;
+        string contractId;
     }
 
     /// @dev Emitted when the registry is paused.
@@ -58,12 +43,17 @@ interface IByocRegistry {
     event ContractPublished(
         address indexed operator,
         address indexed publisher,
-        uint256 indexed contractId,
-        CustomContract publishedContract
+        CustomContractInstance publishedContract
     );
 
     /// @dev Emitted when a contract is unpublished.
-    event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
+    event ContractUnpublished(address indexed operator, address indexed publisher, string indexed contractId);
+
+    /// @dev Emitted when a published contract is added to the public list.
+    event AddedContractToPublicList(address indexed publisher, string indexed contractId);
+
+    /// @dev Emitted when a published contract is removed from the public list.
+    event RemovedContractToPublicList(address indexed publisher, string indexed contractId);
 
     /**
      *  @notice Returns whether a publisher has approved an operator to publish / unpublish contracts on their behalf.
@@ -88,7 +78,7 @@ interface IByocRegistry {
      *
      *  @return published An array of all contracts published by the publisher.
      */
-    function getAllPublicPublishedContracts() external view returns (CustomContract[] memory published);
+    function getAllPublicPublishedContracts() external view returns (CustomContractInstance[] memory published);
 
     /**
      *  @notice Returns the latest version of all contracts published by a publisher.
@@ -97,33 +87,43 @@ interface IByocRegistry {
      *
      *  @return published An array of all contracts published by the publisher.
      */
-    function getAllPublishedContracts(address publisher) external view returns (CustomContract[] memory published);
+    function getAllPublishedContracts(address publisher) external view returns (CustomContractInstance[] memory published);
 
     /**
-     *  @notice Returns a group of contracts published by a publisher.
+     *  @notice Returns all versions of a published contract.
      *
      *  @param publisher  The address of the publisher.
-     *  @param contractId The identifier for a group of published contracts.
+     *  @param contractId The identifier for a published contract (that can have multiple verisons).
      *
      *  @return published The desired contracts published by the publisher.
      */
     function getPublishedContractVersions(address publisher, string memory contractId)
         external
         view
-        returns (CustomContract[] memory published);
+        returns (CustomContractInstance[] memory published);
 
     /**
-     *  @notice Returns a given contract published by a publisher.
+     *  @notice Returns the latest version of a contract published by a publisher.
      *
      *  @param publisher  The address of the publisher.
-     *  @param contractId The identifier for a group of published contracts.
+     *  @param contractId The identifier for a published contract (that can have multiple verisons).
      *
      *  @return published The desired contract published by the publisher.
      */
     function getPublishedContract(address publisher, string memory contractId)
         external
         view
-        returns (CustomContract memory published);
+        returns (CustomContractInstance memory published);
+    
+    /**
+     *  @notice Returns the public id of a published contract, if it is public.
+     *
+     *  @param publisher  The address of the publisher.
+     *  @param contractId The identifier for a published contract (that can have multiple verisons).
+     *
+     *  @return publicId the public id of a published contract.
+     */
+    function getPublicId(address publisher, string memory contractId) external returns(uint256 publicId);
 
     /**
      *  @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
@@ -151,4 +151,20 @@ interface IByocRegistry {
      *  @param contractId The identifier for a published contract (that can have multiple verisons).
      */
     function unpublishContract(address publisher, string memory contractId) external;
+
+    /**
+     *  @notice Lets an account add a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
+     *
+     *  @param publisher  The address of the publisher.
+     *  @param contractId The identifier for a published contract (that can have multiple verisons).
+     */
+    function addToPublicList(address publisher, string memory contractId) external;
+    
+    /**
+     *  @notice Lets an account remove a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
+     *
+     *  @param publisher  The address of the publisher.
+     *  @param contractId The identifier for a published contract (that can have multiple verisons).
+     */
+    function removeFromPublicList(address publisher, string memory contractId) external;
 }
