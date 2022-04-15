@@ -42,7 +42,7 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     /// @dev Only lister role holders can create listings, when listings are restricted by lister address.
     bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
@@ -212,17 +212,24 @@ contract Marketplace is
 
     /// @dev Lets a token owner list tokens for sale: Direct Listing or Auction.
     function createListing(ListingParameters memory _params) external override {
-        require(_params.secondsUntilEndTime > 0, "end time must > 0.");
-
         // Get values to populate `Listing`.
-        uint256 listingId = getNextListingId();
+        uint256 listingId = totalListings;
+        totalListings += 1;
+
         address tokenOwner = _msgSender();
         TokenType tokenTypeOfListing = getTokenType(_params.assetContract);
         uint256 tokenAmountToList = getSafeQuantity(tokenTypeOfListing, _params.quantityToList);
 
-        require(tokenAmountToList > 0, "listing invalid quantity.");
-        require(hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()), "does not have LISTER_ROLE.");
-        require(hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract), "unapproved asset.");
+        require(tokenAmountToList > 0, "QUANTITY");
+        require(hasRole(LISTER_ROLE, address(0)) || hasRole(LISTER_ROLE, _msgSender()), "!LISTER");
+        require(hasRole(ASSET_ROLE, address(0)) || hasRole(ASSET_ROLE, _params.assetContract), "!ASSET");
+
+        uint256 startTime = _params.startTime;
+        if (startTime < block.timestamp) {
+            // do not allow listing to start in the past (1 hour buffer)
+            require(block.timestamp - startTime < 1 hours, "ST");
+            startTime = block.timestamp;
+        }
 
         validateOwnershipAndApproval(
             tokenOwner,
@@ -232,7 +239,6 @@ contract Marketplace is
             tokenTypeOfListing
         );
 
-        uint256 startTime = _params.startTime < block.timestamp ? block.timestamp : _params.startTime;
         Listing memory newListing = Listing({
             listingId: listingId,
             tokenOwner: tokenOwner,
@@ -252,10 +258,7 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
-            require(
-                newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
-                "reserve price exceeds buyout price."
-            );
+            require(newListing.buyoutPricePerToken >= newListing.reservePricePerToken, "RESERVE");
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
@@ -276,12 +279,18 @@ contract Marketplace is
         uint256 safeNewQuantity = getSafeQuantity(targetListing.tokenType, _quantityToList);
         bool isAuction = targetListing.listingType == ListingType.Auction;
 
-        require(safeNewQuantity != 0, "cannot update to 0 quantity");
+        require(safeNewQuantity != 0, "QUANTITY");
 
         // Can only edit auction listing before it starts.
         if (isAuction) {
-            require(block.timestamp < targetListing.startTime, "auction already started.");
-            require(_buyoutPricePerToken >= _reservePricePerToken, "reserve price exceeds buyout price.");
+            require(block.timestamp < targetListing.startTime, "STARTED");
+            require(_buyoutPricePerToken >= _reservePricePerToken, "RESERVE");
+        }
+
+        // validate start time if it's being updated
+        if (_startTime > 0 && _startTime < block.timestamp) {
+            // do not allow listing to start in the past (1 hour buffer)
+            require(block.timestamp - _startTime < 1 hours, "ST");
         }
 
         uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;
@@ -381,6 +390,7 @@ contract Marketplace is
             _currency == targetOffer.currency && _pricePerToken == targetOffer.pricePerToken,
             "invalid currency or price"
         );
+        require(targetOffer.expirationTimestamp > block.timestamp, "offer expired");
 
         delete offers[_listingId][_offeror];
 
@@ -436,7 +446,8 @@ contract Marketplace is
         uint256 _listingId,
         uint256 _quantityWanted,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        uint256 _expirationTimestamp
     ) external payable override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
 
@@ -451,17 +462,22 @@ contract Marketplace is
             offeror: _msgSender(),
             quantityWanted: _quantityWanted,
             currency: _currency,
-            pricePerToken: _pricePerToken
+            pricePerToken: _pricePerToken,
+            expirationTimestamp: _expirationTimestamp
         });
 
         if (targetListing.listingType == ListingType.Auction) {
             // A bid to an auction must be made in the auction's desired currency.
-            newOffer.currency = targetListing.currency;
+            require(newOffer.currency == targetListing.currency, "must use approved currency to bid");
+
             // A bid must be made for all auction items.
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, targetListing.quantity);
 
             handleBid(targetListing, newOffer);
         } else if (targetListing.listingType == ListingType.Direct) {
+            // Prevent potentially lost/locked native token.
+            require(msg.value == 0, "no value needed");
+
             // Offers to direct listings cannot be made directly in native tokens.
             newOffer.currency = _currency == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : _currency;
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, _quantityWanted);
@@ -529,21 +545,21 @@ contract Marketplace is
                 _targetListing.endTime += timeBuffer;
                 listings[_targetListing.listingId] = _targetListing;
             }
+        }
 
-            // Payout previous highest bid.
-            if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
-                CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
-                    _targetListing.currency,
-                    address(this),
-                    currentWinningBid.offeror,
-                    currentOfferAmount,
-                    _nativeTokenWrapper
-                );
-            }
+        // Payout previous highest bid.
+        if (currentWinningBid.offeror != address(0) && currentOfferAmount > 0) {
+            CurrencyTransferLib.transferCurrencyWithWrapper(
+                _targetListing.currency,
+                address(this),
+                currentWinningBid.offeror,
+                currentOfferAmount,
+                _nativeTokenWrapper
+            );
         }
 
         // Collect incoming bid
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _targetListing.currency,
             _incomingBid.offeror,
             address(this),
@@ -715,28 +731,28 @@ contract Marketplace is
         // Distribute price to token owner
         address _nativeTokenWrapper = nativeTokenWrapper;
 
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             platformFeeRecipient,
             platformFeeCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             royaltyRecipient,
             royaltyCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             twFeeRecipient,
             twFeeCut,
             _nativeTokenWrapper
         );
-        CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             _payee,
@@ -754,7 +770,7 @@ contract Marketplace is
         require(
             IERC20Upgradeable(_currency).balanceOf(_addrToCheck) >= _currencyAmountToCheckAgainst &&
                 IERC20Upgradeable(_currency).allowance(_addrToCheck, address(this)) >= _currencyAmountToCheckAgainst,
-            "insufficient balance or allowance."
+            "!BAL20"
         );
     }
 
@@ -780,7 +796,7 @@ contract Marketplace is
                     IERC721Upgradeable(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
 
-        require(isValid, "insufficient token balance or approval.");
+        require(isValid, "!BALNFT");
     }
 
     /// @dev Validates conditions of a direct listing sale.
@@ -845,12 +861,6 @@ contract Marketplace is
         } else {
             revert("token must be ERC1155 or ERC721.");
         }
-    }
-
-    /// @dev Returns the next listing Id to use.
-    function getNextListingId() internal returns (uint256 nextId) {
-        nextId = totalListings;
-        totalListings += 1;
     }
 
     /// @dev Returns the platform fee recipient and bps.
