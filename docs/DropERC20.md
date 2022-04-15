@@ -176,7 +176,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 
 
 
-*Lets an account claim a given quantity of tokens, of a single tokenId, according to claim conditions.*
+*Lets an account claim tokens.*
 
 #### Parameters
 
@@ -197,7 +197,7 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 
 
-*The claim conditions at any given moment.*
+*The set of all claim conditions, at any given moment.*
 
 
 #### Returns
@@ -215,7 +215,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-*Returns the module type of the contract.*
+*Returns the type of the contract.*
 
 
 #### Returns
@@ -232,7 +232,7 @@ function contractURI() external view returns (string)
 
 
 
-*Returns the URI for the storefront-level metadata of the contract.*
+*Contract level metadata.*
 
 
 #### Returns
@@ -374,6 +374,28 @@ function getActiveClaimConditionId() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### getClaimConditionById
+
+```solidity
+function getClaimConditionById(uint256 _conditionId) external view returns (struct IDropClaimCondition.ClaimCondition condition)
+```
+
+
+
+*Returns the claim condition at the given uid.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| condition | IDropClaimCondition.ClaimCondition | undefined
+
 ### getClaimTimestamp
 
 ```solidity
@@ -382,7 +404,7 @@ function getClaimTimestamp(uint256 _conditionId, address _claimer) external view
 
 
 
-*Returns the timestamp for next available claim for a claimer address*
+*Returns the timestamp for when a claimer is eligible for claiming tokens again.*
 
 #### Parameters
 
@@ -451,7 +473,7 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 
 
-*Returns the platform fee bps and recipient.*
+*Returns the platform fee recipient and bps.*
 
 
 #### Returns
@@ -616,7 +638,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _primarySaleRecipient, uint256 _platformFeeBps, address _platformFeeRecipient) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _primarySaleRecipient, address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
 ```
 
 
@@ -633,8 +655,8 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _contractURI | string | undefined
 | _trustedForwarders | address[] | undefined
 | _primarySaleRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
 | _platformFeeRecipient | address | undefined
+| _platformFeeBps | uint256 | undefined
 
 ### isTrustedForwarder
 
@@ -666,7 +688,7 @@ function maxTotalSupply() external view returns (uint256)
 
 
 
-*Token max total supply for the collection.*
+*Global max total supply of tokens.*
 
 
 #### Returns
@@ -683,7 +705,7 @@ function maxWalletClaimCount() external view returns (uint256)
 
 
 
-*The max number of claim per wallet.*
+*The max number of tokens a wallet can claim.*
 
 
 #### Returns
@@ -775,23 +797,6 @@ function numCheckpoints(address account) external view returns (uint32)
 |---|---|---|
 | _0 | uint32 | undefined
 
-### paused
-
-```solidity
-function paused() external view returns (bool)
-```
-
-
-
-*Returns true if the contract is paused, and false otherwise.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
 ### permit
 
 ```solidity
@@ -822,7 +827,7 @@ function primarySaleRecipient() external view returns (address)
 
 
 
-*The adress that receives all primary sales value.*
+*The address that receives all primary sales value.*
 
 
 #### Returns
@@ -868,19 +873,19 @@ function revokeRole(bytes32 role, address account) external nonpayable
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IDropClaimCondition.ClaimCondition[] _phases, bool _resetLimitRestriction) external nonpayable
+function setClaimConditions(IDropClaimCondition.ClaimCondition[] _phases, bool _resetClaimEligibility) external nonpayable
 ```
 
 
 
-*Lets a module admin set claim conditions.*
+*Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _phases | IDropClaimCondition.ClaimCondition[] | undefined
-| _resetLimitRestriction | bool | undefined
+| _resetClaimEligibility | bool | undefined
 
 ### setContractURI
 
@@ -890,7 +895,7 @@ function setContractURI(string _uri) external nonpayable
 
 
 
-*Lets a module admin set the URI for contract-level metadata.*
+*Lets a contract admin set the URI for contract-level metadata.*
 
 #### Parameters
 
@@ -906,7 +911,7 @@ function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
 
 
 
-*Lets a module admin set the maximum number of supply for the collection.*
+*Lets a contract admin set the global maximum supply of tokens.*
 
 #### Parameters
 
@@ -922,7 +927,7 @@ function setMaxWalletClaimCount(uint256 _count) external nonpayable
 
 
 
-*Lets a module admin set a maximum number of claim per wallet.*
+*Lets a contract admin set a maximum number of tokens that can be claimed by any wallet.*
 
 #### Parameters
 
@@ -938,7 +943,7 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 
 
-*Lets a module admin update the fees on primary sales.*
+*Lets a contract admin update the platform fee recipient and bps*
 
 #### Parameters
 
@@ -955,7 +960,7 @@ function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 
 
 
-*Lets a module admin set the default recipient of all primary sales.*
+*Lets a contract admin set the recipient for all primary sales.*
 
 #### Parameters
 
@@ -971,7 +976,7 @@ function setWalletClaimCount(address _claimer, uint256 _count) external nonpayab
 
 
 
-*Lets a module admin set a claim limit on a wallet.*
+*Lets a contract admin set a claim count for a wallet.*
 
 #### Parameters
 
@@ -1091,7 +1096,7 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 
 
 
-*Checks whether a request to claim tokens obeys the active mint condition.*
+*Checks a request to claim tokens against the active claim condition&#39;s criteria.*
 
 #### Parameters
 
@@ -1111,7 +1116,7 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 
 
 
-
+*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
 
 #### Parameters
 
@@ -1258,22 +1263,6 @@ event MaxWalletClaimCountUpdated(uint256 count)
 |---|---|---|
 | count  | uint256 | undefined |
 
-### Paused
-
-```solidity
-event Paused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
-
 ### PlatformFeeInfoUpdated
 
 ```solidity
@@ -1397,22 +1386,6 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### Unpaused
-
-```solidity
-event Unpaused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
 
 ### WalletClaimCountUpdated
 
