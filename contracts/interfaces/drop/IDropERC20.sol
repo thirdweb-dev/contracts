@@ -8,11 +8,12 @@ import "../IThirdwebPrimarySale.sol";
 import "./IDropClaimCondition.sol";
 
 /**
- *  `LazyMintERC20` is an ERC 20 contract.
+ *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens. The
+ *  `DropERC20` contract is a distribution mechanism for ERC20 tokens.
  *
- *  The module admin can create claim conditions with non-overlapping time windows,
- *  and accounts can claim the tokens, in a given time window, according to restrictions
- *  defined in that time window's claim conditions.
+ *  A contract admin (i.e. holder of `DEFAULT_ADMIN_ROLE`) can create claim conditions
+ *  with non-overlapping time windows, and accounts can claim the tokens according to
+ *  restrictions defined in the claim condition that is active at the time of the transaction.
  */
 
 interface IDropERC20 is
@@ -33,46 +34,50 @@ interface IDropERC20 is
     /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
-    /// @dev Emitted when a new sale recipient is set.
+    /// @dev Emitted when a new primary sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
-    /// @dev Emitted when fee on primary sales is updated.
+    /// @dev Emitted when fee platform fee recipient or bps is updated.
     event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
-    /// @dev Emitted when a max total supply is set for a token.
+    /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
-    /// @dev Emitted when a wallet claim count is updated.
+    /// @dev Emitted when the wallet claim count for an address is updated.
     event WalletClaimCountUpdated(address indexed wallet, uint256 count);
 
-    /// @dev Emitted when the max wallet claim count is updated.
+    /// @dev Emitted when the global max wallet claim count is updated.
     event MaxWalletClaimCountUpdated(uint256 count);
 
     /**
      *  @notice Lets an account claim a given quantity of tokens.
      *
-     *  @param _receiver The receiver of the NFTs to claim.
-     *  @param _quantity The quantity of tokens to claim.
-     *  @param _currency The currency in which to pay for the claim.
-     *  @param _pricePerToken The price per token to pay for the claim.
-     *  @param _proofs The proof required to prove the account's inclusion in the merkle root whitelist
-     *                 of the mint conditions that apply.
-     *  @param _proofMaxQuantityPerTransaction The maximum claim quantity per transactions that included in the merkle proof.
+     *  @param receiver                       The receiver of the tokens to claim.
+     *  @param quantity                       The quantity of tokens to claim.
+     *  @param currency                       The currency in which to pay for the claim.
+     *  @param pricePerToken                  The price per token (i.e. price per 1 ether unit of the token)
+     *                                         to pay for the claim.
+     *  @param proofs                         The proof of the claimer's inclusion in the merkle root allowlist
+     *                                        of the claim conditions that apply.
+     *  @param proofMaxQuantityPerTransaction (Optional) The maximum number of tokens an address included in an
+     *                                        allowlist can claim.
      */
     function claim(
-        address _receiver,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction
+        address receiver,
+        uint256 quantity,
+        address currency,
+        uint256 pricePerToken,
+        bytes32[] calldata proofs,
+        uint256 proofMaxQuantityPerTransaction
     ) external payable;
 
     /**
-     *  @notice Lets a module admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+     *  @notice Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param _phases Mint conditions in ascending order by `startTimestamp`.
-     *  @param _resetLimitRestriction To reset claim phases limit restriction.
+     *  @param phases                Claim conditions in ascending order by `startTimestamp`.
+     *  @param resetClaimEligibility Whether to reset `limitLastClaimTimestamp` and
+     *                               `limitMerkleProofClaim` values when setting new
+     *                               claim conditions.
      */
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetLimitRestriction) external;
+    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }
