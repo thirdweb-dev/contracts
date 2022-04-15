@@ -73,6 +73,22 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         assertEq(_factory.getImplementation(contractType, moduleVersion), address(mockModule));
     }
 
+    function test_addImplementation_directV2() public {
+        MockThirdwebContractV2 mockModuleV2 = new MockThirdwebContractV2();
+
+        bytes32 contractType = mockModuleV2.contractType();
+        uint256 moduleVersion = mockModuleV2.contractVersion();
+        uint256 moduleVersionOnFactory = _factory.currentVersion(contractType);
+
+        vm.prank(factoryAdmin);
+        _factory.addImplementation(address(mockModuleV2));
+
+        assertTrue(_factory.approval(address(mockModuleV2)));
+        assertEq(address(mockModuleV2), _factory.implementation(contractType, moduleVersion));
+        assertEq(_factory.currentVersion(contractType), moduleVersionOnFactory + 2);
+        assertEq(_factory.getImplementation(contractType, moduleVersion), address(mockModuleV2));
+    }
+
     function test_addImplementation_newImpl() public {
         vm.prank(factoryAdmin);
         _factory.addImplementation(address(mockModule));
