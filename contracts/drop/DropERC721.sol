@@ -395,7 +395,7 @@ contract DropERC721 is
             require(i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp, "ST");
 
             uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "MS");
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
@@ -496,28 +496,28 @@ contract DropERC721 is
 
         require(
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price specified."
+            "invalid currency or price."
         );
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
                 (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
-            "invalid quantity claimed."
+            "invalid quantity."
         );
         require(
             currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max mint supply."
+            "exceed max claimable supply."
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
         require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
         require(
             maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
-            "exceed claim limit for wallet"
+            "exceed claim limit"
         );
 
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
+        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -557,7 +557,7 @@ contract DropERC721 is
             }
         }
 
-        revert("no active mint condition.");
+        revert("!CONDITION.");
     }
 
     /// @dev Returns the royalty recipient and bps for a particular token Id.
@@ -627,7 +627,7 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxTotalSupply < nextTokenIdToMint, "MAX");
+        require(_maxTotalSupply < nextTokenIdToMint, "existing > desired max supply");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
@@ -643,7 +643,7 @@ contract DropERC721 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_royaltyBps <= MAX_BPS, "MAX_BPS");
+        require(_royaltyBps <= MAX_BPS, "> MAX_BPS");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint16(_royaltyBps);
@@ -657,7 +657,7 @@ contract DropERC721 is
         address _recipient,
         uint256 _bps
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "MAX_BPS");
+        require(_bps <= MAX_BPS, "> MAX_BPS");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
@@ -669,7 +669,7 @@ contract DropERC721 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "> MAX_BPS.");
 
         platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
@@ -698,7 +698,7 @@ contract DropERC721 is
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "caller is not owner nor approved");
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "caller not owner nor approved");
         _burn(tokenId);
     }
 
