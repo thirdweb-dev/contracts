@@ -337,7 +337,7 @@ contract DropERC1155 is
             );
 
             uint256 supplyClaimedAlready = condition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
 
             condition.phases[newStartIndex + i] = _phases[i];
             condition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;

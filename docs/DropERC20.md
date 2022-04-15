@@ -797,23 +797,6 @@ function numCheckpoints(address account) external view returns (uint32)
 |---|---|---|
 | _0 | uint32 | undefined
 
-### paused
-
-```solidity
-function paused() external view returns (bool)
-```
-
-
-
-*Returns true if the contract is paused, and false otherwise.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
 ### permit
 
 ```solidity
@@ -1281,22 +1264,6 @@ event MaxWalletClaimCountUpdated(uint256 count)
 |---|---|---|
 | count  | uint256 | undefined |
 
-### Paused
-
-```solidity
-event Paused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
-
 ### PlatformFeeInfoUpdated
 
 ```solidity
@@ -1420,22 +1387,6 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### Unpaused
-
-```solidity
-event Unpaused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
 
 ### WalletClaimCountUpdated
 

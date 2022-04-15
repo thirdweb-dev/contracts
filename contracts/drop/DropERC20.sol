@@ -257,7 +257,7 @@ contract DropERC20 is
             );
 
             uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
