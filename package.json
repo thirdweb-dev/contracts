@@ -1,11 +1,7 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "",
-<<<<<<< HEAD
-  "version": "2.2.0",
-=======
   "version": "2.2.0-1",
->>>>>>> shipyard-marketplace-audit-fixes
   "license": "Apache-2.0",
   "dependencies": {},
   "source": "typechain/index.ts",
