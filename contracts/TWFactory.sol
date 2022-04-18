@@ -40,7 +40,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         registry = TWRegistry(_registry);
     }
 
-    /// @dev Deploys a proxy that points to the latest version of the given module type.
+    /// @dev Deploys a proxy that points to the latest version of the given contract type.
     function deployProxy(bytes32 _type, bytes memory _data) external returns (address) {
         bytes32 salt = bytes32(registry.count(_msgSender()));
         return deployProxyDeterministic(_type, _data, salt);
@@ -48,7 +48,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
     /**
      *  @dev Deploys a proxy at a deterministic address by taking in `salt` as a parameter.
-     *       Proxy points to the latest version of the given module type.
+     *       Proxy points to the latest version of the given contract type.
      */
     function deployProxyDeterministic(
         bytes32 _type,
@@ -82,7 +82,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         }
     }
 
-    /// @dev Lets a contract admin set the address of a module type x version.
+    /// @dev Lets a contract admin set the address of a contract type x version.
     function addImplementation(address _implementation) external {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
@@ -111,9 +111,14 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         emit ImplementationApproved(_implementation, _toApprove);
     }
 
-    /// @dev Returns the implementation given a module type and version.
+    /// @dev Returns the implementation given a contract type and version.
     function getImplementation(bytes32 _type, uint256 _version) external view returns (address) {
         return implementation[_type][_version];
+    }
+
+    /// @dev Returns the latest implementation given a contract type.
+    function getLatestImplementation(bytes32 _type) external view returns (address) {
+        return implementation[_type][currentVersion[_type]];
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
