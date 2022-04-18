@@ -2,11 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
-import "../IThirdwebRoyalty.sol";
-import "../IThirdwebOwnable.sol";
 import "./IDropClaimCondition.sol";
 
 /**
@@ -27,11 +22,6 @@ import "./IDropClaimCondition.sol";
  */
 
 interface IDropERC721 is
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
     IERC721Upgradeable,
     IDropClaimCondition
 {

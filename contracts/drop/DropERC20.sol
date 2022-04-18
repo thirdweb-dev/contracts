@@ -15,6 +15,10 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
 
@@ -26,6 +30,9 @@ import "../lib/FeeType.sol";
 
 contract DropERC20 is
     Initializable,
+    IThirdwebContract,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
