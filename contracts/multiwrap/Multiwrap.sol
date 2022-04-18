@@ -50,6 +50,8 @@ contract Multiwrap is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can wrap tokens, when wrapping is restricted.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only UNWRAP_ROLE holders can unwrap tokens, when unwrapping is restricted.
+    bytes32 private constant UNWRAP_ROLE = keccak256("UNWRAP_ROLE");
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
@@ -118,6 +120,7 @@ contract Multiwrap is
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+        _setupRole(UNWRAP_ROLE, address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -218,6 +221,10 @@ contract Multiwrap is
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant {
+
+        if (!hasRole(TRANSFER_ROLE, address(0))) {
+            require(hasRole(TRANSFER_ROLE, _msgSender()), "restricted to UNWRAP_ROLE holders.");
+        }
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "unapproved called");
 
