@@ -69,16 +69,6 @@ interface ITokenERC721 is IERC721MetadataUpgradeable, IERC721EnumerableUpgradeab
         returns (bool success, address signer);
 
     /**
-     *  @notice Lets an account with MINTER_ROLE mint an NFT.
-     *
-     *  @param to The address to mint the NFT to.
-     *  @param uri The URI to assign to the NFT.
-     *
-     *  @return tokenId of the NFT minted.
-     */
-    function mintTo(address to, string calldata uri) external returns (uint256);
-
-    /**
      *  @notice Mints an NFT according to the provided mint request.
      *
      *  @param req The mint request.
