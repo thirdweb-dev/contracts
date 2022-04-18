@@ -1,6 +1,6 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
-  "include": ["typechain", "./scripts", "./test"],
+  "include": ["typechain", "./scripts", "./test", "./utils"],
   "files": ["./hardhat.config.ts"],
   "compilerOptions": {
     "module": "esnext",
