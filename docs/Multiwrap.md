@@ -247,6 +247,28 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
+### getWrappedContents
+
+```solidity
+function getWrappedContents(uint256 _tokenId) external view returns (struct IMultiwrap.Token[] contents)
+```
+
+
+
+*Returns the underlygin contents of a wrapped NFT.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contents | IMultiwrap.Token[] | undefined
+
 ### grantRole
 
 ```solidity
