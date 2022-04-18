@@ -132,9 +132,6 @@ contract Pack is
         uint256[] rewardIds
     );
 
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     constructor(
         address _vrfCoordinator,
         address _linkToken,

@@ -289,6 +289,23 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 | newRoyaltyRecipient  | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
+### OwnerUpdated
+
+```solidity
+event OwnerUpdated(address prevOwner, address newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevOwner  | address | undefined |
+| newOwner  | address | undefined |
+
 ### RoyaltyForToken
 
 ```solidity

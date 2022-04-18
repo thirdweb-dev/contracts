@@ -34,12 +34,6 @@ interface IDropERC20 is
     /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
-    /// @dev Emitted when a new primary sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
-    /// @dev Emitted when fee platform fee recipient or bps is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 

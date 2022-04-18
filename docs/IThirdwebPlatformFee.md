@@ -47,4 +47,24 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 
 
+## Events
+
+### PlatformFeeInfoUpdated
+
+```solidity
+event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+```
+
+
+
+*Emitted when fee on primary sales is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| platformFeeBps  | uint256 | undefined |
+
+
 
