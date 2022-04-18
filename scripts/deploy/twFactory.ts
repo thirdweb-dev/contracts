@@ -31,7 +31,7 @@ async function verify(address: string, args: any[]) {
     } catch (e) {
       console.log(address, args, e);
     }
-  }
+}
 
 main()
     .then(() => process.exit(0))
