@@ -287,6 +287,16 @@ contract Multiwrap is
                 : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
+    /// @dev Returns the underlygin contents of a wrapped NFT.
+    function getWrappedContents(uint256 _tokenId) external view returns (Token[] memory contents) {
+        uint256 total = wrappedContents[_tokenId].count;
+        contents = new Token[](total);
+
+        for(uint256 i = 0; i < total; i += 1) {
+            contents[i] = wrappedContents[_tokenId].token[i];
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Setter functions
     //////////////////////////////////////////////////////////////*/
