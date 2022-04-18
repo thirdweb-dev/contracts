@@ -93,7 +93,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
 
         uint8 version = module.contractVersion();
         uint8 currentVersionOfType = uint8(currentVersion[ctype]);
-        require(version > currentVersionOfType, "wrong module version");
+        require(version >= currentVersionOfType, "wrong module version");
 
         currentVersion[ctype] = version;
         implementation[ctype][version] = _implementation;
