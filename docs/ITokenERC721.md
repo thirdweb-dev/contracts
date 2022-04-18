@@ -110,29 +110,6 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
-### mintTo
-
-```solidity
-function mintTo(address to, string uri) external nonpayable returns (uint256)
-```
-
-Lets an account with MINTER_ROLE mint an NFT.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to | address | The address to mint the NFT to.
-| uri | string | The URI to assign to the NFT.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | tokenId of the NFT minted.
-
 ### mintWithSignature
 
 ```solidity

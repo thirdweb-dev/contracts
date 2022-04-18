@@ -67,7 +67,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         forwarder = address(new Forwarder());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
-        byocRegistry = address(new ByocRegistry(registry, forwarders()));
+        byocRegistry = address(new ByocRegistry(forwarders()));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), byocRegistry);
         fee = address(new TWFee(forwarder, factory));
