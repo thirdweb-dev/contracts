@@ -18,19 +18,26 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 //  ==========  Internal imports    ==========
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebOwnable.sol";
+
 import "../interfaces/IMultiwrap.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 contract Multiwrap is
-    IMultiwrap,
+    IThirdwebContract,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
     ERC1155HolderUpgradeable,
     ERC721HolderUpgradeable,
-    ERC721Upgradeable
+    ERC721Upgradeable,
+    IMultiwrap
 {
     /*///////////////////////////////////////////////////////////////
                             State variables

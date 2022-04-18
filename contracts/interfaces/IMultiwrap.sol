@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./IThirdwebContract.sol";
-import "./IThirdwebRoyalty.sol";
-import "./IThirdwebOwnable.sol";
-
 /**
  *  Thirdweb's Multiwrap contract lets you wrap arbitrary ERC20, ERC721 and ERC1155
  *  tokens you own into a single wrapped token / NFT.
@@ -12,7 +8,7 @@ import "./IThirdwebOwnable.sol";
  *  A wrapped NFT can be unwrapped i.e. burned in exchange for its underlying contents.
  */
 
-interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
+interface IMultiwrap {
     /// @notice The type of assets that can be wrapped.
     enum TokenType {
         ERC20,
