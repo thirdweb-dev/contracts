@@ -4,6 +4,7 @@ pragma solidity ^0.8.11;
 // Interface
 import "../interfaces/token/ITokenERC721.sol";
 import "../interfaces/token/IMintableERC721.sol";
+import "../interfaces/token/IBurnableERC721.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -47,6 +48,7 @@ contract TokenERC721 is
     ERC721EnumerableUpgradeable,
     ITokenERC721,
     IMintableERC721,
+    IBurnableERC721,
     SignatureMintUpgradeable
 {
     using ECDSAUpgradeable for bytes32;

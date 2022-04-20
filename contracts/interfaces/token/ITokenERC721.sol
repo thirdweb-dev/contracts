@@ -9,12 +9,5 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721Enume
  *  and a signature (produced by an account with MINTER_ROLE, signing the mint request).
  */
 interface ITokenERC721 is IERC721MetadataUpgradeable, IERC721EnumerableUpgradeable {
-    /**
-     * @dev Burns `tokenId`. See {ERC721-_burn}.
-     *
-     * Requirements:
-     *
-     * - The caller must own `tokenId` or be an approved operator.
-     */
-    function burn(uint256 tokenId) external;
+
 }
