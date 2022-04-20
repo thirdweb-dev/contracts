@@ -25,6 +25,8 @@ async function main() {
 
     console.log("Deploying DropERC721 \ntransaction: ", dropERC721.deployTransaction.hash, "\naddress: ", dropERC721.address);
 
+    await dropERC721.deployTransaction.wait();
+
     console.log("\n")
     
     const addImplementationTx = await twFactory.addImplementation(dropERC721.address)

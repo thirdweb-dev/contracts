@@ -6,7 +6,7 @@ import { TWRegistry } from "typechain/TWRegistry";
 
 async function main() {
     
-    const twRegistryAddress: string = ethers.constants.AddressZero;
+    const twRegistryAddress: string = ethers.constants.AddressZero; // replace
 
     const twRegistry: TWRegistry = await ethers.getContractAt("TWRegistry", twRegistryAddress);
 

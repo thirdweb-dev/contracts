@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 
 async function main() {
     
-    const receiver: string = "0xc42dEA1D2DD666f661025FeB931a82F1f74ba4B1"; // replace
+    const receiver: string = ethers.constants.AddressZero; // replace
 
     const [caller]: SignerWithAddress[] = await ethers.getSigners();
 
