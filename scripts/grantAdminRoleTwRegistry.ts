@@ -16,7 +16,7 @@ async function main() {
     const receiverOfRole: string = ethers.constants.AddressZero;
 
     const isAdminOnRegistry: boolean = await twRegistry.hasRole(
-        ethers.utils.solidityKeccak256(["string"], ["DEFAULT_ADMIN_ROLE"]),
+        await twRegistry.DEFAULT_ADMIN_ROLE(),
         currentAdmin.address
     )
     if(!isAdminOnRegistry) {
@@ -24,7 +24,7 @@ async function main() {
     }
 
     const grantRoleTx = await twRegistry.connect(currentAdmin).grantRole(
-        ethers.utils.solidityKeccak256(["string"], ["DEFAULT_ADMIN_ROLE"]),
+        await twRegistry.DEFAULT_ADMIN_ROLE(),
         receiverOfRole
     );
 
