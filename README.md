@@ -1,36 +1,93 @@
-# Thirdweb Contracts v2
+# Thirdweb Contracts
 
-> [Looking for version 1? Click here!](https://github.com/thirdweb-dev/contracts/tree/v1)
+> Looking for version 1? Click [here](https://github.com/thirdweb-dev/contracts/tree/v1)!
 
-Lets anyone deploy their own copy of the smart contracts on the platform.
+## Quick start
 
-### Deployments
+The [`@thirdweb-dev/contracts`](https://www.npmjs.com/package/@thirdweb-dev/contracts) package gives you access to all contracts and interfaces available in the `/contracts` directory of this repository.
 
-- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
+**Installation:**
+```bash
+yarn add @thirdweb-dev/contracts
+```
 
-- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
+**Usage**
+`@thirdweb-dev/contracts` can be used in your Solidity project just like other popular libraries like `@openzeppelin/contracts`. Once you've installed the package, import the relevant resources from the package as follows:
 
-### ByocRegistry - Polygon
-- `TWRegistry`: [0xF6abb5014Fb6F1Aa615b960fc28bB9C180b6cc44](https://blockscan.com/address/0xF6abb5014Fb6F1Aa615b960fc28bB9C180b6cc44#code)
+```solidity
+// Example usage
 
-- `ByocRegistry`: [0x1B0284a1C9b3fC50067641702a6ed11a76B01256](https://polygonscan.com/address/0x1B0284a1C9b3fC50067641702a6ed11a76B01256#code)
+import "@thirweb-dev/contracts/contracts/interfaces/token/TokenERC721.sol";
 
-### ByocRegistry - Mumbai
+contract MyNFT is TokenERC721 { ... }
+```
 
-- `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
+## Run locally
 
-- `ByocRegistry` (Mumbai): [0xa9CBE73a575038103c3Baaaf7Db51374a60a5209](https://mumbai.polygonscan.com/address/0xa9CBE73a575038103c3Baaaf7Db51374a60a5209#code)
+Clone the repository:
+```bash
+git clone https://github.com/thirdweb-dev/contracts.git
+```
 
-## Running Tests
-1. `yarn`: install contracts dependencies
-2. `forge install`: install tests dependencies
-3. `forge test`: run the tests
+This repository is a hybrid [hardhat](https://hardhat.org/) and [forge](https://github.com/foundry-rs/foundry/tree/master/forge) project.
+
+First install the relevant dependencies of the project:
+```bash
+yarn
+
+forge install
+```
+
+To compile contracts, run:
+```bash
+forge build
+```
+
+Or, if you prefer hardhat, you can run:
+```bash
+npx hardhat compile
+```
+
+
+To run tests:
+```bash
+forge test
+```
+
+To export the ABIs of the coontracts in the `/contracts` directory, run:
+```
+npx hardhat export-abi
+```
+
+To run any scripts in the `/scripts` directory, run:
+```
+npx hardhat run scripts/{path to the script}
+```
+
+## Deployments
+
+The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deployed on the following chains:
+[
+    Ethereum mainnet,
+    Rinkeby,
+    Goerli,
+    Polygon mainnet,
+    Mumbai (Polygon testnet)
+    Avalanche mainnet,
+    Avalanche testnet,
+    Fantom mainnet,
+    Fantom testnet
+]
+
+- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd) (same address for all mentioned networks)
+
+- `TWFactory`: [0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0](https://blockscan.com/address/0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0) (same address for all mentioned networks, except Fantom mainnet)
+  
+- `TWFactory`: [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B) (address for Fantom mainnet)
 
 ## Feedback
 
 If you have any feedback, please reach out to us at support@thirdweb.com.
-
-
 
 ## Authors
 
