@@ -110,29 +110,6 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
-### mintWithSignature
-
-```solidity
-function mintWithSignature(ITokenERC721.MintRequest req, bytes signature) external payable returns (uint256)
-```
-
-Mints an NFT according to the provided mint request.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| req | ITokenERC721.MintRequest | The mint request.
-| signature | bytes | he signature produced by an account signing the mint request.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### name
 
 ```solidity
@@ -349,30 +326,6 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined
 | tokenId | uint256 | undefined
 
-### verify
-
-```solidity
-function verify(ITokenERC721.MintRequest req, bytes signature) external view returns (bool success, address signer)
-```
-
-Verifies that a mint request is signed by an account holding         MINTER_ROLE (at the time of the function call).
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| req | ITokenERC721.MintRequest | The mint request.
-| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| success | bool | undefined
-| signer | address | undefined
-
 
 
 ## Events
@@ -412,43 +365,6 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | owner `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
-
-### TokensMinted
-
-```solidity
-event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri)
-```
-
-
-
-*Emitted when an account with MINTER_ROLE mints an NFT.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| uri  | string | undefined |
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ITokenERC721.MintRequest mintRequest)
-```
-
-
-
-*Emitted when tokens are minted.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ITokenERC721.MintRequest | undefined |
 
 ### Transfer
 
