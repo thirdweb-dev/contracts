@@ -10,7 +10,7 @@ import "contracts/TWRegistry.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "contracts/TWProxy.sol";
-import "./utils/Console.sol";
+// import "./utils/Console.sol";
 import "./mocks/MockThirdwebContract.sol";
 
 interface ITWFactoryData {
@@ -73,6 +73,22 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         assertEq(_factory.getImplementation(contractType, moduleVersion), address(mockModule));
     }
 
+    function test_addImplementation_directV2() public {
+        MockThirdwebContractV2 mockModuleV2 = new MockThirdwebContractV2();
+
+        bytes32 contractType = mockModuleV2.contractType();
+        uint256 moduleVersion = mockModuleV2.contractVersion();
+        uint256 moduleVersionOnFactory = _factory.currentVersion(contractType);
+
+        vm.prank(factoryAdmin);
+        _factory.addImplementation(address(mockModuleV2));
+
+        assertTrue(_factory.approval(address(mockModuleV2)));
+        assertEq(address(mockModuleV2), _factory.implementation(contractType, moduleVersion));
+        assertEq(_factory.currentVersion(contractType), moduleVersionOnFactory + 2);
+        assertEq(_factory.getImplementation(contractType, moduleVersion), address(mockModuleV2));
+    }
+
     function test_addImplementation_newImpl() public {
         vm.prank(factoryAdmin);
         _factory.addImplementation(address(mockModule));
@@ -90,18 +106,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         assertEq(address(mockModuleV2), _factory.implementation(contractType, moduleVersion));
         assertEq(_factory.currentVersion(contractType), moduleVersionOnFactory + 1);
         assertEq(_factory.getImplementation(contractType, moduleVersion), address(mockModuleV2));
-    }
-
-    function test_addImplementation_revert_sameVersionForNewImpl() public {
-        MockThirdwebContract mockModuleV2 = new MockThirdwebContract();
-
-        vm.prank(factoryAdmin);
-        _factory.addImplementation(address(mockModule));
-
-        vm.expectRevert("wrong module version");
-
-        vm.prank(factoryAdmin);
-        _factory.addImplementation(address(mockModuleV2));
     }
 
     function test_addImplementation_revert_invalidCaller() public {
