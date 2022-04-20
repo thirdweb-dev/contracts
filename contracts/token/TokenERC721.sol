@@ -4,6 +4,12 @@ pragma solidity ^0.8.11;
 // Interface
 import { ITokenERC721 } from "../interfaces/token/ITokenERC721.sol";
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebOwnable.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -32,6 +38,11 @@ import "../interfaces/ITWFee.sol";
 
 contract TokenERC721 is
     Initializable,
+    IThirdwebContract,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee,
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
     ERC2771ContextUpgradeable,
@@ -156,13 +167,22 @@ contract TokenERC721 is
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool, address) {
-        address signer = recoverAddress(_req, _signature);
-        return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
+    function verify(MintRequest calldata _req, bytes calldata _signature)
+        public
+        view
+        returns (bool success, address signer)
+    {
+        signer = recoverAddress(_req, _signature);
+        success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
     }
 
     /// @dev Returns the URI for a tokenId
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        override(ERC721Upgradeable, IERC721MetadataUpgradeable)
+        returns (string memory)
+    {
         return uri[_tokenId];
     }
 

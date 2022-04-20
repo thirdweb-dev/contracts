@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@std/stdlib.sol";
+import "@std/Test.sol";
 import "@ds-test/test.sol";
-import "./Console.sol";
+// import "./Console.sol";
 import "./Wallet.sol";
 import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
@@ -26,13 +26,11 @@ import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
 import "contracts/mock/Mock.sol";
 
-abstract contract BaseTest is DSTest, stdCheats {
+abstract contract BaseTest is DSTest, Test {
     string public constant NAME = "NAME";
     string public constant SYMBOL = "SYMBOL";
     string public constant CONTRACT_URI = "CONTRACT_URI";
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    // solhint-disable-next-line
-    Vm public constant vm = Vm(HEVM_ADDRESS);
 
     MockERC20 public erc20;
     MockERC721 public erc721;

@@ -9,7 +9,7 @@ import "contracts/TWRegistry.sol";
 // Helpers
 import "contracts/TWProxy.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "./utils/Console.sol";
+// import "./utils/Console.sol";
 import "./mocks/MockThirdwebContract.sol";
 
 contract TWProxyBenchmark is BaseTest {

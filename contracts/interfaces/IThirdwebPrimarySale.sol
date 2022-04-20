@@ -7,4 +7,7 @@ interface IThirdwebPrimarySale {
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external;
+
+    /// @dev Emitted when a new sale recipient is set.
+    event PrimarySaleRecipientUpdated(address indexed recipient);
 }
