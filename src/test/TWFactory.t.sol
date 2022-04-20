@@ -108,18 +108,6 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         assertEq(_factory.getImplementation(contractType, moduleVersion), address(mockModuleV2));
     }
 
-    function test_addImplementation_revert_sameVersionForNewImpl() public {
-        MockThirdwebContract mockModuleV2 = new MockThirdwebContract();
-
-        vm.prank(factoryAdmin);
-        _factory.addImplementation(address(mockModule));
-
-        vm.expectRevert("wrong module version");
-
-        vm.prank(factoryAdmin);
-        _factory.addImplementation(address(mockModuleV2));
-    }
-
     function test_addImplementation_revert_invalidCaller() public {
         vm.expectRevert("not admin.");
 

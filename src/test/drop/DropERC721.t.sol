@@ -67,7 +67,7 @@ contract BaseDropERC721Test is BaseTest {
         conditions[2].waitTimeInSecondsBetweenClaims = 33;
         drop.setClaimConditions(conditions, false);
 
-        vm.expectRevert("no active mint condition.");
+        vm.expectRevert("!CONDITION.");
         drop.getActiveClaimConditionId();
 
         vm.warp(10);
@@ -114,7 +114,7 @@ contract BaseDropERC721Test is BaseTest {
         drop.setClaimConditions(conditions, false);
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
 
-        vm.expectRevert("cannot claim yet.");
+        vm.expectRevert("cannot claim.");
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
     }
 
