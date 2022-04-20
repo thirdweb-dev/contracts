@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
-import "./openzeppelin-presets/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
@@ -63,7 +63,7 @@ contract ByocRegistry is
         _;
     }
 
-    constructor(address[] memory _trustedForwarders) ERC2771Context(_trustedForwarders) {
+    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
