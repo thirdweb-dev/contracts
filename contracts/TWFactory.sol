@@ -87,7 +87,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         require(hasRole(FACTORY_ROLE, _msgSender()), "not admin.");
 
         IThirdwebContract module = IThirdwebContract(_implementation);
-        
+
         bytes32 ctype = module.contractType();
         require(ctype.length > 0, "invalid module");
 

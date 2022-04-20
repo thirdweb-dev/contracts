@@ -177,7 +177,12 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the URI for a tokenId
-    function tokenURI(uint256 _tokenId) public view override(ERC721Upgradeable, IERC721MetadataUpgradeable) returns (string memory) {
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        override(ERC721Upgradeable, IERC721MetadataUpgradeable)
+        returns (string memory)
+    {
         return uri[_tokenId];
     }
 
