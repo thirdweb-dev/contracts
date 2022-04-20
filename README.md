@@ -11,7 +11,8 @@ The [`@thirdweb-dev/contracts`](https://www.npmjs.com/package/@thirdweb-dev/cont
 yarn add @thirdweb-dev/contracts
 ```
 
-**Usage**
+**Usage:**
+
 `@thirdweb-dev/contracts` can be used in your Solidity project just like other popular libraries like `@openzeppelin/contracts`. Once you've installed the package, import the relevant resources from the package as follows:
 
 ```solidity
@@ -54,7 +55,7 @@ To run tests:
 forge test
 ```
 
-To export the ABIs of the coontracts in the `/contracts` directory, run:
+To export the ABIs of the contracts in the `/contracts` directory, run:
 ```
 npx hardhat export-abi
 ```
@@ -67,23 +68,23 @@ npx hardhat run scripts/{path to the script}
 ## Deployments
 
 The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deployed on the following chains:
-[
-    Ethereum mainnet,
-    Rinkeby,
-    Goerli,
-    Polygon mainnet,
-    Mumbai (Polygon testnet)
-    Avalanche mainnet,
-    Avalanche testnet,
-    Fantom mainnet,
-    Fantom testnet
-]
+- [Ethereum mainnet](https://etherscan.io/)
+- [Rinkeby](https://rinkeby.etherscan.io/)
+- [Goerli](https://goerli.etherscan.io/)
+- [Polygon mainnet](https://polygonscan.com/)
+- [Polygon Mumbai testnet](https://mumbai.polygonscan.com/)
+- [Avalanche mainnet](https://snowtrace.io/)
+- [Avalanche Fuji testnet](https://testnet.snowtrace.io/)
+- [Fantom mainnet](https://ftmscan.com/)
+- [Fantom testnet](https://testnet.ftmscan.com/)
 
-- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd) (same address for all mentioned networks)
+`TWRegistry` is deployed to a common address on all mentioned networks. `TWFactory` is deployed to a common address on all mentioned networks except Fantom mainnet.
 
-- `TWFactory`: [0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0](https://blockscan.com/address/0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0) (same address for all mentioned networks, except Fantom mainnet)
+- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
+
+- `TWFactory`: [0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0](https://blockscan.com/address/0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0)
   
-- `TWFactory`: [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B) (address for Fantom mainnet)
+- `TWFactory` (Fantom mainnet): [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B)
 
 ## Feedback
 
