@@ -13,12 +13,12 @@ yarn add @thirdweb-dev/contracts
 
 **Usage:**
 
-`@thirdweb-dev/contracts` can be used in your Solidity project just like other popular libraries like `@openzeppelin/contracts`. Once you've installed the package, import the relevant resources from the package as follows:
+`@thirdweb-dev/contracts` can be used in your Solidity project just like other popular libraries e.g. `@openzeppelin/contracts`. Once you've installed the package, import the relevant resources from the package as follows:
 
 ```solidity
 // Example usage
 
-import "@thirweb-dev/contracts/contracts/interfaces/token/TokenERC721.sol";
+import "@thirdweb-dev/contracts/contracts/interfaces/token/TokenERC721.sol";
 
 contract MyNFT is TokenERC721 { ... }
 ```
