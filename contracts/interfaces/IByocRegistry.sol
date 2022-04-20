@@ -4,22 +4,18 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 interface IByocRegistry {
-    
-    struct CustomContractInstance {  
+    struct CustomContractInstance {
         string contractId;
         uint256 publishTimestamp;
-        
         string publishMetadataUri;
         bytes32 bytecodeHash;
         address implementation;
     }
 
     struct CustomContract {
-        
         uint256 publicId;
         uint256 total;
         CustomContractInstance latest;
-        
         mapping(uint256 => CustomContractInstance) instances;
     }
 
@@ -87,7 +83,10 @@ interface IByocRegistry {
      *
      *  @return published An array of all contracts published by the publisher.
      */
-    function getAllPublishedContracts(address publisher) external view returns (CustomContractInstance[] memory published);
+    function getAllPublishedContracts(address publisher)
+        external
+        view
+        returns (CustomContractInstance[] memory published);
 
     /**
      *  @notice Returns all versions of a published contract.
@@ -114,7 +113,7 @@ interface IByocRegistry {
         external
         view
         returns (CustomContractInstance memory published);
-    
+
     /**
      *  @notice Returns the public id of a published contract, if it is public.
      *
@@ -123,7 +122,7 @@ interface IByocRegistry {
      *
      *  @return publicId the public id of a published contract.
      */
-    function getPublicId(address publisher, string memory contractId) external returns(uint256 publicId);
+    function getPublicId(address publisher, string memory contractId) external returns (uint256 publicId);
 
     /**
      *  @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
@@ -159,7 +158,7 @@ interface IByocRegistry {
      *  @param contractId The identifier for a published contract (that can have multiple verisons).
      */
     function addToPublicList(address publisher, string memory contractId) external;
-    
+
     /**
      *  @notice Lets an account remove a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
      *

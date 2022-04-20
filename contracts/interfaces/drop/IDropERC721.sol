@@ -21,10 +21,7 @@ import "./IDropClaimCondition.sol";
  *  restrictions defined in the claim condition that is active at the time of the transaction.
  */
 
-interface IDropERC721 is
-    IERC721Upgradeable,
-    IDropClaimCondition
-{
+interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
