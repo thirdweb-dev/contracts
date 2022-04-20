@@ -35,4 +35,25 @@ Lets an account mint an NFT.
 
 
 
+## Events
+
+### TokensMinted
+
+```solidity
+event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri)
+```
+
+
+
+*Emitted when an account with MINTER_ROLE mints an NFT.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| mintedTo `indexed` | address | undefined |
+| tokenIdMinted `indexed` | uint256 | undefined |
+| uri  | string | undefined |
+
+
 

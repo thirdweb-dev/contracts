@@ -4,6 +4,7 @@ pragma solidity ^0.8.11;
 // Interface
 import "../interfaces/token/ITokenERC721.sol";
 import "../interfaces/token/IMintableERC721.sol";
+import "../interfaces/token/IBurnableERC721.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -13,10 +14,6 @@ import "../interfaces/IThirdwebOwnable.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-
-// Signature utils
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -36,6 +33,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Thirdweb top-level
 import "../interfaces/ITWFee.sol";
+import "./SignatureMintUpgradeable.sol";
 
 contract TokenERC721 is
     Initializable,
@@ -45,13 +43,13 @@ contract TokenERC721 is
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
     ReentrancyGuardUpgradeable,
-    EIP712Upgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable,
     ITokenERC721,
-    IMintableERC721
+    IMintableERC721,
+    IBurnableERC721,
+    SignatureMintUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -59,15 +57,8 @@ contract TokenERC721 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC721");
     uint256 private constant VERSION = 1;
 
-    bytes32 private constant TYPEHASH =
-        keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
-
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
@@ -102,9 +93,6 @@ contract TokenERC721 is
     /// @dev Contract level metadata.
     string public contractURI;
 
-    /// @dev Mapping from mint request UID => whether the mint request is processed.
-    mapping(bytes32 => bool) private minted;
-
     /// @dev Mapping from tokenId => URI
     mapping(uint256 => string) private uri;
 
@@ -130,9 +118,9 @@ contract TokenERC721 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("TokenERC721", "1");
         __ERC2771Context_init(_trustedForwarders);
         __ERC721_init(_name, _symbol);
+        __SignatureMint_init("TokenERC721", "1", _defaultAdmin);
 
         // Initialize this contract's state.
         royaltyRecipient = _royaltyRecipient;
@@ -166,16 +154,6 @@ contract TokenERC721 is
      */
     function owner() public view returns (address) {
         return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
-    }
-
-    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        returns (bool success, address signer)
-    {
-        signer = recoverAddress(_req, _signature);
-        success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
     }
 
     /// @dev Returns the URI for a tokenId
@@ -212,13 +190,13 @@ contract TokenERC721 is
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
+        override
         nonReentrant
-        returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
-        tokenIdMinted = _mintTo(receiver, _req.uri);
+        uint256 tokenIdMinted = _mintTo(receiver, _req.uri);
 
         if (_req.royaltyRecipient != address(0)) {
             royaltyInfoForToken[tokenIdMinted] = RoyaltyInfo({
@@ -329,29 +307,6 @@ contract TokenERC721 is
         emit TokensMinted(_to, tokenIdToMint, _uri);
     }
 
-    /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) private view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
-    }
-
-    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
-    function _encodeRequest(MintRequest calldata _req) private pure returns (bytes memory) {
-        return
-            abi.encode(
-                TYPEHASH,
-                _req.to,
-                _req.royaltyRecipient,
-                _req.royaltyBps,
-                _req.primarySaleRecipient,
-                keccak256(bytes(_req.uri)),
-                _req.price,
-                _req.currency,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
-                _req.uid
-            );
-    }
-
     /// @dev Verifies that a mint request is valid.
     function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address) {
         (bool success, address signer) = verify(_req, _signature);
@@ -369,11 +324,11 @@ contract TokenERC721 is
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(MintRequest memory _req) internal {
-        if (_req.price == 0) {
+        if (_req.pricePerToken == 0) {
             return;
         }
 
-        uint256 totalPrice = _req.price;
+        uint256 totalPrice = _req.pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
