@@ -2,7 +2,10 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import { ITokenERC1155 } from "../interfaces/token/ITokenERC1155.sol";
+import "../interfaces/token/ITokenERC1155.sol";
+import "../interfaces/token/IMintableERC1155.sol";
+import "../interfaces/token/IBurnableERC1155.sol";
+import "./SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -12,10 +15,6 @@ import "../interfaces/IThirdwebOwnable.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-
-// Signature utils
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -41,15 +40,16 @@ contract TokenERC1155 is
     IThirdwebRoyalty,
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
-    EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable,
-    ITokenERC1155
+    ITokenERC1155,
+    IMintableERC1155,
+    IBurnableERC1155,
+    SignatureMintUpgradeable
 {
-    using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
@@ -61,15 +61,8 @@ contract TokenERC1155 is
     // Token symbol
     string public symbol;
 
-    bytes32 private constant TYPEHASH =
-        keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
-
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
@@ -104,9 +97,6 @@ contract TokenERC1155 is
     /// @dev Contract level metadata.
     string public contractURI;
 
-    /// @dev Mapping from mint request UID => whether the mint request is processed.
-    mapping(bytes32 => bool) private minted;
-
     mapping(uint256 => string) private _tokenURI;
 
     /// @dev Token ID => total circulating supply of tokens with that ID.
@@ -137,9 +127,9 @@ contract TokenERC1155 is
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __EIP712_init("TokenERC1155", "1");
         __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init("");
+        __SignatureMint_init("TokenERC1155", "1", _defaultAdmin);
 
         // Initialize this contract's state.
         name = _name;
@@ -175,16 +165,6 @@ contract TokenERC1155 is
      */
     function owner() public view returns (address) {
         return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
-    }
-
-    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        returns (bool success, address signer)
-    {
-        signer = recoverAddress(_req, _signature);
-        success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
     }
 
     /// @dev Returns the URI for a tokenId
@@ -359,31 +339,6 @@ contract TokenERC1155 is
         _mint(_to, _tokenId, _amount, "");
 
         emit TokensMinted(_to, _tokenId, _tokenURI[_tokenId], _amount);
-    }
-
-    /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
-    }
-
-    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
-    function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
-        return
-            abi.encode(
-                TYPEHASH,
-                _req.to,
-                _req.royaltyRecipient,
-                _req.royaltyBps,
-                _req.primarySaleRecipient,
-                _req.tokenId,
-                keccak256(bytes(_req.uri)),
-                _req.quantity,
-                _req.pricePerToken,
-                _req.currency,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
-                _req.uid
-            );
     }
 
     /// @dev Verifies that a mint request is valid.
