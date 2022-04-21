@@ -3,6 +3,8 @@ pragma solidity ^0.8.11;
 
 //Interface
 import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
+import { IBurnableERC20 } from "../interfaces/token/IBurnableERC20.sol";
+import { IMintableERC20 } from "../interfaces/token/IMintableERC20.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -39,13 +41,15 @@ contract TokenERC20 is
     IThirdwebPrimarySale,
     IThirdwebPlatformFee,
     Initializable,
-    SignatureMintUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
-    ITokenERC20
+    ITokenERC20,
+    IMintableERC20,
+    IBurnableERC20,
+    SignatureMintUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
 
