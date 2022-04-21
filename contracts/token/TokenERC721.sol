@@ -5,6 +5,7 @@ pragma solidity ^0.8.11;
 import "../interfaces/token/ITokenERC721.sol";
 import "../interfaces/token/IMintableERC721.sol";
 import "../interfaces/token/IBurnableERC721.sol";
+import "./SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -33,7 +34,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Thirdweb top-level
 import "../interfaces/ITWFee.sol";
-import "./SignatureMintUpgradeable.sol";
+
 
 contract TokenERC721 is
     Initializable,

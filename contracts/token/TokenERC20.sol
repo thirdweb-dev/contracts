@@ -2,9 +2,10 @@
 pragma solidity ^0.8.11;
 
 //Interface
-import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
-import { IBurnableERC20 } from "../interfaces/token/IBurnableERC20.sol";
-import { IMintableERC20 } from "../interfaces/token/IMintableERC20.sol";
+import "../interfaces/token/ITokenERC20.sol";
+import "../interfaces/token/IBurnableERC20.sol";
+import "../interfaces/token/IMintableERC20.sol";
+import "./SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -33,8 +34,6 @@ import "../lib/FeeType.sol";
 
 // Thirdweb top-level
 import "../interfaces/ITWFee.sol";
-
-import "./SignatureMintUpgradeable.sol";
 
 contract TokenERC20 is
     IThirdwebContract,
