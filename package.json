@@ -1,7 +1,7 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "",
-  "version": "2.3.0-5",
+  "version": "2.3.0-6",
   "license": "Apache-2.0",
   "dependencies": {},
   "source": "typechain/index.ts",
