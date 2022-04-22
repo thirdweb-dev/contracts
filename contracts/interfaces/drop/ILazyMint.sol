@@ -2,5 +2,5 @@
 pragma solidity ^0.8.11;
 
 interface ILazyMint {
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external;
+    function lazyMint(uint256 amount, string calldata baseURIForTokens, bytes calldata data) external;
 }
