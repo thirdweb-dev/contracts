@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-
-interface IBurnableERC20 is IERC20Upgradeable {
+interface IBurnableERC20 {
     /**
      * @dev Destroys `amount` tokens from the caller.
      *
