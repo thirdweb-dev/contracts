@@ -61,7 +61,6 @@
     "build": "yarn clean && yarn compile",
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat",
-    "release": "yarn compile && cd contracts && np --any-branch --no-tests && cd -",
     "export-abi": "hardhat export-abi"
   }
 }
