@@ -1,7 +1,7 @@
 import hre, { ethers } from "hardhat";
 
 async function verify() {
-  const txhashs = [];
+  const txhashs: string[] = [];
   for (const txhash of txhashs) {
     const types = [
       "TWFee",
