@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "dependencies": {},
   "files": [
-    "**/*.sol"
+    "**/*.sol",
+    "/abi"
   ]
 }
