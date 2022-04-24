@@ -20,7 +20,7 @@
 ```solidity
 // Example usage
 
-import "@thirdweb-dev/contracts/contracts/interfaces/token/TokenERC721.sol";
+import "@thirdweb-dev/contracts/interfaces/token/TokenERC721.sol";
 
 contract MyNFT is TokenERC721 { ... }
 ```
