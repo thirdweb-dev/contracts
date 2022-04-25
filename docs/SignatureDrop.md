@@ -1117,6 +1117,23 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
+### ClaimConditionUpdated
+
+```solidity
+event ClaimConditionUpdated(IDropClaimCondition.ClaimCondition condition, bool resetEligibility)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| condition  | IDropClaimCondition.ClaimCondition | undefined |
+| resetEligibility  | bool | undefined |
+
 ### DefaultRoyalty
 
 ```solidity
@@ -1255,6 +1272,63 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | tokenId `indexed` | uint256 | undefined |
 | royaltyRecipient  | address | undefined |
 | royaltyBps  | uint256 | undefined |
+
+### TokenLazyMinted
+
+```solidity
+event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startId `indexed` | uint256 | undefined |
+| amount  | uint256 | undefined |
+| baseURI `indexed` | string | undefined |
+| encryptedBaseURI  | bytes | undefined |
+
+### TokenURIRevealed
+
+```solidity
+event TokenURIRevealed(uint256 index, string revealedURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index  | uint256 | undefined |
+| revealedURI  | string | undefined |
+
+### TokensMinted
+
+```solidity
+event TokensMinted(address indexed minter, address receiver, uint256 indexed startTokenId, uint256 amountMinted, uint256 pricePerToken, address indexed currency)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| minter `indexed` | address | undefined |
+| receiver  | address | undefined |
+| startTokenId `indexed` | uint256 | undefined |
+| amountMinted  | uint256 | undefined |
+| pricePerToken  | uint256 | undefined |
+| currency `indexed` | address | undefined |
 
 ### TokensMintedWithSignature
 

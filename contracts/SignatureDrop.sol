@@ -110,6 +110,15 @@ contract SignatureDrop is
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI);
+    event TokenURIRevealed(uint256 index, string revealedURI);
+    event TokensMinted(address indexed minter, address receiver, uint256 indexed startTokenId, uint256 amountMinted, uint256 pricePerToken, address indexed currency);
+    event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
+
+    /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
@@ -236,7 +245,7 @@ contract SignatureDrop is
             _setEncryptedBaseURI(batchId, encryptedBaseURI);
         }
 
-        // TODO: emit event
+        emit TokenLazyMinted(startId, _amount, _baseURIForTokens, encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -253,7 +262,7 @@ contract SignatureDrop is
 
         _setBaseURI(batchId, revealedURI);
 
-        // TODO: emit event
+        emit TokenURIRevealed(_index, revealedURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -289,7 +298,7 @@ contract SignatureDrop is
             _mint(receiver, i);
         }
 
-        // TODO: emit event
+        emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
     }
 
     /// @dev Lets an account claim NFTs.
@@ -337,14 +346,13 @@ contract SignatureDrop is
         // Transfer tokens being claimed.
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
-        for (uint256 i = 0; i < _quantity; i += 1) {
-            _mint(_receiver, tokenIdToClaim);
-            tokenIdToClaim += 1;
+        for (uint256 i = tokenIdToClaim; i < tokenIdToClaim + _quantity; i += 1) {
+            _mint(_receiver, i);
         }
 
-        nextTokenIdToClaim = tokenIdToClaim;
+        nextTokenIdToClaim = tokenIdToClaim + _quantity;
 
-        // TODO: emit event
+        emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
     }
 
     function setClaimCondition(
@@ -371,7 +379,7 @@ contract SignatureDrop is
             currency: _condition.currency
         });
 
-        // TODO: emit event
+        emit ClaimConditionUpdated(_condition, _resetClaimEligibility);
     }
 
     /*///////////////////////////////////////////////////////////////
