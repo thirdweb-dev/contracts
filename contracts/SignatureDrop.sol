@@ -347,7 +347,7 @@ contract SignatureDrop is
         // TODO: emit event
     }
 
-    function setClaimConditions(
+    function setClaimCondition(
         ClaimCondition calldata _condition,
         bool _resetClaimEligibility
     )

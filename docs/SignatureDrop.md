@@ -778,10 +778,10 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined
 | approved | bool | undefined
 
-### setClaimConditions
+### setClaimCondition
 
 ```solidity
-function setClaimConditions(IDropClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
+function setClaimCondition(IDropClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
 ```
 
 
