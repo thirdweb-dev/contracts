@@ -53,6 +53,21 @@ abstract contract SignatureMintUpgradeable is
         success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
     }
 
+    /// @dev Verifies that a mint request is valid, and marks it as used.
+    function processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address) {
+        (bool success, address signer) = verify(_req, _signature);
+        require(success, "invalid signature");
+
+        require(
+            _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
+            "request expired"
+        );
+
+        minted[_req.uid] = true;
+
+        return signer;
+    }
+
     /// @dev Returns the address of the signer of the mint request.
     function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);

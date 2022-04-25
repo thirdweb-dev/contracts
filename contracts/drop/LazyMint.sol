@@ -51,6 +51,11 @@ abstract contract LazyMint is ILazyMint {
         revert("No base URI for token.");
     }
 
+    /// @dev Sets the base URI for the batch of tokens with the given batchId.
+    function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
+        baseURI[_batchId] = _baseURI;
+    }
+
     /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.
     function _batchMint(
         uint256 _startId,
