@@ -1008,23 +1008,6 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### thirdwebFee
-
-```solidity
-function thirdwebFee() external view returns (contract ITWFee)
-```
-
-
-
-*The thirdweb contract with fee related information.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract ITWFee | undefined
-
 ### totalSupply
 
 ```solidity

@@ -47,7 +47,7 @@ contract DropERC20 is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev The thirdweb contract with fee related information.
-    ITWFee internal immutable thirdwebFee;
+    ITWFee private immutable thirdwebFee;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -178,6 +178,8 @@ contract DropERC20 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
+        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
+
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
