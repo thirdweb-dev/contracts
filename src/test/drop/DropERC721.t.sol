@@ -7,7 +7,6 @@ import "contracts/drop/DropERC721.sol";
 import "../utils/BaseTest.sol";
 
 contract SubExploitContract is ERC721Holder, ERC1155Holder {
-
     DropERC721 internal drop;
     address payable internal master;
 
@@ -25,21 +24,13 @@ contract SubExploitContract is ERC721Holder, ERC1155Holder {
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external {
-        drop.claim(
-            _receiver,
-            _quantity,
-            _currency,
-            _pricePerToken,
-            _proofs,
-            _proofMaxQuantityPerTransaction
-        );
+        drop.claim(_receiver, _quantity, _currency, _pricePerToken, _proofs, _proofMaxQuantityPerTransaction);
 
         selfdestruct(master);
     }
 }
 
 contract MasterExploitContract is ERC721Holder, ERC1155Holder {
-
     address internal drop;
 
     constructor(address _drop) {
@@ -55,7 +46,7 @@ contract MasterExploitContract is ERC721Holder, ERC1155Holder {
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external {
-        for(uint256 i = 0; i < 100; i ++) {
+        for (uint256 i = 0; i < 100; i++) {
             SubExploitContract sub = new SubExploitContract(address(drop));
             sub.claimDrop(_receiver, _quantity, _currency, _pricePerToken, _proofs, _proofMaxQuantityPerTransaction);
         }
@@ -169,7 +160,7 @@ contract DropERC721Test is BaseTest {
         drop.lazyMint(100, "ipfs://", bytes(""));
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
-        
+
         vm.prank(getActor(5), getActor(5));
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
 

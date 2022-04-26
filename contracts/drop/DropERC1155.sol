@@ -255,7 +255,7 @@ contract DropERC1155 is
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
         require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
-        
+
         // Get the active claim condition index.
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
