@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 /**
  *  `SignatureMint1155` is an ERC 1155 contract. It lets anyone mint NFTs by producing a mint request
