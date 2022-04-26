@@ -11,25 +11,25 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "./interfaces/ITWFee.sol";
+import "../interfaces/ITWFee.sol";
 
-import "./interfaces/IThirdwebContract.sol";
-import "./interfaces/IThirdwebPlatformFee.sol";
-import "./interfaces/IThirdwebPrimarySale.sol";
-import "./interfaces/IThirdwebRoyalty.sol";
-import "./interfaces/IThirdwebOwnable.sol";
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebOwnable.sol";
 
-import "./interfaces/drop/IDropClaimCondition.sol";
-import "./drop/DelayedReveal.sol";
-import "./drop/LazyMint.sol";
-import "./token/SignatureMintUpgradeable.sol";
+import "../interfaces/drop/IDropClaimCondition.sol";
+import "../drop/DelayedReveal.sol";
+import "../drop/LazyMint.sol";
+import "../token/SignatureMintUpgradeable.sol";
 
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
-import "./lib/CurrencyTransferLib.sol";
-import "./lib/FeeType.sol";
+import "../lib/CurrencyTransferLib.sol";
+import "../lib/FeeType.sol";
 
-contract SignatureDrop is
+contract SignatureDropEnumerable is
     Initializable,
     IThirdwebContract,
     IThirdwebOwnable,
