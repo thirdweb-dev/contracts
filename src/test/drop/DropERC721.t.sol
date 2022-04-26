@@ -3,8 +3,67 @@ pragma solidity ^0.8.0;
 
 import "contracts/drop/DropERC721.sol";
 
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+
 // Test imports
 import "../utils/BaseTest.sol";
+
+contract SubExploitContract is ERC721Holder, ERC1155Holder {
+
+    DropERC721 internal drop;
+    address payable internal master;
+
+    constructor(address _drop) {
+        drop = DropERC721(_drop);
+        master = payable(msg.sender);
+    }
+
+    /// @dev Lets an account claim NFTs.
+    function claimDrop(
+        address _receiver,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityPerTransaction
+    ) external {
+        drop.claim(
+            _receiver,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _proofs,
+            _proofMaxQuantityPerTransaction
+        );
+
+        selfdestruct(master);
+    }
+}
+
+contract MasterExploitContract is ERC721Holder, ERC1155Holder {
+
+    address internal drop;
+
+    constructor(address _drop) {
+        drop = _drop;
+    }
+
+    /// @dev Lets an account claim NFTs.
+    function performExploit(
+        address _receiver,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityPerTransaction
+    ) external {
+        for(uint256 i = 0; i < 100; i ++) {
+            SubExploitContract sub = new SubExploitContract(address(drop));
+            sub.claimDrop(_receiver, _quantity, _currency, _pricePerToken, _proofs, _proofMaxQuantityPerTransaction);
+        }
+    }
+}
 
 contract BaseDropERC721Test is BaseTest {
     DropERC721 public drop;
@@ -14,38 +73,38 @@ contract BaseDropERC721Test is BaseTest {
         drop = DropERC721(getContract("DropERC721"));
     }
 
-    function test_claimCondition_startIdAndCount() public {
-        vm.startPrank(deployer);
+    // function test_claimCondition_startIdAndCount() public {
+    //     vm.startPrank(deployer);
 
-        uint256 currentStartId = 0;
-        uint256 count = 0;
+    //     uint256 currentStartId = 0;
+    //     uint256 count = 0;
 
-        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](2);
-        conditions[0].startTimestamp = 0;
-        conditions[0].maxClaimableSupply = 10;
-        conditions[1].startTimestamp = 1;
-        conditions[1].maxClaimableSupply = 10;
+    //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](2);
+    //     conditions[0].startTimestamp = 0;
+    //     conditions[0].maxClaimableSupply = 10;
+    //     conditions[1].startTimestamp = 1;
+    //     conditions[1].maxClaimableSupply = 10;
 
-        drop.setClaimConditions(conditions, false);
-        (currentStartId, count) = drop.claimCondition();
-        assertEq(currentStartId, 0);
-        assertEq(count, 2);
+    //     drop.setClaimConditions(conditions, false);
+    //     (currentStartId, count) = drop.claimCondition();
+    //     assertEq(currentStartId, 0);
+    //     assertEq(count, 2);
 
-        drop.setClaimConditions(conditions, false);
-        (currentStartId, count) = drop.claimCondition();
-        assertEq(currentStartId, 0);
-        assertEq(count, 2);
+    //     drop.setClaimConditions(conditions, false);
+    //     (currentStartId, count) = drop.claimCondition();
+    //     assertEq(currentStartId, 0);
+    //     assertEq(count, 2);
 
-        drop.setClaimConditions(conditions, true);
-        (currentStartId, count) = drop.claimCondition();
-        assertEq(currentStartId, 2);
-        assertEq(count, 2);
+    //     drop.setClaimConditions(conditions, true);
+    //     (currentStartId, count) = drop.claimCondition();
+    //     assertEq(currentStartId, 2);
+    //     assertEq(count, 2);
 
-        drop.setClaimConditions(conditions, true);
-        (currentStartId, count) = drop.claimCondition();
-        assertEq(currentStartId, 4);
-        assertEq(count, 2);
-    }
+    //     drop.setClaimConditions(conditions, true);
+    //     (currentStartId, count) = drop.claimCondition();
+    //     assertEq(currentStartId, 4);
+    //     assertEq(count, 2);
+    // }
 
     function test_claimCondition_startPhase() public {
         vm.startPrank(deployer);
@@ -112,9 +171,11 @@ contract BaseDropERC721Test is BaseTest {
 
         drop.lazyMint(100, "ipfs://", bytes(""));
         drop.setClaimConditions(conditions, false);
+        vm.roll(1);
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
 
-        vm.expectRevert("cannot claim.");
+        vm.expectRevert("!WAIT_TIME");
+        vm.roll(2);
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
     }
 
@@ -133,9 +194,39 @@ contract BaseDropERC721Test is BaseTest {
         drop.lazyMint(100, "ipfs://", bytes(""));
 
         drop.setClaimConditions(conditions, false);
+        vm.roll(1);
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
 
         drop.setClaimConditions(conditions, true);
+        vm.roll(2);
         drop.claim(receiver, 1, address(0), 0, proofs, 0);
+    }
+
+    function test_multiple_claim_exploit() public {
+        MasterExploitContract masterExploit = new MasterExploitContract(address(drop));
+
+        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 1;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", bytes(""));
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        bytes32[] memory proofs = new bytes32[](0);
+
+        vm.expectRevert("LIMIT");
+        vm.prank(getActor(5));
+        masterExploit.performExploit(
+            address(masterExploit),
+            conditions[0].quantityLimitPerTransaction,
+            conditions[0].currency,
+            conditions[0].pricePerToken,
+            proofs,
+            0
+        );
     }
 }
