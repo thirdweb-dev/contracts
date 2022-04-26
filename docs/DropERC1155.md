@@ -131,29 +131,6 @@ function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _
 | _proofs | bytes32[] | undefined
 | _proofMaxQuantityPerTransaction | uint256 | undefined
 
-### claimCondition
-
-```solidity
-function claimCondition(uint256) external view returns (uint256 currentStartId, uint256 count)
-```
-
-
-
-*Mapping from token ID =&gt; the set of all claim conditions, at any given moment, for tokens of the token ID.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| currentStartId | uint256 | undefined
-| count | uint256 | undefined
-
 ### contractType
 
 ```solidity

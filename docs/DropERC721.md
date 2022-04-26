@@ -66,28 +66,6 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### baseURIIndices
-
-```solidity
-function baseURIIndices(uint256) external view returns (uint256)
-```
-
-
-
-*Largest tokenId of each batch of tokens with the same baseURI*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### burn
 
 ```solidity
@@ -124,24 +102,6 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _pricePerToken | uint256 | undefined
 | _proofs | bytes32[] | undefined
 | _proofMaxQuantityPerTransaction | uint256 | undefined
-
-### claimCondition
-
-```solidity
-function claimCondition() external view returns (uint256 currentStartId, uint256 count)
-```
-
-
-
-*The set of all claim conditions, at any given moment.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| currentStartId | uint256 | undefined
-| count | uint256 | undefined
 
 ### contractType
 

@@ -105,7 +105,7 @@ contract DropERC1155 is
     mapping(uint256 => uint256) public maxTotalSupply;
 
     /// @dev Mapping from token ID => the set of all claim conditions, at any given moment, for tokens of the token ID.
-    mapping(uint256 => ClaimConditionList) public claimCondition;
+    mapping(uint256 => ClaimConditionList) private claimCondition;
 
     /// @dev Mapping from token ID => the address of the recipient of primary sales.
     mapping(uint256 => address) public saleRecipient;
@@ -119,9 +119,26 @@ contract DropERC1155 is
     /// @dev Mapping from token ID => the max number of NFTs of the token ID a wallet can claim.
     mapping(uint256 => uint256) public maxWalletClaimCount;
 
+    /// @dev Mapping from keccak256(tx.origin / caller, block.number, tokenId) => whether caller has already claimed in the block.
+    mapping(bytes32 => bool) private hasClaimedInBlock;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
+
+    modifier transactionLimit(uint256 _tokenId) {
+        /**
+         *  A caller (tx.origin) can only call claim once per block. This is to avoid the following exploit:
+         *
+         *  A master smart contract repeats a cycle of (1) create a new smart contract, (2) created smart contract claim tokens, 
+         *  (3) created smart contract transfers back tokens to master contract, then self destructs, (4) repeat.
+         */
+        bytes32 identifier = keccak256(abi.encodePacked(tx.origin, block.number, _tokenId));
+        require(!hasClaimedInBlock[identifier], "LIMIT");
+        hasClaimedInBlock[identifier] = true;
+
+        _;
+    }
 
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
@@ -253,46 +270,20 @@ contract DropERC1155 is
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
-    ) external payable nonReentrant {
+    ) external payable nonReentrant transactionLimit(_tokenId) {
         // Get the active claim condition index.
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
-        /**
-         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
-         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
-         *  restriction.
-         */
-
-        // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            activeConditionId,
-            _msgSender(),
-            _tokenId,
-            _quantity,
-            _proofs,
-            _proofMaxQuantityPerTransaction
-        );
-
-        // Verify claim validity. If not valid, revert.
-        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
-        verifyClaim(
-            activeConditionId,
+        validateClaim(
+            activeConditionId, 
             _msgSender(),
             _tokenId,
             _quantity,
             _currency,
             _pricePerToken,
-            toVerifyMaxQuantityPerTransaction
+            _proofs,
+            _proofMaxQuantityPerTransaction
         );
-
-        if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            /**
-             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-             *  can be used only once.
-             */
-            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
-        }
 
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken, _tokenId);
@@ -415,6 +406,55 @@ contract DropERC1155 is
         walletClaimCount[_tokenId][_msgSender()] += _quantityBeingClaimed;
 
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
+    }
+
+    /// @dev Validates a claim.
+    function validateClaim(
+        uint256 _conditionId,
+        address _claimer,
+        uint256 _tokenId,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityPerTransaction
+    ) internal {
+        /**
+         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
+         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
+         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction.
+         */
+
+        // Verify inclusion in allowlist.
+        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
+            _conditionId,
+            _claimer,
+            _tokenId,
+            _quantity,
+            _proofs,
+            _proofMaxQuantityPerTransaction
+        );
+
+        // Verify claim validity. If not valid, revert.
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        verifyClaim(
+            _conditionId,
+            _claimer,
+            _tokenId,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
+
+        if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
+            /**
+             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+             *  can be used only once.
+             */
+            claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].set(merkleProofIndex);
+        }
     }
 
     /// @dev Checks a request to claim NFTs against the active claim condition's criteria.

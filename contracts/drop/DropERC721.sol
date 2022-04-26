@@ -43,11 +43,6 @@ contract DropERC721 is
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
     uint256 private constant VERSION = 2;
 
-    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
@@ -88,10 +83,10 @@ contract DropERC721 is
     string public contractURI;
 
     /// @dev Largest tokenId of each batch of tokens with the same baseURI
-    uint256[] public baseURIIndices;
+    uint256[] private baseURIIndices;
 
     /// @dev The set of all claim conditions, at any given moment.
-    ClaimConditionList public claimCondition;
+    ClaimConditionList private claimCondition;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
@@ -115,9 +110,26 @@ contract DropERC721 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
+    /// @dev Mapping from keccak256(tx.origin / caller, block number) => whether caller has already claimed in the block.
+    mapping(bytes32 => bool) private hasClaimedInBlock;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
+
+    modifier transactionLimit() {
+        /**
+         *  A caller (tx.origin) can only call claim once per block. This is to avoid the following exploit:
+         *
+         *  A master smart contract repeats a cycle of (1) create a new smart contract, (2) created smart contract claim tokens, 
+         *  (3) created smart contract transfers back tokens to master contract, then self destructs, (4) repeat.
+         */
+        bytes32 identifier = keccak256(abi.encodePacked(tx.origin, block.number));
+        require(!hasClaimedInBlock[identifier], "LIMIT");
+        hasClaimedInBlock[identifier] = true;
+
+        _;
+    }
 
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
@@ -149,6 +161,9 @@ contract DropERC721 is
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
         _owner = _defaultAdmin;
+
+        bytes32 TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+        bytes32 MINTER_ROLE = keccak256("MINTER_ROLE");
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -231,7 +246,7 @@ contract DropERC721 is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
-    ) external onlyRole(MINTER_ROLE) {
+    ) external onlyRole(keccak256("MINTER_ROLE")) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -249,14 +264,14 @@ contract DropERC721 is
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 index, bytes calldata _key)
         external
-        onlyRole(MINTER_ROLE)
+        onlyRole(keccak256("MINTER_ROLE"))
         returns (string memory revealedURI)
     {
-        require(index < baseURIIndices.length, "invalid index.");
+        require(index < baseURIIndices.length, "!INDEX");
 
         uint256 _index = baseURIIndices[index];
         bytes memory encryptedURI = encryptedBaseURI[_index];
-        require(encryptedURI.length != 0, "nothing to reveal.");
+        require(encryptedURI.length != 0, "!REVEAL");
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
@@ -264,8 +279,6 @@ contract DropERC721 is
         delete encryptedBaseURI[_index];
 
         emit NFTRevealed(_index, revealedURI);
-
-        return revealedURI;
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
@@ -316,8 +329,7 @@ contract DropERC721 is
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
-    ) external payable nonReentrant {
-        uint256 tokenIdToClaim = nextTokenIdToClaim;
+    ) external payable nonReentrant transactionLimit {
 
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
@@ -339,14 +351,13 @@ contract DropERC721 is
         );
 
         // Verify claim validity. If not valid, revert.
-        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
         verifyClaim(
             activeConditionId,
             _msgSender(),
             _quantity,
             _currency,
             _pricePerToken,
-            toVerifyMaxQuantityPerTransaction
+            _proofMaxQuantityPerTransaction == 0
         );
 
         if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
@@ -361,7 +372,7 @@ contract DropERC721 is
         collectClaimPrice(_quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        transferClaimedTokens(_receiver, activeConditionId, _quantity);
+        uint256 tokenIdToClaim = transferClaimedTokens(_receiver, activeConditionId, _quantity);
 
         emit TokensClaimed(activeConditionId, _msgSender(), _receiver, tokenIdToClaim, _quantity);
     }
@@ -395,7 +406,7 @@ contract DropERC721 is
             require(i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp, "ST");
 
             uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "MAX_CLAIMABLE");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
@@ -446,7 +457,7 @@ contract DropERC721 is
         uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
+            require(msg.value == totalPrice, "!TOTAL_PRICE.");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
@@ -464,7 +475,7 @@ contract DropERC721 is
         address _to,
         uint256 _conditionId,
         uint256 _quantityBeingClaimed
-    ) internal {
+    ) internal returns (uint256 startId) {
         // Update the supply minted under mint condition.
         claimCondition.phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
 
@@ -474,6 +485,7 @@ contract DropERC721 is
         walletClaimCount[_msgSender()] += _quantityBeingClaimed;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
+        startId = tokenIdToClaim;
 
         for (uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
             _mint(_to, tokenIdToClaim);
@@ -496,28 +508,28 @@ contract DropERC721 is
 
         require(
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price."
+            "!PRICE_CURRENCY."
         );
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
                 (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
-            "invalid quantity."
+            "!QUANTITY."
         );
         require(
             currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max claimable supply."
+            "MAX_CLAIMABLE"
         );
-        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
+        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "!TOKENS");
+        require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "MAX_SUPPLY");
         require(
             maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
-            "exceed claim limit"
+            "WALLET_LIMIT"
         );
 
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
+        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "!WAIT_TIME");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -536,11 +548,11 @@ contract DropERC721 is
                 currentClaimPhase.merkleRoot,
                 keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
             );
-            require(validMerkleProof, "not in whitelist.");
-            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
+            require(validMerkleProof, "!ALLOWLIST");
+            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "SPOT_USED");
             require(
                 _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
-                "invalid quantity proof."
+                "!QTY_PROOF"
             );
         }
     }
@@ -627,7 +639,7 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxTotalSupply < nextTokenIdToMint, "existing > desired max supply");
+        require(_maxTotalSupply < nextTokenIdToMint, "< CURRENT_SUPLY");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
@@ -698,7 +710,7 @@ contract DropERC721 is
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "caller not owner nor approved");
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "!BURN");
         _burn(tokenId);
     }
 
@@ -709,6 +721,8 @@ contract DropERC721 is
         uint256 tokenId
     ) internal virtual override(ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
+
+        bytes32 TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {

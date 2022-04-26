@@ -79,10 +79,27 @@ contract DropERC20 is
 
     /// @dev Mapping from address => number of tokens a wallet has claimed.
     mapping(address => uint256) public walletClaimCount;
+    
+    /// @dev Mapping from keccak256(tx.origin / caller, block number) => whether caller has already claimed in the block.
+    mapping(bytes32 => bool) private hasClaimedInBlock;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
+
+    modifier transactionLimit() {
+        /**
+         *  A caller (tx.origin) can only call claim once per block. This is to avoid the following exploit:
+         *
+         *  A master smart contract repeats a cycle of (1) create a new smart contract, (2) created smart contract claim tokens, 
+         *  (3) created smart contract transfers back tokens to master contract, then self destructs, (4) repeat.
+         */
+        bytes32 identifier = keccak256(abi.encodePacked(tx.origin, block.number));
+        require(!hasClaimedInBlock[identifier], "LIMIT");
+        hasClaimedInBlock[identifier] = true;
+
+        _;
+    }
 
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
@@ -177,7 +194,7 @@ contract DropERC20 is
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
-    ) external payable nonReentrant {
+    ) external payable nonReentrant transactionLimit {
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
