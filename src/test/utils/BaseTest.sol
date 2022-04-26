@@ -27,13 +27,11 @@ import "contracts/vote/VoteERC20.sol";
 import { ByocRegistry } from "contracts/ByocRegistry.sol";
 import "contracts/mock/Mock.sol";
 
-abstract contract BaseTest is DSTest, stdCheats {
+abstract contract BaseTest is DSTest, Test {
     string public constant NAME = "NAME";
     string public constant SYMBOL = "SYMBOL";
     string public constant CONTRACT_URI = "CONTRACT_URI";
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    // solhint-disable-next-line
-    Vm public constant vm = Vm(HEVM_ADDRESS);
 
     MockERC20 public erc20;
     MockERC721 public erc721;
@@ -67,7 +65,7 @@ abstract contract BaseTest is DSTest, stdCheats {
         forwarder = address(new Forwarder());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
-        byocRegistry = address(new ByocRegistry(forwarders()));
+        byocRegistry = address(new ByocRegistry(forwarder));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), byocRegistry);
         fee = address(new TWFee(forwarder, factory));

@@ -21,24 +21,25 @@ contract MockCustomContract {
 contract IByocRegistryData {
     /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
+
     /// @dev Emitted when a publisher's approval of an operator is updated.
     event Approved(address indexed publisher, address indexed operator, bool isApproved);
+
     /// @dev Emitted when a contract is published.
     event ContractPublished(
         address indexed operator,
         address indexed publisher,
-        uint256 indexed contractId,
-        IByocRegistry.CustomContract publishedContract
+        IByocRegistry.CustomContractInstance publishedContract
     );
+
     /// @dev Emitted when a contract is unpublished.
-    event ContractUnpublished(address indexed operator, address indexed publisher, uint256 indexed contractId);
-    /// @dev Emitted when a contract is deployed.
-    event ContractDeployed(
-        address indexed deployer,
-        address indexed publisher,
-        uint256 indexed contractId,
-        address deployedContract
-    );
+    event ContractUnpublished(address indexed operator, address indexed publisher, string indexed contractId);
+
+    /// @dev Emitted when a published contract is added to the public list.
+    event AddedContractToPublicList(address indexed publisher, string indexed contractId);
+
+    /// @dev Emitted when a published contract is removed from the public list.
+    event RemovedContractToPublicList(address indexed publisher, string indexed contractId);
 }
 
 contract ByocRegistryTest is BaseTest, IByocRegistryData {
@@ -63,15 +64,17 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish() public {
+        string memory contractId = "MyContract";
         vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
-        IByocRegistry.CustomContract memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
 
         assertEq(customContract.contractId, contractId);
         assertEq(customContract.publishMetadataUri, publishMetadataUri);
@@ -80,18 +83,22 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_viaOperator() public {
+        
+        string memory contractId = "MyContract";
+        
         vm.prank(publisher);
         byoc.approveOperator(operator, true);
-
+        
         vm.prank(operator);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
-        IByocRegistry.CustomContract memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
 
         assertEq(customContract.contractId, contractId);
         assertEq(customContract.publishMetadataUri, publishMetadataUri);
@@ -100,6 +107,8 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_revert_unapprovedCaller() public {
+        string memory contractId = "MyContract";
+
         vm.expectRevert("unapproved caller");
 
         vm.prank(operator);
@@ -107,11 +116,14 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
     }
 
     function test_publish_revert_registryPaused() public {
+        string memory contractId = "MyContract";
+
         vm.prank(factoryAdmin);
         byoc.setPause(true);
 
@@ -122,60 +134,72 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
     }
 
     function test_publish_emit_ContractPublished() public {
+        string memory contractId = "MyContract";
+
         vm.prank(publisher);
         byoc.approveOperator(operator, true);
 
-        IByocRegistry.CustomContract memory expectedCustomContract = IByocRegistry.CustomContract({
-            contractId: 0,
+        IByocRegistry.CustomContractInstance memory expectedCustomContract = IByocRegistry.CustomContractInstance({
+            contractId: contractId,
+            publishTimestamp: 100,
             publishMetadataUri: publishMetadataUri,
             bytecodeHash: keccak256(type(MockCustomContract).creationCode),
             implementation: address(0)
         });
 
         vm.expectEmit(true, true, true, true);
-        emit ContractPublished(operator, publisher, expectedCustomContract.contractId, expectedCustomContract);
+        emit ContractPublished(operator, publisher, expectedCustomContract);
 
+        vm.warp(100);
         vm.prank(operator);
         byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
     }
 
     function test_unpublish() public {
+        string memory contractId = "MyContract";
+
         vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
         vm.prank(publisher);
         byoc.unpublishContract(publisher, contractId);
 
-        IByocRegistry.CustomContract memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
 
-        assertEq(customContract.contractId, 0);
+        assertEq(customContract.contractId, "");
         assertEq(customContract.publishMetadataUri, "");
         assertEq(customContract.bytecodeHash, bytes32(0));
         assertEq(customContract.implementation, address(0));
     }
 
     function test_unpublish_viaOperator() public {
+        string memory contractId = "MyContract";
+
         vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
         vm.prank(publisher);
@@ -184,21 +208,24 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
         vm.prank(operator);
         byoc.unpublishContract(publisher, contractId);
 
-        IByocRegistry.CustomContract memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
 
-        assertEq(customContract.contractId, 0);
+        assertEq(customContract.contractId, "");
         assertEq(customContract.publishMetadataUri, "");
         assertEq(customContract.bytecodeHash, bytes32(0));
         assertEq(customContract.implementation, address(0));
     }
 
     function test_unpublish_revert_unapprovedCaller() public {
+        string memory contractId = "MyContract";
+
         vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
         vm.expectRevert("unapproved caller");
@@ -208,12 +235,15 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish_revert_registryPaused() public {
+        string memory contractId = "MyContract";
+
         vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
         vm.prank(factoryAdmin);
@@ -226,12 +256,15 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_unpublish_emit_ContractUnpublished() public {
+        string memory contractId = "MyContract";
+
         vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
+        byoc.publishContract(
             publisher,
             publishMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0)
+            address(0),
+            contractId
         );
 
         vm.prank(publisher);
@@ -242,35 +275,5 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
 
         vm.prank(operator);
         byoc.unpublishContract(publisher, contractId);
-    }
-
-    function test_deployInstance() public {
-        vm.prank(publisher);
-        uint256 contractId = byoc.publishContract(
-            publisher,
-            publishMetadataUri,
-            keccak256(type(MockCustomContract).creationCode),
-            address(0)
-        );
-
-        uint256 num = 10;
-        address predictedAddr = Create2.computeAddress(
-            bytes32("hello"),
-            keccak256(abi.encodePacked(type(MockCustomContract).creationCode, abi.encode(num))),
-            address(byoc)
-        );
-
-        vm.prank(deployerOfPublished);
-        address deployedAddress = byoc.deployInstance(
-            publisher,
-            contractId,
-            type(MockCustomContract).creationCode,
-            abi.encode(num),
-            bytes32("hello"),
-            0
-        );
-
-        assertEq(deployedAddress, predictedAddr);
-        assertEq(MockCustomContract(deployedAddress).num(), num);
     }
 }
