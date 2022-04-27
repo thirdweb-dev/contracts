@@ -528,12 +528,7 @@ contract Pack is
      **/
 
     /// @dev See EIP 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155PresetUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 

@@ -6,8 +6,7 @@ pragma solidity ^0.8.0;
     @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
     Note: The ERC-165 identifier for this interface is 0xd9b67a26.
  */
-/* is ERC165 */
-interface IERC1155 {
+interface ERC1155 {
     /**
         @dev Either `TransferSingle` or `TransferBatch` MUST emit when tokens are transferred, including zero value transfers as well as minting or burning (see "Safe Transfer Rules" section of the standard).
         The `_operator` argument MUST be msg.sender.
