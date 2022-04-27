@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
-import "../interfaces/drop/ILazyMint.sol";
+import "./interface/ILazyMint.sol";
 
 abstract contract LazyMint is ILazyMint {
     /// @dev Largest tokenId of each batch of tokens with the same baseURI.

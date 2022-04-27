@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 interface IDelayedReveal {
     function reveal(uint256 identifier, bytes calldata key) external returns (string memory revealedURI);

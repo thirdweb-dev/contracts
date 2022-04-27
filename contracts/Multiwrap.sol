@@ -22,6 +22,7 @@ import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 // Helpers
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "./lib/CurrencyTransferLib.sol";
 import "./lib/MultiTokenTransferLib.sol";
 
@@ -354,7 +355,7 @@ contract Multiwrap is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable, ERC1155ReceiverUpgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, ERC1155ReceiverUpgradeable)
         returns (bool)
     {
         return

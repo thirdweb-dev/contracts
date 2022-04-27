@@ -17,12 +17,14 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
-
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebPlatformFee.sol";
-import "../interfaces/IThirdwebPrimarySale.sol";
-import "../interfaces/IThirdwebRoyalty.sol";
-import "../interfaces/IThirdwebOwnable.sol";
+
+//  ==========  Features    ==========
+
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 

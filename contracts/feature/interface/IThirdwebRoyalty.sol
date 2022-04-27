@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
-
-interface IThirdwebRoyalty is IERC2981Upgradeable {
+interface IThirdwebRoyalty {
     struct RoyaltyInfo {
         address recipient;
         uint256 bps;
@@ -24,6 +22,15 @@ interface IThirdwebRoyalty is IERC2981Upgradeable {
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyInfoForToken(uint256 tokenId) external view returns (address, uint16);
+
+    /**
+     * @dev Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of
+     * exchange. The royalty amount is denominated and should be payed in that same unit of exchange.
+     */
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount);
 
     /// @dev Emitted when royalty info is updated.
     event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps);

@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
-import "../interfaces/token/ISignatureMint.sol";
+import "./interface/ISignatureMint.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
-abstract contract SignatureMintUpgradeable is
-    Initializable,
-    AccessControlEnumerableUpgradeable,
-    EIP712Upgradeable,
-    ISignatureMint
-{
-    using ECDSAUpgradeable for bytes32;
+abstract contract SignatureMint is AccessControlEnumerable, EIP712, ISignatureMint {
+    using ECDSA for bytes32;
 
     bytes32 internal constant TYPEHASH =
         keccak256(
@@ -21,27 +16,12 @@ abstract contract SignatureMintUpgradeable is
         );
 
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
-    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
-    mapping(bytes32 => bool) internal minted;
+    mapping(bytes32 => bool) private minted;
 
-    /**
-     * @dev See {_setURI}.
-     */
-    function __SignatureMint_init(
-        string memory eip721Name,
-        string memory eip712Version,
-        address minter
-    ) internal onlyInitializing {
-        __EIP712_init(eip721Name, eip712Version);
-
-        __SignatureMint_init_unchained(minter);
-    }
-
-    function __SignatureMint_init_unchained(address minter) internal onlyInitializing {
-        _setupRole(MINTER_ROLE, minter);
-    }
+    constructor(string memory eip721Name, string memory eip712Version) EIP712(eip721Name, eip712Version) {}
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(MintRequest calldata _req, bytes calldata _signature)
@@ -51,21 +31,6 @@ abstract contract SignatureMintUpgradeable is
     {
         signer = recoverAddress(_req, _signature);
         success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
-    }
-
-    /// @dev Verifies that a mint request is valid, and marks it as used.
-    function processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address) {
-        (bool success, address signer) = verify(_req, _signature);
-        require(success, "invalid signature");
-
-        require(
-            _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
-            "request expired"
-        );
-
-        minted[_req.uid] = true;
-
-        return signer;
     }
 
     /// @dev Returns the address of the signer of the mint request.

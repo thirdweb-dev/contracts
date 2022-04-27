@@ -17,10 +17,13 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebPlatformFee.sol";
-import "../interfaces/IThirdwebPrimarySale.sol";
-import "../interfaces/IThirdwebRoyalty.sol";
-import "../interfaces/IThirdwebOwnable.sol";
+
+//  ==========  Features    ==========
+
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
 
 import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";

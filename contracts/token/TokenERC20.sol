@@ -2,14 +2,13 @@
 pragma solidity ^0.8.11;
 
 //Interface
-import "../interfaces/token/ITokenERC20.sol";
-import "../interfaces/token/IBurnableERC20.sol";
-import "../interfaces/token/IMintableERC20.sol";
-import "./SignatureMintUpgradeable.sol";
+import "../feature/interface/IBurnableERC20.sol";
+import "../feature/interface/IMintableERC20.sol";
+import "../feature/SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebPlatformFee.sol";
-import "../interfaces/IThirdwebPrimarySale.sol";
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -45,7 +44,6 @@ contract TokenERC20 is
     MulticallUpgradeable,
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
-    ITokenERC20,
     IMintableERC20,
     IBurnableERC20,
     SignatureMintUpgradeable

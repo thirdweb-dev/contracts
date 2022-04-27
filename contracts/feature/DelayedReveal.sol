@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
-import "../interfaces/drop/IDelayedReveal.sol";
+import "./interface/IDelayedReveal.sol";
 
 abstract contract DelayedReveal is IDelayedReveal {
     /// @dev Mapping from id of a batch of tokens => to encrypted base URI for the respective batch of tokens.
