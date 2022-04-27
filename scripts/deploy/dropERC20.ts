@@ -25,11 +25,7 @@ async function main() {
 
     console.log("Deploying DropERC20 \ntransaction: ", dropERC20.deployTransaction.hash, "\naddress: ", dropERC20.address);
 
-    console.log("\n")
-    
-    const addImplementationTx = await twFactory.addImplementation(dropERC20.address)
-    console.log("Adding DropERC20 implementation to TWFactory: ", addImplementationTx.hash);
-    await addImplementationTx.wait();
+    await dropERC20.deployTransaction.wait();
 
     console.log("\n")
 

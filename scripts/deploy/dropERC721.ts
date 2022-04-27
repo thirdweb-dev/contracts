@@ -28,12 +28,6 @@ async function main() {
     await dropERC721.deployTransaction.wait();
 
     console.log("\n")
-    
-    const addImplementationTx = await twFactory.addImplementation(dropERC721.address)
-    console.log("Adding DropERC721 implementation to TWFactory: ", addImplementationTx.hash);
-    await addImplementationTx.wait();
-
-    console.log("\n")
 
     console.log("Verifying contract.")
     await verify(dropERC721.address, [twFeeAddress]);
