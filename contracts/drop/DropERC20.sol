@@ -16,8 +16,11 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebPlatformFee.sol";
-import "../interfaces/IThirdwebPrimarySale.sol";
+
+//  ==========  Features    ==========
+
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
 
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";

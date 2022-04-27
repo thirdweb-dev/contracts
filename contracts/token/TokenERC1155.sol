@@ -2,16 +2,15 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import "../interfaces/token/ITokenERC1155.sol";
-import "../interfaces/token/IMintableERC1155.sol";
-import "../interfaces/token/IBurnableERC1155.sol";
-import "./SignatureMintUpgradeable.sol";
+import "../feature/interface/IMintableERC1155.sol";
+import "../feature/interface/IBurnableERC1155.sol";
+import "../feature/SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebPlatformFee.sol";
-import "../interfaces/IThirdwebPrimarySale.sol";
-import "../interfaces/IThirdwebRoyalty.sol";
-import "../interfaces/IThirdwebOwnable.sol";
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -45,7 +44,6 @@ contract TokenERC1155 is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable,
-    ITokenERC1155,
     IMintableERC1155,
     IBurnableERC1155,
     SignatureMintUpgradeable
@@ -168,12 +166,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Returns the URI for a tokenId
-    function uri(uint256 _tokenId)
-        public
-        view
-        override(ERC1155Upgradeable, IERC1155MetadataURIUpgradeable)
-        returns (string memory)
-    {
+    function uri(uint256 _tokenId) public view override(ERC1155Upgradeable) returns (string memory) {
         return _tokenURI[_tokenId];
     }
 
@@ -450,7 +443,7 @@ contract TokenERC1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable)
         returns (bool)
     {
         return

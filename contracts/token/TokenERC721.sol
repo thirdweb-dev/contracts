@@ -2,15 +2,15 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import "../interfaces/token/IMintableERC721.sol";
-import "../interfaces/token/IBurnableERC721.sol";
-import "./SignatureMintUpgradeable.sol";
+import "../feature/interface/IMintableERC721.sol";
+import "../feature/interface/IBurnableERC721.sol";
+import "../feature/SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebPlatformFee.sol";
-import "../interfaces/IThirdwebPrimarySale.sol";
-import "../interfaces/IThirdwebRoyalty.sol";
-import "../interfaces/IThirdwebOwnable.sol";
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -371,7 +371,7 @@ contract TokenERC721 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable, IERC165Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || interfaceId == type(IERC2981Upgradeable).interfaceId;

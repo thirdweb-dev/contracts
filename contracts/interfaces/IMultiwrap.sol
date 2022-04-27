@@ -2,8 +2,8 @@
 pragma solidity ^0.8.11;
 
 import "./IThirdwebContract.sol";
-import "./IThirdwebRoyalty.sol";
-import "./IThirdwebOwnable.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
 import "../lib/MultiTokenTransferLib.sol";
 
 interface IMultiwrap is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {

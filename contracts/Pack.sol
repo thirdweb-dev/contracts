@@ -4,8 +4,8 @@ pragma solidity ^0.8.11;
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
-import "./interfaces/IThirdwebOwnable.sol";
-import "./interfaces/IThirdwebRoyalty.sol";
+import "./feature/interface/IThirdwebOwnable.sol";
+import "./feature/interface/IThirdwebRoyalty.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -20,6 +20,7 @@ import "./lib/FeeType.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // Thirdweb top-level
 import "./interfaces/ITWFee.sol";
@@ -527,12 +528,7 @@ contract Pack is
      **/
 
     /// @dev See EIP 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155PresetUpgradeable, IERC165Upgradeable)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155PresetUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 

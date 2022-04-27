@@ -11,23 +11,25 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "./interfaces/ITWFee.sol";
+import "../interfaces/ITWFee.sol";
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/drop/IDropClaimCondition.sol";
 
-import "./interfaces/IThirdwebContract.sol";
-import "./interfaces/IThirdwebPlatformFee.sol";
-import "./interfaces/IThirdwebPrimarySale.sol";
-import "./interfaces/IThirdwebRoyalty.sol";
-import "./interfaces/IThirdwebOwnable.sol";
+//  ==========  Features    ==========
 
-import "./interfaces/drop/IDropClaimCondition.sol";
-import "./drop/DelayedReveal.sol";
-import "./drop/LazyMint.sol";
-import "./token/SignatureMintUpgradeable.sol";
+import "../feature/interface/IThirdwebPlatformFee.sol";
+import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
+import "../feature/DelayedReveal.sol";
+import "../feature/LazyMint.sol";
+import "../feature/SignatureMintUpgradeable.sol";
 
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "./lib/CurrencyTransferLib.sol";
-import "./lib/FeeType.sol";
+import "../lib/CurrencyTransferLib.sol";
+import "../lib/FeeType.sol";
 
 contract SignatureDrop is
     Initializable,
@@ -206,7 +208,7 @@ contract SignatureDrop is
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
+        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;

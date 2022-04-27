@@ -2,8 +2,8 @@
 pragma solidity ^0.8.11;
 
 import "./IThirdwebContract.sol";
-import "./IThirdwebOwnable.sol";
-import "./IThirdwebRoyalty.sol";
+import "../feature/interface/IThirdwebOwnable.sol";
+import "../feature/interface/IThirdwebRoyalty.sol";
 
 interface IPack is IThirdwebContract, IThirdwebOwnable, IThirdwebRoyalty {
     /**
