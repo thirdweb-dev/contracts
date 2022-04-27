@@ -83,12 +83,11 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     }
 
     function test_publish_viaOperator() public {
-        
         string memory contractId = "MyContract";
-        
+
         vm.prank(publisher);
         byoc.approveOperator(operator, true);
-        
+
         vm.prank(operator);
         byoc.publishContract(
             publisher,

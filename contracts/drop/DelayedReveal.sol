@@ -4,7 +4,6 @@ pragma solidity ^0.8.11;
 import "../interfaces/drop/IDelayedReveal.sol";
 
 abstract contract DelayedReveal is IDelayedReveal {
-
     /// @dev Mapping from id of a batch of tokens => to encrypted base URI for the respective batch of tokens.
     mapping(uint256 => bytes) private encryptedBaseURI;
 

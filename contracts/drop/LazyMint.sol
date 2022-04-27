@@ -4,7 +4,6 @@ pragma solidity ^0.8.11;
 import "../interfaces/drop/ILazyMint.sol";
 
 abstract contract LazyMint is ILazyMint {
-
     /// @dev Largest tokenId of each batch of tokens with the same baseURI.
     uint256[] private batchIds;
 
@@ -38,7 +37,6 @@ abstract contract LazyMint is ILazyMint {
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
     function getBaseURI(uint256 _tokenId) internal view returns (string memory) {
-
         uint256 numOfTokenBatches = getNumOfTokenBatches();
         uint256[] memory indices = batchIds;
 
@@ -61,10 +59,7 @@ abstract contract LazyMint is ILazyMint {
         uint256 _startId,
         uint256 _amountToMint,
         string calldata _baseURIForTokens
-    )
-        internal
-        returns (uint256 nextTokenIdToMint, uint256 batchId)
-    {
+    ) internal returns (uint256 nextTokenIdToMint, uint256 batchId) {
         batchId = _startId + _amountToMint;
         nextTokenIdToMint = batchId;
 
@@ -72,5 +67,4 @@ abstract contract LazyMint is ILazyMint {
 
         baseURI[batchId] = _baseURIForTokens;
     }
-
 }

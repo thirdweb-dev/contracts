@@ -34,7 +34,6 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 // Thirdweb top-level
 import "../interfaces/ITWFee.sol";
 
-
 contract TokenERC721 is
     Initializable,
     IThirdwebContract,
