@@ -56,42 +56,6 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined
 
-### burn
-
-```solidity
-function burn(address account, uint256 id, uint256 value) external nonpayable
-```
-
-
-
-*Lets a token owner burn the tokens they own (i.e. destroy for good)*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
-| value | uint256 | undefined
-
-### burnBatch
-
-```solidity
-function burnBatch(address account, uint256[] ids, uint256[] values) external nonpayable
-```
-
-
-
-*Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined
-| ids | uint256[] | undefined
-| values | uint256[] | undefined
-
 ### isApprovedForAll
 
 ```solidity
@@ -114,42 +78,6 @@ function isApprovedForAll(address account, address operator) external view retur
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
-
-### mintTo
-
-```solidity
-function mintTo(address to, uint256 tokenId, string uri, uint256 amount) external nonpayable
-```
-
-Lets an account with MINTER_ROLE mint an NFT.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to | address | The address to mint the NFT to.
-| tokenId | uint256 | The tokenId of the NFTs to mint
-| uri | string | The URI to assign to the NFT.
-| amount | uint256 | The number of copies of the NFT to mint.
-
-### mintWithSignature
-
-```solidity
-function mintWithSignature(ITokenERC1155.MintRequest req, bytes signature) external payable
-```
-
-Mints an NFT according to the provided mint request.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| req | ITokenERC1155.MintRequest | The mint request.
-| signature | bytes | The signature produced by an account signing the mint request.
 
 ### safeBatchTransferFrom
 
@@ -274,30 +202,6 @@ function uri(uint256 id) external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### verify
-
-```solidity
-function verify(ITokenERC1155.MintRequest req, bytes signature) external view returns (bool success, address signer)
-```
-
-Verifies that a mint request is signed by an account holding         MINTER_ROLE (at the time of the function call).
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| req | ITokenERC1155.MintRequest | The mint request.
-| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| success | bool | undefined
-| signer | address | undefined
-
 
 
 ## Events
@@ -319,44 +223,6 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 | account `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
-
-### TokensMinted
-
-```solidity
-event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted)
-```
-
-
-
-*Emitted when an account with MINTER_ROLE mints an NFT.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| uri  | string | undefined |
-| quantityMinted  | uint256 | undefined |
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ITokenERC1155.MintRequest mintRequest)
-```
-
-
-
-*Emitted when tokens are minted.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ITokenERC1155.MintRequest | undefined |
 
 ### TransferBatch
 

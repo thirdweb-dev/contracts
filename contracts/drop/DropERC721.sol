@@ -18,6 +18,12 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebOwnable.sol";
+
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../lib/CurrencyTransferLib.sol";
@@ -26,6 +32,11 @@ import "../lib/MerkleProof.sol";
 
 contract DropERC721 is
     Initializable,
+    IThirdwebContract,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

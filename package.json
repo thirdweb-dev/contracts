@@ -1,16 +1,12 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "",
-  "version": "2.2.1",
+  "version": "2.3.0-6",
   "license": "Apache-2.0",
   "dependencies": {},
   "source": "typechain/index.ts",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "module": "dist/index.mjs",
   "files": [
-    "contracts/",
-    "dist/"
+    "/contracts/**/*.sol"
   ],
   "devDependencies": {
     "@chainlink/contracts": "^0.4.0",
@@ -20,7 +16,7 @@
     "@openzeppelin/contracts": "4.5.0",
     "@openzeppelin/contracts-upgradeable": "4.5.1",
     "@primitivefi/hardhat-dodoc": "^0.1.3",
-    "@typechain/ethers-v5": "^9.0.0",
+    "@typechain/ethers-v5": "^10.0.0",
     "@typechain/hardhat": "^4.0.0",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.1.0",
@@ -37,7 +33,6 @@
     "hardhat-contract-sizer": "^2.5.0",
     "hardhat-gas-reporter": "^1.0.8",
     "mocha": "^9.2.1",
-    "patch-package": "^6.4.7",
     "prettier": "^2.5.1",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.7",
@@ -45,8 +40,8 @@
     "ts-node": "^10.6.0",
     "tslib": "^2.3.1",
     "tsup": "^5.11.11",
-    "typechain": "^7.0.0",
-    "typescript": "^4.6.2"
+    "typechain": "^8.0.0",
+    "typescript": "^4.4.4"
   },
   "peerDependencies": {
     "ethers": "^5.0.0"
@@ -63,18 +58,9 @@
     "prettier:contracts": "prettier --config .prettierrc --list-different \"{contracts,src}/**/*.sol\"",
     "test": "hardhat test",
     "typechain": "hardhat typechain",
-    "build": "yarn clean && yarn patch-package && yarn compile && yarn build:lib",
-    "build:lib": "tsup --dts --env.NODE_ENV production --minify --format esm,cjs",
+    "build": "yarn clean && yarn compile",
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat",
-    "patch-package": "patch-package"
-  },
-  "tsup": {
-    "entry": [
-      "typechain/**/*.ts"
-    ],
-    "splitting": false,
-    "sourcemap": true,
-    "clean": true
+    "export-abi": "hardhat export-abi"
   }
 }

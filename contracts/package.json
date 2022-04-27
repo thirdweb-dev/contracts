@@ -1,0 +1,11 @@
+{
+  "name": "@thirdweb-dev/contracts",
+  "description": "",
+  "version": "2.3.0-10",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "files": [
+    "**/*.sol",
+    "/abi"
+  ]
+}

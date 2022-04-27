@@ -1,16 +1,16 @@
 import hre, { ethers } from "hardhat";
 
-// Contract types
-import { TWFee } from "typechain/TWFee";
-import { TWFactory } from "typechain/TWFactory";
-
-// General Types
-import { DropERC721 } from "typechain/DropERC721";
-import { DropERC1155 } from "typechain/DropERC1155";
-import { TokenERC20 } from "typechain/TokenERC20";
-import { TokenERC721 } from "typechain/TokenERC721";
-import { TokenERC1155 } from "typechain/TokenERC1155";
-import { Marketplace, Split, VoteERC20 } from "typechain";
+import {
+  DropERC1155,
+  DropERC721,
+  Marketplace,
+  Split,
+  TokenERC1155,
+  TokenERC20,
+  TokenERC721,
+  TWFee,
+  VoteERC20,
+} from "typechain";
 
 async function verify(address: string, args: any[]) {
   try {

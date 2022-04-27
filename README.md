@@ -4,31 +4,38 @@
 
 ## Quick start
 
-The [`@thirdweb-dev/contracts`](https://www.npmjs.com/package/@thirdweb-dev/contracts) package gives you access to all contracts and interfaces available in the `/contracts` directory of this repository.
+### BYOC Deployments - (new)
 
-**Installation:**
-```bash
-yarn add @thirdweb-dev/contracts
-```
+### ByocRegistry - Mumbai
+- `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
 
-**Usage:**
+- `ByocRegistry`: [0x61Bb02795b4fF5248169A54D9f149C4557B0B7de](https://mumbai.polygonscan.com/address/0x61Bb02795b4fF5248169A54D9f149C4557B0B7de#code)
+
+- `ByocFactory`: [0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6](https://mumbai.polygonscan.com/address/0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6#code)
+
+### BYOC Deployments - (previous)
 
 `@thirdweb-dev/contracts` can be used in your Solidity project just like other popular libraries e.g. `@openzeppelin/contracts`. Once you've installed the package, import the relevant resources from the package as follows:
 
 ```solidity
 // Example usage
 
-import "@thirdweb-dev/contracts/contracts/interfaces/token/TokenERC721.sol";
+import "@thirdweb-dev/contracts/interfaces/token/TokenERC721.sol";
 
 contract MyNFT is TokenERC721 { ... }
 ```
 
 ## Run locally
 
-Clone the repository:
-```bash
-git clone https://github.com/thirdweb-dev/contracts.git
-```
+### Deployments (prod)
+- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
+
+- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
+
+## Running Tests
+1. `yarn`: install contracts dependencies
+2. `forge install`: install tests dependencies
+3. `forge test`: run the tests
 
 This repository is a hybrid [hardhat](https://hardhat.org/) and [forge](https://github.com/foundry-rs/foundry/tree/master/forge) project.
 

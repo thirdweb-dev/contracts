@@ -2,11 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
-import "../IThirdwebRoyalty.sol";
-import "../IThirdwebOwnable.sol";
 import "./IDropClaimCondition.sol";
 
 /**
@@ -26,15 +21,7 @@ import "./IDropClaimCondition.sol";
  *  restrictions defined in the claim condition that is active at the time of the transaction.
  */
 
-interface IDropERC1155 is
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IERC1155Upgradeable,
-    IDropClaimCondition
-{
+interface IDropERC1155 is IERC1155Upgradeable, IDropClaimCondition {
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,

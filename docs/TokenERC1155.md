@@ -418,7 +418,7 @@ function mintTo(address _to, uint256 _tokenId, string _uri, uint256 _amount) ext
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ITokenERC1155.MintRequest _req, bytes _signature) external payable
+function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) external payable
 ```
 
 
@@ -429,7 +429,7 @@ function mintWithSignature(ITokenERC1155.MintRequest _req, bytes _signature) ext
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ITokenERC1155.MintRequest | undefined
+| _req | ISignatureMint.MintRequest | undefined
 | _signature | bytes | undefined
 
 ### multicall
@@ -896,7 +896,7 @@ function uri(uint256 _tokenId) external view returns (string)
 ### verify
 
 ```solidity
-function verify(ITokenERC1155.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+function verify(ISignatureMint.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
 ```
 
 
@@ -907,7 +907,7 @@ function verify(ITokenERC1155.MintRequest _req, bytes _signature) external view 
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ITokenERC1155.MintRequest | undefined
+| _req | ISignatureMint.MintRequest | undefined
 | _signature | bytes | undefined
 
 #### Returns
@@ -1100,7 +1100,7 @@ event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, stri
 ### TokensMintedWithSignature
 
 ```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ITokenERC1155.MintRequest mintRequest)
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMint.MintRequest mintRequest)
 ```
 
 
@@ -1114,7 +1114,7 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 | signer `indexed` | address | undefined |
 | mintedTo `indexed` | address | undefined |
 | tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ITokenERC1155.MintRequest | undefined |
+| mintRequest  | ISignatureMint.MintRequest | undefined |
 
 ### TransferBatch
 

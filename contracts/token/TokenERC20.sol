@@ -2,7 +2,10 @@
 pragma solidity ^0.8.11;
 
 //Interface
-import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
+import "../interfaces/token/ITokenERC20.sol";
+import "../interfaces/token/IBurnableERC20.sol";
+import "../interfaces/token/IMintableERC20.sol";
+import "./SignatureMintUpgradeable.sol";
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebPlatformFee.sol";
@@ -43,19 +46,15 @@ contract TokenERC20 is
     ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     ITokenERC20,
-    AccessControlEnumerableUpgradeable
+    IMintableERC20,
+    IBurnableERC20,
+    SignatureMintUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
 
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC20");
     uint256 private constant VERSION = 1;
 
-    bytes32 private constant TYPEHASH =
-        keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
-
-    bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -77,9 +76,6 @@ contract TokenERC20 is
     /// @dev The adress that receives all primary sales value.
     address public primarySaleRecipient;
 
-    /// @dev Mapping from mint request UID => whether the mint request is processed.
-    mapping(bytes32 => bool) private minted;
-
     constructor(address _thirdwebFee) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
     }
@@ -98,6 +94,7 @@ contract TokenERC20 is
         __ERC2771Context_init_unchained(_trustedForwarders);
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
+        __SignatureMint_init("TokenERC20", "1", _defaultAdmin);
 
         contractURI = _contractURI;
         primarySaleRecipient = _primarySaleRecipient;
@@ -106,7 +103,6 @@ contract TokenERC20 is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(PAUSER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
     }
@@ -189,16 +185,6 @@ contract TokenERC20 is
         _mintTo(to, amount);
     }
 
-    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        returns (bool success, address signer)
-    {
-        signer = recoverAddress(_req, _signature);
-        success = !minted[_req.uid] && hasRole(MINTER_ROLE, signer);
-    }
-
     /// @dev Mints tokens according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
@@ -207,11 +193,11 @@ contract TokenERC20 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
-        collectPrice(saleRecipient, _req.currency, _req.price);
+        collectPrice(saleRecipient, _req.currency, _req.pricePerToken);
 
         _mintTo(receiver, _req.quantity);
 
-        emit TokensMintedWithSignature(signer, receiver, _req);
+        emit TokensMintedWithSignature(signer, receiver, 0, _req);
     }
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
@@ -285,27 +271,6 @@ contract TokenERC20 is
         minted[_req.uid] = true;
 
         return signer;
-    }
-
-    /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
-    }
-
-    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
-    function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
-        return
-            abi.encode(
-                TYPEHASH,
-                _req.to,
-                _req.primarySaleRecipient,
-                _req.quantity,
-                _req.price,
-                _req.currency,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
-                _req.uid
-            );
     }
 
     /**

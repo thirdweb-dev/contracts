@@ -16,6 +16,12 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 //  ==========  Internal imports    ==========
 
+import "../interfaces/IThirdwebContract.sol";
+import "../interfaces/IThirdwebPlatformFee.sol";
+import "../interfaces/IThirdwebPrimarySale.sol";
+import "../interfaces/IThirdwebRoyalty.sol";
+import "../interfaces/IThirdwebOwnable.sol";
+
 import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
 
@@ -27,6 +33,11 @@ import "../lib/MerkleProof.sol";
 
 contract DropERC1155 is
     Initializable,
+    IThirdwebContract,
+    IThirdwebOwnable,
+    IThirdwebRoyalty,
+    IThirdwebPrimarySale,
+    IThirdwebPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

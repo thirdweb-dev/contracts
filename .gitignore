@@ -15,6 +15,7 @@ typechain/
 .parcel-cache/
 
 abi/
+contracts/abi/
 artifacts/
 artifacts_forge/
 
