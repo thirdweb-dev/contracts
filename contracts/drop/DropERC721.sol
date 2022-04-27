@@ -63,7 +63,7 @@ contract DropERC721 is
     uint256 private constant MAX_BPS = 10_000;
 
     /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
+    ITWFee private immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
@@ -328,6 +328,8 @@ contract DropERC721 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
+        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
+
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
         // Get the claim conditions.
