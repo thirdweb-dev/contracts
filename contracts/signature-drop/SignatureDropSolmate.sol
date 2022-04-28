@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "./ERC721Solmate.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
@@ -12,26 +12,26 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/ITWFee.sol";
+
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/drop/IDropClaimCondition.sol";
-
-//  ==========  Features    ==========
-
 import "../feature/interface/IThirdwebPlatformFee.sol";
 import "../feature/interface/IThirdwebPrimarySale.sol";
 import "../feature/interface/IThirdwebRoyalty.sol";
 import "../feature/interface/IThirdwebOwnable.sol";
+
+import "../interfaces/drop/IDropClaimCondition.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/SignatureMintUpgradeable.sol";
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
-contract SignatureDropEnumerable is
+contract SignatureDropSolmate is
     Initializable,
     IThirdwebContract,
     IThirdwebOwnable,
@@ -45,7 +45,7 @@ contract SignatureDropEnumerable is
     DelayedReveal,
     LazyMint,
     SignatureMintUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721Solmate
 {
     using StringsUpgradeable for uint256;
 
@@ -117,29 +117,20 @@ contract SignatureDropEnumerable is
 
     event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
-    event TokensMinted(
-        address indexed minter,
-        address receiver,
-        uint256 indexed startTokenId,
-        uint256 amountMinted,
-        uint256 pricePerToken,
-        address indexed currency
-    );
+    event TokensMinted(address indexed minter, address receiver, uint256 indexed startTokenId, uint256 amountMinted, uint256 pricePerToken, address indexed currency);
     event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _thirdwebFee) initializer {
+    constructor(address _thirdwebFee) initializer ERC721Solmate("Name", "SYMBOL") {
         thirdwebFee = ITWFee(_thirdwebFee);
     }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
-        string memory _name,
-        string memory _symbol,
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _saleRecipient,
@@ -151,7 +142,6 @@ contract SignatureDropEnumerable is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
-        __ERC721_init(_name, _symbol);
         __SignatureMint_init("TokenDrop", "1", _defaultAdmin);
 
         // Initialize this contract's state.
@@ -198,7 +188,7 @@ contract SignatureDropEnumerable is
     function tokenURI(uint256 _tokenId) public view override returns (string memory uriForToken) {
         uriForToken = uri[_tokenId];
 
-        if (bytes(uriForToken).length == 0) {
+        if(bytes(uriForToken).length == 0) {
             uriForToken = string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
         }
     }
@@ -208,7 +198,7 @@ contract SignatureDropEnumerable is
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC721Solmate, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -238,12 +228,15 @@ contract SignatureDropEnumerable is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) external onlyRole(MINTER_ROLE) {
+    )
+        external
+        onlyRole(MINTER_ROLE)
+    {
         (bytes memory encryptedBaseURI, uint256 expectedStartId) = abi.decode(_data, (bytes, uint256));
 
         uint256 startId = nextTokenIdToMint;
         require(startId == expectedStartId, "Unexpected start Id");
-
+        
         uint256 batchId;
         (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
 
@@ -255,7 +248,10 @@ contract SignatureDropEnumerable is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    )
         external
         onlyRole(MINTER_ROLE)
         returns (string memory revealedURI)
@@ -273,7 +269,14 @@ contract SignatureDropEnumerable is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    )
+        external
+        payable
+        nonReentrant
+    {
         require(_req.quantity > 0, "minting zero tokens");
         require(nextTokenIdToClaim + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
@@ -290,7 +293,7 @@ contract SignatureDropEnumerable is
         uint256 tokenIdToMint = nextTokenIdToClaim;
         nextTokenIdToClaim += _req.quantity;
 
-        for (uint256 i = tokenIdToMint; i < tokenIdToMint + _req.quantity; i += 1) {
+        for(uint256 i = tokenIdToMint; i < tokenIdToMint + _req.quantity; i += 1) {
             _mint(receiver, i);
         }
 
@@ -303,7 +306,11 @@ contract SignatureDropEnumerable is
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken
-    ) external payable {
+    )
+        external
+        payable
+        
+    {
         ClaimCondition memory condition = claimCondition;
 
         // Verify claim
@@ -311,17 +318,23 @@ contract SignatureDropEnumerable is
             _currency == condition.currency && _pricePerToken == condition.pricePerToken,
             "invalid currency or price."
         );
-        require(_quantity > 0 && _quantity <= condition.quantityLimitPerTransaction, "invalid quantity.");
-        require(condition.supplyClaimed + _quantity <= condition.maxClaimableSupply, "exceed max claimable supply.");
+        require(
+            _quantity > 0 && _quantity <= condition.quantityLimitPerTransaction,
+            "invalid quantity."
+        );
+        require(
+            condition.supplyClaimed + _quantity <= condition.maxClaimableSupply,
+            "exceed max claimable supply."
+        );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
         uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
         require(
-            lastClaimTimestampForClaimer == 0 ||
-                block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
+            lastClaimTimestampForClaimer == 0 
+                || block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
             "cannot claim."
         );
-
+        
         // Collect price for claim.
         collectPrice(_quantity, _currency, _pricePerToken);
 
@@ -341,16 +354,19 @@ contract SignatureDropEnumerable is
         emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
     }
 
-    function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility)
+    function setClaimCondition(
+        ClaimCondition calldata _condition,
+        bool _resetClaimEligibility
+    )
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        if (_resetClaimEligibility) {
+        if(_resetClaimEligibility) {
             conditionId = keccak256(abi.encodePacked(msg.sender, block.number));
         }
 
         ClaimCondition memory currentConditoin = claimCondition;
-
+        
         claimCondition = ClaimCondition({
             startTimestamp: block.timestamp,
             maxClaimableSupply: _condition.maxClaimableSupply,
@@ -492,7 +508,13 @@ contract SignatureDropEnumerable is
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "caller not owner nor approved");
+        address ownerOfToken = ownerOf(tokenId);
+        require(
+            ownerOfToken == _msgSender() 
+                || isApprovedForAll[ownerOfToken][_msgSender()]
+                || getApproved[tokenId] == _msgSender(),
+            "caller not owner nor approved"
+        );
         _burn(tokenId);
     }
 
@@ -500,14 +522,26 @@ contract SignatureDropEnumerable is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
-    ) internal virtual override(ERC721EnumerableUpgradeable) {
-        super._beforeTokenTransfer(from, to, tokenId);
-
+        uint256
+    ) internal virtual {
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 id
+    ) public virtual override {
+        _beforeTokenTransfer(from, to, id);
+        super.transferFrom(from, to, id);
+    }
+
+    function _mint(address to, uint256 id) internal virtual override {
+        _beforeTokenTransfer(_ownerOf[id], to, id);
+        super._mint(to, id);
     }
 
     function _msgSender()

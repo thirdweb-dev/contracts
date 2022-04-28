@@ -12,21 +12,21 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/ITWFee.sol";
+
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/drop/IDropClaimCondition.sol";
-
-//  ==========  Features    ==========
-
 import "../feature/interface/IThirdwebPlatformFee.sol";
 import "../feature/interface/IThirdwebPrimarySale.sol";
 import "../feature/interface/IThirdwebRoyalty.sol";
 import "../feature/interface/IThirdwebOwnable.sol";
+
+import "../interfaces/drop/IDropClaimCondition.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/SignatureMintUpgradeable.sol";
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+
 
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
