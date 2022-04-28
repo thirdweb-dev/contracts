@@ -238,7 +238,7 @@ contract SignatureDropEnumerable is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) external onlyRole(MINTER_ROLE) {
+    ) external /** onlyRole(MINTER_ROLE) */ {
         (bytes memory encryptedBaseURI, uint256 expectedStartId) = abi.decode(_data, (bytes, uint256));
 
         uint256 startId = nextTokenIdToMint;
@@ -301,33 +301,39 @@ contract SignatureDropEnumerable is
     function claim(
         address _receiver,
         uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken
+        address,
+        uint256
     ) external payable {
-        ClaimCondition memory condition = claimCondition;
+        // ClaimCondition memory condition = claimCondition;
 
-        // Verify claim
-        require(
-            _currency == condition.currency && _pricePerToken == condition.pricePerToken,
-            "invalid currency or price."
-        );
-        require(_quantity > 0 && _quantity <= condition.quantityLimitPerTransaction, "invalid quantity.");
-        require(condition.supplyClaimed + _quantity <= condition.maxClaimableSupply, "exceed max claimable supply.");
-        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
+        // // Verify claim
+        // require(
+        //     _currency == condition.currency && _pricePerToken == condition.pricePerToken,
+        //     "invalid currency or price."
+        // );
+        // require(
+        //     _quantity > 0 && _quantity <= condition.quantityLimitPerTransaction,
+        //     "invalid quantity."
+        // );
+        // require(
+        //     condition.supplyClaimed + _quantity <= condition.maxClaimableSupply,
+        //     "exceed max claimable supply."
+        // );
+        // require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
-        uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
-        require(
-            lastClaimTimestampForClaimer == 0 ||
-                block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
+        // uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
+        // require(
+        //     lastClaimTimestampForClaimer == 0 
+        //         || block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
+        //     "cannot claim."
+        // );
+        
+        // // Collect price for claim.
+        // collectPrice(_quantity, _currency, _pricePerToken);
 
-        // Collect price for claim.
-        collectPrice(_quantity, _currency, _pricePerToken);
-
-        // Mark the claim.
-        lastClaimTimestamp[msg.sender][conditionId] = block.timestamp;
-        claimCondition.supplyClaimed += _quantity;
+        // // Mark the claim.
+        // lastClaimTimestamp[msg.sender][conditionId] = block.timestamp;
+        // claimCondition.supplyClaimed += _quantity;
 
         // Transfer tokens being claimed.
         uint256 tokenIdToClaim = nextTokenIdToClaim;
@@ -338,7 +344,7 @@ contract SignatureDropEnumerable is
 
         nextTokenIdToClaim = tokenIdToClaim + _quantity;
 
-        emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
+        // emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
     }
 
     function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility)
@@ -505,7 +511,7 @@ contract SignatureDropEnumerable is
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
+        if (hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
     }

@@ -230,7 +230,7 @@ contract SignatureDropERC721A is
         bytes calldata _data
     )
         external
-        onlyRole(MINTER_ROLE)
+        /** onlyRole(MINTER_ROLE) */
     {
         (bytes memory encryptedBaseURI, uint256 expectedStartId) = abi.decode(_data, (bytes, uint256));
 
@@ -304,54 +304,56 @@ contract SignatureDropERC721A is
     function claim(
         address _receiver,
         uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken
+        address,
+        uint256
     )
         external
         payable
         
     {
-        ClaimCondition memory condition = claimCondition;
+        // ClaimCondition memory condition = claimCondition;
 
-        // Verify claim
-        require(
-            _currency == condition.currency && _pricePerToken == condition.pricePerToken,
-            "invalid currency or price."
-        );
-        require(
-            _quantity > 0 && _quantity <= condition.quantityLimitPerTransaction,
-            "invalid quantity."
-        );
-        require(
-            condition.supplyClaimed + _quantity <= condition.maxClaimableSupply,
-            "exceed max claimable supply."
-        );
-        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
+        // // Verify claim
+        // require(
+        //     _currency == condition.currency && _pricePerToken == condition.pricePerToken,
+        //     "invalid currency or price."
+        // );
+        // require(
+        //     _quantity > 0 && _quantity <= condition.quantityLimitPerTransaction,
+        //     "invalid quantity."
+        // );
+        // require(
+        //     condition.supplyClaimed + _quantity <= condition.maxClaimableSupply,
+        //     "exceed max claimable supply."
+        // );
+        // require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
-        uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
-        require(
-            lastClaimTimestampForClaimer == 0 
-                || block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
+        // uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
+        // require(
+        //     lastClaimTimestampForClaimer == 0 
+        //         || block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
+        //     "cannot claim."
+        // );
         
-        // Collect price for claim.
-        collectPrice(_quantity, _currency, _pricePerToken);
+        // // Collect price for claim.
+        // collectPrice(_quantity, _currency, _pricePerToken);
 
-        // Mark the claim.
-        lastClaimTimestamp[msg.sender][conditionId] = block.timestamp;
-        claimCondition.supplyClaimed += _quantity;
+        // // Mark the claim.
+        // lastClaimTimestamp[msg.sender][conditionId] = block.timestamp;
+        // claimCondition.supplyClaimed += _quantity;
 
         // Transfer tokens being claimed.
-        uint256 tokenIdToClaim = nextTokenIdToClaim;
+        // uint256 tokenIdToClaim = nextTokenIdToClaim;
 
-        for (uint256 i = tokenIdToClaim; i < tokenIdToClaim + _quantity; i += 1) {
-            _mint(_receiver, i);
-        }
+        // for (uint256 i = tokenIdToClaim; i < tokenIdToClaim + _quantity; i += 1) {
+        //     _mint(_receiver, i);
+        // }
 
-        nextTokenIdToClaim = tokenIdToClaim + _quantity;
+        _mint(_receiver, _quantity);
 
-        emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
+        nextTokenIdToClaim += _quantity;
+
+        // emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
     }
 
     function setClaimCondition(
@@ -527,7 +529,7 @@ contract SignatureDropERC721A is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
+        if (hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
     }
