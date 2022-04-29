@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
  * @title ERC20Metadata interface
  * @dev see https://github.com/ethereum/EIPs/issues/20
  */
-interface ERC20Metadata {
+interface IERC20Metadata {
     function name() external view returns (string memory);
 
     function symbol() external view returns (string memory);

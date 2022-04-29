@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /**
     Note: The ERC-165 identifier for this interface is 0x0e89341c.
 */
-interface ERC1155Metadata {
+interface IERC1155Metadata {
     /**
         @notice A distinct Uniform Resource Identifier (URI) for a given token.
         @dev URIs are defined in RFC 3986.

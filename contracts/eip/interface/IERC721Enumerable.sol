@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 /// @dev See https://eips.ethereum.org/EIPS/eip-721
 ///  Note: the ERC-165 identifier for this interface is 0x780e9d63.
 /* is ERC721 */
-interface ERC721Enumerable {
+interface IERC721Enumerable {
     /// @notice Enumerate valid NFTs
     /// @dev Throws if `_index` >= `totalSupply()`.
     /// @param _index A counter less than `totalSupply()`
