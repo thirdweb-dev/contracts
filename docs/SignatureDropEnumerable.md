@@ -85,7 +85,7 @@ function burn(uint256 tokenId) external nonpayable
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address, uint256) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken) external payable
 ```
 
 
@@ -98,8 +98,8 @@ function claim(address _receiver, uint256 _quantity, address, uint256) external 
 |---|---|---|
 | _receiver | address | undefined
 | _quantity | uint256 | undefined
-| _2 | address | undefined
-| _3 | uint256 | undefined
+| _currency | address | undefined
+| _pricePerToken | uint256 | undefined
 
 ### claimCondition
 
@@ -518,7 +518,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) extern
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) external payable
+function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable
 ```
 
 
@@ -529,7 +529,7 @@ function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) ex
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
+| _req | ISignatureMintERC721.MintRequest | undefined
 | _signature | bytes | undefined
 
 ### multicall
@@ -1056,7 +1056,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 ### verify
 
 ```solidity
-function verify(ISignatureMint.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
 ```
 
 
@@ -1067,7 +1067,7 @@ function verify(ISignatureMint.MintRequest _req, bytes _signature) external view
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
+| _req | ISignatureMintERC721.MintRequest | undefined
 | _signature | bytes | undefined
 
 #### Returns
@@ -1333,7 +1333,7 @@ event TokensMinted(address indexed minter, address receiver, uint256 indexed sta
 ### TokensMintedWithSignature
 
 ```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMint.MintRequest mintRequest)
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ISignatureMintERC721.MintRequest mintRequest)
 ```
 
 
@@ -1346,8 +1346,7 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 |---|---|---|
 | signer `indexed` | address | undefined |
 | mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ISignatureMint.MintRequest | undefined |
+| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
 
 ### Transfer
 

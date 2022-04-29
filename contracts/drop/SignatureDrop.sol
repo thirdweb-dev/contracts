@@ -5,6 +5,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -23,7 +24,7 @@ import "../feature/interface/IThirdwebRoyalty.sol";
 import "../feature/interface/IThirdwebOwnable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
-import "../feature/SignatureMintUpgradeable.sol";
+import "../feature/SignatureMintERC721Upgradeable.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
@@ -42,9 +43,10 @@ contract SignatureDropEnumerable is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    AccessControlEnumerableUpgradeable,
     DelayedReveal,
     LazyMint,
-    SignatureMintUpgradeable,
+    SignatureMintERC721Upgradeable,
     ERC721EnumerableUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -58,6 +60,8 @@ contract SignatureDropEnumerable is
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -152,7 +156,7 @@ contract SignatureDropEnumerable is
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
         __ERC721_init(_name, _symbol);
-        __SignatureMint_init("TokenDrop", "1", _defaultAdmin);
+        __SignatureMintERC721_init();
 
         // Initialize this contract's state.
         royaltyRecipient = _royaltyRecipient;
@@ -278,7 +282,7 @@ contract SignatureDropEnumerable is
         require(nextTokenIdToClaim + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
         // Verify and process payload.
-        processRequest(_req, _signature);
+        _processRequest(_req, _signature);
 
         // Get receiver of tokens.
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
@@ -396,6 +400,11 @@ contract SignatureDropEnumerable is
             primarySaleRecipient,
             totalPrice - platformFees - twFee
         );
+    }
+
+    /// @dev Returns whether a given address is authorized to sign mint requests.
+    function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
+        return hasRole(MINTER_ROLE, _signer);
     }
 
     /*///////////////////////////////////////////////////////////////
