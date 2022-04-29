@@ -85,7 +85,7 @@ function burn(uint256 tokenId) external nonpayable
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken) external payable
+function claim(address _receiver, uint256 _quantity, address, uint256) external payable
 ```
 
 
@@ -98,8 +98,8 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 |---|---|---|
 | _receiver | address | undefined
 | _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
+| _2 | address | undefined
+| _3 | uint256 | undefined
 
 ### claimCondition
 
