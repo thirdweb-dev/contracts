@@ -43,14 +43,6 @@ interface ITokenERC721 is IERC721Upgradeable {
         MintRequest mintRequest
     );
 
-    /// @dev Emitted when accrued royalties are withdrawn from the contract.
-    event FundsWithdrawn(
-        address indexed paymentReceiver,
-        address feeRecipient,
-        uint256 totalAmount,
-        uint256 feeCollected
-    );
-
     /**
      *  @notice Verifies that a mint request is signed by an account holding
      *         MINTER_ROLE (at the time of the function call).

@@ -302,25 +302,6 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
-### FundsWithdrawn
-
-```solidity
-event FundsWithdrawn(address indexed paymentReceiver, address feeRecipient, uint256 totalAmount, uint256 feeCollected)
-```
-
-
-
-*Emitted when accrued royalties are withdrawn from the contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| paymentReceiver `indexed` | address | undefined |
-| feeRecipient  | address | undefined |
-| totalAmount  | uint256 | undefined |
-| feeCollected  | uint256 | undefined |
-
 ### TokensMinted
 
 ```solidity

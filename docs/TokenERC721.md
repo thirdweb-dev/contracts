@@ -1016,25 +1016,6 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 | newRoyaltyRecipient  | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
-### FundsWithdrawn
-
-```solidity
-event FundsWithdrawn(address indexed paymentReceiver, address feeRecipient, uint256 totalAmount, uint256 feeCollected)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| paymentReceiver `indexed` | address | undefined |
-| feeRecipient  | address | undefined |
-| totalAmount  | uint256 | undefined |
-| feeCollected  | uint256 | undefined |
-
 ### OwnerUpdated
 
 ```solidity
