@@ -49,12 +49,6 @@ contract ERC721AUpgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
-        _currentIndex = _startTokenId();
-    }
-
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
@@ -65,6 +59,7 @@ contract ERC721AUpgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     function __ERC721A_init_unchained(string memory name_, string memory symbol_) internal onlyInitializing {
         _name = name_;
         _symbol = symbol_;
+        _currentIndex = _startTokenId();
     }
 
     /**
@@ -218,7 +213,7 @@ contract ERC721AUpgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
      * @dev See {IERC721-approve}.
      */
     function approve(address to, uint256 tokenId) public override {
-        address owner = ERC721A.ownerOf(tokenId);
+        address owner = ERC721AUpgradeable.ownerOf(tokenId);
         if (to == owner) revert ApprovalToCurrentOwner();
 
         if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) {
