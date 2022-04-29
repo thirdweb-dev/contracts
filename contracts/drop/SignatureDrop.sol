@@ -67,7 +67,7 @@ contract SignatureDrop is
     uint256 private constant MAX_BPS = 10_000;
 
     /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
+    ITWFee private immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
