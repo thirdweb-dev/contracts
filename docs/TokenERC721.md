@@ -417,7 +417,7 @@ function mintTo(address _to, string _uri) external nonpayable returns (uint256)
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) external payable
+function mintWithSignature(ITokenERC721.MintRequest _req, bytes _signature) external payable returns (uint256 tokenIdMinted)
 ```
 
 
@@ -428,8 +428,14 @@ function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) ex
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
+| _req | ITokenERC721.MintRequest | undefined
 | _signature | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| tokenIdMinted | uint256 | undefined
 
 ### multicall
 
@@ -932,7 +938,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 ### verify
 
 ```solidity
-function verify(ISignatureMint.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+function verify(ITokenERC721.MintRequest _req, bytes _signature) external view returns (bool, address)
 ```
 
 
@@ -943,15 +949,15 @@ function verify(ISignatureMint.MintRequest _req, bytes _signature) external view
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
+| _req | ITokenERC721.MintRequest | undefined
 | _signature | bytes | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| _0 | bool | undefined
+| _1 | address | undefined
 
 
 
@@ -1153,7 +1159,7 @@ event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, stri
 ### TokensMintedWithSignature
 
 ```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMint.MintRequest mintRequest)
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ITokenERC721.MintRequest mintRequest)
 ```
 
 
@@ -1167,7 +1173,7 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 | signer `indexed` | address | undefined |
 | mintedTo `indexed` | address | undefined |
 | tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ISignatureMint.MintRequest | undefined |
+| mintRequest  | ITokenERC721.MintRequest | undefined |
 
 ### Transfer
 

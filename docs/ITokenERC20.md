@@ -95,6 +95,40 @@ function decimals() external view returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined
 
+### mintTo
+
+```solidity
+function mintTo(address to, uint256 amount) external nonpayable
+```
+
+
+
+*Creates `amount` new tokens for `to`. See {ERC20-_mint}. Requirements: - the caller must have the `MINTER_ROLE`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| to | address | undefined
+| amount | uint256 | undefined
+
+### mintWithSignature
+
+```solidity
+function mintWithSignature(ITokenERC20.MintRequest req, bytes signature) external payable
+```
+
+Mints an NFT according to the provided mint request.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| req | ITokenERC20.MintRequest | The mint request.
+| signature | bytes | he signature produced by an account signing the mint request.
+
 ### name
 
 ```solidity
@@ -193,6 +227,30 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined
 
+### verify
+
+```solidity
+function verify(ITokenERC20.MintRequest req, bytes signature) external view returns (bool success, address signer)
+```
+
+Verifies that a mint request is signed by an account holding         MINTER_ROLE (at the time of the function call).
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| req | ITokenERC20.MintRequest | The mint request.
+| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined
+| signer | address | undefined
+
 
 
 ## Events
@@ -214,6 +272,41 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
+
+### TokensMinted
+
+```solidity
+event TokensMinted(address indexed mintedTo, uint256 quantityMinted)
+```
+
+
+
+*Emitted when an account with MINTER_ROLE mints an NFT.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| mintedTo `indexed` | address | undefined |
+| quantityMinted  | uint256 | undefined |
+
+### TokensMintedWithSignature
+
+```solidity
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ITokenERC20.MintRequest mintRequest)
+```
+
+
+
+*Emitted when tokens are minted.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer `indexed` | address | undefined |
+| mintedTo `indexed` | address | undefined |
+| mintRequest  | ITokenERC20.MintRequest | undefined |
 
 ### Transfer
 

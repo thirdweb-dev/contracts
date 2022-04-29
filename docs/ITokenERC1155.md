@@ -79,6 +79,42 @@ function isApprovedForAll(address account, address operator) external view retur
 |---|---|---|
 | _0 | bool | undefined
 
+### mintTo
+
+```solidity
+function mintTo(address to, uint256 tokenId, string uri, uint256 amount) external nonpayable
+```
+
+Lets an account with MINTER_ROLE mint an NFT.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| to | address | The address to mint the NFT to.
+| tokenId | uint256 | The tokenId of the NFTs to mint
+| uri | string | The URI to assign to the NFT.
+| amount | uint256 | The number of copies of the NFT to mint.
+
+### mintWithSignature
+
+```solidity
+function mintWithSignature(ITokenERC1155.MintRequest req, bytes signature) external payable
+```
+
+Mints an NFT according to the provided mint request.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| req | ITokenERC1155.MintRequest | The mint request.
+| signature | bytes | he signature produced by an account signing the mint request.
+
 ### safeBatchTransferFrom
 
 ```solidity
@@ -158,49 +194,29 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### totalSupply
+### verify
 
 ```solidity
-function totalSupply(uint256 id) external view returns (uint256 supply)
+function verify(ITokenERC1155.MintRequest req, bytes signature) external view returns (bool success, address signer)
 ```
 
+Verifies that a mint request is signed by an account holding         MINTER_ROLE (at the time of the function call).
 
 
-*The total circulating supply of tokens of ID `tokenId`*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| id | uint256 | undefined
+| req | ITokenERC1155.MintRequest | The mint request.
+| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| supply | uint256 | undefined
-
-### uri
-
-```solidity
-function uri(uint256 id) external view returns (string)
-```
-
-
-
-*Returns the URI for token type `id`. If the `\{id\}` substring is present in the URI, it must be replaced by clients with the actual token type ID.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined
+| success | bool | undefined
+| signer | address | undefined
 
 
 
@@ -223,6 +239,44 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 | account `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### TokensMinted
+
+```solidity
+event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted)
+```
+
+
+
+*Emitted when an account with MINTER_ROLE mints an NFT.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| mintedTo `indexed` | address | undefined |
+| tokenIdMinted `indexed` | uint256 | undefined |
+| uri  | string | undefined |
+| quantityMinted  | uint256 | undefined |
+
+### TokensMintedWithSignature
+
+```solidity
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ITokenERC1155.MintRequest mintRequest)
+```
+
+
+
+*Emitted when tokens are minted.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer `indexed` | address | undefined |
+| mintedTo `indexed` | address | undefined |
+| tokenIdMinted `indexed` | uint256 | undefined |
+| mintRequest  | ITokenERC1155.MintRequest | undefined |
 
 ### TransferBatch
 
