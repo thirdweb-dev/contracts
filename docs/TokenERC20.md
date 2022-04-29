@@ -598,7 +598,7 @@ function mintTo(address to, uint256 amount) external nonpayable
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) external payable
+function mintWithSignature(ITokenERC20.MintRequest _req, bytes _signature) external payable
 ```
 
 
@@ -609,7 +609,7 @@ function mintWithSignature(ISignatureMint.MintRequest _req, bytes _signature) ex
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
+| _req | ITokenERC20.MintRequest | undefined
 | _signature | bytes | undefined
 
 ### multicall
@@ -962,7 +962,7 @@ function unpause() external nonpayable
 ### verify
 
 ```solidity
-function verify(ISignatureMint.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+function verify(ITokenERC20.MintRequest _req, bytes _signature) external view returns (bool, address)
 ```
 
 
@@ -973,15 +973,15 @@ function verify(ISignatureMint.MintRequest _req, bytes _signature) external view
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
+| _req | ITokenERC20.MintRequest | undefined
 | _signature | bytes | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| _0 | bool | undefined
+| _1 | address | undefined
 
 
 
@@ -1164,7 +1164,7 @@ event TokensMinted(address indexed mintedTo, uint256 quantityMinted)
 ### TokensMintedWithSignature
 
 ```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMint.MintRequest mintRequest)
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ITokenERC20.MintRequest mintRequest)
 ```
 
 
@@ -1177,8 +1177,7 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 |---|---|---|
 | signer `indexed` | address | undefined |
 | mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ISignatureMint.MintRequest | undefined |
+| mintRequest  | ITokenERC20.MintRequest | undefined |
 
 ### Transfer
 
