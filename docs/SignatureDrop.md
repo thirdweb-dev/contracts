@@ -937,7 +937,7 @@ function thirdwebFee() external view returns (contract ITWFee)
 ### tokenURI
 
 ```solidity
-function tokenURI(uint256 _tokenId) external view returns (string uriForToken)
+function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
 
@@ -954,7 +954,7 @@ function tokenURI(uint256 _tokenId) external view returns (string uriForToken)
 
 | Name | Type | Description |
 |---|---|---|
-| uriForToken | string | undefined
+| _0 | string | undefined
 
 ### totalSupply
 

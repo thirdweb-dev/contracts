@@ -103,9 +103,6 @@ contract SignatureDrop is
                                 Mappings
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Mapping from tokenId => URI (for tokens minted with signature)
-    mapping(uint256 => string) private uri;
-
     /// @dev Mapping from claimer => condition Id => timestamp of last claim.
     mapping(address => mapping(bytes32 => uint256)) private lastClaimTimestamp;
 
@@ -196,12 +193,8 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view override returns (string memory uriForToken) {
-        uriForToken = uri[_tokenId];
-
-        if (bytes(uriForToken).length == 0) {
-            uriForToken = string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
-        }
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        return string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
     }
 
     /// @dev See ERC 165
