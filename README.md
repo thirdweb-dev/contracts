@@ -33,7 +33,7 @@ contract HellowWorldContract is ThirdwebContract {
 
 ```
 
-By extending `ThirdwebContract` you can use the [thirdeb cli](https://github.com/[thirdweb-dev/thirdweb-cli) to publish, deploy and manage your contracts on your [thirdweb dashboard](https://thirdweb.com/dashboard).
+By extending `ThirdwebContract` you can use the [thirdeb cli](https://github.com/thirdweb-dev/thirdweb-cli) to publish, deploy and manage your contracts on your [thirdweb dashboard](https://thirdweb.com/dashboard).
 
 ## Deployed addresses
 
