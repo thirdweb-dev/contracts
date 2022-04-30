@@ -23,9 +23,9 @@ We’ve observed that there are largely three distinct contexts under which one 
     1. The nature of tokens to be minted by the audience is pre-determined by the contract admin. E.g. a 10k NFT drop where the contents of the NFTs to be minted by the audience is already known and determined by the contract admin before the audience comes in to mint NFTs.
     2. The nature of tokens to be minted by the audience is *not* pre-determined by the contract admin. E.g. a course ‘certificate’ dynamically generated with the name of the course participant, to be minted by the course participant at the time of course completion.
 
-The thirdweb `Token` contracts serve the cases described in (1) and 2(i).
+The thirdweb `Token` contracts serve the cases described in (1) and 2(ii).
 
-The thirdweb `Drop` contracts serve the case described in 2(ii). They are written to give a contract creator granular control over restrictions around an audience minting tokens from the same contract (or ‘collection’, in the case of NFTs) over an extended period of time.
+The thirdweb `Drop` contracts serve the case described in 2(i). They are written to give a contract creator granular control over restrictions around an audience minting tokens from the same contract (or ‘collection’, in the case of NFTs) over an extended period of time.
 
 ## Technical Details
 
@@ -57,9 +57,7 @@ struct ClaimCondition {
 | waitTimeInSecondsBetweenClaims | uint256 | The least number of seconds an account must wait after claiming tokens, to be able to claim tokens again. |
 | merkleRoot | bytes32 | The allowlist of addresses that can claim tokens under the claim condition.
 
-(Optional) The allowlist may specify the exact amount of tokens that an address in the allowlist is eligible to claim. |
-| pricePerToken | uint256 | The price required to pay per token claimed. |
-| currency | address | The currency in which the pricePerToken must be paid. |
+(Optional) The allowlist may specify the exact amount of tokens that an address in the allowlist is eligible to claim.
 
 The parameters that make up a claim condition can be composed in different ways to create specific restrictions around a mint. For example, a single claim condition where:
 
@@ -95,7 +93,7 @@ struct ClaimConditionList {
 
 ### Setting claim conditions
 
-In all `Drop` contracts, a contract admin specifies the following when setting claim conditions —
+In all `Drop` contracts, a contract admin specifies the following when setting claim conditions:
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -147,7 +145,7 @@ The distribution mechanism for tokens expressed by thirdweb’s `Drop` is implem
 There are a few key differences between the three implementations —
 
 - `DropERC20` is written for the distribution of completely fungible, ERC20 tokens. On the other hand, `DropERC721` and `DropERC1155` are written for the distribution of NFTs, which requires ‘lazy minting’ i.e. defining the content of the NFTs before an audience comes in to mint them during a claim condition.
-- Both `DropERC20` and `DropERC721` maintain a global, contract-wide `ClaimConditionsList` which stores the claim conditions under which tokens can be minted. The `DropERC1155` contract, on the other hand, maintains a `ClaimConditionList` for every integer tokenId that an NFT can assume. And so, a contract admin can set up claim conditions per NFT i.e. per tokenId, in the `DropERC1155` contract.
+- Both `DropERC20` and `DropERC721` maintain a global, contract-wide `ClaimConditionsList` which stores the claim conditions under which tokens can be minted. The `DropERC1155` contract, on the other hand, maintains a `ClaimConditionList` for every integer token ID that an NFT can assume. And so, a contract admin can set up claim conditions per NFT i.e. per token ID, in the `DropERC1155` contract.
 
 ## Limitations
 
