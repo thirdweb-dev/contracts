@@ -1,4 +1,4 @@
-# Signature mint design document.
+# Signature minting design document.
 
 This is a live document that explains the 'signature minting' mechanism used in [thirdweb](https://thirdweb.com/) `Token` smart contracts.
 
@@ -21,16 +21,16 @@ The following diagram illustrates how the 'signature minting' flow looks like. F
 
 ### Why we're developing `Signature Minting`
 
-We’ve observed that there are largely three distinct contexts under which one mints tokens —
+We’ve observed that there are largely three distinct contexts under which one mints tokens:
 
 1. Minting tokens for yourself on a contract you own. E.g. a person wants to mint their Twitter profile picture as an NFT.
 2. Having an audience mint tokens on a contract you own.
-    i. The nature of tokens to be minted by the audience is pre-determined by the contract admin. E.g. a 10k NFT drop where the contents of the NFTs to be minted by the audience is already known and determined by the contract admin before the audience comes in to mint NFTs.
-    ii. The nature of tokens to be minted by the audience is *not* pre-determined by the contract admin. E.g. a course ‘certificate’ dynamically generated with the name of the course participant, to be minted by the course participant at the time of course completion.
+    1. The nature of tokens to be minted by the audience is pre-determined by the contract admin. E.g. a 10k NFT drop where the contents of the NFTs to be minted by the audience is already known and determined by the contract admin before the audience comes in to mint NFTs.
+    2. The nature of tokens to be minted by the audience is *not* pre-determined by the contract admin. E.g. a course ‘certificate’ dynamically generated with the name of the course participant, to be minted by the course participant at the time of course completion.
 
 The thirdweb `Drop` contracts serve the cases described in 2(i).
 
-The thirdweb `Token` contracts serve the case described in 2(ii). And the 'signature minting' mechanism is particularly designed to serve the case described in 2(ii).
+The thirdweb `Token` contracts serve the cases described in (1) and 2(ii). And the 'signature minting' mechanism is particularly designed to serve the case described in 2(ii).
 
 ## Technical Details
 
