@@ -16,6 +16,7 @@ typechain/
 
 abi/
 contracts/abi/
+contracts/README.md
 artifacts/
 artifacts_forge/
 
