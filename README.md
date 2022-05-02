@@ -10,7 +10,7 @@
 <a href="https://discord.gg/thirdweb"><img alt="Join our Discord!" src="https://img.shields.io/discord/834227967404146718.svg?color=7289da&label=discord&logo=discord&style=flat"/></a>
 
 </p>
-<p align="center"><strong>Collection of smart contracts deployable via thirdweb dashboard and CLI</strong></p>
+<p align="center"><strong>Collection of smart contracts deployable via the thirdweb SDK, dashboard and CLI</strong></p>
 <br />
 
 ## Installation
