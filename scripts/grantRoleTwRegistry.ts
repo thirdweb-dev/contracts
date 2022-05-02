@@ -1,32 +1,36 @@
 import { ethers } from "hardhat";
 
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Wallet } from "@ethersproject/wallet";
+import { BytesLike } from "@ethersproject/bytes";
 
 import { TWRegistry } from "typechain";
 
 async function main() {
-  const [roleHolder]: SignerWithAddress[] = await ethers.getSigners();
-
   const twRegistryAddress: string = ethers.constants.AddressZero; // replace
+
   const twRegistry: TWRegistry = await ethers.getContractAt("TWRegistry", twRegistryAddress);
+
+  const currentAdminPkey: string = ""; // DO NOT COMMIT
+  const currentAdmin: Wallet = new ethers.Wallet(currentAdminPkey, ethers.provider);
+
+  const receiverOfRole: string = ethers.constants.AddressZero;
+  const role: BytesLike = ""; // replace
 
   const isAdminOnRegistry: boolean = await twRegistry.hasRole(
     await twRegistry.DEFAULT_ADMIN_ROLE(),
-    roleHolder.address,
+    currentAdmin.address,
   );
   if (!isAdminOnRegistry) {
     throw new Error("Caller provided is not admin on registry");
-  } else {
-    console.log("Caller provided is admin on registry. Revoking role now.");
   }
 
-  const revokeRoleTx = await twRegistry
-    .connect(roleHolder)
-    .revokeRole(await twRegistry.DEFAULT_ADMIN_ROLE(), roleHolder.address);
+  const grantRoleTx = await twRegistry
+    .connect(currentAdmin)
+    .grantRole(role, receiverOfRole);
 
-  console.log(`\nRevoking admin role from ${roleHolder.address} at tx: ${revokeRoleTx.hash}`);
+  console.log(`\nGranting admin role to ${receiverOfRole} at tx: ${grantRoleTx.hash}`);
 
-  await revokeRoleTx.wait();
+  await grantRoleTx.wait();
 
   console.log("Done.");
 }

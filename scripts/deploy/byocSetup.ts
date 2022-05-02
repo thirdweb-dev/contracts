@@ -27,19 +27,22 @@ async function verify(address: string, args: any[]) {
 }
 
 async function main() {
-  const registryAddress: string = "0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C";
 
   const [deployer]: SignerWithAddress[] = await ethers.getSigners();
   console.log("Deployer address:", deployer.address);
 
-  const trustedForwarders: string[] = ["0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81"];
+  const trustedForwarder: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
 
-  const registry: TWRegistry = await ethers.getContractAt("TWRegistry", registryAddress);
-  console.log("TWRegistry at: ", registry.address);
+  // const registryAddress: string = ethers.constants.AddressZero; // replace
+  // const registry: TWRegistry = await ethers.getContractAt("TWRegistry", registryAddress);
+  const registry: TWRegistry = await ethers.getContractFactory("TWRegistry").then(f => f.deploy(trustedForwarder));
+  console.log("\nDeploying new TWRegistry \ntx: ", registry.deployTransaction.hash, "\naddress: ", registry.address);
+
+  await registry.deployTransaction.wait();
 
   const byocRegsitry: ByocRegistry = await ethers
     .getContractFactory("ByocRegistry")
-    .then(f => f.deploy(trustedForwarders));
+    .then(f => f.deploy(trustedForwarder));
   console.log(
     "Deploying ByocRegistry at tx: ",
     byocRegsitry.deployTransaction.hash,
@@ -51,20 +54,19 @@ async function main() {
 
   const byocFactory: ByocFactory = await ethers
     .getContractFactory("ByocFactory")
-    .then(f => f.deploy(registryAddress, trustedForwarders));
-  console.log("Deploying ByocFactory at tx: ", byocFactory.deployTransaction.hash, " address: ", byocFactory.address);
+    .then(f => f.deploy(registry.address, trustedForwarder));
+  console.log("\nDeploying ByocFactory \ntx: ", byocFactory.deployTransaction.hash, "\naddress: ", byocFactory.address);
   await byocFactory.deployTransaction.wait();
-  console.log("Deployed ByocFactory");
 
   const tx = await registry.grantRole(await registry.OPERATOR_ROLE(), byocFactory.address);
-  console.log("Granting operator role to ByocFactory: ", tx.hash);
+  console.log("\nGranting operator role to ByocFactory: ", tx.hash);
 
   await tx.wait();
 
-  console.log("Done. Now verifying contracts:");
+  console.log("\nDone. Now verifying contracts:");
 
-  await verify(byocRegsitry.address, [trustedForwarders]);
-  await verify(byocFactory.address, [registryAddress, trustedForwarders]);
+  // await verify(byocRegsitry.address, [trustedForwarders]);
+  await verify(byocFactory.address, [registry.address, trustedForwarder]);
 }
 
 main()
