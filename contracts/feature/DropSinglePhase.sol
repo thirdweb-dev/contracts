@@ -7,7 +7,6 @@ import "./Context.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase, Context {
-    
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     /*///////////////////////////////////////////////////////////////
@@ -35,7 +34,6 @@ abstract contract DropSinglePhase is IDropSinglePhase, Context {
      *       has already claimed tokens i.e. used their place in the allowlist.
      */
     mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
-
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -97,8 +95,11 @@ abstract contract DropSinglePhase is IDropSinglePhase, Context {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility, bytes memory) external {
-
+    function setClaimConditions(
+        ClaimCondition calldata _condition,
+        bool _resetClaimEligibility,
+        bytes memory
+    ) external {
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
 
@@ -213,8 +214,8 @@ abstract contract DropSinglePhase is IDropSinglePhase, Context {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal virtual returns (uint256 startTokenId);
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        returns (uint256 startTokenId);
 }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IContractMetadata {
-
     /// @dev Returns the metadata URI of the contract.
     function contractURI() external view returns (string memory);
 

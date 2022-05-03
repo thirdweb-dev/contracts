@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./interface/IContractMetadata.sol";
 
 abstract contract ContractMetadata is IContractMetadata {
-    
     /// @dev Contract level metadata.
     string public contractURI;
 

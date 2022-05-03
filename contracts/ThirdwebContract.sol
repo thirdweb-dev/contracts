@@ -6,13 +6,12 @@ import "./feature/Context.sol";
 import "./feature/ContractMetadata.sol";
 
 contract ThirdwebContract is Context, Ownable, ContractMetadata {
-
     struct ThirdwebInfo {
         string publishMetadataUri;
         string contractURI;
         address owner;
     }
-    
+
     /// @dev The publish metadata of the contract of which this contract is an instance.
     string private publishMetadataUri;
 

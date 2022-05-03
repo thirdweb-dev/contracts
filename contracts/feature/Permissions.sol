@@ -6,7 +6,6 @@ import "./Context.sol";
 import "../lib/Strings.sol";
 
 contract Permissions is IPermissions, Context {
-    
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
     mapping(bytes32 => bytes32) private _getRoleAdmin;
 
@@ -42,10 +41,7 @@ contract Permissions is IPermissions, Context {
     }
 
     function renounceRole(bytes32 role, address account) public virtual {
-        require(
-            _msgSender() == account,
-            "Can only renounce for self"
-        );
+        require(_msgSender() == account, "Can only renounce for self");
 
         delete _hasRole[role][account];
 

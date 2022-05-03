@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./interface/IPrimarySale.sol";
 
 abstract contract PrimarySale is IPrimarySale {
-    
     /// @dev The address that receives all primary sales value.
     address private recipient;
 

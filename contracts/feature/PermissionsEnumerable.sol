@@ -4,37 +4,35 @@ pragma solidity ^0.8.0;
 import "./interface/IPermissionsEnumerable.sol";
 import "./Permissions.sol";
 
-contract PermissionsEnumerable is IPermissionsEnumerable, Permissions  {
-
+contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
     struct RoleMembers {
         uint256 index;
         mapping(uint256 => address) members;
         mapping(address => uint256) indexOf;
     }
 
-    mapping(bytes32 => RoleMembers) private roleMembers; 
+    mapping(bytes32 => RoleMembers) private roleMembers;
 
     function getRoleMember(bytes32 role, uint256 index) external view returns (address member) {
         uint256 currentIndex = roleMembers[role].index;
         uint256 check;
 
-        for(uint256 i = 0; i < currentIndex; i += 1) {
-            if(roleMembers[role].members[i] != address(0)) {
-                if(check == index) {
+        for (uint256 i = 0; i < currentIndex; i += 1) {
+            if (roleMembers[role].members[i] != address(0)) {
+                if (check == index) {
                     member = roleMembers[role].members[i];
                 }
             } else {
                 check += 1;
             }
         }
-        
     }
 
     function getRoleMemberCount(bytes32 role) external view returns (uint256 count) {
         uint256 currentIndex = roleMembers[role].index;
-        
-        for(uint256 i = 0; i < currentIndex; i += 1) {
-            if(roleMembers[role].members[i] != address(0)) {
+
+        for (uint256 i = 0; i < currentIndex; i += 1) {
+            if (roleMembers[role].members[i] != address(0)) {
                 count += 1;
             }
         }
@@ -60,7 +58,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions  {
         _addMember(role, account);
     }
 
-    function _addMember(bytes32 role, address account) internal {        
+    function _addMember(bytes32 role, address account) internal {
         uint256 idx = roleMembers[role].index;
         roleMembers[role].index += 1;
 
@@ -68,7 +66,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions  {
         roleMembers[role].indexOf[account] = idx;
     }
 
-    function _removeMember(bytes32 role, address account) internal {        
+    function _removeMember(bytes32 role, address account) internal {
         uint256 idx = roleMembers[role].indexOf[account];
 
         delete roleMembers[role].members[idx];

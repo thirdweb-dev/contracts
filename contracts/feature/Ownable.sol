@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./interface/IOwnable.sol";
 
 abstract contract Ownable is IOwnable {
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address public owner;
 

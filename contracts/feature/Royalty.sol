@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./interface/IRoyalty.sol";
 
 abstract contract Royalty is IRoyalty {
-
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
 
@@ -42,7 +41,7 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public {   
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public {
         require(_canSetRoyaltyInfo(), "Not authorized");
         require(_royaltyBps <= 10_000, "Exceeds max bps");
 

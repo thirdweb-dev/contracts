@@ -162,13 +162,7 @@ contract SignatureDrop is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721AUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -300,10 +294,11 @@ contract SignatureDrop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256 startTokenId) {
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256 startTokenId)
+    {
         startTokenId = _currentIndex;
         _mint(_to, _quantityBeingClaimed);
     }
