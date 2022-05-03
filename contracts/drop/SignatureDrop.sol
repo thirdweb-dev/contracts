@@ -240,6 +240,18 @@ contract SignatureDrop is
         emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
     }
 
+    /// @dev Lets an account claim tokens.
+    function claim(
+        address _receiver,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        AllowlistProof calldata _allowlistProof,
+        bytes memory _data
+    ) public payable override nonReentrant {
+        super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/

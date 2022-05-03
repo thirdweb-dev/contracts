@@ -49,7 +49,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, Context {
         uint256 _pricePerToken,
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
-    ) external payable virtual {
+    ) public payable virtual {
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
