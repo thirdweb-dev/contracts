@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IThirdwebPrimarySale.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
-contract PrimarySale is IThirdwebPrimarySale, AccessControlEnumerableUpgradeable {
+abstract contract PrimarySale is IThirdwebPrimarySale {
     
     /// @dev The address that receives all primary sales value.
     address private recipient;
@@ -14,8 +13,13 @@ contract PrimarySale is IThirdwebPrimarySale, AccessControlEnumerableUpgradeable
     }
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPrimarySaleRecipient(address _saleRecipient) public {
+        require(_canSetPrimarySaleRecipient(), "Not authorized");
+
         recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
+
+    /// @dev Returns whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal virtual returns (bool);
 }

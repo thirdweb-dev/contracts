@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IThirdwebPlatformFee.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
-abstract contract PlatformFee is IThirdwebPlatformFee, AccessControlEnumerableUpgradeable {
+abstract contract PlatformFee is IThirdwebPlatformFee {
 
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
@@ -20,13 +19,16 @@ abstract contract PlatformFee is IThirdwebPlatformFee, AccessControlEnumerableUp
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
         public
-        onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= 10_000, "exceeds max bps.");
+        require(_canSetPlatformFeeInfo(), "Not authorized");
+        require(_platformFeeBps <= 10_000, "Exceeds max bps");
 
         platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
+
+    /// @dev Returns whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal virtual returns (bool);
 }

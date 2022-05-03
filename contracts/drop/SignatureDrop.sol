@@ -47,6 +47,7 @@ contract SignatureDrop is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    AccessControlEnumerableUpgradeable,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -68,9 +69,6 @@ contract SignatureDrop is
 
     /// @dev The thirdweb contract with fee related information.
     ITWFee private immutable thirdwebFee;
-
-    /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address private _owner;
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
@@ -133,7 +131,7 @@ contract SignatureDrop is
 
         // Initialize this contract's state.
         contractURI = _contractURI;
-        _owner = _defaultAdmin;
+        owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -349,6 +347,31 @@ contract SignatureDrop is
     /// @dev Returns whether a given address is authorized to sign mint requests.
     function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
         return hasRole(MINTER_ROLE, _signer);
+    }
+
+    /// @dev Returns whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IThirdwebRoyalty.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
-contract Royalty is IThirdwebRoyalty, AccessControlEnumerableUpgradeable {
+abstract contract Royalty is IThirdwebRoyalty {
 
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
@@ -43,11 +42,9 @@ contract Royalty is IThirdwebRoyalty, AccessControlEnumerableUpgradeable {
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_royaltyBps <= 10_000, "exceeds max bps");
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public {   
+        require(_canSetRoyaltyInfo(), "Not authorized");
+        require(_royaltyBps <= 10_000, "Exceeds max bps");
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint16(_royaltyBps);
@@ -60,11 +57,15 @@ contract Royalty is IThirdwebRoyalty, AccessControlEnumerableUpgradeable {
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= 10_000, "exceeds max bps");
+    ) external {
+        require(_canSetRoyaltyInfo(), "Not authorized");
+        require(_bps <= 10_000, "Exceeds max bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
+
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal virtual returns (bool);
 }
