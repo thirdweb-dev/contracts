@@ -1,6 +1,4 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.1 (access/IAccessControlEnumerable.sol)
-
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 import "./IPermissions.sol";

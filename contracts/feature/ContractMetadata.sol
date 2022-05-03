@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interfaces/IThirdwebContract.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "./interface/IContractMetadata.sol";
 
-abstract contract ContractMetadata is IThirdwebContract {
+abstract contract ContractMetadata is IContractMetadata {
     
     /// @dev Contract level metadata.
     string public contractURI;

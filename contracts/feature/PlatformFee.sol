@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IThirdwebPlatformFee.sol";
+import "./interface/IPlatformFee.sol";
 
-abstract contract PlatformFee is IThirdwebPlatformFee {
+abstract contract PlatformFee is IPlatformFee {
 
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;

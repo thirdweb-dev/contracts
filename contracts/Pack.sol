@@ -4,8 +4,8 @@ pragma solidity ^0.8.11;
 // Base
 import "./openzeppelin-presets/ERC1155PresetUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
-import "./feature/interface/IThirdwebOwnable.sol";
-import "./feature/interface/IThirdwebRoyalty.sol";
+import "./feature/interface/IOwnable.sol";
+import "./feature/interface/IRoyalty.sol";
 
 // Randomness
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -28,8 +28,8 @@ import "./interfaces/ITWFee.sol";
 contract Pack is
     Initializable,
     IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
+    IOwnable,
+    IRoyalty,
     VRFConsumerBase,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IThirdwebOwnable.sol";
+import "./interface/IOwnable.sol";
 
-abstract contract Ownable is IThirdwebOwnable {
+abstract contract Ownable is IOwnable {
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address public owner;
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) external {
+    function setOwner(address _newOwner) public {
         require(_canSetOwner(), "Not authorized");
 
         address _prevOwner = owner;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IThirdwebRoyalty.sol";
+import "./interface/IRoyalty.sol";
 
-abstract contract Royalty is IThirdwebRoyalty {
+abstract contract Royalty is IRoyalty {
 
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;

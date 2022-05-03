@@ -5,8 +5,8 @@ pragma solidity ^0.8.11;
 import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
 
 import "../interfaces/IThirdwebContract.sol";
-import "../feature/interface/IThirdwebPlatformFee.sol";
-import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IPlatformFee.sol";
+import "../feature/interface/IPrimarySale.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -35,8 +35,8 @@ import "../interfaces/ITWFee.sol";
 contract TokenERC20 is
     Initializable,
     IThirdwebContract,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
+    IPrimarySale,
+    IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
