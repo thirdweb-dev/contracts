@@ -3,43 +3,45 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
+import "./Context.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase {
+abstract contract DropSinglePhase is IDropSinglePhase, Context {
+    
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
-    /// @dev The active conditions for claiming lazy minted tokens.
-    ClaimCondition public claimCondition;
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
 
-    mapping(bytes32 => mapping(address => uint256)) private lastClaimTimestamp;
-    mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
+    /// @dev The active conditions for claiming tokens.
+    ClaimCondition public claimCondition;
 
     /// @dev The ID for the active claim condition.
     bytes32 private conditionId;
 
-    function _msgSender() internal virtual returns (address) {
-        return msg.sender;
-    }
+    /*///////////////////////////////////////////////////////////////
+                                Mappings
+    //////////////////////////////////////////////////////////////*/
 
-    function _beforeClaim(
-        address _receiver,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        AllowlistProof calldata _allowlistProof,
-        bytes memory _data
-    ) internal virtual;
+    /**
+     *  @dev Map from an account and uid for a claim condition, to the last timestamp
+     *       at which the account claimed tokens under that claim condition.
+     */
+    mapping(bytes32 => mapping(address => uint256)) private lastClaimTimestamp;
 
-    function _afterClaim(
-        address _receiver,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        AllowlistProof calldata _allowlistProof,
-        bytes memory _data
-    ) internal virtual;
+    /**
+     *  @dev Map from a claim condition uid to whether an address in an allowlist
+     *       has already claimed tokens i.e. used their place in the allowlist.
+     */
+    mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
 
-    /// @dev Lets an account claim NFTs.
+
+    /*///////////////////////////////////////////////////////////////
+                            Drop logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Lets an account claim tokens.
     function claim(
         address _receiver,
         uint256 _quantity,
@@ -51,6 +53,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
+
         /**
          *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
          *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
@@ -83,46 +86,40 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
 
         // If there's a price, collect price.
-        collectPrice(_quantity, _currency, _pricePerToken);
+        collectPriceOnClaim(_quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        uint256 startTokenId = transferClaimedTokens(_receiver, _quantity);
+        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
         emit TokensClaimed(claimCondition, _msgSender(), _receiver, _quantity, startTokenId);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPrice(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal virtual;
+    /// @dev Lets a contract admin set claim conditions.
+    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility, bytes memory) external {
 
-    /// @dev Transfers the NFTs being claimed.
-    function transferClaimedTokens(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+        bytes32 targetConditionId = conditionId;
+        uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
 
-    function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility) external {
         if (_resetClaimEligibility) {
-            conditionId = keccak256(abi.encodePacked(msg.sender, block.number));
+            supplyClaimedAlready = 0;
+            targetConditionId = keccak256(abi.encodePacked(msg.sender, block.number));
         }
 
-        ClaimCondition memory currentConditoin = claimCondition;
+        require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
 
         claimCondition = ClaimCondition({
             startTimestamp: block.timestamp,
             maxClaimableSupply: _condition.maxClaimableSupply,
-            supplyClaimed: _resetClaimEligibility ? currentConditoin.supplyClaimed : _condition.supplyClaimed,
+            supplyClaimed: supplyClaimedAlready,
             quantityLimitPerTransaction: _condition.supplyClaimed,
             waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
             merkleRoot: _condition.merkleRoot,
             pricePerToken: _condition.pricePerToken,
             currency: _condition.currency
         });
+        conditionId = targetConditionId;
 
         emit ClaimConditionUpdated(_condition, _resetClaimEligibility);
     }
@@ -152,12 +149,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
             "exceed max claimable supply."
         );
-        // require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        // require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
-        // require(
-        //     maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
-        //     "exceed claim limit"
-        // );
 
         uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
         require(
@@ -189,4 +180,41 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             );
         }
     }
+
+    /*///////////////////////////////////////////////////////////////
+        Virtual functions: to be implemented in derived contract
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Runs before every `claim` function call.
+    function _beforeClaim(
+        address _receiver,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        AllowlistProof calldata _allowlistProof,
+        bytes memory _data
+    ) internal virtual {}
+
+    /// @dev Runs after every `claim` function call.
+    function _afterClaim(
+        address _receiver,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        AllowlistProof calldata _allowlistProof,
+        bytes memory _data
+    ) internal virtual {}
+
+    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
+    function collectPriceOnClaim(
+        uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken
+    ) internal virtual;
+
+    /// @dev Transfers the NFTs being claimed.
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual returns (uint256 startTokenId);
 }

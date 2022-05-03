@@ -33,6 +33,7 @@ import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
+import "../feature/DropSinglePhase.sol";
 
 contract SignatureDrop is
     Initializable,
@@ -44,8 +45,8 @@ contract SignatureDrop is
     DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
+    DropSinglePhase,
     SignatureMintERC721Upgradeable,
-    IDropClaimCondition,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -74,12 +75,6 @@ contract SignatureDrop is
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
 
-    /// @dev The active conditions for claiming lazy minted tokens.
-    ClaimCondition public claimCondition;
-
-    /// @dev The ID for the active claim condition.
-    bytes32 private conditionId;
-
     /*///////////////////////////////////////////////////////////////
                                 Mappings
     //////////////////////////////////////////////////////////////*/
@@ -101,7 +96,6 @@ contract SignatureDrop is
         uint256 pricePerToken,
         address indexed currency
     );
-    event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -238,7 +232,7 @@ contract SignatureDrop is
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPrice(_req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
         _mint(receiver, _req.quantity);
@@ -246,80 +240,28 @@ contract SignatureDrop is
         emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
     }
 
-    /// @dev Lets an account claim NFTs.
-    function claim(
-        address _receiver,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken
-    ) external payable {
-        ClaimCondition memory condition = claimCondition;
-
-        // Verify claim
-        require(
-            _currency == condition.currency && _pricePerToken == condition.pricePerToken,
-            "invalid currency or price."
-        );
-        require(_quantity > 0 && _quantity <= condition.quantityLimitPerTransaction, "invalid quantity.");
-        require(condition.supplyClaimed + _quantity <= condition.maxClaimableSupply, "exceed max claimable supply.");
-
-        uint256 tokenIdToClaim = _currentIndex;
-        require(tokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-
-        uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
-        require(
-            lastClaimTimestampForClaimer == 0 ||
-                block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
-
-        // Collect price for claim.
-        collectPrice(_quantity, _currency, _pricePerToken);
-
-        // Mark the claim.
-        lastClaimTimestamp[msg.sender][conditionId] = block.timestamp;
-        claimCondition.supplyClaimed += _quantity;
-
-        // Transfer tokens being claimed.
-        _mint(_receiver, _quantity);
-
-        emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
-    }
-
-    function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        if (_resetClaimEligibility) {
-            conditionId = keccak256(abi.encodePacked(msg.sender, block.number));
-        }
-
-        ClaimCondition memory currentConditoin = claimCondition;
-
-        claimCondition = ClaimCondition({
-            startTimestamp: block.timestamp,
-            maxClaimableSupply: _condition.maxClaimableSupply,
-            supplyClaimed: _resetClaimEligibility ? currentConditoin.supplyClaimed : _condition.supplyClaimed,
-            quantityLimitPerTransaction: _condition.supplyClaimed,
-            waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
-            merkleRoot: _condition.merkleRoot,
-            pricePerToken: _condition.pricePerToken,
-            currency: _condition.currency
-        });
-
-        emit ClaimConditionUpdated(_condition, _resetClaimEligibility);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Runs before every `claim` function call.
+    function _beforeClaim(
+        address,
+        uint256 _quantity,
+        address,
+        uint256,
+        AllowlistProof calldata,
+        bytes memory
+    ) internal view override {
+        require(_currentIndex + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
+    }
+
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPrice(
+    function collectPriceOnClaim(
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal {
+    ) internal override {
         if (_pricePerToken == 0) {
             return;
         }
@@ -343,6 +285,15 @@ contract SignatureDrop is
             primarySaleRecipient(),
             totalPrice - platformFees - twFee
         );
+    }
+
+    /// @dev Transfers the NFTs being claimed.
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {
+        startTokenId = _currentIndex;
+        _mint(_to, _quantityBeingClaimed);
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
