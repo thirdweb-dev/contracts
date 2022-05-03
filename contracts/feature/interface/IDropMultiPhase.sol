@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./IClaimCondition.sol";
 
 interface IDropMultiPhase is IClaimCondition {
-    
     struct AllowlistProof {
         bytes32[] proof;
         uint256 maxQuantityInAllowlist;
@@ -40,5 +39,9 @@ interface IDropMultiPhase is IClaimCondition {
      *
      *  @param data                     Arbitrary bytes data that can be leveraged in the implementation of this interface.
      */
-    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility, bytes memory data) external;
+    function setClaimConditions(
+        ClaimCondition[] calldata phases,
+        bool resetClaimEligibility,
+        bytes memory data
+    ) external;
 }

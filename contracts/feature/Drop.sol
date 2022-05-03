@@ -3,6 +3,4 @@ pragma solidity ^0.8.0;
 
 import "./interface/IClaimCondition.sol";
 
-contract Drop is IClaimCondition {
-    
-}
+contract Drop is IClaimCondition {}

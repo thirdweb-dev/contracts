@@ -37,16 +37,13 @@ abstract contract SignatureMintERC1155Upgradeable is Initializable, EIP712Upgrad
     function _isAuthorizedSigner(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a mint request and marks the request as minted.
-    function _processRequest(MintRequest calldata _req, bytes calldata _signature)
-        internal
-        returns (address signer)
-    {
+    function _processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address signer) {
         bool success;
         (success, signer) = verify(_req, _signature);
 
         require(success, "Invalid request");
         require(
-            _req.validityStartTimestamp <= block.timestamp  && block.timestamp <= _req.validityEndTimestamp,
+            _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
 

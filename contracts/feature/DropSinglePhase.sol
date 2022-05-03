@@ -6,7 +6,6 @@ import "../lib/MerkleProof.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase {
-
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     /// @dev The active conditions for claiming lazy minted tokens.
@@ -49,7 +48,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
     ) external payable virtual {
-
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
@@ -70,13 +68,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
 
-        verifyClaim(
-            _msgSender(),
-            _quantity,
-            _currency,
-            _pricePerToken,
-            toVerifyMaxQuantityPerTransaction
-        );
+        verifyClaim(_msgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -109,14 +101,12 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferClaimedTokens(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal virtual returns (uint256 startTokenId);
+    function transferClaimedTokens(address _to, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        returns (uint256 startTokenId);
 
-    function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility)
-        external
-    {
+    function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility) external {
         if (_resetClaimEligibility) {
             conditionId = keccak256(abi.encodePacked(msg.sender, block.number));
         }
@@ -170,7 +160,11 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // );
 
         uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        require(timestampOfLastClaim == 0 || block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims, "cannot claim.");
+        require(
+            timestampOfLastClaim == 0 ||
+                block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
+            "cannot claim."
+        );
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -195,5 +189,4 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             );
         }
     }
-
 }

@@ -486,9 +486,9 @@ contract SignatureDrop is
         address ownerOfToken = ownerOf(tokenId);
         //solhint-disable-next-line max-line-length
         require(
-            _msgSender() == ownerOfToken
-                || isApprovedForAll(ownerOfToken, _msgSender())
-                || getApproved(tokenId) == _msgSender(),
+            _msgSender() == ownerOfToken ||
+                isApprovedForAll(ownerOfToken, _msgSender()) ||
+                getApproved(tokenId) == _msgSender(),
             "caller not owner nor approved"
         );
         _burn(tokenId);
