@@ -7,23 +7,36 @@ import "../lib/Strings.sol";
 
 contract Permissions is IPermissions, Context {
     
-    mapping(bytes32 => mapping(address => bool)) public hasRole;
-    mapping(bytes32 => bytes32) public getRoleAdmin;
+    mapping(bytes32 => mapping(address => bool)) private _hasRole;
+    mapping(bytes32 => bytes32) private _getRoleAdmin;
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
-    function grantRole(bytes32 role, address account) public virtual {
-        _checkRole(getRoleAdmin[role], _msgSender());
+    modifier onlyRole(bytes32 role) {
+        _checkRole(role, _msgSender());
+        _;
+    }
 
-        hasRole[role][account] = true;
+    function hasRole(bytes32 role, address account) public view returns (bool) {
+        return _hasRole[role][account];
+    }
+
+    function getRoleAdmin(bytes32 role) public view returns (bytes32) {
+        return _getRoleAdmin[role];
+    }
+
+    function grantRole(bytes32 role, address account) public virtual {
+        _checkRole(_getRoleAdmin[role], _msgSender());
+
+        _hasRole[role][account] = true;
 
         emit RoleGranted(role, account, _msgSender());
     }
 
     function revokeRole(bytes32 role, address account) public virtual {
-        _checkRole(getRoleAdmin[role], _msgSender());
+        _checkRole(_getRoleAdmin[role], _msgSender());
 
-        delete hasRole[role][account];
+        delete _hasRole[role][account];
 
         emit RoleRevoked(role, account, _msgSender());
     }
@@ -34,13 +47,18 @@ contract Permissions is IPermissions, Context {
             "Can only renounce for self"
         );
 
-        delete hasRole[role][account];
+        delete _hasRole[role][account];
 
         emit RoleRevoked(role, account, _msgSender());
     }
 
+    function _setupRole(bytes32 role, address account) internal virtual {
+        _hasRole[role][account] = true;
+        emit RoleGranted(role, account, _msgSender());
+    }
+
     function _checkRole(bytes32 role, address account) internal view virtual {
-        if (!hasRole[role][account]) {
+        if (!_hasRole[role][account]) {
             revert(
                 string(
                     abi.encodePacked(

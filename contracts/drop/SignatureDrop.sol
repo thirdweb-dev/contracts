@@ -31,6 +31,7 @@ import "../feature/PrimarySale.sol";
 import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
+import "../feature/PermissionsEnumerable.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
 
 contract SignatureDrop is
@@ -42,12 +43,12 @@ contract SignatureDrop is
     Ownable,
     DelayedReveal,
     LazyMint,
+    PermissionsEnumerable,
     SignatureMintERC721Upgradeable,
     IDropClaimCondition,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -171,7 +172,7 @@ contract SignatureDrop is
         public
         view
         virtual
-        override(ERC721AUpgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC721AUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -410,7 +411,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -420,7 +421,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();

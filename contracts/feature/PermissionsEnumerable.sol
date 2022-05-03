@@ -55,6 +55,11 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions  {
         _removeMember(role, account);
     }
 
+    function _setupRole(bytes32 role, address account) internal override {
+        super._setupRole(role, account);
+        _addMember(role, account);
+    }
+
     function _addMember(bytes32 role, address account) internal {        
         uint256 idx = roleMembers[role].index;
         roleMembers[role].index += 1;
