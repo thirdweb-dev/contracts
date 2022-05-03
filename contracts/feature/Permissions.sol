@@ -12,29 +12,23 @@ contract Permissions is IPermissions, Context {
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
-    function grantRole(bytes32 role, address account) external {
-        require(
-            hasRole[getRoleAdmin[role]][_msgSender()],
-            "Not role admin."
-        );
+    function grantRole(bytes32 role, address account) public virtual {
+        _checkRole(getRoleAdmin[role], _msgSender());
 
         hasRole[role][account] = true;
 
         emit RoleGranted(role, account, _msgSender());
     }
 
-    function revokeRole(bytes32 role, address account) external {
-        require(
-            hasRole[getRoleAdmin[role]][_msgSender()],
-            "Not role admin."
-        );
+    function revokeRole(bytes32 role, address account) public virtual {
+        _checkRole(getRoleAdmin[role], _msgSender());
 
         delete hasRole[role][account];
 
         emit RoleRevoked(role, account, _msgSender());
     }
 
-    function renounceRole(bytes32 role, address account) external {
+    function renounceRole(bytes32 role, address account) public virtual {
         require(
             _msgSender() == account,
             "Can only renounce for self"
