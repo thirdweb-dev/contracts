@@ -24,29 +24,31 @@ import "../lib/FeeType.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/interface/IThirdwebPlatformFee.sol";
-import "../feature/interface/IThirdwebPrimarySale.sol";
-import "../feature/interface/IThirdwebRoyalty.sol";
-import "../feature/interface/IThirdwebOwnable.sol";
+import "../feature/ContractMetadata.sol";
+import "../feature/PlatformFee.sol";
+import "../feature/Royalty.sol";
+import "../feature/PrimarySale.sol";
+import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
+import "../feature/PermissionsEnumerable.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
 
 contract SignatureDrop is
     Initializable,
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
+    ContractMetadata,
+    PlatformFee,
+    Royalty,
+    PrimarySale,
+    Ownable,
+    DelayedReveal,
+    LazyMint,
+    PermissionsEnumerable,
+    SignatureMintERC721Upgradeable,
     IDropClaimCondition,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable,
-    DelayedReveal,
-    LazyMint,
-    SignatureMintERC721Upgradeable,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -69,27 +71,6 @@ contract SignatureDrop is
     /// @dev The thirdweb contract with fee related information.
     ITWFee private immutable thirdwebFee;
 
-    /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address private _owner;
-
-    /// @dev The address that receives all primary sales value.
-    address public primarySaleRecipient;
-
-    /// @dev The address that receives all platform fees from all sales.
-    address private platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint16 private platformFeeBps;
-
-    /// @dev The (default) address that receives all royalty value.
-    address private royaltyRecipient;
-
-    /// @dev The (default) % of a sale to take as royalty (in basis points).
-    uint16 private royaltyBps;
-
-    /// @dev Contract level metadata.
-    string public contractURI;
-
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
 
@@ -105,9 +86,6 @@ contract SignatureDrop is
 
     /// @dev Mapping from claimer => condition Id => timestamp of last claim.
     mapping(address => mapping(bytes32 => uint256)) private lastClaimTimestamp;
-
-    /// @dev Token ID => royalty recipient and bps for token
-    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /*///////////////////////////////////////////////////////////////
                                 Events
@@ -153,18 +131,17 @@ contract SignatureDrop is
         __SignatureMintERC721_init();
 
         // Initialize this contract's state.
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
-        platformFeeRecipient = _platformFeeRecipient;
-        platformFeeBps = uint16(_platformFeeBps);
-        primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        _owner = _defaultAdmin;
+        owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        setPrimarySaleRecipient(_saleRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -181,13 +158,6 @@ contract SignatureDrop is
         return uint8(VERSION);
     }
 
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
@@ -202,22 +172,10 @@ contract SignatureDrop is
         public
         view
         virtual
-        override(ERC721AUpgradeable, AccessControlEnumerableUpgradeable)
+        override(ERC721AUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    }
-
-    /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
-        receiver = recipient;
-        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -366,6 +324,8 @@ contract SignatureDrop is
             return;
         }
 
+        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
+
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
         (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
@@ -380,7 +340,7 @@ contract SignatureDrop is
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
-            primarySaleRecipient,
+            primarySaleRecipient(),
             totalPrice - platformFees - twFee
         );
     }
@@ -390,91 +350,29 @@ contract SignatureDrop is
         return hasRole(MINTER_ROLE, _signer);
     }
 
-    /*///////////////////////////////////////////////////////////////
-                        Getter functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        primarySaleRecipient = _saleRecipient;
-        emit PrimarySaleRecipientUpdated(_saleRecipient);
+    /// @dev Returns whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_royaltyBps <= MAX_BPS, "> MAX_BPS");
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
-
-        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+    /// @dev Returns whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
-    function setRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "> MAX_BPS");
-
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
-
-        emit RoyaltyForToken(_tokenId, _recipient, _bps);
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_platformFeeBps <= MAX_BPS, "> MAX_BPS.");
-
-        platformFeeBps = uint16(_platformFeeBps);
-        platformFeeRecipient = _platformFeeRecipient;
-
-        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "!ADMIN");
-        address _prevOwner = _owner;
-        _owner = _newOwner;
-
-        emit OwnerUpdated(_prevOwner, _newOwner);
-    }
-
-    /// @dev Lets a contract admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        contractURI = _uri;
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Setter functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the royalty recipient and bps for a particular token Id.
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
-
-        return
-            royaltyForToken.recipient == address(0)
-                ? (royaltyRecipient, uint16(royaltyBps))
-                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
-    }
-
-    /// @dev Returns the platform fee recipient and bps.
-    function getPlatformFeeInfo() external view returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
-    }
-
-    /// @dev Returns the default royalty recipient and bps.
-    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
-        return (royaltyRecipient, uint16(royaltyBps));
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -513,7 +411,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -523,7 +421,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();

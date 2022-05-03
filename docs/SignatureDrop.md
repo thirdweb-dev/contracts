@@ -150,7 +150,7 @@ function contractURI() external view returns (string)
 
 
 
-*Contract level metadata.*
+
 
 
 #### Returns
@@ -635,7 +635,7 @@ function primarySaleRecipient() external view returns (address)
 
 
 
-*The address that receives all primary sales value.*
+*The adress that receives all primary sales value.*
 
 
 #### Returns
