@@ -16,7 +16,7 @@ abstract contract PlatformFee is IPlatformFee {
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) public  override{
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) public override {
         require(_canSetPlatformFeeInfo(), "Not authorized");
         require(_platformFeeBps <= 10_000, "Exceeds max bps");
 
