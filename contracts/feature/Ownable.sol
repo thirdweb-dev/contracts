@@ -5,10 +5,10 @@ import "./interface/IOwnable.sol";
 
 abstract contract Ownable is IOwnable {
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address public owner;
+    address public override owner;
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) public {
+    function setOwner(address _newOwner) public override {
         require(_canSetOwner(), "Not authorized");
 
         address _prevOwner = owner;

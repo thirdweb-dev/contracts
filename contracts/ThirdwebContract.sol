@@ -5,7 +5,7 @@ import "./feature/Ownable.sol";
 import "./feature/ExecutionContext.sol";
 import "./feature/ContractMetadata.sol";
 
-contract ThirdwebContract is ExecutionContext, Ownable, ContractMetadata {
+contract ThirdwebContract is Ownable, ContractMetadata {
     struct ThirdwebInfo {
         string publishMetadataUri;
         string contractURI;
@@ -22,20 +22,21 @@ contract ThirdwebContract is ExecutionContext, Ownable, ContractMetadata {
 
     /// @dev Initializes the publish metadata and contract metadata at deploy time.
     function setThirdwebInfo(ThirdwebInfo memory _thirdwebInfo) external {
-        require(bytes(publishMetadataUri).length == 0, "Already initialized");
+        require(bytes(publishMetadataUri).length == 0, "Published metadata already initialized");
+        require(owner == address(0), "Owner already initialized");
 
         publishMetadataUri = _thirdwebInfo.publishMetadataUri;
         contractURI = _thirdwebInfo.contractURI;
         owner = _thirdwebInfo.owner;
     }
 
-    /// @dev Returns whether owner can be set in the given execution context.
+    /// @dev Returns whether owner can be set
     function _canSetOwner() internal virtual override returns (bool) {
-        return _msgSender() == owner;
+        return msg.sender == owner;
     }
 
-    /// @dev Returns whether contract metadata can be set in the given execution context.
+    /// @dev Returns whether contract metadata can be set
     function _canSetContractURI() internal virtual override returns (bool) {
-        return _msgSender() == owner;
+        return msg.sender == owner;
     }
 }
