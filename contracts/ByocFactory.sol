@@ -112,11 +112,11 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, T
         emit Paused(_pause);
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context, ExecutionContext) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context, ExecutionContext) returns (bytes calldata) {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }
