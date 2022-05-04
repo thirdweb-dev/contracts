@@ -21,7 +21,7 @@ abstract contract DelayedReveal is IDelayedReveal {
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
+    function encryptDecrypt(bytes memory data, bytes calldata key) public pure override returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
 

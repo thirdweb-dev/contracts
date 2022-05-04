@@ -23,6 +23,7 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
     function verify(MintRequest calldata _req, bytes calldata _signature)
         public
         view
+        override
         returns (bool success, address signer)
     {
         signer = _recoverAddress(_req, _signature);

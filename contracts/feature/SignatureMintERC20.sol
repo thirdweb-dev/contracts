@@ -23,6 +23,7 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
     function verify(MintRequest calldata _req, bytes calldata _signature)
         public
         view
+        override
         returns (bool success, address signer)
     {
         signer = _recoverAddress(_req, _signature);

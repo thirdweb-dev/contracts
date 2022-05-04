@@ -18,6 +18,7 @@ abstract contract Royalty is IRoyalty {
         external
         view
         virtual
+        override
         returns (address receiver, uint256 royaltyAmount)
     {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
@@ -26,7 +27,7 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Returns the royalty recipient and bps for a particular token Id.
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
         return
@@ -36,12 +37,12 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Returns the default royalty recipient and bps.
-    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
+    function getDefaultRoyaltyInfo() external view override returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public override {
         require(_canSetRoyaltyInfo(), "Not authorized");
         require(_royaltyBps <= 10_000, "Exceeds max bps");
 
@@ -56,7 +57,7 @@ abstract contract Royalty is IRoyalty {
         uint256 _tokenId,
         address _recipient,
         uint256 _bps
-    ) external {
+    ) external override {
         require(_canSetRoyaltyInfo(), "Not authorized");
         require(_bps <= 10_000, "Exceeds max bps");
 

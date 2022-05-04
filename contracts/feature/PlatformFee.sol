@@ -11,12 +11,12 @@ abstract contract PlatformFee is IPlatformFee {
     uint16 private platformFeeBps;
 
     /// @dev Returns the platform fee recipient and bps.
-    function getPlatformFeeInfo() public view returns (address, uint16) {
+    function getPlatformFeeInfo() public view override returns (address, uint16) {
         return (platformFeeRecipient, uint16(platformFeeBps));
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) public {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) public  override{
         require(_canSetPlatformFeeInfo(), "Not authorized");
         require(_platformFeeBps <= 10_000, "Exceeds max bps");
 

@@ -47,7 +47,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         uint256 _pricePerToken,
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
-    ) public payable virtual {
+    ) public payable virtual override {
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
@@ -99,7 +99,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         ClaimCondition calldata _condition,
         bool _resetClaimEligibility,
         bytes memory
-    ) external {
+    ) external override {
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
 

@@ -27,6 +27,7 @@ abstract contract SignatureMintERC1155Upgradeable is Initializable, EIP712Upgrad
     function verify(MintRequest calldata _req, bytes calldata _signature)
         public
         view
+        override
         returns (bool success, address signer)
     {
         signer = _recoverAddress(_req, _signature);
