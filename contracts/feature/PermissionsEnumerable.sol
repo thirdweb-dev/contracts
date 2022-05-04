@@ -13,7 +13,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
 
     mapping(bytes32 => RoleMembers) private roleMembers;
 
-    function getRoleMember(bytes32 role, uint256 index) external view returns (address member) {
+    function getRoleMember(bytes32 role, uint256 index) external view override returns (address member) {
         uint256 currentIndex = roleMembers[role].index;
         uint256 check;
 
@@ -28,7 +28,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
         }
     }
 
-    function getRoleMemberCount(bytes32 role) external view returns (uint256 count) {
+    function getRoleMemberCount(bytes32 role) external view override returns (uint256 count) {
         uint256 currentIndex = roleMembers[role].index;
 
         for (uint256 i = 0; i < currentIndex; i += 1) {
