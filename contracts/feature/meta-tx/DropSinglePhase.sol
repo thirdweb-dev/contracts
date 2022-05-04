@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IDropSinglePhase.sol";
-import "../lib/MerkleProof.sol";
+import "../interface/IDropSinglePhase.sol";
+import "../../lib/MerkleProof.sol";
+import "./ExecutionContext.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase {
+abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     /*///////////////////////////////////////////////////////////////
@@ -60,7 +61,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
         // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            msg.sender,
+            _msgSender(),
             _quantity,
             _allowlistProof
         );
@@ -68,7 +69,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
 
-        verifyClaim(msg.sender, _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(_msgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -80,7 +81,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
         // Update contract state.
         claimCondition.supplyClaimed += _quantity;
-        lastClaimTimestamp[activeConditionId][msg.sender] = block.timestamp;
+        lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_quantity, _currency, _pricePerToken);
@@ -88,7 +89,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(claimCondition, msg.sender, _receiver, _quantity, startTokenId);
+        emit TokensClaimed(claimCondition, _msgSender(), _receiver, _quantity, startTokenId);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }

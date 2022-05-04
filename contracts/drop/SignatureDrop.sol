@@ -33,7 +33,7 @@ import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
-import "../feature/DropSinglePhase.sol";
+import "../feature/meta-tx/DropSinglePhase.sol";
 
 contract SignatureDrop is
     Initializable,
