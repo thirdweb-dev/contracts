@@ -362,7 +362,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, ExecutionContext)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -372,7 +372,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, ExecutionContext)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();

@@ -11,9 +11,9 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 //  ==========  Internal imports    ==========
 import { IByocFactory } from "./interfaces/IByocFactory.sol";
 import { TWRegistry } from "./TWRegistry.sol";
-import { ThirdwebContract } from "./ThirdwebContract.sol";
+import "./ThirdwebContract.sol";
 
-contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
+contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, ThirdwebContract {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -112,11 +112,11 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         emit Paused(_pause);
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, ExecutionContext) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+    function _msgData() internal view virtual override(Context, ERC2771Context, ExecutionContext) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./feature/Ownable.sol";
-import "./feature/Context.sol";
+import "./feature/ExecutionContext.sol";
 import "./feature/ContractMetadata.sol";
 
-contract ThirdwebContract is Context, Ownable, ContractMetadata {
+contract ThirdwebContract is ExecutionContext, Ownable, ContractMetadata {
     struct ThirdwebInfo {
         string publishMetadataUri;
         string contractURI;

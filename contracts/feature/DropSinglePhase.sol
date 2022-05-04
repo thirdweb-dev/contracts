@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
-import "./Context.sol";
+import "./ExecutionContext.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase, Context {
+abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     /*///////////////////////////////////////////////////////////////

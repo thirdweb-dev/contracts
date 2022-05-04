@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IPermissions.sol";
-import "./Context.sol";
+import "./ExecutionContext.sol";
 import "../lib/Strings.sol";
 
-contract Permissions is IPermissions, Context {
+contract Permissions is IPermissions, ExecutionContext {
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
     mapping(bytes32 => bytes32) private _getRoleAdmin;
 
