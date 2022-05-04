@@ -3,27 +3,18 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
+import "../eip/ERC721AUpgradeable.sol";
+
 import "../interfaces/ITWFee.sol";
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/drop/IDropClaimCondition.sol";
-
-//  ==========  Features    ==========
-
-import "../feature/interface/IThirdwebPlatformFee.sol";
-import "../feature/interface/IThirdwebPrimarySale.sol";
-import "../feature/interface/IThirdwebRoyalty.sol";
-import "../feature/interface/IThirdwebOwnable.sol";
-import "../feature/DelayedReveal.sol";
-import "../feature/LazyMint.sol";
-import "../feature/SignatureMintUpgradeable.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
@@ -31,21 +22,35 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 
+//  ==========  Features    ==========
+
+import "../feature/ContractMetadata.sol";
+import "../feature/PlatformFee.sol";
+import "../feature/Royalty.sol";
+import "../feature/PrimarySale.sol";
+import "../feature/Ownable.sol";
+import "../feature/DelayedReveal.sol";
+import "../feature/LazyMint.sol";
+import "../feature/PermissionsEnumerable.sol";
+import "../feature/SignatureMintERC721Upgradeable.sol";
+import "../feature/DropSinglePhase.sol";
+
 contract SignatureDrop is
     Initializable,
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IDropClaimCondition,
+    ContractMetadata,
+    PlatformFee,
+    Royalty,
+    PrimarySale,
+    Ownable,
+    DelayedReveal,
+    LazyMint,
+    PermissionsEnumerable,
+    DropSinglePhase,
+    SignatureMintERC721Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    DelayedReveal,
-    LazyMint,
-    SignatureMintUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
 
@@ -58,58 +63,17 @@ contract SignatureDrop is
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
     /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
-
-    /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address private _owner;
-
-    /// @dev The address that receives all primary sales value.
-    address public primarySaleRecipient;
-
-    /// @dev The address that receives all platform fees from all sales.
-    address private platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint16 private platformFeeBps;
-
-    /// @dev The (default) address that receives all royalty value.
-    address private royaltyRecipient;
-
-    /// @dev The (default) % of a sale to take as royalty (in basis points).
-    uint16 private royaltyBps;
-
-    /// @dev Contract level metadata.
-    string public contractURI;
+    ITWFee private immutable thirdwebFee;
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
-
-    /// @dev The tokenId of the next lazy minted NFT that will be claimed.
-    uint256 public nextTokenIdToClaim;
-
-    /// @dev The active conditions for claiming lazy minted tokens.
-    ClaimCondition public claimCondition;
-
-    /// @dev The ID for the active claim condition.
-    bytes32 private conditionId;
-
-    /*///////////////////////////////////////////////////////////////
-                                Mappings
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Mapping from tokenId => URI (for tokens minted with signature)
-    mapping(uint256 => string) private uri;
-
-    /// @dev Mapping from claimer => condition Id => timestamp of last claim.
-    mapping(address => mapping(bytes32 => uint256)) private lastClaimTimestamp;
-
-    /// @dev Token ID => royalty recipient and bps for token
-    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     /*///////////////////////////////////////////////////////////////
                                 Events
@@ -125,7 +89,6 @@ contract SignatureDrop is
         uint256 pricePerToken,
         address indexed currency
     );
-    event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -151,22 +114,21 @@ contract SignatureDrop is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
-        __ERC721_init(_name, _symbol);
-        __SignatureMint_init("TokenDrop", "1", _defaultAdmin);
+        __ERC721A_init(_name, _symbol);
+        __SignatureMintERC721_init();
 
         // Initialize this contract's state.
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
-        platformFeeRecipient = _platformFeeRecipient;
-        platformFeeBps = uint16(_platformFeeBps);
-        primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
-        _owner = _defaultAdmin;
+        owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        setPrimarySaleRecipient(_saleRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -183,47 +145,18 @@ contract SignatureDrop is
         return uint8(VERSION);
     }
 
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view override returns (string memory uriForToken) {
-        uriForToken = uri[_tokenId];
-
-        if (bytes(uriForToken).length == 0) {
-            uriForToken = string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
-        }
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        return string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721AUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    }
-
-    /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
-        receiver = recipient;
-        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -275,109 +208,64 @@ contract SignatureDrop is
     /// @dev Claim lazy minted tokens via signature.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         require(_req.quantity > 0, "minting zero tokens");
-        require(nextTokenIdToClaim + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
+
+        uint256 tokenIdToMint = _currentIndex;
+        require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
 
         // Verify and process payload.
-        processRequest(_req, _signature);
+        _processRequest(_req, _signature);
 
         // Get receiver of tokens.
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPrice(_req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
 
-        // Mint tokens. `type(uint256).max` is reserved.
-        uint256 tokenIdToMint = nextTokenIdToClaim;
-        nextTokenIdToClaim += _req.quantity;
-
-        for (uint256 i = tokenIdToMint; i < tokenIdToMint + _req.quantity; i += 1) {
-            _mint(receiver, i);
-        }
+        // Mint tokens.
+        _mint(receiver, _req.quantity);
 
         emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
     }
 
-    /// @dev Lets an account claim NFTs.
+    /// @dev Lets an account claim tokens.
     function claim(
         address _receiver,
         uint256 _quantity,
         address _currency,
-        uint256 _pricePerToken
-    ) external payable {
-        ClaimCondition memory condition = claimCondition;
-
-        // Verify claim
-        require(
-            _currency == condition.currency && _pricePerToken == condition.pricePerToken,
-            "invalid currency or price."
-        );
-        require(_quantity > 0 && _quantity <= condition.quantityLimitPerTransaction, "invalid quantity.");
-        require(condition.supplyClaimed + _quantity <= condition.maxClaimableSupply, "exceed max claimable supply.");
-        require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-
-        uint256 lastClaimTimestampForClaimer = lastClaimTimestamp[msg.sender][conditionId];
-        require(
-            lastClaimTimestampForClaimer == 0 ||
-                block.timestamp >= lastClaimTimestampForClaimer + condition.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
-
-        // Collect price for claim.
-        collectPrice(_quantity, _currency, _pricePerToken);
-
-        // Mark the claim.
-        lastClaimTimestamp[msg.sender][conditionId] = block.timestamp;
-        claimCondition.supplyClaimed += _quantity;
-
-        // Transfer tokens being claimed.
-        uint256 tokenIdToClaim = nextTokenIdToClaim;
-
-        for (uint256 i = tokenIdToClaim; i < tokenIdToClaim + _quantity; i += 1) {
-            _mint(_receiver, i);
-        }
-
-        nextTokenIdToClaim = tokenIdToClaim + _quantity;
-
-        emit TokensMinted(_msgSender(), _receiver, tokenIdToClaim, _quantity, _pricePerToken, _currency);
-    }
-
-    function setClaimCondition(ClaimCondition calldata _condition, bool _resetClaimEligibility)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        if (_resetClaimEligibility) {
-            conditionId = keccak256(abi.encodePacked(msg.sender, block.number));
-        }
-
-        ClaimCondition memory currentConditoin = claimCondition;
-
-        claimCondition = ClaimCondition({
-            startTimestamp: block.timestamp,
-            maxClaimableSupply: _condition.maxClaimableSupply,
-            supplyClaimed: _resetClaimEligibility ? currentConditoin.supplyClaimed : _condition.supplyClaimed,
-            quantityLimitPerTransaction: _condition.supplyClaimed,
-            waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
-            merkleRoot: _condition.merkleRoot,
-            pricePerToken: _condition.pricePerToken,
-            currency: _condition.currency
-        });
-
-        emit ClaimConditionUpdated(_condition, _resetClaimEligibility);
+        uint256 _pricePerToken,
+        AllowlistProof calldata _allowlistProof,
+        bytes memory _data
+    ) public payable override nonReentrant {
+        super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Runs before every `claim` function call.
+    function _beforeClaim(
+        address,
+        uint256 _quantity,
+        address,
+        uint256,
+        AllowlistProof calldata,
+        bytes memory
+    ) internal view override {
+        require(_currentIndex + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
+    }
+
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPrice(
+    function collectPriceOnClaim(
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal {
+    ) internal override {
         if (_pricePerToken == 0) {
             return;
         }
+
+        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
@@ -393,96 +281,49 @@ contract SignatureDrop is
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
-            primarySaleRecipient,
+            primarySaleRecipient(),
             totalPrice - platformFees - twFee
         );
     }
 
-    /*///////////////////////////////////////////////////////////////
-                        Getter functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        primarySaleRecipient = _saleRecipient;
-        emit PrimarySaleRecipientUpdated(_saleRecipient);
-    }
-
-    /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+    /// @dev Transfers the NFTs being claimed.
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256 startTokenId)
     {
-        require(_royaltyBps <= MAX_BPS, "> MAX_BPS");
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
-
-        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+        startTokenId = _currentIndex;
+        _mint(_to, _quantityBeingClaimed);
     }
 
-    /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
-    function setRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "> MAX_BPS");
-
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
-
-        emit RoyaltyForToken(_tokenId, _recipient, _bps);
+    /// @dev Returns whether a given address is authorized to sign mint requests.
+    function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
+        return hasRole(MINTER_ROLE, _signer);
     }
 
-    /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_platformFeeBps <= MAX_BPS, "> MAX_BPS.");
-
-        platformFeeBps = uint16(_platformFeeBps);
-        platformFeeRecipient = _platformFeeRecipient;
-
-        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+    /// @dev Returns whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "!ADMIN");
-        address _prevOwner = _owner;
-        _owner = _newOwner;
-
-        emit OwnerUpdated(_prevOwner, _newOwner);
+    /// @dev Returns whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Lets a contract admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        contractURI = _uri;
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /*///////////////////////////////////////////////////////////////
-                        Setter functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the royalty recipient and bps for a particular token Id.
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
-
-        return
-            royaltyForToken.recipient == address(0)
-                ? (royaltyRecipient, uint16(royaltyBps))
-                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Returns the platform fee recipient and bps.
-    function getPlatformFeeInfo() external view returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
-    }
-
-    /// @dev Returns the default royalty recipient and bps.
-    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
-        return (royaltyRecipient, uint16(royaltyBps));
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -491,18 +332,25 @@ contract SignatureDrop is
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
+        address ownerOfToken = ownerOf(tokenId);
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "caller not owner nor approved");
+        require(
+            _msgSender() == ownerOfToken ||
+                isApprovedForAll(ownerOfToken, _msgSender()) ||
+                getApproved(tokenId) == _msgSender(),
+            "caller not owner nor approved"
+        );
         _burn(tokenId);
     }
 
     /// @dev See {ERC721-_beforeTokenTransfer}.
-    function _beforeTokenTransfer(
+    function _beforeTokenTransfers(
         address from,
         address to,
-        uint256 tokenId
-    ) internal virtual override(ERC721EnumerableUpgradeable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal virtual override {
+        super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -514,7 +362,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -524,7 +372,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Context)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();

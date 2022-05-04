@@ -19,8 +19,8 @@ import "../interfaces/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/interface/IThirdwebPlatformFee.sol";
-import "../feature/interface/IThirdwebPrimarySale.sol";
+import "../feature/interface/IPlatformFee.sol";
+import "../feature/interface/IPrimarySale.sol";
 
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
@@ -34,8 +34,8 @@ import "../lib/FeeType.sol";
 contract DropERC20 is
     Initializable,
     IThirdwebContract,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
+    IPrimarySale,
+    IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

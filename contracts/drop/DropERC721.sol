@@ -21,10 +21,10 @@ import "../interfaces/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/interface/IThirdwebPlatformFee.sol";
-import "../feature/interface/IThirdwebPrimarySale.sol";
-import "../feature/interface/IThirdwebRoyalty.sol";
-import "../feature/interface/IThirdwebOwnable.sol";
+import "../feature/interface/IPlatformFee.sol";
+import "../feature/interface/IPrimarySale.sol";
+import "../feature/interface/IRoyalty.sol";
+import "../feature/interface/IOwnable.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
@@ -35,10 +35,10 @@ import "../lib/MerkleProof.sol";
 contract DropERC721 is
     Initializable,
     IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
+    IOwnable,
+    IRoyalty,
+    IPrimarySale,
+    IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
