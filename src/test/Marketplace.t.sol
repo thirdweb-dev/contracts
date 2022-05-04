@@ -219,7 +219,7 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-1 makes an offer to the direct listing for 4 WETH.
         weth.approve(address(marketplace), 4 ether);
-        
+
         vm.warp(1);
         marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, type(uint256).max);
 
@@ -263,7 +263,7 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-1 makes an offer to the direct listing for 4 WETH.
         weth.approve(address(marketplace), 4 ether);
-        
+
         vm.warp(2);
         marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, 0);
 
