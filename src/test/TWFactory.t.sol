@@ -10,7 +10,7 @@ import "contracts/TWRegistry.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "contracts/TWProxy.sol";
-import "./utils/Console.sol";
+// import "./utils/Console.sol";
 import "./mocks/MockThirdwebContract.sol";
 
 interface ITWFactoryData {
