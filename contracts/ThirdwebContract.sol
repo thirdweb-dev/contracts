@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./feature/Ownable.sol";
-import "./feature/ExecutionContext.sol";
 import "./feature/ContractMetadata.sol";
 
 contract ThirdwebContract is Ownable, ContractMetadata {
