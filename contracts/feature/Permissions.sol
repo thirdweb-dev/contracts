@@ -48,6 +48,12 @@ contract Permissions is IPermissions, Context {
         emit RoleRevoked(role, account, _msgSender());
     }
 
+    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
+        bytes32 previousAdminRole = _getRoleAdmin[role];
+        _getRoleAdmin[role] = adminRole;
+        emit RoleAdminChanged(role, previousAdminRole, adminRole);
+    }
+
     function _setupRole(bytes32 role, address account) internal virtual {
         _hasRole[role][account] = true;
         emit RoleGranted(role, account, _msgSender());
