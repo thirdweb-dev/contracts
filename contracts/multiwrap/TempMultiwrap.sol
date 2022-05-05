@@ -16,17 +16,20 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
+//  ==========  Feature imports    ==========//mychange
+import "../feature/TokenBundle.sol";
+
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IThirdwebContract.sol";
 import "../interfaces/IThirdwebRoyalty.sol";
 import "../interfaces/IThirdwebOwnable.sol";
 
-import "../interfaces/IMultiwrap.sol";
+import "./ITempMultiwrap.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
-contract Multiwrap is
+contract TempMultiwrap is
     IThirdwebContract,
     IThirdwebOwnable,
     IThirdwebRoyalty,
@@ -37,8 +40,9 @@ contract Multiwrap is
     ERC1155HolderUpgradeable,
     ERC721HolderUpgradeable,
     ERC721Upgradeable,
-    IMultiwrap
-{
+    ITempMultiwrap,
+    TokenBundle
+{//mychange TokenBundle
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -60,7 +64,8 @@ contract Multiwrap is
     address private immutable nativeTokenWrapper;
 
     /// @dev The next token ID of the NFT to mint.
-    uint256 public nextTokenIdToMint;
+    // uint256 public nextTokenIdToMint;
+    //mychange
 
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
@@ -85,7 +90,9 @@ contract Multiwrap is
     mapping(uint256 => string) private uri;
 
     /// @dev Mapping from tokenId of wrapped NFT => wrapped contents of the token.
-    mapping(uint256 => WrappedContents) private wrappedContents;
+    // mapping(uint256 => WrappedContents) private wrappedContents;
+    //mychange
+    // mapping(uint256=>BundleInfo) private bundle;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -163,7 +170,8 @@ contract Multiwrap is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return uri[_tokenId];
+        // return uri[_tokenId]; //mychange
+        return getUri(_tokenId);
     }
 
     /// @dev See ERC 165
@@ -202,15 +210,23 @@ contract Multiwrap is
         string calldata _uriForWrappedToken,
         address _recipient
     ) external payable nonReentrant onlyMinter returns (uint256 tokenId) {
-        tokenId = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+        // tokenId = nextTokenIdToMint;
+        // nextTokenIdToMint += 1;
+        //mychange
+        tokenId = _getNextTokenId();
 
-        for (uint256 i = 0; i < _wrappedContents.length; i += 1) {
-            wrappedContents[tokenId].token[i] = _wrappedContents[i];
-        }
-        wrappedContents[tokenId].count = _wrappedContents.length;
+        _setBundle(_wrappedContents, tokenId); //mychange
 
-        uri[tokenId] = _uriForWrappedToken;
+        //mychange
+        // for (uint256 i = 0; i < _wrappedContents.length; i += 1) {
+        //     bundle[tokenId].tokens[i] = _wrappedContents[i];
+        // }
+        // wrappedContents[tokenId].count = _wrappedContents.length;
+
+        //mychange
+        // uri[tokenId] = _uriForWrappedToken; 
+
+        _setUri(_uriForWrappedToken, tokenId);
 
         _safeMint(_recipient, tokenId);
 
@@ -230,15 +246,19 @@ contract Multiwrap is
 
         _burn(_tokenId);
 
-        uint256 count = wrappedContents[_tokenId].count;
+        // uint256 count = wrappedContents[_tokenId].count; //mychange
+
+        uint256 count = getTokenCount(_tokenId);
         Token[] memory tokensUnwrapped = new Token[](count);
 
         for (uint256 i = 0; i < count; i += 1) {
-            tokensUnwrapped[i] = wrappedContents[_tokenId].token[i];
+            // tokensUnwrapped[i] = wrappedContents[_tokenId].token[i]; //mychange
+            tokensUnwrapped[i] = getToken(_tokenId, i);
             transferToken(address(this), _recipient, tokensUnwrapped[i]);
         }
 
-        delete wrappedContents[_tokenId];
+        // delete wrappedContents[_tokenId]; //mychange
+        _deleteBundle(_tokenId);
 
         emit TokensUnwrapped(_msgSender(), _recipient, _tokenId, tokensUnwrapped);
     }
@@ -254,14 +274,16 @@ contract Multiwrap is
                 _token.assetContract,
                 _from,
                 _to,
-                _token.amount,
+                _token.totalAmount,
                 nativeTokenWrapper
             );
         } else if (_token.tokenType == TokenType.ERC721) {
             IERC721Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId);
         } else if (_token.tokenType == TokenType.ERC1155) {
-            IERC1155Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId, _token.amount, "");
+            IERC1155Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId, _token.totalAmount, "");
         }
+
+        //mychange _token.amount now _token.totalAmount
     }
 
     /// @dev Transfers multiple arbitrary ERC20 / ERC721 / ERC1155 tokens.
@@ -296,11 +318,13 @@ contract Multiwrap is
 
     /// @dev Returns the underlygin contents of a wrapped NFT.
     function getWrappedContents(uint256 _tokenId) external view returns (Token[] memory contents) {
-        uint256 total = wrappedContents[_tokenId].count;
+        //mychange
+        uint256 total = getTokenCount(_tokenId);
         contents = new Token[](total);
 
+        //mychange
         for(uint256 i = 0; i < total; i += 1) {
-            contents[i] = wrappedContents[_tokenId].token[i];
+            contents[i] = getToken(_tokenId, i);
         }
     }
 

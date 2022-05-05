@@ -13,7 +13,7 @@ interface ITokenBundle {
         address assetContract;
         TokenType tokenType;
         uint256 tokenId;
-        uint256 totalAmountPacked;
+        uint256 totalAmount;
         
     }
 
