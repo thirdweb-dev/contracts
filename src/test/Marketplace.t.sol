@@ -89,6 +89,7 @@ contract MarketplaceTest is BaseTest {
     }
 
     function test_createListing_auctionListing() public {
+        vm.warp(0);
         (uint256 createdListingId, Marketplace.ListingParameters memory createdListing) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
@@ -114,6 +115,7 @@ contract MarketplaceTest is BaseTest {
         vm.deal(getActor(0), 100 ether);
 
         Marketplace.Offer memory winningBid;
+        vm.warp(0);
         (uint256 listingId, ) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
@@ -123,8 +125,8 @@ contract MarketplaceTest is BaseTest {
 
         assertEq(getActor(0).balance, 100 ether);
 
-        vm.warp(1);
         vm.prank(getActor(0));
+        vm.warp(1);
         marketplace.offer{ value: 1 ether }(listingId, 1, NATIVE_TOKEN, 1 ether, type(uint256).max);
         winningBid = getWinningBid(listingId);
         assertEq(getActor(0).balance, 99 ether);
@@ -134,8 +136,8 @@ contract MarketplaceTest is BaseTest {
         assertEq(winningBid.currency, NATIVE_TOKEN);
         assertEq(winningBid.pricePerToken, 1 ether);
 
-        vm.warp(2);
         vm.prank(getActor(0));
+        vm.warp(2);
         marketplace.offer{ value: 2 ether }(listingId, 1, NATIVE_TOKEN, 2 ether, type(uint256).max);
         winningBid = getWinningBid(listingId);
         assertEq(getActor(0).balance, 98 ether);
@@ -152,6 +154,7 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-0 creates an auction listing.
         vm.prank(getActor(0));
+        vm.warp(0);
         (uint256 listingId, ) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
@@ -168,8 +171,8 @@ contract MarketplaceTest is BaseTest {
          *      - Actor-1 receives auctioned items escrowed in Marketplace.
          *      - Winning bid amount is escrowed in the contract.
          */
-        vm.warp(1);
         vm.prank(getActor(1));
+        vm.warp(1);
         marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
 
         assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
@@ -199,6 +202,7 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-0 creates a direct listing with NATIVE_TOKEN as accepted currency.
         vm.prank(getActor(0));
+        vm.warp(0);
         (uint256 listingId, ) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
@@ -206,7 +210,6 @@ contract MarketplaceTest is BaseTest {
             IMarketplace.ListingType.Direct
         );
 
-        vm.warp(1);
         vm.startPrank(getActor(1));
 
         // Actor-1 mints 4 ether worth of WETH
@@ -216,12 +219,13 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-1 makes an offer to the direct listing for 4 WETH.
         weth.approve(address(marketplace), 4 ether);
+
+        vm.warp(1);
         marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, type(uint256).max);
 
         vm.stopPrank();
 
         // Actor-0 successfully accepts the offer.
-        vm.warp(2);
         Marketplace.Listing memory listing = getListing(listingId);
         assertEq(erc721.ownerOf(listing.tokenId), getActor(0));
         assertEq(weth.balanceOf(getActor(0)), 0);
@@ -230,6 +234,7 @@ contract MarketplaceTest is BaseTest {
         uint256 offerValuePostFee = (4 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
 
         vm.prank(getActor(0));
+        vm.warp(2);
         marketplace.acceptOffer(listingId, getActor(1), address(weth), 4 ether);
         assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
         assertEq(weth.balanceOf(getActor(0)), offerValuePostFee);
@@ -249,7 +254,6 @@ contract MarketplaceTest is BaseTest {
             IMarketplace.ListingType.Direct
         );
 
-        vm.warp(1);
         vm.startPrank(getActor(1));
 
         // Actor-1 mints 4 ether worth of WETH
@@ -259,12 +263,13 @@ contract MarketplaceTest is BaseTest {
 
         // Actor-1 makes an offer to the direct listing for 4 WETH.
         weth.approve(address(marketplace), 4 ether);
+
+        vm.warp(2);
         marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, 0);
 
         vm.stopPrank();
 
         // Actor-0 successfully accepts the offer.
-        vm.warp(2);
         Marketplace.Listing memory listing = getListing(listingId);
         assertEq(erc721.ownerOf(listing.tokenId), getActor(0));
         assertEq(weth.balanceOf(getActor(0)), 0);
@@ -275,9 +280,11 @@ contract MarketplaceTest is BaseTest {
         marketplace.acceptOffer(listingId, getActor(1), address(weth), 4 ether);
 
         vm.prank(getActor(1));
-        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, 3);
+        vm.warp(3);
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 4 ether, 5);
 
         vm.prank(getActor(0));
+        vm.warp(4);
         marketplace.acceptOffer(listingId, getActor(1), address(weth), 4 ether);
     }
 

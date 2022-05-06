@@ -16,6 +16,15 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 //  ==========  Internal imports    ==========
 
+import "../interfaces/IThirdwebContract.sol";
+
+//  ==========  Features    ==========
+
+import "../feature/interface/IPlatformFee.sol";
+import "../feature/interface/IPrimarySale.sol";
+import "../feature/interface/IRoyalty.sol";
+import "../feature/interface/IOwnable.sol";
+
 import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
 
@@ -27,6 +36,11 @@ import "../lib/MerkleProof.sol";
 
 contract DropERC1155 is
     Initializable,
+    IThirdwebContract,
+    IOwnable,
+    IRoyalty,
+    IPrimarySale,
+    IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -59,7 +73,7 @@ contract DropERC1155 is
     uint256 private constant MAX_BPS = 10_000;
 
     /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
+    ITWFee private immutable thirdwebFee;
 
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
@@ -254,6 +268,8 @@ contract DropERC1155 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
+        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
+
         // Get the active claim condition index.
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
@@ -337,7 +353,7 @@ contract DropERC1155 is
             );
 
             uint256 supplyClaimedAlready = condition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
 
             condition.phases[newStartIndex + i] = _phases[i];
             condition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;

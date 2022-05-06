@@ -15,6 +15,13 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
+import "../interfaces/IThirdwebContract.sol";
+
+//  ==========  Features    ==========
+
+import "../feature/interface/IPlatformFee.sol";
+import "../feature/interface/IPrimarySale.sol";
+
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
 import { ITWFee } from "../interfaces/ITWFee.sol";
 
@@ -26,6 +33,9 @@ import "../lib/FeeType.sol";
 
 contract DropERC20 is
     Initializable,
+    IThirdwebContract,
+    IPrimarySale,
+    IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -47,7 +57,7 @@ contract DropERC20 is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev The thirdweb contract with fee related information.
-    ITWFee internal immutable thirdwebFee;
+    ITWFee private immutable thirdwebFee;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -178,6 +188,8 @@ contract DropERC20 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityPerTransaction
     ) external payable nonReentrant {
+        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
+
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
@@ -219,7 +231,7 @@ contract DropERC20 is
         // If there's a price, collect price.
         collectClaimPrice(_quantity, _currency, _pricePerToken);
 
-        // Mint the relevant tokens to claimer.
+        // Mint the relevant NFTs to claimer.
         transferClaimedTokens(_receiver, activeConditionId, _quantity);
 
         emit TokensClaimed(activeConditionId, _msgSender(), _receiver, _quantity);
@@ -257,7 +269,7 @@ contract DropERC20 is
             );
 
             uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready < _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;

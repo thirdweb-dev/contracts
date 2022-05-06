@@ -4,6 +4,12 @@ pragma solidity ^0.8.11;
 // Interface
 import { ITokenERC721 } from "../interfaces/token/ITokenERC721.sol";
 
+import "../interfaces/IThirdwebContract.sol";
+import "../feature/interface/IPlatformFee.sol";
+import "../feature/interface/IPrimarySale.sol";
+import "../feature/interface/IRoyalty.sol";
+import "../feature/interface/IOwnable.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -32,6 +38,11 @@ import "../interfaces/ITWFee.sol";
 
 contract TokenERC721 is
     Initializable,
+    IThirdwebContract,
+    IOwnable,
+    IRoyalty,
+    IPrimarySale,
+    IPlatformFee,
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
     ERC2771ContextUpgradeable,

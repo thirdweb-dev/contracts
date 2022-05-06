@@ -70,57 +70,6 @@ Lets an account claim a given quantity of NFTs.
 | proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
 | proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim.
 
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-*Returns the module type of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
-
-### contractURI
-
-```solidity
-function contractURI() external view returns (string)
-```
-
-
-
-*Returns the metadata URI of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the version of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined
-
 ### getApproved
 
 ```solidity
@@ -142,65 +91,6 @@ function getApproved(uint256 tokenId) external view returns (address operator)
 | Name | Type | Description |
 |---|---|---|
 | operator | address | undefined
-
-### getDefaultRoyaltyInfo
-
-```solidity
-function getDefaultRoyaltyInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the royalty recipient and fee bps.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee bps and recipient.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
-### getRoyaltyInfoForToken
-
-```solidity
-function getRoyaltyInfoForToken(uint256 tokenId) external view returns (address, uint16)
-```
-
-
-
-*Returns the royalty recipient for a particular token Id.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
 
 ### isApprovedForAll
 
@@ -243,23 +133,6 @@ Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.          The URIs
 | baseURIForTokens | string | The URI for the NFTs to lazy mint. If lazy minting                           &#39;delayed-reveal&#39; NFTs, the is a URI for NFTs in the                           un-revealed state.
 | encryptedBaseURI | bytes | If lazy minting &#39;delayed-reveal&#39; NFTs, this is the                           result of encrypting the URI of the NFTs in the revealed                           state.
 
-### owner
-
-```solidity
-function owner() external view returns (address)
-```
-
-
-
-*Returns the owner of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
 ### ownerOf
 
 ```solidity
@@ -281,47 +154,6 @@ function ownerOf(uint256 tokenId) external view returns (address owner)
 | Name | Type | Description |
 |---|---|---|
 | owner | address | undefined
-
-### primarySaleRecipient
-
-```solidity
-function primarySaleRecipient() external view returns (address)
-```
-
-
-
-*The adress that receives all primary sales value.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
-### royaltyInfo
-
-```solidity
-function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount)
-```
-
-
-
-*Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of exchange. The royalty amount is denominated and should be payed in that same unit of exchange.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
 
 ### safeTransferFrom
 
@@ -375,106 +207,6 @@ Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 |---|---|---|
 | phases | IDropClaimCondition.ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`.
 | resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and                               `limitMerkleProofClaim` values when setting new                               claim conditions.
-
-### setContractURI
-
-```solidity
-function setContractURI(string _uri) external nonpayable
-```
-
-
-
-*Sets contract URI for the storefront-level metadata of the contract.       Only module admin can call this function.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _uri | string | undefined
-
-### setDefaultRoyaltyInfo
-
-```solidity
-function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
-```
-
-
-
-*Lets a module admin update the royalty bps and recipient.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
-
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-
-
-*Lets a module admin set a new owner for the contract. The new owner must be a module admin.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | undefined
-
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
-
-
-
-*Lets a module admin update the fees on primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
-
-### setPrimarySaleRecipient
-
-```solidity
-function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
-```
-
-
-
-*Lets a module admin set the default recipient of all primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _saleRecipient | address | undefined
-
-### setRoyaltyInfoForToken
-
-```solidity
-function setRoyaltyInfoForToken(uint256 tokenId, address recipient, uint256 bps) external nonpayable
-```
-
-
-
-*Lets a module admin set the royalty recipient for a particular token Id.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
-| recipient | address | undefined
-| bps | uint256 | undefined
 
 ### supportsInterface
 
@@ -572,23 +304,6 @@ event ClaimConditionsUpdated(IDropClaimCondition.ClaimCondition[] claimCondition
 |---|---|---|
 | claimConditions  | IDropClaimCondition.ClaimCondition[] | undefined |
 
-### DefaultRoyalty
-
-```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newRoyaltyRecipient  | address | undefined |
-| newRoyaltyBps  | uint256 | undefined |
-
 ### MaxTotalSupplyUpdated
 
 ```solidity
@@ -637,74 +352,6 @@ event NFTRevealed(uint256 endTokenId, string revealedURI)
 |---|---|---|
 | endTokenId  | uint256 | undefined |
 | revealedURI  | string | undefined |
-
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
-```
-
-
-
-*Emitted when a new owner is set.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-*Emitted when fee platform fee recipient or bps is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient  | address | undefined |
-| platformFeeBps  | uint256 | undefined |
-
-### PrimarySaleRecipientUpdated
-
-```solidity
-event PrimarySaleRecipientUpdated(address indexed recipient)
-```
-
-
-
-*Emitted when a new primary sale recipient is set.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
-
-### RoyaltyForToken
-
-```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
-| royaltyBps  | uint256 | undefined |
 
 ### TokensClaimed
 

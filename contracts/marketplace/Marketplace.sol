@@ -287,10 +287,10 @@ contract Marketplace is
             require(_buyoutPricePerToken >= _reservePricePerToken, "RESERVE");
         }
 
-        // validate start time if it's being updated
-        if (_startTime > 0 && _startTime < block.timestamp) {
+        if (_startTime < block.timestamp) {
             // do not allow listing to start in the past (1 hour buffer)
             require(block.timestamp - _startTime < 1 hours, "ST");
+            _startTime = block.timestamp;
         }
 
         uint256 newStartTime = _startTime == 0 ? targetListing.startTime : _startTime;

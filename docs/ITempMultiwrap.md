@@ -55,23 +55,6 @@ Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.
 
 ## Events
 
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
-```
-
-
-
-*Emitted when the contract owner is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
-
 ### TokensUnwrapped
 
 ```solidity

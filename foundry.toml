@@ -1,24 +1,24 @@
 [default]
 solc-version = "0.8.12"
- #auto_detect_solc = false
-src = 'src'
-test = 'test'
-out = 'artifacts_forge'
-libs = ['lib']
-remappings = [
-    #' @chainlink=node_modules/@chainlink/contracts/src/',
-    '@chainlink/contracts/src=node_modules/@chainlink/contracts/src/',
-    '@ds-test=lib/ds-test/src/',
-    '@openzeppelin=node_modules/@openzeppelin/',
-    '@std=lib/forge-std/src/',
-    'contracts/=contracts/',
-]
-libraries = []
+#auto_detect_solc = false
 cache = true
-force = false
 evm_version = 'london'
+force = false
+libraries = []
+libs = ['lib']
 optimizer = true
 optimizer_runs = 800
+out = 'artifacts_forge'
+remappings = [
+  #' @chainlink=node_modules/@chainlink/contracts/src/',
+  '@chainlink/contracts/src=node_modules/@chainlink/contracts/src/',
+  '@ds-test=lib/ds-test/src/',
+  '@openzeppelin=node_modules/@openzeppelin/',
+  '@std=lib/forge-std/src/',
+  'contracts/=contracts/',
+]
+src = 'src'
+test = 'test'
 verbosity = 0
 #ignored_error_codes = []
 #fuzz_runs = 256
@@ -34,4 +34,3 @@ verbosity = 0
 #block_coinbase = '0x0000000000000000000000000000000000000000'
 #block_timestamp = 0
 #block_difficulty = 0
-

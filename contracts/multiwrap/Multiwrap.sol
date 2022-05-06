@@ -15,12 +15,13 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebRoyalty.sol";
-import "../interfaces/IThirdwebOwnable.sol";
+import "../feature/interface/IRoyalty.sol";
+import "../feature/interface/IOwnable.sol";
 
 import "../interfaces/IMultiwrap.sol";
 import "../lib/CurrencyTransferLib.sol";
@@ -28,8 +29,8 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 contract Multiwrap is
     IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
+    IOwnable,
+    IRoyalty,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -171,7 +172,7 @@ contract Multiwrap is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155ReceiverUpgradeable, ERC721Upgradeable, IERC165Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155ReceiverUpgradeable, ERC721Upgradeable)
         returns (bool)
     {
         return

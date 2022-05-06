@@ -60,9 +60,6 @@ interface ITempMultiwrap is ITokenBundle {
         Token[] wrappedContents
     );
 
-    /// @dev Emitted when the contract owner is updated.
-    event OwnerUpdated(address prevOwner, address newOwner);
-
     /**
      *  @notice Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.
      *

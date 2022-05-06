@@ -2,11 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
-import "../IThirdwebRoyalty.sol";
-import "../IThirdwebOwnable.sol";
 import "./IDropClaimCondition.sol";
 
 /**
@@ -26,15 +21,7 @@ import "./IDropClaimCondition.sol";
  *  restrictions defined in the claim condition that is active at the time of the transaction.
  */
 
-interface IDropERC721 is
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
-    IThirdwebPrimarySale,
-    IThirdwebPlatformFee,
-    IERC721Upgradeable,
-    IDropClaimCondition
-{
+interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
@@ -52,15 +39,6 @@ interface IDropERC721 is
 
     /// @dev Emitted when new claim conditions are set.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
-
-    /// @dev Emitted when a new primary sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
-    /// @dev Emitted when fee platform fee recipient or bps is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
-
-    /// @dev Emitted when a new owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
 
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);

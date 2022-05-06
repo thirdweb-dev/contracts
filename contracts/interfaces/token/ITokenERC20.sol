@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
-import "../IThirdwebPrimarySale.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
-interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatformFee, IERC20Upgradeable {
+interface ITokenERC20 is IERC20MetadataUpgradeable {
     /**
      *  @notice The body of a request to mint tokens.
      *
@@ -35,12 +32,6 @@ interface ITokenERC20 is IThirdwebContract, IThirdwebPrimarySale, IThirdwebPlatf
 
     /// @dev Emitted when tokens are minted.
     event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
-
-    /// @dev Emitted when a new sale recipient is set.
-    event PrimarySaleRecipientUpdated(address indexed recipient);
-
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding

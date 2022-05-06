@@ -2,9 +2,9 @@
 pragma solidity ^0.8.11;
 
 import "../IThirdwebContract.sol";
-import "../IThirdwebPlatformFee.sol";
+import "../../feature/interface/IPlatformFee.sol";
 
-interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
+interface IMarketplace is IThirdwebContract, IPlatformFee {
     /// @notice Type of the tokens that can be listed for sale.
     enum TokenType {
         ERC1155,
@@ -191,9 +191,6 @@ interface IMarketplace is IThirdwebContract, IThirdwebPlatformFee {
         address auctionCreator,
         address winningBidder
     );
-
-    /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Emitted when auction buffers are updated.
     event AuctionBuffersUpdated(uint256 timeBuffer, uint256 bidBufferBps);
