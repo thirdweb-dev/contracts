@@ -33,10 +33,27 @@ function bundle(uint256) external view returns (uint256 count, string uri)
 | count | uint256 | undefined
 | uri | string | undefined
 
-### getToken
+### bundleId
 
 ```solidity
-function getToken(uint256 tokenId, uint256 index) external view returns (struct ITokenBundle.Token)
+function bundleId() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### deletedBundle
+
+```solidity
+function deletedBundle(uint256) external view returns (bool)
 ```
 
 
@@ -47,7 +64,46 @@ function getToken(uint256 tokenId, uint256 index) external view returns (struct 
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### getNextBundleId
+
+```solidity
+function getNextBundleId() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getToken
+
+```solidity
+function getToken(uint256 _bundleId, uint256 index) external view returns (struct ITokenBundle.Token)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
 | index | uint256 | undefined
 
 #### Returns
@@ -59,7 +115,7 @@ function getToken(uint256 tokenId, uint256 index) external view returns (struct 
 ### getTokenCount
 
 ```solidity
-function getTokenCount(uint256 tokenId) external view returns (uint256)
+function getTokenCount(uint256 _bundleId) external view returns (uint256)
 ```
 
 
@@ -70,7 +126,7 @@ function getTokenCount(uint256 tokenId) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| _bundleId | uint256 | undefined
 
 #### Returns
 
@@ -81,7 +137,7 @@ function getTokenCount(uint256 tokenId) external view returns (uint256)
 ### getUri
 
 ```solidity
-function getUri(uint256 tokenId) external view returns (string)
+function getUri(uint256 _bundleId) external view returns (string)
 ```
 
 
@@ -92,30 +148,13 @@ function getUri(uint256 tokenId) external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| _bundleId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
-
-### nextTokenIdToMint
-
-```solidity
-function nextTokenIdToMint() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
 
 
 
