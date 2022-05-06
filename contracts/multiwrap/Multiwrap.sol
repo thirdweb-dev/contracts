@@ -222,7 +222,6 @@ contract Multiwrap is
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant {
-
         if (!hasRole(TRANSFER_ROLE, address(0))) {
             require(hasRole(TRANSFER_ROLE, _msgSender()), "restricted to UNWRAP_ROLE holders.");
         }
@@ -300,7 +299,7 @@ contract Multiwrap is
         uint256 total = wrappedContents[_tokenId].count;
         contents = new Token[](total);
 
-        for(uint256 i = 0; i < total; i += 1) {
+        for (uint256 i = 0; i < total; i += 1) {
             contents[i] = wrappedContents[_tokenId].token[i];
         }
     }

@@ -5,8 +5,8 @@ import "./interface/ITokenBundle.sol";
 
 abstract contract TokenBundle is ITokenBundle {
     uint256 public bundleId;
-    mapping(uint256=>BundleInfo) public bundle;
-    mapping(uint256=>bool) public deletedBundle;
+    mapping(uint256 => BundleInfo) public bundle;
+    mapping(uint256 => bool) public deletedBundle;
 
     // function getNextTokenId() public virtual returns (uint256);
 
@@ -21,7 +21,7 @@ abstract contract TokenBundle is ITokenBundle {
     function getUri(uint256 _bundleId) public view returns (string memory) {
         return bundle[_bundleId].uri;
     }
-    
+
     function getNextBundleId() public view returns (uint256) {
         return bundleId;
     }
@@ -46,7 +46,12 @@ abstract contract TokenBundle is ITokenBundle {
         bundle[_bundleId].count = _tokensToBind.length;
     }
 
-    function _setBundleToken(Token memory _tokenToBind, uint256 _bundleId, uint256 index, bool update) internal {
+    function _setBundleToken(
+        Token memory _tokenToBind,
+        uint256 _bundleId,
+        uint256 index,
+        bool update
+    ) internal {
         require(_bundleId < bundleId, "bundle doesn't exist");
         require(!deletedBundle[_bundleId], "this bundle was deleted");
         bundle[_bundleId].tokens[index] = _tokenToBind;

@@ -42,8 +42,8 @@ contract TempMultiwrap is
     ERC721HolderUpgradeable,
     ERC721Upgradeable,
     ITempMultiwrap,
-    TokenBundle
-{//mychange TokenBundle
+    TokenBundle //mychange TokenBundle
+{
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -228,7 +228,7 @@ contract TempMultiwrap is
         // wrappedContents[tokenId].count = _wrappedContents.length;
 
         //mychange
-        // uri[tokenId] = _uriForWrappedToken; 
+        // uri[tokenId] = _uriForWrappedToken;
 
         _setUri(_uriForWrappedToken, tokenToBundle[tokenId]);
 
@@ -241,7 +241,6 @@ contract TempMultiwrap is
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant {
-
         if (!hasRole(TRANSFER_ROLE, address(0))) {
             require(hasRole(TRANSFER_ROLE, _msgSender()), "restricted to UNWRAP_ROLE holders.");
         }
@@ -284,7 +283,13 @@ contract TempMultiwrap is
         } else if (_token.tokenType == TokenType.ERC721) {
             IERC721Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId);
         } else if (_token.tokenType == TokenType.ERC1155) {
-            IERC1155Upgradeable(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId, _token.totalAmount, "");
+            IERC1155Upgradeable(_token.assetContract).safeTransferFrom(
+                _from,
+                _to,
+                _token.tokenId,
+                _token.totalAmount,
+                ""
+            );
         }
 
         //mychange _token.amount now _token.totalAmount
@@ -327,7 +332,7 @@ contract TempMultiwrap is
         contents = new Token[](total);
 
         //mychange
-        for(uint256 i = 0; i < total; i += 1) {
+        for (uint256 i = 0; i < total; i += 1) {
             contents[i] = getToken(tokenToBundle[_tokenId], i);
         }
     }

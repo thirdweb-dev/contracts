@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface ITokenBundle {
-
     enum TokenType {
         ERC20,
         ERC721,
@@ -14,13 +13,11 @@ interface ITokenBundle {
         TokenType tokenType;
         uint256 tokenId;
         uint256 totalAmount;
-        
     }
 
     struct BundleInfo {
         uint256 count;
         string uri;
-        mapping(uint256=>Token) tokens;
+        mapping(uint256 => Token) tokens;
     }
-
 }
