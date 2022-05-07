@@ -89,23 +89,6 @@ function bundle(uint256) external view returns (uint256 count, string uri)
 | count | uint256 | undefined
 | uri | string | undefined
 
-### bundleId
-
-```solidity
-function bundleId() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### contractType
 
 ```solidity
@@ -157,28 +140,6 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined
 
-### deletedBundle
-
-```solidity
-function deletedBundle(uint256) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
 ### getApproved
 
 ```solidity
@@ -218,23 +179,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### getNextBundleId
-
-```solidity
-function getNextBundleId() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
 
 ### getRoleAdmin
 

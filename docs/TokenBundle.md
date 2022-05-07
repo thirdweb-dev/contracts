@@ -33,62 +33,6 @@ function bundle(uint256) external view returns (uint256 count, string uri)
 | count | uint256 | undefined
 | uri | string | undefined
 
-### bundleId
-
-```solidity
-function bundleId() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-### deletedBundle
-
-```solidity
-function deletedBundle(uint256) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### getNextBundleId
-
-```solidity
-function getNextBundleId() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### getToken
 
 ```solidity

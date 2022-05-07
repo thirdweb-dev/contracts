@@ -95,9 +95,6 @@ contract TempMultiwrap is
     //mychange
     // mapping(uint256=>BundleInfo) private bundle;
 
-    //mychange
-    mapping(uint256 => uint256) private tokenToBundle;
-
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -175,7 +172,7 @@ contract TempMultiwrap is
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         // return uri[_tokenId]; //mychange
-        return getUri(tokenToBundle[_tokenId]);
+        return getUri(_tokenId);
     }
 
     /// @dev See ERC 165
@@ -219,7 +216,7 @@ contract TempMultiwrap is
         //mychange
         // tokenId = _getNextTokenId();
 
-        tokenToBundle[tokenId] = _setBundle(_wrappedContents); //mychange
+        _setBundle(_wrappedContents, tokenId); //mychange
 
         //mychange
         // for (uint256 i = 0; i < _wrappedContents.length; i += 1) {
@@ -230,7 +227,7 @@ contract TempMultiwrap is
         //mychange
         // uri[tokenId] = _uriForWrappedToken;
 
-        _setUri(_uriForWrappedToken, tokenToBundle[tokenId]);
+        _setUri(_uriForWrappedToken, tokenId);
 
         _safeMint(_recipient, tokenId);
 
@@ -251,17 +248,17 @@ contract TempMultiwrap is
 
         // uint256 count = wrappedContents[_tokenId].count; //mychange
 
-        uint256 count = getTokenCount(tokenToBundle[_tokenId]);
+        uint256 count = getTokenCount(_tokenId);
         Token[] memory tokensUnwrapped = new Token[](count);
 
         for (uint256 i = 0; i < count; i += 1) {
             // tokensUnwrapped[i] = wrappedContents[_tokenId].token[i]; //mychange
-            tokensUnwrapped[i] = getToken(tokenToBundle[_tokenId], i);
+            tokensUnwrapped[i] = getToken(_tokenId, i);
             transferToken(address(this), _recipient, tokensUnwrapped[i]);
         }
 
         // delete wrappedContents[_tokenId]; //mychange
-        _deleteBundle(tokenToBundle[_tokenId]);
+        _deleteBundle(_tokenId);
 
         emit TokensUnwrapped(_msgSender(), _recipient, _tokenId, tokensUnwrapped);
     }
@@ -328,12 +325,12 @@ contract TempMultiwrap is
     /// @dev Returns the underlygin contents of a wrapped NFT.
     function getWrappedContents(uint256 _tokenId) external view returns (Token[] memory contents) {
         //mychange
-        uint256 total = getTokenCount(tokenToBundle[_tokenId]);
+        uint256 total = getTokenCount(_tokenId);
         contents = new Token[](total);
 
         //mychange
         for (uint256 i = 0; i < total; i += 1) {
-            contents[i] = getToken(tokenToBundle[_tokenId], i);
+            contents[i] = getToken(_tokenId, i);
         }
     }
 
