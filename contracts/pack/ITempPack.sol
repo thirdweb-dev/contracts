@@ -1,5 +1,5 @@
-// // SPDX-License-Identifier: Apache-2.0
-// pragma solidity ^0.8.11; 
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.11;
 
 // import "../feature/interface/ITokenBundle.sol";
 
@@ -34,7 +34,7 @@
 
 //     /**
 //      *  @notice All info relevant to packs.
-//      *  
+//      *
 //      *  @param contents                 The reward units packed in the packs.
 //      *  @param openStartTimestamp       The timestamp after which packs can be opened.
 //      *  @param amountDistributedPerOpen The number of reward units distributed per open.
