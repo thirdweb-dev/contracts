@@ -1,5 +1,5 @@
-// // SPDX-License-Identifier: Apache-2.0
-// pragma solidity ^0.8.11;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.11;
 
 // //  ==========  External imports    ==========
 
@@ -281,8 +281,8 @@
 //         PackContent[] calldata _contents,
 //         uint256 _packId
 //     )
-//         internal 
-//         returns (uint256 packTotalSupply) 
+//         internal
+//         returns (uint256 packTotalSupply)
 //     {
 //         uint256 nativeTokenAmount;
 
@@ -300,7 +300,7 @@
 //                 nativeTokenAmount += _contents[i].token.totalAmount;
 //             } else {
 //                 transferPackContent(
-//                     _contents[i].token.assetContract, 
+//                     _contents[i].token.assetContract,
 //                     _contents[i].token.tokenType,
 //                     _msgSender(),
 //                     address(this),
@@ -312,7 +312,7 @@
 
 //         if(nativeTokenAmount > 0) {
 //             transferPackContent(
-//                 CurrencyTransferLib.NATIVE_TOKEN, 
+//                 CurrencyTransferLib.NATIVE_TOKEN,
 //                 TokenType.ERC20,
 //                 _msgSender(),
 //                 address(this),
@@ -327,11 +327,11 @@
 //         uint256 _packId,
 //         uint256 _numOfPacksToOpen,
 //         uint256 _rewardUnitsPerOpen
-//     )   
+//     )
 //         internal
 //         returns (
 //             PackContent[] memory rewardUnits
-//         ) 
+//         )
 //     {
 
 //         rewardUnits = new PackContent[](_numOfPacksToOpen * _rewardUnitsPerOpen);
@@ -339,7 +339,7 @@
 
 //         uint256 random = uint(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
 //         for(uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
-            
+
 //             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
 //             uint256 target = randomVal % currentTotalSupply;
 //             uint256 step;
@@ -414,8 +414,6 @@
 //     /*///////////////////////////////////////////////////////////////
 //                         Setter functions
 //     //////////////////////////////////////////////////////////////*/
-
-    
 
 //     /// @dev Lets a contract admin update the default royalty recipient and bps.
 //     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
