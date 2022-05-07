@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./interface/ITokenBundle.sol";
 
 abstract contract TokenBundle is ITokenBundle {
-    mapping(uint256 => BundleInfo) public bundle;
+    mapping(uint256 => BundleInfo) private bundle;
 
     // function _getNextBundleId() internal virtual returns (uint256);
 
@@ -21,6 +21,7 @@ abstract contract TokenBundle is ITokenBundle {
     }
 
     function _setBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
+        // uint256 _bundleId = _getNextBundleId();
         require(_tokensToBind.length > 0, "no tokens to bind");
         for (uint256 i = 0; i < _tokensToBind.length; i += 1) {
             bundle[_bundleId].tokens[i] = _tokensToBind[i];
