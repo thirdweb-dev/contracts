@@ -85,12 +85,12 @@ function burn(uint256 tokenId) external nonpayable
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
 
-*Lets an account claim NFTs.*
+*Lets an account claim tokens.*
 
 #### Parameters
 
@@ -100,6 +100,8 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _quantity | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
+| _data | bytes | undefined
 
 ### claimCondition
 
@@ -109,7 +111,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 
 
 
-*The active conditions for claiming lazy minted tokens.*
+
 
 
 #### Returns
@@ -305,7 +307,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 
 
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
+*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
 
 #### Parameters
 
@@ -322,7 +324,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ### getRoleMember
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address)
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
 
@@ -340,12 +342,12 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| member | address | undefined
 
 ### getRoleMemberCount
 
 ```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256)
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
 
@@ -362,7 +364,7 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| count | uint256 | undefined
 
 ### getRoyaltyInfoForToken
 
@@ -395,7 +397,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -596,7 +598,7 @@ function owner() external view returns (address)
 
 
 
-*Returns the address of the current owner.*
+
 
 
 #### Returns
@@ -652,7 +654,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+
 
 #### Parameters
 
@@ -692,7 +694,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -761,22 +763,23 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined
 | approved | bool | undefined
 
-### setClaimCondition
+### setClaimConditions
 
 ```solidity
-function setClaimCondition(IDropClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility, bytes) external nonpayable
 ```
 
 
 
-
+*Lets a contract admin set claim conditions.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _condition | IDropClaimCondition.ClaimCondition | undefined
+| _condition | IClaimCondition.ClaimCondition | undefined
 | _resetClaimEligibility | bool | undefined
+| _2 | bytes | undefined
 
 ### setContractURI
 
@@ -998,6 +1001,51 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 | success | bool | undefined
 | signer | address | undefined
 
+### verifyClaim
+
+```solidity
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+```
+
+
+
+*Checks a request to claim NFTs against the active claim condition&#39;s criteria.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined
+| _quantity | uint256 | undefined
+| _currency | address | undefined
+| _pricePerToken | uint256 | undefined
+| verifyMaxQuantityPerTransaction | bool | undefined
+
+### verifyClaimMerkleProof
+
+```solidity
+function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+```
+
+
+
+*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined
+| _quantity | uint256 | undefined
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| validMerkleProof | bool | undefined
+| merkleProofIndex | uint256 | undefined
+
 
 
 ## Events
@@ -1041,7 +1089,7 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 ### ClaimConditionUpdated
 
 ```solidity
-event ClaimConditionUpdated(IDropClaimCondition.ClaimCondition condition, bool resetEligibility)
+event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
 ```
 
 
@@ -1052,7 +1100,7 @@ event ClaimConditionUpdated(IDropClaimCondition.ClaimCondition condition, bool r
 
 | Name | Type | Description |
 |---|---|---|
-| condition  | IDropClaimCondition.ClaimCondition | undefined |
+| condition  | IClaimCondition.ClaimCondition | undefined |
 | resetEligibility  | bool | undefined |
 
 ### DefaultRoyalty
@@ -1229,6 +1277,26 @@ event TokenURIRevealed(uint256 index, string revealedURI)
 |---|---|---|
 | index  | uint256 | undefined |
 | revealedURI  | string | undefined |
+
+### TokensClaimed
+
+```solidity
+event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed claimer, address indexed receiver, uint256 quantityClaimed, uint256 indexed aux)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| condition  | IClaimCondition.ClaimCondition | undefined |
+| claimer `indexed` | address | undefined |
+| receiver `indexed` | address | undefined |
+| quantityClaimed  | uint256 | undefined |
+| aux `indexed` | uint256 | undefined |
 
 ### TokensMinted
 

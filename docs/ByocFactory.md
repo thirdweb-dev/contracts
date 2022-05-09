@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### contractURI
+
+```solidity
+function contractURI() external view returns (string)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### deployInstance
 
 ```solidity
@@ -80,6 +97,23 @@ Deploys a clone pointing to an implementation of a published contract.
 | Name | Type | Description |
 |---|---|---|
 | deployedAddress | address | undefined
+
+### getPublishMetadataUri
+
+```solidity
+function getPublishMetadataUri() external view returns (string)
+```
+
+
+
+*Returns the publish metadata for this contract.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
 
 ### getRoleAdmin
 
@@ -227,6 +261,23 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### renounceRole
 
 ```solidity
@@ -261,6 +312,38 @@ function revokeRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined
 | account | address | undefined
 
+### setContractURI
+
+```solidity
+function setContractURI(string _uri) external nonpayable
+```
+
+
+
+*Lets a contract admin set the URI for contract-level metadata.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _uri | string | undefined
+
+### setOwner
+
+```solidity
+function setOwner(address _newOwner) external nonpayable
+```
+
+
+
+*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | undefined
+
 ### setPause
 
 ```solidity
@@ -276,6 +359,22 @@ function setPause(bool _pause) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _pause | bool | undefined
+
+### setThirdwebInfo
+
+```solidity
+function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable
+```
+
+
+
+*Initializes the publish metadata and contract metadata at deploy time.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
 
 ### supportsInterface
 
@@ -320,6 +419,23 @@ event ContractDeployed(address indexed deployer, address indexed publisher, addr
 | deployer `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
 | deployedContract  | address | undefined |
+
+### OwnerUpdated
+
+```solidity
+event OwnerUpdated(address prevOwner, address newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevOwner  | address | undefined |
+| newOwner  | address | undefined |
 
 ### Paused
 

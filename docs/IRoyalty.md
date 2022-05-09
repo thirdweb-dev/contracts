@@ -1,4 +1,4 @@
-# IThirdwebRoyalty
+# IRoyalty
 
 
 

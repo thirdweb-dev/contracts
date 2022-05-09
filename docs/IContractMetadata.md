@@ -1,4 +1,4 @@
-# ContractMetadata
+# IContractMetadata
 
 
 
@@ -18,7 +18,7 @@ function contractURI() external view returns (string)
 
 
 
-*Contract level metadata.*
+*Returns the metadata URI of the contract.*
 
 
 #### Returns
@@ -35,7 +35,7 @@ function setContractURI(string _uri) external nonpayable
 
 
 
-*Lets a contract admin set the URI for contract-level metadata.*
+*Sets contract URI for the storefront-level metadata of the contract.       Only module admin can call this function.*
 
 #### Parameters
 

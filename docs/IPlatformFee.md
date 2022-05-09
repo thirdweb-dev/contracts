@@ -1,4 +1,4 @@
-# IThirdwebPlatformFee
+# IPlatformFee
 
 
 

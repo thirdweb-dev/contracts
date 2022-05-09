@@ -13,7 +13,7 @@ import "contracts/Forwarder.sol";
 import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
-import "contracts/Multiwrap.sol";
+import "contracts/multiwrap/Multiwrap.sol";
 import "contracts/Pack.sol";
 import "contracts/Split.sol";
 import "contracts/drop/DropERC20.sol";
@@ -82,7 +82,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
         // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
-        TWFactory(factory).addImplementation(address(new Multiwrap()));
+        TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 

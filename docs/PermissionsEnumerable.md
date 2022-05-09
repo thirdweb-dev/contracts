@@ -1,4 +1,4 @@
-# SignatureMintUpgradeable
+# PermissionsEnumerable
 
 
 
@@ -35,7 +35,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 
 
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
+*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
 
 #### Parameters
 
@@ -52,7 +52,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ### getRoleMember
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address)
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
 
@@ -70,12 +70,12 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| member | address | undefined
 
 ### getRoleMemberCount
 
 ```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256)
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
 
@@ -92,7 +92,7 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| count | uint256 | undefined
 
 ### grantRole
 
@@ -102,7 +102,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -134,23 +134,6 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### mintWithSignature
-
-```solidity
-function mintWithSignature(ISignatureMint.MintRequest req, bytes signature) external payable
-```
-
-Mints tokens according to the provided mint request.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| req | ISignatureMint.MintRequest | The payload / mint request.
-| signature | bytes | The signature produced by an account signing the mint request.
-
 ### renounceRole
 
 ```solidity
@@ -159,7 +142,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+
 
 #### Parameters
 
@@ -176,7 +159,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -184,52 +167,6 @@ function revokeRole(bytes32 role, address account) external nonpayable
 |---|---|---|
 | role | bytes32 | undefined
 | account | address | undefined
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-
-
-*See {IERC165-supportsInterface}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### verify
-
-```solidity
-function verify(ISignatureMint.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
-```
-
-
-
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureMint.MintRequest | undefined
-| _signature | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| success | bool | undefined
-| signer | address | undefined
 
 
 
@@ -288,25 +225,6 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | role `indexed` | bytes32 | undefined |
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMint.MintRequest mintRequest)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ISignatureMint.MintRequest | undefined |
 
 
 
