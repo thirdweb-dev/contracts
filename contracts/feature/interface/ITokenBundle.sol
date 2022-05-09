@@ -4,11 +4,16 @@ pragma solidity ^0.8.0;
 /**
  *  Group together arbitrary ERC20, ERC721 and ERC1155 tokens into a single bundle.
  *
- *  This bundle of tokens is a generic list of tokens that can have multiple use cases,
- *  such as mapping to an NFT, or put in an escrow, etc.
+ *  The `Token` struct is a generic type that can describe any ERC20, ERC721 or ERC1155 token.
+ *  The `Bundle` struct is a data structure to track a group/bundle of multiple assets i.e. ERC20,
+ *  ERC721 and ERC1155 tokens, each described as a `Token`.
+ *
+ *  Expressing tokens as the `Token` type, and grouping them as a `Bundle` allows for writing generic
+ *  logic to handle any ERC20, ERC721 or ERC1155 tokens.
  */
 
 interface ITokenBundle {
+    
     /// @notice The type of assets that can be wrapped.
     enum TokenType {
         ERC20,
@@ -17,12 +22,12 @@ interface ITokenBundle {
     }
 
     /**
-     *  @notice A generic interface to describe a token to be put in a bundle.
+     *  @notice A generic interface to describe any ERC20, ERC721 or ERC1155 token.
      *
-     *  @param assetContract The contract address of the asset to bind.
-     *  @param tokenType     The token type (ERC20 / ERC721 / ERC1155) of the asset to bind.
-     *  @param tokenId       The token Id of the asset to bind, if the asset is an ERC721 / ERC1155 NFT.
-     *  @param totalAmount   The amount of the asset to bind, if the asset is an ERC20 / ERC1155 fungible token.
+     *  @param assetContract The contract address of the asset.
+     *  @param tokenType     The token type (ERC20 / ERC721 / ERC1155) of the asset.
+     *  @param tokenId       The token Id of the asset, if the asset is an ERC721 / ERC1155 NFT.
+     *  @param totalAmount   The amount of the asset, if the asset is an ERC20 / ERC1155 fungible token.
      */
     struct Token {
         address assetContract;
@@ -32,11 +37,11 @@ interface ITokenBundle {
     }
 
     /**
-     *  @notice An internal data structure to track the contents of a bundle.
+     *  @notice An internal data structure to track a group / bundle of multiple assets i.e. `Token`s.
      *
-     *  @param count    The total kinds of assets i.e. `Token` inside a bundle.
+     *  @param count    The total number of assets i.e. `Token` in a bundle.
      *  @param uri      The (metadata) URI assigned to the bundle created
-     *  @param tokens   Mapping from a UID -> to the asset i.e. `Token` at that UID.
+     *  @param tokens   Mapping from a UID -> to a unique asset i.e. `Token` in the bundle.
      */
     struct BundleInfo {
         uint256 count;
