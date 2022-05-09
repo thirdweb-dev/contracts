@@ -13,7 +13,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ITokenBundle {
-    
     /// @notice The type of assets that can be wrapped.
     enum TokenType {
         ERC20,

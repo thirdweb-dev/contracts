@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./interface/ITokenBundle.sol";
 
 abstract contract TokenBundle is ITokenBundle {
-
     /// @dev Mapping from bundle UID => bundle info.
     mapping(uint256 => BundleInfo) private bundle;
 
@@ -25,16 +24,14 @@ abstract contract TokenBundle is ITokenBundle {
 
     /// @dev Lets the calling contract create/update a bundle, by passing in a list of tokens and a unique id.
     function _setBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
-
         require(_tokensToBind.length > 0, "TokenBundle: no tokens to bind.");
 
         uint256 currentCount = bundle[_bundleId].count;
         uint256 targetCount = _tokensToBind.length;
         uint256 check = currentCount > targetCount ? currentCount : targetCount;
-        
-        for (uint256 i = 0; i < check; i += 1) {
 
-            if(i < targetCount) {
+        for (uint256 i = 0; i < check; i += 1) {
+            if (i < targetCount) {
                 bundle[_bundleId].tokens[i] = _tokensToBind[i];
             } else if (i < currentCount) {
                 delete bundle[_bundleId].tokens[i];
@@ -45,10 +42,7 @@ abstract contract TokenBundle is ITokenBundle {
     }
 
     /// @dev Lets the calling contract add a token to a bundle for a unique bundle id and index.
-    function _addTokenInBundle(
-        Token memory _tokenToBind,
-        uint256 _bundleId
-    ) internal {
+    function _addTokenInBundle(Token memory _tokenToBind, uint256 _bundleId) internal {
         uint256 id = bundle[_bundleId].count;
 
         bundle[_bundleId].tokens[id] = _tokenToBind;
