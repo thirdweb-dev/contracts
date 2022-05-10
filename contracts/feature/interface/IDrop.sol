@@ -1,24 +1,23 @@
-
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 import "./IClaimCondition.sol";
 
-interface IDropSinglePhase is IClaimCondition {
+interface IDrop is IClaimCondition {
     struct AllowlistProof {
         bytes32[] proof;
         uint256 maxQuantityInAllowlist;
     }
 
     event TokensClaimed(
-        ClaimCondition condition,
+        uint256 indexed claimConditionIndex,
         address indexed claimer,
         address indexed receiver,
-        uint256 quantityClaimed,
-        uint256 indexed aux
+        uint256 startTokenId,
+        uint256 quantityClaimed
     );
 
-    event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
+    event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.
@@ -43,7 +42,7 @@ interface IDropSinglePhase is IClaimCondition {
     /**
      *  @notice Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param phase                    Claim condition to set.
+     *  @param phases                   Claim conditions in ascending order by `startTimestamp`.
      *
      *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
      *                                  claim conditions.
@@ -51,7 +50,7 @@ interface IDropSinglePhase is IClaimCondition {
      *  @param data                     Arbitrary bytes data that can be leveraged in the implementation of this interface.
      */
     function setClaimConditions(
-        ClaimCondition calldata phase,
+        ClaimCondition[] calldata phases,
         bool resetClaimEligibility,
         bytes memory data
     ) external;

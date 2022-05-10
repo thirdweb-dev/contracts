@@ -33,7 +33,8 @@ import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
-import "../feature/meta-tx/DropSinglePhase.sol";
+import "../feature/Drop.sol";
+// import "../feature/meta-tx/DropSinglePhase.sol";
 
 contract SignatureDrop is
     Initializable,
@@ -45,7 +46,7 @@ contract SignatureDrop is
     DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
-    DropSinglePhase,
+    Drop,
     SignatureMintERC721Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
@@ -362,7 +363,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, ExecutionContext)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -372,7 +373,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, ExecutionContext)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();
