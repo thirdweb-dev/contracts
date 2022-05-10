@@ -51,19 +51,19 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, T
         bytes memory _constructorArgs,
         bytes32 _salt,
         uint256 _value,
-        ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
+        string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-        require(bytes(_thirdwebInfo.publishMetadataUri).length > 0, "No publish metadata");
+        require(bytes(publishMetadataUri).length > 0, "No publish metadata");
 
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
         bytes32 salt = _salt == "" ? keccak256(abi.encodePacked(_msgSender(), block.number)) : _salt;
 
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
-        ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
+        ThirdwebContract(deployedAddress).setPublisheMetadataUi(publishMetadataUri);
         require(
             keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) ==
-                keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
+                keccak256(bytes(publishMetadataUri)),
             "Not a thirdweb contract"
         );
 
@@ -79,15 +79,15 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, T
         bytes memory _initializeData,
         bytes32 _salt,
         uint256 _value,
-        ThirdwebContract.ThirdwebInfo memory _thirdwebInfo
+        string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
         bytes32 salt = _salt == "" ? keccak256(abi.encodePacked(_msgSender(), block.number)) : _salt;
         deployedAddress = Clones.cloneDeterministic(_implementation, salt);
 
-        ThirdwebContract(deployedAddress).setThirdwebInfo(_thirdwebInfo);
+        ThirdwebContract(deployedAddress).setPublisheMetadataUi(publishMetadataUri);
         require(
             keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) ==
-                keccak256(bytes(_thirdwebInfo.publishMetadataUri)),
+                keccak256(bytes(publishMetadataUri)),
             "Not a thirdweb contract"
         );
 
