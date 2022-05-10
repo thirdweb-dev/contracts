@@ -27,27 +27,10 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
-### contractURI
-
-```solidity
-function contractURI() external view returns (string)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined
-
 ### deployInstance
 
 ```solidity
-function deployInstance(address _publisher, bytes _contractBytecode, bytes _constructorArgs, bytes32 _salt, uint256 _value, ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable returns (address deployedAddress)
+function deployInstance(address _publisher, bytes _contractBytecode, bytes _constructorArgs, bytes32 _salt, uint256 _value, string publishMetadataUri) external nonpayable returns (address deployedAddress)
 ```
 
 Deploys an instance of a published contract directly.
@@ -63,7 +46,7 @@ Deploys an instance of a published contract directly.
 | _constructorArgs | bytes | undefined
 | _salt | bytes32 | undefined
 | _value | uint256 | undefined
-| _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
+| publishMetadataUri | string | undefined
 
 #### Returns
 
@@ -74,7 +57,7 @@ Deploys an instance of a published contract directly.
 ### deployInstanceProxy
 
 ```solidity
-function deployInstanceProxy(address _publisher, address _implementation, bytes _initializeData, bytes32 _salt, uint256 _value, ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable returns (address deployedAddress)
+function deployInstanceProxy(address _publisher, address _implementation, bytes _initializeData, bytes32 _salt, uint256 _value, string publishMetadataUri) external nonpayable returns (address deployedAddress)
 ```
 
 Deploys a clone pointing to an implementation of a published contract.
@@ -90,7 +73,7 @@ Deploys a clone pointing to an implementation of a published contract.
 | _initializeData | bytes | undefined
 | _salt | bytes32 | undefined
 | _value | uint256 | undefined
-| _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
+| publishMetadataUri | string | undefined
 
 #### Returns
 
@@ -261,23 +244,6 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### owner
-
-```solidity
-function owner() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
 ### renounceRole
 
 ```solidity
@@ -312,38 +278,6 @@ function revokeRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined
 | account | address | undefined
 
-### setContractURI
-
-```solidity
-function setContractURI(string _uri) external nonpayable
-```
-
-
-
-*Lets a contract admin set the URI for contract-level metadata.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _uri | string | undefined
-
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-
-
-*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | undefined
-
 ### setPause
 
 ```solidity
@@ -360,21 +294,21 @@ function setPause(bool _pause) external nonpayable
 |---|---|---|
 | _pause | bool | undefined
 
-### setThirdwebInfo
+### setPublisheMetadataUi
 
 ```solidity
-function setThirdwebInfo(ThirdwebContract.ThirdwebInfo _thirdwebInfo) external nonpayable
+function setPublisheMetadataUi(string uri) external nonpayable
 ```
 
 
 
-*Initializes the publish metadata and contract metadata at deploy time.*
+*Initializes the publish metadata and at deploy time.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _thirdwebInfo | ThirdwebContract.ThirdwebInfo | undefined
+| uri | string | undefined
 
 ### supportsInterface
 
@@ -419,23 +353,6 @@ event ContractDeployed(address indexed deployer, address indexed publisher, addr
 | deployer `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
 | deployedContract  | address | undefined |
-
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
 
 ### Paused
 
