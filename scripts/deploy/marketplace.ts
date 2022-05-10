@@ -3,10 +3,15 @@ import hre, { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { TWFactory, Marketplace } from "typechain";
 
+import { nativeTokenWrapper } from "../../utils/nativeTokenWrapper";
+
 async function main() {
+
+  const chainId: number = hre.network.config.chainId as number;
+
   const [caller]: SignerWithAddress[] = await ethers.getSigners();
 
-  const nativeTokenWrapperAddress: string = ethers.constants.AddressZero; // replace
+  const nativeTokenWrapperAddress: string = nativeTokenWrapper[chainId]; // replace
   const twFeeAddress: string = ethers.constants.AddressZero; // replace
   const twFactoryAddress: string = ethers.constants.AddressZero; // replace
 
