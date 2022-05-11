@@ -13,8 +13,6 @@ import { IByocFactory } from "./interfaces/IByocFactory.sol";
 import { TWRegistry } from "./TWRegistry.sol";
 import "./ThirdwebContract.sol";
 
-import "hardhat/console.sol";
-
 contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
     /*///////////////////////////////////////////////////////////////
                             State variables
