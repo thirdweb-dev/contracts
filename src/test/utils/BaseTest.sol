@@ -19,6 +19,7 @@ import "contracts/Split.sol";
 import "contracts/drop/DropERC20.sol";
 import "contracts/drop/DropERC721.sol";
 import "contracts/drop/DropERC1155.sol";
+import { SignatureDrop } from "contracts/drop/SignatureDrop.sol";
 import "contracts/token/TokenERC20.sol";
 import "contracts/token/TokenERC721.sol";
 import "contracts/token/TokenERC1155.sol";
@@ -78,6 +79,8 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new DropERC721(fee)));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
+        TWFactory(factory).addImplementation(address(new SignatureDrop(fee)));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
@@ -177,6 +180,24 @@ abstract contract BaseTest is DSTest, Test {
             "DropERC1155",
             abi.encodeCall(
                 DropERC1155.initialize,
+                (
+                    deployer,
+                    NAME,
+                    SYMBOL,
+                    CONTRACT_URI,
+                    forwarders(),
+                    saleRecipient,
+                    royaltyRecipient,
+                    royaltyBps,
+                    platformFeeBps,
+                    platformFeeRecipient
+                )
+            )
+        );
+        deployContractProxy(
+            "SignatureDrop",
+            abi.encodeCall(
+                SignatureDrop.initialize,
                 (
                     deployer,
                     NAME,
