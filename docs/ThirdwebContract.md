@@ -27,10 +27,10 @@ function getPublishMetadataUri() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### setPublisheMetadataUi
+### setPublishMetadataUri
 
 ```solidity
-function setPublisheMetadataUi(string uri) external nonpayable
+function setPublishMetadataUri(string uri) external nonpayable
 ```
 
 

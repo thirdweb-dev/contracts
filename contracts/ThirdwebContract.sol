@@ -8,15 +8,10 @@ interface IDeployer {
 contract ThirdwebContract {
     /// @dev The publish metadata of the contract of which this contract is an instance.
     string private publishMetadataUri;
-
-    /// @dev The address of the thirdweb factory.
-    address private factory;
-
     /// @dev Address of the contract deployer.
     address private deployer;
 
     constructor() {
-        factory = msg.sender;
         deployer = IDeployer(msg.sender).deployer();
     }
 
@@ -26,17 +21,13 @@ contract ThirdwebContract {
     }
 
     /// @dev Initializes the publish metadata and at deploy time.
-    function setPublisheMetadataUi(string memory uri) external {
+    function setPublishMetadataUri(string memory uri) external {
         require(bytes(publishMetadataUri).length == 0, "Published metadata already initialized");
         publishMetadataUri = uri;
     }
 
     /// @dev Returns msg.sender, if caller is not thirdweb factory. Returns the intended msg.sender if caller is factory.
-    function _thirdwebMsgSender() internal view returns (address sender) {
-        if (msg.sender == factory) {
-            sender = deployer;
-        } else {
-            sender = msg.sender;
-        }
+    function _contractDeployer() internal view returns (address) {
+        return deployer;
     }
 }
