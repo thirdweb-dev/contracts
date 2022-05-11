@@ -81,22 +81,22 @@ Deploys a clone pointing to an implementation of a published contract.
 |---|---|---|
 | deployedAddress | address | undefined
 
-### getPublishMetadataUri
+### deployer
 
 ```solidity
-function getPublishMetadataUri() external view returns (string)
+function deployer() external view returns (address)
 ```
 
 
 
-*Returns the publish metadata for this contract.*
+*Empty var used in deployment.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | address | undefined
 
 ### getRoleAdmin
 
@@ -293,22 +293,6 @@ function setPause(bool _pause) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _pause | bool | undefined
-
-### setPublisheMetadataUi
-
-```solidity
-function setPublisheMetadataUi(string uri) external nonpayable
-```
-
-
-
-*Initializes the publish metadata and at deploy time.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| uri | string | undefined
 
 ### supportsInterface
 

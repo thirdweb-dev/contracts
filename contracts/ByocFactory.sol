@@ -13,7 +13,9 @@ import { IByocFactory } from "./interfaces/IByocFactory.sol";
 import { TWRegistry } from "./TWRegistry.sol";
 import "./ThirdwebContract.sol";
 
-contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, ThirdwebContract {
+import "hardhat/console.sol";
+
+contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -23,6 +25,9 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, T
 
     /// @dev Whether the registry is paused.
     bool public isPaused;
+
+    /// @dev Empty var used in deployment.
+    address public deployer;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
@@ -53,6 +58,9 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, T
         uint256 _value,
         string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
+
+        deployer = _msgSender();
+
         require(bytes(publishMetadataUri).length > 0, "No publish metadata");
 
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
@@ -68,6 +76,8 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable, T
         );
 
         registry.add(_publisher, deployedAddress);
+
+        delete deployer;
 
         emit ContractDeployed(_msgSender(), _publisher, deployedAddress);
     }
