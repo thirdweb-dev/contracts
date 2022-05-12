@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 interface IPrimarySale {
     /// @dev The adress that receives all primary sales value.
-    function getPrimarySaleRecipient() external view returns (address);
+    function primarySaleRecipient() external view returns (address);
 
     /// @dev Lets a module admin set the default recipient of all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) external;

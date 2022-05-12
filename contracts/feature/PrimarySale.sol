@@ -5,17 +5,17 @@ import "./interface/IPrimarySale.sol";
 
 abstract contract PrimarySale is IPrimarySale {
     /// @dev The address that receives all primary sales value.
-    address internal primarySaleRecipient;
+    address private recipient;
 
-    function getPrimarySaleRecipient() public view override returns (address) {
-        return primarySaleRecipient;
+    function primarySaleRecipient() public view override returns (address) {
+        return recipient;
     }
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function setPrimarySaleRecipient(address _saleRecipient) public override {
         require(_canSetPrimarySaleRecipient(), "Not authorized");
 
-        primarySaleRecipient = _saleRecipient;
+        recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 
