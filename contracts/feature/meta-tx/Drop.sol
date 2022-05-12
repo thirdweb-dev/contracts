@@ -52,7 +52,14 @@ abstract contract Drop is IDrop, ExecutionContext {
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
 
-        verifyClaim(activeConditionId, _msgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(
+            activeConditionId,
+            _msgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**

@@ -28,10 +28,9 @@ contract SignatureDropTest is BaseTest {
         erc20.mint(deployer_signer, 1_000_000);
         vm.deal(deployer_signer, 1_000);
 
-        typehash =
-            keccak256(
-                "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-            );
+        typehash = keccak256(
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
         _TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -49,13 +48,12 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", data);
 
-        bytes memory errorMessage =
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(uint160(address(this)), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-                    );
+        bytes memory errorMessage = abi.encodePacked(
+            "AccessControl: account ",
+            Strings.toHexString(uint160(address(this)), 20),
+            " is missing role ",
+            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+        );
 
         vm.expectRevert(errorMessage);
         sigdrop.lazyMint(100, "ipfs://", data);
@@ -74,7 +72,7 @@ contract SignatureDropTest is BaseTest {
         data = abi.encode("", 199);
         vm.expectRevert("Unexpected start Id");
         sigdrop.lazyMint(100, "ipfs://", data);
-        
+
         vm.stopPrank();
     }
 
@@ -92,7 +90,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(nextTokenIdToMint, 100);
         vm.stopPrank();
     }
-    
+
     // - test _batchMint and tokenURI
     function test_lazyMint_batchMintAndTokenURI() public {
         vm.startPrank(deployer_signer);
@@ -137,7 +135,7 @@ contract SignatureDropTest is BaseTest {
         vm.expectEmit(true, true, false, false);
         emit TokenLazyMinted(0, 100, "ipfs://", "sdc");
         sigdrop.lazyMint(100, "ipfs://", data);
-        
+
         vm.stopPrank();
     }
 
@@ -155,13 +153,12 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployer_signer);
         sigdrop.reveal(0, "key");
 
-        bytes memory errorMessage =
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(uint160(address(this)), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-                    );
+        bytes memory errorMessage = abi.encodePacked(
+            "AccessControl: account ",
+            Strings.toHexString(uint160(address(this)), 20),
+            " is missing role ",
+            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+        );
 
         vm.expectRevert(errorMessage);
         sigdrop.reveal(0, "key");
@@ -213,7 +210,7 @@ contract SignatureDropTest is BaseTest {
 
         vm.stopPrank();
     }
-    
+
     // - test _setBaseURI
     function test_delayedReveal_setBaseURI() public {
         vm.startPrank(deployer_signer);
@@ -240,7 +237,7 @@ contract SignatureDropTest is BaseTest {
         vm.expectEmit(false, false, false, true);
         emit TokenURIRevealed(0, "ipfs://");
         sigdrop.reveal(0, "key");
-        
+
         vm.stopPrank();
     }
 
@@ -256,42 +253,42 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
-                                    mintrequest.to = address(0);
-                                    mintrequest.royaltyRecipient = address(2);
-                                    mintrequest.royaltyBps = 0;
-                                    mintrequest.primarySaleRecipient = address(deployer);
-                                    mintrequest.uri = "ipfs://";
-                                    mintrequest.quantity = 1;
-                                    mintrequest.pricePerToken = 0;
-                                    mintrequest.currency = address(3);
-                                    mintrequest.validityStartTimestamp = 1000;
-                                    mintrequest.validityEndTimestamp = 2000;
-                                    mintrequest.uid = bytes32(id);
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 0;
+        mintrequest.currency = address(3);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
 
         bytes memory encodedRequest = abi.encode(
-                typehash,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
+            typehash,
+            mintrequest.to,
+            mintrequest.royaltyRecipient,
+            mintrequest.royaltyBps,
+            mintrequest.primarySaleRecipient,
+            keccak256(bytes(mintrequest.uri)),
+            mintrequest.quantity,
+            mintrequest.pricePerToken,
+            mintrequest.currency,
+            mintrequest.validityStartTimestamp,
+            mintrequest.validityEndTimestamp,
+            mintrequest.uid
+        );
         bytes32 structHash = keccak256(encodedRequest);
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-                                
+
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-        bytes memory signature = abi.encodePacked(r,s,v);
+        bytes memory signature = abi.encodePacked(r, s, v);
         vm.warp(1000);
         sigdrop.mintWithSignature(mintrequest, signature);
 
         (v, r, s) = vm.sign(4321, typedDataHash);
-        signature = abi.encodePacked(r,s,v);
+        signature = abi.encodePacked(r, s, v);
         vm.expectRevert("Invalid request");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
@@ -318,25 +315,25 @@ contract SignatureDropTest is BaseTest {
             mintrequest.uid = bytes32(id);
 
             bytes memory encodedRequest = abi.encode(
-                    typehash,
-                    mintrequest.to,
-                    mintrequest.royaltyRecipient,
-                    mintrequest.royaltyBps,
-                    mintrequest.primarySaleRecipient,
-                    keccak256(bytes(mintrequest.uri)),
-                    mintrequest.quantity,
-                    mintrequest.pricePerToken,
-                    mintrequest.currency,
-                    mintrequest.validityStartTimestamp,
-                    mintrequest.validityEndTimestamp,
-                    mintrequest.uid
-                );
+                typehash,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
             bytes32 structHash = keccak256(encodedRequest);
             bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r,s,v);
-            vm.startPrank(deployer_signer);          
+            bytes memory signature = abi.encodePacked(r, s, v);
+            vm.startPrank(deployer_signer);
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
             sigdrop.mintWithSignature(mintrequest, signature);
@@ -369,8 +366,6 @@ contract SignatureDropTest is BaseTest {
         //     vm.stopPrank();
         // }
     }
-
-
 
     /*///////////////////////////////////////////////////////////////
                                 Claim Tests
