@@ -85,7 +85,7 @@ function burn(uint256 tokenId) external nonpayable
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof, bytes _data) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
@@ -100,13 +100,13 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _quantity | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
+| _allowlistProof | IDrop.AllowlistProof | undefined
 | _data | bytes | undefined
 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
+function claimCondition() external view returns (uint256 currentStartId, uint256 count)
 ```
 
 
@@ -118,14 +118,8 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| startTimestamp | uint256 | undefined
-| maxClaimableSupply | uint256 | undefined
-| supplyClaimed | uint256 | undefined
-| quantityLimitPerTransaction | uint256 | undefined
-| waitTimeInSecondsBetweenClaims | uint256 | undefined
-| merkleRoot | bytes32 | undefined
-| pricePerToken | uint256 | undefined
-| currency | address | undefined
+| currentStartId | uint256 | undefined
+| count | uint256 | undefined
 
 ### contractType
 
@@ -200,6 +194,23 @@ function encryptDecrypt(bytes data, bytes key) external pure returns (bytes resu
 | Name | Type | Description |
 |---|---|---|
 | result | bytes | undefined
+
+### getActiveClaimConditionId
+
+```solidity
+function getActiveClaimConditionId() external view returns (uint256)
+```
+
+
+
+*At any given moment, returns the uid for the active claim condition.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
 
 ### getApproved
 
@@ -766,7 +777,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility, bytes) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility, bytes) external nonpayable
 ```
 
 
@@ -777,7 +788,7 @@ function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _res
 
 | Name | Type | Description |
 |---|---|---|
-| _condition | IClaimCondition.ClaimCondition | undefined
+| _conditions | IClaimCondition.ClaimCondition[] | undefined
 | _resetClaimEligibility | bool | undefined
 | _2 | bytes | undefined
 
@@ -1004,7 +1015,7 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 ### verifyClaim
 
 ```solidity
-function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
 ```
 
 
@@ -1015,6 +1026,7 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 
 | Name | Type | Description |
 |---|---|---|
+| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
 | _currency | address | undefined
@@ -1024,7 +1036,7 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, IDrop.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
@@ -1035,9 +1047,10 @@ function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSingle
 
 | Name | Type | Description |
 |---|---|---|
+| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
+| _allowlistProof | IDrop.AllowlistProof | undefined
 
 #### Returns
 
@@ -1086,10 +1099,10 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
-### ClaimConditionUpdated
+### ClaimConditionsUpdated
 
 ```solidity
-event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
+event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions)
 ```
 
 
@@ -1100,8 +1113,24 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 
 | Name | Type | Description |
 |---|---|---|
-| condition  | IClaimCondition.ClaimCondition | undefined |
-| resetEligibility  | bool | undefined |
+| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### DefaultRoyalty
 
@@ -1281,7 +1310,7 @@ event TokenURIRevealed(uint256 index, string revealedURI)
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed claimer, address indexed receiver, uint256 quantityClaimed, uint256 indexed aux)
+event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
 ```
 
 
@@ -1292,11 +1321,11 @@ event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed cl
 
 | Name | Type | Description |
 |---|---|---|
-| condition  | IClaimCondition.ClaimCondition | undefined |
+| claimConditionIndex `indexed` | uint256 | undefined |
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
+| startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
-| aux `indexed` | uint256 | undefined |
 
 ### TokensMinted
 

@@ -55,11 +55,17 @@ abstract contract BaseTest is DSTest, Test {
     uint128 public platformFeeBps = 500; // 5%
     uint256 public constant MAX_BPS = 10_000; // 100%
 
+    uint256 privateKey = 1234;
+    address signer;
+
     mapping(bytes32 => address) public contracts;
 
     function setUp() public virtual {
         /// setup main factory contracts. registry, fee, factory.
         vm.startPrank(factoryAdmin);
+
+        signer = vm.addr(privateKey);
+
         erc20 = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
@@ -199,7 +205,7 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(
                 SignatureDrop.initialize,
                 (
-                    deployer,
+                    signer,
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
