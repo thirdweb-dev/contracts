@@ -79,7 +79,7 @@ contract SignatureDrop is
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    event TokensLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
     event TokensMinted(
         address indexed minter,
@@ -187,7 +187,7 @@ contract SignatureDrop is
             _setEncryptedBaseURI(batchId, _encryptedBaseURI);
         }
 
-        emit TokensLazyMinted(startId, _amount, _baseURIForTokens, _encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
