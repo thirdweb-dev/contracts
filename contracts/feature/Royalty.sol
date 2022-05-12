@@ -5,10 +5,10 @@ import "./interface/IRoyalty.sol";
 
 abstract contract Royalty is IRoyalty {
     /// @dev The (default) address that receives all royalty value.
-    address private royaltyRecipient;
+    address internal royaltyRecipient;
 
     /// @dev The (default) % of a sale to take as royalty (in basis points).
-    uint16 private royaltyBps;
+    uint16 internal royaltyBps;
 
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;

@@ -117,23 +117,19 @@ contract SignatureDrop is
         __ERC721A_init(_name, _symbol);
         __SignatureMintERC721_init();
 
-        // Revoked at the end of the function.
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         // Initialize this contract's state.
-        setContractURI(_contractURI);
-        setOwner(_defaultAdmin);
+        royaltyRecipient = _royaltyRecipient;
+        royaltyBps = uint16(_royaltyBps);
+        platformFeeRecipient = _platformFeeRecipient;
+        platformFeeBps = uint16(_platformFeeBps);
+        primarySaleRecipient = _saleRecipient;
+        contractURI = _contractURI;
+        owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
-
-        setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        setPrimarySaleRecipient(_saleRecipient);
-
-        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -284,7 +280,7 @@ contract SignatureDrop is
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
-            primarySaleRecipient(),
+            getPrimarySaleRecipient(),
             totalPrice - platformFees - twFee
         );
     }

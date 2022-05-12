@@ -5,10 +5,10 @@ import "./interface/IPlatformFee.sol";
 
 abstract contract PlatformFee is IPlatformFee {
     /// @dev The address that receives all platform fees from all sales.
-    address private platformFeeRecipient;
+    address internal platformFeeRecipient;
 
     /// @dev The % of primary sales collected as platform fees.
-    uint16 private platformFeeBps;
+    uint16 internal platformFeeBps;
 
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
