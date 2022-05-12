@@ -175,21 +175,19 @@ contract SignatureDrop is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _data
+        bytes calldata _encryptedBaseURI
     ) external onlyRole(MINTER_ROLE) {
-        (bytes memory encryptedBaseURI, uint256 expectedStartId) = abi.decode(_data, (bytes, uint256));
 
         uint256 startId = nextTokenIdToMint;
-        require(startId == expectedStartId, "Unexpected start Id");
 
         uint256 batchId;
         (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
 
-        if (encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(batchId, encryptedBaseURI);
+        if (_encryptedBaseURI.length != 0) {
+            _setEncryptedBaseURI(batchId, _encryptedBaseURI);
         }
 
-        emit TokenLazyMinted(startId, _amount, _baseURIForTokens, encryptedBaseURI);
+        emit TokenLazyMinted(startId, _amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
