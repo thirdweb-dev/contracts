@@ -25,26 +25,17 @@ contract Permissions is IPermissions {
 
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
-
-        _hasRole[role][account] = true;
-
-        emit RoleGranted(role, account, msg.sender);
+        _setupRole(role, account);
     }
 
     function revokeRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
-
-        delete _hasRole[role][account];
-
-        emit RoleRevoked(role, account, msg.sender);
+        _revokeRole(role, account);
     }
 
     function renounceRole(bytes32 role, address account) public virtual override {
         require(msg.sender == account, "Can only renounce for self");
-
-        delete _hasRole[role][account];
-
-        emit RoleRevoked(role, account, msg.sender);
+        _revokeRole(role, account);
     }
 
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
@@ -56,6 +47,11 @@ contract Permissions is IPermissions {
     function _setupRole(bytes32 role, address account) internal virtual {
         _hasRole[role][account] = true;
         emit RoleGranted(role, account, msg.sender);
+    }
+
+    function _revokeRole(bytes32 role, address account) internal virtual {
+        delete _hasRole[role][account];
+        emit RoleRevoked(role, account, msg.sender);
     }
 
     function _checkRole(bytes32 role, address account) internal view virtual {

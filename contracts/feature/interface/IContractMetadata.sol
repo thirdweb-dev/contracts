@@ -10,4 +10,6 @@ interface IContractMetadata {
      *       Only module admin can call this function.
      */
     function setContractURI(string calldata _uri) external;
+
+    event ContractURIUpdated(string prevURI, string newURI);
 }

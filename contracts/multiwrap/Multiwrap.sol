@@ -4,27 +4,13 @@ pragma solidity ^0.8.11;
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IThirdwebContract.sol";
-import "../feature/interface/IRoyalty.sol";
-import "../feature/interface/IOwnable.sol";
-
 import "../interfaces/IMultiwrap.sol";
-import "../lib/CurrencyTransferLib.sol";
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
@@ -86,21 +72,21 @@ contract Multiwrap is
         __ERC2771Context_init(_trustedForwarders);
         __ERC721_init(_name, _symbol);
 
-        // _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        // Revoked at the end of the function.
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
-        // // Initialize this contract's state.
-        // royaltyRecipient = _royaltyRecipient;
-        // royaltyBps = uint128(_royaltyBps);
-        // contractURI = _contractURI;
-        // _owner = _defaultAdmin;
+        // Initialize this contract's state.
+        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        setOwner(_defaultAdmin);
+        setContractURI(_contractURI);
 
-        // _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        // _setupRole(MINTER_ROLE, _defaultAdmin);
-        // _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        // _setupRole(TRANSFER_ROLE, address(0));
-        // _setupRole(UNWRAP_ROLE, address(0));
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, address(0));
+        _setupRole(UNWRAP_ROLE, address(0));
 
-        // _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

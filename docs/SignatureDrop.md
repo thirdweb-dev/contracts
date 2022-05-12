@@ -1103,6 +1103,23 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 | condition  | IClaimCondition.ClaimCondition | undefined |
 | resetEligibility  | bool | undefined |
 
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
+
 ### DefaultRoyalty
 
 ```solidity

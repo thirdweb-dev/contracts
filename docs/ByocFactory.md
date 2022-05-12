@@ -420,6 +420,23 @@ event ContractDeployed(address indexed deployer, address indexed publisher, addr
 | publisher `indexed` | address | undefined |
 | deployedContract  | address | undefined |
 
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
+
 ### OwnerUpdated
 
 ```solidity
