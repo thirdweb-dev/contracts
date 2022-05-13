@@ -195,6 +195,28 @@ function encryptDecrypt(bytes data, bytes key) external pure returns (bytes resu
 |---|---|---|
 | result | bytes | undefined
 
+### encryptedBaseURI
+
+```solidity
+function encryptedBaseURI(uint256) external view returns (bytes)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined
+
 ### getActiveClaimConditionId
 
 ```solidity
