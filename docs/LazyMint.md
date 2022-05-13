@@ -10,6 +10,28 @@
 
 ## Methods
 
+### baseURIIndices
+
+```solidity
+function baseURIIndices(uint256) external view returns (uint256)
+```
+
+
+
+*Largest tokenId of each batch of tokens with the same baseURI.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### getBaseURICount
 
 ```solidity
