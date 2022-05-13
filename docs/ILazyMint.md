@@ -13,7 +13,7 @@
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes data) external nonpayable
+function lazyMint(uint256 amount, string baseURIForTokens, bytes encryptedBaseURI) external nonpayable
 ```
 
 
@@ -26,7 +26,7 @@ function lazyMint(uint256 amount, string baseURIForTokens, bytes data) external 
 |---|---|---|
 | amount | uint256 | undefined
 | baseURIForTokens | string | undefined
-| data | bytes | undefined
+| encryptedBaseURI | bytes | undefined
 
 
 
