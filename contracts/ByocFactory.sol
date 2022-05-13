@@ -5,6 +5,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
@@ -13,7 +14,7 @@ import { IByocFactory } from "./interfaces/IByocFactory.sol";
 import { TWRegistry } from "./TWRegistry.sol";
 import "./ThirdwebContract.sol";
 
-contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
+contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEnumerable {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -24,8 +25,8 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
     /// @dev Whether the registry is paused.
     bool public isPaused;
 
-    /// @dev Empty var used in deployment.
-    address public deployer;
+    /// @dev contract address deployed through the factory => deployer
+    mapping(address => address) public getContractDeployer;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
@@ -56,12 +57,15 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         uint256 _value,
         string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-        deployer = _msgSender();
-
         require(bytes(publishMetadataUri).length > 0, "No publish metadata");
 
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
-        bytes32 salt = _salt == "" ? keccak256(abi.encodePacked(_msgSender(), block.number)) : _salt;
+        bytes32 salt = _salt == ""
+            ? keccak256(abi.encodePacked(_msgSender(), block.number, keccak256(contractBytecode)))
+            : keccak256(abi.encodePacked(_msgSender(), _salt));
+
+        address computedContractAddress = Create2.computeAddress(salt, keccak256(contractBytecode), address(this));
+        getContractDeployer[computedContractAddress] = _msgSender();
 
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
@@ -73,8 +77,6 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         );
 
         registry.add(_publisher, deployedAddress);
-
-        delete deployer;
 
         emit ContractDeployed(_msgSender(), _publisher, deployedAddress);
     }
@@ -88,7 +90,13 @@ contract ByocFactory is IByocFactory, ERC2771Context, AccessControlEnumerable {
         uint256 _value,
         string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-        bytes32 salt = _salt == "" ? keccak256(abi.encodePacked(_msgSender(), block.number)) : _salt;
+        bytes32 salt = _salt == ""
+            ? keccak256(abi.encodePacked(_msgSender(), block.number, _implementation, _initializeData))
+            : keccak256(abi.encodePacked(_msgSender(), _salt));
+
+        address computedContractAddress = Clones.predictDeterministicAddress(_implementation, salt, address(this));
+        getContractDeployer[computedContractAddress] = _msgSender();
+
         deployedAddress = Clones.cloneDeterministic(_implementation, salt);
 
         ThirdwebContract(deployedAddress).setPublishMetadataUri(publishMetadataUri);
