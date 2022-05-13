@@ -86,7 +86,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
-        TWFactory(factory).addImplementation(address(new SignatureDrop(fee)));
+        TWFactory(factory).addImplementation(address(new SignatureDrop()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
