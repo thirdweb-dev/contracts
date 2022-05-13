@@ -81,16 +81,21 @@ Deploys a clone pointing to an implementation of a published contract.
 |---|---|---|
 | deployedAddress | address | undefined
 
-### deployer
+### getContractDeployer
 
 ```solidity
-function deployer() external view returns (address)
+function getContractDeployer(address) external view returns (address)
 ```
 
 
 
-*Empty var used in deployment.*
+*contract address deployed through the factory =&gt; deployer*
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
 
 #### Returns
 
@@ -243,6 +248,28 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
+
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | undefined
 
 ### renounceRole
 

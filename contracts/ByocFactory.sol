@@ -90,12 +90,15 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
         uint256 _value,
         string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
+
+        address caller = _msgSender();
+
         bytes32 salt = _salt == ""
-            ? keccak256(abi.encodePacked(_msgSender(), block.number, _implementation, _initializeData))
-            : keccak256(abi.encodePacked(_msgSender(), _salt));
+            ? keccak256(abi.encodePacked(caller, block.number, _implementation, _initializeData))
+            : keccak256(abi.encodePacked(caller, _salt));
 
         address computedContractAddress = Clones.predictDeterministicAddress(_implementation, salt, address(this));
-        getContractDeployer[computedContractAddress] = _msgSender();
+        getContractDeployer[computedContractAddress] = caller;
 
         deployedAddress = Clones.cloneDeterministic(_implementation, salt);
 
@@ -106,14 +109,14 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
             "Not a thirdweb contract"
         );
 
-        registry.add(_publisher, deployedAddress);
+        registry.add(caller, deployedAddress);
 
         if (_initializeData.length > 0) {
             // slither-disable-next-line unused-return
             Address.functionCallWithValue(deployedAddress, _initializeData, _value);
         }
 
-        emit ContractDeployed(_msgSender(), _publisher, deployedAddress);
+        emit ContractDeployed(caller, _publisher, deployedAddress);
     }
 
     /*///////////////////////////////////////////////////////////////

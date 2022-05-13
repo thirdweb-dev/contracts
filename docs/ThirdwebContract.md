@@ -46,3 +46,17 @@ function setPublishMetadataUri(string uri) external nonpayable
 
 
 
+## Errors
+
+### ThirdwebContract_MetadataAlreadyInitialized
+
+```solidity
+error ThirdwebContract_MetadataAlreadyInitialized()
+```
+
+
+
+
+
+
+
