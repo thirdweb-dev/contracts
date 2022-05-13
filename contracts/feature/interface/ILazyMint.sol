@@ -5,6 +5,6 @@ interface ILazyMint {
     function lazyMint(
         uint256 amount,
         string calldata baseURIForTokens,
-        bytes calldata data
+        bytes calldata encryptedBaseURI
     ) external;
 }

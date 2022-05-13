@@ -195,6 +195,28 @@ function encryptDecrypt(bytes data, bytes key) external pure returns (bytes resu
 |---|---|---|
 | result | bytes | undefined
 
+### encryptedBaseURI
+
+```solidity
+function encryptedBaseURI(uint256) external view returns (bytes)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined
+
 ### getActiveClaimConditionId
 
 ```solidity
@@ -234,6 +256,45 @@ function getApproved(uint256 tokenId) external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
+### getBaseURICount
+
+```solidity
+function getBaseURICount() external view returns (uint256)
+```
+
+
+
+*Returns the number of batches of tokens having the same baseURI.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getBatchIdAtIndex
+
+```solidity
+function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
+```
+
+
+
+*Returns the id for the batch of tokens the given tokenId belongs to.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### getDefaultRoyaltyInfo
 
 ```solidity
@@ -251,23 +312,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### getNumOfTokenBatches
-
-```solidity
-function getNumOfTokenBatches() external view returns (uint256)
-```
-
-
-
-*Returns the number of batches of tokens having the same baseURI.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
 
 ### getPlatformFeeInfo
 

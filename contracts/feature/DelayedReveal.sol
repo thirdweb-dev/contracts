@@ -5,7 +5,7 @@ import "./interface/IDelayedReveal.sol";
 
 abstract contract DelayedReveal is IDelayedReveal {
     /// @dev Mapping from id of a batch of tokens => to encrypted base URI for the respective batch of tokens.
-    mapping(uint256 => bytes) private encryptedBaseURI;
+    mapping(uint256 => bytes) public encryptedBaseURI;
 
     /// @dev Sets the encrypted baseURI for a batch of tokenIds.
     function _setEncryptedBaseURI(uint256 _batchId, bytes memory _encryptedBaseURI) internal {
