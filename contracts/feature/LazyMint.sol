@@ -11,19 +11,19 @@ abstract contract LazyMint is ILazyMint {
     mapping(uint256 => string) private baseURI;
 
     /// @dev Returns the number of batches of tokens having the same baseURI.
-    function getNumOfTokenBatches() public view returns (uint256) {
+    function getBaseURICount() public view returns (uint256) {
         return batchIds.length;
     }
 
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
     function getBatchIdAtIndex(uint256 _index) internal view returns (uint256) {
-        require(_index < getNumOfTokenBatches(), "invalid index.");
+        require(_index < getBaseURICount(), "invalid index.");
         return batchIds[_index];
     }
 
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
     function getBatchId(uint256 _tokenId) internal view returns (uint256) {
-        uint256 numOfTokenBatches = getNumOfTokenBatches();
+        uint256 numOfTokenBatches = getBaseURICount();
         uint256[] memory indices = batchIds;
 
         for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
@@ -37,7 +37,7 @@ abstract contract LazyMint is ILazyMint {
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
     function getBaseURI(uint256 _tokenId) internal view returns (string memory) {
-        uint256 numOfTokenBatches = getNumOfTokenBatches();
+        uint256 numOfTokenBatches = getBaseURICount();
         uint256[] memory indices = batchIds;
 
         for (uint256 i = 0; i < numOfTokenBatches; i += 1) {

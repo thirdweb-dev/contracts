@@ -10,10 +10,10 @@
 
 ## Methods
 
-### getNumOfTokenBatches
+### getBaseURICount
 
 ```solidity
-function getNumOfTokenBatches() external view returns (uint256)
+function getBaseURICount() external view returns (uint256)
 ```
 
 

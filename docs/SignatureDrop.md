@@ -234,6 +234,23 @@ function getApproved(uint256 tokenId) external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
+### getBaseURICount
+
+```solidity
+function getBaseURICount() external view returns (uint256)
+```
+
+
+
+*Returns the number of batches of tokens having the same baseURI.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### getDefaultRoyaltyInfo
 
 ```solidity
@@ -251,23 +268,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### getNumOfTokenBatches
-
-```solidity
-function getNumOfTokenBatches() external view returns (uint256)
-```
-
-
-
-*Returns the number of batches of tokens having the same baseURI.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
 
 ### getPlatformFeeInfo
 
