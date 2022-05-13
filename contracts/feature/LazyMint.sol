@@ -16,7 +16,7 @@ abstract contract LazyMint is ILazyMint {
     }
 
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
-    function getBatchIdAtIndex(uint256 _index) internal view returns (uint256) {
+    function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
         require(_index < getBaseURICount(), "invalid index.");
         return batchIds[_index];
     }
