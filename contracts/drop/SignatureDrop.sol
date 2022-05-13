@@ -69,9 +69,6 @@ contract SignatureDrop is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee private immutable thirdwebFee;
-
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
 
@@ -79,7 +76,7 @@ contract SignatureDrop is
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
     event TokensMinted(
         address indexed minter,
@@ -93,10 +90,6 @@ contract SignatureDrop is
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
-
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -175,21 +168,18 @@ contract SignatureDrop is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _data
+        bytes calldata _encryptedBaseURI
     ) external onlyRole(MINTER_ROLE) {
-        (bytes memory encryptedBaseURI, uint256 expectedStartId) = abi.decode(_data, (bytes, uint256));
-
         uint256 startId = nextTokenIdToMint;
-        require(startId == expectedStartId, "Unexpected start Id");
 
         uint256 batchId;
         (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
 
-        if (encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(batchId, encryptedBaseURI);
+        if (_encryptedBaseURI.length != 0) {
+            _setEncryptedBaseURI(batchId, _encryptedBaseURI);
         }
 
-        emit TokenLazyMinted(startId, _amount, _baseURIForTokens, encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -274,20 +264,17 @@ contract SignatureDrop is
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
             primarySaleRecipient(),
-            totalPrice - platformFees - twFee
+            totalPrice - platformFees
         );
     }
 

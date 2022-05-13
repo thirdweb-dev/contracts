@@ -513,7 +513,7 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable
 ```
 
 
@@ -526,7 +526,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) extern
 |---|---|---|
 | _amount | uint256 | undefined
 | _baseURIForTokens | string | undefined
-| _data | bytes | undefined
+| _encryptedBaseURI | bytes | undefined
 
 ### mintWithSignature
 
@@ -1271,25 +1271,6 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | royaltyRecipient  | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
-### TokenLazyMinted
-
-```solidity
-event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| startId `indexed` | uint256 | undefined |
-| amount  | uint256 | undefined |
-| baseURI `indexed` | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
-
 ### TokenURIRevealed
 
 ```solidity
@@ -1326,6 +1307,25 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 | receiver `indexed` | address | undefined |
 | startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
+
+### TokensLazyMinted
+
+```solidity
+event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startTokenId  | uint256 | undefined |
+| endTokenId  | uint256 | undefined |
+| baseURI  | string | undefined |
+| encryptedBaseURI  | bytes | undefined |
 
 ### TokensMinted
 

@@ -16,25 +16,6 @@ abstract contract Drop is IDrop, ExecutionContext {
     /// @dev The active conditions for claiming tokens.
     ClaimConditionList public claimCondition;
 
-    /// @dev The ID for the active claim condition.
-    // bytes32 private conditionId;
-
-    /*///////////////////////////////////////////////////////////////
-                                Mappings
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @dev Map from an account and uid for a claim condition, to the last timestamp
-     *       at which the account claimed tokens under that claim condition.
-     */
-    // mapping(uint256 => mapping(address => uint256)) private lastClaimTimestamp;
-
-    /**
-     *  @dev Map from a claim condition uid to whether an address in an allowlist
-     *       has already claimed tokens i.e. used their place in the allowlist.
-     */
-    mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
-
     /*///////////////////////////////////////////////////////////////
                             Drop logic
     //////////////////////////////////////////////////////////////*/
@@ -63,7 +44,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
-            msg.sender,
+            _msgSender(),
             _quantity,
             _allowlistProof
         );
@@ -71,7 +52,14 @@ abstract contract Drop is IDrop, ExecutionContext {
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
 
-        verifyClaim(activeConditionId, msg.sender, _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(
+            activeConditionId,
+            _msgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -84,9 +72,9 @@ abstract contract Drop is IDrop, ExecutionContext {
 
         // Update contract state.
         // claimCondition.supplyClaimed += _quantity;
-        // lastClaimTimestamp[activeConditionId][msg.sender] = block.timestamp;
+        // lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
         claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
-        claimCondition.lastClaimTimestamp[activeConditionId][msg.sender] = block.timestamp;
+        claimCondition.lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_quantity, _currency, _pricePerToken);
@@ -94,7 +82,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(activeConditionId, msg.sender, _receiver, startTokenId, _quantity);
+        emit TokensClaimed(activeConditionId, _msgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
@@ -192,7 +180,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         );
 
         // uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        uint256 timestampOfLastClaim = claimCondition.lastClaimTimestamp[getActiveClaimConditionId()][_claimer];
+        uint256 timestampOfLastClaim = claimCondition.lastClaimTimestamp[_conditionId][_claimer];
         require(
             timestampOfLastClaim == 0 ||
                 block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
