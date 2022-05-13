@@ -7,7 +7,7 @@ import { SignatureDrop } from "contracts/drop/SignatureDrop.sol";
 import "../utils/BaseTest.sol";
 
 contract SignatureDropTest is BaseTest {
-    event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
 
     SignatureDrop public sigdrop;
@@ -43,10 +43,8 @@ contract SignatureDropTest is BaseTest {
 
     // - test access/roles
     function test_lazyMint_minterRole() public {
-        bytes memory data = abi.encode("", 0);
-
         vm.prank(deployer_signer);
-        sigdrop.lazyMint(100, "ipfs://", data);
+        sigdrop.lazyMint(100, "ipfs://", "");
 
         bytes memory errorMessage = abi.encodePacked(
             "AccessControl: account ",
@@ -56,32 +54,14 @@ contract SignatureDropTest is BaseTest {
         );
 
         vm.expectRevert(errorMessage);
-        sigdrop.lazyMint(100, "ipfs://", data);
-    }
-
-    // - expect revert when start id not equal to expected id
-    function test_lazyMint_StartIdAndExpectedStartId() public {
-        vm.startPrank(deployer_signer);
-
-        bytes memory data = abi.encode("", 0);
-        sigdrop.lazyMint(100, "ipfs://", data);
-
-        data = abi.encode("", 100);
-        sigdrop.lazyMint(100, "ipfs://", data);
-
-        data = abi.encode("", 199);
-        vm.expectRevert("Unexpected start Id");
-        sigdrop.lazyMint(100, "ipfs://", data);
-
-        vm.stopPrank();
+        sigdrop.lazyMint(100, "ipfs://", "");
     }
 
     // - test _batchMint and value of nextTokenIdToMint
     function test_lazyMint_batchMintAndNextTokenIdToMint() public {
         vm.startPrank(deployer_signer);
 
-        bytes memory data = abi.encode("", 0);
-        sigdrop.lazyMint(100, "ipfs://", data);
+        sigdrop.lazyMint(100, "ipfs://", "");
 
         uint256 slot = stdstore.target(address(sigdrop)).sig("nextTokenIdToMint()").find();
         bytes32 loc = bytes32(slot);
@@ -95,8 +75,7 @@ contract SignatureDropTest is BaseTest {
     function test_lazyMint_batchMintAndTokenURI() public {
         vm.startPrank(deployer_signer);
 
-        bytes memory data = abi.encode("", 0);
-        sigdrop.lazyMint(100, "ipfs://", data);
+        sigdrop.lazyMint(100, "ipfs://", "");
 
         string memory uri = sigdrop.tokenURI(1);
         assertEq(uri, "ipfs://1");
@@ -115,8 +94,7 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
 
         string memory uri = sigdrop.tokenURI(1);
         assertEq(uri, "1");
@@ -130,11 +108,9 @@ contract SignatureDropTest is BaseTest {
     function test_lazyMint_event() public {
         vm.startPrank(deployer_signer);
 
-        bytes memory data = abi.encode("", 0);
-
-        vm.expectEmit(true, true, false, false);
-        emit TokenLazyMinted(0, 100, "ipfs://", "sdc");
-        sigdrop.lazyMint(100, "ipfs://", data);
+        vm.expectEmit(false, false, false, true);
+        emit TokensLazyMinted(0, 100, "ipfs://", "");
+        sigdrop.lazyMint(100, "ipfs://", "");
 
         vm.stopPrank();
     }
@@ -146,9 +122,8 @@ contract SignatureDropTest is BaseTest {
     // - test access/roles
     function test_delayedReveal_minterRole() public {
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
         vm.prank(deployer_signer);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
 
         vm.prank(deployer_signer);
         sigdrop.reveal(0, "key");
@@ -169,12 +144,10 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
         sigdrop.reveal(0, "key");
 
-        data = abi.encode(encryptedURI, 100);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
         vm.expectRevert("invalid index.");
         sigdrop.reveal(2, "key");
 
@@ -186,8 +159,7 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
 
         string memory revealedURI = sigdrop.reveal(0, "key");
         assertEq(revealedURI, "ipfs://");
@@ -201,8 +173,7 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
 
         string memory revealedURI = sigdrop.reveal(0, "keyy");
         assertEq(revealedURI, "ipfs://");
@@ -216,8 +187,7 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
         sigdrop.reveal(0, "key");
 
         string memory uri = sigdrop.tokenURI(1);
@@ -231,8 +201,7 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        bytes memory data = abi.encode(encryptedURI, 0);
-        sigdrop.lazyMint(100, "", data);
+        sigdrop.lazyMint(100, "", encryptedURI);
 
         vm.expectEmit(false, false, false, true);
         emit TokenURIRevealed(0, "ipfs://");
@@ -247,9 +216,8 @@ contract SignatureDropTest is BaseTest {
 
     // - test _processRequest and recover signer
     function test_mintWithSignature_processRequestAndRecoverSigner() public {
-        bytes memory data = abi.encode("", 0);
         vm.prank(deployer_signer);
-        sigdrop.lazyMint(100, "ipfs://", data);
+        sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
@@ -295,25 +263,24 @@ contract SignatureDropTest is BaseTest {
 
     // - test price and currencies
     function test_mintWithSignature_priceAndCurrency() public {
-        bytes memory data = abi.encode("", 0);
         vm.prank(deployer_signer);
-        sigdrop.lazyMint(100, "ipfs://", data);
+        sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        {
-            mintrequest.to = address(0);
-            mintrequest.royaltyRecipient = address(2);
-            mintrequest.royaltyBps = 0;
-            mintrequest.primarySaleRecipient = address(deployer);
-            mintrequest.uri = "ipfs://";
-            mintrequest.quantity = 1;
-            mintrequest.pricePerToken = 1;
-            mintrequest.currency = address(erc20);
-            mintrequest.validityStartTimestamp = 1000;
-            mintrequest.validityEndTimestamp = 2000;
-            mintrequest.uid = bytes32(id);
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(erc20);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
 
+        {
             bytes memory encodedRequest = abi.encode(
                 typehash,
                 mintrequest.to,
@@ -340,31 +307,90 @@ contract SignatureDropTest is BaseTest {
             vm.stopPrank();
         }
 
-        // {
-        //     mintrequest.currency = address(NATIVE_TOKEN);
-        //     bytes memory encodedRequest = abi.encode(
-        //             typehash,
-        //             mintrequest.to,
-        //             mintrequest.royaltyRecipient,
-        //             mintrequest.royaltyBps,
-        //             mintrequest.primarySaleRecipient,
-        //             keccak256(bytes(mintrequest.uri)),
-        //             mintrequest.quantity,
-        //             mintrequest.pricePerToken,
-        //             mintrequest.currency,
-        //             mintrequest.validityStartTimestamp,
-        //             mintrequest.validityEndTimestamp,
-        //             mintrequest.uid
-        //         );
-        //     bytes32 structHash = keccak256(encodedRequest);
-        //     bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        {
+            mintrequest.currency = address(NATIVE_TOKEN);
+            id = 1;
+            mintrequest.uid = bytes32(id);
+            bytes memory encodedRequest = abi.encode(
+                    typehash,
+                    mintrequest.to,
+                    mintrequest.royaltyRecipient,
+                    mintrequest.royaltyBps,
+                    mintrequest.primarySaleRecipient,
+                    keccak256(bytes(mintrequest.uri)),
+                    mintrequest.quantity,
+                    mintrequest.pricePerToken,
+                    mintrequest.currency,
+                    mintrequest.validityStartTimestamp,
+                    mintrequest.validityEndTimestamp,
+                    mintrequest.uid
+                );
+            bytes32 structHash = keccak256(encodedRequest);
+            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
-        //     vm.startPrank(deployer_signer);
-        //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-        //     bytes memory signature = abi.encodePacked(r,s,v);
-        //     sigdrop.mintWithSignature(mintrequest, signature);
-        //     vm.stopPrank();
-        // }
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+            bytes memory signature = abi.encodePacked(r,s,v);
+            vm.startPrank(address(deployer_signer));
+            vm.warp(1000);
+            sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
+            vm.stopPrank();
+        }
+    }
+
+    // - test balance and owner of tokens minted
+    function test_mintWithSignature_checkBalanceAndOwner() public {
+        vm.prank(deployer_signer);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        uint256 id = 0;
+        SignatureDrop.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(erc20);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        {
+            bytes memory encodedRequest = abi.encode(
+                typehash,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
+            bytes32 structHash = keccak256(encodedRequest);
+            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            vm.startPrank(deployer_signer);
+            vm.warp(1000);
+            erc20.approve(address(sigdrop), 1);
+            sigdrop.mintWithSignature(mintrequest, signature);
+            vm.stopPrank();
+
+            uint256 balance = sigdrop.balanceOf(address(deployer_signer));
+            assertEq(balance, 1);
+
+            address owner = sigdrop.ownerOf(0);
+            assertEq(deployer_signer, owner);
+
+            vm.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
+            owner = sigdrop.ownerOf(1);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -462,12 +488,12 @@ contract SignatureDropTest is BaseTest {
         conditions[0].quantityLimitPerTransaction = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
-        // vm.prank(deployer);
-        // sigdrop.lazyMint(100, "ipfs://", bytes(""));
-        // vm.prank(deployer);
-        // sigdrop.setClaimConditions(conditions, false, "");
+        vm.prank(deployer_signer);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployer_signer);
+        sigdrop.setClaimConditions(conditions, false, "");
 
-        // vm.prank(getActor(5), getActor(5));
+        vm.prank(getActor(5), getActor(5));
         // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         // vm.expectRevert("cannot claim.");
@@ -500,33 +526,5 @@ contract SignatureDropTest is BaseTest {
 
     //     vm.prank(getActor(5), getActor(5));
     //     sigdrop.claim(receiver, 1, address(0), 0, proofs, 0);
-    // }
-
-    // function test_multiple_claim_exploit() public {
-    //     MasterExploitContract masterExploit = new MasterExploitContract(address(sigdrop));
-
-    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-    //     conditions[0].maxClaimableSupply = 100;
-    //     conditions[0].quantityLimitPerTransaction = 1;
-    //     conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
-
-    //     vm.prank(deployer);
-    //     sigdrop.lazyMint(100, "ipfs://", bytes(""));
-
-    //     vm.prank(deployer);
-    //     sigdrop.setClaimConditions(conditions, false);
-
-    //     bytes32[] memory proofs = new bytes32[](0);
-
-    //     vm.startPrank(getActor(5));
-    //     vm.expectRevert(bytes("BOT"));
-    //     masterExploit.performExploit(
-    //         address(masterExploit),
-    //         conditions[0].quantityLimitPerTransaction,
-    //         conditions[0].currency,
-    //         conditions[0].pricePerToken,
-    //         proofs,
-    //         0
-    //     );
     // }
 }
