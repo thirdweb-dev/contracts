@@ -59,13 +59,15 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
         require(bytes(publishMetadataUri).length > 0, "No publish metadata");
 
+        address caller = _msgSender();
+
         bytes memory contractBytecode = abi.encodePacked(_contractBytecode, _constructorArgs);
         bytes32 salt = _salt == ""
-            ? keccak256(abi.encodePacked(_msgSender(), block.number, keccak256(contractBytecode)))
-            : keccak256(abi.encodePacked(_msgSender(), _salt));
+            ? keccak256(abi.encodePacked(caller, block.number, keccak256(contractBytecode)))
+            : keccak256(abi.encodePacked(caller, _salt));
 
         address computedContractAddress = Create2.computeAddress(salt, keccak256(contractBytecode), address(this));
-        getContractDeployer[computedContractAddress] = _msgSender();
+        getContractDeployer[computedContractAddress] = caller;
 
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
@@ -76,9 +78,9 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
             "Not a thirdweb contract"
         );
 
-        registry.add(_publisher, deployedAddress);
+        registry.add(caller, deployedAddress);
 
-        emit ContractDeployed(_msgSender(), _publisher, deployedAddress);
+        emit ContractDeployed(caller, _publisher, deployedAddress);
     }
 
     /// @notice Deploys a clone pointing to an implementation of a published contract.
@@ -90,7 +92,6 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
         uint256 _value,
         string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
-
         address caller = _msgSender();
 
         bytes32 salt = _salt == ""

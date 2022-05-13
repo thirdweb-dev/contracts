@@ -25,7 +25,6 @@ contract ThirdwebContract {
     }
 
     /// @dev Enable access to the original contract deployer in the constructor. If this function is called outside of a constructor, it will return address(0) instead.
-    ///      Save 1 storage slot from not storing the factory address and not having to hardcode the factory address.
     function _contractDeployer() internal view returns (address) {
         if (address(this).code.length == 0) {
             try IContractDeployer(msg.sender).getContractDeployer(address(this)) returns (address deployer) {
