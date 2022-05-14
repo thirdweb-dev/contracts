@@ -180,12 +180,14 @@ abstract contract Drop is IDrop, ExecutionContext {
         );
 
         // uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        uint256 timestampOfLastClaim = claimCondition.lastClaimTimestamp[_conditionId][_claimer];
-        require(
-            timestampOfLastClaim == 0 ||
-                block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
+        // uint256 timestampOfLastClaim = claimCondition.lastClaimTimestamp[_conditionId][_claimer];
+        // require(
+        //     timestampOfLastClaim == 0 ||
+        //         block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
+        //     "cannot claim."
+        // );
+        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
+        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -222,6 +224,25 @@ abstract contract Drop is IDrop, ExecutionContext {
         }
 
         revert("!CONDITION.");
+    }
+
+    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
+    function getClaimTimestamp(uint256 _conditionId, address _claimer)
+        public
+        view
+        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
+    {
+        lastClaimTimestamp = claimCondition.lastClaimTimestamp[_conditionId][_claimer];
+
+        unchecked {
+            nextValidClaimTimestamp =
+                lastClaimTimestamp +
+                claimCondition.conditions[_conditionId].waitTimeInSecondsBetweenClaims;
+
+            if (nextValidClaimTimestamp < lastClaimTimestamp) {
+                nextValidClaimTimestamp = type(uint256).max;
+            }
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
