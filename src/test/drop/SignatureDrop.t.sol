@@ -312,24 +312,24 @@ contract SignatureDropTest is BaseTest {
             id = 1;
             mintrequest.uid = bytes32(id);
             bytes memory encodedRequest = abi.encode(
-                    typehash,
-                    mintrequest.to,
-                    mintrequest.royaltyRecipient,
-                    mintrequest.royaltyBps,
-                    mintrequest.primarySaleRecipient,
-                    keccak256(bytes(mintrequest.uri)),
-                    mintrequest.quantity,
-                    mintrequest.pricePerToken,
-                    mintrequest.currency,
-                    mintrequest.validityStartTimestamp,
-                    mintrequest.validityEndTimestamp,
-                    mintrequest.uid
-                );
+                typehash,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
             bytes32 structHash = keccak256(encodedRequest);
             bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r,s,v);
+            bytes memory signature = abi.encodePacked(r, s, v);
             vm.startPrank(address(deployer_signer));
             vm.warp(1000);
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
