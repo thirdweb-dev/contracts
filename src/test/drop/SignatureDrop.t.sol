@@ -312,24 +312,24 @@ contract SignatureDropTest is BaseTest {
             id = 1;
             mintrequest.uid = bytes32(id);
             bytes memory encodedRequest = abi.encode(
-                    typehash,
-                    mintrequest.to,
-                    mintrequest.royaltyRecipient,
-                    mintrequest.royaltyBps,
-                    mintrequest.primarySaleRecipient,
-                    keccak256(bytes(mintrequest.uri)),
-                    mintrequest.quantity,
-                    mintrequest.pricePerToken,
-                    mintrequest.currency,
-                    mintrequest.validityStartTimestamp,
-                    mintrequest.validityEndTimestamp,
-                    mintrequest.uid
-                );
+                typehash,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
             bytes32 structHash = keccak256(encodedRequest);
             bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r,s,v);
+            bytes memory signature = abi.encodePacked(r, s, v);
             vm.startPrank(address(deployer_signer));
             vm.warp(1000);
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
@@ -494,37 +494,40 @@ contract SignatureDropTest is BaseTest {
         sigdrop.setClaimConditions(conditions, false, "");
 
         vm.prank(getActor(5), getActor(5));
-        // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        // vm.expectRevert("cannot claim.");
-        // vm.prank(getActor(5), getActor(5));
-        // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+        vm.expectRevert("cannot claim.");
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
-    // function test_claimCondition_resetEligibility_waitTimeInSecondsBetweenClaims() public {
-    //     vm.warp(1);
+    function test_claimCondition_resetEligibility_waitTimeInSecondsBetweenClaims() public {
+        vm.warp(1);
 
-    //     address receiver = getActor(0);
-    //     bytes32[] memory proofs = new bytes32[](0);
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
 
-    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-    //     conditions[0].maxClaimableSupply = 100;
-    //     conditions[0].quantityLimitPerTransaction = 100;
-    //     conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
 
-    //     vm.prank(deployer);
-    //     sigdrop.lazyMint(100, "ipfs://", bytes(""));
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
-    //     vm.prank(deployer);
-    //     sigdrop.setClaimConditions(conditions, false);
+        vm.prank(deployer_signer);
+        sigdrop.lazyMint(100, "ipfs://", "");
 
-    //     vm.prank(getActor(5), getActor(5));
-    //     sigdrop.claim(receiver, 1, address(0), 0, proofs, 0);
+        vm.prank(deployer);
+        sigdrop.setClaimConditions(conditions, false, "");
 
-    //     vm.prank(deployer);
-    //     sigdrop.setClaimConditions(conditions, true);
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-    //     vm.prank(getActor(5), getActor(5));
-    //     sigdrop.claim(receiver, 1, address(0), 0, proofs, 0);
-    // }
+        vm.prank(deployer);
+        sigdrop.setClaimConditions(conditions, true, "");
+
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+    }
 }
