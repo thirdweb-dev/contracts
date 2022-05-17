@@ -93,10 +93,9 @@ contract Multiwrap is
                             Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    modifier onlyMinter() {
-        // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(MINTER_ROLE, address(0))) {
-            require(hasRole(MINTER_ROLE, _msgSender()), "restricted to MINTER_ROLE holders.");
+    modifier onlyRoleWithSwitch(bytes32 role) {
+        if (!hasRole(role, address(0))) {
+            _checkRole(role, _msgSender());
         }
 
         _;
@@ -148,7 +147,7 @@ contract Multiwrap is
         Token[] calldata _wrappedContents,
         string calldata _uriForWrappedToken,
         address _recipient
-    ) external payable nonReentrant onlyMinter returns (uint256 tokenId) {
+    ) external payable nonReentrant onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
         
         tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
@@ -161,11 +160,10 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(uint256 _tokenId, address _recipient) external nonReentrant {
+    function unwrap(uint256 _tokenId, address _recipient) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
         
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "unapproved called");
-        require(hasRole(UNWRAP_ROLE, address(0)) || hasRole(UNWRAP_ROLE, _msgSender()), "!UNWRAP_ROLE");
 
         _burn(_tokenId);
         _releaseTokens(_recipient, _tokenId);
@@ -177,7 +175,7 @@ contract Multiwrap is
                         Getter functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the underlygin contents of a wrapped NFT.
+    /// @dev Returns the underlying contents of a wrapped NFT.
     function getWrappedContents(uint256 _tokenId) external view returns (Token[] memory contents) {
         uint256 total = getTokenCountOfBundle(_tokenId);
         contents = new Token[](total);
@@ -222,7 +220,7 @@ contract Multiwrap is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
     }
 
