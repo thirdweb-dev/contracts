@@ -348,7 +348,7 @@ contract MultiwrapTest is BaseTest {
         assertEq(contentsOfWrappedToken.length, 0);
     }
 
-    function test_event_wrap_TokensUnwrapped() public {
+    function test_event_unwrap_TokensUnwrapped() public {
         
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
@@ -404,7 +404,7 @@ contract MultiwrapTest is BaseTest {
         assertEq(erc1155.balanceOf(address(multiwrap), 0), 0);
     }
 
-    function test_revert_wrap_invalidTokenId() public {
+    function test_revert_unwrap_invalidTokenId() public {
 
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
@@ -420,7 +420,7 @@ contract MultiwrapTest is BaseTest {
         multiwrap.unwrap(expectedIdForWrappedToken + 1, recipient);
     }
 
-    function test_revert_wrap_unapprovedCaller() public {
+    function test_revert_unwrap_unapprovedCaller() public {
         
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
@@ -436,7 +436,7 @@ contract MultiwrapTest is BaseTest {
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 
-    function test_revert_wrap_notOwner() public {
+    function test_revert_unwrap_notOwner() public {
 
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
@@ -455,7 +455,7 @@ contract MultiwrapTest is BaseTest {
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 
-    function test_revert_wrap_access_UNWRAP_ROLE() public {
+    function test_revert_unwrap_access_UNWRAP_ROLE() public {
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
