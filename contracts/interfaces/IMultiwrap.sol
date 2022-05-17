@@ -11,7 +11,6 @@ import "../feature/interface/ITokenBundle.sol";
  */
 
 interface IMultiwrap is ITokenBundle {
-    
     /// @dev Emitted when tokens are wrapped.
     event TokensWrapped(
         address indexed wrapper,

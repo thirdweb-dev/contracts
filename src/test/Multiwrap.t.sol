@@ -10,7 +10,6 @@ import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
 
 contract MultiwrapReentrant is MockERC20, ITokenBundle {
-
     Multiwrap internal multiwrap;
     uint256 internal tokenIdOfWrapped = 0;
 
@@ -64,24 +63,30 @@ contract MultiwrapTest is BaseTest {
         tokenOwner = getWallet();
         uriForWrappedToken = "ipfs://baseURI/";
 
-        wrappedContent.push(ITokenBundle.Token({
-            assetContract: address(erc20),
-            tokenType: ITokenBundle.TokenType.ERC20,
-            tokenId: 0,
-            totalAmount: 10 ether
-        }));
-        wrappedContent.push(ITokenBundle.Token({
-            assetContract: address(erc721),
-            tokenType: ITokenBundle.TokenType.ERC721,
-            tokenId: 0,
-            totalAmount: 1
-        }));
-        wrappedContent.push(ITokenBundle.Token({
-            assetContract: address(erc1155),
-            tokenType: ITokenBundle.TokenType.ERC1155,
-            tokenId: 0,
-            totalAmount: 100
-        }));
+        wrappedContent.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 10 ether
+            })
+        );
+        wrappedContent.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 0,
+                totalAmount: 1
+            })
+        );
+        wrappedContent.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 0,
+                totalAmount: 100
+            })
+        );
 
         // Mint tokens-to-wrap to `tokenOwner`
         erc20.mint(address(tokenOwner), 10 ether);
@@ -103,16 +108,15 @@ contract MultiwrapTest is BaseTest {
      *      - `wrap`
      *      - `unwrap`
      */
-    
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `wrap`
     //////////////////////////////////////////////////////////////*/
-    
+
     /**
      *  note: Testing state changes; token owner calls `wrap` to wrap owned tokens.
      */
     function test_state_wrap() public {
-
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
 
@@ -123,7 +127,7 @@ contract MultiwrapTest is BaseTest {
 
         ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, wrappedContent.length);
-        for(uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
+        for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
             assertEq(contentsOfWrappedToken[i].assetContract, wrappedContent[i].assetContract);
             assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(wrappedContent[i].tokenType));
             assertEq(contentsOfWrappedToken[i].tokenId, wrappedContent[i].tokenId);
@@ -141,7 +145,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        
+
         vm.expectEmit(true, true, true, true);
         emit TokensWrapped(address(tokenOwner), recipient, expectedIdForWrappedToken, wrappedContent);
 
@@ -152,7 +156,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing token balances; token owner calls `wrap` to wrap owned tokens.
      */
     function test_balances_wrap() public {
-        
         // ERC20 balance
         assertEq(erc20.balanceOf(address(tokenOwner)), 10 ether);
         assertEq(erc20.balanceOf(address(multiwrap)), 0);
@@ -163,8 +166,7 @@ contract MultiwrapTest is BaseTest {
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 100);
         assertEq(erc1155.balanceOf(address(multiwrap), 0), 0);
-        
-        
+
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
 
@@ -209,12 +211,11 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert("ReentrancyGuard: reentrant call");
         multiwrap.wrap(reentrantContentToWrap, uriForWrappedToken, recipient);
     }
-    
+
     /**
      *  note: Testing revert condition; token owner calls `wrap` to wrap owned tokens, without MINTER_ROLE.
      */
     function test_revert_wrap_access_MINTER_ROLE() public {
-
         vm.prank(address(tokenOwner));
         multiwrap.renounceRole(keccak256("MINTER_ROLE"), address(tokenOwner));
 
@@ -238,7 +239,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC20 tokens.
      */
     function test_revert_wrap_notOwner_ERC20() public {
-        
         tokenOwner.transferERC20(address(erc20), address(0x12), 10 ether);
 
         address recipient = address(0x123);
@@ -252,7 +252,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC721 tokens.
      */
     function test_revert_wrap_notOwner_ERC721() public {
-        
         tokenOwner.transferERC721(address(erc721), address(0x12), 0);
 
         address recipient = address(0x123);
@@ -266,7 +265,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC1155 tokens.
      */
     function test_revert_wrap_notOwner_ERC1155() public {
-
         tokenOwner.transferERC1155(address(erc1155), address(0x12), 0, 100, "");
 
         address recipient = address(0x123);
@@ -277,7 +275,6 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_revert_wrap_noTokensToWrap() public {
-
         ITokenBundle.Token[] memory emptyContent;
 
         address recipient = address(0x123);
@@ -295,7 +292,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing state changes; wrapped token owner calls `unwrap` to unwrap underlying tokens.
      */
     function test_state_unwrap() public {
-
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -321,7 +317,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing state changes; wrapped token owner calls `unwrap` to unwrap underlying tokens.
      */
     function test_state_unwrap_approvedCaller() public {
-
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -349,7 +344,6 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_event_unwrap_TokensUnwrapped() public {
-        
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -368,7 +362,6 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_balances_unwrap() public {
-        
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -405,7 +398,6 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_revert_unwrap_invalidTokenId() public {
-
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -421,7 +413,6 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_revert_unwrap_unapprovedCaller() public {
-        
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -437,7 +428,6 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_revert_unwrap_notOwner() public {
-
         // ===== setup: wrap tokens =====
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);

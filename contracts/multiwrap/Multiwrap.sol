@@ -148,7 +148,6 @@ contract Multiwrap is
         string calldata _uriForWrappedToken,
         address _recipient
     ) external payable nonReentrant onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
-        
         tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
@@ -161,7 +160,6 @@ contract Multiwrap is
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
-        
         require(_tokenId < nextTokenIdToMint, "invalid tokenId");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "unapproved called");
 
