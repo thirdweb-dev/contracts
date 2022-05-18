@@ -94,7 +94,7 @@ contract MultiwrapTest is BaseTest {
         erc1155.mint(address(tokenOwner), 0, 100);
 
         // Token owner approves `Multiwrap` to transfer tokens.
-        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), 10 ether);
+        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), type(uint).max);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), true);
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);
 
@@ -470,5 +470,88 @@ contract MultiwrapTest is BaseTest {
         vm.prank(recipient);
         vm.expectRevert(bytes(errorMsg));
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
+    }
+
+    /**
+     *      Fuzz testing:
+     *      - Wrapping and unwrapping arbitrary kinds of tokens
+     */
+
+    uint256 internal constant MAX_TOKENS = 1000;
+
+    function getTokensToWrap(uint256 x) internal returns (ITokenBundle.Token[] memory tokensToWrap) {
+        uint256 len = x % MAX_TOKENS;
+        tokensToWrap = new ITokenBundle.Token[](len);
+
+        for(uint256 i = 0; i < len; i += 1) {
+            
+            uint256 random = uint(keccak256(abi.encodePacked(len + i))) % MAX_TOKENS;
+            uint256 selector = random % 3;
+
+            if(selector == 0) {
+
+                tokensToWrap[i] = ITokenBundle.Token({
+                    assetContract: address(erc20),
+                    tokenType: ITokenBundle.TokenType.ERC20,
+                    tokenId: 0,
+                    totalAmount: random
+                });
+
+                erc20.mint(address(tokenOwner), tokensToWrap[i].totalAmount);
+
+            } else if (selector == 1) {
+
+                uint256 tokenId = erc721.nextTokenIdToMint();
+
+                tokensToWrap[i] = ITokenBundle.Token({
+                    assetContract: address(erc721),
+                    tokenType: ITokenBundle.TokenType.ERC721,
+                    tokenId: tokenId,
+                    totalAmount: 1
+                });
+
+                erc721.mint(address(tokenOwner), 1);
+
+            } else if (selector == 2) {
+
+                tokensToWrap[i] = ITokenBundle.Token({
+                    assetContract: address(erc1155),
+                    tokenType: ITokenBundle.TokenType.ERC1155,
+                    tokenId: random,
+                    totalAmount: random
+                });
+
+                erc1155.mint(address(tokenOwner), tokensToWrap[i].tokenId, tokensToWrap[i].totalAmount);
+            }
+        }
+    }
+
+    function test_fuzz_wrap(uint256 x) public {
+        ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
+
+        uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        if(x == 0) {
+            vm.expectRevert("TokenBundle: no tokens to bind.");
+            multiwrap.wrap(tokensToWrap, uriForWrappedToken, recipient);
+        } else {
+            
+            multiwrap.wrap(tokensToWrap, uriForWrappedToken, recipient);
+
+            assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
+
+            ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
+            assertEq(contentsOfWrappedToken.length, tokensToWrap.length);
+            for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
+                assertEq(contentsOfWrappedToken[i].assetContract, tokensToWrap[i].assetContract);
+                assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(tokensToWrap[i].tokenType));
+                assertEq(contentsOfWrappedToken[i].tokenId, tokensToWrap[i].tokenId);
+                assertEq(contentsOfWrappedToken[i].totalAmount, tokensToWrap[i].totalAmount);
+            }
+
+            assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+        }
     }
 }
