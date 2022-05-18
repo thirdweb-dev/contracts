@@ -322,7 +322,7 @@ function getWrappedContents(uint256 _tokenId) external view returns (struct ITok
 
 
 
-*Returns the underlygin contents of a wrapped NFT.*
+*Returns the underlying contents of a wrapped NFT.*
 
 #### Parameters
 
@@ -875,7 +875,7 @@ function unwrap(uint256 _tokenId, address _recipient) external nonpayable
 ### wrap
 
 ```solidity
-function wrap(ITokenBundle.Token[] _wrappedContents, string _uriForWrappedToken, address _recipient) external payable returns (uint256 tokenId)
+function wrap(ITokenBundle.Token[] _tokensToWrap, string _uriForWrappedToken, address _recipient) external payable returns (uint256 tokenId)
 ```
 
 
@@ -886,7 +886,7 @@ function wrap(ITokenBundle.Token[] _wrappedContents, string _uriForWrappedToken,
 
 | Name | Type | Description |
 |---|---|---|
-| _wrappedContents | ITokenBundle.Token[] | undefined
+| _tokensToWrap | ITokenBundle.Token[] | undefined
 | _uriForWrappedToken | string | undefined
 | _recipient | address | undefined
 

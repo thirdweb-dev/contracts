@@ -83,7 +83,11 @@ contract Multiwrap is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
+
+        // note: see `_beforeTokenTransfer` for TRANSFER_ROLE behaviour.
         _setupRole(TRANSFER_ROLE, address(0));
+
+        // note: see `onlyRoleWithSwitch` for UNWRAP_ROLE behaviour.
         _setupRole(UNWRAP_ROLE, address(0));
 
         _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -144,24 +148,24 @@ contract Multiwrap is
 
     /// @dev Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.
     function wrap(
-        Token[] calldata _wrappedContents,
+        Token[] calldata _tokensToWrap,
         string calldata _uriForWrappedToken,
         address _recipient
     ) external payable nonReentrant onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
         tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
-        _storeTokens(_msgSender(), _wrappedContents, _uriForWrappedToken, tokenId);
+        _storeTokens(_msgSender(), _tokensToWrap, _uriForWrappedToken, tokenId);
 
         _safeMint(_recipient, tokenId);
 
-        emit TokensWrapped(_msgSender(), _recipient, tokenId, _wrappedContents);
+        emit TokensWrapped(_msgSender(), _recipient, tokenId, _tokensToWrap);
     }
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
-        require(_tokenId < nextTokenIdToMint, "invalid tokenId");
-        require(_isApprovedOrOwner(_msgSender(), _tokenId), "unapproved called");
+        require(_tokenId < nextTokenIdToMint, "Multiwrap: wrapped NFT DNE.");
+        require(_isApprovedOrOwner(_msgSender(), _tokenId), "Multiwrap: caller not approved for unwrapping.");
 
         _burn(_tokenId);
         _releaseTokens(_recipient, _tokenId);

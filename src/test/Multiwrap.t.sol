@@ -408,7 +408,7 @@ contract MultiwrapTest is BaseTest {
         // ===== target test content =====
 
         vm.prank(recipient);
-        vm.expectRevert("invalid tokenId");
+        vm.expectRevert("Multiwrap: wrapped NFT DNE.");
         multiwrap.unwrap(expectedIdForWrappedToken + 1, recipient);
     }
 
@@ -423,7 +423,7 @@ contract MultiwrapTest is BaseTest {
         // ===== target test content =====
 
         vm.prank(address(0x12));
-        vm.expectRevert("unapproved called");
+        vm.expectRevert("Multiwrap: caller not approved for unwrapping.");
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 
@@ -441,7 +441,7 @@ contract MultiwrapTest is BaseTest {
         multiwrap.transferFrom(recipient, address(0x12), 0);
 
         vm.prank(recipient);
-        vm.expectRevert("unapproved called");
+        vm.expectRevert("Multiwrap: caller not approved for unwrapping.");
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 
@@ -528,11 +528,10 @@ contract MultiwrapTest is BaseTest {
 
     function test_fuzz_state_wrap(uint256 x) public {
 
-        if(x == 0) {
+        ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
+        if(tokensToWrap.length == 0) {
             return;
         }
-
-        ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
 
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
@@ -558,11 +557,10 @@ contract MultiwrapTest is BaseTest {
 
         // ===== setup: wrap tokens =====
 
-        if(x == 0) {
+        ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
+        if(tokensToWrap.length == 0) {
             return;
         }
-
-        ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
 
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
