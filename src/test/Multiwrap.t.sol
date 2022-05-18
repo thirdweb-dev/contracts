@@ -94,7 +94,7 @@ contract MultiwrapTest is BaseTest {
         erc1155.mint(address(tokenOwner), 0, 100);
 
         // Token owner approves `Multiwrap` to transfer tokens.
-        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), type(uint).max);
+        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), type(uint256).max);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), true);
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), true);
 
@@ -483,13 +483,11 @@ contract MultiwrapTest is BaseTest {
         uint256 len = x % MAX_TOKENS;
         tokensToWrap = new ITokenBundle.Token[](len);
 
-        for(uint256 i = 0; i < len; i += 1) {
-            
-            uint256 random = uint(keccak256(abi.encodePacked(len + i))) % MAX_TOKENS;
+        for (uint256 i = 0; i < len; i += 1) {
+            uint256 random = uint256(keccak256(abi.encodePacked(len + i))) % MAX_TOKENS;
             uint256 selector = random % 3;
 
-            if(selector == 0) {
-
+            if (selector == 0) {
                 tokensToWrap[i] = ITokenBundle.Token({
                     assetContract: address(erc20),
                     tokenType: ITokenBundle.TokenType.ERC20,
@@ -498,9 +496,7 @@ contract MultiwrapTest is BaseTest {
                 });
 
                 erc20.mint(address(tokenOwner), tokensToWrap[i].totalAmount);
-
             } else if (selector == 1) {
-
                 uint256 tokenId = erc721.nextTokenIdToMint();
 
                 tokensToWrap[i] = ITokenBundle.Token({
@@ -511,9 +507,7 @@ contract MultiwrapTest is BaseTest {
                 });
 
                 erc721.mint(address(tokenOwner), 1);
-
             } else if (selector == 2) {
-
                 tokensToWrap[i] = ITokenBundle.Token({
                     assetContract: address(erc1155),
                     tokenType: ITokenBundle.TokenType.ERC1155,
@@ -527,9 +521,8 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_fuzz_state_wrap(uint256 x) public {
-
         ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
-        if(tokensToWrap.length == 0) {
+        if (tokensToWrap.length == 0) {
             return;
         }
 
@@ -554,11 +547,10 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_fuzz_state_unwrap(uint256 x) public {
-
         // ===== setup: wrap tokens =====
 
         ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
-        if(tokensToWrap.length == 0) {
+        if (tokensToWrap.length == 0) {
             return;
         }
 
