@@ -527,31 +527,60 @@ contract MultiwrapTest is BaseTest {
     }
 
     function test_fuzz_state_wrap(uint256 x) public {
+
+        if(x == 0) {
+            return;
+        }
+
         ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
 
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        if(x == 0) {
-            vm.expectRevert("TokenBundle: no tokens to bind.");
-            multiwrap.wrap(tokensToWrap, uriForWrappedToken, recipient);
-        } else {
-            
-            multiwrap.wrap(tokensToWrap, uriForWrappedToken, recipient);
+        multiwrap.wrap(tokensToWrap, uriForWrappedToken, recipient);
 
-            assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
+        assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
 
-            ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
-            assertEq(contentsOfWrappedToken.length, tokensToWrap.length);
-            for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
-                assertEq(contentsOfWrappedToken[i].assetContract, tokensToWrap[i].assetContract);
-                assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(tokensToWrap[i].tokenType));
-                assertEq(contentsOfWrappedToken[i].tokenId, tokensToWrap[i].tokenId);
-                assertEq(contentsOfWrappedToken[i].totalAmount, tokensToWrap[i].totalAmount);
-            }
-
-            assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
+        assertEq(contentsOfWrappedToken.length, tokensToWrap.length);
+        for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
+            assertEq(contentsOfWrappedToken[i].assetContract, tokensToWrap[i].assetContract);
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(tokensToWrap[i].tokenType));
+            assertEq(contentsOfWrappedToken[i].tokenId, tokensToWrap[i].tokenId);
+            assertEq(contentsOfWrappedToken[i].totalAmount, tokensToWrap[i].totalAmount);
         }
+
+        assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+    }
+
+    function test_fuzz_state_unwrap(uint256 x) public {
+
+        // ===== setup: wrap tokens =====
+
+        if(x == 0) {
+            return;
+        }
+
+        ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
+
+        uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        multiwrap.wrap(tokensToWrap, uriForWrappedToken, recipient);
+
+        // ===== target test content =====
+
+        vm.prank(recipient);
+        multiwrap.unwrap(expectedIdForWrappedToken, recipient);
+
+        vm.expectRevert("ERC721: owner query for nonexistent token");
+        multiwrap.ownerOf(expectedIdForWrappedToken);
+
+        assertEq("", multiwrap.tokenURI(expectedIdForWrappedToken));
+
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
+        assertEq(contentsOfWrappedToken.length, 0);
     }
 }
