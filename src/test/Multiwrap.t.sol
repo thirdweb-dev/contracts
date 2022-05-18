@@ -274,6 +274,45 @@ contract MultiwrapTest is BaseTest {
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
+    /**
+     *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC20 tokens.
+     */
+    function test_revert_wrap_notApprovedTransfer_ERC20() public {
+        tokenOwner.setAllowanceERC20(address(erc20), address(multiwrap), 0);
+
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("ERC20: insufficient allowance");
+        multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC721 tokens.
+     */
+    function test_revert_wrap_notApprovedTransfer_ERC721() public {
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(multiwrap), false);
+
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("ERC721: transfer caller is not owner nor approved");
+        multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC1155 tokens.
+     */
+    function test_revert_wrap_notApprovedTransfer_ERC1155() public {
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(multiwrap), false);
+
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("ERC1155: caller is not owner nor approved");
+        multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
+    }
+
     function test_revert_wrap_noTokensToWrap() public {
         ITokenBundle.Token[] memory emptyContent;
 
