@@ -137,6 +137,40 @@ contract MultiwrapTest is BaseTest {
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
     }
 
+    /*
+     *  note: Testing state changes; token owner calls `wrap` to wrap native tokens.
+     */
+    function test_state_wrap_nativeTokens() public {
+        uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](1);
+
+        vm.deal(address(tokenOwner), 100 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+
+        vm.prank(address(tokenOwner));
+        multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+
+        assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
+
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
+        assertEq(contentsOfWrappedToken.length, nativeTokenContentToWrap.length);
+        for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
+            assertEq(contentsOfWrappedToken[i].assetContract, nativeTokenContentToWrap[i].assetContract);
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(nativeTokenContentToWrap[i].tokenType));
+            assertEq(contentsOfWrappedToken[i].tokenId, nativeTokenContentToWrap[i].tokenId);
+            assertEq(contentsOfWrappedToken[i].totalAmount, nativeTokenContentToWrap[i].totalAmount);
+        }
+
+        assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+    }
+
     /**
      *  note: Testing event emission; token owner calls `wrap` to wrap owned tokens.
      */
@@ -233,6 +267,27 @@ contract MultiwrapTest is BaseTest {
         vm.prank(address(tokenOwner));
         vm.expectRevert(bytes(errorMsg));
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; token owner calls `wrap` with insufficient value when wrapping native tokens.
+     */
+    function test_revert_wrap_nativeTokens_insufficientValue() public {
+        address recipient = address(0x123);
+
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](1);
+
+        vm.deal(address(tokenOwner), 100 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("msg.value != amount");
+        multiwrap.wrap(nativeTokenContentToWrap, uriForWrappedToken, recipient);
     }
 
     /**
