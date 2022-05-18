@@ -526,7 +526,7 @@ contract MultiwrapTest is BaseTest {
         }
     }
 
-    function test_fuzz_wrap(uint256 x) public {
+    function test_fuzz_state_wrap(uint256 x) public {
         ITokenBundle.Token[] memory tokensToWrap = getTokensToWrap(x);
 
         uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
