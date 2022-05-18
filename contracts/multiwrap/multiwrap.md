@@ -10,25 +10,19 @@ The document is written for technical and non-technical readers. To ask further 
 
 The thirdweb Multiwrap contract lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own into a single wrapped token / NFT.
 
-The `Multiwrap` contract is meant to be used for bundling up multiple assets (ERC20 / ERC721 / ERC1155) into a single wrapped token, which can then
-be unwrapped in exchange for the underlying tokens.
+The `Multiwrap` contract is meant to be used for bundling up multiple assets (ERC20 / ERC721 / ERC1155) into a single wrapped token, which can then be unwrapped in exchange for the underlying tokens.
 
-The single wrapped token received on bundling up multiple assets, as mentioned above, is an ERC721 NFT. It can be transferred, sold on any NFT Marketplace, and
-generate royalties just like any other NFTs.
+The single wrapped token received on bundling up multiple assets, as mentioned above, is an ERC721 NFT. It can be transferred, sold on any NFT Marketplace, and generate royalties just like any other NFTs.
 
 ### Why we’re building `Multiwrap`
 
-We're building `Multiwrap` for cases where an application wishes to bundle up / distribute / transact over *n* independent tokens all at once, as a single asset. This opens
-up several novel NFT use cases.
+We're building `Multiwrap` for cases where an application wishes to bundle up / distribute / transact over *n* independent tokens all at once, as a single asset. This opens up several novel NFT use cases.
 
-For example, consider a lending service where people can take out a loan while putting up an NFT as a collateral. Using `Multiwrap`, a borrower can wrap their NFT with
-some ether, and put up the resultant wrapped ERC721 NFT as collateral on the lending service. Now, the bowwoer's NFT, as collateral, has a floor value.
+For example, consider a lending service where people can take out a loan while putting up an NFT as a collateral. Using `Multiwrap`, a borrower can wrap their NFT with some ether, and put up the resultant wrapped ERC721 NFT as collateral on the lending service. Now, the borrower's NFT, as collateral, has a floor value.
 
 ## Technical Details
 
-The `Multiwrap` contract itself is an ERC721 contract. It lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own into a single wrapped token / NFT. This means
-escrowing the relevant ERC20, ERC721 and ERC1155 tokens into the `Multiwrap` contract, and receiving the wrapped NFT in exchange. This wrapped NFT can later be 'unwrapped'
-i.e. burned in exchange for the underlying tokens.
+The `Multiwrap` contract itself is an ERC721 contract. It lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own into a single wrapped token / NFT. This means escrowing the relevant ERC20, ERC721 and ERC1155 tokens into the `Multiwrap` contract, and receiving the wrapped NFT in exchange. This wrapped NFT can later be 'unwrapped' i.e. burned in exchange for the underlying tokens.
 
 ### Wrapping tokens
 
@@ -42,7 +36,7 @@ struct Token {
     address assetContract;
     TokenType tokenType;
     uint256 tokenId;
-    uint256 amount;
+    uint256 totalAmount;
 }
 ```
 
@@ -51,15 +45,15 @@ struct Token {
 | assetContract | address | The contract address of the asset to wrap. |
 | tokenType | TokenType | The token type (ERC20 / ERC721 / ERC1155) of the asset to wrap. |
 | tokenId | uint256 | The token Id of the asset to wrap, if the asset is an ERC721 / ERC1155 NFT. |
-| amount | uint256 | The amount of the asset to wrap, if the asset is an ERC20 / ERC1155 fungible token. |
+| totalAmount | uint256 | The amount of the asset to wrap, if the asset is an ERC20 / ERC1155 fungible token. |
 
-Each token in the bundle of tokens to be wrapped as a single wrapped NFT must be specified to the `Multiwrap` contract in the form of the `Token` struct. The contract handles the respective token based on the value of `tokenType` provided. Any incorrect values passed (e.g. the `amount` specified to be wrapped exceeds the token owner's token balance) will cause the wrapping transaction to revert.
+Each token in the bundle of tokens to be wrapped as a single wrapped NFT must be specified to the `Multiwrap` contract in the form of the `Token` struct. The contract handles the respective token based on the value of `tokenType` provided. Any incorrect values passed (e.g. the `totalAmount` specified to be wrapped exceeds the token owner's token balance) will cause the wrapping transaction to revert.
 
 Multiple tokens can be wrapped as a single wrapped NFT by calling the following function:
 
 ```solidity
 function wrap(
-    Token[] memory wrappedContents,
+    Token[] memory tokensToWrap,
     string calldata uriForWrappedToken,
     address recipient
 ) external payable returns (uint256 tokenId);
@@ -67,7 +61,7 @@ function wrap(
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| wrappedContents | Token[] | The tokens to wrap. |
+| tokensToWrap | Token[] | The tokens to wrap. |
 | uriForWrappedToken | string | The metadata URI for the wrapped NFT. |
 | recipient | address | The recipient of the wrapped NFT. |
 
@@ -86,8 +80,8 @@ function unwrap(
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| tokenId | Token[] | The token Id of the wrapped NFT to unwrap.. |
-| recipient | address | The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT. |
+| tokenId | Token[] | The token Id of the wrapped NFT to unwrap. |
+| recipient | address | The recipient of the underlying ERC20, ERC721 or ERC1155 tokens of the wrapped NFT. |
 
 When unwrapping the single wrapped NFT, the wrapped NFT is burned.
 
