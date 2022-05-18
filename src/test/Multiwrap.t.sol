@@ -291,6 +291,33 @@ contract MultiwrapTest is BaseTest {
     }
 
     /**
+     *  note: Testing revert condition; token owner calls `wrap` to wrap native tokens, but with multiple instances in `tokensToWrap` array.
+     */
+    function test_revert_wrap_nativeTokens_insufficientValue_multipleInstances() public {
+        address recipient = address(0x123);
+
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](2);
+
+        vm.deal(address(tokenOwner), 100 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 5 ether
+        });
+        nativeTokenContentToWrap[1] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 5 ether
+        });
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("msg.value != amount");
+        multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+    }
+
+    /**
      *  note: Testing revert condition; token owner calls `wrap` to wrap un-owned ERC20 tokens.
      */
     function test_revert_wrap_notOwner_ERC20() public {
