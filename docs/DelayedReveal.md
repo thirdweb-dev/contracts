@@ -58,7 +58,7 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 ### getRevealURI
 
 ```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
+function getRevealURI(uint256 _batchId, bytes _key) external nonpayable returns (string revealedURI)
 ```
 
 

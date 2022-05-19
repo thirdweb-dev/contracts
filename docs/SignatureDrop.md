@@ -358,7 +358,7 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 ### getRevealURI
 
 ```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
+function getRevealURI(uint256 _batchId, bytes _key) external nonpayable returns (string revealedURI)
 ```
 
 
