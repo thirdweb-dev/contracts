@@ -16,7 +16,7 @@ The single wrapped token received on bundling up multiple assets, as mentioned a
 
 ### How the `Multiwrap` product *should* work
 
-![multiwrap-diagram.png](multiwrap-diagram.png)
+![multiwrap-diagram.png](/assets/multiwrap-diagram.png)
 
 A token owner should be able to wrap any combination of *n* ERC20, ERC721 or ERC1155 tokens as a wrapped NFT. When wrapping, the token owner should be able to specify a recipient for the wrapped NFT. At the time of wrapping, the token owner should be able to set the metadata of the wrapped NFT that will be minted.
 
