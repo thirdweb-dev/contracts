@@ -10,53 +10,75 @@
 
 ## Methods
 
-### getPublishMetadataUri
+### owner
 
 ```solidity
-function getPublishMetadataUri() external view returns (string)
+function owner() external view returns (address)
 ```
 
 
 
-*Returns the publish metadata for this contract.*
+
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | address | undefined
 
-### setPublishMetadataUri
+### setOwner
 
 ```solidity
-function setPublishMetadataUri(string uri) external nonpayable
+function setOwner(address _newOwner) external nonpayable
 ```
 
 
 
-*Initializes the publish metadata and at deploy time.*
+*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| uri | string | undefined
+| _newOwner | address | undefined
 
-
-
-
-## Errors
-
-### ThirdwebContract_MetadataAlreadyInitialized
+### tw_initializeOwner
 
 ```solidity
-error ThirdwebContract_MetadataAlreadyInitialized()
+function tw_initializeOwner(address deployer) external nonpayable
+```
+
+
+
+*Initializes the owner of the contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| deployer | address | undefined
+
+
+
+## Events
+
+### OwnerUpdated
+
+```solidity
+event OwnerUpdated(address prevOwner, address newOwner)
 ```
 
 
 
 
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevOwner  | address | undefined |
+| newOwner  | address | undefined |
 
 
 

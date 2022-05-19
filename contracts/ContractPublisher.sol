@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
 //  ==========  Internal imports    ==========
-import { IByocRegistry } from "./interfaces/IByocRegistry.sol";
+import { IContractPublisher } from "./interfaces/IContractPublisher.sol";
 
-contract ByocRegistry is IByocRegistry, ERC2771Context, AccessControlEnumerable, Multicall {
+contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlEnumerable, Multicall {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /*///////////////////////////////////////////////////////////////

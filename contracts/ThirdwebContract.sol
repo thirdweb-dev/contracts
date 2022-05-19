@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-interface IContractDeployer {
-    function getContractDeployer(address _contract) external view returns (address);
-}
+import "./feature/Ownable.sol";
+import "./interfaces/IContractDeployer.sol";
 
-error ThirdwebContract_MetadataAlreadyInitialized();
+contract ThirdwebContract is Ownable {
+    uint256 private hasSetOwner;
 
-contract ThirdwebContract {
-    /// @dev The publish metadata of the contract of which this contract is an instance.
-    string private publishMetadataUri;
-
-    /// @dev Returns the publish metadata for this contract.
-    function getPublishMetadataUri() external view returns (string memory) {
-        return publishMetadataUri;
+    /// @dev Initializes the owner of the contract.
+    function tw_initializeOwner(address deployer) external {
+        require(hasSetOwner == 0, "Owner already initialized");
+        hasSetOwner = 1;
+        owner = deployer;
     }
 
-    /// @dev Initializes the publish metadata and at deploy time.
-    function setPublishMetadataUri(string memory uri) external {
-        if (bytes(publishMetadataUri).length != 0) {
-            revert ThirdwebContract_MetadataAlreadyInitialized();
-        }
-        publishMetadataUri = uri;
+    /// @dev Returns whether owner can be set
+    function _canSetOwner() internal virtual override returns (bool) {
+        return msg.sender == owner;
     }
 
     /// @dev Enable access to the original contract deployer in the constructor. If this function is called outside of a constructor, it will return address(0) instead.

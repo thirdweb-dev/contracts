@@ -2,7 +2,7 @@ import hre, { ethers } from "hardhat";
 
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-import { TWRegistry, ByocRegistry, ByocFactory } from "typechain";
+import { TWRegistry, ContractMetadataRegistry, ContractDeployer, ContractPublisher } from "typechain";
 
 /**
  *  NOTE: This deploy script is written for Polygon-Mumbai.
@@ -27,7 +27,6 @@ async function verify(address: string, args: any[]) {
 }
 
 async function main() {
-
   const [deployer]: SignerWithAddress[] = await ethers.getSigners();
   console.log("Deployer address:", deployer.address);
 
@@ -37,36 +36,55 @@ async function main() {
   // const registry: TWRegistry = await ethers.getContractAt("TWRegistry", registryAddress);
   const registry: TWRegistry = await ethers.getContractFactory("TWRegistry").then(f => f.deploy(trustedForwarder));
   console.log("\nDeploying new TWRegistry \ntx: ", registry.deployTransaction.hash, "\naddress: ", registry.address);
-
   await registry.deployTransaction.wait();
 
-  const byocRegsitry: ByocRegistry = await ethers
-    .getContractFactory("ByocRegistry")
+  const contractMetadataRegistry: ContractMetadataRegistry = await ethers
+    .getContractFactory("ContractMetadataRegistry")
     .then(f => f.deploy(trustedForwarder));
   console.log(
-    "Deploying ByocRegistry at tx: ",
-    byocRegsitry.deployTransaction.hash,
+    "Deploying ContractMetadataRegistry at tx: ",
+    contractMetadataRegistry.deployTransaction.hash,
     " address: ",
-    byocRegsitry.address,
+    contractMetadataRegistry.address,
   );
-  await byocRegsitry.deployTransaction.wait();
-  console.log("Deployed ByocRegistry");
+  await contractMetadataRegistry.deployTransaction.wait();
+  console.log("Deployed ContractMetadataRegistry");
 
-  const byocFactory: ByocFactory = await ethers
-    .getContractFactory("ByocFactory")
-    .then(f => f.deploy(registry.address, trustedForwarder));
-  console.log("\nDeploying ByocFactory \ntx: ", byocFactory.deployTransaction.hash, "\naddress: ", byocFactory.address);
-  await byocFactory.deployTransaction.wait();
+  const contractPublisher: ContractPublisher = await ethers
+    .getContractFactory("ContractPublisher")
+    .then(f => f.deploy(trustedForwarder));
+  console.log(
+    "Deploying ContractPublisher at tx: ",
+    contractPublisher.deployTransaction.hash,
+    " address: ",
+    contractPublisher.address,
+  );
+  await contractPublisher.deployTransaction.wait();
+  console.log("Deployed ContractPublisher");
 
-  const tx = await registry.grantRole(await registry.OPERATOR_ROLE(), byocFactory.address);
-  console.log("\nGranting operator role to ByocFactory: ", tx.hash);
+  const contractDeployer: ContractDeployer = await ethers
+    .getContractFactory("ContractDeployer")
+    .then(f => f.deploy(registry.address, contractMetadataRegistry.address, trustedForwarder));
+  console.log(
+    "\nDeploying ContractDeployer \ntx: ",
+    contractDeployer.deployTransaction.hash,
+    "\naddress: ",
+    contractDeployer.address,
+  );
+  await contractDeployer.deployTransaction.wait();
 
+  const tx = await registry.grantRole(await registry.OPERATOR_ROLE(), contractDeployer.address);
+  console.log("\nGranting operator role to ContractDeployer for TWRegistry: ", tx.hash);
   await tx.wait();
+  const tx2 = await contractMetadataRegistry.grantRole(await registry.OPERATOR_ROLE(), contractDeployer.address);
+  console.log("\nGranting operator role to ContractDeployer for ContractMetadataRegistry: ", tx.hash);
+  await tx2.wait();
 
   console.log("\nDone. Now verifying contracts:");
 
-  // await verify(byocRegsitry.address, [trustedForwarders]);
-  await verify(byocFactory.address, [registry.address, trustedForwarder]);
+  await verify(contractPublisher.address, [trustedForwarder]);
+  await verify(contractMetadataRegistry.address, [trustedForwarder]);
+  await verify(contractDeployer.address, [registry.address, contractMetadataRegistry.address, trustedForwarder]);
 }
 
 main()

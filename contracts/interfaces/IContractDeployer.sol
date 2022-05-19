@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../ThirdwebContract.sol";
-
-interface IByocFactory {
+interface IContractDeployer {
     /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
 
@@ -51,4 +49,6 @@ interface IByocFactory {
         uint256 value,
         string memory publishMetadataUri
     ) external returns (address deployedAddress);
+
+    function getContractDeployer(address _contract) external view returns (address);
 }

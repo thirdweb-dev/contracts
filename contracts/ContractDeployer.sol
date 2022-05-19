@@ -10,23 +10,25 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 //  ==========  Internal imports    ==========
-import { IByocFactory } from "./interfaces/IByocFactory.sol";
+import { IContractDeployer } from "./interfaces/IContractDeployer.sol";
 import { TWRegistry } from "./TWRegistry.sol";
-import "./ThirdwebContract.sol";
+import { IContractMetadataRegistry } from "./interfaces/IContractMetadataRegistry.sol";
+import { ThirdwebContract } from "./ThirdwebContract.sol";
 
-contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEnumerable {
+contract ContractDeployer is IContractDeployer, ERC2771Context, Multicall, AccessControlEnumerable {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
     /// @dev The main thirdweb registry.
     TWRegistry private immutable registry;
+    /// @dev The contract metadta registry.
+    IContractMetadataRegistry private immutable metadataRegistry;
+    /// @dev contract address deployed through the factory => deployer
+    mapping(address => address) public getContractDeployer;
 
     /// @dev Whether the registry is paused.
     bool public isPaused;
-
-    /// @dev contract address deployed through the factory => deployer
-    mapping(address => address) public getContractDeployer;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
@@ -39,8 +41,13 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
         _;
     }
 
-    constructor(address _twRegistry, address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(
+        address _twRegistry,
+        address _metadataRegistry,
+        address _trustedForwarder
+    ) ERC2771Context(_trustedForwarder) {
         registry = TWRegistry(_twRegistry);
+        metadataRegistry = IContractMetadataRegistry(_metadataRegistry);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
@@ -66,18 +73,20 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
             ? keccak256(abi.encodePacked(caller, block.number, keccak256(contractBytecode)))
             : keccak256(abi.encodePacked(caller, _salt));
 
+        // compute the address of the clone and save it
         address computedContractAddress = Create2.computeAddress(salt, keccak256(contractBytecode), address(this));
         getContractDeployer[computedContractAddress] = caller;
 
+        // deploy the contract
         deployedAddress = Create2.deploy(_value, salt, contractBytecode);
 
-        ThirdwebContract(deployedAddress).setPublishMetadataUri(publishMetadataUri);
-        require(
-            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) ==
-                keccak256(bytes(publishMetadataUri)),
-            "Not a thirdweb contract"
-        );
+        // set the owner
+        ThirdwebContract(deployedAddress).tw_initializeOwner(caller);
 
+        // register to metadata registry
+        metadataRegistry.registerMetadata(deployedAddress, publishMetadataUri);
+
+        // register to TWRegistry
         registry.add(caller, deployedAddress);
 
         emit ContractDeployed(caller, _publisher, deployedAddress);
@@ -92,24 +101,28 @@ contract ByocFactory is IByocFactory, ERC2771Context, Multicall, AccessControlEn
         uint256 _value,
         string memory publishMetadataUri
     ) external onlyUnpausedOrAdmin returns (address deployedAddress) {
+        require(bytes(publishMetadataUri).length > 0, "No publish metadata");
+
         address caller = _msgSender();
 
         bytes32 salt = _salt == ""
             ? keccak256(abi.encodePacked(caller, block.number, _implementation, _initializeData))
             : keccak256(abi.encodePacked(caller, _salt));
 
+        // compute the address of the clone and save it
         address computedContractAddress = Clones.predictDeterministicAddress(_implementation, salt, address(this));
         getContractDeployer[computedContractAddress] = caller;
 
+        // deploy the clone
         deployedAddress = Clones.cloneDeterministic(_implementation, salt);
 
-        ThirdwebContract(deployedAddress).setPublishMetadataUri(publishMetadataUri);
-        require(
-            keccak256(bytes(ThirdwebContract(deployedAddress).getPublishMetadataUri())) ==
-                keccak256(bytes(publishMetadataUri)),
-            "Not a thirdweb contract"
-        );
+        // set the owner
+        ThirdwebContract(deployedAddress).tw_initializeOwner(caller);
 
+        // register to metadata registry
+        metadataRegistry.registerMetadata(deployedAddress, publishMetadataUri);
+
+        // register to TWRegistry
         registry.add(caller, deployedAddress);
 
         if (_initializeData.length > 0) {
