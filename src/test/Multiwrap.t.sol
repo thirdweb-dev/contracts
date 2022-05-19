@@ -176,13 +176,12 @@ contract MultiwrapTest is BaseTest {
      *        Only assets with ASSET_ROLE can be wrapped.
      */
     function test_state_wrap_withAssetRoleRestriction() public {
-        
         // ===== setup =====
 
         vm.startPrank(deployer);
         multiwrap.revokeRole(keccak256("ASSET_ROLE"), address(0));
 
-        for(uint i = 0; i < wrappedContent.length; i += 1) {
+        for (uint256 i = 0; i < wrappedContent.length; i += 1) {
             multiwrap.grantRole(keccak256("ASSET_ROLE"), wrappedContent[i].assetContract);
         }
 

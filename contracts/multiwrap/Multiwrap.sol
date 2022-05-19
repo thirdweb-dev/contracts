@@ -154,9 +154,8 @@ contract Multiwrap is
         string calldata _uriForWrappedToken,
         address _recipient
     ) external payable nonReentrant onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
-
-        if(!hasRole(ASSET_ROLE, address(0))) {
-            for(uint256 i = 0; i < _tokensToWrap.length; i += 1) {
+        if (!hasRole(ASSET_ROLE, address(0))) {
+            for (uint256 i = 0; i < _tokensToWrap.length; i += 1) {
                 _checkRole(ASSET_ROLE, _tokensToWrap[i].assetContract);
             }
         }
