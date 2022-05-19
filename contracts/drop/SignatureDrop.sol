@@ -149,7 +149,14 @@ contract SignatureDrop is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
+        uint256 batchId = getBatchId(_tokenId);
+        string memory batchUri = getBaseURI(_tokenId);
+
+        if (isEncryptedBatch(batchId)) {
+            return string(abi.encodePacked(batchUri, "0"));
+        } else {
+            return string(abi.encodePacked(batchUri, _tokenId.toString()));
+        }
     }
 
     /// @dev See ERC 165
@@ -324,15 +331,15 @@ contract SignatureDrop is
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
-        address ownerOfToken = ownerOf(tokenId);
-        //solhint-disable-next-line max-line-length
-        require(
-            _msgSender() == ownerOfToken ||
-                isApprovedForAll(ownerOfToken, _msgSender()) ||
-                getApproved(tokenId) == _msgSender(),
-            "caller not owner nor approved"
-        );
-        _burn(tokenId);
+//        address ownerOfToken = ownerOf(tokenId);
+//        //solhint-disable-next-line max-line-length
+//        require(
+//            _msgSender() == ownerOfToken ||
+//                isApprovedForAll(ownerOfToken, _msgSender()) ||
+//                getApproved(tokenId) == _msgSender(),
+//            "caller not owner nor approved"
+//        );
+//        _burn(tokenId);
     }
 
     /// @dev See {ERC721-_beforeTokenTransfer}.

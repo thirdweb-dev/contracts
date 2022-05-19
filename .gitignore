@@ -50,3 +50,6 @@ crytic-export/
 venv/
 mcore_*/
 corpus/
+
+# IDES
+.idea

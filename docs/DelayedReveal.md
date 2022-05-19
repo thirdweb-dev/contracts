@@ -78,6 +78,28 @@ function getRevealURI(uint256 _batchId, bytes _key) external view returns (strin
 |---|---|---|
 | revealedURI | string | undefined
 
+### isEncryptedBatch
+
+```solidity
+function isEncryptedBatch(uint256 _batchId) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _batchId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### reveal
 
 ```solidity

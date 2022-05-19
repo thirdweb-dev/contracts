@@ -66,6 +66,30 @@ function getActiveClaimConditionId() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### getClaimTimestamp
+
+```solidity
+function getClaimTimestamp(uint256 _conditionId, address _claimer) external view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
+```
+
+
+
+*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined
+| _claimer | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| lastClaimTimestamp | uint256 | undefined
+| nextValidClaimTimestamp | uint256 | undefined
+
 ### setClaimConditions
 
 ```solidity

@@ -295,6 +295,30 @@ function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### getClaimTimestamp
+
+```solidity
+function getClaimTimestamp(uint256 _conditionId, address _claimer) external view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
+```
+
+
+
+*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined
+| _claimer | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| lastClaimTimestamp | uint256 | undefined
+| nextValidClaimTimestamp | uint256 | undefined
+
 ### getDefaultRoyaltyInfo
 
 ```solidity
@@ -525,6 +549,28 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | owner | address | undefined
 | operator | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### isEncryptedBatch
+
+```solidity
+function isEncryptedBatch(uint256 _batchId) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _batchId | uint256 | undefined
 
 #### Returns
 

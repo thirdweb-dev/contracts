@@ -55,4 +55,8 @@ abstract contract DelayedReveal is IDelayedReveal {
             }
         }
     }
+
+    function isEncryptedBatch(uint256 _batchId) public view returns (bool) {
+        return encryptedBaseURI[_batchId].length > 0;
+    }
 }
