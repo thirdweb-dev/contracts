@@ -23,13 +23,6 @@ contract ContractMetadataRegistry is IContractMetadataRegistry, ERC2771Context, 
                     Constructor + modifiers
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Checks whether the caller is a contract admin.
-    modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must be admin");
-
-        _;
-    }
-
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -38,7 +31,7 @@ contract ContractMetadataRegistry is IContractMetadataRegistry, ERC2771Context, 
                             External methods
     //////////////////////////////////////////////////////////////*/
 
-    function registerMetadata(address contractAddress, string memory metadataUri) external onlyAdmin {
+    function registerMetadata(address contractAddress, string memory metadataUri) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
         require(bytes(metadataUri).length > 0, "No metadata");
         require(bytes(getMetadataUri[contractAddress]).length == 0, "Metadata already registered");
