@@ -13,11 +13,14 @@ abstract contract DelayedReveal is IDelayedReveal {
     }
 
     /// @dev Returns the decrypted i.e. revealed URI for a batch of tokens.
-    function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
+    function getRevealURI(uint256 _batchId, bytes calldata _key) public returns (string memory revealedURI) {
         bytes memory encryptedURI = encryptedBaseURI[_batchId];
         require(encryptedURI.length != 0, "nothing to reveal.");
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
+
+        // yash - added this, and removed view mutability
+        delete encryptedBaseURI[_batchId];
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain

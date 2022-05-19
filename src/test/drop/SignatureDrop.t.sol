@@ -83,7 +83,7 @@ contract SignatureDropTest is BaseTest {
         uri = sigdrop.tokenURI(99);
         assertEq(uri, "ipfs://99");
 
-        vm.expectRevert("No base URI for token.");
+        vm.expectRevert("No batch id for token.");
         uri = sigdrop.tokenURI(100);
 
         vm.stopPrank();
@@ -97,7 +97,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "", encryptedURI);
 
         string memory uri = sigdrop.tokenURI(1);
-        assertEq(uri, "1");
+        assertEq(uri, "0");
         /// note: can we return an error message instead? that "no base uri for token." etc.
         /// note: should we check for lengths of baseURI and encryptedURI.. both can't be empty
 
