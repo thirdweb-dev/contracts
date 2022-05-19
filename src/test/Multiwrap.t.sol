@@ -172,6 +172,44 @@ contract MultiwrapTest is BaseTest {
     }
 
     /**
+     *  note: Testing state changes; token owner calls `wrap` to wrap owned tokens.
+     *        Only assets with ASSET_ROLE can be wrapped.
+     */
+    function test_state_wrap_withAssetRoleRestriction() public {
+        
+        // ===== setup =====
+
+        vm.startPrank(deployer);
+        multiwrap.revokeRole(keccak256("ASSET_ROLE"), address(0));
+
+        for(uint i = 0; i < wrappedContent.length; i += 1) {
+            multiwrap.grantRole(keccak256("ASSET_ROLE"), wrappedContent[i].assetContract);
+        }
+
+        vm.stopPrank();
+
+        // ===== target test content =====
+        uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
+
+        assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
+
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
+        assertEq(contentsOfWrappedToken.length, wrappedContent.length);
+        for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
+            assertEq(contentsOfWrappedToken[i].assetContract, wrappedContent[i].assetContract);
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(wrappedContent[i].tokenType));
+            assertEq(contentsOfWrappedToken[i].tokenId, wrappedContent[i].tokenId);
+            assertEq(contentsOfWrappedToken[i].totalAmount, wrappedContent[i].totalAmount);
+        }
+
+        assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+    }
+
+    /**
      *  note: Testing event emission; token owner calls `wrap` to wrap owned tokens.
      */
     function test_event_wrap_TokensWrapped() public {
@@ -247,6 +285,30 @@ contract MultiwrapTest is BaseTest {
     }
 
     /**
+     *  note: Testing revert condition; token owner calls `wrap` to wrap owned tokens.
+     *        Only assets with ASSET_ROLE can be wrapped, but assets being wrapped don't have that role.
+     */
+    function test_revert_wrap_access_ASSET_ROLE() public {
+        vm.prank(deployer);
+        multiwrap.revokeRole(keccak256("ASSET_ROLE"), address(0));
+
+        address recipient = address(0x123);
+
+        string memory errorMsg = string(
+            abi.encodePacked(
+                "Permissions: account ",
+                Strings.toHexString(uint160(wrappedContent[0].assetContract), 20),
+                " is missing role ",
+                Strings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
+            )
+        );
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert(bytes(errorMsg));
+        multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
+    }
+
+    /**
      *  note: Testing revert condition; token owner calls `wrap` to wrap owned tokens, without MINTER_ROLE.
      */
     function test_revert_wrap_access_MINTER_ROLE() public {
@@ -257,7 +319,7 @@ contract MultiwrapTest is BaseTest {
 
         string memory errorMsg = string(
             abi.encodePacked(
-                "AccessControl: account ",
+                "Permissions: account ",
                 Strings.toHexString(uint160(address(tokenOwner)), 20),
                 " is missing role ",
                 Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
@@ -581,7 +643,7 @@ contract MultiwrapTest is BaseTest {
 
         string memory errorMsg = string(
             abi.encodePacked(
-                "AccessControl: account ",
+                "Permissions: account ",
                 Strings.toHexString(uint160(recipient), 20),
                 " is missing role ",
                 Strings.toHexString(uint256(keccak256("UNWRAP_ROLE")), 32)
