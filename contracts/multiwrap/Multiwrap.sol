@@ -47,6 +47,8 @@ contract Multiwrap is
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
     /// @dev Only UNWRAP_ROLE holders can unwrap tokens, when unwrapping is restricted.
     bytes32 private constant UNWRAP_ROLE = keccak256("UNWRAP_ROLE");
+    /// @dev Only assets with ASSET_ROLE can be wrapped, when wrapping is restricted to particular assets.
+    bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev The next token ID of the NFT to mint.
     uint256 public nextTokenIdToMint;
@@ -90,6 +92,9 @@ contract Multiwrap is
         // note: see `onlyRoleWithSwitch` for UNWRAP_ROLE behaviour.
         _setupRole(UNWRAP_ROLE, address(0));
 
+        // note: see `onlyRoleWithSwitch` for UNWRAP_ROLE behaviour.
+        _setupRole(ASSET_ROLE, address(0));
+
         _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
@@ -98,10 +103,7 @@ contract Multiwrap is
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyRoleWithSwitch(bytes32 role) {
-        if (!hasRole(role, address(0))) {
-            _checkRole(role, _msgSender());
-        }
-
+        _checkRoleWithSwitch(role, _msgSender());
         _;
     }
 
@@ -152,6 +154,13 @@ contract Multiwrap is
         string calldata _uriForWrappedToken,
         address _recipient
     ) external payable nonReentrant onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
+
+        if(!hasRole(ASSET_ROLE, address(0))) {
+            for(uint256 i = 0; i < _tokensToWrap.length; i += 1) {
+                _checkRole(ASSET_ROLE, _tokensToWrap[i].assetContract);
+            }
+        }
+
         tokenId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
