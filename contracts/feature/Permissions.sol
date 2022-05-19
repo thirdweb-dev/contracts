@@ -67,7 +67,7 @@ contract Permissions is IPermissions {
             revert(
                 string(
                     abi.encodePacked(
-                        "AccessControl: account ",
+                        "Permissions: account ",
                         Strings.toHexString(uint160(account), 20),
                         " is missing role ",
                         Strings.toHexString(uint256(role), 32)
@@ -82,7 +82,7 @@ contract Permissions is IPermissions {
             revert(
                 string(
                     abi.encodePacked(
-                        "AccessControl: account ",
+                        "Permissions: account ",
                         Strings.toHexString(uint160(account), 20),
                         " is missing role ",
                         Strings.toHexString(uint256(role), 32)
