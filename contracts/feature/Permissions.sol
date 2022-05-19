@@ -19,6 +19,14 @@ contract Permissions is IPermissions {
         return _hasRole[role][account];
     }
 
+    function hasRoleWithSwitch(bytes32 role, address account) public view returns (bool) {
+        if (!_hasRole[role][address(0)]) {
+            return _hasRole[role][account];
+        }
+
+        return true;
+    }
+
     function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
         return _getRoleAdmin[role];
     }
