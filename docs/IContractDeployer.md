@@ -1,4 +1,4 @@
-# IByocFactory
+# IContractDeployer
 
 
 
@@ -63,6 +63,28 @@ Deploys a clone pointing to an implementation of a published contract.
 | Name | Type | Description |
 |---|---|---|
 | deployedAddress | address | The address of the contract deployed.
+
+### getContractDeployer
+
+```solidity
+function getContractDeployer(address _contract) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _contract | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
 
 
 

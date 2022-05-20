@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
-import "../ThirdwebContract.sol";
-
-interface IByocFactory {
+interface IContractDeployer {
     /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
 
@@ -18,7 +16,7 @@ interface IByocFactory {
      *  @param constructorArgs  The encoded constructor args to deploy the contract with.
      *  @param salt             The salt to use in the CREATE2 contract deployment.
      *  @param value            The native token value to pass to the contract on deployment.
-     *  @param thirdwebInfo     The publish metadata URI and contract URI for the contract to deploy.
+     *  @param publishMetadataUri     The publish metadata URI for the contract to deploy.
      *
      *  @return deployedAddress The address of the contract deployed.
      */
@@ -28,7 +26,7 @@ interface IByocFactory {
         bytes memory constructorArgs,
         bytes32 salt,
         uint256 value,
-        ThirdwebContract.ThirdwebInfo memory thirdwebInfo
+        string memory publishMetadataUri
     ) external returns (address deployedAddress);
 
     /**
@@ -39,7 +37,7 @@ interface IByocFactory {
      *  @param initializeData   The encoded function call to initialize the contract with.
      *  @param salt             The salt to use in the CREATE2 contract deployment.
      *  @param value            The native token value to pass to the contract on deployment.
-     *  @param thirdwebInfo     The publish metadata URI and contract URI for the contract to deploy.
+     *  @param publishMetadataUri     The publish metadata URI and for the contract to deploy.
      *
      *  @return deployedAddress The address of the contract deployed.
      */
@@ -49,6 +47,8 @@ interface IByocFactory {
         bytes memory initializeData,
         bytes32 salt,
         uint256 value,
-        ThirdwebContract.ThirdwebInfo memory thirdwebInfo
+        string memory publishMetadataUri
     ) external returns (address deployedAddress);
+
+    function getContractDeployer(address _contract) external view returns (address);
 }
