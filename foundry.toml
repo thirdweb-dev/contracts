@@ -4,6 +4,7 @@ solc-version = "0.8.12"
 cache = true
 evm_version = 'london'
 force = false
+gas_reports = ["Multiwrap"]
 libraries = []
 libs = ['lib']
 optimizer = true
