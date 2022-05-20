@@ -5,14 +5,14 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { TWRegistry, ContractMetadataRegistry, ContractDeployer, ContractPublisher } from "typechain";
 
 /**
- *  NOTE: This deploy script is written for Polygon-Mumbai.
  *
- *  There is a mock `TWRegistry` deployed on Polygon-Mumbai for the purposes of Byoc testing.
+ *  There is a mock `TWRegistry` deployed on testnets for the purposes of thirdweb deploy testing.
  *
  *  This script does the following:
- *      (1) deploys `contracts/ByocRegistry` and `contracts/ByocFactory`.
- *      (2) grants `OPERATOR_ROLE` in `TWRegistry` to the deployed `ByocFactory`.
- *      (3) verifies deployed contracts.
+ *      (1) deploys `contracts/ContractMetadataRegistry` and `contracts/ContractDeployer`.
+ *      (2) grants `OPERATOR_ROLE` in `TWRegistry` to the deployed `ContractDeployer`.
+ *      (3) grants `OPERATOR_ROLE` in `ContractMetadataRegistry` to the deployed `ContractDeployer`.
+ *      (4) verifies deployed contracts.
  */
 
 async function verify(address: string, args: any[]) {
@@ -32,11 +32,8 @@ async function main() {
 
   const trustedForwarder: string = "0xc82BbE41f2cF04e3a8efA18F7032BDD7f6d98a81";
 
-  // const registryAddress: string = ethers.constants.AddressZero; // replace
-  // const registry: TWRegistry = await ethers.getContractAt("TWRegistry", registryAddress);
-  const registry: TWRegistry = await ethers.getContractFactory("TWRegistry").then(f => f.deploy(trustedForwarder));
-  console.log("\nDeploying new TWRegistry \ntx: ", registry.deployTransaction.hash, "\naddress: ", registry.address);
-  await registry.deployTransaction.wait();
+  const registryAddress: string = ethers.constants.AddressZero; // REPLACE FOR CORRECT CHAIN
+  const registry: TWRegistry = await ethers.getContractAt("TWRegistry", registryAddress);
 
   const contractMetadataRegistry: ContractMetadataRegistry = await ethers
     .getContractFactory("ContractMetadataRegistry")
