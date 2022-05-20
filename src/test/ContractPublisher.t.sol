@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Target contracts
-import { ByocRegistry } from "contracts/ByocRegistry.sol";
-import "contracts/interfaces/IByocRegistry.sol";
+import { ContractPublisher } from "contracts/ContractPublisher.sol";
+import "contracts/interfaces/IContractPublisher.sol";
 import "contracts/TWRegistry.sol";
 
 // Test helpers
@@ -18,7 +18,7 @@ contract MockCustomContract {
     }
 }
 
-contract IByocRegistryData {
+contract IContractPublisherData {
     /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
 
@@ -29,7 +29,7 @@ contract IByocRegistryData {
     event ContractPublished(
         address indexed operator,
         address indexed publisher,
-        IByocRegistry.CustomContractInstance publishedContract
+        IContractPublisher.CustomContractInstance publishedContract
     );
 
     /// @dev Emitted when a contract is unpublished.
@@ -42,8 +42,8 @@ contract IByocRegistryData {
     event RemovedContractToPublicList(address indexed publisher, string indexed contractId);
 }
 
-contract ByocRegistryTest is BaseTest, IByocRegistryData {
-    ByocRegistry internal byoc;
+contract ContractPublisherTest is BaseTest, IContractPublisherData {
+    ContractPublisher internal byoc;
     TWRegistry internal twRegistry;
 
     address internal publisher;
@@ -55,7 +55,7 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
     function setUp() public override {
         super.setUp();
 
-        byoc = ByocRegistry(byocRegistry);
+        byoc = ContractPublisher(contractPublisher);
         twRegistry = TWRegistry(registry);
 
         publisher = getActor(0);
@@ -74,7 +74,10 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
             contractId
         );
 
-        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
+            publisher,
+            contractId
+        );
 
         assertEq(customContract.contractId, contractId);
         assertEq(customContract.publishMetadataUri, publishMetadataUri);
@@ -97,7 +100,10 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
             contractId
         );
 
-        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
+            publisher,
+            contractId
+        );
 
         assertEq(customContract.contractId, contractId);
         assertEq(customContract.publishMetadataUri, publishMetadataUri);
@@ -144,13 +150,14 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
         vm.prank(publisher);
         byoc.approveOperator(operator, true);
 
-        IByocRegistry.CustomContractInstance memory expectedCustomContract = IByocRegistry.CustomContractInstance({
-            contractId: contractId,
-            publishTimestamp: 100,
-            publishMetadataUri: publishMetadataUri,
-            bytecodeHash: keccak256(type(MockCustomContract).creationCode),
-            implementation: address(0)
-        });
+        IContractPublisher.CustomContractInstance memory expectedCustomContract = IContractPublisher
+            .CustomContractInstance({
+                contractId: contractId,
+                publishTimestamp: 100,
+                publishMetadataUri: publishMetadataUri,
+                bytecodeHash: keccak256(type(MockCustomContract).creationCode),
+                implementation: address(0)
+            });
 
         vm.expectEmit(true, true, true, true);
         emit ContractPublished(operator, publisher, expectedCustomContract);
@@ -181,7 +188,10 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
         vm.prank(publisher);
         byoc.unpublishContract(publisher, contractId);
 
-        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
+            publisher,
+            contractId
+        );
 
         assertEq(customContract.contractId, "");
         assertEq(customContract.publishMetadataUri, "");
@@ -207,7 +217,10 @@ contract ByocRegistryTest is BaseTest, IByocRegistryData {
         vm.prank(operator);
         byoc.unpublishContract(publisher, contractId);
 
-        IByocRegistry.CustomContractInstance memory customContract = byoc.getPublishedContract(publisher, contractId);
+        IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
+            publisher,
+            contractId
+        );
 
         assertEq(customContract.contractId, "");
         assertEq(customContract.publishMetadataUri, "");
