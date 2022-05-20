@@ -86,8 +86,19 @@ contract SignatureDropTest is BaseTest {
         uri = sigdrop.tokenURI(99);
         assertEq(uri, "ipfs://99");
 
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing revert condition; calling tokenURI for invalid batch id.
+     */
+    function test_revert_lazyMint_batchMintAndTokenURI() public {
+        vm.startPrank(deployer_signer);
+
+        sigdrop.lazyMint(100, "ipfs://", "");
+
         vm.expectRevert("No batch id for token.");
-        uri = sigdrop.tokenURI(100);
+        sigdrop.tokenURI(100);
 
         vm.stopPrank();
     }
@@ -189,7 +200,6 @@ contract SignatureDropTest is BaseTest {
 
         string memory revealedURI = sigdrop.reveal(0, "keyy");
         assertEq(revealedURI, "ipfs://");
-        /// note: probably need to check encryptDecrypt in more detail, and not just "keyy"
 
         vm.stopPrank();
     }
