@@ -29,7 +29,7 @@ contract SignatureDropTest is BaseTest {
         vm.deal(deployer_signer, 1_000);
 
         typehash = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
@@ -41,11 +41,10 @@ contract SignatureDropTest is BaseTest {
                                 Lazy Mint Tests
     //////////////////////////////////////////////////////////////*/
 
-    // - test access/roles
-    function test_lazyMint_minterRole() public {
-        vm.prank(deployer_signer);
-        sigdrop.lazyMint(100, "ipfs://", "");
-
+    /**
+     *  note: Testing revert condition; an address without MINTER_ROLE calls lazyMint function.
+     */
+    function test_revert_lazyMint_MINTER_ROLE() public {
         bytes memory errorMessage = abi.encodePacked(
             "AccessControl: account ",
             Strings.toHexString(uint160(address(this)), 20),
@@ -57,8 +56,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
     }
 
-    // - test _batchMint and value of nextTokenIdToMint
-    function test_lazyMint_batchMintAndNextTokenIdToMint() public {
+    /*
+     *  note: Testing state changes; a batch of tokens, and nextTokenIdToMint
+     */
+    function test_state_lazyMint_batchMintAndNextTokenIdToMint() public {
         vm.startPrank(deployer_signer);
 
         sigdrop.lazyMint(100, "ipfs://", "");
@@ -71,8 +72,10 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    // - test _batchMint and tokenURI
-    function test_lazyMint_batchMintAndTokenURI() public {
+    /*
+     *  note: Testing state changes; a batch of tokens, and associated baseURI for tokens
+     */
+    function test_state_lazyMint_batchMintAndTokenURI() public {
         vm.startPrank(deployer_signer);
 
         sigdrop.lazyMint(100, "ipfs://", "");
@@ -89,8 +92,10 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    // - test _setEncryptedBaseURI and tokenURI
-    function test_lazyMint_setEncryptedBaseURIAndTokenURI() public {
+    /*
+     *  note: Testing state changes; a batch of tokens with encrypted base URI, and associated URI for tokens
+     */
+    function test_state_lazyMint_setEncryptedBaseURIAndTokenURI() public {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -98,14 +103,14 @@ contract SignatureDropTest is BaseTest {
 
         string memory uri = sigdrop.tokenURI(1);
         assertEq(uri, "0");
-        /// note: can we return an error message instead? that "no base uri for token." etc.
-        /// note: should we check for lengths of baseURI and encryptedURI.. both can't be empty
 
         vm.stopPrank();
     }
 
-    // - test event emitted
-    function test_lazyMint_event() public {
+    /**
+     *  note: Testing event emission; tokens lazy minted.
+     */
+    function test_event_lazyMint_event() public {
         vm.startPrank(deployer_signer);
 
         vm.expectEmit(false, false, false, true);
@@ -119,8 +124,10 @@ contract SignatureDropTest is BaseTest {
                                 Delayed Reveal Tests
     //////////////////////////////////////////////////////////////*/
 
-    // - test access/roles
-    function test_delayedReveal_minterRole() public {
+    /**
+     *  note: Testing revert condition; an address without MINTER_ROLE calls reveal function.
+     */
+    function test_revert_delayedReveal_minterRole() public {
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -139,8 +146,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.reveal(0, "key");
     }
 
-    // - test _index valid/invalid, getBatchIdAtIndex
-    function test_delayedReveal_getBatchIdAtIndex() public {
+    /*
+     *  note: Testing revert condition; trying to reveal URI for non-existent batch.
+     */
+    function test_revert_delayedReveal_getBatchIdAtIndex() public {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -154,8 +163,10 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    // - test getRevealURI
-    function test_delayedReveal_getRevealURI() public {
+    /*
+     *  note: Testing state changes; URI revealed for a batch of tokens.
+     */
+    function test_state_delayedReveal_getRevealURI() public {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -163,12 +174,13 @@ contract SignatureDropTest is BaseTest {
 
         string memory revealedURI = sigdrop.reveal(0, "key");
         assertEq(revealedURI, "ipfs://");
-        /// note: probably need to check encryptDecrypt in more detail, and not just "keyy"
 
         vm.stopPrank();
     }
 
-    // - test incorrect key
+    /*
+     *  note: Testing state changes; revealing URI with an incorrect key.
+     */
     function testFail_delayedReveal_incorrectKey() public {
         vm.startPrank(deployer_signer);
 
@@ -182,8 +194,10 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    // - test _setBaseURI
-    function test_delayedReveal_setBaseURI() public {
+    /*
+     *  note: Testing state changes; check baseURI after reveal for a batch of tokens.
+     */
+    function test_state_delayedReveal_setBaseURI() public {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -196,8 +210,10 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    // - test event emitted
-    function test_delayedReveal_event() public {
+    /**
+     *  note: Testing event emission; token URI revealed.
+     */
+    function test_event_delayedReveal_event() public {
         vm.startPrank(deployer_signer);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -214,8 +230,10 @@ contract SignatureDropTest is BaseTest {
                                 Signature Mint Tests
     //////////////////////////////////////////////////////////////*/
 
-    // - test _processRequest and recover signer
-    function test_mintWithSignature_processRequestAndRecoverSigner() public {
+    /**
+     *  note: Testing revert condition; invalid signature.
+     */
+    function test_revert_mintWithSignature_processRequestAndRecoverSigner() public {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -261,8 +279,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
-    // - test price and currencies
-    function test_mintWithSignature_priceAndCurrency() public {
+    /*
+     *  note: Testing state changes; minting with signature, for a given price and currency.
+     */
+    function test_state_mintWithSignature_priceAndCurrency() public {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -337,8 +357,10 @@ contract SignatureDropTest is BaseTest {
         }
     }
 
-    // - test balance and owner of tokens minted
-    function test_mintWithSignature_checkBalanceAndOwner() public {
+    /**
+     *  note: Testing token balances; checking balance and owner of tokens after minting with signature.
+     */
+    function test_balances_mintWithSignature_checkBalanceAndOwner() public {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -397,8 +419,10 @@ contract SignatureDropTest is BaseTest {
                                 Claim Tests
     //////////////////////////////////////////////////////////////*/
 
-    // claim tests
-    function test_claimCondition_startIdAndCount() public {
+    /**
+     *  note: Testing state changes; check startId and count after setting claim conditions.
+     */
+    function test_state_claimCondition_startIdAndCount() public {
         vm.startPrank(deployer_signer);
 
         uint256 currentStartId = 0;
@@ -431,7 +455,10 @@ contract SignatureDropTest is BaseTest {
         assertEq(count, 2);
     }
 
-    function test_claimCondition_startPhase() public {
+    /**
+     *  note: Testing state changes; check activeConditionId based on changes in block timestamp.
+     */
+    function test_state_claimCondition_startPhase() public {
         vm.startPrank(deployer_signer);
 
         uint256 activeConditionId = 0;
@@ -474,7 +501,10 @@ contract SignatureDropTest is BaseTest {
         assertEq(sigdrop.getActiveClaimConditionId(), 2);
     }
 
-    function test_claimCondition_waitTimeInSecondsBetweenClaims() public {
+    /**
+     *  note: Testing revert condition; not allowed to claim again before wait time is over.
+     */
+    function test_revert_claimCondition_waitTimeInSecondsBetweenClaims() public {
         vm.warp(1);
 
         address receiver = getActor(0);
@@ -501,7 +531,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
-    function test_claimCondition_resetEligibility_waitTimeInSecondsBetweenClaims() public {
+    /**
+     *  note: Testing state changes; reset eligibility of claim conditions and claiming again for same condition id.
+     */
+    function test_state_claimCondition_resetEligibility_waitTimeInSecondsBetweenClaims() public {
         vm.warp(1);
 
         address receiver = getActor(0);
