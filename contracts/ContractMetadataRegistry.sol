@@ -10,17 +10,19 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import { IContractMetadataRegistry } from "./interfaces/IContractMetadataRegistry.sol";
 
 contract ContractMetadataRegistry is IContractMetadataRegistry, ERC2771Context, Multicall, AccessControlEnumerable {
+    
+    /// @dev Only accounts with OPERATOR_ROLE can register metadata for contracts.
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            Mappings
     //////////////////////////////////////////////////////////////*/
 
     /// @dev contract address deployed => metadata uri
     mapping(address => string) public getMetadataUri;
 
     /*///////////////////////////////////////////////////////////////
-                    Constructor + modifiers
+                            Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
@@ -28,14 +30,17 @@ contract ContractMetadataRegistry is IContractMetadataRegistry, ERC2771Context, 
     }
 
     /*///////////////////////////////////////////////////////////////
-                            External methods
+                        External functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Records `metadataUri` as metadata for the contract at `contractAddress`.
     function registerMetadata(address contractAddress, string memory metadataUri) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()), "not operator.");
+        require(hasRole(OPERATOR_ROLE, _msgSender()), "Not operator.");
         require(bytes(metadataUri).length > 0, "No metadata");
         require(bytes(getMetadataUri[contractAddress]).length == 0, "Metadata already registered");
+        
         getMetadataUri[contractAddress] = metadataUri;
+        
         emit MetadataRegistered(contractAddress, metadataUri);
     }
 

@@ -35,7 +35,7 @@ function OPERATOR_ROLE() external view returns (bytes32)
 
 
 
-
+*Only accounts with OPERATOR_ROLE can register metadata for contracts.*
 
 
 #### Returns
@@ -225,7 +225,7 @@ function registerMetadata(address contractAddress, string metadataUri) external 
 
 
 
-
+*Records `metadataUri` as metadata for the contract at `contractAddress`.*
 
 #### Parameters
 

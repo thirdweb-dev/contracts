@@ -18,7 +18,7 @@ function registerMetadata(address contractAddress, string metadataUri) external 
 
 
 
-
+*Records `metadataUri` as metadata for the contract at `contractAddress`.*
 
 #### Parameters
 
