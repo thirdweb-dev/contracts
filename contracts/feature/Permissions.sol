@@ -19,32 +19,31 @@ contract Permissions is IPermissions {
         return _hasRole[role][account];
     }
 
+    function hasRoleWithSwitch(bytes32 role, address account) public view returns (bool) {
+        if (!_hasRole[role][address(0)]) {
+            return _hasRole[role][account];
+        }
+
+        return true;
+    }
+
     function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
         return _getRoleAdmin[role];
     }
 
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
-
-        _hasRole[role][account] = true;
-
-        emit RoleGranted(role, account, msg.sender);
+        _setupRole(role, account);
     }
 
     function revokeRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
-
-        delete _hasRole[role][account];
-
-        emit RoleRevoked(role, account, msg.sender);
+        _revokeRole(role, account);
     }
 
     function renounceRole(bytes32 role, address account) public virtual override {
         require(msg.sender == account, "Can only renounce for self");
-
-        delete _hasRole[role][account];
-
-        emit RoleRevoked(role, account, msg.sender);
+        _revokeRole(role, account);
     }
 
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
@@ -58,12 +57,32 @@ contract Permissions is IPermissions {
         emit RoleGranted(role, account, msg.sender);
     }
 
+    function _revokeRole(bytes32 role, address account) internal virtual {
+        delete _hasRole[role][account];
+        emit RoleRevoked(role, account, msg.sender);
+    }
+
     function _checkRole(bytes32 role, address account) internal view virtual {
         if (!_hasRole[role][account]) {
             revert(
                 string(
                     abi.encodePacked(
-                        "AccessControl: account ",
+                        "Permissions: account ",
+                        Strings.toHexString(uint160(account), 20),
+                        " is missing role ",
+                        Strings.toHexString(uint256(role), 32)
+                    )
+                )
+            );
+        }
+    }
+
+    function _checkRoleWithSwitch(bytes32 role, address account) internal view virtual {
+        if (!hasRoleWithSwitch(role, account)) {
+            revert(
+                string(
+                    abi.encodePacked(
+                        "Permissions: account ",
                         Strings.toHexString(uint160(account), 20),
                         " is missing role ",
                         Strings.toHexString(uint256(role), 32)
