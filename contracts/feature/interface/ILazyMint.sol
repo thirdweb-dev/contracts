@@ -6,5 +6,5 @@ interface ILazyMint {
         uint256 amount,
         string calldata baseURIForTokens,
         bytes calldata encryptedBaseURI
-    ) external;
+    ) external returns (uint256 batchId);
 }
