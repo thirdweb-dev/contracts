@@ -66,6 +66,28 @@ function getActiveClaimConditionId() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### getClaimConditionById
+
+```solidity
+function getClaimConditionById(uint256 _conditionId) external view returns (struct IClaimCondition.ClaimCondition condition)
+```
+
+
+
+*Returns the claim condition at the given uid.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| condition | IClaimCondition.ClaimCondition | undefined
+
 ### getClaimTimestamp
 
 ```solidity
