@@ -227,6 +227,7 @@ contract SignatureDrop is
         _mint(receiver, _req.quantity);
 
         emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
+        // emit TokensMintedWithSignature(signer, receiver, _req);
     }
 
     /// @dev Lets an account claim tokens.
