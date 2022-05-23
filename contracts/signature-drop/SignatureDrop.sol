@@ -205,8 +205,11 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
-
+    function mintWithSignature(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        nonReentrant
+    {
         ISignatureMintERC721(sigMint).mintWithSignature(_req, _signature);
 
         uint256 tokenIdToMint = _currentIndex;
@@ -319,15 +322,15 @@ contract SignatureDrop is
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
-       address ownerOfToken = ownerOf(tokenId);
-       //solhint-disable-next-line max-line-length
-       require(
-           _msgSender() == ownerOfToken ||
-               isApprovedForAll(ownerOfToken, _msgSender()) ||
-               getApproved(tokenId) == _msgSender(),
-           "caller not owner nor approved"
-       );
-       _burn(tokenId);
+        address ownerOfToken = ownerOf(tokenId);
+        //solhint-disable-next-line max-line-length
+        require(
+            _msgSender() == ownerOfToken ||
+                isApprovedForAll(ownerOfToken, _msgSender()) ||
+                getApproved(tokenId) == _msgSender(),
+            "caller not owner nor approved"
+        );
+        _burn(tokenId);
     }
 
     /// @dev See {ERC721-_beforeTokenTransfer}.

@@ -7,10 +7,7 @@ import { PermissionsEnumerable } from "../feature/PermissionsEnumerable.sol";
 import { SignatureMintERC721 } from "../feature/SignatureMintERC721.sol";
 import "../feature/interface/IPermissions.sol";
 
-contract SigMint is
-    PermissionsEnumerable,
-    SignatureMintERC721
-{
+contract SigMint is PermissionsEnumerable, SignatureMintERC721 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -22,15 +19,11 @@ contract SigMint is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    )
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
         onlyRole(OPERATOR_ROLE)
     {
-
         require(_req.quantity > 0, "minting zero tokens");
 
         // Verify and process payload.

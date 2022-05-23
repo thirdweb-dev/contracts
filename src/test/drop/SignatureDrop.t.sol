@@ -508,7 +508,7 @@ contract SignatureDropTest is BaseTest {
     }
 
     function test_fuzz_mintWithSignature_priceAndCurrency(uint128 x, uint128 y) public {
-        if(x < y) {
+        if (x < y) {
             uint256 id = 0;
             ISignatureMintERC721.MintRequest memory mintrequest;
 
