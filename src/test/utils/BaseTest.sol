@@ -19,12 +19,13 @@ import "contracts/Split.sol";
 import "contracts/drop/DropERC20.sol";
 import "contracts/drop/DropERC721.sol";
 import "contracts/drop/DropERC1155.sol";
-import { SignatureDrop } from "contracts/drop/SignatureDrop.sol";
 import "contracts/token/TokenERC20.sol";
 import "contracts/token/TokenERC721.sol";
 import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
+import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
+import { SigMint } from "contracts/signature-drop/SigMint.sol";
 import { ByocRegistry } from "contracts/ByocRegistry.sol";
 import { ByocFactory } from "contracts/ByocFactory.sol";
 import "contracts/mock/Mock.sol";
@@ -214,7 +215,8 @@ abstract contract BaseTest is DSTest, Test {
                     royaltyRecipient,
                     royaltyBps,
                     platformFeeBps,
-                    platformFeeRecipient
+                    platformFeeRecipient,
+                    address(new SigMint())
                 )
             )
         );

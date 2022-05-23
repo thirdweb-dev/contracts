@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { SignatureDrop } from "contracts/drop/SignatureDrop.sol";
+import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
+import { ISignatureMintERC721 } from "contracts/feature/interface/ISignatureMintERC721.sol";
 
 // Test imports
 import "../utils/BaseTest.sol";
@@ -34,7 +35,7 @@ contract SignatureDropTest is BaseTest {
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
         _TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-        domainSeparator = keccak256(abi.encode(_TYPE_HASH, nameHash, versionHash, block.chainid, address(sigdrop)));
+        domainSeparator = keccak256(abi.encode(_TYPE_HASH, nameHash, versionHash, block.chainid, sigdrop.sigMint()));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -264,7 +265,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
 
-        SignatureDrop.MintRequest memory mintrequest;
+        ISignatureMintERC721.MintRequest memory mintrequest;
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -312,7 +313,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
-        SignatureDrop.MintRequest memory mintrequest;
+        ISignatureMintERC721.MintRequest memory mintrequest;
 
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
@@ -390,7 +391,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
-        SignatureDrop.MintRequest memory mintrequest;
+        ISignatureMintERC721.MintRequest memory mintrequest;
 
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
@@ -444,7 +445,7 @@ contract SignatureDropTest is BaseTest {
     /*
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
-    function mintWithSignature_priceAndCurrency(SignatureDrop.MintRequest memory mintrequest) internal {
+    function mintWithSignature_priceAndCurrency(ISignatureMintERC721.MintRequest memory mintrequest) internal {
         vm.prank(deployer_signer);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -509,7 +510,7 @@ contract SignatureDropTest is BaseTest {
     function test_fuzz_mintWithSignature_priceAndCurrency(uint128 x, uint128 y) public {
         if(x < y) {
             uint256 id = 0;
-            SignatureDrop.MintRequest memory mintrequest;
+            ISignatureMintERC721.MintRequest memory mintrequest;
 
             mintrequest.to = address(0);
             mintrequest.royaltyRecipient = address(2);
