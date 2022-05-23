@@ -226,6 +226,11 @@ abstract contract Drop is IDrop, ExecutionContext {
         revert("!CONDITION.");
     }
 
+    /// @dev Returns the claim condition at the given uid.
+    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+        condition = claimCondition.conditions[_conditionId];
+    }
+
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
     function getClaimTimestamp(uint256 _conditionId, address _claimer)
         public
