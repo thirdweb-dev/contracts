@@ -240,9 +240,10 @@ contract SignatureDrop is
     function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
         external
         view
-        returns (bool success, address signer) {
-            return ISignatureMintERC721(sigMint).verify(_req, _signature);
-        }
+        returns (bool success, address signer)
+    {
+        return ISignatureMintERC721(sigMint).verify(_req, _signature);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
