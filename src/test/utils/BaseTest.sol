@@ -13,7 +13,7 @@ import "contracts/Forwarder.sol";
 import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
-import "contracts/multiwrap/Multiwrap.sol";
+import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
 import "contracts/Pack.sol";
 import "contracts/Split.sol";
 import "contracts/drop/DropERC20.sol";
@@ -26,8 +26,8 @@ import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { SigMint } from "contracts/signature-drop/SigMint.sol";
-import { ByocRegistry } from "contracts/ByocRegistry.sol";
-import { ByocFactory } from "contracts/ByocFactory.sol";
+import { ContractPublisher } from "contracts/ContractPublisher.sol";
+import { ContractDeployer } from "contracts/ContractDeployer.sol";
 import "contracts/mock/Mock.sol";
 
 abstract contract BaseTest is DSTest, Test {
@@ -45,7 +45,7 @@ abstract contract BaseTest is DSTest, Test {
     address public registry;
     address public factory;
     address public fee;
-    address public byocRegistry;
+    address public contractPublisher;
 
     address public factoryAdmin = address(0x10000);
     address public deployer = address(0x20000);
@@ -74,9 +74,9 @@ abstract contract BaseTest is DSTest, Test {
         forwarder = address(new Forwarder());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
-        byocRegistry = address(new ByocRegistry(forwarder));
+        contractPublisher = address(new ContractPublisher(forwarder));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
-        TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), byocRegistry);
+        TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
         fee = address(new TWFee(forwarder, factory));
         TWFactory(factory).addImplementation(address(new TokenERC20(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC721(fee)));

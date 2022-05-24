@@ -1,4 +1,4 @@
-# IByocRegistry
+# IContractPublisher
 
 
 
@@ -47,7 +47,7 @@ Lets a publisher (caller) approve an operator to publish / unpublish contracts o
 ### getAllPublicPublishedContracts
 
 ```solidity
-function getAllPublicPublishedContracts() external view returns (struct IByocRegistry.CustomContractInstance[] published)
+function getAllPublicPublishedContracts() external view returns (struct IContractPublisher.CustomContractInstance[] published)
 ```
 
 Returns the latest version of all contracts published by a publisher.
@@ -59,12 +59,12 @@ Returns the latest version of all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance[] | An array of all contracts published by the publisher.
+| published | IContractPublisher.CustomContractInstance[] | An array of all contracts published by the publisher.
 
 ### getAllPublishedContracts
 
 ```solidity
-function getAllPublishedContracts(address publisher) external view returns (struct IByocRegistry.CustomContractInstance[] published)
+function getAllPublishedContracts(address publisher) external view returns (struct IContractPublisher.CustomContractInstance[] published)
 ```
 
 Returns the latest version of all contracts published by a publisher.
@@ -81,7 +81,7 @@ Returns the latest version of all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance[] | An array of all contracts published by the publisher.
+| published | IContractPublisher.CustomContractInstance[] | An array of all contracts published by the publisher.
 
 ### getPublicId
 
@@ -109,7 +109,7 @@ Returns the public id of a published contract, if it is public.
 ### getPublishedContract
 
 ```solidity
-function getPublishedContract(address publisher, string contractId) external view returns (struct IByocRegistry.CustomContractInstance published)
+function getPublishedContract(address publisher, string contractId) external view returns (struct IContractPublisher.CustomContractInstance published)
 ```
 
 Returns the latest version of a contract published by a publisher.
@@ -127,12 +127,12 @@ Returns the latest version of a contract published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance | The desired contract published by the publisher.
+| published | IContractPublisher.CustomContractInstance | The desired contract published by the publisher.
 
 ### getPublishedContractVersions
 
 ```solidity
-function getPublishedContractVersions(address publisher, string contractId) external view returns (struct IByocRegistry.CustomContractInstance[] published)
+function getPublishedContractVersions(address publisher, string contractId) external view returns (struct IContractPublisher.CustomContractInstance[] published)
 ```
 
 Returns all versions of a published contract.
@@ -150,7 +150,7 @@ Returns all versions of a published contract.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance[] | The desired contracts published by the publisher.
+| published | IContractPublisher.CustomContractInstance[] | The desired contracts published by the publisher.
 
 ### isApprovedByPublisher
 
@@ -271,7 +271,7 @@ event Approved(address indexed publisher, address indexed operator, bool isAppro
 ### ContractPublished
 
 ```solidity
-event ContractPublished(address indexed operator, address indexed publisher, IByocRegistry.CustomContractInstance publishedContract)
+event ContractPublished(address indexed operator, address indexed publisher, IContractPublisher.CustomContractInstance publishedContract)
 ```
 
 
@@ -284,7 +284,7 @@ event ContractPublished(address indexed operator, address indexed publisher, IBy
 |---|---|---|
 | operator `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
-| publishedContract  | IByocRegistry.CustomContractInstance | undefined |
+| publishedContract  | IContractPublisher.CustomContractInstance | undefined |
 
 ### ContractUnpublished
 

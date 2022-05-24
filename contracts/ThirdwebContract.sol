@@ -2,31 +2,16 @@
 pragma solidity ^0.8.0;
 
 import "./feature/Ownable.sol";
-import "./feature/ContractMetadata.sol";
+import "./interfaces/IContractDeployer.sol";
 
-contract ThirdwebContract is Ownable, ContractMetadata {
-    struct ThirdwebInfo {
-        string publishMetadataUri;
-        string contractURI;
-        address owner;
-    }
+contract ThirdwebContract is Ownable {
+    uint256 private hasSetOwner;
 
-    /// @dev The publish metadata of the contract of which this contract is an instance.
-    string private publishMetadataUri;
-
-    /// @dev Returns the publish metadata for this contract.
-    function getPublishMetadataUri() external view returns (string memory) {
-        return publishMetadataUri;
-    }
-
-    /// @dev Initializes the publish metadata and contract metadata at deploy time.
-    function setThirdwebInfo(ThirdwebInfo memory _thirdwebInfo) external {
-        require(bytes(publishMetadataUri).length == 0, "Published metadata already initialized");
-        require(owner == address(0), "Owner already initialized");
-
-        publishMetadataUri = _thirdwebInfo.publishMetadataUri;
-        contractURI = _thirdwebInfo.contractURI;
-        owner = _thirdwebInfo.owner;
+    /// @dev Initializes the owner of the contract.
+    function tw_initializeOwner(address deployer) external {
+        require(hasSetOwner == 0, "Owner already initialized");
+        hasSetOwner = 1;
+        owner = deployer;
     }
 
     /// @dev Returns whether owner can be set
@@ -34,8 +19,15 @@ contract ThirdwebContract is Ownable, ContractMetadata {
         return msg.sender == owner;
     }
 
-    /// @dev Returns whether contract metadata can be set
-    function _canSetContractURI() internal virtual override returns (bool) {
-        return msg.sender == owner;
+    /// @dev Enable access to the original contract deployer in the constructor. If this function is called outside of a constructor, it will return address(0) instead.
+    function _contractDeployer() internal view returns (address) {
+        if (address(this).code.length == 0) {
+            try IContractDeployer(msg.sender).getContractDeployer(address(this)) returns (address deployer) {
+                return deployer;
+            } catch {
+                return address(0);
+            }
+        }
+        return address(0);
     }
 }

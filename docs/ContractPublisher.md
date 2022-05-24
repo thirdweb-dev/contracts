@@ -1,4 +1,4 @@
-# ByocRegistry
+# ContractPublisher
 
 
 
@@ -64,7 +64,7 @@ Lets a publisher (caller) approve an operator to publish / unpublish contracts o
 ### getAllPublicPublishedContracts
 
 ```solidity
-function getAllPublicPublishedContracts() external view returns (struct IByocRegistry.CustomContractInstance[] published)
+function getAllPublicPublishedContracts() external view returns (struct IContractPublisher.CustomContractInstance[] published)
 ```
 
 Returns the latest version of all contracts published by a publisher.
@@ -76,12 +76,12 @@ Returns the latest version of all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined
 
 ### getAllPublishedContracts
 
 ```solidity
-function getAllPublishedContracts(address _publisher) external view returns (struct IByocRegistry.CustomContractInstance[] published)
+function getAllPublishedContracts(address _publisher) external view returns (struct IContractPublisher.CustomContractInstance[] published)
 ```
 
 Returns the latest version of all contracts published by a publisher.
@@ -98,7 +98,7 @@ Returns the latest version of all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined
 
 ### getPublicId
 
@@ -126,7 +126,7 @@ Returns the public id of a published contract, if it is public.
 ### getPublishedContract
 
 ```solidity
-function getPublishedContract(address _publisher, string _contractId) external view returns (struct IByocRegistry.CustomContractInstance published)
+function getPublishedContract(address _publisher, string _contractId) external view returns (struct IContractPublisher.CustomContractInstance published)
 ```
 
 Returns the latest version of a contract published by a publisher.
@@ -144,12 +144,12 @@ Returns the latest version of a contract published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance | undefined
+| published | IContractPublisher.CustomContractInstance | undefined
 
 ### getPublishedContractVersions
 
 ```solidity
-function getPublishedContractVersions(address _publisher, string _contractId) external view returns (struct IByocRegistry.CustomContractInstance[] published)
+function getPublishedContractVersions(address _publisher, string _contractId) external view returns (struct IContractPublisher.CustomContractInstance[] published)
 ```
 
 Returns all versions of a published contract.
@@ -167,7 +167,7 @@ Returns all versions of a published contract.
 
 | Name | Type | Description |
 |---|---|---|
-| published | IByocRegistry.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined
 
 ### getRoleAdmin
 
@@ -545,7 +545,7 @@ event Approved(address indexed publisher, address indexed operator, bool isAppro
 ### ContractPublished
 
 ```solidity
-event ContractPublished(address indexed operator, address indexed publisher, IByocRegistry.CustomContractInstance publishedContract)
+event ContractPublished(address indexed operator, address indexed publisher, IContractPublisher.CustomContractInstance publishedContract)
 ```
 
 
@@ -558,7 +558,7 @@ event ContractPublished(address indexed operator, address indexed publisher, IBy
 |---|---|---|
 | operator `indexed` | address | undefined |
 | publisher `indexed` | address | undefined |
-| publishedContract  | IByocRegistry.CustomContractInstance | undefined |
+| publishedContract  | IContractPublisher.CustomContractInstance | undefined |
 
 ### ContractUnpublished
 

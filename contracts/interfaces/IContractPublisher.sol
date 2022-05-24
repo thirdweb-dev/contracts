@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-interface IByocRegistry {
+interface IContractPublisher {
     struct CustomContractInstance {
         string contractId;
         uint256 publishTimestamp;

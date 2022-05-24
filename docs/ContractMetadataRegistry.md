@@ -1,4 +1,4 @@
-# PermissionsEnumerable
+# ContractMetadataRegistry
 
 
 
@@ -27,6 +27,45 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### OPERATOR_ROLE
+
+```solidity
+function OPERATOR_ROLE() external view returns (bytes32)
+```
+
+
+
+*Only accounts with OPERATOR_ROLE can register metadata for contracts.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
+### getMetadataUri
+
+```solidity
+function getMetadataUri(address) external view returns (string)
+```
+
+
+
+*contract address deployed =&gt; metadata uri*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### getRoleAdmin
 
 ```solidity
@@ -35,7 +74,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 
 
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
+*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
 
 #### Parameters
 
@@ -52,7 +91,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ### getRoleMember
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
+function getRoleMember(bytes32 role, uint256 index) external view returns (address)
 ```
 
 
@@ -70,12 +109,12 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| member | address | undefined
+| _0 | address | undefined
 
 ### getRoleMemberCount
 
 ```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
+function getRoleMemberCount(bytes32 role) external view returns (uint256)
 ```
 
 
@@ -92,7 +131,7 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 
 | Name | Type | Description |
 |---|---|---|
-| count | uint256 | undefined
+| _0 | uint256 | undefined
 
 ### grantRole
 
@@ -102,7 +141,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
 
 #### Parameters
 
@@ -134,10 +173,10 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### hasRoleWithSwitch
+### isTrustedForwarder
 
 ```solidity
-function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+function isTrustedForwarder(address forwarder) external view returns (bool)
 ```
 
 
@@ -148,14 +187,52 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| forwarder | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
+
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | undefined
+
+### registerMetadata
+
+```solidity
+function registerMetadata(address contractAddress, string metadataUri) external nonpayable
+```
+
+
+
+*Records `metadataUri` as metadata for the contract at `contractAddress`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| contractAddress | address | undefined
+| metadataUri | string | undefined
 
 ### renounceRole
 
@@ -165,7 +242,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
 
 #### Parameters
 
@@ -182,7 +259,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
 
 #### Parameters
 
@@ -191,9 +268,48 @@ function revokeRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined
 | account | address | undefined
 
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*See {IERC165-supportsInterface}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 
 
 ## Events
+
+### MetadataRegistered
+
+```solidity
+event MetadataRegistered(address indexed contractAddress, string metadataUri)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| contractAddress `indexed` | address | undefined |
+| metadataUri  | string | undefined |
 
 ### RoleAdminChanged
 
