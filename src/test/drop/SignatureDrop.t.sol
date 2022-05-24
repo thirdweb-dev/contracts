@@ -47,7 +47,7 @@ contract SignatureDropTest is BaseTest {
      */
     function test_revert_lazyMint_MINTER_ROLE() public {
         bytes memory errorMessage = abi.encodePacked(
-            "AccessControl: account ",
+            "Permissions: account ",
             Strings.toHexString(uint160(address(this)), 20),
             " is missing role ",
             Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
@@ -164,7 +164,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.reveal(0, "key");
 
         bytes memory errorMessage = abi.encodePacked(
-            "AccessControl: account ",
+            "Permissions: account ",
             Strings.toHexString(uint160(address(this)), 20),
             " is missing role ",
             Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
