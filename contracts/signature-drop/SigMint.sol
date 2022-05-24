@@ -27,9 +27,10 @@ contract SigMint is PermissionsEnumerable, SignatureMintERC721 {
         require(_req.quantity > 0, "minting zero tokens");
 
         // Verify and process payload.
-        address signer = _processRequest(_req, _signature);
+        // address signer = _processRequest(_req, _signature);
+        _processRequest(_req, _signature);
 
-        emit TokensMintedWithSignature(signer, _req.to, _req);
+        // emit TokensMintedWithSignature(signer, _req.to, _req);
     }
 
     /*///////////////////////////////////////////////////////////////

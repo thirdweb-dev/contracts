@@ -80,6 +80,14 @@ contract SignatureDrop is
 
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
+    event TokensMinted(
+        address indexed minter,
+        address receiver,
+        uint256 indexed startTokenId,
+        uint256 amountMinted,
+        uint256 pricePerToken,
+        address indexed currency
+    );
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -223,6 +231,8 @@ contract SignatureDrop is
 
         // Mint tokens.
         _mint(receiver, _req.quantity);
+
+        emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
     }
 
     /// @dev Lets an account claim tokens.
