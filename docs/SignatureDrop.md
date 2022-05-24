@@ -1147,6 +1147,30 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined
 | tokenId | uint256 | undefined
 
+### verify
+
+```solidity
+function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | ISignatureMintERC721.MintRequest | undefined
+| _signature | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined
+| signer | address | undefined
+
 ### verifyClaim
 
 ```solidity
