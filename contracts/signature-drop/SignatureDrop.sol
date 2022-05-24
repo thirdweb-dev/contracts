@@ -237,6 +237,13 @@ contract SignatureDrop is
         super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
+    function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
+        external
+        view
+        returns (bool success, address signer) {
+            return ISignatureMintERC721(sigMint).verify(_req, _signature);
+        }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
