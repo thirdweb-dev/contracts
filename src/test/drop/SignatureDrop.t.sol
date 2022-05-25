@@ -318,10 +318,99 @@ contract SignatureDropTest is BaseTest {
                         Signature Mint Tests
     //////////////////////////////////////////////////////////////*/
 
+    /*
+     *  note: Testing state changes; minting with signature, for a given price and currency.
+     */
+    function test_state_mintWithSignature() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        uint256 id = 0;
+        ISignatureMintERC721.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(erc20);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        // Test with ERC20 currency
+        {
+
+            uint256 totalSupplyBefore = sigdrop.totalSupply();
+
+            bytes memory encodedRequest = abi.encode(
+                typehashMintRequest,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
+            bytes32 structHash = keccak256(encodedRequest);
+            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            vm.startPrank(deployerSigner);
+            vm.warp(1000);
+            erc20.approve(address(sigdrop), 1);
+            sigdrop.mintWithSignature(mintrequest, signature);
+            vm.stopPrank();
+
+            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+        }
+
+        // Test with native token currency
+        {
+            uint256 totalSupplyBefore = sigdrop.totalSupply();
+
+            mintrequest.currency = address(NATIVE_TOKEN);
+            id = 1;
+            mintrequest.uid = bytes32(id);
+            bytes memory encodedRequest = abi.encode(
+                typehashMintRequest,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
+            bytes32 structHash = keccak256(encodedRequest);
+            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            vm.startPrank(address(deployerSigner));
+            vm.warp(1000);
+            sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
+            vm.stopPrank();
+
+            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+        }
+    }
+
     /**
      *  note: Testing revert condition; invalid signature.
      */
-    function test_revert_mintWithSignature_processRequestAndRecoverSigner() public {
+    function test_revert_mintWithSignature_unapprovedSigner() public {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -367,88 +456,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
-    /*
-     *  note: Testing state changes; minting with signature, for a given price and currency.
-     */
-    function test_state_mintWithSignature_priceAndCurrency() public {
-        vm.prank(deployerSigner);
-        sigdrop.lazyMint(100, "ipfs://", "");
-        uint256 id = 0;
-        ISignatureMintERC721.MintRequest memory mintrequest;
-
-        mintrequest.to = address(0);
-        mintrequest.royaltyRecipient = address(2);
-        mintrequest.royaltyBps = 0;
-        mintrequest.primarySaleRecipient = address(deployer);
-        mintrequest.uri = "ipfs://";
-        mintrequest.quantity = 1;
-        mintrequest.pricePerToken = 1;
-        mintrequest.currency = address(erc20);
-        mintrequest.validityStartTimestamp = 1000;
-        mintrequest.validityEndTimestamp = 2000;
-        mintrequest.uid = bytes32(id);
-
-        {
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(deployerSigner);
-            vm.warp(1000);
-            erc20.approve(address(sigdrop), 1);
-            sigdrop.mintWithSignature(mintrequest, signature);
-            vm.stopPrank();
-        }
-
-        {
-            mintrequest.currency = address(NATIVE_TOKEN);
-            id = 1;
-            mintrequest.uid = bytes32(id);
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(address(deployerSigner));
-            vm.warp(1000);
-            sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
-            vm.stopPrank();
-        }
-    }
-
     /**
      *  note: Testing token balances; checking balance and owner of tokens after minting with signature.
      */
-    function test_balances_mintWithSignature_checkBalanceAndOwner() public {
+    function test_balances_mintWithSignature() public {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -467,6 +478,8 @@ contract SignatureDropTest is BaseTest {
         mintrequest.uid = bytes32(id);
 
         {
+            uint256 currencyBalBefore = erc20.balanceOf(deployerSigner);
+
             bytes memory encodedRequest = abi.encode(
                 typehashMintRequest,
                 mintrequest.to,
@@ -498,6 +511,8 @@ contract SignatureDropTest is BaseTest {
             address owner = sigdrop.ownerOf(0);
             assertEq(deployerSigner, owner);
 
+            assertEq(currencyBalBefore - mintrequest.pricePerToken * mintrequest.quantity, erc20.balanceOf(deployerSigner));
+
             vm.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
             owner = sigdrop.ownerOf(1);
         }
@@ -506,7 +521,7 @@ contract SignatureDropTest is BaseTest {
     /*
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
-    function mintWithSignature_priceAndCurrency(ISignatureMintERC721.MintRequest memory mintrequest) internal {
+    function mintWithSignature(ISignatureMintERC721.MintRequest memory mintrequest) internal {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -568,7 +583,7 @@ contract SignatureDropTest is BaseTest {
         }
     }
 
-    function test_fuzz_mintWithSignature_priceAndCurrency(uint128 x, uint128 y) public {
+    function test_fuzz_mintWithSignature(uint128 x, uint128 y) public {
         if (x < y) {
             uint256 id = 0;
             ISignatureMintERC721.MintRequest memory mintrequest;
@@ -585,7 +600,7 @@ contract SignatureDropTest is BaseTest {
             mintrequest.validityEndTimestamp = y;
             mintrequest.uid = bytes32(id);
 
-            mintWithSignature_priceAndCurrency(mintrequest);
+            mintWithSignature(mintrequest);
         }
     }
 
