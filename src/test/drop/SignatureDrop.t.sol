@@ -6,8 +6,12 @@ import { ISignatureMintERC721 } from "contracts/feature/interface/ISignatureMint
 
 // Test imports
 import "../utils/BaseTest.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract SignatureDropTest is BaseTest {
+
+    using StringsUpgradeable for uint256;
+
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
 
@@ -42,6 +46,55 @@ contract SignatureDropTest is BaseTest {
                                 Lazy Mint Tests
     //////////////////////////////////////////////////////////////*/
 
+    /*
+     *  note: Testing state changes; lazy mint a batch of tokens with no encrypted base URI.
+     */
+    function test_state_lazyMint_noEncryptedURI() public {
+        uint256 amountToLazyMint = 100;
+        string memory baseURI = "ipfs://";
+        bytes memory encryptedBaseURI = "";
+
+        uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
+
+        vm.startPrank(deployer_signer);
+        uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
+
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
+
+        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+            string memory uri = sigdrop.tokenURI(i);
+            console.log(uri);
+            assertEq(uri, string(abi.encodePacked(baseURI, i.toString())));
+        }
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing state changes; lazy mint a batch of tokens with encrypted base URI.
+     */
+    function test_state_lazyMint_withEncryptedURI() public {
+        uint256 amountToLazyMint = 100;
+        string memory baseURI = "ipfs://";
+        bytes memory encryptedBaseURI = "encryptedBaseURI://";
+
+        uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
+
+        vm.startPrank(deployer_signer);
+        uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
+
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
+
+        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+            string memory uri = sigdrop.tokenURI(1);
+            assertEq(uri, string(abi.encodePacked(baseURI, "0")));
+        }
+
+        vm.stopPrank();
+    }
+
     /**
      *  note: Testing revert condition; an address without MINTER_ROLE calls lazyMint function.
      */
@@ -58,58 +111,9 @@ contract SignatureDropTest is BaseTest {
     }
 
     /*
-     *  note: Testing state changes; a batch of tokens, and nextTokenIdToMint
-     */
-    function test_state_lazyMint_batchMintAndNextTokenIdToMint() public {
-        vm.startPrank(deployer_signer);
-
-        sigdrop.lazyMint(100, "ipfs://", "");
-
-        uint256 slot = stdstore.target(address(sigdrop)).sig("nextTokenIdToMint()").find();
-        bytes32 loc = bytes32(slot);
-        uint256 nextTokenIdToMint = uint256(vm.load(address(sigdrop), loc));
-
-        assertEq(nextTokenIdToMint, 100);
-        vm.stopPrank();
-    }
-
-    /*
-     *  note: Fuzz testing; a batch of tokens, and nextTokenIdToMint
-     */
-    function test_fuzz_lazyMint_batchMintAndNextTokenIdToMint(uint256 x) public {
-        vm.startPrank(deployer_signer);
-
-        sigdrop.lazyMint(x, "ipfs://", "");
-
-        uint256 slot = stdstore.target(address(sigdrop)).sig("nextTokenIdToMint()").find();
-        bytes32 loc = bytes32(slot);
-        uint256 nextTokenIdToMint = uint256(vm.load(address(sigdrop), loc));
-
-        assertEq(nextTokenIdToMint, x);
-        vm.stopPrank();
-    }
-
-    /*
-     *  note: Testing state changes; a batch of tokens, and associated baseURI for tokens
-     */
-    function test_state_lazyMint_batchMintAndTokenURI() public {
-        vm.startPrank(deployer_signer);
-
-        sigdrop.lazyMint(100, "ipfs://", "");
-
-        string memory uri = sigdrop.tokenURI(1);
-        assertEq(uri, "ipfs://1");
-
-        uri = sigdrop.tokenURI(99);
-        assertEq(uri, "ipfs://99");
-
-        vm.stopPrank();
-    }
-
-    /*
      *  note: Testing revert condition; calling tokenURI for invalid batch id.
      */
-    function test_revert_lazyMint_batchMintAndTokenURI() public {
+    function test_revert_lazyMint_URIForNonLazyMintedToken() public {
         vm.startPrank(deployer_signer);
 
         sigdrop.lazyMint(100, "ipfs://", "");
@@ -120,30 +124,87 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    /*
-     *  note: Testing state changes; a batch of tokens with encrypted base URI, and associated URI for tokens
-     */
-    function test_state_lazyMint_setEncryptedBaseURIAndTokenURI() public {
-        vm.startPrank(deployer_signer);
-
-        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        sigdrop.lazyMint(100, "", encryptedURI);
-
-        string memory uri = sigdrop.tokenURI(1);
-        assertEq(uri, "0");
-
-        vm.stopPrank();
-    }
-
     /**
      *  note: Testing event emission; tokens lazy minted.
      */
-    function test_event_lazyMint_event() public {
+    function test_event_lazyMint_TokensLazyMinted() public {
         vm.startPrank(deployer_signer);
 
         vm.expectEmit(false, false, false, true);
         emit TokensLazyMinted(0, 100, "ipfs://", "");
         sigdrop.lazyMint(100, "ipfs://", "");
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Fuzz testing state changes; lazy mint a batch of tokens with no encrypted base URI.
+     */
+    function test_fuzz_lazyMint_noEncryptedURI(uint256 x) public {
+
+        vm.assume(x > 0);
+
+        uint256 amountToLazyMint = x;
+        string memory baseURI = "ipfs://";
+        bytes memory encryptedBaseURI = "";
+
+        uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
+
+        vm.startPrank(deployer_signer);
+        uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
+
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
+
+        string memory uri = sigdrop.tokenURI(0);
+        assertEq(uri, string(abi.encodePacked(baseURI, uint(0).toString())));
+
+        uri = sigdrop.tokenURI(x-1);
+        assertEq(uri, string(abi.encodePacked(baseURI, uint(x-1).toString())));
+
+        /**
+         *  note: this loop takes too long to run with fuzz tests.
+         */
+        // for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+        //     string memory uri = sigdrop.tokenURI(i);
+        //     console.log(uri);
+        //     assertEq(uri, string(abi.encodePacked(baseURI, i.toString())));
+        // }
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Fuzz testing state changes; lazy mint a batch of tokens with encrypted base URI.
+     */
+    function test_fuzz_lazyMint_withEncryptedURI(uint256 x) public {
+        vm.assume(x > 0);
+
+        uint256 amountToLazyMint = x;
+        string memory baseURI = "ipfs://";
+        bytes memory encryptedBaseURI = "encryptedBaseURI://";
+
+        uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
+
+        vm.startPrank(deployer_signer);
+        uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
+
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
+        assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
+
+        string memory uri = sigdrop.tokenURI(0);
+        assertEq(uri, string(abi.encodePacked(baseURI, "0")));
+
+        uri = sigdrop.tokenURI(x-1);
+        assertEq(uri, string(abi.encodePacked(baseURI, "0")));
+
+        /**
+         *  note: this loop takes too long to run with fuzz tests.
+         */
+        // for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+        //     string memory uri = sigdrop.tokenURI(1);
+        //     assertEq(uri, string(abi.encodePacked(baseURI, "0")));
+        // }
 
         vm.stopPrank();
     }
