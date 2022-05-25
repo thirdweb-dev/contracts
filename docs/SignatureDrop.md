@@ -673,7 +673,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBas
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable
+function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable returns (address signer)
 ```
 
 
@@ -686,6 +686,12 @@ function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signatu
 |---|---|---|
 | _req | ISignatureMintERC721.MintRequest | undefined
 | _signature | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined
 
 ### multicall
 
@@ -1486,10 +1492,10 @@ event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI,
 | baseURI  | string | undefined |
 | encryptedBaseURI  | bytes | undefined |
 
-### TokensMinted
+### TokensMintedWithSignature
 
 ```solidity
-event TokensMinted(address indexed minter, address receiver, uint256 indexed startTokenId, uint256 amountMinted, uint256 pricePerToken, address indexed currency)
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMintERC721.MintRequest mintRequest)
 ```
 
 
@@ -1500,12 +1506,10 @@ event TokensMinted(address indexed minter, address receiver, uint256 indexed sta
 
 | Name | Type | Description |
 |---|---|---|
-| minter `indexed` | address | undefined |
-| receiver  | address | undefined |
-| startTokenId `indexed` | uint256 | undefined |
-| amountMinted  | uint256 | undefined |
-| pricePerToken  | uint256 | undefined |
-| currency `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
+| mintedTo `indexed` | address | undefined |
+| tokenIdMinted `indexed` | uint256 | undefined |
+| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
 
 ### Transfer
 

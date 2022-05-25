@@ -12,14 +12,18 @@ contract SigMint is SignatureMintERC721 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    )
+        external
+        payable
+        returns (address signer)
+    {
         require(_req.quantity > 0, "minting zero tokens");
 
         // Verify and process payload.
-        // address signer = _processRequest(_req, _signature);
-        _processRequest(_req, _signature);
-
-        // emit TokensMintedWithSignature(signer, _req.to, _req);
+        signer = _processRequest(_req, _signature);
     }
 
     /*///////////////////////////////////////////////////////////////

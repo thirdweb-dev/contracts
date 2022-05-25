@@ -76,13 +76,11 @@ contract SignatureDrop is
 
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
-    event TokensMinted(
-        address indexed minter,
-        address receiver,
-        uint256 indexed startTokenId,
-        uint256 amountMinted,
-        uint256 pricePerToken,
-        address indexed currency
+    event TokensMintedWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        ISignatureMintERC721.MintRequest mintRequest
     );
 
     /*///////////////////////////////////////////////////////////////
@@ -211,8 +209,9 @@ contract SignatureDrop is
         external
         payable
         nonReentrant
+        returns (address signer)
     {
-        ISignatureMintERC721(sigMint).mintWithSignature(_req, _signature);
+        signer = ISignatureMintERC721(sigMint).mintWithSignature(_req, _signature);
 
         uint256 tokenIdToMint = _currentIndex;
         require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
@@ -226,7 +225,7 @@ contract SignatureDrop is
         // Mint tokens.
         _mint(receiver, _req.quantity);
 
-        emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
+        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /// @dev Lets an account claim tokens.
