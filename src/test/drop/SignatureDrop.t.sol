@@ -14,6 +14,12 @@ contract SignatureDropTest is BaseTest {
 
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
+    event TokensMintedWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        ISignatureMintERC721.MintRequest mintRequest
+    );
 
     SignatureDrop public sigdrop;
     address internal deployerSigner;
@@ -398,6 +404,8 @@ contract SignatureDropTest is BaseTest {
             vm.startPrank(deployerSigner);
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
+            vm.expectEmit(true, true, true, false);
+            emit TokensMintedWithSignature(deployerSigner, deployerSigner, 0, mintrequest);
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
