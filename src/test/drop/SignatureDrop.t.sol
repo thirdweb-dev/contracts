@@ -489,6 +489,100 @@ contract SignatureDropTest is BaseTest {
     }
 
     /**
+     *  note: Testing revert condition; not enough minted tokens.
+     */
+    function test_revert_mintWithSignature_notEnoughMintedTokens() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        uint256 id = 0;
+
+        ISignatureMintERC721.MintRequest memory mintrequest;
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 101;
+        mintrequest.pricePerToken = 0;
+        mintrequest.currency = address(3);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        bytes memory encodedRequest = abi.encode(
+            typehashMintRequest,
+            mintrequest.to,
+            mintrequest.royaltyRecipient,
+            mintrequest.royaltyBps,
+            mintrequest.primarySaleRecipient,
+            keccak256(bytes(mintrequest.uri)),
+            mintrequest.quantity,
+            mintrequest.pricePerToken,
+            mintrequest.currency,
+            mintrequest.validityStartTimestamp,
+            mintrequest.validityEndTimestamp,
+            mintrequest.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        vm.warp(1000);
+        vm.expectRevert("not enough minted tokens.");
+        sigdrop.mintWithSignature(mintrequest, signature);
+    }
+
+    /**
+     *  note: Testing revert condition; sent value is not equal to price.
+     */
+    function test_revert_mintWithSignature_notSentAmountRequired() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        uint256 id = 0;
+        ISignatureMintERC721.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(3);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+        {
+            mintrequest.currency = address(NATIVE_TOKEN);
+            bytes memory encodedRequest = abi.encode(
+                typehashMintRequest,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
+            bytes32 structHash = keccak256(encodedRequest);
+            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            vm.startPrank(address(deployerSigner));
+            vm.warp(mintrequest.validityStartTimestamp);
+            vm.expectRevert("must send total price.");
+            sigdrop.mintWithSignature{ value: 2 }(mintrequest, signature);
+            vm.stopPrank();
+        }
+    }
+
+    /**
      *  note: Testing token balances; checking balance and owner of tokens after minting with signature.
      */
     function test_balances_mintWithSignature() public {
