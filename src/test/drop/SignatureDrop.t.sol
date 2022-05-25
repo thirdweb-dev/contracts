@@ -7,10 +7,13 @@ import { ISignatureMintERC721 } from "contracts/feature/interface/ISignatureMint
 // Test imports
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "../../../contracts/lib/Strings2.sol";
 
 contract SignatureDropTest is BaseTest {
 
     using StringsUpgradeable for uint256;
+    using Strings2 for bytes;
 
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
@@ -771,6 +774,78 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
+
+    /**
+     *  note: Testing revert condition; not enough minted tokens.
+     */
+    function test_revert_claimCondition_notEnoughMintedTokens() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions, false, "");
+
+        vm.expectRevert("not enough minted tokens.");
+        vm.prank(getActor(6), getActor(6));
+        sigdrop.claim(receiver, 101, address(0), 0, alp, "");
+    }
+
+    /**
+     *  note: Testing revert condition; exceed max claimable supply.
+     */
+    function test_revert_claimCondition_exceedMaxClaimableSupply() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(200, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions, false, "");
+
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 100, address(0), 0, alp, "");
+
+        vm.expectRevert("exceed max claimable supply.");
+        vm.prank(getActor(6), getActor(6));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+    }
+
+    /**
+     *  note: Testing revert condition; not allowed to claim again before wait time is over.
+     */
+    // function test_revert_claimCondition_merkleProof() public {
+    //     bytes memory packed = abi.encodePacked(address(1), address(2), address(3));
+    //     string[] memory inputs = new string[](8);
+
+    //     inputs[0] = "node";
+    //     inputs[1] = "src/test/scripts/merkleTree.js";
+    //     inputs[2] = "tree";
+    //     inputs[3] = packed.toHexString();
+
+    //     bytes memory result = vm.ffi(inputs);
+    // }
 
     /**
      *  note: Testing state changes; check startId and count after setting claim conditions.
