@@ -4,19 +4,15 @@ pragma solidity ^0.8.11;
 //  ==========  Features    ==========
 
 import { SignatureMintERC721 } from "../feature/SignatureMintERC721.sol";
-import { IPermissions  } from "../feature/interface/IPermissions.sol";
+import { IPermissions } from "../feature/interface/IPermissions.sol";
 
 contract SigMint is SignatureMintERC721 {
-    
     /*///////////////////////////////////////////////////////////////
                     Claiming lazy minted tokens logic
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-    {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable {
         require(_req.quantity > 0, "minting zero tokens");
 
         // Verify and process payload.
