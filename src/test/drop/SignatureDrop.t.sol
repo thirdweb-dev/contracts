@@ -209,6 +209,22 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
+    /*
+     *  note: Fuzz testing; a batch of tokens, and nextTokenIdToMint
+     */
+    function test_fuzz_lazyMint_batchMintAndNextTokenIdToMint(uint256 x) public {
+        vm.startPrank(deployerSigner);
+
+        sigdrop.lazyMint(x, "ipfs://", "");
+
+        uint256 slot = stdstore.target(address(sigdrop)).sig("nextTokenIdToMint()").find();
+        bytes32 loc = bytes32(slot);
+        uint256 nextTokenIdToMint = uint256(vm.load(address(sigdrop), loc));
+
+        assertEq(nextTokenIdToMint, x);
+        vm.stopPrank();
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Delayed Reveal Tests
     //////////////////////////////////////////////////////////////*/
@@ -279,6 +295,22 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "", encryptedURI);
         vm.expectRevert("invalid index.");
         sigdrop.reveal(2, "key");
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing revert condition; already revealed URI.
+     */
+    function test_revert_delayedReveal_alreadyRevealed() public {
+        vm.startPrank(deployerSigner);
+
+        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
+        sigdrop.lazyMint(100, "", encryptedURI);
+        sigdrop.reveal(0, "key");
+
+        vm.expectRevert("nothing to reveal.");
+        sigdrop.reveal(0, "key");
 
         vm.stopPrank();
     }
@@ -609,6 +641,36 @@ contract SignatureDropTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     /**
+     *  note: Testing revert condition; not allowed to claim again before wait time is over.
+     */
+    function test_revert_claimCondition_waitTimeInSecondsBetweenClaims() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions, false, "");
+
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+
+        vm.expectRevert("cannot claim.");
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+    }
+
+    /**
      *  note: Testing state changes; check startId and count after setting claim conditions.
      */
     function test_state_claimCondition_startIdAndCount() public {
@@ -688,36 +750,6 @@ contract SignatureDropTest is BaseTest {
 
         vm.warp(40);
         assertEq(sigdrop.getActiveClaimConditionId(), 2);
-    }
-
-    /**
-     *  note: Testing revert condition; not allowed to claim again before wait time is over.
-     */
-    function test_revert_claimCondition_waitTimeInSecondsBetweenClaims() public {
-        vm.warp(1);
-
-        address receiver = getActor(0);
-        bytes32[] memory proofs = new bytes32[](0);
-
-        SignatureDrop.AllowlistProof memory alp;
-        alp.proof = proofs;
-
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
-
-        vm.prank(deployerSigner);
-        sigdrop.lazyMint(100, "ipfs://", "");
-        vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
-
-        vm.prank(getActor(5), getActor(5));
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
-
-        vm.expectRevert("cannot claim.");
-        vm.prank(getActor(5), getActor(5));
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
     /**
