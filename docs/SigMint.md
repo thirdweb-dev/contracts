@@ -301,23 +301,5 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
 
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ISignatureMintERC721.MintRequest mintRequest)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
-
 
 

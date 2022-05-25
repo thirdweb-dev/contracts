@@ -1486,6 +1486,27 @@ event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI,
 | baseURI  | string | undefined |
 | encryptedBaseURI  | bytes | undefined |
 
+### TokensMinted
+
+```solidity
+event TokensMinted(address indexed minter, address receiver, uint256 indexed startTokenId, uint256 amountMinted, uint256 pricePerToken, address indexed currency)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| minter `indexed` | address | undefined |
+| receiver  | address | undefined |
+| startTokenId `indexed` | uint256 | undefined |
+| amountMinted  | uint256 | undefined |
+| pricePerToken  | uint256 | undefined |
+| currency `indexed` | address | undefined |
+
 ### Transfer
 
 ```solidity

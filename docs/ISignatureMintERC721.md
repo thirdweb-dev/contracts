@@ -53,25 +53,4 @@ Verifies that a mint request is signed by an account holding          MINTER_ROL
 
 
 
-## Events
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ISignatureMintERC721.MintRequest mintRequest)
-```
-
-
-
-*Emitted when tokens are minted.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
-
-
 

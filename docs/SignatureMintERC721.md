@@ -53,25 +53,4 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 
 
 
-## Events
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ISignatureMintERC721.MintRequest mintRequest)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
-
-
 
