@@ -43,7 +43,7 @@ contract SignatureDropTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                                Lazy Mint Tests
+                            Lazy Mint Tests
     //////////////////////////////////////////////////////////////*/
 
     /*
@@ -210,13 +210,42 @@ contract SignatureDropTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                                Delayed Reveal Tests
+                        Delayed Reveal Tests
     //////////////////////////////////////////////////////////////*/
+
+    /*
+     *  note: Testing state changes; URI revealed for a batch of tokens.
+     */
+    function test_state_reveal() public {
+        vm.startPrank(deployerSigner);
+
+        bytes memory key = "key";
+        uint256 amountToLazyMint = 100;
+        bytes memory secretURI = "ipfs://";
+        string memory placeholderURI = "ipfs://";
+        bytes memory encryptedURI = sigdrop.encryptDecrypt(secretURI, key);
+        sigdrop.lazyMint(amountToLazyMint, placeholderURI, encryptedURI);
+
+        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+            string memory uri = sigdrop.tokenURI(i);
+            assertEq(uri, string(abi.encodePacked(placeholderURI, "0")));
+        }
+
+        string memory revealedURI = sigdrop.reveal(0, key);
+        assertEq(revealedURI, string(secretURI));
+
+        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+            string memory uri = sigdrop.tokenURI(i);
+            assertEq(uri, string(abi.encodePacked(secretURI, i.toString())));
+        }
+
+        vm.stopPrank();
+    }
 
     /**
      *  note: Testing revert condition; an address without MINTER_ROLE calls reveal function.
      */
-    function test_revert_delayedReveal_minterRole() public {
+    function test_revert_reveal_MINTER_ROLE() public {
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -238,12 +267,14 @@ contract SignatureDropTest is BaseTest {
     /*
      *  note: Testing revert condition; trying to reveal URI for non-existent batch.
      */
-    function test_revert_delayedReveal_getBatchIdAtIndex() public {
+    function test_revert_reveal_revealingNonExistentBatch() public {
         vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
         sigdrop.reveal(0, "key");
+
+        console.log(sigdrop.getBaseURICount());
 
         sigdrop.lazyMint(100, "", encryptedURI);
         vm.expectRevert("invalid index.");
@@ -253,24 +284,9 @@ contract SignatureDropTest is BaseTest {
     }
 
     /*
-     *  note: Testing state changes; URI revealed for a batch of tokens.
-     */
-    function test_state_delayedReveal_getRevealURI() public {
-        vm.startPrank(deployerSigner);
-
-        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        sigdrop.lazyMint(100, "", encryptedURI);
-
-        string memory revealedURI = sigdrop.reveal(0, "key");
-        assertEq(revealedURI, "ipfs://");
-
-        vm.stopPrank();
-    }
-
-    /*
      *  note: Testing state changes; revealing URI with an incorrect key.
      */
-    function testFail_delayedReveal_incorrectKey() public {
+    function testFail_reveal_incorrectKey() public {
         vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -282,26 +298,10 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
-    /*
-     *  note: Testing state changes; check baseURI after reveal for a batch of tokens.
-     */
-    function test_state_delayedReveal_setBaseURI() public {
-        vm.startPrank(deployerSigner);
-
-        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        sigdrop.lazyMint(100, "", encryptedURI);
-        sigdrop.reveal(0, "key");
-
-        string memory uri = sigdrop.tokenURI(1);
-        assertEq(uri, "ipfs://1");
-
-        vm.stopPrank();
-    }
-
     /**
-     *  note: Testing event emission; token URI revealed.
+     *  note: Testing event emission; TokenURIRevealed.
      */
-    function test_event_delayedReveal_event() public {
+    function test_event_reveal_TokenURIRevealed() public {
         vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
@@ -315,7 +315,7 @@ contract SignatureDropTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                                Signature Mint Tests
+                        Signature Mint Tests
     //////////////////////////////////////////////////////////////*/
 
     /**
