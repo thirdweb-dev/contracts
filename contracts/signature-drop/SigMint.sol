@@ -3,17 +3,11 @@ pragma solidity ^0.8.11;
 
 //  ==========  Features    ==========
 
-import { PermissionsEnumerable } from "../feature/PermissionsEnumerable.sol";
 import { SignatureMintERC721 } from "../feature/SignatureMintERC721.sol";
-import "../feature/interface/IPermissions.sol";
+import { IPermissions  } from "../feature/interface/IPermissions.sol";
 
-contract SigMint is PermissionsEnumerable, SignatureMintERC721 {
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    bytes32 private constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-
+contract SigMint is SignatureMintERC721 {
+    
     /*///////////////////////////////////////////////////////////////
                     Claiming lazy minted tokens logic
     //////////////////////////////////////////////////////////////*/
@@ -22,7 +16,6 @@ contract SigMint is PermissionsEnumerable, SignatureMintERC721 {
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
-        onlyRole(OPERATOR_ROLE)
     {
         require(_req.quantity > 0, "minting zero tokens");
 
@@ -31,14 +24,6 @@ contract SigMint is PermissionsEnumerable, SignatureMintERC721 {
         _processRequest(_req, _signature);
 
         // emit TokensMintedWithSignature(signer, _req.to, _req);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                    Contract specific function
-    //////////////////////////////////////////////////////////////*/
-
-    function claimOperatorRole() external {
-        _setupRole(OPERATOR_ROLE, msg.sender);
     }
 
     /*///////////////////////////////////////////////////////////////

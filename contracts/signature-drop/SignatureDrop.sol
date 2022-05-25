@@ -31,10 +31,6 @@ import "../feature/PermissionsEnumerable.sol";
 import "../feature/meta-tx/Drop.sol";
 import "../feature/interface/ISignatureMintERC721.sol";
 
-interface ISignatureMintSplit {
-    function claimOperatorRole() external;
-}
-
 contract SignatureDrop is
     Initializable,
     ContractMetadata,
@@ -116,9 +112,7 @@ contract SignatureDrop is
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         // Initialize this contract's state.
-
         sigMint = _signatureMintLogic;
-        ISignatureMintSplit(_signatureMintLogic).claimOperatorRole();
 
         setContractURI(_contractURI);
         setOwner(_defaultAdmin);
