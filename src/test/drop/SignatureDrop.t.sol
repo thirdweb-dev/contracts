@@ -16,30 +16,30 @@ contract SignatureDropTest is BaseTest {
     event TokenURIRevealed(uint256 index, string revealedURI);
 
     SignatureDrop public sigdrop;
-    address deployer_signer;
-    bytes32 typehash;
-    bytes32 nameHash;
-    bytes32 versionHash;
-    bytes32 _TYPE_HASH;
-    bytes32 domainSeparator;
+    address internal deployerSigner;
+    bytes32 internal typehashMintRequest;
+    bytes32 internal nameHash;
+    bytes32 internal versionHash;
+    bytes32 internal typehasEip712;
+    bytes32 internal domainSeparator;
 
     using stdStorage for StdStorage;
 
     function setUp() public override {
         super.setUp();
-        deployer_signer = signer;
+        deployerSigner = signer;
         sigdrop = SignatureDrop(getContract("SignatureDrop"));
 
-        erc20.mint(deployer_signer, 1_000_000);
-        vm.deal(deployer_signer, 1_000);
+        erc20.mint(deployerSigner, 1_000_000);
+        vm.deal(deployerSigner, 1_000);
 
-        typehash = keccak256(
+        typehashMintRequest = keccak256(
             "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
-        _TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-        domainSeparator = keccak256(abi.encode(_TYPE_HASH, nameHash, versionHash, block.chainid, sigdrop.sigMint()));
+        typehasEip712 = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        domainSeparator = keccak256(abi.encode(typehasEip712, nameHash, versionHash, block.chainid, sigdrop.sigMint()));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ contract SignatureDropTest is BaseTest {
 
         uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
 
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
         uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
@@ -81,7 +81,7 @@ contract SignatureDropTest is BaseTest {
 
         uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
 
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
         uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
@@ -114,7 +114,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing revert condition; calling tokenURI for invalid batch id.
      */
     function test_revert_lazyMint_URIForNonLazyMintedToken() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         sigdrop.lazyMint(100, "ipfs://", "");
 
@@ -128,7 +128,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing event emission; tokens lazy minted.
      */
     function test_event_lazyMint_TokensLazyMinted() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         vm.expectEmit(false, false, false, true);
         emit TokensLazyMinted(0, 100, "ipfs://", "");
@@ -150,7 +150,7 @@ contract SignatureDropTest is BaseTest {
 
         uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
 
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
         uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
@@ -186,7 +186,7 @@ contract SignatureDropTest is BaseTest {
 
         uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
 
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
         uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, encryptedBaseURI);
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
@@ -218,10 +218,10 @@ contract SignatureDropTest is BaseTest {
      */
     function test_revert_delayedReveal_minterRole() public {
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "", encryptedURI);
 
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.reveal(0, "key");
 
         bytes memory errorMessage = abi.encodePacked(
@@ -239,7 +239,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing revert condition; trying to reveal URI for non-existent batch.
      */
     function test_revert_delayedReveal_getBatchIdAtIndex() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -256,7 +256,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; URI revealed for a batch of tokens.
      */
     function test_state_delayedReveal_getRevealURI() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -271,7 +271,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; revealing URI with an incorrect key.
      */
     function testFail_delayedReveal_incorrectKey() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -286,7 +286,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; check baseURI after reveal for a batch of tokens.
      */
     function test_state_delayedReveal_setBaseURI() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -302,7 +302,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing event emission; token URI revealed.
      */
     function test_event_delayedReveal_event() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
@@ -322,7 +322,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing revert condition; invalid signature.
      */
     function test_revert_mintWithSignature_processRequestAndRecoverSigner() public {
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
 
@@ -340,7 +340,7 @@ contract SignatureDropTest is BaseTest {
         mintrequest.uid = bytes32(id);
 
         bytes memory encodedRequest = abi.encode(
-            typehash,
+            typehashMintRequest,
             mintrequest.to,
             mintrequest.royaltyRecipient,
             mintrequest.royaltyBps,
@@ -371,7 +371,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
     function test_state_mintWithSignature_priceAndCurrency() public {
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
         ISignatureMintERC721.MintRequest memory mintrequest;
@@ -390,7 +390,7 @@ contract SignatureDropTest is BaseTest {
 
         {
             bytes memory encodedRequest = abi.encode(
-                typehash,
+                typehashMintRequest,
                 mintrequest.to,
                 mintrequest.royaltyRecipient,
                 mintrequest.royaltyBps,
@@ -408,7 +408,7 @@ contract SignatureDropTest is BaseTest {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
             bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(deployer_signer);
+            vm.startPrank(deployerSigner);
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
             sigdrop.mintWithSignature(mintrequest, signature);
@@ -420,7 +420,7 @@ contract SignatureDropTest is BaseTest {
             id = 1;
             mintrequest.uid = bytes32(id);
             bytes memory encodedRequest = abi.encode(
-                typehash,
+                typehashMintRequest,
                 mintrequest.to,
                 mintrequest.royaltyRecipient,
                 mintrequest.royaltyBps,
@@ -438,7 +438,7 @@ contract SignatureDropTest is BaseTest {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
             bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(address(deployer_signer));
+            vm.startPrank(address(deployerSigner));
             vm.warp(1000);
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
             vm.stopPrank();
@@ -449,7 +449,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing token balances; checking balance and owner of tokens after minting with signature.
      */
     function test_balances_mintWithSignature_checkBalanceAndOwner() public {
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
         ISignatureMintERC721.MintRequest memory mintrequest;
@@ -468,7 +468,7 @@ contract SignatureDropTest is BaseTest {
 
         {
             bytes memory encodedRequest = abi.encode(
-                typehash,
+                typehashMintRequest,
                 mintrequest.to,
                 mintrequest.royaltyRecipient,
                 mintrequest.royaltyBps,
@@ -486,17 +486,17 @@ contract SignatureDropTest is BaseTest {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
             bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(deployer_signer);
+            vm.startPrank(deployerSigner);
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
-            uint256 balance = sigdrop.balanceOf(address(deployer_signer));
+            uint256 balance = sigdrop.balanceOf(address(deployerSigner));
             assertEq(balance, 1);
 
             address owner = sigdrop.ownerOf(0);
-            assertEq(deployer_signer, owner);
+            assertEq(deployerSigner, owner);
 
             vm.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
             owner = sigdrop.ownerOf(1);
@@ -507,13 +507,13 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
     function mintWithSignature_priceAndCurrency(ISignatureMintERC721.MintRequest memory mintrequest) internal {
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
 
         {
             bytes memory encodedRequest = abi.encode(
-                typehash,
+                typehashMintRequest,
                 mintrequest.to,
                 mintrequest.royaltyRecipient,
                 mintrequest.royaltyBps,
@@ -531,7 +531,7 @@ contract SignatureDropTest is BaseTest {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
             bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(deployer_signer);
+            vm.startPrank(deployerSigner);
             vm.warp(mintrequest.validityStartTimestamp);
             erc20.approve(address(sigdrop), 1);
             sigdrop.mintWithSignature(mintrequest, signature);
@@ -543,7 +543,7 @@ contract SignatureDropTest is BaseTest {
             id = 1;
             mintrequest.uid = bytes32(id);
             bytes memory encodedRequest = abi.encode(
-                typehash,
+                typehashMintRequest,
                 mintrequest.to,
                 mintrequest.royaltyRecipient,
                 mintrequest.royaltyBps,
@@ -561,7 +561,7 @@ contract SignatureDropTest is BaseTest {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
             bytes memory signature = abi.encodePacked(r, s, v);
-            vm.startPrank(address(deployer_signer));
+            vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
             vm.stopPrank();
@@ -597,7 +597,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; check startId and count after setting claim conditions.
      */
     function test_state_claimCondition_startIdAndCount() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         uint256 currentStartId = 0;
         uint256 count = 0;
@@ -633,7 +633,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing state changes; check activeConditionId based on changes in block timestamp.
      */
     function test_state_claimCondition_startPhase() public {
-        vm.startPrank(deployer_signer);
+        vm.startPrank(deployerSigner);
 
         uint256 activeConditionId = 0;
 
@@ -692,9 +692,9 @@ contract SignatureDropTest is BaseTest {
         conditions[0].quantityLimitPerTransaction = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions, false, "");
 
         vm.prank(getActor(5), getActor(5));
@@ -722,7 +722,7 @@ contract SignatureDropTest is BaseTest {
         conditions[0].quantityLimitPerTransaction = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
-        vm.prank(deployer_signer);
+        vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
 
         vm.prank(deployer);
