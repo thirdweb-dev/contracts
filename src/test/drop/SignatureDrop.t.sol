@@ -186,7 +186,23 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.lazyMint(100, "", encryptedURI);
         vm.expectRevert("invalid index.");
-        sigdrop.reveal(2, "key");
+        sigdrop.reveal(1, "key");
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing revert condition; already revealed URI.
+     */
+    function test_revert_delayedReveal_alreadyRevealed() public {
+        vm.startPrank(deployer_signer);
+
+        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
+        sigdrop.lazyMint(100, "", encryptedURI);
+        sigdrop.reveal(0, "key");
+
+        vm.expectRevert("nothing to reveal.");
+        sigdrop.reveal(0, "key");
 
         vm.stopPrank();
     }
@@ -561,7 +577,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
-    
+
     /**
      *  note: Testing state changes; check startId and count after setting claim conditions.
      */
