@@ -9,9 +9,9 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-//  ==========  Internal imports    ==========
+import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 
-import "../eip/ERC721AUpgradeable.sol";
+//  ==========  Internal imports    ==========
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
