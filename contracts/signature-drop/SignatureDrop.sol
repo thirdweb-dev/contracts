@@ -237,6 +237,7 @@ contract SignatureDrop is
         super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
+    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
         external
         view

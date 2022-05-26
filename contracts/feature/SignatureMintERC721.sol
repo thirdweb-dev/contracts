@@ -19,7 +19,7 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
 
     constructor() EIP712("SignatureMintERC721", "1") {}
 
-    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
+    /// @dev Verifies that a mint request is signed by an authorized account.
     function verify(MintRequest calldata _req, bytes calldata _signature)
         public
         view
