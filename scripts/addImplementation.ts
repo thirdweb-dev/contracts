@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { TWFactory } from "typechain/TWFactory";
+import { TWFactory } from "typechain";
 
 async function main() {
 
