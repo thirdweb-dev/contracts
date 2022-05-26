@@ -10,10 +10,10 @@
 
 ## Methods
 
-### getNumOfTokenBatches
+### getBaseURICount
 
 ```solidity
-function getNumOfTokenBatches() external view returns (uint256)
+function getBaseURICount() external view returns (uint256)
 ```
 
 
@@ -27,10 +27,32 @@ function getNumOfTokenBatches() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### getBatchIdAtIndex
+
+```solidity
+function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
+```
+
+
+
+*Returns the id for the batch of tokens the given tokenId belongs to.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes data) external nonpayable
+function lazyMint(uint256 amount, string baseURIForTokens, bytes encryptedBaseURI) external nonpayable returns (uint256 batchId)
 ```
 
 
@@ -43,7 +65,13 @@ function lazyMint(uint256 amount, string baseURIForTokens, bytes data) external 
 |---|---|---|
 | amount | uint256 | undefined
 | baseURIForTokens | string | undefined
-| data | bytes | undefined
+| encryptedBaseURI | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| batchId | uint256 | undefined
 
 
 

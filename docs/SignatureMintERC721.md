@@ -13,7 +13,7 @@
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMintERC721.MintRequest req, bytes signature) external payable
+function mintWithSignature(ISignatureMintERC721.MintRequest req, bytes signature) external payable returns (address signer)
 ```
 
 Mints tokens according to the provided mint request.
@@ -27,6 +27,12 @@ Mints tokens according to the provided mint request.
 | req | ISignatureMintERC721.MintRequest | The payload / mint request.
 | signature | bytes | The signature produced by an account signing the mint request.
 
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined
+
 ### verify
 
 ```solidity
@@ -35,7 +41,7 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 
 
 
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
+*Verifies that a mint request is signed by an authorized account.*
 
 #### Parameters
 
@@ -58,7 +64,7 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 ### TokensMintedWithSignature
 
 ```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ISignatureMintERC721.MintRequest mintRequest)
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMintERC721.MintRequest mintRequest)
 ```
 
 
@@ -71,6 +77,7 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 |---|---|---|
 | signer `indexed` | address | undefined |
 | mintedTo `indexed` | address | undefined |
+| tokenIdMinted `indexed` | uint256 | undefined |
 | mintRequest  | ISignatureMintERC721.MintRequest | undefined |
 
 

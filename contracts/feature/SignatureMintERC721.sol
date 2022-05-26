@@ -11,7 +11,7 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
@@ -19,7 +19,7 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
 
     constructor() EIP712("SignatureMintERC721", "1") {}
 
-    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
+    /// @dev Verifies that a mint request is signed by an authorized account.
     function verify(MintRequest calldata _req, bytes calldata _signature)
         public
         view

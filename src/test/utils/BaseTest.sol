@@ -24,6 +24,8 @@ import "contracts/token/TokenERC721.sol";
 import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
+import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
+import { SigMint } from "contracts/signature-drop/SigMint.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { ContractDeployer } from "contracts/ContractDeployer.sol";
 import "contracts/mock/Mock.sol";
@@ -54,11 +56,17 @@ abstract contract BaseTest is DSTest, Test {
     uint128 public platformFeeBps = 500; // 5%
     uint256 public constant MAX_BPS = 10_000; // 100%
 
+    uint256 public privateKey = 1234;
+    address public signer;
+
     mapping(bytes32 => address) public contracts;
 
     function setUp() public virtual {
         /// setup main factory contracts. registry, fee, factory.
         vm.startPrank(factoryAdmin);
+
+        signer = vm.addr(privateKey);
+
         erc20 = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
@@ -78,6 +86,8 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new DropERC721(fee)));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
+        TWFactory(factory).addImplementation(address(new SignatureDrop()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
@@ -188,6 +198,25 @@ abstract contract BaseTest is DSTest, Test {
                     royaltyBps,
                     platformFeeBps,
                     platformFeeRecipient
+                )
+            )
+        );
+        deployContractProxy(
+            "SignatureDrop",
+            abi.encodeCall(
+                SignatureDrop.initialize,
+                (
+                    signer,
+                    NAME,
+                    SYMBOL,
+                    CONTRACT_URI,
+                    forwarders(),
+                    saleRecipient,
+                    royaltyRecipient,
+                    royaltyBps,
+                    platformFeeBps,
+                    platformFeeRecipient,
+                    address(new SigMint())
                 )
             )
         );
