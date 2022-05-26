@@ -59,6 +59,7 @@ abstract contract DelayedReveal is IDelayedReveal {
         }
     }
 
+    /// @dev Returns whether the relvant batch of NFTs is subject to a delayed reveal.
     function isEncryptedBatch(uint256 _batchId) public view returns (bool) {
         return encryptedBaseURI[_batchId].length > 0;
     }
