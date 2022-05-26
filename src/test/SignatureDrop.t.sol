@@ -8,11 +8,9 @@ import { ISignatureMintERC721 } from "contracts/feature/interface/ISignatureMint
 import "./utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "contracts/lib/Strings2.sol";
 
 contract SignatureDropTest is BaseTest {
     using StringsUpgradeable for uint256;
-    using Strings2 for bytes;
 
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
