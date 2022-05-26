@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "contracts/lib/Strings2.sol";
 
 contract SignatureDropTest is BaseTest {
-
     using StringsUpgradeable for uint256;
     using Strings2 for bytes;
 
@@ -71,7 +70,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
 
-        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
             string memory uri = sigdrop.tokenURI(i);
             console.log(uri);
             assertEq(uri, string(abi.encodePacked(baseURI, i.toString())));
@@ -96,7 +95,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
 
-        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
             string memory uri = sigdrop.tokenURI(1);
             assertEq(uri, string(abi.encodePacked(baseURI, "0")));
         }
@@ -150,7 +149,6 @@ contract SignatureDropTest is BaseTest {
      *  note: Fuzz testing state changes; lazy mint a batch of tokens with no encrypted base URI.
      */
     function test_fuzz_lazyMint_noEncryptedURI(uint256 x) public {
-
         vm.assume(x > 0);
 
         uint256 amountToLazyMint = x;
@@ -166,10 +164,10 @@ contract SignatureDropTest is BaseTest {
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
 
         string memory uri = sigdrop.tokenURI(0);
-        assertEq(uri, string(abi.encodePacked(baseURI, uint(0).toString())));
+        assertEq(uri, string(abi.encodePacked(baseURI, uint256(0).toString())));
 
-        uri = sigdrop.tokenURI(x-1);
-        assertEq(uri, string(abi.encodePacked(baseURI, uint(x-1).toString())));
+        uri = sigdrop.tokenURI(x - 1);
+        assertEq(uri, string(abi.encodePacked(baseURI, uint256(x - 1).toString())));
 
         /**
          *  note: this loop takes too long to run with fuzz tests.
@@ -204,7 +202,7 @@ contract SignatureDropTest is BaseTest {
         string memory uri = sigdrop.tokenURI(0);
         assertEq(uri, string(abi.encodePacked(baseURI, "0")));
 
-        uri = sigdrop.tokenURI(x-1);
+        uri = sigdrop.tokenURI(x - 1);
         assertEq(uri, string(abi.encodePacked(baseURI, "0")));
 
         /**
@@ -251,7 +249,7 @@ contract SignatureDropTest is BaseTest {
         bytes memory encryptedURI = sigdrop.encryptDecrypt(secretURI, key);
         sigdrop.lazyMint(amountToLazyMint, placeholderURI, encryptedURI);
 
-        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
             string memory uri = sigdrop.tokenURI(i);
             assertEq(uri, string(abi.encodePacked(placeholderURI, "0")));
         }
@@ -259,7 +257,7 @@ contract SignatureDropTest is BaseTest {
         string memory revealedURI = sigdrop.reveal(0, key);
         assertEq(revealedURI, string(secretURI));
 
-        for(uint256 i = 0; i < amountToLazyMint; i += 1) {
+        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
             string memory uri = sigdrop.tokenURI(i);
             assertEq(uri, string(abi.encodePacked(secretURI, i.toString())));
         }
@@ -382,7 +380,6 @@ contract SignatureDropTest is BaseTest {
 
         // Test with ERC20 currency
         {
-
             uint256 totalSupplyBefore = sigdrop.totalSupply();
 
             bytes memory encodedRequest = abi.encode(
@@ -648,7 +645,10 @@ contract SignatureDropTest is BaseTest {
             address owner = sigdrop.ownerOf(0);
             assertEq(deployerSigner, owner);
 
-            assertEq(currencyBalBefore - mintrequest.pricePerToken * mintrequest.quantity, erc20.balanceOf(deployerSigner));
+            assertEq(
+                currencyBalBefore - mintrequest.pricePerToken * mintrequest.quantity,
+                erc20.balanceOf(deployerSigner)
+            );
 
             vm.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
             owner = sigdrop.ownerOf(1);

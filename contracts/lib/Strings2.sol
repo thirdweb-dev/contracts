@@ -1,8 +1,6 @@
-
 pragma solidity ^0.8.0;
 
 library Strings2 {
-
     ///@dev converts bytes array to its ASCII hex string representation
     /// TODO: Definitely more efficient way to do this by processing multiple (16?) bytes at once
     /// but really a helper function for the tests, efficiency not key.
@@ -13,10 +11,10 @@ library Strings2 {
         hex_buffer[0] = "0";
         hex_buffer[1] = "x";
 
-        uint pos = 2;
+        uint256 pos = 2;
         uint256 length = input.length;
-        for (uint i = 0; i < length; ++i) {
-            uint _byte = uint8(input[i]);
+        for (uint256 i = 0; i < length; ++i) {
+            uint256 _byte = uint8(input[i]);
             hex_buffer[pos++] = symbols[_byte >> 4];
             hex_buffer[pos++] = symbols[_byte & 0xf];
         }
