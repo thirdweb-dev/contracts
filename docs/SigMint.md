@@ -1,4 +1,4 @@
-# SignatureMintERC721Upgradeable
+# SigMint
 
 
 
@@ -13,19 +13,19 @@
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMintERC721.MintRequest req, bytes signature) external payable returns (address signer)
+function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable returns (address signer)
 ```
 
-Mints tokens according to the provided mint request.
 
 
+*Claim lazy minted tokens via signature.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| req | ISignatureMintERC721.MintRequest | The payload / mint request.
-| signature | bytes | The signature produced by an account signing the mint request.
+| _req | ISignatureMintERC721.MintRequest | undefined
+| _signature | bytes | undefined
 
 #### Returns
 
@@ -41,7 +41,7 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 
 
 
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
+*Verifies that a mint request is signed by an authorized account.*
 
 #### Parameters
 

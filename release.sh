@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do

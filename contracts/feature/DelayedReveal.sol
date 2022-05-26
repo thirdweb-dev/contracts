@@ -5,7 +5,7 @@ import "./interface/IDelayedReveal.sol";
 
 abstract contract DelayedReveal is IDelayedReveal {
     /// @dev Mapping from id of a batch of tokens => to encrypted base URI for the respective batch of tokens.
-    mapping(uint256 => bytes) private encryptedBaseURI;
+    mapping(uint256 => bytes) public encryptedBaseURI;
 
     /// @dev Sets the encrypted baseURI for a batch of tokenIds.
     function _setEncryptedBaseURI(uint256 _batchId, bytes memory _encryptedBaseURI) internal {
@@ -13,11 +13,14 @@ abstract contract DelayedReveal is IDelayedReveal {
     }
 
     /// @dev Returns the decrypted i.e. revealed URI for a batch of tokens.
-    function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
+    function getRevealURI(uint256 _batchId, bytes calldata _key) public returns (string memory revealedURI) {
         bytes memory encryptedURI = encryptedBaseURI[_batchId];
         require(encryptedURI.length != 0, "nothing to reveal.");
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
+
+        // yash - added this, and removed view mutability
+        delete encryptedBaseURI[_batchId];
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
@@ -54,5 +57,10 @@ abstract contract DelayedReveal is IDelayedReveal {
                 mstore(add(result, add(i, 32)), chunk)
             }
         }
+    }
+
+    /// @dev Returns whether the relvant batch of NFTs is subject to a delayed reveal.
+    function isEncryptedBatch(uint256 _batchId) public view returns (bool) {
+        return encryptedBaseURI[_batchId].length > 0;
     }
 }

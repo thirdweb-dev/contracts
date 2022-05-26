@@ -17,6 +17,7 @@ remappings = [
   '@openzeppelin=node_modules/@openzeppelin/',
   '@std=lib/forge-std/src/',
   'contracts/=contracts/',
+  'erc721a-upgradeable/=node_modules/erc721a-upgradeable/',
 ]
 src = 'src'
 test = 'test'

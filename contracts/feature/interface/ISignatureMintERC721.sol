@@ -39,7 +39,12 @@ interface ISignatureMintERC721 {
     }
 
     /// @dev Emitted when tokens are minted.
-    event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
+    event TokensMintedWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        MintRequest mintRequest
+    );
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding
@@ -61,5 +66,8 @@ interface ISignatureMintERC721 {
      *  @param req The payload / mint request.
      *  @param signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable;
+    function mintWithSignature(MintRequest calldata req, bytes calldata signature)
+        external
+        payable
+        returns (address signer);
 }

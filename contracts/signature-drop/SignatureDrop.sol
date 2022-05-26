@@ -3,24 +3,17 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+
+import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../eip/ERC721AUpgradeable.sol";
-
-import "../interfaces/ITWFee.sol";
-import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/drop/IDropClaimCondition.sol";
-
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
-
 import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeType.sol";
 
 //  ==========  Features    ==========
 
@@ -32,8 +25,8 @@ import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
-import "../feature/SignatureMintERC721Upgradeable.sol";
-import "../feature/meta-tx/DropSinglePhase.sol";
+import "../feature/meta-tx/Drop.sol";
+import "../feature/interface/ISignatureMintERC721.sol";
 
 contract SignatureDrop is
     Initializable,
@@ -45,8 +38,7 @@ contract SignatureDrop is
     DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
-    DropSinglePhase,
-    SignatureMintERC721Upgradeable,
+    Drop,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -69,34 +61,28 @@ contract SignatureDrop is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee private immutable thirdwebFee;
-
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
+
+    /// @dev The address of the contract with signature minting logic.
+    address public sigMint;
 
     /*///////////////////////////////////////////////////////////////
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    event TokenLazyMinted(uint256 indexed startId, uint256 amount, string indexed baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
-    event TokensMinted(
-        address indexed minter,
-        address receiver,
-        uint256 indexed startTokenId,
-        uint256 amountMinted,
-        uint256 pricePerToken,
-        address indexed currency
+    event TokensMintedWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        ISignatureMintERC721.MintRequest mintRequest
     );
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
-
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -109,17 +95,22 @@ contract SignatureDrop is
         address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
-        address _platformFeeRecipient
+        address _platformFeeRecipient,
+        address _signatureMintLogic
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
-        __SignatureMintERC721_init();
+
+        // Revoked at the end of the function.
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         // Initialize this contract's state.
-        contractURI = _contractURI;
-        owner = _defaultAdmin;
+        sigMint = _signatureMintLogic;
+
+        setContractURI(_contractURI);
+        setOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -129,6 +120,8 @@ contract SignatureDrop is
         setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         setPrimarySaleRecipient(_saleRecipient);
+
+        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -151,7 +144,14 @@ contract SignatureDrop is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return string(abi.encodePacked(getBaseURI(_tokenId), _tokenId.toString()));
+        uint256 batchId = getBatchId(_tokenId);
+        string memory batchUri = getBaseURI(_tokenId);
+
+        if (isEncryptedBatch(batchId)) {
+            return string(abi.encodePacked(batchUri, "0"));
+        } else {
+            return string(abi.encodePacked(batchUri, _tokenId.toString()));
+        }
     }
 
     /// @dev See ERC 165
@@ -170,21 +170,17 @@ contract SignatureDrop is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _data
-    ) external onlyRole(MINTER_ROLE) {
-        (bytes memory encryptedBaseURI, uint256 expectedStartId) = abi.decode(_data, (bytes, uint256));
-
+        bytes calldata _encryptedBaseURI
+    ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
         uint256 startId = nextTokenIdToMint;
-        require(startId == expectedStartId, "Unexpected start Id");
 
-        uint256 batchId;
         (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
 
-        if (encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(batchId, encryptedBaseURI);
+        if (_encryptedBaseURI.length != 0) {
+            _setEncryptedBaseURI(batchId, _encryptedBaseURI);
         }
 
-        emit TokenLazyMinted(startId, _amount, _baseURIForTokens, encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -206,14 +202,16 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
-        require(_req.quantity > 0, "minting zero tokens");
+    function mintWithSignature(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        nonReentrant
+        returns (address signer)
+    {
+        signer = ISignatureMintERC721(sigMint).mintWithSignature(_req, _signature);
 
         uint256 tokenIdToMint = _currentIndex;
         require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
-
-        // Verify and process payload.
-        _processRequest(_req, _signature);
 
         // Get receiver of tokens.
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
@@ -224,7 +222,7 @@ contract SignatureDrop is
         // Mint tokens.
         _mint(receiver, _req.quantity);
 
-        emit TokensMinted(_msgSender(), _req.to, tokenIdToMint, _req.quantity, _req.pricePerToken, _req.currency);
+        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /// @dev Lets an account claim tokens.
@@ -237,6 +235,15 @@ contract SignatureDrop is
         bytes memory _data
     ) public payable override nonReentrant {
         super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
+    }
+
+    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
+    function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
+        external
+        view
+        returns (bool success, address signer)
+    {
+        return ISignatureMintERC721(sigMint).verify(_req, _signature);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -269,20 +276,17 @@ contract SignatureDrop is
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
             primarySaleRecipient(),
-            totalPrice - platformFees - twFee
+            totalPrice - platformFees
         );
     }
 
@@ -294,11 +298,6 @@ contract SignatureDrop is
     {
         startTokenId = _currentIndex;
         _mint(_to, _quantityBeingClaimed);
-    }
-
-    /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
-        return hasRole(MINTER_ROLE, _signer);
     }
 
     /// @dev Returns whether platform fee info can be set in the given execution context.
