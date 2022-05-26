@@ -5,10 +5,10 @@ import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ISignatureMintERC721 } from "contracts/feature/interface/ISignatureMintERC721.sol";
 
 // Test imports
-import "../utils/BaseTest.sol";
+import "./utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "../../../contracts/lib/Strings2.sol";
+import "contracts/lib/Strings2.sol";
 
 contract SignatureDropTest is BaseTest {
 
