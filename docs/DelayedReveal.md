@@ -86,7 +86,7 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 
 
 
-
+*Returns whether the relvant batch of NFTs is subject to a delayed reveal.*
 
 #### Parameters
 

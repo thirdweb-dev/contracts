@@ -610,7 +610,7 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 
 
 
-
+*Returns whether the relvant batch of NFTs is subject to a delayed reveal.*
 
 #### Parameters
 
@@ -1161,7 +1161,7 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 
 
 
-
+*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
 
 #### Parameters
 
