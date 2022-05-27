@@ -39,7 +39,7 @@ yarn-error.log*
 yalc.lock
 
 # Forge
-/lib
+#/lib
 /out
 
 #Build
