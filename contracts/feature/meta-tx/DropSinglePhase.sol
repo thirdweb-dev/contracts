@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/IDropSinglePhase.sol";
+import "../interface/IDrop.sol";
 import "../../lib/MerkleProof.sol";
 import "./ExecutionContext.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
+abstract contract DropSinglePhase is IDrop, ExecutionContext {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     /*///////////////////////////////////////////////////////////////
@@ -89,14 +89,14 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(claimCondition, _msgSender(), _receiver, _quantity, startTokenId);
+        emit TokensClaimed(uint256(conditionId), _msgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(
-        ClaimCondition calldata _condition,
+        ClaimCondition[] calldata _conditions,
         bool _resetClaimEligibility,
         bytes memory
     ) external override {
@@ -108,21 +108,21 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
             targetConditionId = keccak256(abi.encodePacked(msg.sender, block.number));
         }
 
-        require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
+        require(supplyClaimedAlready <= _conditions[0].maxClaimableSupply, "max supply claimed already");
 
         claimCondition = ClaimCondition({
             startTimestamp: block.timestamp,
-            maxClaimableSupply: _condition.maxClaimableSupply,
+            maxClaimableSupply: _conditions[0].maxClaimableSupply,
             supplyClaimed: supplyClaimedAlready,
-            quantityLimitPerTransaction: _condition.supplyClaimed,
-            waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
-            merkleRoot: _condition.merkleRoot,
-            pricePerToken: _condition.pricePerToken,
-            currency: _condition.currency
+            quantityLimitPerTransaction: _conditions[0].supplyClaimed,
+            waitTimeInSecondsBetweenClaims: _conditions[0].waitTimeInSecondsBetweenClaims,
+            merkleRoot: _conditions[0].merkleRoot,
+            pricePerToken: _conditions[0].pricePerToken,
+            currency: _conditions[0].currency
         });
         conditionId = targetConditionId;
 
-        emit ClaimConditionUpdated(_condition, _resetClaimEligibility);
+        emit ClaimConditionsUpdated(_conditions);
     }
 
     /// @dev Checks a request to claim NFTs against the active claim condition's criteria.

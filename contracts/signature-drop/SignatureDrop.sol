@@ -26,6 +26,7 @@ import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
 import "../feature/meta-tx/Drop.sol";
+import "../feature/meta-tx/DropSinglePhase.sol";
 import "../feature/interface/ISignatureMintERC721.sol";
 
 contract SignatureDrop is
@@ -38,7 +39,7 @@ contract SignatureDrop is
     DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
-    Drop,
+    DropSinglePhase,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,

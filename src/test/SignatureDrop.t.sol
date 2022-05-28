@@ -848,84 +848,84 @@ contract SignatureDropTest is BaseTest {
     /**
      *  note: Testing state changes; check startId and count after setting claim conditions.
      */
-    function test_state_claimCondition_startIdAndCount() public {
-        vm.startPrank(deployerSigner);
+    // function test_state_claimCondition_startIdAndCount() public {
+    //     vm.startPrank(deployerSigner);
 
-        uint256 currentStartId = 0;
-        uint256 count = 0;
+    //     uint256 currentStartId = 0;
+    //     uint256 count = 0;
 
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](2);
-        conditions[0].startTimestamp = 0;
-        conditions[0].maxClaimableSupply = 10;
-        conditions[1].startTimestamp = 1;
-        conditions[1].maxClaimableSupply = 10;
+    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](2);
+    //     conditions[0].startTimestamp = 0;
+    //     conditions[0].maxClaimableSupply = 10;
+    //     conditions[1].startTimestamp = 1;
+    //     conditions[1].maxClaimableSupply = 10;
 
-        sigdrop.setClaimConditions(conditions, false, "");
-        (currentStartId, count) = sigdrop.claimCondition();
-        assertEq(currentStartId, 0);
-        assertEq(count, 2);
+    //     sigdrop.setClaimConditions(conditions, false, "");
+    //     (currentStartId, count) = sigdrop.claimCondition();
+    //     assertEq(currentStartId, 0);
+    //     assertEq(count, 2);
 
-        sigdrop.setClaimConditions(conditions, false, "");
-        (currentStartId, count) = sigdrop.claimCondition();
-        assertEq(currentStartId, 0);
-        assertEq(count, 2);
+    //     sigdrop.setClaimConditions(conditions, false, "");
+    //     (currentStartId, count) = sigdrop.claimCondition();
+    //     assertEq(currentStartId, 0);
+    //     assertEq(count, 2);
 
-        sigdrop.setClaimConditions(conditions, true, "");
-        (currentStartId, count) = sigdrop.claimCondition();
-        assertEq(currentStartId, 2);
-        assertEq(count, 2);
+    //     sigdrop.setClaimConditions(conditions, true, "");
+    //     (currentStartId, count) = sigdrop.claimCondition();
+    //     assertEq(currentStartId, 2);
+    //     assertEq(count, 2);
 
-        sigdrop.setClaimConditions(conditions, true, "");
-        (currentStartId, count) = sigdrop.claimCondition();
-        assertEq(currentStartId, 4);
-        assertEq(count, 2);
-    }
+    //     sigdrop.setClaimConditions(conditions, true, "");
+    //     (currentStartId, count) = sigdrop.claimCondition();
+    //     assertEq(currentStartId, 4);
+    //     assertEq(count, 2);
+    // }
 
     /**
      *  note: Testing state changes; check activeConditionId based on changes in block timestamp.
      */
-    function test_state_claimCondition_startPhase() public {
-        vm.startPrank(deployerSigner);
+    // function test_state_claimCondition_startPhase() public {
+    //     vm.startPrank(deployerSigner);
 
-        uint256 activeConditionId = 0;
+    //     uint256 activeConditionId = 0;
 
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](3);
-        conditions[0].startTimestamp = 10;
-        conditions[0].maxClaimableSupply = 11;
-        conditions[0].quantityLimitPerTransaction = 12;
-        conditions[0].waitTimeInSecondsBetweenClaims = 13;
-        conditions[1].startTimestamp = 20;
-        conditions[1].maxClaimableSupply = 21;
-        conditions[1].quantityLimitPerTransaction = 22;
-        conditions[1].waitTimeInSecondsBetweenClaims = 23;
-        conditions[2].startTimestamp = 30;
-        conditions[2].maxClaimableSupply = 31;
-        conditions[2].quantityLimitPerTransaction = 32;
-        conditions[2].waitTimeInSecondsBetweenClaims = 33;
-        sigdrop.setClaimConditions(conditions, false, "");
+    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](3);
+    //     conditions[0].startTimestamp = 10;
+    //     conditions[0].maxClaimableSupply = 11;
+    //     conditions[0].quantityLimitPerTransaction = 12;
+    //     conditions[0].waitTimeInSecondsBetweenClaims = 13;
+    //     conditions[1].startTimestamp = 20;
+    //     conditions[1].maxClaimableSupply = 21;
+    //     conditions[1].quantityLimitPerTransaction = 22;
+    //     conditions[1].waitTimeInSecondsBetweenClaims = 23;
+    //     conditions[2].startTimestamp = 30;
+    //     conditions[2].maxClaimableSupply = 31;
+    //     conditions[2].quantityLimitPerTransaction = 32;
+    //     conditions[2].waitTimeInSecondsBetweenClaims = 33;
+    //     sigdrop.setClaimConditions(conditions, false, "");
 
-        vm.expectRevert("!CONDITION.");
-        sigdrop.getActiveClaimConditionId();
+    //     vm.expectRevert("!CONDITION.");
+    //     sigdrop.getActiveClaimConditionId();
 
-        vm.warp(10);
-        activeConditionId = sigdrop.getActiveClaimConditionId();
-        assertEq(activeConditionId, 0);
+    //     vm.warp(10);
+    //     activeConditionId = sigdrop.getActiveClaimConditionId();
+    //     assertEq(activeConditionId, 0);
 
-        vm.warp(20);
-        activeConditionId = sigdrop.getActiveClaimConditionId();
-        assertEq(activeConditionId, 1);
+    //     vm.warp(20);
+    //     activeConditionId = sigdrop.getActiveClaimConditionId();
+    //     assertEq(activeConditionId, 1);
 
-        vm.warp(30);
-        activeConditionId = sigdrop.getActiveClaimConditionId();
-        assertEq(activeConditionId, 2);
-        // assertEq(sigdrop.getClaimConditionById(activeConditionId).startTimestamp, 30);
-        // assertEq(sigdrop.getClaimConditionById(activeConditionId).maxClaimableSupply, 31);
-        // assertEq(sigdrop.getClaimConditionById(activeConditionId).quantityLimitPerTransaction, 32);
-        // assertEq(sigdrop.getClaimConditionById(activeConditionId).waitTimeInSecondsBetweenClaims, 33);
+    //     vm.warp(30);
+    //     activeConditionId = sigdrop.getActiveClaimConditionId();
+    //     assertEq(activeConditionId, 2);
+    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).startTimestamp, 30);
+    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).maxClaimableSupply, 31);
+    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).quantityLimitPerTransaction, 32);
+    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).waitTimeInSecondsBetweenClaims, 33);
 
-        vm.warp(40);
-        assertEq(sigdrop.getActiveClaimConditionId(), 2);
-    }
+    //     vm.warp(40);
+    //     assertEq(sigdrop.getActiveClaimConditionId(), 2);
+    // }
 
     /**
      *  note: Testing state changes; reset eligibility of claim conditions and claiming again for same condition id.
