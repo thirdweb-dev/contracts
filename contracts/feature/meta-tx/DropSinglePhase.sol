@@ -100,6 +100,8 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
         bool _resetClaimEligibility,
         bytes memory
     ) external override {
+        require(_canSetClaimConditions(), "Not authorized");
+
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
 
@@ -218,4 +220,6 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
         internal
         virtual
         returns (uint256 startTokenId);
+
+    function _canSetClaimConditions() internal virtual returns (bool);
 }

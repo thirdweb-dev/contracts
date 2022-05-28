@@ -93,6 +93,8 @@ abstract contract Drop is IDrop, ExecutionContext {
         bool _resetClaimEligibility,
         bytes memory
     ) external virtual override {
+        require(_canSetClaimConditions(), "Not authorized");
+        
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
@@ -286,4 +288,6 @@ abstract contract Drop is IDrop, ExecutionContext {
         internal
         virtual
         returns (uint256 startTokenId);
+
+    function _canSetClaimConditions() internal virtual returns (bool);
 }

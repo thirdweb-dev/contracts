@@ -326,6 +326,11 @@ contract SignatureDrop is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    /// @dev Returns whether platform fee info can be set in the given execution context.
+    function _canSetClaimConditions() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
