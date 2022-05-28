@@ -116,7 +116,7 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
             startTimestamp: block.timestamp,
             maxClaimableSupply: _conditions[0].maxClaimableSupply,
             supplyClaimed: supplyClaimedAlready,
-            quantityLimitPerTransaction: _conditions[0].supplyClaimed,
+            quantityLimitPerTransaction: _conditions[0].quantityLimitPerTransaction,
             waitTimeInSecondsBetweenClaims: _conditions[0].waitTimeInSecondsBetweenClaims,
             merkleRoot: _conditions[0].merkleRoot,
             pricePerToken: _conditions[0].pricePerToken,
@@ -153,12 +153,14 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
             "exceed max claimable supply."
         );
 
-        uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        require(
-            timestampOfLastClaim == 0 ||
-                block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
+        // uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
+        // require(
+        //     timestampOfLastClaim == 0 ||
+        //         block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
+        //     "cannot claim."
+        // );
+        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(conditionId, _claimer);
+        require(lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -181,6 +183,25 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
                 _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
                 "invalid quantity proof."
             );
+        }
+    }
+
+    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
+    function getClaimTimestamp(bytes32 _conditionId, address _claimer)
+        public
+        view
+        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+    {
+        lastClaimedAt = lastClaimTimestamp[_conditionId][_claimer];
+
+        unchecked {
+            nextValidClaimTimestamp =
+                lastClaimedAt +
+                claimCondition.waitTimeInSecondsBetweenClaims;
+
+            if (nextValidClaimTimestamp < lastClaimedAt) {
+                nextValidClaimTimestamp = type(uint256).max;
+            }
         }
     }
 

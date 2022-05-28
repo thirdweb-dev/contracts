@@ -106,7 +106,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 currentStartId, uint256 count)
+function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
 ```
 
 
@@ -118,8 +118,14 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| currentStartId | uint256 | undefined
-| count | uint256 | undefined
+| startTimestamp | uint256 | undefined
+| maxClaimableSupply | uint256 | undefined
+| supplyClaimed | uint256 | undefined
+| quantityLimitPerTransaction | uint256 | undefined
+| waitTimeInSecondsBetweenClaims | uint256 | undefined
+| merkleRoot | bytes32 | undefined
+| pricePerToken | uint256 | undefined
+| currency | address | undefined
 
 ### contractType
 
@@ -217,23 +223,6 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 |---|---|---|
 | _0 | bytes | undefined
 
-### getActiveClaimConditionId
-
-```solidity
-function getActiveClaimConditionId() external view returns (uint256)
-```
-
-
-
-*At any given moment, returns the uid for the active claim condition.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### getApproved
 
 ```solidity
@@ -294,52 +283,6 @@ function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
-
-### getClaimConditionById
-
-```solidity
-function getClaimConditionById(uint256 _conditionId) external view returns (struct IClaimCondition.ClaimCondition condition)
-```
-
-
-
-*Returns the claim condition at the given uid.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| condition | IClaimCondition.ClaimCondition | undefined
-
-### getClaimTimestamp
-
-```solidity
-function getClaimTimestamp(uint256 _conditionId, address _claimer) external view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-```
-
-
-
-*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| lastClaimTimestamp | uint256 | undefined
-| nextValidClaimTimestamp | uint256 | undefined
 
 ### getDefaultRoyaltyInfo
 
@@ -1180,7 +1123,7 @@ function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) externa
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
 ```
 
 
@@ -1191,7 +1134,6 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
 | _currency | address | undefined
@@ -1201,7 +1143,7 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, IDrop.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDrop.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
@@ -1212,7 +1154,6 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
 | _allowlistProof | IDrop.AllowlistProof | undefined

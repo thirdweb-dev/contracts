@@ -947,13 +947,13 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
 
-        vm.prank(deployer);
+        vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions, false, "");
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        vm.prank(deployer);
+        vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions, true, "");
 
         vm.prank(getActor(5), getActor(5));
