@@ -3,7 +3,6 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
@@ -40,7 +39,6 @@ contract SignatureDrop is
     PermissionsEnumerable,
     DropSinglePhase,
     SignatureMintERC721Upgradeable,
-    ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC721AUpgradeable
@@ -90,7 +88,6 @@ contract SignatureDrop is
         address _platformFeeRecipient
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
-        __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
         __SignatureMintERC721_init();
@@ -194,7 +191,6 @@ contract SignatureDrop is
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
-        nonReentrant
         returns (address signer)
     {
         require(_req.quantity > 0, "minting zero tokens");
@@ -215,18 +211,6 @@ contract SignatureDrop is
         _mint(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
-    }
-
-    /// @dev Lets an account claim tokens.
-    function claim(
-        address _receiver,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        AllowlistProof calldata _allowlistProof,
-        bytes memory _data
-    ) public payable override nonReentrant {
-        super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /*///////////////////////////////////////////////////////////////
