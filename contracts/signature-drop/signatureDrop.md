@@ -8,7 +8,7 @@ The document is written for technical and non-technical readers. To ask further 
 
 ## Background
 
-The thirdweb [`Drop`](https://portal.thirdweb.com/contracts/design/Drop) and [signature minting]([signature minting](https://portal.thirdweb.com/contracts/design/SignatureMint)) are distribution mechanisms for tokens. 
+The thirdweb [`Drop`](https://portal.thirdweb.com/contracts/design/Drop) and [signature minting](https://portal.thirdweb.com/contracts/design/SignatureMint) are distribution mechanisms for tokens. 
 
 The `Drop` contracts are meant to be used when the goal of the contract creator is for an audience to come in and claim tokens within certain restrictions e.g. — ‘only addresses in an allowlist can mint tokens’, or ‘minters must pay **x** amount of price in **y** currency to mint’, etc.
 
@@ -27,7 +27,8 @@ The contract creator 'lazy mints' i.e. defines the content for a batch of NFTs (
 The `SignatureDrop` contract supports both distribution mechanisms - of drop and signature minting - in the same contract. The following is an end-to-end flow, from the contract admin actions, to an end user wallet's actions when minting tokens:
 
 - A contract admin (particularly, a wallet with `MINTER_ROLE`) 'lazy mints' i.e. defines the content for a batch of NFTs. This batch of NFTs can optionally be a batch of [delayed-reveal](https://blog.thirdweb.com/delayed-reveal-nfts) NFTs.
-- A contract admin (particularly, a wallet with `DEFAULT_ADMIN_ROLE`) sets a claim phase, which defines restrictions around minting NFTs from the lazy minted batch of NFTs. **Note:** unlike the `NFT Drop` or `Edition Drop` contracts, where the contract admin can set a series of claim phases at once, the `SignatureDrop` contract lets the contract admin set only *one* claim phase at a time.
+- A contract admin (particularly, a wallet with `DEFAULT_ADMIN_ROLE`) sets a claim phase, which defines restrictions around minting NFTs from the lazy minted batch of NFTs. 
+  - **Note:** unlike the `NFT Drop` or `Edition Drop` contracts, where the contract admin can set a series of claim phases at once, the `SignatureDrop` contract lets the contract admin set only *one* claim phase at a time.
 - A wallet claims tokens from the batch of lazy minted tokens in one of two ways:
   - claiming tokens under the restrictions defined in the claim phase, as in `Drop`.
   - claiming tokens via a signed payload from a contract admin, as in 'signature minting'.
@@ -120,7 +121,7 @@ function mintWithSignature(
 | _req | ISignatureMintERC721.MintRequest | Mint request in the format specified above. |
 | _signature | bytes | Contact owner’s signature for the mint request. |
 
-### Setting claim conditions and regular claiming of tokens
+### Setting claim conditions
 
 A contract admin (i.e. a holder of `DEFAULT_ADMIN_ROLE`) can set a *single* claim condition; this defines restrictions around claiming from the batch of lazy minted tokens. An active claim condition can be completely overwritten, or updated, by the contract admin. At any moment, there is only one active claim condition.
 
@@ -169,6 +170,24 @@ Per wallet restrictions related to the claim condition are stored as follows:
 
 **Note:** if a claim condition has an allowlist, a wallet can only use their spot in the condition's allowlist *once*. Allowlists can optionally specify the max amount of tokens each wallet in the allowlist can claim. A wallet in such an allowlist, too, can use their allowlist spot only *once*, regardless of the number of tokens they end up claiming.
 
+A contract admin sets claim conditions by calling the following function:
+```solidity
+/// @dev Lets a contract admin set claim conditions.
+function setClaimConditions(
+    ClaimCondition calldata _condition,
+    bool _resetClaimEligibility,
+    bytes memory
+) external override;
+```
+| Parameter | Type | Description |
+| --- | --- | --- |
+| _condition | ClaimCondition | Defines restrictions around claiming lazy minted tokens. |
+| resetClaimEligibility | bool | Whether to reset limitLastClaimTimestamp and usedAllowlistSpot values when setting a claim conditions. |
+
+You can read into the technical details of setting claim conditions in the [`Drop` design document](https://portal.thirdweb.com/contracts/design/Drop#setting-claim-conditions).
+
+
+### Claiming tokens via `Drop`
 An account can claim the tokens by calling the following function:
 ```solidity
 function claim(
