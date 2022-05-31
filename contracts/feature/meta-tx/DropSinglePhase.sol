@@ -153,12 +153,6 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
             "exceed max claimable supply."
         );
 
-        // uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        // require(
-        //     timestampOfLastClaim == 0 ||
-        //         block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-        //     "cannot claim."
-        // );
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(conditionId, _claimer);
         require(lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
