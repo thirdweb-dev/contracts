@@ -182,7 +182,7 @@ function setClaimConditions(
 | Parameter | Type | Description |
 | --- | --- | --- |
 | _condition | ClaimCondition | Defines restrictions around claiming lazy minted tokens. |
-| resetClaimEligibility | bool | Whether to reset limitLastClaimTimestamp and usedAllowlistSpot values when setting a claim conditions. |
+| resetClaimEligibility | bool | Whether to reset lastClaimTimestamp and usedAllowlistSpot values when setting a claim conditions. |
 
 You can read into the technical details of setting claim conditions in the [`Drop` design document](https://portal.thirdweb.com/contracts/design/Drop#setting-claim-conditions).
 
