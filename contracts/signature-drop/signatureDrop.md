@@ -2,36 +2,43 @@
 
 This is a live document that explains what the [thirdweb](https://thirdweb.com/) `SignatureDrop` smart contract is, how it works and can be used, and why it is designed the way it is.
 
-The document is written for technical and non-technical readers. To ask further questions about thirdweb’s `SignatureDrop` contract, please join the [thirdweb discord](https://discord.gg/thirdweb) or create a github issue.
+The document is written for technical and non-technical readers. To ask further questions about thirdweb’s `SignatureDrop` contract, please join the [thirdweb discord](https://discord.gg/thirdweb) or create a [github issue](https://github.com/thirdweb-dev/contracts/issues).
 
 ---
 
 ## Background
 
-The thirdweb [`Drop`](https://portal.thirdweb.com/contracts/design/Drop) contracts are distribution mechanisms for tokens. 
+The thirdweb [`Drop`](https://portal.thirdweb.com/contracts/design/Drop) and [signature minting]([signature minting](https://portal.thirdweb.com/contracts/design/SignatureMint)) are distribution mechanisms for tokens. 
 
 The `Drop` contracts are meant to be used when the goal of the contract creator is for an audience to come in and claim tokens within certain restrictions e.g. — ‘only addresses in an allowlist can mint tokens’, or ‘minters must pay **x** amount of price in **y** currency to mint’, etc.
 
-The `Drop` contracts let the contract creator establish phases (periods of time), where each phase can specify multiple such restrictions on the minting of tokens during that period of time. We refer to such a phase as a ‘claim condition’.
+Built-in contracts that implement [signature minting](https://portal.thirdweb.com/contracts/design/SignatureMint) are meant to be used when the restrictions around a wallet's minting tokens are not pre-defined, like in `Drop`. With signature minting, a contract creator can set custom restrictions around a token's minting, such as a price, at the very time that a wallet wants to mint tokens.
 
-`SignatureDrop` adds on to the functionality by allowing the audience to claim tokens using a mint-request pre-signed by the contract creator.
+The `SignatureDrop` contract supports both distribution mechanisms - of drop and signature minting - in the same contract.
 
-### How the `SignatureDrop` product *should* work
+The contract creator 'lazy mints' i.e. defines the content for a batch of NFTs (yet un-minted). An NFT from this batch is distributed to a wallet in one of two ways:
+1. claiming tokens under the restrictions defined in the time's active claim phase, as in `Drop`.
+2. claiming tokens via a signed payload from a contract admin, as in 'signature minting'.
+
+### How `SignatureDrop` works
 
 ![signature-drop-diag.png](/assets/signature-drop-diag.png)
 
-### Core parts of the `SignatureDrop` product
+The `SignatureDrop` contract supports both distribution mechanisms - of drop and signature minting - in the same contract. The following is an end-to-end flow, from the contract admin actions, to an end user wallet's actions when minting tokens:
 
-- An authorized account should be able to batch upload NFT metadata, and set whether the base URI is encrypted or not.
-- An authorized account should be able to authorize an external party to claim tokens on their contract using a signed mint-request.
-- An account with the admin role should be able to set claim conditions
-- Allowlisted accounts should be able to claim tokens within a particular claim condition when active.
+- A contract admin (particularly, a wallet with `MINTER_ROLE`) 'lazy mints' i.e. defines the content for a batch of NFTs. This batch of NFTs can optionally be a batch of [delayed-reveal](https://blog.thirdweb.com/delayed-reveal-nfts) NFTs.
+- A contract admin (particularly, a wallet with `DEFAULT_ADMIN_ROLE`) sets a claim phase, which defines restrictions around minting NFTs from the lazy minted batch of NFTs. **Note:** unlike the `NFT Drop` or `Edition Drop` contracts, where the contract admin can set a series of claim phases at once, the `SignatureDrop` contract lets the contract admin set only *one* claim phase at a time.
+- A wallet claims tokens from the batch of lazy minted tokens in one of two ways:
+  - claiming tokens under the restrictions defined in the claim phase, as in `Drop`.
+  - claiming tokens via a signed payload from a contract admin, as in 'signature minting'.
 
-### Why we’re building `SignatureDrop`
+### Use cases for `SignatureDrop`
 
 We built our `Drop` contracts for the following [reason](https://portal.thirdweb.com/contracts/design/Drop#why-were-building-drop). The limitation of our `Drop` contracts is that all wallets in an audience attempting to claim tokens are subject to the same restrictions in the single, active claim phase at any moment.
 
 In the `SignatureDrop` contract, a wallet can now claim tokens [via a signature](https://portal.thirdweb.com/contracts/design/SignatureMint#background) from an authorized wallet, from the same pool of lazy minted tokens which can be claimed via the `Drop` mechanism. This means a contract owner can now set custom restrictions for a wallet to claim tokens, that may be different from the active claim phase at the time.
+
+An example of using this added feature of the `SignatureDrop` contract is when you want to maintain an allowlist off-chain i.e. not in the claim phase details, which are stored on-chain, and difficult to update once set. The contract's claim phase can define a common set of restrictions that any wallet not in your allowlist will mint tokens under. And using [signature minting](https://portal.thirdweb.com/contracts/design/SignatureMint), you can apply custom restrictions around minting, such as a price, currency and so on, on a per wallet basis, for wallets in your off-chain allowlist.
 
 ## Technical Details
 
@@ -41,7 +48,7 @@ A contract admin can lazy mint tokens, and establish phases for an audience to c
 
 ### Batch upload of NFTs metadata: LazyMint
 
-The contract creator or an address with MINTER_ROLE mints *n* NFTs, by providing base URI for the tokens or an encrypted URI.
+The contract creator or an address with `MINTER_ROLE` mints *n* NFTs, by providing base URI for the tokens or an encrypted URI.
 ```solidity
 function lazyMint(
 	uint256 _amount,
@@ -57,7 +64,7 @@ function lazyMint(
 
 ### Delayed reveal
 
-An account with MINTER_ROLE can reveal the URI for a batch of ‘delayed-reveal’ NFTs. The URI can be revealed by calling the following function:
+An account with `MINTER_ROLE` can reveal the URI for a batch of ‘delayed-reveal’ NFTs. The URI can be revealed by calling the following function:
 ```solidity
 function reveal(uint256 _index, bytes calldata _key)
 	external
@@ -71,7 +78,7 @@ function reveal(uint256 _index, bytes calldata _key)
 
 ### Claiming tokens via signature
 
-An account with MINTER_ROLE signs the mint request for a user. The mint request is then submitted for claiming the tokens. The mint request is specified in the following format:
+An account with `MINTER_ROLE` signs the mint request for a user. The mint request is then submitted for claiming the tokens. The mint request is specified in the following format:
 ```solidity
 struct MintRequest {
 	address to;
@@ -115,7 +122,7 @@ function mintWithSignature(
 
 ### Setting claim conditions and regular claiming of tokens
 
-A contract admin (i.e. a holder of `DEFAULT_ADMIN_ROLE`) can set a series of claim conditions, ordered by their respective `startTimestamp`. A claim condition defines criteria under which accounts can mint tokens. Claim conditions can be overwritten, or added to, by the contract admin. At any moment, there is only one active claim condition.
+A contract admin (i.e. a holder of `DEFAULT_ADMIN_ROLE`) can set a *single* claim condition; this defines restrictions around claiming from the batch of lazy minted tokens. An active claim condition can be completely overwritten, or updated, by the contract admin. At any moment, there is only one active claim condition.
 
 A claim condition is specified in the following format:
 ```solidity
@@ -141,23 +148,26 @@ struct ClaimCondition {
 | pricePerToken | uint256 | The price required to pay per token claimed. |
 | currency | address | The currency in which the pricePerToken must be paid. |
 
-The set of all claim conditions is stored in the following format:
+Per wallet restrictions related to the claim condition are stored as follows:
 ```solidity
-struct ClaimConditionList {
-  uint256 currentStartId;
-  uint256 count;
-  mapping(uint256 => ClaimCondition) conditions;
-  mapping(uint256 => mapping(address => uint256)) lastClaimTimestamp;
-  mapping(uint256 => BitMapsUpgradeable.BitMap) usedAllowlistSpot;
-}
+/**
+  *  @dev Map from an account and uid for a claim condition, to the last timestamp
+  *       at which the account claimed tokens under that claim condition.
+  */
+  mapping(bytes32 => mapping(address => uint256)) private lastClaimTimestamp;
+
+/**
+  *  @dev Map from a claim condition uid to whether an address in an allowlist
+  *       has already claimed tokens i.e. used their place in the allowlist.
+  */
+  mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
 ```
 | Parameters | Type | Description |
 | --- | --- | --- |
-| currentStartId | uint256 | The uid for the first claim condition amongst the current set of claim conditions. The uid for each next claim condition is one more than the previous claim condition's uid. |
-| count | uint256 | The total number of phases / claim conditions in the list of claim conditions. |
-| conditions | mapping(uint256 => ClaimCondition) | The claim conditions at a given uid. Claim conditions are ordered in an ascending order by their startTimestamp. |
-| lastClaimTimestamp | mapping(uint256 => mapping(address => uint256)) | Map from an account and uid for a claim condition, to the last timestamp at which the account claimed tokens under that claim condition. |
-| usedAllowlistSpot | mapping(uint256 => BitMapsUpgradeable.BitMap) | Map from a claim condition uid to whether an address in an allowlist has already claimed tokens i.e. used their place in the allowlist. |
+| lastClaimTimestamp | mapping(bytes32 => mapping(address => uint256)) | Map from an account and uid for a claim condition, to the last timestamp at which the account claimed tokens under that claim condition. |
+| usedAllowlistSpot | mapping(bytes32 => BitMapsUpgradeable.BitMap) | Map from a uid for a claim condition to whether an address in an allowlist has already claimed tokens i.e. used their place in the allowlist. |
+
+**Note:** if a claim condition has an allowlist, a wallet can only use their spot in the condition's allowlist *once*. Allowlists can optionally specify the max amount of tokens each wallet in the allowlist can claim. A wallet in such an allowlist, too, can use their allowlist spot only *once*, regardless of the number of tokens they end up claiming.
 
 An account can claim the tokens by calling the following function:
 ```solidity
@@ -183,7 +193,7 @@ function claim(
 
 | Role name | Type (Switch / !Switch) | Purpose |
 | -- | -- | -- |
-| TRANSFER_ROLE | Switch | Only token transfers to or from role holders are allowed. |
+| TRANSFER_ROLE | Switch | Only token transfers to or from role holders are allowed. Minting and burning are not affected. |
 | MINTER_ROLE | !Switch | Only MINTER_ROLE holders can sign off on MintRequests and lazy mint tokens. |
 
 What does **Type (Switch / !Switch)** mean?
