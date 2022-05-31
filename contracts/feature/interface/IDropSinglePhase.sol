@@ -10,11 +10,11 @@ interface IDropSinglePhase is IClaimCondition {
     }
 
     event TokensClaimed(
-        ClaimCondition condition,
+        uint256 indexed claimConditionIndex,
         address indexed claimer,
         address indexed receiver,
-        uint256 quantityClaimed,
-        uint256 indexed aux
+        uint256 startTokenId,
+        uint256 quantityClaimed
     );
 
     event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);

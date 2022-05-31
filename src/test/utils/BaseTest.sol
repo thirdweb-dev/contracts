@@ -25,7 +25,6 @@ import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
-import { SigMint } from "contracts/signature-drop/SigMint.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { ContractDeployer } from "contracts/ContractDeployer.sol";
 import "contracts/mock/Mock.sol";
@@ -215,8 +214,7 @@ abstract contract BaseTest is DSTest, Test {
                     royaltyRecipient,
                     royaltyBps,
                     platformFeeBps,
-                    platformFeeRecipient,
-                    address(new SigMint())
+                    platformFeeRecipient
                 )
             )
         );

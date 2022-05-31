@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/IDrop.sol";
+import "../interface/IDropSinglePhase.sol";
 import "../../lib/MerkleProof.sol";
 import "./ExecutionContext.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-abstract contract DropSinglePhase is IDrop, ExecutionContext {
+abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     /*///////////////////////////////////////////////////////////////
@@ -96,7 +96,7 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
 
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(
-        ClaimCondition[] calldata _conditions,
+        ClaimCondition calldata _condition,
         bool _resetClaimEligibility,
         bytes memory
     ) external override {
@@ -110,21 +110,21 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
             targetConditionId = keccak256(abi.encodePacked(msg.sender, block.number));
         }
 
-        require(supplyClaimedAlready <= _conditions[0].maxClaimableSupply, "max supply claimed already");
+        require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
 
         claimCondition = ClaimCondition({
-            startTimestamp: block.timestamp,
-            maxClaimableSupply: _conditions[0].maxClaimableSupply,
+            startTimestamp: _condition.startTimestamp,
+            maxClaimableSupply: _condition.maxClaimableSupply,
             supplyClaimed: supplyClaimedAlready,
-            quantityLimitPerTransaction: _conditions[0].quantityLimitPerTransaction,
-            waitTimeInSecondsBetweenClaims: _conditions[0].waitTimeInSecondsBetweenClaims,
-            merkleRoot: _conditions[0].merkleRoot,
-            pricePerToken: _conditions[0].pricePerToken,
-            currency: _conditions[0].currency
+            quantityLimitPerTransaction: _condition.quantityLimitPerTransaction,
+            waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
+            merkleRoot: _condition.merkleRoot,
+            pricePerToken: _condition.pricePerToken,
+            currency: _condition.currency
         });
         conditionId = targetConditionId;
 
-        emit ClaimConditionsUpdated(_conditions);
+        emit ClaimConditionUpdated(_condition, _resetClaimEligibility);
     }
 
     /// @dev Checks a request to claim NFTs against the active claim condition's criteria.
@@ -184,6 +184,20 @@ abstract contract DropSinglePhase is IDrop, ExecutionContext {
                 "invalid quantity proof."
             );
         }
+    }
+
+    /// @dev At any given moment, returns the uid for the active claim condition.
+    function getActiveClaimConditionId() public view returns (uint256) {
+        return uint256(conditionId);
+    }
+
+    /// @dev Returns the claim condition at the given uid.
+    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+        if(_conditionId == uint256(conditionId)) {
+            return claimCondition;
+        }
+
+        revert ("Condition doesn't exist");
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
-import { ISignatureMintERC721 } from "contracts/feature/interface/ISignatureMintERC721.sol";
 
 // Test imports
 import "./utils/BaseTest.sol";
@@ -18,7 +17,7 @@ contract SignatureDropTest is BaseTest {
         address indexed signer,
         address indexed mintedTo,
         uint256 indexed tokenIdMinted,
-        ISignatureMintERC721.MintRequest mintRequest
+        SignatureDrop.MintRequest mintRequest
     );
 
     SignatureDrop public sigdrop;
@@ -26,7 +25,7 @@ contract SignatureDropTest is BaseTest {
     bytes32 internal typehashMintRequest;
     bytes32 internal nameHash;
     bytes32 internal versionHash;
-    bytes32 internal typehasEip712;
+    bytes32 internal typehashEip712;
     bytes32 internal domainSeparator;
 
     using stdStorage for StdStorage;
@@ -44,8 +43,8 @@ contract SignatureDropTest is BaseTest {
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
-        typehasEip712 = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-        domainSeparator = keccak256(abi.encode(typehasEip712, nameHash, versionHash, block.chainid, sigdrop.sigMint()));
+        typehashEip712 = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop)));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -362,7 +361,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
-        ISignatureMintERC721.MintRequest memory mintrequest;
+        SignatureDrop.MintRequest memory mintrequest;
 
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
@@ -453,7 +452,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
 
-        ISignatureMintERC721.MintRequest memory mintrequest;
+        SignatureDrop.MintRequest memory mintrequest;
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -502,7 +501,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
 
-        ISignatureMintERC721.MintRequest memory mintrequest;
+        SignatureDrop.MintRequest memory mintrequest;
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -546,7 +545,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
-        ISignatureMintERC721.MintRequest memory mintrequest;
+        SignatureDrop.MintRequest memory mintrequest;
 
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
@@ -595,7 +594,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
-        ISignatureMintERC721.MintRequest memory mintrequest;
+        SignatureDrop.MintRequest memory mintrequest;
 
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
@@ -656,7 +655,7 @@ contract SignatureDropTest is BaseTest {
     /*
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
-    function mintWithSignature(ISignatureMintERC721.MintRequest memory mintrequest) internal {
+    function mintWithSignature(SignatureDrop.MintRequest memory mintrequest) internal {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -721,7 +720,7 @@ contract SignatureDropTest is BaseTest {
     function test_fuzz_mintWithSignature(uint128 x, uint128 y) public {
         if (x < y) {
             uint256 id = 0;
-            ISignatureMintERC721.MintRequest memory mintrequest;
+            SignatureDrop.MintRequest memory mintrequest;
 
             mintrequest.to = address(0);
             mintrequest.royaltyRecipient = address(2);
@@ -763,7 +762,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions[0], false, "");
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
@@ -793,7 +792,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions[0], false, "");
 
         vm.expectRevert("not enough minted tokens.");
         vm.prank(getActor(6), getActor(6));
@@ -820,7 +819,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(200, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions[0], false, "");
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
@@ -948,13 +947,13 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
 
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions[0], false, "");
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, true, "");
+        sigdrop.setClaimConditions(conditions[0], true, "");
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");

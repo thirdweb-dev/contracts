@@ -25,9 +25,8 @@ import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
-import "../feature/meta-tx/Drop.sol";
 import "../feature/meta-tx/DropSinglePhase.sol";
-import "../feature/interface/ISignatureMintERC721.sol";
+import "../feature/SignatureMintERC721Upgradeable.sol";
 
 contract SignatureDrop is
     Initializable,
@@ -40,6 +39,7 @@ contract SignatureDrop is
     LazyMint,
     PermissionsEnumerable,
     DropSinglePhase,
+    SignatureMintERC721Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -65,21 +65,12 @@ contract SignatureDrop is
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
 
-    /// @dev The address of the contract with signature minting logic.
-    address public sigMint;
-
     /*///////////////////////////////////////////////////////////////
                                 Events
     //////////////////////////////////////////////////////////////*/
 
     event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 index, string revealedURI);
-    event TokensMintedWithSignature(
-        address indexed signer,
-        address indexed mintedTo,
-        uint256 indexed tokenIdMinted,
-        ISignatureMintERC721.MintRequest mintRequest
-    );
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -96,19 +87,16 @@ contract SignatureDrop is
         address _royaltyRecipient,
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
-        address _platformFeeRecipient,
-        address _signatureMintLogic
+        address _platformFeeRecipient
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
+        __SignatureMintERC721_init();
 
         // Revoked at the end of the function.
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
-        // Initialize this contract's state.
-        sigMint = _signatureMintLogic;
 
         setContractURI(_contractURI);
         setOwner(_defaultAdmin);
@@ -203,16 +191,19 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
         nonReentrant
         returns (address signer)
     {
-        signer = ISignatureMintERC721(sigMint).mintWithSignature(_req, _signature);
+        require(_req.quantity > 0, "minting zero tokens");
 
         uint256 tokenIdToMint = _currentIndex;
         require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
+
+        // Verify and process payload.
+        signer = _processRequest(_req, _signature);
 
         // Get receiver of tokens.
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
@@ -236,15 +227,6 @@ contract SignatureDrop is
         bytes memory _data
     ) public payable override nonReentrant {
         super.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
-    }
-
-    /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
-        external
-        view
-        returns (bool success, address signer)
-    {
-        return ISignatureMintERC721(sigMint).verify(_req, _signature);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -299,6 +281,11 @@ contract SignatureDrop is
     {
         startTokenId = _currentIndex;
         _mint(_to, _quantityBeingClaimed);
+    }
+
+    /// @dev Returns whether a given address is authorized to sign mint requests.
+    function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
+        return hasRole(MINTER_ROLE, _signer);
     }
 
     /// @dev Returns whether platform fee info can be set in the given execution context.
