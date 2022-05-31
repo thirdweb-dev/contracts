@@ -13,7 +13,7 @@
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof, bytes _data) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
@@ -28,7 +28,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _quantity | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
-| _allowlistProof | IDrop.AllowlistProof | undefined
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
 | _data | bytes | undefined
 
 ### claimCondition
@@ -82,7 +82,7 @@ function getClaimTimestamp(bytes32 _conditionId, address _claimer) external view
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility, bytes) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility, bytes) external nonpayable
 ```
 
 
@@ -93,7 +93,7 @@ function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _
 
 | Name | Type | Description |
 |---|---|---|
-| _conditions | IClaimCondition.ClaimCondition[] | undefined
+| _condition | IClaimCondition.ClaimCondition | undefined
 | _resetClaimEligibility | bool | undefined
 | _2 | bytes | undefined
 
@@ -120,7 +120,7 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDrop.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
@@ -133,7 +133,7 @@ function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDrop.Allow
 |---|---|---|
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
-| _allowlistProof | IDrop.AllowlistProof | undefined
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
 
 #### Returns
 
@@ -146,10 +146,10 @@ function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDrop.Allow
 
 ## Events
 
-### ClaimConditionsUpdated
+### ClaimConditionUpdated
 
 ```solidity
-event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions)
+event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
 ```
 
 
@@ -160,7 +160,8 @@ event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions)
 
 | Name | Type | Description |
 |---|---|---|
-| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+| condition  | IClaimCondition.ClaimCondition | undefined |
+| resetEligibility  | bool | undefined |
 
 ### TokensClaimed
 

@@ -73,7 +73,7 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed claimer, address indexed receiver, uint256 quantityClaimed, uint256 indexed aux)
+event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
 ```
 
 
@@ -84,11 +84,11 @@ event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed cl
 
 | Name | Type | Description |
 |---|---|---|
-| condition  | IClaimCondition.ClaimCondition | undefined |
+| claimConditionIndex `indexed` | uint256 | undefined |
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
+| startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
-| aux `indexed` | uint256 | undefined |
 
 
 

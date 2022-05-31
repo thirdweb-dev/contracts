@@ -180,20 +180,6 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         }
     }
 
-    /// @dev At any given moment, returns the uid for the active claim condition.
-    function getActiveClaimConditionId() public view returns (uint256) {
-        return uint256(conditionId);
-    }
-
-    /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
-        if(_conditionId == uint256(conditionId)) {
-            return claimCondition;
-        }
-
-        revert ("Condition doesn't exist");
-    }
-
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
     function getClaimTimestamp(bytes32 _conditionId, address _claimer)
         public
