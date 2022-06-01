@@ -964,7 +964,7 @@ contract SignatureDropTest is BaseTest {
                             Reentrancy related Tests
     //////////////////////////////////////////////////////////////*/
 
-    function test_reentrancy_mintWithSignature() public {
+    function testFail_reentrancy_mintWithSignature() public {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -1016,7 +1016,7 @@ contract SignatureDropTest is BaseTest {
         }
     }
 
-    function test_reentrancy_claim() public {
+    function testFail_reentrancy_claim() public {
         vm.warp(1);
 
         address receiver = getActor(0);
@@ -1054,15 +1054,25 @@ contract SignatureDropTest is BaseTest {
 contract MaliciousReceiver {
     SignatureDrop sigdrop;
 
+    SignatureDrop.MintRequest mintrequest;
+    SignatureDrop.AllowlistProof alp;
+    bytes signature;
+    bool claim;
+
     constructor(address _sigdrop) {
         sigdrop = SignatureDrop(_sigdrop);
     }
 
     function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature) external {
+        claim = false;
+        mintrequest = _mintrequest;
+        signature = _signature;
         sigdrop.mintWithSignature{ value: _mintrequest.pricePerToken }(_mintrequest, _signature);
     }
 
     function attackClaim(SignatureDrop.AllowlistProof calldata _alp) external {
+        claim = true;
+        alp = _alp;
         sigdrop.claim(address(this), 1, address(0), 0, _alp, "");
     }
 
@@ -1072,6 +1082,11 @@ contract MaliciousReceiver {
         uint256 tokenId,
         bytes calldata data
     ) external returns (bytes4) {
+        if(claim) {
+            sigdrop.claim(address(this), 1, address(0), 0, alp, "");
+        } else {
+            sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
+        }
         return this.onERC721Received.selector;
     }
 }
