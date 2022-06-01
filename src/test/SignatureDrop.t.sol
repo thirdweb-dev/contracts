@@ -485,6 +485,7 @@ contract SignatureDropTest is BaseTest {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         vm.warp(1000);
+        vm.prank(deployerSigner);
         sigdrop.mintWithSignature(mintrequest, signature);
 
         (v, r, s) = vm.sign(4321, typedDataHash);
@@ -957,5 +958,120 @@ contract SignatureDropTest is BaseTest {
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Reentrancy related Tests
+    //////////////////////////////////////////////////////////////*/
+
+    function test_reentrancy_mintWithSignature() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        uint256 id = 0;
+        SignatureDrop.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(NATIVE_TOKEN);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        // Test with native token currency
+        {
+            uint256 totalSupplyBefore = sigdrop.totalSupply();
+
+            mintrequest.uid = bytes32(id);
+            bytes memory encodedRequest = abi.encode(
+                typehashMintRequest,
+                mintrequest.to,
+                mintrequest.royaltyRecipient,
+                mintrequest.royaltyBps,
+                mintrequest.primarySaleRecipient,
+                keccak256(bytes(mintrequest.uri)),
+                mintrequest.quantity,
+                mintrequest.pricePerToken,
+                mintrequest.currency,
+                mintrequest.validityStartTimestamp,
+                mintrequest.validityEndTimestamp,
+                mintrequest.uid
+            );
+            bytes32 structHash = keccak256(encodedRequest);
+            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+            bytes memory signature = abi.encodePacked(r, s, v);
+
+            MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
+            vm.deal(address(mal), 100 ether);
+            vm.warp(1000);
+            mal.attackMintWithSignature(mintrequest, signature);
+
+            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+        }
+    }
+
+    function test_reentrancy_claim() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false, "");
+
+        MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
+        vm.deal(address(mal), 100 ether);
+        mal.attackClaim(alp);
+
+        // vm.prank(getActor(5), getActor(5));
+        // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+
+        // vm.prank(deployerSigner);
+        // sigdrop.setClaimConditions(conditions[0], true, "");
+
+        // vm.prank(getActor(5), getActor(5));
+        // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+    }
+}
+
+contract MaliciousReceiver {
+    SignatureDrop sigdrop;
+
+    constructor(address _sigdrop) {
+        sigdrop = SignatureDrop(_sigdrop);
+    }
+
+    function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature) external {
+        sigdrop.mintWithSignature{ value: _mintrequest.pricePerToken }(_mintrequest, _signature);
+    }
+
+    function attackClaim(SignatureDrop.AllowlistProof calldata _alp) external {
+        sigdrop.claim(address(this), 1, address(0), 0, _alp, "");
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

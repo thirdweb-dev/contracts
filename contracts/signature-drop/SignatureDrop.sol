@@ -208,7 +208,7 @@ contract SignatureDrop is
         collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
-        _mint(receiver, _req.quantity);
+        _safeMint(receiver, _req.quantity, "");
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
@@ -264,7 +264,7 @@ contract SignatureDrop is
         returns (uint256 startTokenId)
     {
         startTokenId = _currentIndex;
-        _mint(_to, _quantityBeingClaimed);
+        _safeMint(_to, _quantityBeingClaimed, "");
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
