@@ -916,9 +916,11 @@ contract MaliciousReceiver {
         sigdrop = SignatureDrop(_sigdrop);
     }
 
-    function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature, bool swap)
-        external
-    {
+    function attackMintWithSignature(
+        SignatureDrop.MintRequest calldata _mintrequest,
+        bytes calldata _signature,
+        bool swap
+    ) external {
         claim = swap;
         mintrequest = _mintrequest;
         signature = _signature;
@@ -931,7 +933,11 @@ contract MaliciousReceiver {
         sigdrop.claim(address(this), 1, address(0), 0, _alp, "");
     }
 
-    function saveCombination(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature, SignatureDrop.AllowlistProof calldata _alp) external {
+    function saveCombination(
+        SignatureDrop.MintRequest calldata _mintrequest,
+        bytes calldata _signature,
+        SignatureDrop.AllowlistProof calldata _alp
+    ) external {
         mintrequest = _mintrequest;
         signature = _signature;
         alp = _alp;
@@ -947,7 +953,7 @@ contract MaliciousReceiver {
             loop = false;
             claim = false;
             sigdrop.claim(address(this), 1, address(0), 0, alp, "");
-        } else if(!claim && loop) {
+        } else if (!claim && loop) {
             loop = false;
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
         }
