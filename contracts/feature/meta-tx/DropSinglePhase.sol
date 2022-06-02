@@ -189,9 +189,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         lastClaimedAt = lastClaimTimestamp[_conditionId][_claimer];
 
         unchecked {
-            nextValidClaimTimestamp =
-                lastClaimedAt +
-                claimCondition.waitTimeInSecondsBetweenClaims;
+            nextValidClaimTimestamp = lastClaimedAt + claimCondition.waitTimeInSecondsBetweenClaims;
 
             if (nextValidClaimTimestamp < lastClaimedAt) {
                 nextValidClaimTimestamp = type(uint256).max;

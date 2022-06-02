@@ -43,7 +43,9 @@ contract SignatureDropTest is BaseTest {
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
-        typehashEip712 = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop)));
     }
 
@@ -1063,7 +1065,9 @@ contract MaliciousReceiver {
         sigdrop = SignatureDrop(_sigdrop);
     }
 
-    function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature) external {
+    function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature)
+        external
+    {
         claim = false;
         mintrequest = _mintrequest;
         signature = _signature;
@@ -1082,7 +1086,7 @@ contract MaliciousReceiver {
         uint256 tokenId,
         bytes calldata data
     ) external returns (bytes4) {
-        if(claim) {
+        if (claim) {
             sigdrop.claim(address(this), 1, address(0), 0, alp, "");
         } else {
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);

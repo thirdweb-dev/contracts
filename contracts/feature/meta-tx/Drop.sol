@@ -94,7 +94,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         bytes memory
     ) external virtual override {
         require(_canSetClaimConditions(), "Not authorized");
-        
+
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
