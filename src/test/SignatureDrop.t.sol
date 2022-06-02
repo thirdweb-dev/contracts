@@ -1021,7 +1021,7 @@ contract SignatureDropTest is BaseTest {
     function testFail_reentrancy_claim() public {
         vm.warp(1);
 
-        address receiver = getActor(0);
+        // address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.AllowlistProof memory alp;
@@ -1054,12 +1054,12 @@ contract SignatureDropTest is BaseTest {
 }
 
 contract MaliciousReceiver {
-    SignatureDrop sigdrop;
+    SignatureDrop public sigdrop;
 
-    SignatureDrop.MintRequest mintrequest;
-    SignatureDrop.AllowlistProof alp;
-    bytes signature;
-    bool claim;
+    SignatureDrop.MintRequest public mintrequest;
+    SignatureDrop.AllowlistProof public alp;
+    bytes public signature;
+    bool public claim;
 
     constructor(address _sigdrop) {
         sigdrop = SignatureDrop(_sigdrop);
@@ -1081,10 +1081,10 @@ contract MaliciousReceiver {
     }
 
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
+        address,
+        address,
+        uint256,
+        bytes calldata
     ) external returns (bytes4) {
         if (claim) {
             sigdrop.claim(address(this), 1, address(0), 0, alp, "");
