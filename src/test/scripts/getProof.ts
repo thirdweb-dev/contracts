@@ -1,10 +1,6 @@
 const { MerkleTree } = require("merkletreejs");
-// const { MerkleTree } = require("./merkleTree.ts");
-// const {hardhat} = require("hardhat");
 const keccak256 = require("keccak256");
 const { ethers } = require('ethers');
-const { toBuffer } = require('ethereumjs-util');
-const SHA256 = require("crypto-js/sha256");
 
 const members = [
     "0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3",
@@ -26,15 +22,4 @@ const expectedProof = tree.getHexProof(
     ethers.utils.solidityKeccak256(["address", "uint256"], [members[0], 0]),
   );
 
-// const encoder = ethers.utils.defaultAbiCoder;
-// const num_leaves = process.argv[2];
-// const encoded_leaves = process.argv[3];
-// const decoded_data = encoder.decode([`bytes32[${num_leaves}]`], encoded_leaves)[0];
-// let dataAsBuffer = decoded_data.map(b => toBuffer(b));
-
-// const tree = new MerkleTree(dataAsBuffer);
-
-// const expectedProof = tree.getHexProof(
-//     ethers.utils.solidityKeccak256(["address", "uint256"], ['0x1', 0]),
-//   );
 process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bytes32[]'], [expectedProof]));

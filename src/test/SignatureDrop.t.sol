@@ -356,6 +356,30 @@ contract SignatureDropTest is BaseTest {
                         Signature Mint Tests
     //////////////////////////////////////////////////////////////*/
 
+    function signMintRequest(SignatureDrop.MintRequest memory mintrequest, uint256 privateKey) internal returns(bytes memory) {
+        bytes memory encodedRequest = abi.encode(
+            typehashMintRequest,
+            mintrequest.to,
+            mintrequest.royaltyRecipient,
+            mintrequest.royaltyBps,
+            mintrequest.primarySaleRecipient,
+            keccak256(bytes(mintrequest.uri)),
+            mintrequest.quantity,
+            mintrequest.pricePerToken,
+            mintrequest.currency,
+            mintrequest.validityStartTimestamp,
+            mintrequest.validityEndTimestamp,
+            mintrequest.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        return signature;
+    }
+ 
     /*
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
@@ -381,25 +405,7 @@ contract SignatureDropTest is BaseTest {
         {
             uint256 totalSupplyBefore = sigdrop.totalSupply();
 
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(deployerSigner);
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
@@ -418,25 +424,8 @@ contract SignatureDropTest is BaseTest {
             mintrequest.currency = address(NATIVE_TOKEN);
             id = 1;
             mintrequest.uid = bytes32(id);
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(1000);
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
@@ -467,31 +456,12 @@ contract SignatureDropTest is BaseTest {
         mintrequest.validityEndTimestamp = 2000;
         mintrequest.uid = bytes32(id);
 
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            mintrequest.to,
-            mintrequest.royaltyRecipient,
-            mintrequest.royaltyBps,
-            mintrequest.primarySaleRecipient,
-            keccak256(bytes(mintrequest.uri)),
-            mintrequest.quantity,
-            mintrequest.pricePerToken,
-            mintrequest.currency,
-            mintrequest.validityStartTimestamp,
-            mintrequest.validityEndTimestamp,
-            mintrequest.uid
-        );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
         vm.prank(deployerSigner);
         sigdrop.mintWithSignature(mintrequest, signature);
 
-        (v, r, s) = vm.sign(4321, typedDataHash);
-        signature = abi.encodePacked(r, s, v);
+        signature = signMintRequest(mintrequest, 4321);
         vm.expectRevert("Invalid request");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
@@ -517,25 +487,7 @@ contract SignatureDropTest is BaseTest {
         mintrequest.validityEndTimestamp = 2000;
         mintrequest.uid = bytes32(id);
 
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            mintrequest.to,
-            mintrequest.royaltyRecipient,
-            mintrequest.royaltyBps,
-            mintrequest.primarySaleRecipient,
-            keccak256(bytes(mintrequest.uri)),
-            mintrequest.quantity,
-            mintrequest.pricePerToken,
-            mintrequest.currency,
-            mintrequest.validityStartTimestamp,
-            mintrequest.validityEndTimestamp,
-            mintrequest.uid
-        );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
         vm.expectRevert("not enough minted tokens.");
         sigdrop.mintWithSignature(mintrequest, signature);
@@ -563,25 +515,7 @@ contract SignatureDropTest is BaseTest {
         mintrequest.uid = bytes32(id);
         {
             mintrequest.currency = address(NATIVE_TOKEN);
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
             vm.expectRevert("must send total price.");
@@ -614,25 +548,7 @@ contract SignatureDropTest is BaseTest {
         {
             uint256 currencyBalBefore = erc20.balanceOf(deployerSigner);
 
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(deployerSigner);
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
@@ -664,25 +580,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         {
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(deployerSigner);
             vm.warp(mintrequest.validityStartTimestamp);
             erc20.approve(address(sigdrop), 1);
@@ -694,25 +592,7 @@ contract SignatureDropTest is BaseTest {
             mintrequest.currency = address(NATIVE_TOKEN);
             id = 1;
             mintrequest.uid = bytes32(id);
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
@@ -833,29 +713,13 @@ contract SignatureDropTest is BaseTest {
     }
 
     /**
-     *  note: Testing revert condition; not allowed to claim again before wait time is over.
+     *  note: Testing revert condition; can't claim if not in whitelist.
      */
     function test_revert_claimCondition_merkleProof() public {
-        bytes32[] memory leafs = new bytes32[](3);
-        leafs[0] = bytes32('0x1');
-        leafs[1] = bytes32('0x2');
-        leafs[2] = bytes32('0x3');
-        bytes memory packed = abi.encodePacked(leafs);
-        string[] memory inputs = new string[](8);
-
-        // inputs[0] = "npm";
-        // inputs[1] = "--prefix";
-        // inputs[2] = "src/test/scripts/";
-        // inputs[3] = "--silent";
-        // inputs[4] = "run";
-        // inputs[5] = "generateRoot";
-        // inputs[6] = leafs.length.toString();
-        // inputs[7] = packed.toHexString();
+        string[] memory inputs = new string[](2);
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        // inputs[2] = leafs.length.toString();
-        // inputs[3] = packed.toHexString();
 
         bytes memory result = vm.ffi(inputs);
         bytes32 root = abi.decode(result, (bytes32));
@@ -867,7 +731,6 @@ contract SignatureDropTest is BaseTest {
         vm.warp(1);
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
-        // bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.AllowlistProof memory alp;
         alp.proof = proofs;
@@ -886,89 +749,11 @@ contract SignatureDropTest is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver);
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
+
+        vm.prank(address(4));
+        vm.expectRevert("not in whitelist.");
+        sigdrop.claim(receiver, 100, address(0), 0, alp, "");
     }
-
-    /**
-     *  note: Testing state changes; check startId and count after setting claim conditions.
-     */
-    // function test_state_claimCondition_startIdAndCount() public {
-    //     vm.startPrank(deployerSigner);
-
-    //     uint256 currentStartId = 0;
-    //     uint256 count = 0;
-
-    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](2);
-    //     conditions[0].startTimestamp = 0;
-    //     conditions[0].maxClaimableSupply = 10;
-    //     conditions[1].startTimestamp = 1;
-    //     conditions[1].maxClaimableSupply = 10;
-
-    //     sigdrop.setClaimConditions(conditions, false, "");
-    //     (currentStartId, count) = sigdrop.claimCondition();
-    //     assertEq(currentStartId, 0);
-    //     assertEq(count, 2);
-
-    //     sigdrop.setClaimConditions(conditions, false, "");
-    //     (currentStartId, count) = sigdrop.claimCondition();
-    //     assertEq(currentStartId, 0);
-    //     assertEq(count, 2);
-
-    //     sigdrop.setClaimConditions(conditions, true, "");
-    //     (currentStartId, count) = sigdrop.claimCondition();
-    //     assertEq(currentStartId, 2);
-    //     assertEq(count, 2);
-
-    //     sigdrop.setClaimConditions(conditions, true, "");
-    //     (currentStartId, count) = sigdrop.claimCondition();
-    //     assertEq(currentStartId, 4);
-    //     assertEq(count, 2);
-    // }
-
-    /**
-     *  note: Testing state changes; check activeConditionId based on changes in block timestamp.
-     */
-    // function test_state_claimCondition_startPhase() public {
-    //     vm.startPrank(deployerSigner);
-
-    //     uint256 activeConditionId = 0;
-
-    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](3);
-    //     conditions[0].startTimestamp = 10;
-    //     conditions[0].maxClaimableSupply = 11;
-    //     conditions[0].quantityLimitPerTransaction = 12;
-    //     conditions[0].waitTimeInSecondsBetweenClaims = 13;
-    //     conditions[1].startTimestamp = 20;
-    //     conditions[1].maxClaimableSupply = 21;
-    //     conditions[1].quantityLimitPerTransaction = 22;
-    //     conditions[1].waitTimeInSecondsBetweenClaims = 23;
-    //     conditions[2].startTimestamp = 30;
-    //     conditions[2].maxClaimableSupply = 31;
-    //     conditions[2].quantityLimitPerTransaction = 32;
-    //     conditions[2].waitTimeInSecondsBetweenClaims = 33;
-    //     sigdrop.setClaimConditions(conditions, false, "");
-
-    //     vm.expectRevert("!CONDITION.");
-    //     sigdrop.getActiveClaimConditionId();
-
-    //     vm.warp(10);
-    //     activeConditionId = sigdrop.getActiveClaimConditionId();
-    //     assertEq(activeConditionId, 0);
-
-    //     vm.warp(20);
-    //     activeConditionId = sigdrop.getActiveClaimConditionId();
-    //     assertEq(activeConditionId, 1);
-
-    //     vm.warp(30);
-    //     activeConditionId = sigdrop.getActiveClaimConditionId();
-    //     assertEq(activeConditionId, 2);
-    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).startTimestamp, 30);
-    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).maxClaimableSupply, 31);
-    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).quantityLimitPerTransaction, 32);
-    //     // assertEq(sigdrop.getClaimConditionById(activeConditionId).waitTimeInSecondsBetweenClaims, 33);
-
-    //     vm.warp(40);
-    //     assertEq(sigdrop.getActiveClaimConditionId(), 2);
-    // }
 
     /**
      *  note: Testing state changes; reset eligibility of claim conditions and claiming again for same condition id.
@@ -1007,7 +792,7 @@ contract SignatureDropTest is BaseTest {
                             Reentrancy related Tests
     //////////////////////////////////////////////////////////////*/
 
-    function test_reentrancy_mintWithSignature() public {
+    function testFail_reentrancy_mintWithSignature() public {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -1030,25 +815,7 @@ contract SignatureDropTest is BaseTest {
             uint256 totalSupplyBefore = sigdrop.totalSupply();
 
             mintrequest.uid = bytes32(id);
-            bytes memory encodedRequest = abi.encode(
-                typehashMintRequest,
-                mintrequest.to,
-                mintrequest.royaltyRecipient,
-                mintrequest.royaltyBps,
-                mintrequest.primarySaleRecipient,
-                keccak256(bytes(mintrequest.uri)),
-                mintrequest.quantity,
-                mintrequest.pricePerToken,
-                mintrequest.currency,
-                mintrequest.validityStartTimestamp,
-                mintrequest.validityEndTimestamp,
-                mintrequest.uid
-            );
-            bytes32 structHash = keccak256(encodedRequest);
-            bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-            bytes memory signature = abi.encodePacked(r, s, v);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
 
             MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
             vm.deal(address(mal), 100 ether);
@@ -1059,10 +826,8 @@ contract SignatureDropTest is BaseTest {
         }
     }
 
-    function test_reentrancy_claim() public {
+    function testFail_reentrancy_claim() public {
         vm.warp(1);
-
-        // address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.AllowlistProof memory alp;
@@ -1082,15 +847,6 @@ contract SignatureDropTest is BaseTest {
         MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
         vm.deal(address(mal), 100 ether);
         mal.attackClaim(alp);
-
-        // vm.prank(getActor(5), getActor(5));
-        // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
-
-        // vm.prank(deployerSigner);
-        // sigdrop.setClaimConditions(conditions[0], true, "");
-
-        // vm.prank(getActor(5), getActor(5));
-        // sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 }
 
