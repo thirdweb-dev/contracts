@@ -202,7 +202,7 @@ contract SignatureDrop is
         signer = _processRequest(_req, _signature);
 
         // Get receiver of tokens.
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
+        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
         // Collect price
         collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
