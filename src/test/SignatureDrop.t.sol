@@ -356,7 +356,10 @@ contract SignatureDropTest is BaseTest {
                         Signature Mint Tests
     //////////////////////////////////////////////////////////////*/
 
-    function signMintRequest(SignatureDrop.MintRequest memory mintrequest, uint256 privateKey) internal returns(bytes memory) {
+    function signMintRequest(SignatureDrop.MintRequest memory mintrequest, uint256 privateKey)
+        internal
+        returns (bytes memory)
+    {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             mintrequest.to,
@@ -379,7 +382,7 @@ contract SignatureDropTest is BaseTest {
 
         return signature;
     }
- 
+
     /*
      *  note: Testing state changes; minting with signature, for a given price and currency.
      */
@@ -424,7 +427,7 @@ contract SignatureDropTest is BaseTest {
             mintrequest.currency = address(NATIVE_TOKEN);
             id = 1;
             mintrequest.uid = bytes32(id);
-            
+
             bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(1000);
