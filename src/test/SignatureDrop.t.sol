@@ -835,17 +835,58 @@ contract SignatureDropTest is BaseTest {
     /**
      *  note: Testing revert condition; not allowed to claim again before wait time is over.
      */
-    // function test_revert_claimCondition_merkleProof() public {
-    //     bytes memory packed = abi.encodePacked(address(1), address(2), address(3));
-    //     string[] memory inputs = new string[](8);
+    function test_revert_claimCondition_merkleProof() public {
+        bytes32[] memory leafs = new bytes32[](3);
+        leafs[0] = bytes32('0x1');
+        leafs[1] = bytes32('0x2');
+        leafs[2] = bytes32('0x3');
+        bytes memory packed = abi.encodePacked(leafs);
+        string[] memory inputs = new string[](8);
 
-    //     inputs[0] = "node";
-    //     inputs[1] = "src/test/scripts/merkleTree.js";
-    //     inputs[2] = "tree";
-    //     inputs[3] = packed.toHexString();
+        // inputs[0] = "npm";
+        // inputs[1] = "--prefix";
+        // inputs[2] = "src/test/scripts/";
+        // inputs[3] = "--silent";
+        // inputs[4] = "run";
+        // inputs[5] = "generateRoot";
+        // inputs[6] = leafs.length.toString();
+        // inputs[7] = packed.toHexString();
 
-    //     bytes memory result = vm.ffi(inputs);
-    // }
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        // inputs[2] = leafs.length.toString();
+        // inputs[3] = packed.toHexString();
+
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        inputs[1] = "src/test/scripts/getProof.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        vm.warp(1);
+
+        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        // bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].merkleRoot = root;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(200, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false, "");
+
+        // vm.prank(getActor(5), getActor(5));
+        vm.prank(receiver);
+        sigdrop.claim(receiver, 100, address(0), 0, alp, "");
+    }
 
     /**
      *  note: Testing state changes; check startId and count after setting claim conditions.
@@ -966,7 +1007,7 @@ contract SignatureDropTest is BaseTest {
                             Reentrancy related Tests
     //////////////////////////////////////////////////////////////*/
 
-    function testFail_reentrancy_mintWithSignature() public {
+    function test_reentrancy_mintWithSignature() public {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         uint256 id = 0;
@@ -1018,7 +1059,7 @@ contract SignatureDropTest is BaseTest {
         }
     }
 
-    function testFail_reentrancy_claim() public {
+    function test_reentrancy_claim() public {
         vm.warp(1);
 
         // address receiver = getActor(0);
