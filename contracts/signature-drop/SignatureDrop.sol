@@ -208,7 +208,7 @@ contract SignatureDrop is
         collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
-        _safeMint(receiver, _req.quantity, "");
+        _safeMint(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
@@ -264,7 +264,7 @@ contract SignatureDrop is
         returns (uint256 startTokenId)
     {
         startTokenId = _currentIndex;
-        _safeMint(_to, _quantityBeingClaimed, "");
+        _safeMint(_to, _quantityBeingClaimed);
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
@@ -308,15 +308,7 @@ contract SignatureDrop is
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
-        address ownerOfToken = ownerOf(tokenId);
-        //solhint-disable-next-line max-line-length
-        require(
-            _msgSender() == ownerOfToken ||
-                isApprovedForAll(ownerOfToken, _msgSender()) ||
-                getApproved(tokenId) == _msgSender(),
-            "caller not owner nor approved"
-        );
-        _burn(tokenId);
+        _burn(tokenId, true);
     }
 
     /// @dev See {ERC721-_beforeTokenTransfer}.
