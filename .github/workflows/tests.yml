@@ -32,4 +32,5 @@ jobs:
         with:
           version: nightly
       - name: Run tests
-        run: forge test
+        run: forge test --no-match-contract SignatureDrop
+        run: forge test --match-contract SignatureDrop --ffi
