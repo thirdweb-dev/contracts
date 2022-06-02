@@ -823,7 +823,7 @@ contract SignatureDropTest is BaseTest {
             MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
             vm.deal(address(mal), 100 ether);
             vm.warp(1000);
-            mal.attackMintWithSignature(mintrequest, signature);
+            mal.attackMintWithSignature(mintrequest, signature, false);
 
             assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
         }
@@ -849,7 +849,57 @@ contract SignatureDropTest is BaseTest {
 
         MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
         vm.deal(address(mal), 100 ether);
-        mal.attackClaim(alp);
+        mal.attackClaim(alp, false);
+    }
+
+    function testFail_combination_signatureAndClaim() public {
+        vm.warp(1);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false, "");
+
+        uint256 id = 0;
+        SignatureDrop.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(NATIVE_TOKEN);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        // Test with native token currency
+        {
+            uint256 totalSupplyBefore = sigdrop.totalSupply();
+
+            mintrequest.uid = bytes32(id);
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
+
+            MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
+            vm.deal(address(mal), 100 ether);
+            vm.warp(1000);
+            mal.saveCombination(mintrequest, signature, alp);
+            mal.attackMintWithSignature(mintrequest, signature, true);
+            // mal.attackClaim(alp, true);
+
+            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+        }
     }
 }
 
@@ -860,24 +910,31 @@ contract MaliciousReceiver {
     SignatureDrop.AllowlistProof public alp;
     bytes public signature;
     bool public claim;
+    bool public loop = true;
 
     constructor(address _sigdrop) {
         sigdrop = SignatureDrop(_sigdrop);
     }
 
-    function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature)
+    function attackMintWithSignature(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature, bool swap)
         external
     {
-        claim = false;
+        claim = swap;
         mintrequest = _mintrequest;
         signature = _signature;
         sigdrop.mintWithSignature{ value: _mintrequest.pricePerToken }(_mintrequest, _signature);
     }
 
-    function attackClaim(SignatureDrop.AllowlistProof calldata _alp) external {
-        claim = true;
+    function attackClaim(SignatureDrop.AllowlistProof calldata _alp, bool swap) external {
+        claim = !swap;
         alp = _alp;
         sigdrop.claim(address(this), 1, address(0), 0, _alp, "");
+    }
+
+    function saveCombination(SignatureDrop.MintRequest calldata _mintrequest, bytes calldata _signature, SignatureDrop.AllowlistProof calldata _alp) external {
+        mintrequest = _mintrequest;
+        signature = _signature;
+        alp = _alp;
     }
 
     function onERC721Received(
@@ -886,9 +943,12 @@ contract MaliciousReceiver {
         uint256,
         bytes calldata
     ) external returns (bytes4) {
-        if (claim) {
+        if (claim && loop) {
+            loop = false;
+            claim = false;
             sigdrop.claim(address(this), 1, address(0), 0, alp, "");
-        } else {
+        } else if(!claim && loop) {
+            loop = false;
             sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
         }
         return this.onERC721Received.selector;
