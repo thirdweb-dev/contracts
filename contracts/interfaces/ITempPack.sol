@@ -7,10 +7,10 @@ pragma solidity ^0.8.11;
  *  on opening a pack depends on the relative supply of all tokens in the packs.
  */
 
-interface IPack {
+interface ITempPack {
 
     /// @notice The types of tokens that can be added to packs.
-    enum TokenType { ERC20, ERC721, ERC1155 }
+    // enum TokenType { ERC20, ERC721, ERC1155 }
 
     /**
      *  @notice A unit of content i.e. a token in a pack.
@@ -22,13 +22,13 @@ interface IPack {
      *  @param amountPerUnit            The amount of this token to distribute as a unit,
      *                                  on opening a pack.
      */
-    struct PackContent {
-        address assetContract;
-        TokenType tokenType;
-        uint256 tokenId;
-        uint256 totalAmountPacked;
-        uint256 amountPerUnit;
-    }
+    // struct PackContent {
+    //     address assetContract;
+    //     TokenType tokenType;
+    //     uint256 tokenId;
+    //     uint256 totalAmountPacked;
+    //     uint256 amountPerUnit;
+    // }
 
     /**
      *  @notice All info relevant to packs.
@@ -39,10 +39,9 @@ interface IPack {
      *  @param packUri                  The metadata URI for packs.
      */
     struct PackInfo {
-        PackContent[] contents;
+        mapping(address=>uint256) perUnitAmounts;
         uint128 openStartTimestamp;
         uint128 amountDistributedPerOpen;
-        string uri;
     }
 
     /// @notice Emitted when a set of packs is created.
@@ -66,13 +65,13 @@ interface IPack {
      *  @return packId The unique identifer of the created set of packs.
      *  @return packTotalSupply The total number of packs created.
      */
-    function createPack(
-        PackContent[] calldata contents,
-        string calldata packUri,
-        uint128 openStartTimestamp,
-        uint128 amountDistributedPerOpen,
-        address recipient
-    ) external returns (uint256 packId, uint256 packTotalSupply);
+    // function createPack(
+    //     PackContent[] calldata contents,
+    //     string calldata packUri,
+    //     uint128 openStartTimestamp,
+    //     uint128 amountDistributedPerOpen,
+    //     address recipient
+    // ) external returns (uint256 packId, uint256 packTotalSupply);
 
     /**
      *  @notice Lets a pack owner open a pack and receive the pack's reward unit.
@@ -80,5 +79,5 @@ interface IPack {
      *  @param packId       The identifier of the pack to open.
      *  @param amountToOpen The number of packs to open at once.
      */
-    function openPack(uint256 packId, uint256 amountToOpen) external;
+    // function openPack(uint256 packId, uint256 amountToOpen) external;
 }
