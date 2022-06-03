@@ -76,15 +76,9 @@ struct PackContent {
 | --- | --- |
 | assetContract | The contract address of the token. |
 | tokenType | The type of the token -- ERC20 / ERC721 / ERC1155 |
-| tokenId | The tokenId of the the token. 
-
-(Not applicable for ERC20 tokens. The contract will ignore this value for ERC20 tokens.) |
-| totalAmountPacked | The total amount of this token packed in the pack.
-
-(Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
-| amountDistributedPerOpen | The amount of this token to distribute as a unit, on opening a pack.
-
-(Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
+| tokenId | The tokenId of the the token. (Not applicable for ERC20 tokens. The contract will ignore this value for ERC20 tokens.) |
+| totalAmountPacked | The total amount of this token packed in the pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
+| amountDistributedPerOpen | The amount of this token to distribute as a unit, on opening a pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
 
 **Note:** A pack can contain different configurations for the same token. For example, the same set of packs can contain ‘500 units of 20 USDC’ and ‘10 units of 1000 USDC’ as two independent types of underlying rewards.
 
