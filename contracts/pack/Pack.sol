@@ -15,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 
 //  ==========  Internal imports    ==========
@@ -22,24 +23,28 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../interfaces/IPack.sol";
 import "../interfaces/ITWFee.sol";
 
-import "../interfaces/IThirdwebContract.sol";
-import "../interfaces/IThirdwebOwnable.sol";
-import "../interfaces/IThirdwebRoyalty.sol";
-
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../lib/FeeType.sol";
 import "../lib/CurrencyTransferLib.sol";
 
+//  ==========  Features    ==========
+
+import "../feature/ContractMetadata.sol";
+import "../feature/Royalty.sol";
+import "../feature/Ownable.sol";
+import "../feature/PermissionsEnumerable.sol";
+import "../feature/TokenStore.sol";
+
 contract Pack is
     Initializable,
-    IThirdwebContract,
-    IThirdwebOwnable,
-    IThirdwebRoyalty,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable,
     ERC721HolderUpgradeable,
     ERC1155HolderUpgradeable,
     ERC1155PausableUpgradeable,
@@ -85,9 +90,6 @@ contract Pack is
     /// @dev The (default) % of a sale to take as royalty (in basis points).
     uint256 private royaltyBps;
 
-    /// @dev Contract level metadata.
-    string public contractURI;
-
     /*///////////////////////////////////////////////////////////////
                              Mappings
     //////////////////////////////////////////////////////////////*/
@@ -128,15 +130,16 @@ contract Pack is
 
         name = _name;
         symbol = _symbol;
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = _royaltyBps;
-        contractURI = _contractURI;
 
-        _owner = _defaultAdmin;
+        setContractURI(_contractURI);
+        setOwner(_defaultAdmin);
+
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -151,13 +154,6 @@ contract Pack is
     /// @dev Returns the version of the contract.
     function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
     }
 
     /// @dev Pauses / unpauses contract.
@@ -183,22 +179,10 @@ contract Pack is
         public
         view
         virtual
-        override(ERC1155Upgradeable, ERC1155ReceiverUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable)
+        override(ERC1155Upgradeable, ERC1155ReceiverUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    }
-
-    /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
-        receiver = recipient;
-        royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -379,66 +363,22 @@ contract Pack is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Getter functions
+                        Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the default royalty recipient and bps.
-    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
-        return (royaltyRecipient, uint16(royaltyBps));
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Returns the royalty recipient and bps for a particular token Id.
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
-
-        return
-            royaltyForToken.recipient == address(0)
-                ? (royaltyRecipient, uint16(royaltyBps))
-                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /*///////////////////////////////////////////////////////////////
-                        Setter functions
-    //////////////////////////////////////////////////////////////*/
-
-    
-
-    /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint128(_royaltyBps);
-
-        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
-    }
-
-    /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
-    function setRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "exceed royalty bps");
-
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
-
-        emit RoyaltyForToken(_tokenId, _recipient, _bps);
-    }
-
-    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        emit OwnerUpdated(_owner, _newOwner);
-        _owner = _newOwner;
-    }
-
-    /// @dev Lets a contract admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        contractURI = _uri;
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
