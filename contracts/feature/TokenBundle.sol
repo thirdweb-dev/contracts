@@ -66,6 +66,9 @@ abstract contract TokenBundle is ITokenBundle {
 
     /// @dev Lets the calling contract delete a particular bundle.
     function _deleteBundle(uint256 _bundleId) internal {
-        delete bundle[_bundleId];
+        for (uint256 i = 0; i < bundle[_bundleId].count; i += 1) {
+            delete bundle[_bundleId].tokens[i];
+        }
+        bundle[_bundleId].count = 0;
     }
 }

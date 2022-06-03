@@ -489,7 +489,8 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert("ERC721: owner query for nonexistent token");
         multiwrap.ownerOf(expectedIdForWrappedToken);
 
-        assertEq("", multiwrap.tokenURI(expectedIdForWrappedToken));
+        assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+        assertEq(0, multiwrap.getTokenCountOfBundle(expectedIdForWrappedToken));
 
         ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
@@ -519,7 +520,8 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert("ERC721: owner query for nonexistent token");
         multiwrap.ownerOf(expectedIdForWrappedToken);
 
-        assertEq("", multiwrap.tokenURI(expectedIdForWrappedToken));
+        assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+        assertEq(0, multiwrap.getTokenCountOfBundle(expectedIdForWrappedToken));
 
         ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
@@ -750,7 +752,8 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert("ERC721: owner query for nonexistent token");
         multiwrap.ownerOf(expectedIdForWrappedToken);
 
-        assertEq("", multiwrap.tokenURI(expectedIdForWrappedToken));
+        assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
+        assertEq(0, multiwrap.getTokenCountOfBundle(expectedIdForWrappedToken));
 
         ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
