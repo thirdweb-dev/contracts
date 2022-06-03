@@ -348,7 +348,7 @@ contract Pack is
         uint256 _amount
     ) internal {
         if (_tokenType == TokenType.ERC20) {
-            CurrencyTransferLib.transferCurrencyWithWrapperAndBalanceCheck(
+            CurrencyTransferLib.transferCurrencyWithWrapper(
                 _assetContract,
                 _from,
                 _to,
