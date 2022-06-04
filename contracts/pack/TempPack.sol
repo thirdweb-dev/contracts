@@ -54,7 +54,7 @@ contract TempPack is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("Pack");
+    bytes32 private constant MODULE_TYPE = bytes32("TempPack");
     uint256 private constant VERSION = 1;
 
     // Token name
@@ -108,6 +108,9 @@ contract TempPack is
         __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
 
+        // Revoked at the end of the function.
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+
         name = _name;
         symbol = _symbol;
 
@@ -120,6 +123,8 @@ contract TempPack is
         _setupRole(TRANSFER_ROLE, address(0));
 
         setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+
+        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -213,7 +218,7 @@ contract TempPack is
 
         (
             Token[] memory rewardUnits
-        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen);
+        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
         _burn(_msgSender(), _packId, _amountToOpen);
 
@@ -239,7 +244,7 @@ contract TempPack is
 
             packTotalSupply += _contents[i].totalAmount / _perUnitAmounts[i];
             // packInfo[packId].perUnitAmounts[_contents[i].assetContract] = _perUnitAmounts[i];
-            packInfo[packId].perUnitAmounts[i] = _perUnitAmounts[i];
+            packInfo[packId].perUnitAmounts.push(_perUnitAmounts[i]);
         }
         
         _storeTokens(_msgSender(), _contents, _packUri, packId);
@@ -249,7 +254,8 @@ contract TempPack is
     function getRewardUnits(
         uint256 _packId,
         uint256 _numOfPacksToOpen,
-        uint256 _rewardUnitsPerOpen
+        uint256 _rewardUnitsPerOpen,
+        PackInfo memory pack
     )   
         internal
         returns (
@@ -268,8 +274,8 @@ contract TempPack is
             uint256 step;
 
             for(uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
-                Token memory _token = getTokenOfBundle(_packId, j);
-                PackInfo memory pack = packInfo[_packId];
+                uint256 id = _packId;
+                Token memory _token = getTokenOfBundle(id, j);
                 uint256 check = _token.totalAmount / pack.perUnitAmounts[j];
 
                 if(target < step + check) {
@@ -278,7 +284,7 @@ contract TempPack is
                     rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
                     _token.totalAmount -= pack.perUnitAmounts[j];
-                    _updateTokenInBundle(_token, _packId, j);
+                    _updateTokenInBundle(_token, id, j);
 
                     break;
 
@@ -298,6 +304,7 @@ contract TempPack is
         PackInfo storage pack = packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
         contents = new Token[](total);
+        perUnitAmounts = new uint256[](total);
 
         for (uint256 i = 0; i < total; i += 1) {
             contents[i] = getTokenOfBundle(_packId, i);
