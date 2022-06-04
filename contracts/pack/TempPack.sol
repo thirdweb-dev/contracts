@@ -46,8 +46,6 @@ contract TempPack is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC721HolderUpgradeable,
-    ERC1155HolderUpgradeable,
     ERC1155PausableUpgradeable,
     ITempPack
 {
@@ -73,9 +71,6 @@ contract TempPack is
     /// @dev The thirdweb contract with fee related information.
     ITWFee public immutable thirdwebFee;
 
-    /// @dev The address of the native token wrapper contract.
-    address private immutable nativeTokenWrapper;
-
     /// @dev The token Id of the next set of packs to be minted.
     uint256 public nextTokenId;
 
@@ -93,9 +88,8 @@ contract TempPack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _thirdwebFee, address _nativeTokenWrapper) initializer {
+    constructor(address _thirdwebFee, address _nativeTokenWrapper) TokenStore(_nativeTokenWrapper) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
-        nativeTokenWrapper = _nativeTokenWrapper;
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -157,7 +151,7 @@ contract TempPack is
 
     /// @dev Returns the URI for a given tokenId.
     function uri(uint256 _tokenId) public view override returns (string memory) {
-        return packInfo[_tokenId].uri;
+        return getUriOfBundle(_tokenId);
     }
 
     /// @dev See ERC 165
@@ -165,7 +159,7 @@ contract TempPack is
         public
         view
         virtual
-        override(ERC1155Upgradeable, ERC1155ReceiverUpgradeable)
+        override(ERC1155Receiver, ERC1155Upgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -203,7 +197,7 @@ contract TempPack is
 
         _mint(_recipient, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _msgSender(), _recipient, packInfo[packId], packTotalSupply);
+        emit PackCreated(packId, _msgSender(), _recipient, packTotalSupply);
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
@@ -244,7 +238,8 @@ contract TempPack is
             require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "invalid erc721 rewards");
 
             packTotalSupply += _contents[i].totalAmount / _perUnitAmounts[i];
-            packInfo[packId].perUnitAmounts[_contents[i].assetContract] = _perUnitAmounts[i];
+            // packInfo[packId].perUnitAmounts[_contents[i].assetContract] = _perUnitAmounts[i];
+            packInfo[packId].perUnitAmounts[i] = _perUnitAmounts[i];
         }
         
         _storeTokens(_msgSender(), _contents, _packUri, packId);
@@ -275,15 +270,14 @@ contract TempPack is
             for(uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
                 Token memory _token = getTokenOfBundle(_packId, j);
                 PackInfo memory pack = packInfo[_packId];
-
-                uint256 check = _token.totalAmount / pack.perUnitAmounts[_token.assetContract];
+                uint256 check = _token.totalAmount / pack.perUnitAmounts[j];
 
                 if(target < step + check) {
 
                     rewardUnits[i] = _token;
-                    rewardUnits[i].totalAmount = pack.perUnitAmounts[_token.assetContract];
+                    rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
-                    _token.totalAmount -= pack.perUnitAmounts[_token.assetContract];
+                    _token.totalAmount -= pack.perUnitAmounts[j];
                     _updateTokenInBundle(_token, _packId, j);
 
                     break;
@@ -292,6 +286,22 @@ contract TempPack is
                     step += check;
                 }
             }
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Getter functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the underlying contents of a pack.
+    function getPackContents(uint256 _packId) external view returns (Token[] memory contents, uint256[] memory perUnitAmounts) {
+        PackInfo storage pack = packInfo[_packId];
+        uint256 total = getTokenCountOfBundle(_packId);
+        contents = new Token[](total);
+
+        for (uint256 i = 0; i < total; i += 1) {
+            contents[i] = getTokenOfBundle(_packId, i);
+            perUnitAmounts[i] = pack.perUnitAmounts[i];
         }
     }
 
