@@ -279,12 +279,10 @@ contract TempPack is
                 uint256 check = _token.totalAmount / pack.perUnitAmounts[j];
 
                 if(target < step + check) {
-
-                    rewardUnits[i] = _token;
-                    rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
-
                     _token.totalAmount -= pack.perUnitAmounts[j];
                     _updateTokenInBundle(_token, id, j);
+                    rewardUnits[i] = _token;
+                    rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
                     break;
 

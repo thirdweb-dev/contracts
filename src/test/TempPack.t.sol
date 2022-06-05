@@ -34,7 +34,7 @@ contract TempPackTest is BaseTest {
                 totalAmount: 1000 ether
             })
         );
-        amountsPerUnit.push(10);
+        amountsPerUnit.push(10 ether);
 
         packContents.push(
             ITokenBundle.Token({
@@ -64,7 +64,7 @@ contract TempPackTest is BaseTest {
                 totalAmount: 1000 ether
             })
         );
-        amountsPerUnit.push(20);
+        amountsPerUnit.push(20 ether);
 
         packContents.push(
             ITokenBundle.Token({
@@ -144,5 +144,82 @@ contract TempPackTest is BaseTest {
         }
 
         assertEq(packUri, tempPack.uri(packId));
+    }
+
+    /**
+     *  note: Testing token balances; token owner calls `createPack` to pack owned tokens.
+     */
+    function test_balances_createPack() public {
+        // ERC20 balance
+        assertEq(erc20.balanceOf(address(tokenOwner)), 2000 ether);
+        assertEq(erc20.balanceOf(address(tempPack)), 0);
+
+        // ERC721 balance
+        assertEq(erc721.ownerOf(0), address(tokenOwner));
+        assertEq(erc721.ownerOf(1), address(tokenOwner));
+        assertEq(erc721.ownerOf(2), address(tokenOwner));
+        assertEq(erc721.ownerOf(3), address(tokenOwner));
+        assertEq(erc721.ownerOf(4), address(tokenOwner));
+
+        // ERC1155 balance
+        assertEq(erc1155.balanceOf(address(tokenOwner), 0), 100);
+        assertEq(erc1155.balanceOf(address(tempPack), 0), 0);
+
+        uint256 packId = tempPack.nextTokenId();
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+
+        // ERC20 balance
+        assertEq(erc20.balanceOf(address(tokenOwner)), 0);
+        assertEq(erc20.balanceOf(address(tempPack)), 2000 ether);
+
+        // ERC721 balance
+        assertEq(erc721.ownerOf(0), address(tempPack));
+        assertEq(erc721.ownerOf(1), address(tempPack));
+        assertEq(erc721.ownerOf(2), address(tempPack));
+        assertEq(erc721.ownerOf(3), address(tempPack));
+        assertEq(erc721.ownerOf(4), address(tempPack));
+
+        // ERC1155 balance
+        assertEq(erc1155.balanceOf(address(tokenOwner), 0), 0);
+        assertEq(erc1155.balanceOf(address(tempPack), 0), 100);
+
+        // TempPack wrapped token balance
+        assertEq(tempPack.balanceOf(address(recipient), packId), 175);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: `openPack`
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  note: Testing state changes; pack owner calls `openPack` to redeem underlying rewards.
+     */
+    function test_state_openPack() public {
+        uint256 packId = tempPack.nextTokenId();
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+
+        vm.prank(recipient, recipient);
+        tempPack.openPack(packId, 1);
+
+        assertEq(packUri, tempPack.uri(packId));
+        // assertEq(0, tempPack.getTokenCountOfBundle(packId));
+        if(erc20.balanceOf(address(recipient)) > 0) {
+            assertTrue(erc20.balanceOf(address(recipient)) == 10 ether || erc20.balanceOf(address(recipient)) == 20 ether);
+            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
+        } else if(erc1155.balanceOf(address(recipient), 0) > 0) {
+            assertEq(erc1155.balanceOf(address(recipient), 0), 5);
+            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
+        } else if(erc721.balanceOf(address(recipient)) > 0) {
+            assertEq(erc721.balanceOf(address(recipient)), 1);
+            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
+        } else {
+            assertEq(tempPack.balanceOf(address(recipient), packId), 178);
+        }
     }
 }
