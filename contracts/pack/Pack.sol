@@ -21,7 +21,6 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IPack.sol";
-import "../interfaces/ITWFee.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
@@ -69,9 +68,6 @@ contract Pack is
     /// @dev Only MINTER_ROLE holders can create packs.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
-
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
@@ -92,8 +88,7 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _thirdwebFee, address _nativeTokenWrapper) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
+    constructor(address _nativeTokenWrapper) initializer {
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
