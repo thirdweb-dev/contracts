@@ -39,7 +39,7 @@ interface IPack {
      *  @param packUri                  The metadata URI for packs.
      */
     struct PackInfo {
-        PackContent[] contents;
+        // PackContent[] contents;
         uint128 openStartTimestamp;
         uint128 amountDistributedPerOpen;
         string uri;

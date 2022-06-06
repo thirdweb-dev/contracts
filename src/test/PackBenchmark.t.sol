@@ -54,55 +54,55 @@ contract CreatePackBenchmarkTest is BaseTest {
             })
         );
 
-        // packContents.push(
-        //     IPack.PackContent({
-        //         assetContract: address(erc721),
-        //         tokenType: IPack.TokenType.ERC721,
-        //         tokenId: 1,
-        //         totalAmountPacked: 1,
-        //         amountPerUnit: 1
-        //     })
-        // );
+        packContents.push(
+            IPack.PackContent({
+                assetContract: address(erc721),
+                tokenType: IPack.TokenType.ERC721,
+                tokenId: 1,
+                totalAmountPacked: 1,
+                amountPerUnit: 1
+            })
+        );
 
-        // packContents.push(
-        //     IPack.PackContent({
-        //         assetContract: address(erc20),
-        //         tokenType: IPack.TokenType.ERC20,
-        //         tokenId: 0,
-        //         totalAmountPacked: 1000 ether,
-        //         amountPerUnit: 10 ether
-        //     })
-        // );
+        packContents.push(
+            IPack.PackContent({
+                assetContract: address(erc20),
+                tokenType: IPack.TokenType.ERC20,
+                tokenId: 0,
+                totalAmountPacked: 1000 ether,
+                amountPerUnit: 10 ether
+            })
+        );
 
-        // packContents.push(
-        //     IPack.PackContent({
-        //         assetContract: address(erc721),
-        //         tokenType: IPack.TokenType.ERC721,
-        //         tokenId: 2,
-        //         totalAmountPacked: 1,
-        //         amountPerUnit: 1
-        //     })
-        // );
+        packContents.push(
+            IPack.PackContent({
+                assetContract: address(erc721),
+                tokenType: IPack.TokenType.ERC721,
+                tokenId: 2,
+                totalAmountPacked: 1,
+                amountPerUnit: 1
+            })
+        );
 
-        // packContents.push(
-        //     IPack.PackContent({
-        //         assetContract: address(erc721),
-        //         tokenType: IPack.TokenType.ERC721,
-        //         tokenId: 3,
-        //         totalAmountPacked: 1,
-        //         amountPerUnit: 1
-        //     })
-        // );
+        packContents.push(
+            IPack.PackContent({
+                assetContract: address(erc721),
+                tokenType: IPack.TokenType.ERC721,
+                tokenId: 3,
+                totalAmountPacked: 1,
+                amountPerUnit: 1
+            })
+        );
 
-        // packContents.push(
-        //     IPack.PackContent({
-        //         assetContract: address(erc721),
-        //         tokenType: IPack.TokenType.ERC721,
-        //         tokenId: 4,
-        //         totalAmountPacked: 1,
-        //         amountPerUnit: 1
-        //     })
-        // );
+        packContents.push(
+            IPack.PackContent({
+                assetContract: address(erc721),
+                tokenType: IPack.TokenType.ERC721,
+                tokenId: 4,
+                totalAmountPacked: 1,
+                amountPerUnit: 1
+            })
+        );
 
         erc20.mint(address(tokenOwner), 2000 ether);
         erc721.mint(address(tokenOwner), 5);

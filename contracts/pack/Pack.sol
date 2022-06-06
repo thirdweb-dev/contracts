@@ -79,6 +79,8 @@ contract Pack is
     /// @dev Mapping from pack ID => The state of that set of packs.
     mapping(uint256 => PackInfo) private packInfo;
 
+    mapping(uint256 => PackContent[]) private packContents;
+
    /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -189,15 +191,18 @@ contract Pack is
         packId = nextTokenId;
         nextTokenId += 1;
 
-        packTotalSupply = escrowPackContents(_contents, packInfo[packId]);
+        packTotalSupply = escrowPackContents(_contents, packId);
 
-        packInfo[packId].uri = _packUri;
-        packInfo[packId].openStartTimestamp = _openStartTimestamp;
-        packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
+        PackInfo memory pack = PackInfo({
+            uri: _packUri,
+            openStartTimestamp: _openStartTimestamp,
+            amountDistributedPerOpen: _amountDistributedPerOpen
+        });
+        packInfo[packId] = pack;
 
         _mint(_recipient, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _msgSender(), _recipient, packInfo[packId], packTotalSupply);
+        emit PackCreated(packId, _msgSender(), _recipient, pack, packTotalSupply);
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
@@ -213,7 +218,7 @@ contract Pack is
 
         (
             PackContent[] memory rewardUnits
-        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack.contents);
+        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, packContents[_packId]);
 
         _burn(_msgSender(), _packId, _amountToOpen);
 
@@ -231,9 +236,10 @@ contract Pack is
         emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
     }
 
+    /// @dev Escrows contents when creating a pack.
     function escrowPackContents(
         PackContent[] calldata _contents,
-        PackInfo storage pack
+        uint256 _packId
     )
         internal 
         returns (uint256 packTotalSupply) 
@@ -246,7 +252,7 @@ contract Pack is
             require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmountPacked == 1, "invalid erc721 rewards");
 
             packTotalSupply += _contents[i].totalAmountPacked / _contents[i].amountPerUnit;
-            pack.contents.push(_contents[i]);
+            packContents[_packId].push(_contents[i]);
 
             if(_contents[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].totalAmountPacked;
@@ -302,12 +308,12 @@ contract Pack is
                 uint256 check = _availableRewardUnits[j].totalAmountPacked / _availableRewardUnits[j].amountPerUnit;
 
                 if(target < step + check) {
-                    _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
-                    packInfo[_packId].contents[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
 
                     rewardUnits[i] = _availableRewardUnits[j];
                     rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
 
+                    _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
+                    packContents[_packId][j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
 
                     break;
 
@@ -348,7 +354,12 @@ contract Pack is
 
     /// @dev Returns the underlying contents of a pack.
     function getPackContents(uint256 _packId) external view returns (PackContent[] memory contents) {
-        contents = packInfo[_packId].contents;
+        contents = packContents[_packId];
+    }
+
+    /// @dev Returns the info related to a set of packs.
+    function getPackInfo(uint256 _packId) external view returns (PackInfo memory info) {
+        info = packInfo[_packId];
     }
 
     /*///////////////////////////////////////////////////////////////

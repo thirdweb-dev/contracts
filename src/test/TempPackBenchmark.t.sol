@@ -56,54 +56,54 @@ contract TempCreatePackBenchmarkTest is BaseTest {
         );
         amountsPerUnit.push(20 ether);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 1,
-        //         totalAmount: 1
-        //     })
-        // );
-        // amountsPerUnit.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 1,
+                totalAmount: 1
+            })
+        );
+        amountsPerUnit.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc20),
-        //         tokenType: ITokenBundle.TokenType.ERC20,
-        //         tokenId: 0,
-        //         totalAmount: 1000 ether
-        //     })
-        // );
-        // amountsPerUnit.push(10 ether);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        amountsPerUnit.push(10 ether);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 2,
-        //         totalAmount: 1
-        //     })
-        // );
-        // amountsPerUnit.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 2,
+                totalAmount: 1
+            })
+        );
+        amountsPerUnit.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 3,
-        //         totalAmount: 1
-        //     })
-        // );
-        // amountsPerUnit.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 3,
+                totalAmount: 1
+            })
+        );
+        amountsPerUnit.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 4,
-        //         totalAmount: 1
-        //     })
-        // );
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 4,
+                totalAmount: 1
+            })
+        );
         amountsPerUnit.push(1);
 
         erc20.mint(address(tokenOwner), 2000 ether);
