@@ -13,7 +13,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
@@ -21,10 +20,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IPack.sol";
-
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-
-import "../lib/FeeType.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
@@ -33,7 +29,6 @@ import "../feature/ContractMetadata.sol";
 import "../feature/Royalty.sol";
 import "../feature/Ownable.sol";
 import "../feature/PermissionsEnumerable.sol";
-import "../feature/TokenStore.sol";
 
 contract Pack is
     Initializable,
