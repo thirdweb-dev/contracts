@@ -58,23 +58,6 @@ Lets a pack owner open a pack and receive the pack&#39;s reward unit.
 
 ## Events
 
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
-```
-
-
-
-*Emitted when the owner is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
-
 ### PackCreated
 
 ```solidity
@@ -95,28 +78,7 @@ Emitted when a set of packs is created.
 | packInfo  | IPack.PackInfo | undefined |
 | totalPacksCreated  | uint256 | undefined |
 
-<<<<<<< HEAD
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
-
-### RoyaltyForToken
-=======
 ### PackOpened
->>>>>>> pack
 
 ```solidity
 event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, IPack.PackContent[] rewardUnitsDistributed)

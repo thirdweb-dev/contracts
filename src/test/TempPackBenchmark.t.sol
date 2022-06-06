@@ -132,7 +132,6 @@ contract TempCreatePackBenchmarkTest is BaseTest {
     }
 }
 
-
 contract TempOpenPackBenchmarkTest is BaseTest {
     TempPack internal tempPack;
 

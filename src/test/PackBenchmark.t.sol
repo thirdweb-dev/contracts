@@ -240,7 +240,7 @@ contract OpenPackBenchmarkTest is BaseTest {
         pack.createPack(packContents, packUri, 0, 1, address(0x123));
 
         vm.startPrank(address(0x123), address(0x123));
-    }    
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `openPack`

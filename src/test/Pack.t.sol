@@ -211,7 +211,6 @@ contract PackTest is BaseTest {
 
         IPack.PackContent[] memory packed = pack.getPackContents(packId);
         assertEq(packed.length, 8);
-        
     }
 
     function test_balances_openPack() public {
@@ -239,13 +238,15 @@ contract PackTest is BaseTest {
         vm.prank(recipient, recipient);
         pack.openPack(packId, 1);
 
-        if(erc20.balanceOf(address(recipient)) > 0) {
-            assertTrue(erc20.balanceOf(address(recipient)) == 10 ether || erc20.balanceOf(address(recipient)) == 20 ether);
+        if (erc20.balanceOf(address(recipient)) > 0) {
+            assertTrue(
+                erc20.balanceOf(address(recipient)) == 10 ether || erc20.balanceOf(address(recipient)) == 20 ether
+            );
             assertEq(pack.balanceOf(address(recipient), packId), 174);
-        } else if(erc1155.balanceOf(address(recipient), 0) > 0) {
+        } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
             assertEq(erc1155.balanceOf(address(recipient), 0), 5);
             assertEq(pack.balanceOf(address(recipient), packId), 174);
-        } else if(erc721.balanceOf(address(recipient)) > 0) {
+        } else if (erc721.balanceOf(address(recipient)) > 0) {
             assertEq(erc721.balanceOf(address(recipient)), 1);
             assertEq(pack.balanceOf(address(recipient), packId), 174);
         } else {

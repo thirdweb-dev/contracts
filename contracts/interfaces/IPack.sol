@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11; 
+pragma solidity ^0.8.11;
 
 /**
  *  The thirdweb `Pack` contract is a lootbox mechanism. An account can bundle up arbitrary ERC20, ERC721 and ERC1155 tokens into
@@ -8,9 +8,12 @@ pragma solidity ^0.8.11;
  */
 
 interface IPack {
-
     /// @notice The types of tokens that can be added to packs.
-    enum TokenType { ERC20, ERC721, ERC1155 }
+    enum TokenType {
+        ERC20,
+        ERC721,
+        ERC1155
+    }
 
     /**
      *  @notice A unit of content i.e. a token in a pack.
@@ -32,7 +35,7 @@ interface IPack {
 
     /**
      *  @notice All info relevant to packs.
-     *  
+     *
      *  @param contents                 The reward units packed in the packs.
      *  @param openStartTimestamp       The timestamp after which packs can be opened.
      *  @param amountDistributedPerOpen The number of reward units distributed per open.
@@ -46,10 +49,21 @@ interface IPack {
     }
 
     /// @notice Emitted when a set of packs is created.
-    event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, PackInfo packInfo, uint256 totalPacksCreated);
+    event PackCreated(
+        uint256 indexed packId,
+        address indexed packCreator,
+        address recipient,
+        PackInfo packInfo,
+        uint256 totalPacksCreated
+    );
 
     /// @notice Emitted when a pack is opened.
-    event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, PackContent[] rewardUnitsDistributed);
+    event PackOpened(
+        uint256 indexed packId,
+        address indexed opener,
+        uint256 numOfPacksOpened,
+        PackContent[] rewardUnitsDistributed
+    );
 
     /**
      *  @notice Creates a pack with the stated contents.

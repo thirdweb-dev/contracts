@@ -17,7 +17,6 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-
 //  ==========  Internal imports    ==========
 
 import "../interfaces/ITempPack.sol";
@@ -49,7 +48,6 @@ contract TempPack is
     ERC1155PausableUpgradeable,
     ITempPack
 {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -84,7 +82,7 @@ contract TempPack is
     /// @dev Mapping from pack ID => The state of that set of packs.
     mapping(uint256 => PackInfo) private packInfo;
 
-   /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
@@ -143,7 +141,7 @@ contract TempPack is
 
     /// @dev Pauses / unpauses contract.
     function pause(bool _toPause) internal onlyRole(DEFAULT_ADMIN_ROLE) {
-        if(_toPause) {
+        if (_toPause) {
             _pause();
         } else {
             _unpause();
@@ -182,14 +180,7 @@ contract TempPack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    )
-        external
-        onlyRole(MINTER_ROLE)
-        nonReentrant
-        whenNotPaused
-        returns (uint256 packId, uint256 packTotalSupply)
-    {
-
+    ) external onlyRole(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0, "nothing to pack");
 
         packId = nextTokenId;
@@ -207,7 +198,6 @@ contract TempPack is
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
     function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused {
-
         address opener = _msgSender();
 
         require(opener == tx.origin, "opener must be eoa");
@@ -216,9 +206,7 @@ contract TempPack is
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
 
-        (
-            Token[] memory rewardUnits
-        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
+        Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
         _burn(_msgSender(), _packId, _amountToOpen);
 
@@ -232,21 +220,19 @@ contract TempPack is
         uint256[] calldata _perUnitAmounts,
         string calldata _packUri,
         uint256 packId
-    )
-        internal 
-        returns (uint256 packTotalSupply) 
-    {
-
-        for(uint256 i = 0; i < _contents.length; i += 1) {
-
+    ) internal returns (uint256 packTotalSupply) {
+        for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount % _perUnitAmounts[i] == 0, "invalid reward units");
-            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "invalid erc721 rewards");
+            require(
+                _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
+                "invalid erc721 rewards"
+            );
 
             packTotalSupply += _contents[i].totalAmount / _perUnitAmounts[i];
             // packInfo[packId].perUnitAmounts[_contents[i].assetContract] = _perUnitAmounts[i];
             packInfo[packId].perUnitAmounts.push(_perUnitAmounts[i]);
         }
-        
+
         _storeTokens(_msgSender(), _contents, _packUri, packId);
     }
 
@@ -256,35 +242,28 @@ contract TempPack is
         uint256 _numOfPacksToOpen,
         uint256 _rewardUnitsPerOpen,
         PackInfo memory pack
-    )   
-        internal
-        returns (
-            Token[] memory rewardUnits
-        ) 
-    {
+    ) internal returns (Token[] memory rewardUnits) {
         rewardUnits = new Token[](_numOfPacksToOpen * _rewardUnitsPerOpen);
         uint256 currentTotalSupply = totalSupply[_packId];
         uint256 availableRewardUnitsCount = getTokenCountOfBundle(_packId);
 
-        uint256 random = uint(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
-        for(uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
-            
+        uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
+        for (uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
             uint256 step;
-            for(uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
+            for (uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
                 uint256 id = _packId;
                 Token memory _token = getTokenOfBundle(id, j);
                 uint256 check = _token.totalAmount / pack.perUnitAmounts[j];
 
-                if(target < step + check) {
+                if (target < step + check) {
                     _token.totalAmount -= pack.perUnitAmounts[j];
                     _updateTokenInBundle(_token, id, j);
                     rewardUnits[i] = _token;
                     rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
                     break;
-
                 } else {
                     step += check;
                 }
@@ -297,7 +276,11 @@ contract TempPack is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the underlying contents of a pack.
-    function getPackContents(uint256 _packId) external view returns (Token[] memory contents, uint256[] memory perUnitAmounts) {
+    function getPackContents(uint256 _packId)
+        external
+        view
+        returns (Token[] memory contents, uint256[] memory perUnitAmounts)
+    {
         PackInfo storage pack = packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
         contents = new Token[](total);

@@ -98,7 +98,7 @@ function contractURI() external view returns (string)
 
 
 
-*Contract level metadata.*
+
 
 
 #### Returns
@@ -169,6 +169,50 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
+### getPackContents
+
+```solidity
+function getPackContents(uint256 _packId) external view returns (struct IPack.PackContent[] contents)
+```
+
+
+
+*Returns the underlying contents of a pack.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _packId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contents | IPack.PackContent[] | undefined
+
+### getPackInfo
+
+```solidity
+function getPackInfo(uint256 _packId) external view returns (struct IPack.PackInfo info)
+```
+
+
+
+*Returns the info related to a set of packs.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _packId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| info | IPack.PackInfo | undefined
+
 ### getRoleAdmin
 
 ```solidity
@@ -177,7 +221,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 
 
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
+*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
 
 #### Parameters
 
@@ -194,7 +238,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ### getRoleMember
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address)
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
 
@@ -212,12 +256,12 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| member | address | undefined
 
 ### getRoleMemberCount
 
 ```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256)
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
 
@@ -234,7 +278,7 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| count | uint256 | undefined
 
 ### getRoyaltyInfoForToken
 
@@ -267,7 +311,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -285,6 +329,29 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 
 *Returns `true` if `account` has been granted `role`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### hasRoleWithSwitch
+
+```solidity
+function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+```
+
+
+
+
 
 #### Parameters
 
@@ -505,7 +572,7 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable
 ```
 
-
+Lets a pack owner open packs and receive the packs&#39; reward units.
 
 
 
@@ -524,7 +591,7 @@ function owner() external view returns (address)
 
 
 
-*Returns the address of the current owner.*
+
 
 
 #### Returns
@@ -558,7 +625,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+
 
 #### Parameters
 
@@ -575,7 +642,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -771,23 +838,6 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### thirdwebFee
-
-```solidity
-function thirdwebFee() external view returns (contract ITWFee)
-```
-
-
-
-*The thirdweb contract with fee related information.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract ITWFee | undefined
-
 ### totalSupply
 
 ```solidity
@@ -853,6 +903,23 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 | account `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### DefaultRoyalty
 

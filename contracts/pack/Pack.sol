@@ -16,7 +16,6 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IPack.sol";
@@ -44,7 +43,6 @@ contract Pack is
     ERC1155PausableUpgradeable,
     IPack
 {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -81,7 +79,7 @@ contract Pack is
 
     mapping(uint256 => PackContent[]) private packContents;
 
-   /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
@@ -140,7 +138,7 @@ contract Pack is
 
     /// @dev Pauses / unpauses contract.
     function pause(bool _toPause) internal onlyRole(DEFAULT_ADMIN_ROLE) {
-        if(_toPause) {
+        if (_toPause) {
             _pause();
         } else {
             _unpause();
@@ -178,14 +176,7 @@ contract Pack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    )
-        external
-        onlyRole(MINTER_ROLE)
-        nonReentrant
-        whenNotPaused
-        returns (uint256 packId, uint256 packTotalSupply)
-    {
-
+    ) external onlyRole(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0, "nothing to pack");
 
         packId = nextTokenId;
@@ -207,7 +198,6 @@ contract Pack is
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
     function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused {
-
         address opener = _msgSender();
 
         require(opener == tx.origin, "opener must be eoa");
@@ -216,13 +206,16 @@ contract Pack is
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
 
-        (
-            PackContent[] memory rewardUnits
-        ) = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, packContents[_packId]);
+        PackContent[] memory rewardUnits = getRewardUnits(
+            _packId,
+            _amountToOpen,
+            pack.amountDistributedPerOpen,
+            packContents[_packId]
+        );
 
         _burn(_msgSender(), _packId, _amountToOpen);
 
-        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
+        for (uint256 i = 0; i < rewardUnits.length; i += 1) {
             transferPackContent(
                 rewardUnits[i].assetContract,
                 rewardUnits[i].tokenType,
@@ -237,28 +230,27 @@ contract Pack is
     }
 
     /// @dev Escrows contents when creating a pack.
-    function escrowPackContents(
-        PackContent[] calldata _contents,
-        uint256 _packId
-    )
-        internal 
-        returns (uint256 packTotalSupply) 
+    function escrowPackContents(PackContent[] calldata _contents, uint256 _packId)
+        internal
+        returns (uint256 packTotalSupply)
     {
         uint256 nativeTokenAmount;
 
-        for(uint256 i = 0; i < _contents.length; i += 1) {
-
+        for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmountPacked % _contents[i].amountPerUnit == 0, "invalid reward units");
-            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmountPacked == 1, "invalid erc721 rewards");
+            require(
+                _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmountPacked == 1,
+                "invalid erc721 rewards"
+            );
 
             packTotalSupply += _contents[i].totalAmountPacked / _contents[i].amountPerUnit;
             packContents[_packId].push(_contents[i]);
 
-            if(_contents[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN) {
+            if (_contents[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].totalAmountPacked;
             } else {
                 transferPackContent(
-                    _contents[i].assetContract, 
+                    _contents[i].assetContract,
                     _contents[i].tokenType,
                     _msgSender(),
                     address(this),
@@ -268,9 +260,9 @@ contract Pack is
             }
         }
 
-        if(nativeTokenAmount > 0) {
+        if (nativeTokenAmount > 0) {
             transferPackContent(
-                CurrencyTransferLib.NATIVE_TOKEN, 
+                CurrencyTransferLib.NATIVE_TOKEN,
                 TokenType.ERC20,
                 _msgSender(),
                 address(this),
@@ -286,29 +278,20 @@ contract Pack is
         uint256 _numOfPacksToOpen,
         uint256 _rewardUnitsPerOpen,
         PackContent[] memory _availableRewardUnits
-    )   
-        internal
-        returns (
-            PackContent[] memory rewardUnits
-        ) 
-    {
-
+    ) internal returns (PackContent[] memory rewardUnits) {
         rewardUnits = new PackContent[](_numOfPacksToOpen * _rewardUnitsPerOpen);
         uint256 currentTotalSupply = totalSupply[_packId];
 
-        uint256 random = uint(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
-        for(uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
-            
+        uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
+        for (uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
             uint256 step;
 
-            for(uint256 j = 0; j < _availableRewardUnits.length; j += 1) {
-                
+            for (uint256 j = 0; j < _availableRewardUnits.length; j += 1) {
                 uint256 check = _availableRewardUnits[j].totalAmountPacked / _availableRewardUnits[j].amountPerUnit;
 
-                if(target < step + check) {
-
+                if (target < step + check) {
                     rewardUnits[i] = _availableRewardUnits[j];
                     rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
 
@@ -316,7 +299,6 @@ contract Pack is
                     packContents[_packId][j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
 
                     break;
-
                 } else {
                     step += check;
                 }
@@ -334,13 +316,7 @@ contract Pack is
         uint256 _amount
     ) internal {
         if (_tokenType == TokenType.ERC20) {
-            CurrencyTransferLib.transferCurrencyWithWrapper(
-                _assetContract,
-                _from,
-                _to,
-                _amount,
-                nativeTokenWrapper
-            );
+            CurrencyTransferLib.transferCurrencyWithWrapper(_assetContract, _from, _to, _amount, nativeTokenWrapper);
         } else if (_tokenType == TokenType.ERC721) {
             IERC721Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId);
         } else if (_tokenType == TokenType.ERC1155) {

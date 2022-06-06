@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11; 
+pragma solidity ^0.8.11;
 
 import "../feature/interface/ITokenBundle.sol";
 
@@ -10,10 +10,9 @@ import "../feature/interface/ITokenBundle.sol";
  */
 
 interface ITempPack is ITokenBundle {
-
     /**
      *  @notice All info relevant to packs.
-     *  
+     *
      *  @param perUnitAmounts           Mapping from a UID -> to the per-unit amount of that asset i.e. `Token` at that index.
      *  @param openStartTimestamp       The timestamp after which packs can be opened.
      *  @param amountDistributedPerOpen The number of reward units distributed per open.
@@ -25,10 +24,20 @@ interface ITempPack is ITokenBundle {
     }
 
     /// @notice Emitted when a set of packs is created.
-    event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, uint256 totalPacksCreated);
+    event PackCreated(
+        uint256 indexed packId,
+        address indexed packCreator,
+        address recipient,
+        uint256 totalPacksCreated
+    );
 
     /// @notice Emitted when a pack is opened.
-    event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, Token[] rewardUnitsDistributed);
+    event PackOpened(
+        uint256 indexed packId,
+        address indexed opener,
+        uint256 numOfPacksOpened,
+        Token[] rewardUnitsDistributed
+    );
 
     /**
      *  @notice Creates a pack with the stated contents.
