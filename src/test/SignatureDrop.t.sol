@@ -8,6 +8,112 @@ import "./utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
+contract SignatureDropBenchmarkTest is BaseTest {
+    using StringsUpgradeable for uint256;
+
+    SignatureDrop public sigdrop;
+    address internal deployerSigner;
+    bytes32 internal typehashMintRequest;
+    bytes32 internal nameHash;
+    bytes32 internal versionHash;
+    bytes32 internal typehashEip712;
+    bytes32 internal domainSeparator;
+
+    SignatureDrop.AllowlistProof alp;
+    SignatureDrop.MintRequest mintrequest;
+    bytes signature;
+
+    using stdStorage for StdStorage;
+
+    function setUp() public override {
+        super.setUp();
+        deployerSigner = signer;
+        sigdrop = SignatureDrop(getContract("SignatureDrop"));
+
+        erc20.mint(deployerSigner, 1_000_000);
+        vm.deal(deployerSigner, 1_000);
+
+        typehashMintRequest = keccak256(
+            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
+        nameHash = keccak256(bytes("SignatureMintERC721"));
+        versionHash = keccak256(bytes("1"));
+        typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop)));
+
+        // ==========================
+
+        bytes32[] memory proofs = new bytes32[](0);
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false, "");
+        uint256 id = 0;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1;
+        mintrequest.currency = address(erc20);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        signature = signMintRequest(mintrequest, privateKey);
+        vm.startPrank(deployerSigner);
+
+        vm.warp(1000);
+        erc20.approve(address(sigdrop), 1);
+    }
+
+    function signMintRequest(SignatureDrop.MintRequest memory mintrequest, uint256 privateKey)
+        internal
+        returns (bytes memory)
+    {
+        bytes memory encodedRequest = abi.encode(
+            typehashMintRequest,
+            mintrequest.to,
+            mintrequest.royaltyRecipient,
+            mintrequest.royaltyBps,
+            mintrequest.primarySaleRecipient,
+            keccak256(bytes(mintrequest.uri)),
+            mintrequest.quantity,
+            mintrequest.pricePerToken,
+            mintrequest.currency,
+            mintrequest.validityStartTimestamp,
+            mintrequest.validityEndTimestamp,
+            mintrequest.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        return signature;
+    }
+
+    function test_benchmark_mintWithSignature() public {
+        sigdrop.mintWithSignature(mintrequest, signature);
+    }
+
+    function test_benchmark_claim() public {
+        sigdrop.claim(address(25), 1, address(0), 0, alp, "");
+    }
+}
+
 contract SignatureDropTest is BaseTest {
     using StringsUpgradeable for uint256;
 
