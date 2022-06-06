@@ -113,6 +113,9 @@ contract Pack is
         __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
 
+        // Revoked at the end of the function.
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+
         name = _name;
         symbol = _symbol;
 
@@ -125,6 +128,8 @@ contract Pack is
         _setupRole(TRANSFER_ROLE, address(0));
 
         setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+
+        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -307,12 +312,12 @@ contract Pack is
                 uint256 check = _availableRewardUnits[j].totalAmountPacked / _availableRewardUnits[j].amountPerUnit;
 
                 if(target < step + check) {
+                    _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
+                    packInfo[_packId].contents[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
 
                     rewardUnits[i] = _availableRewardUnits[j];
                     rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
 
-                    _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
-                    packInfo[_packId].contents[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
 
                     break;
 
@@ -345,6 +350,15 @@ contract Pack is
         } else if (_tokenType == TokenType.ERC1155) {
             IERC1155Upgradeable(_assetContract).safeTransferFrom(_from, _to, _tokenId, _amount, "");
         }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Getter functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the underlying contents of a pack.
+    function getPackContents(uint256 _packId) external view returns (PackContent[] memory contents) {
+        contents = packInfo[_packId].contents;
     }
 
     /*///////////////////////////////////////////////////////////////

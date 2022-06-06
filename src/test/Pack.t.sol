@@ -1,121 +1,119 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TempPack } from "contracts/pack/TempPack.sol";
-import { ITempPack } from "contracts/interfaces/ITempPack.sol";
-import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
+import { Pack } from "contracts/pack/Pack.sol";
+import { IPack } from "contracts/interfaces/IPack.sol";
 
 // Test imports
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
 
-contract TempPackTest is BaseTest {
-    TempPack internal tempPack;
+contract PackTest is BaseTest {
+    Pack internal pack;
 
     Wallet internal tokenOwner;
     string internal packUri;
-    ITokenBundle.Token[] internal packContents;
-    uint256[] internal amountsPerUnit;
+    IPack.PackContent[] internal packContents;
 
     function setUp() public override {
         super.setUp();
 
-        tempPack = TempPack(getContract("TempPack"));
+        pack = Pack(getContract("Pack"));
 
         tokenOwner = getWallet();
         packUri = "ipfs://";
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc721),
-                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenType: IPack.TokenType.ERC721,
                 tokenId: 0,
-                totalAmount: 1
+                totalAmountPacked: 1,
+                amountPerUnit: 1
             })
         );
-        amountsPerUnit.push(1);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc1155),
-                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenType: IPack.TokenType.ERC1155,
                 tokenId: 0,
-                totalAmount: 100
+                totalAmountPacked: 100,
+                amountPerUnit: 5
             })
         );
-        amountsPerUnit.push(5);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc20),
-                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenType: IPack.TokenType.ERC20,
                 tokenId: 0,
-                totalAmount: 1000 ether
+                totalAmountPacked: 1000 ether,
+                amountPerUnit: 20 ether
             })
         );
-        amountsPerUnit.push(20 ether);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc721),
-                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenType: IPack.TokenType.ERC721,
                 tokenId: 1,
-                totalAmount: 1
+                totalAmountPacked: 1,
+                amountPerUnit: 1
             })
         );
-        amountsPerUnit.push(1);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc20),
-                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenType: IPack.TokenType.ERC20,
                 tokenId: 0,
-                totalAmount: 1000 ether
+                totalAmountPacked: 1000 ether,
+                amountPerUnit: 10 ether
             })
         );
-        amountsPerUnit.push(10 ether);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc721),
-                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenType: IPack.TokenType.ERC721,
                 tokenId: 2,
-                totalAmount: 1
+                totalAmountPacked: 1,
+                amountPerUnit: 1
             })
         );
-        amountsPerUnit.push(1);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc721),
-                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenType: IPack.TokenType.ERC721,
                 tokenId: 3,
-                totalAmount: 1
+                totalAmountPacked: 1,
+                amountPerUnit: 1
             })
         );
-        amountsPerUnit.push(1);
 
         packContents.push(
-            ITokenBundle.Token({
+            IPack.PackContent({
                 assetContract: address(erc721),
-                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenType: IPack.TokenType.ERC721,
                 tokenId: 4,
-                totalAmount: 1
+                totalAmountPacked: 1,
+                amountPerUnit: 1
             })
         );
-        amountsPerUnit.push(1);
 
         erc20.mint(address(tokenOwner), 2000 ether);
         erc721.mint(address(tokenOwner), 5);
         erc1155.mint(address(tokenOwner), 0, 100);
 
-        tokenOwner.setAllowanceERC20(address(erc20), address(tempPack), type(uint256).max);
-        tokenOwner.setApprovalForAllERC721(address(erc721), address(tempPack), true);
-        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(tempPack), true);
+        tokenOwner.setAllowanceERC20(address(erc20), address(pack), type(uint256).max);
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(pack), true);
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(pack), true);
 
         vm.prank(deployer);
-        tempPack.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
+        pack.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -126,24 +124,24 @@ contract TempPackTest is BaseTest {
      *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
      */
     function test_state_createPack() public {
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = pack.nextTokenId();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        pack.createPack(packContents, packUri, 0, 1, recipient);
 
-        assertEq(packId + 1, tempPack.nextTokenId());
+        assertEq(packId + 1, pack.nextTokenId());
 
-        (ITokenBundle.Token[] memory packed, ) = tempPack.getPackContents(packId);
+        IPack.PackContent[] memory packed = pack.getPackContents(packId);
         assertEq(packed.length, packContents.length);
         for (uint256 i = 0; i < packed.length; i += 1) {
             assertEq(packed[i].assetContract, packContents[i].assetContract);
             assertEq(uint256(packed[i].tokenType), uint256(packContents[i].tokenType));
             assertEq(packed[i].tokenId, packContents[i].tokenId);
-            assertEq(packed[i].totalAmount, packContents[i].totalAmount);
+            assertEq(packed[i].totalAmountPacked, packContents[i].totalAmountPacked);
         }
 
-        assertEq(packUri, tempPack.uri(packId));
+        assertEq(packUri, pack.uri(packId));
     }
 
     /**
@@ -152,7 +150,7 @@ contract TempPackTest is BaseTest {
     function test_balances_createPack() public {
         // ERC20 balance
         assertEq(erc20.balanceOf(address(tokenOwner)), 2000 ether);
-        assertEq(erc20.balanceOf(address(tempPack)), 0);
+        assertEq(erc20.balanceOf(address(pack)), 0);
 
         // ERC721 balance
         assertEq(erc721.ownerOf(0), address(tokenOwner));
@@ -163,31 +161,31 @@ contract TempPackTest is BaseTest {
 
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 100);
-        assertEq(erc1155.balanceOf(address(tempPack), 0), 0);
+        assertEq(erc1155.balanceOf(address(pack), 0), 0);
 
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = pack.nextTokenId();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        pack.createPack(packContents, packUri, 0, 1, recipient);
 
         // ERC20 balance
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
-        assertEq(erc20.balanceOf(address(tempPack)), 2000 ether);
+        assertEq(erc20.balanceOf(address(pack)), 2000 ether);
 
         // ERC721 balance
-        assertEq(erc721.ownerOf(0), address(tempPack));
-        assertEq(erc721.ownerOf(1), address(tempPack));
-        assertEq(erc721.ownerOf(2), address(tempPack));
-        assertEq(erc721.ownerOf(3), address(tempPack));
-        assertEq(erc721.ownerOf(4), address(tempPack));
+        assertEq(erc721.ownerOf(0), address(pack));
+        assertEq(erc721.ownerOf(1), address(pack));
+        assertEq(erc721.ownerOf(2), address(pack));
+        assertEq(erc721.ownerOf(3), address(pack));
+        assertEq(erc721.ownerOf(4), address(pack));
 
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 0);
-        assertEq(erc1155.balanceOf(address(tempPack), 0), 100);
+        assertEq(erc1155.balanceOf(address(pack), 0), 100);
 
-        // TempPack wrapped token balance
-        assertEq(tempPack.balanceOf(address(recipient), packId), 175);
+        // Pack token balance
+        assertEq(pack.balanceOf(address(recipient), packId), 175);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -199,59 +197,59 @@ contract TempPackTest is BaseTest {
      */
     function test_state_openPack() public {
         vm.warp(1000);
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = pack.nextTokenId();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        pack.createPack(packContents, packUri, 0, 1, recipient);
 
         vm.prank(recipient, recipient);
-        tempPack.openPack(packId, 1);
+        pack.openPack(packId, 1);
 
-        assertEq(packUri, tempPack.uri(packId));
-        assertEq(tempPack.totalSupply(packId), 174);
+        assertEq(packUri, pack.uri(packId));
+        assertEq(pack.totalSupply(packId), 174);
 
-        (ITokenBundle.Token[] memory packed, ) = tempPack.getPackContents(packId);
+        IPack.PackContent[] memory packed = pack.getPackContents(packId);
         assertEq(packed.length, 8);
         
     }
 
     function test_balances_openPack() public {
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = pack.nextTokenId();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        pack.createPack(packContents, packUri, 0, 1, recipient);
 
         // ERC20 balance
         assertEq(erc20.balanceOf(address(recipient)), 0);
-        assertEq(erc20.balanceOf(address(tempPack)), 2000 ether);
+        assertEq(erc20.balanceOf(address(pack)), 2000 ether);
 
         // ERC721 balance
-        assertEq(erc721.ownerOf(0), address(tempPack));
-        assertEq(erc721.ownerOf(1), address(tempPack));
-        assertEq(erc721.ownerOf(2), address(tempPack));
-        assertEq(erc721.ownerOf(3), address(tempPack));
-        assertEq(erc721.ownerOf(4), address(tempPack));
+        assertEq(erc721.ownerOf(0), address(pack));
+        assertEq(erc721.ownerOf(1), address(pack));
+        assertEq(erc721.ownerOf(2), address(pack));
+        assertEq(erc721.ownerOf(3), address(pack));
+        assertEq(erc721.ownerOf(4), address(pack));
 
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(recipient), 0), 0);
-        assertEq(erc1155.balanceOf(address(tempPack), 0), 100);
+        assertEq(erc1155.balanceOf(address(pack), 0), 100);
 
         vm.prank(recipient, recipient);
-        tempPack.openPack(packId, 1);
+        pack.openPack(packId, 1);
 
         if(erc20.balanceOf(address(recipient)) > 0) {
             assertTrue(erc20.balanceOf(address(recipient)) == 10 ether || erc20.balanceOf(address(recipient)) == 20 ether);
-            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
+            assertEq(pack.balanceOf(address(recipient), packId), 174);
         } else if(erc1155.balanceOf(address(recipient), 0) > 0) {
             assertEq(erc1155.balanceOf(address(recipient), 0), 5);
-            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
+            assertEq(pack.balanceOf(address(recipient), packId), 174);
         } else if(erc721.balanceOf(address(recipient)) > 0) {
             assertEq(erc721.balanceOf(address(recipient)), 1);
-            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
+            assertEq(pack.balanceOf(address(recipient), packId), 174);
         } else {
-            assertEq(tempPack.balanceOf(address(recipient), packId), 178);
+            assertEq(pack.balanceOf(address(recipient), packId), 178);
         }
     }
 }

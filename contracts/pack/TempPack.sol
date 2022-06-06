@@ -272,7 +272,6 @@ contract TempPack is
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
             uint256 step;
-
             for(uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
                 uint256 id = _packId;
                 Token memory _token = getTokenOfBundle(id, j);
