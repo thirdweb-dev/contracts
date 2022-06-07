@@ -292,11 +292,11 @@ contract Pack is
                 uint256 check = _availableRewardUnits[j].totalAmountPacked / _availableRewardUnits[j].amountPerUnit;
 
                 if (target < step + check) {
-                    rewardUnits[i] = _availableRewardUnits[j];
-                    rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
-
                     _availableRewardUnits[j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
                     packContents[_packId][j].totalAmountPacked -= _availableRewardUnits[j].amountPerUnit;
+
+                    rewardUnits[i] = _availableRewardUnits[j];
+                    rewardUnits[i].totalAmountPacked = _availableRewardUnits[j].amountPerUnit;
 
                     break;
                 } else {
