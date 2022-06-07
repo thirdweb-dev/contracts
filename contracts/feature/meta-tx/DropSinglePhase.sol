@@ -153,7 +153,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
             "exceed max claimable supply."
         );
 
-        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(conditionId, _claimer);
+        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
         require(lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
 
@@ -181,12 +181,12 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(bytes32 _conditionId, address _claimer)
+    function getClaimTimestamp(address _claimer)
         public
         view
         returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
     {
-        lastClaimedAt = lastClaimTimestamp[_conditionId][_claimer];
+        lastClaimedAt = lastClaimTimestamp[conditionId][_claimer];
 
         unchecked {
             nextValidClaimTimestamp = lastClaimedAt + claimCondition.waitTimeInSecondsBetweenClaims;
