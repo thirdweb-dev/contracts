@@ -229,21 +229,20 @@ contract TempPack is
         rewardUnits = new Token[](_numOfPacksToOpen * _rewardUnitsPerOpen);
         uint256 currentTotalSupply = totalSupply[_packId];
         uint256 availableRewardUnitsCount = getTokenCountOfBundle(_packId);
-        uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
 
+        uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
         for (uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
             uint256 step;
-
             for (uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
-                Token memory _token = getTokenOfBundle(_packId, j);
+                uint256 id = _packId;
+                Token memory _token = getTokenOfBundle(id, j);
                 uint256 check = _token.totalAmount / pack.perUnitAmounts[j];
 
                 if (target < step + check) {
                     _token.totalAmount -= pack.perUnitAmounts[j];
-                    _updateTokenInBundle(_token, _packId, j);
-
+                    _updateTokenInBundle(_token, id, j);
                     rewardUnits[i] = _token;
                     rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
