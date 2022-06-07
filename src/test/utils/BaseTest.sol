@@ -95,7 +95,7 @@ abstract contract BaseTest is DSTest, Test {
         // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("TempPack"), 1)));
-        TWFactory(factory).addImplementation(address(new TempPack(fee, address(weth))));
+        TWFactory(factory).addImplementation(address(new TempPack(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
         TWFactory(factory).addImplementation(address(new Pack(address(weth))));
         TWFactory(factory).addImplementation(address(new VoteERC20()));

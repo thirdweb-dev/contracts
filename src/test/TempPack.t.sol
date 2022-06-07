@@ -126,13 +126,13 @@ contract TempPackTest is BaseTest {
      *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
      */
     function test_state_createPack() public {
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
         tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
 
-        assertEq(packId + 1, tempPack.nextTokenId());
+        assertEq(packId + 1, tempPack.nextTokenIdToMint());
 
         (ITokenBundle.Token[] memory packed, ) = tempPack.getPackContents(packId);
         assertEq(packed.length, packContents.length);
@@ -165,7 +165,7 @@ contract TempPackTest is BaseTest {
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 100);
         assertEq(erc1155.balanceOf(address(tempPack), 0), 0);
 
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
@@ -199,7 +199,7 @@ contract TempPackTest is BaseTest {
      */
     function test_state_openPack() public {
         vm.warp(1000);
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
@@ -216,7 +216,7 @@ contract TempPackTest is BaseTest {
     }
 
     function test_balances_openPack() public {
-        uint256 packId = tempPack.nextTokenId();
+        uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
