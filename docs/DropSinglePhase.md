@@ -58,7 +58,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 ### getClaimTimestamp
 
 ```solidity
-function getClaimTimestamp(bytes32 _conditionId, address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+function getClaimTimestamp(address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
 ```
 
 
@@ -69,7 +69,6 @@ function getClaimTimestamp(bytes32 _conditionId, address _claimer) external view
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | bytes32 | undefined
 | _claimer | address | undefined
 
 #### Returns
