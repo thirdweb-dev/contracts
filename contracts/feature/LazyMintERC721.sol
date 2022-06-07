@@ -15,6 +15,8 @@ abstract contract LazyMintERC721 is LazyMint {
         string calldata baseURIForTokens,
         bytes calldata extraData
     ) external virtual override returns (uint256 batchId) {
+        require(amount > 0, "amount must be greater than 0");
+        require(_canLazyMint(), "Not authorized");
         uint256 startId = nextTokenIdToMint;
         (nextTokenIdToMint, batchId) = _batchMint(startId, amount, baseURIForTokens);
         emit TokensLazyMinted(startId, startId + amount, baseURIForTokens, extraData);
