@@ -5,6 +5,6 @@ interface ILazyMint {
     function lazyMint(
         uint256 amount,
         string calldata baseURIForTokens,
-        bytes calldata encryptedBaseURI
+        bytes calldata extraData
     ) external returns (uint256 batchId);
 }
