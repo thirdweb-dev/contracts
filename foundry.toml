@@ -19,8 +19,8 @@ remappings = [
   'contracts/=contracts/',
   'erc721a-upgradeable/=node_modules/erc721a-upgradeable/',
 ]
-src = 'src'
-test = 'test'
+src = 'contracts'
+test = 'src/test'
 verbosity = 0
 #ignored_error_codes = []
 #fuzz_runs = 256

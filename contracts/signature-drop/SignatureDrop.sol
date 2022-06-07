@@ -25,7 +25,7 @@ import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
-import "../feature/meta-tx/Drop.sol";
+import "../feature/Drop.sol";
 import "../feature/interface/ISignatureMintERC721.sol";
 
 contract SignatureDrop is

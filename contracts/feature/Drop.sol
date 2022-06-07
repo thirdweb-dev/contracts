@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/IDrop.sol";
-import "../../lib/MerkleProof.sol";
-import "../../lib/Bitmaps.sol";
+import "./interface/IDrop.sol";
+import "../lib/MerkleProof.sol";
+import "../lib/Bitmaps.sol";
 
 abstract contract Drop is IDrop {
     using BitMaps for BitMaps.BitMap;
@@ -180,13 +180,6 @@ abstract contract Drop is IDrop {
             "exceed max claimable supply."
         );
 
-        // uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        // uint256 timestampOfLastClaim = claimCondition.lastClaimTimestamp[_conditionId][_claimer];
-        // require(
-        //     timestampOfLastClaim == 0 ||
-        //         block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-        //     "cannot claim."
-        // );
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
         require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
@@ -207,7 +200,6 @@ abstract contract Drop is IDrop {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             require(validMerkleProof, "not in whitelist.");
-            // require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
             require(!claimCondition.usedAllowlistSpot[_conditionId].get(merkleProofIndex), "proof claimed.");
             require(
                 _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
