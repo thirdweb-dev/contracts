@@ -66,7 +66,7 @@ contract TempPack is
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// @dev The token Id of the next set of packs to be minted.
-    uint256 public nextTokenId;
+    uint256 public nextTokenIdToMint;
 
     /*///////////////////////////////////////////////////////////////
                              Mappings
@@ -177,8 +177,8 @@ contract TempPack is
     ) external onlyRole(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0, "nothing to pack");
 
-        packId = nextTokenId;
-        nextTokenId += 1;
+        packId = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
 
         packTotalSupply = escrowPackContents(_contents, _perUnitAmounts, _packUri, packId);
 
