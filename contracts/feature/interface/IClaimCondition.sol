@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../../lib/BitMaps.sol";
+import "../../lib/Bitmaps.sol";
 
 /**
  *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens.
