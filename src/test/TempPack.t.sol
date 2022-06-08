@@ -607,4 +607,116 @@ contract TempPackTest is BaseTest {
         vm.expectRevert("opening more than owned");
         tempPack.openPack(2, 1);
     }
+
+    
+    /*///////////////////////////////////////////////////////////////
+                            Fuzz testing
+    //////////////////////////////////////////////////////////////*/
+
+
+    uint256 internal constant MAX_TOKENS = 10;
+
+    function getTokensToPack(uint256 len) internal returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) {
+        vm.assume(len < MAX_TOKENS);
+        tokensToPack = new ITokenBundle.Token[](len);
+        amounts = new uint256[](len);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            uint256 random = uint256(keccak256(abi.encodePacked(len + i))) % MAX_TOKENS;
+            uint256 selector = random % 3;
+
+            if (selector == 0) {
+                tokensToPack[i] = ITokenBundle.Token({
+                    assetContract: address(erc20),
+                    tokenType: ITokenBundle.TokenType.ERC20,
+                    tokenId: 0,
+                    totalAmount: random * 10 ether
+                });
+                amounts[i] = 10 ether;
+
+                erc20.mint(address(tokenOwner), tokensToPack[i].totalAmount);
+            } else if (selector == 1) {
+                uint256 tokenId = erc721.nextTokenIdToMint();
+
+                tokensToPack[i] = ITokenBundle.Token({
+                    assetContract: address(erc721),
+                    tokenType: ITokenBundle.TokenType.ERC721,
+                    tokenId: tokenId,
+                    totalAmount: 1
+                });
+                amounts[i] = 1;
+
+                erc721.mint(address(tokenOwner), 1);
+            } else if (selector == 2) {
+                tokensToPack[i] = ITokenBundle.Token({
+                    assetContract: address(erc1155),
+                    tokenType: ITokenBundle.TokenType.ERC1155,
+                    tokenId: random,
+                    totalAmount: random * 10
+                });
+                amounts[i] = 10;
+
+                erc1155.mint(address(tokenOwner), tokensToPack[i].tokenId, tokensToPack[i].totalAmount);
+            }
+        }
+    }
+
+    function test_fuzz_state_createPack(uint256 x) public {
+        (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) = getTokensToPack(x);
+        if (tokensToPack.length == 0) {
+            return;
+        }
+
+        uint256 packId = tempPack.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        tempPack.createPack(tokensToPack, amounts, packUri, 0, 1, recipient);
+
+        assertEq(packId + 1, tempPack.nextTokenIdToMint());
+
+        (ITokenBundle.Token[] memory packed, ) = tempPack.getPackContents(packId);
+        assertEq(packed.length, tokensToPack.length);
+        for (uint256 i = 0; i < packed.length; i += 1) {
+            assertEq(packed[i].assetContract, tokensToPack[i].assetContract);
+            assertEq(uint256(packed[i].tokenType), uint256(tokensToPack[i].tokenType));
+            assertEq(packed[i].tokenId, tokensToPack[i].tokenId);
+            assertEq(packed[i].totalAmount, tokensToPack[i].totalAmount);
+        }
+
+        assertEq(packUri, tempPack.uri(packId));
+    }
+
+    function test_fuzz_state_openPack(uint256 x) public {
+        (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) = getTokensToPack(x);
+        if (tokensToPack.length == 0) {
+            return;
+        }
+
+        uint256 packId = tempPack.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = tempPack.createPack(tokensToPack, amounts, packUri, 0, 1, recipient);
+
+        vm.prank(recipient, recipient);
+        tempPack.openPack(packId, 1);
+
+        assertEq(packUri, tempPack.uri(packId));
+
+        if (erc20.balanceOf(address(recipient)) > 0) {
+            assertTrue(
+                erc20.balanceOf(address(recipient)) == 10 ether
+            );
+            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
+            assertEq(erc1155.balanceOf(address(recipient), 0), 10);
+            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        } else if (erc721.balanceOf(address(recipient)) > 0) {
+            assertEq(erc721.balanceOf(address(recipient)), 1);
+            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        } else {
+            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        }
+    }
 }
