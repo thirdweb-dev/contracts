@@ -252,7 +252,7 @@ contract TempPack is
         uint256 currentTotalSupply = totalSupply[_packId];
         uint256 availableRewardUnitsCount = getTokenCountOfBundle(_packId);
 
-        uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
+        uint256 random = generateRandomValue();
         for (uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
@@ -319,6 +319,10 @@ contract TempPack is
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function generateRandomValue() internal view returns(uint256 random) {
+        random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
+    }
 
     /**
      * @dev See {ERC1155-_beforeTokenTransfer}.
