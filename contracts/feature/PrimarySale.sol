@@ -12,9 +12,13 @@ abstract contract PrimarySale is IPrimarySale {
     }
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) public override {
+    function setPrimarySaleRecipient(address _saleRecipient) external override {
         require(_canSetPrimarySaleRecipient(), "Not authorized");
+        _setupPrimarySaleRecipient(_saleRecipient);
+    }
 
+    /// @dev Lets a contract admin set the recipient for all primary sales.
+    function _setupPrimarySaleRecipient(address _saleRecipient) internal {
         recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }

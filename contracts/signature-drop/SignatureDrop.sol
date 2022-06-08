@@ -92,22 +92,17 @@ contract SignatureDrop is
         __ERC721A_init(_name, _symbol);
         __SignatureMintERC721_init();
 
-        // Revoked at the end of the function.
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
-        setContractURI(_contractURI);
-        setOwner(_defaultAdmin);
+        _setupContractURI(_contractURI);
+        _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
 
-        setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        setPrimarySaleRecipient(_saleRecipient);
-
-        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setupPrimarySaleRecipient(_saleRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////
