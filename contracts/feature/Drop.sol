@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDrop.sol";
 import "../lib/MerkleProof.sol";
-import "../lib/TWBitmaps.sol";
+import "../lib/TWBitMaps.sol";
 
 abstract contract Drop is IDrop {
     using TWBitMaps for TWBitMaps.BitMap;
