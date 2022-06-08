@@ -89,7 +89,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(uint256(conditionId), _msgSender(), _receiver, startTokenId, _quantity);
+        emit TokensClaimed(_msgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
