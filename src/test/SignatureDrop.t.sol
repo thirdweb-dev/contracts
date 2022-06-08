@@ -56,7 +56,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
         uint256 id = 0;
 
         mintrequest.to = address(0);
@@ -754,7 +754,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
@@ -784,7 +784,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         vm.expectRevert("not enough minted tokens.");
         vm.prank(getActor(6), getActor(6));
@@ -811,7 +811,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(200, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
@@ -853,7 +853,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(200, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver);
@@ -885,13 +885,13 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
 
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], true, "");
+        sigdrop.setClaimConditions(conditions[0], true);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
@@ -951,7 +951,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", "");
 
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
         vm.deal(address(mal), 100 ether);
@@ -973,7 +973,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false, "");
+        sigdrop.setClaimConditions(conditions[0], false);
 
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;

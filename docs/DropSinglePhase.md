@@ -81,7 +81,7 @@ function getClaimTimestamp(address _claimer) external view returns (uint256 last
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility, bytes) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
 ```
 
 
@@ -94,7 +94,6 @@ function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _res
 |---|---|---|
 | _condition | IClaimCondition.ClaimCondition | undefined
 | _resetClaimEligibility | bool | undefined
-| _2 | bytes | undefined
 
 ### verifyClaim
 

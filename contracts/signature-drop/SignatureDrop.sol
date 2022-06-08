@@ -24,7 +24,7 @@ import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
 import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
-import "../feature/meta-tx/DropSinglePhase.sol";
+import "../feature/DropSinglePhase.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
 
 contract SignatureDrop is
@@ -328,11 +328,15 @@ contract SignatureDrop is
         }
     }
 
+    function _dropMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
+    }
+
     function _msgSender()
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, ExecutionContext)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
@@ -342,7 +346,7 @@ contract SignatureDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, ExecutionContext)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (bytes calldata)
     {
         return ERC2771ContextUpgradeable._msgData();

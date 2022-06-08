@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/IDropSinglePhase.sol";
-import "../../lib/MerkleProof.sol";
-import "./ExecutionContext.sol";
-import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
+import "./interface/IDropSinglePhase.sol";
+import "../lib/MerkleProof.sol";
+import "../lib/TWBitMaps.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
-    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
+abstract contract DropSinglePhase is IDropSinglePhase {
+    using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -33,7 +32,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
      *  @dev Map from a claim condition uid to whether an address in an allowlist
      *       has already claimed tokens i.e. used their place in the allowlist.
      */
-    mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
+    mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -61,7 +60,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
 
         // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            _msgSender(),
+            _dropMsgSender(),
             _quantity,
             _allowlistProof
         );
@@ -69,7 +68,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
 
-        verifyClaim(_msgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(_dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -81,7 +80,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
 
         // Update contract state.
         claimCondition.supplyClaimed += _quantity;
-        lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
+        lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_quantity, _currency, _pricePerToken);
@@ -89,7 +88,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(_msgSender(), _receiver, startTokenId, _quantity);
+        emit TokensClaimed(_dropMsgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
@@ -97,8 +96,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(
         ClaimCondition calldata _condition,
-        bool _resetClaimEligibility,
-        bytes memory
+        bool _resetClaimEligibility
     ) external override {
         require(_canSetClaimConditions(), "Not authorized");
 
@@ -107,7 +105,7 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
 
         if (_resetClaimEligibility) {
             supplyClaimedAlready = 0;
-            targetConditionId = keccak256(abi.encodePacked(msg.sender, block.number));
+            targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number));
         }
 
         require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
@@ -197,9 +195,14 @@ abstract contract DropSinglePhase is IDropSinglePhase, ExecutionContext {
         }
     }
 
-    /*///////////////////////////////////////////////////////////////
-        Virtual functions: to be implemented in derived contract
-    //////////////////////////////////////////////////////////////*/
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender.
+    function _dropMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
 
     /// @dev Runs before every `claim` function call.
     function _beforeClaim(

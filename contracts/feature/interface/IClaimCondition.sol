@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
+import "../../lib/TWBitMaps.sol";
 
 /**
  *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens.
@@ -75,6 +75,6 @@ interface IClaimCondition {
         uint256 count;
         mapping(uint256 => ClaimCondition) conditions;
         mapping(uint256 => mapping(address => uint256)) lastClaimTimestamp;
-        mapping(uint256 => BitMapsUpgradeable.BitMap) usedAllowlistSpot;
+        mapping(uint256 => TWBitMaps.BitMap) usedAllowlistSpot;
     }
 }
