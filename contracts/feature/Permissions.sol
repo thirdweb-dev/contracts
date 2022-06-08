@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IPermissions.sol";
-import "../lib/Strings.sol";
+import "../lib/TWStrings.sol";
 
 contract Permissions is IPermissions {
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
@@ -68,9 +68,9 @@ contract Permissions is IPermissions {
                 string(
                     abi.encodePacked(
                         "Permissions: account ",
-                        Strings.toHexString(uint160(account), 20),
+                        TWStrings.toHexString(uint160(account), 20),
                         " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
+                        TWStrings.toHexString(uint256(role), 32)
                     )
                 )
             );
@@ -83,9 +83,9 @@ contract Permissions is IPermissions {
                 string(
                     abi.encodePacked(
                         "Permissions: account ",
-                        Strings.toHexString(uint160(account), 20),
+                        TWStrings.toHexString(uint160(account), 20),
                         " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
+                        TWStrings.toHexString(uint256(role), 32)
                     )
                 )
             );

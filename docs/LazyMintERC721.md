@@ -90,6 +90,28 @@ function nextTokenIdToMint() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### tokenURI
+
+```solidity
+function tokenURI(uint256 _tokenId) external view returns (string)
+```
+
+
+
+*Returns the URI for a given tokenId*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 
 
 ## Events
