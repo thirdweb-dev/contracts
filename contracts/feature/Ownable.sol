@@ -8,9 +8,13 @@ abstract contract Ownable is IOwnable {
     address public override owner;
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) public override {
+    function setOwner(address _newOwner) external override {
         require(_canSetOwner(), "Not authorized");
+        _setupOwner(_newOwner);
+    }
 
+    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
+    function _setupOwner(address _newOwner) internal {
         address _prevOwner = owner;
         owner = _newOwner;
 

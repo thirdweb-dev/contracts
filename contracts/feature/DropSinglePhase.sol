@@ -88,17 +88,15 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(claimCondition, _dropMsgSender(), _receiver, _quantity, startTokenId);
+        emit TokensClaimed(_dropMsgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(
-        ClaimCondition calldata _condition,
-        bool _resetClaimEligibility,
-        bytes memory
-    ) external virtual override {
+    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
+        require(_canSetClaimConditions(), "Not authorized");
+
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
 
@@ -110,10 +108,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
 
         claimCondition = ClaimCondition({
-            startTimestamp: block.timestamp,
+            startTimestamp: _condition.startTimestamp,
             maxClaimableSupply: _condition.maxClaimableSupply,
             supplyClaimed: supplyClaimedAlready,
-            quantityLimitPerTransaction: _condition.supplyClaimed,
+            quantityLimitPerTransaction: _condition.quantityLimitPerTransaction,
             waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
             merkleRoot: _condition.merkleRoot,
             pricePerToken: _condition.pricePerToken,
@@ -150,12 +148,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             "exceed max claimable supply."
         );
 
-        uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        require(
-            timestampOfLastClaim == 0 ||
-                block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
+        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
+        require(lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -178,6 +172,23 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
                 "invalid quantity proof."
             );
+        }
+    }
+
+    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
+    function getClaimTimestamp(address _claimer)
+        public
+        view
+        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+    {
+        lastClaimedAt = lastClaimTimestamp[conditionId][_claimer];
+
+        unchecked {
+            nextValidClaimTimestamp = lastClaimedAt + claimCondition.waitTimeInSecondsBetweenClaims;
+
+            if (nextValidClaimTimestamp < lastClaimedAt) {
+                nextValidClaimTimestamp = type(uint256).max;
+            }
         }
     }
 
@@ -210,10 +221,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         bytes memory _data
     ) internal virtual {}
 
-    /*///////////////////////////////////////////////////////////////
-        Virtual functions: to be implemented in derived contract
-    //////////////////////////////////////////////////////////////*/
-
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
         uint256 _quantityToClaim,
@@ -226,4 +233,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         internal
         virtual
         returns (uint256 startTokenId);
+
+    function _canSetClaimConditions() internal virtual returns (bool);
 }

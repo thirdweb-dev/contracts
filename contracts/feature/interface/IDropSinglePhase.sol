@@ -10,11 +10,10 @@ interface IDropSinglePhase is IClaimCondition {
     }
 
     event TokensClaimed(
-        ClaimCondition condition,
         address indexed claimer,
         address indexed receiver,
-        uint256 quantityClaimed,
-        uint256 indexed aux
+        uint256 startTokenId,
+        uint256 quantityClaimed
     );
 
     event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
@@ -46,12 +45,6 @@ interface IDropSinglePhase is IClaimCondition {
      *
      *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
      *                                  claim conditions.
-     *
-     *  @param data                     Arbitrary bytes data that can be leveraged in the implementation of this interface.
      */
-    function setClaimConditions(
-        ClaimCondition calldata phase,
-        bool resetClaimEligibility,
-        bytes memory data
-    ) external;
+    function setClaimConditions(ClaimCondition calldata phase, bool resetClaimEligibility) external;
 }

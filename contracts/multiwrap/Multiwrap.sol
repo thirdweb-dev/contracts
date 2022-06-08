@@ -74,13 +74,10 @@ contract Multiwrap is
         __ERC2771Context_init(_trustedForwarders);
         __ERC721_init(_name, _symbol);
 
-        // Revoked at the end of the function.
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         // Initialize this contract's state.
-        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        setOwner(_defaultAdmin);
-        setContractURI(_contractURI);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setupOwner(_defaultAdmin);
+        _setupContractURI(_contractURI);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -94,8 +91,6 @@ contract Multiwrap is
 
         // note: see `onlyRoleWithSwitch` for UNWRAP_ROLE behaviour.
         _setupRole(ASSET_ROLE, address(0));
-
-        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

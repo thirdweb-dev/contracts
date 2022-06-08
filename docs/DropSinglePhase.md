@@ -55,10 +55,33 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 | pricePerToken | uint256 | undefined
 | currency | address | undefined
 
+### getClaimTimestamp
+
+```solidity
+function getClaimTimestamp(address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+```
+
+
+
+*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| lastClaimedAt | uint256 | undefined
+| nextValidClaimTimestamp | uint256 | undefined
+
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility, bytes) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
 ```
 
 
@@ -71,7 +94,6 @@ function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _res
 |---|---|---|
 | _condition | IClaimCondition.ClaimCondition | undefined
 | _resetClaimEligibility | bool | undefined
-| _2 | bytes | undefined
 
 ### verifyClaim
 
@@ -142,7 +164,7 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed claimer, address indexed receiver, uint256 quantityClaimed, uint256 indexed aux)
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
 ```
 
 
@@ -153,11 +175,10 @@ event TokensClaimed(IClaimCondition.ClaimCondition condition, address indexed cl
 
 | Name | Type | Description |
 |---|---|---|
-| condition  | IClaimCondition.ClaimCondition | undefined |
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
+| startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
-| aux `indexed` | uint256 | undefined |
 
 
 
