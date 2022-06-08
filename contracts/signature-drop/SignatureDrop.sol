@@ -199,7 +199,7 @@ contract SignatureDrop is
         /**
          *  Get receiver of tokens.
          *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the 
+         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
          *        mempool can be frontrun by copying the input data, since the minted tokens
          *        will be sent to the `_msgSender()` in this case.
          */
