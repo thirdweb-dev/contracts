@@ -614,7 +614,7 @@ contract TempPackTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
 
-    uint256 internal constant MAX_TOKENS = 10;
+    uint256 internal constant MAX_TOKENS = 1000;
 
     function getTokensToPack(uint256 len) internal returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) {
         vm.assume(len < MAX_TOKENS);
@@ -700,23 +700,44 @@ contract TempPackTest is BaseTest {
         (, uint256 totalSupply) = tempPack.createPack(tokensToPack, amounts, packUri, 0, 1, recipient);
 
         vm.prank(recipient, recipient);
-        tempPack.openPack(packId, 1);
+        ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, 1);
 
         assertEq(packUri, tempPack.uri(packId));
 
-        if (erc20.balanceOf(address(recipient)) > 0) {
-            assertTrue(
-                erc20.balanceOf(address(recipient)) == 10 ether
-            );
-            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
-            assertEq(erc1155.balanceOf(address(recipient), 0), 10);
-            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        } else if (erc721.balanceOf(address(recipient)) > 0) {
-            assertEq(erc721.balanceOf(address(recipient)), 1);
-            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        } else {
-            assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        // if (erc20.balanceOf(address(recipient)) > 0) {
+            // assertTrue(
+            //     erc20.balanceOf(address(recipient)) == 10 ether
+            // );
+        //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        // } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
+        //     assertEq(erc1155.balanceOf(address(recipient), 0), 10);
+        //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        // } else if (erc721.balanceOf(address(recipient)) > 0) {
+        //     assertEq(erc721.balanceOf(address(recipient)), 1);
+        //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        // } else {
+        //     // assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
+        //     revert("failing here");
+        // }
+        uint256 erc20Amount;
+        uint256[] memory erc1155Amounts = new uint256[](MAX_TOKENS);
+        uint256 erc721Amount;
+
+        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
+            if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+                erc20Amount += rewardUnits[i].totalAmount;
+            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
+                erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
+            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
+                erc721Amount += rewardUnits[i].totalAmount;
+            }
+        }
+
+        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
+        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
+
+        for(uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
         }
     }
 }
