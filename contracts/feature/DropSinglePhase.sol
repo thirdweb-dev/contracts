@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
-import "../lib/Bitmaps.sol";
+import "../lib/TWBitmaps.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase {
-    using BitMaps for BitMaps.BitMap;
+    using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -32,7 +32,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
      *  @dev Map from a claim condition uid to whether an address in an allowlist
      *       has already claimed tokens i.e. used their place in the allowlist.
      */
-    mapping(bytes32 => BitMaps.BitMap) private usedAllowlistSpot;
+    mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
