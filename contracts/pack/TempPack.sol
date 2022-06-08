@@ -201,7 +201,7 @@ contract TempPack is
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused returns(Token[] memory) {
         address opener = _msgSender();
 
         require(opener == tx.origin, "opener must be eoa");
@@ -217,6 +217,8 @@ contract TempPack is
         _transferTokenBatch(address(this), _msgSender(), rewardUnits);
 
         emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
+
+        return rewardUnits;
     }
 
     function escrowPackContents(
