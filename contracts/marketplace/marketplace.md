@@ -105,7 +105,7 @@ These are features that are already offered by popular marketplaces like [OpenSe
 
 We're building this for customers who want to have their NFTs listed for sale on their *own* market.
 
-![marketplace-1.png](/assets/signature-minting-diag-1.png)
+![marketplace-1.png](/assets/marketplace-1.png)
 
 ### What the Marketplace will look like to users
 
