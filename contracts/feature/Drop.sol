@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/IDrop.sol";
-import "../../lib/MerkleProof.sol";
-import "./ExecutionContext.sol";
-import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
+import "./interface/IDrop.sol";
+import "../lib/MerkleProof.sol";
+import "../lib/TWBitMaps.sol";
 
-abstract contract Drop is IDrop, ExecutionContext {
-    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
+abstract contract Drop is IDrop {
+    using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -44,7 +43,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
             activeConditionId,
-            _msgSender(),
+            _dropMsgSender(),
             _quantity,
             _allowlistProof
         );
@@ -54,7 +53,7 @@ abstract contract Drop is IDrop, ExecutionContext {
 
         verifyClaim(
             activeConditionId,
-            _msgSender(),
+            _dropMsgSender(),
             _quantity,
             _currency,
             _pricePerToken,
@@ -74,7 +73,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         // claimCondition.supplyClaimed += _quantity;
         // lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
         claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
-        claimCondition.lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
+        claimCondition.lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_quantity, _currency, _pricePerToken);
@@ -82,17 +81,19 @@ abstract contract Drop is IDrop, ExecutionContext {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(activeConditionId, _msgSender(), _receiver, startTokenId, _quantity);
+        emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(
-        ClaimCondition[] calldata _conditions,
-        bool _resetClaimEligibility,
-        bytes memory
-    ) external virtual override {
+    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetClaimEligibility)
+        external
+        virtual
+        override
+    {
+        require(_canSetClaimConditions(), "Not authorized");
+
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
@@ -179,13 +180,6 @@ abstract contract Drop is IDrop, ExecutionContext {
             "exceed max claimable supply."
         );
 
-        // uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        // uint256 timestampOfLastClaim = claimCondition.lastClaimTimestamp[_conditionId][_claimer];
-        // require(
-        //     timestampOfLastClaim == 0 ||
-        //         block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-        //     "cannot claim."
-        // );
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
         require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
@@ -206,7 +200,6 @@ abstract contract Drop is IDrop, ExecutionContext {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             require(validMerkleProof, "not in whitelist.");
-            // require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
             require(!claimCondition.usedAllowlistSpot[_conditionId].get(merkleProofIndex), "proof claimed.");
             require(
                 _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
@@ -250,9 +243,14 @@ abstract contract Drop is IDrop, ExecutionContext {
         }
     }
 
-    /*///////////////////////////////////////////////////////////////
-        Virtual functions: to be implemented in derived contract
-    //////////////////////////////////////////////////////////////*/
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender.
+    function _dropMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
 
     /// @dev Runs before every `claim` function call.
     function _beforeClaim(
@@ -274,6 +272,10 @@ abstract contract Drop is IDrop, ExecutionContext {
         bytes memory _data
     ) internal virtual {}
 
+    /*///////////////////////////////////////////////////////////////
+        Virtual functions: to be implemented in derived contract
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
         uint256 _quantityToClaim,
@@ -286,4 +288,7 @@ abstract contract Drop is IDrop, ExecutionContext {
         internal
         virtual
         returns (uint256 startTokenId);
+
+    /// @dev Determine what wallet can update claim conditions
+    function _canSetClaimConditions() internal virtual returns (bool);
 }

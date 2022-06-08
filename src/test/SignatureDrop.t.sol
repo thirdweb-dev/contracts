@@ -763,7 +763,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
@@ -793,7 +793,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions, false);
 
         vm.expectRevert("not enough minted tokens.");
         vm.prank(getActor(6), getActor(6));
@@ -820,7 +820,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(200, "ipfs://", "");
         vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
@@ -860,22 +860,22 @@ contract SignatureDropTest is BaseTest {
         conditions[1].startTimestamp = 1;
         conditions[1].maxClaimableSupply = 10;
 
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions, false);
         (currentStartId, count) = sigdrop.claimCondition();
         assertEq(currentStartId, 0);
         assertEq(count, 2);
 
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions, false);
         (currentStartId, count) = sigdrop.claimCondition();
         assertEq(currentStartId, 0);
         assertEq(count, 2);
 
-        sigdrop.setClaimConditions(conditions, true, "");
+        sigdrop.setClaimConditions(conditions, true);
         (currentStartId, count) = sigdrop.claimCondition();
         assertEq(currentStartId, 2);
         assertEq(count, 2);
 
-        sigdrop.setClaimConditions(conditions, true, "");
+        sigdrop.setClaimConditions(conditions, true);
         (currentStartId, count) = sigdrop.claimCondition();
         assertEq(currentStartId, 4);
         assertEq(count, 2);
@@ -902,7 +902,7 @@ contract SignatureDropTest is BaseTest {
         conditions[2].maxClaimableSupply = 31;
         conditions[2].quantityLimitPerTransaction = 32;
         conditions[2].waitTimeInSecondsBetweenClaims = 33;
-        sigdrop.setClaimConditions(conditions, false, "");
+        sigdrop.setClaimConditions(conditions, false);
 
         vm.expectRevert("!CONDITION.");
         sigdrop.getActiveClaimConditionId();
@@ -947,14 +947,14 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
 
-        vm.prank(deployer);
-        sigdrop.setClaimConditions(conditions, false, "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        vm.prank(deployer);
-        sigdrop.setClaimConditions(conditions, true, "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions, true);
 
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
