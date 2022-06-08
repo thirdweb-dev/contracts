@@ -59,7 +59,7 @@ interface ITempPack is ITokenBundle {
         uint128 openStartTimestamp,
         uint128 amountDistributedPerOpen,
         address recipient
-    ) external returns (uint256 packId, uint256 packTotalSupply);
+    ) external payable returns (uint256 packId, uint256 packTotalSupply);
 
     /**
      *  @notice Lets a pack owner open a pack and receive the pack's reward unit.
@@ -67,5 +67,5 @@ interface ITempPack is ITokenBundle {
      *  @param packId       The identifier of the pack to open.
      *  @param amountToOpen The number of packs to open at once.
      */
-    function openPack(uint256 packId, uint256 amountToOpen) external;
+    function openPack(uint256 packId, uint256 amountToOpen) external returns(Token[] memory);
 }

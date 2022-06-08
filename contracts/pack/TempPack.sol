@@ -53,6 +53,8 @@ contract TempPack is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can create packs.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
+    bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev The token Id of the next set of packs to be minted.
     uint256 public nextTokenIdToMint;
@@ -103,9 +105,21 @@ contract TempPack is
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
 
+        // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
+        _setupRole(ASSET_ROLE, address(0));
+
         setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
 
         _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Modifiers
+    //////////////////////////////////////////////////////////////*/
+
+    modifier onlyRoleWithSwitch(bytes32 role) {
+        _checkRoleWithSwitch(role, _msgSender());
+        _;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -163,9 +177,15 @@ contract TempPack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external onlyRole(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable onlyRoleWithSwitch(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0, "nothing to pack");
         require(_contents.length == _perUnitAmounts.length, "invalid per unit amounts");
+
+        if (!hasRole(ASSET_ROLE, address(0))) {
+            for (uint256 i = 0; i < _contents.length; i += 1) {
+                _checkRole(ASSET_ROLE, _contents[i].assetContract);
+            }
+        }
 
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
@@ -181,7 +201,7 @@ contract TempPack is
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused returns(Token[] memory) {
         address opener = _msgSender();
 
         require(opener == tx.origin, "opener must be eoa");
@@ -197,6 +217,8 @@ contract TempPack is
         _transferTokenBatch(address(this), _msgSender(), rewardUnits);
 
         emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
+
+        return rewardUnits;
     }
 
     function escrowPackContents(
@@ -230,7 +252,7 @@ contract TempPack is
         uint256 currentTotalSupply = totalSupply[_packId];
         uint256 availableRewardUnitsCount = getTokenCountOfBundle(_packId);
 
-        uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number), block.difficulty)));
+        uint256 random = generateRandomValue();
         for (uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % currentTotalSupply;
@@ -297,6 +319,10 @@ contract TempPack is
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function generateRandomValue() internal view returns(uint256 random) {
+        random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
+    }
 
     /**
      * @dev See {ERC1155-_beforeTokenTransfer}.
