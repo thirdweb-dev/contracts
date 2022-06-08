@@ -163,7 +163,7 @@ contract TempPack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external onlyRole(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable onlyRole(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0, "nothing to pack");
         require(_contents.length == _perUnitAmounts.length, "invalid per unit amounts");
 
