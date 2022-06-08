@@ -94,10 +94,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(
-        ClaimCondition calldata _condition,
-        bool _resetClaimEligibility
-    ) external override {
+    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
         require(_canSetClaimConditions(), "Not authorized");
 
         bytes32 targetConditionId = conditionId;

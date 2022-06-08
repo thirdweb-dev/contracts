@@ -46,8 +46,5 @@ interface IDropSinglePhase is IClaimCondition {
      *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
      *                                  claim conditions.
      */
-    function setClaimConditions(
-        ClaimCondition calldata phase,
-        bool resetClaimEligibility
-    ) external;
+    function setClaimConditions(ClaimCondition calldata phase, bool resetClaimEligibility) external;
 }
