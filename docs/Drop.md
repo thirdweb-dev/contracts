@@ -115,7 +115,7 @@ function getClaimTimestamp(uint256 _conditionId, address _claimer) external view
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility, bytes) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility) external nonpayable
 ```
 
 
@@ -128,7 +128,6 @@ function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _
 |---|---|---|
 | _conditions | IClaimCondition.ClaimCondition[] | undefined
 | _resetClaimEligibility | bool | undefined
-| _2 | bytes | undefined
 
 ### verifyClaim
 
