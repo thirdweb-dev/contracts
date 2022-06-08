@@ -309,6 +309,7 @@ contract SignatureDrop is
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) public virtual {
+        // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.
         _burn(tokenId, true);
     }
 
