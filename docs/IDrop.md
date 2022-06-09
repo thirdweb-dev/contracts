@@ -31,13 +31,13 @@ Lets an account claim a given quantity of NFTs.
 | allowlistProof | IDrop.AllowlistProof | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
 | data | bytes | Arbitrary bytes data that can be leveraged in the implementation of this interface.
 
-### setClaimConditions
+### lazyMint
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
+function lazyMint(uint256 amount, string baseURIForTokens, bytes extraData) external nonpayable returns (uint256 batchId)
 ```
 
-Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+
 
 
 
@@ -45,28 +45,19 @@ Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 | Name | Type | Description |
 |---|---|---|
-| phases | IClaimCondition.ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`.
-| resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new                                  claim conditions.
+| amount | uint256 | undefined
+| baseURIForTokens | string | undefined
+| extraData | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| batchId | uint256 | undefined
 
 
 
 ## Events
-
-### ClaimConditionsUpdated
-
-```solidity
-event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
 
 ### TokensClaimed
 

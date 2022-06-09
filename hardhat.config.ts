@@ -74,7 +74,7 @@ const config: HardhatUserConfig = {
       metadata: {
         // Not including the metadata hash
         // https://github.com/paulrberg/solidity-template/issues/31
-        bytecodeHash: "none",
+        bytecodeHash: "ipfs",
       },
       // You should disable the optimizer when debugging
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
