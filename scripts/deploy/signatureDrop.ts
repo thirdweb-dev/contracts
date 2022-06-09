@@ -2,17 +2,13 @@ import hre, { ethers } from "hardhat";
 
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-import { SignatureDrop, SigMint } from "typechain";
+import { SignatureDrop } from "typechain";
 
 async function main() {
 
     const [caller]: SignerWithAddress[] = await ethers.getSigners();
 
     console.log("\n")
-
-    const sigmint: SigMint = await ethers.getContractFactory("SigMint").then(f => f.deploy());
-    console.log("Deploying SigMint \ntransaction: ", sigmint.deployTransaction.hash, "\naddress: ", sigmint.address);
-    await sigmint.deployTransaction.wait();
 
     const sigdrop: SignatureDrop = await ethers.getContractFactory("SignatureDrop").then(f => f.deploy());
     console.log("Deploying SignatureDrop \ntransaction: ", sigdrop.deployTransaction.hash, "\naddress: ", sigdrop.address);
@@ -22,7 +18,6 @@ async function main() {
 
     console.log("Verifying contract.")
     await verify(sigdrop.address, []);
-    await verify(sigmint.address, []);
 }
 
 async function verify(address: string, args: any[]) {
