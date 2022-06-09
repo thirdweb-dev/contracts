@@ -34,9 +34,10 @@ yarn-error.log*
 /relayerTest
 ./contracts/v2/Market.sol
 /notes.txt
-<<<<<<< HEAD
 .yalc/
 yalc.lock
+package-lock.json
+yarn.lock
 
 # Forge
 #/lib

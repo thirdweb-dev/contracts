@@ -884,8 +884,6 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", "");
 
-        console.log("debug");
-
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
