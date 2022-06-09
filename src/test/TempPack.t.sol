@@ -608,15 +608,16 @@ contract TempPackTest is BaseTest {
         tempPack.openPack(2, 1);
     }
 
-    
     /*///////////////////////////////////////////////////////////////
                             Fuzz testing
     //////////////////////////////////////////////////////////////*/
 
-
     uint256 internal constant MAX_TOKENS = 1000;
 
-    function getTokensToPack(uint256 len) internal returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) {
+    function getTokensToPack(uint256 len)
+        internal
+        returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts)
+    {
         vm.assume(len < MAX_TOKENS);
         tokensToPack = new ITokenBundle.Token[](len);
         amounts = new uint256[](len);
@@ -705,9 +706,9 @@ contract TempPackTest is BaseTest {
         assertEq(packUri, tempPack.uri(packId));
 
         // if (erc20.balanceOf(address(recipient)) > 0) {
-            // assertTrue(
-            //     erc20.balanceOf(address(recipient)) == 10 ether
-            // );
+        // assertTrue(
+        //     erc20.balanceOf(address(recipient)) == 10 ether
+        // );
         //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
         // } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
         //     assertEq(erc1155.balanceOf(address(recipient), 0), 10);
@@ -723,12 +724,12 @@ contract TempPackTest is BaseTest {
         uint256[] memory erc1155Amounts = new uint256[](MAX_TOKENS);
         uint256 erc721Amount;
 
-        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
-            if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+        for (uint256 i = 0; i < rewardUnits.length; i += 1) {
+            if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
                 erc20Amount += rewardUnits[i].totalAmount;
-            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
+            } else if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
                 erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
-            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
+            } else if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
                 erc721Amount += rewardUnits[i].totalAmount;
             }
         }
@@ -736,7 +737,7 @@ contract TempPackTest is BaseTest {
         assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
         assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
 
-        for(uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
             assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
         }
     }

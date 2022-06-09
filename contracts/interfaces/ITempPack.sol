@@ -67,5 +67,5 @@ interface ITempPack is ITokenBundle {
      *  @param packId       The identifier of the pack to open.
      *  @param amountToOpen The number of packs to open at once.
      */
-    function openPack(uint256 packId, uint256 amountToOpen) external returns(Token[] memory);
+    function openPack(uint256 packId, uint256 amountToOpen) external returns (Token[] memory);
 }

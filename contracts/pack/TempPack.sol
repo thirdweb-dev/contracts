@@ -177,7 +177,14 @@ contract TempPack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable onlyRoleWithSwitch(MINTER_ROLE) nonReentrant whenNotPaused returns (uint256 packId, uint256 packTotalSupply) {
+    )
+        external
+        payable
+        onlyRoleWithSwitch(MINTER_ROLE)
+        nonReentrant
+        whenNotPaused
+        returns (uint256 packId, uint256 packTotalSupply)
+    {
         require(_contents.length > 0, "nothing to pack");
         require(_contents.length == _perUnitAmounts.length, "invalid per unit amounts");
 
@@ -190,7 +197,7 @@ contract TempPack is
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
-        packTotalSupply = escrowPackContents(_contents, _perUnitAmounts, _packUri, packId);
+        packTotalSupply = escrowPackContents(_contents, _perUnitAmounts, _packUri, packId, _amountDistributedPerOpen);
 
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
@@ -201,7 +208,12 @@ contract TempPack is
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant whenNotPaused returns(Token[] memory) {
+    function openPack(uint256 _packId, uint256 _amountToOpen)
+        external
+        nonReentrant
+        whenNotPaused
+        returns (Token[] memory)
+    {
         address opener = _msgSender();
 
         require(opener == tx.origin, "opener must be eoa");
@@ -225,8 +237,11 @@ contract TempPack is
         Token[] calldata _contents,
         uint256[] calldata _perUnitAmounts,
         string calldata _packUri,
-        uint256 packId
+        uint256 packId,
+        uint256 amountPerOpen
     ) internal returns (uint256 packTotalSupply) {
+        uint256 totalRewardUnits;
+
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount % _perUnitAmounts[i] == 0, "invalid reward units");
             require(
@@ -234,9 +249,13 @@ contract TempPack is
                 "invalid erc721 rewards"
             );
 
-            packTotalSupply += _contents[i].totalAmount / _perUnitAmounts[i];
+            totalRewardUnits += _contents[i].totalAmount / _perUnitAmounts[i];
+
             packInfo[packId].perUnitAmounts.push(_perUnitAmounts[i]);
         }
+
+        require(totalRewardUnits % amountPerOpen == 0, "invalid amount to distribute per open");
+        packTotalSupply = totalRewardUnits / amountPerOpen;
 
         _storeTokens(_msgSender(), _contents, _packUri, packId);
     }
@@ -320,7 +339,7 @@ contract TempPack is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    function generateRandomValue() internal view returns(uint256 random) {
+    function generateRandomValue() internal view returns (uint256 random) {
         random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
     }
 
