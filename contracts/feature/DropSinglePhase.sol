@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IDropSinglePhase.sol";
+import "./interface/IClaimConditionsSinglePhase.sol";
+import "./interface/IDrop.sol";
+import "./LazyMint.sol";
 import "../lib/MerkleProof.sol";
 import "../lib/TWBitMaps.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase {
+abstract contract DropSinglePhase is LazyMint, IDrop, IClaimConditionsSinglePhase {
     using TWBitMaps for TWBitMaps.BitMap;
 
-    /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////x////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
@@ -88,7 +90,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(_dropMsgSender(), _receiver, startTokenId, _quantity);
+        emit TokensClaimed(0, _dropMsgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }

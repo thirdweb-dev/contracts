@@ -22,7 +22,6 @@ import "../feature/Royalty.sol";
 import "../feature/PrimarySale.sol";
 import "../feature/Ownable.sol";
 import "../feature/DelayedReveal.sol";
-import "../feature/LazyMint.sol";
 import "../feature/PermissionsEnumerable.sol";
 import "../feature/DropSinglePhase.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
@@ -35,7 +34,6 @@ contract SignatureDrop is
     PrimarySale,
     Ownable,
     DelayedReveal,
-    LazyMint,
     PermissionsEnumerable,
     DropSinglePhase,
     SignatureMintERC721Upgradeable,

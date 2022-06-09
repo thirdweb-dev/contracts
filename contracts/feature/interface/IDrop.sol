@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./IClaimCondition.sol";
+import "./ILazyMint.sol";
 
-interface IDrop is IClaimCondition {
+interface IDrop is ILazyMint {
     struct AllowlistProof {
         bytes32[] proof;
         uint256 maxQuantityInAllowlist;
@@ -16,8 +16,6 @@ interface IDrop is IClaimCondition {
         uint256 startTokenId,
         uint256 quantityClaimed
     );
-
-    event ClaimConditionsUpdated(ClaimCondition[] claimConditions);
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.
@@ -38,15 +36,4 @@ interface IDrop is IClaimCondition {
         AllowlistProof calldata allowlistProof,
         bytes memory data
     ) external payable;
-
-    /**
-     *  @notice Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
-     *
-     *  @param phases                   Claim conditions in ascending order by `startTimestamp`.
-     *
-     *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
-     *                                  claim conditions.
-     *
-     */
-    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }

@@ -2,10 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IDrop.sol";
+import "./interface/IClaimConditionsMultiPhase.sol";
+import "./LazyMint.sol";
 import "../lib/MerkleProof.sol";
 import "../lib/TWBitMaps.sol";
 
-abstract contract Drop is IDrop {
+abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
     using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
