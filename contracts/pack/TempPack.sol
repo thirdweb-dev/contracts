@@ -274,7 +274,7 @@ contract TempPack is
         PackInfo memory pack
     ) internal returns (Token[] memory rewardUnits) {
         rewardUnits = new Token[](_numOfPacksToOpen * _rewardUnitsPerOpen);
-        uint256 currentTotalSupply = totalSupply[_packId];
+        uint256 currentTotalSupply = totalSupply[_packId] * _rewardUnitsPerOpen;
         uint256 availableRewardUnitsCount = getTokenCountOfBundle(_packId);
 
         uint256 random = generateRandomValue();
@@ -292,6 +292,8 @@ contract TempPack is
                     _updateTokenInBundle(_token, id, j);
                     rewardUnits[i] = _token;
                     rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
+
+                    currentTotalSupply -= 1;
 
                     break;
                 } else {
