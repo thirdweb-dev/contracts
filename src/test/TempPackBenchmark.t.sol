@@ -21,7 +21,7 @@ contract TempCreatePackBenchmarkTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        tempPack = TempPack(getContract("TempPack"));
+        tempPack = TempPack(payable(getContract("TempPack")));
 
         tokenOwner = getWallet();
         packUri = "ipfs://";
@@ -143,7 +143,7 @@ contract TempOpenPackBenchmarkTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        tempPack = TempPack(getContract("TempPack"));
+        tempPack = TempPack(payable(getContract("TempPack")));
 
         tokenOwner = getWallet();
         packUri = "ipfs://";
