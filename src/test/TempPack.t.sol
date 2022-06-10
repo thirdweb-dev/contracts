@@ -675,15 +675,16 @@ contract TempPackTest is BaseTest {
         tempPack.openPack(2, 1);
     }
 
-    
     /*///////////////////////////////////////////////////////////////
                             Fuzz testing
     //////////////////////////////////////////////////////////////*/
 
-
     uint256 internal constant MAX_TOKENS = 1000;
 
-    function getTokensToPack(uint256 len) internal returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) {
+    function getTokensToPack(uint256 len)
+        internal
+        returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts)
+    {
         vm.assume(len < MAX_TOKENS);
         tokensToPack = new ITokenBundle.Token[](len);
         amounts = new uint256[](len);
@@ -802,7 +803,7 @@ contract TempPackTest is BaseTest {
         assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
         assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
 
-        for(uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
             assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
         }
     }
