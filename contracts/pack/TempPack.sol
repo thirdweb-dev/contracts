@@ -113,6 +113,12 @@ contract TempPack is
         _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    receive() external payable {}
+
+    function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        CurrencyTransferLib.safeTransferNativeToken(_msgSender(), address(this).balance);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Modifiers
     //////////////////////////////////////////////////////////////*/
