@@ -20,8 +20,8 @@ contract SignatureDropBenchmarkTest is BaseTest {
     bytes32 internal domainSeparator;
 
     SignatureDrop.AllowlistProof alp;
-    SignatureDrop.MintRequest mintrequest;
-    bytes signature;
+    SignatureDrop.MintRequest _mintrequest;
+    bytes _signature;
 
     using stdStorage for StdStorage;
 
@@ -59,19 +59,19 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
         uint256 id = 0;
 
-        mintrequest.to = address(0);
-        mintrequest.royaltyRecipient = address(2);
-        mintrequest.royaltyBps = 0;
-        mintrequest.primarySaleRecipient = address(deployer);
-        mintrequest.uri = "ipfs://";
-        mintrequest.quantity = 1;
-        mintrequest.pricePerToken = 1;
-        mintrequest.currency = address(erc20);
-        mintrequest.validityStartTimestamp = 1000;
-        mintrequest.validityEndTimestamp = 2000;
-        mintrequest.uid = bytes32(id);
+        _mintrequest.to = address(0);
+        _mintrequest.royaltyRecipient = address(2);
+        _mintrequest.royaltyBps = 0;
+        _mintrequest.primarySaleRecipient = address(deployer);
+        _mintrequest.uri = "ipfs://";
+        _mintrequest.quantity = 1;
+        _mintrequest.pricePerToken = 1;
+        _mintrequest.currency = address(erc20);
+        _mintrequest.validityStartTimestamp = 1000;
+        _mintrequest.validityEndTimestamp = 2000;
+        _mintrequest.uid = bytes32(id);
 
-        signature = signMintRequest(mintrequest, privateKey);
+        _signature = signMintRequest(_mintrequest, privateKey);
         vm.startPrank(deployerSigner);
 
         vm.warp(1000);
@@ -106,7 +106,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
     }
 
     function test_benchmark_mintWithSignature() public {
-        sigdrop.mintWithSignature(mintrequest, signature);
+        sigdrop.mintWithSignature(_mintrequest, _signature);
     }
 
     function test_benchmark_claim() public {
