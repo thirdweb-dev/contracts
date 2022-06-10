@@ -9,6 +9,7 @@ import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
+// import "forge-std/console2.sol";
 
 contract TempPackTest is BaseTest {
     /// @notice Emitted when a set of packs is created.
@@ -84,16 +85,6 @@ contract TempPackTest is BaseTest {
 
         packContents.push(
             ITokenBundle.Token({
-                assetContract: address(erc20),
-                tokenType: ITokenBundle.TokenType.ERC20,
-                tokenId: 0,
-                totalAmount: 1000 ether
-            })
-        );
-        amountsPerUnit.push(10 ether);
-
-        packContents.push(
-            ITokenBundle.Token({
                 assetContract: address(erc721),
                 tokenType: ITokenBundle.TokenType.ERC721,
                 tokenId: 2,
@@ -101,6 +92,16 @@ contract TempPackTest is BaseTest {
             })
         );
         amountsPerUnit.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        amountsPerUnit.push(10 ether);
 
         packContents.push(
             ITokenBundle.Token({
@@ -122,9 +123,30 @@ contract TempPackTest is BaseTest {
         );
         amountsPerUnit.push(1);
 
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 5,
+                totalAmount: 1
+            })
+        );
+        amountsPerUnit.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 1,
+                totalAmount: 500
+            })
+        );
+        amountsPerUnit.push(10);
+
         erc20.mint(address(tokenOwner), 2000 ether);
-        erc721.mint(address(tokenOwner), 5);
+        erc721.mint(address(tokenOwner), 6);
         erc1155.mint(address(tokenOwner), 0, 100);
+        erc1155.mint(address(tokenOwner), 1, 500);
 
         tokenOwner.setAllowanceERC20(address(erc20), address(tempPack), type(uint256).max);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(tempPack), true);
@@ -238,7 +260,7 @@ contract TempPackTest is BaseTest {
 
         vm.startPrank(address(tokenOwner));
         vm.expectEmit(true, true, true, true);
-        emit PackCreated(packId, address(tokenOwner), recipient, 175);
+        emit PackCreated(packId, address(tokenOwner), recipient, 226);
 
         tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
 
@@ -259,16 +281,20 @@ contract TempPackTest is BaseTest {
         assertEq(erc721.ownerOf(2), address(tokenOwner));
         assertEq(erc721.ownerOf(3), address(tokenOwner));
         assertEq(erc721.ownerOf(4), address(tokenOwner));
+        assertEq(erc721.ownerOf(5), address(tokenOwner));
 
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 100);
         assertEq(erc1155.balanceOf(address(tempPack), 0), 0);
 
+        assertEq(erc1155.balanceOf(address(tokenOwner), 1), 500);
+        assertEq(erc1155.balanceOf(address(tempPack), 1), 0);
+
         uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        (, uint256 totalSupply) = tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
 
         // ERC20 balance
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
@@ -280,13 +306,17 @@ contract TempPackTest is BaseTest {
         assertEq(erc721.ownerOf(2), address(tempPack));
         assertEq(erc721.ownerOf(3), address(tempPack));
         assertEq(erc721.ownerOf(4), address(tempPack));
+        assertEq(erc721.ownerOf(5), address(tempPack));
 
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 0);
         assertEq(erc1155.balanceOf(address(tempPack), 0), 100);
 
+        assertEq(erc1155.balanceOf(address(tokenOwner), 1), 0);
+        assertEq(erc1155.balanceOf(address(tempPack), 1), 500);
+
         // TempPack wrapped token balance
-        assertEq(tempPack.balanceOf(address(recipient), packId), 175);
+        assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply);
     }
 
     /**
@@ -474,19 +504,34 @@ contract TempPackTest is BaseTest {
     function test_state_openPack() public {
         vm.warp(1000);
         uint256 packId = tempPack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        (, uint256 totalSupply) = tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
-        tempPack.openPack(packId, 1);
+        ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, packsToOpen);
+        console2.log("total reward units: ", rewardUnits.length);
+
+        for(uint256 i = 0; i < rewardUnits.length; i++) {
+            console2.log("----- reward unit number: ", i, "------");
+            console2.log("asset contract: ", rewardUnits[i].assetContract);
+            console2.log("token type: ", uint256(rewardUnits[i].tokenType));
+            console2.log("tokenId: ", rewardUnits[i].tokenId);
+            if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
+            } else {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+            }
+            console2.log("");
+        }
 
         assertEq(packUri, tempPack.uri(packId));
-        assertEq(tempPack.totalSupply(packId), 174);
+        assertEq(tempPack.totalSupply(packId), totalSupply - packsToOpen);
 
         (ITokenBundle.Token[] memory packed, ) = tempPack.getPackContents(packId);
-        assertEq(packed.length, 8);
+        assertEq(packed.length, packContents.length);
     }
 
     /**
@@ -510,10 +555,11 @@ contract TempPackTest is BaseTest {
 
     function test_balances_openPack() public {
         uint256 packId = tempPack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 1, recipient);
+        tempPack.createPack(packContents, amountsPerUnit, packUri, 0, 2, recipient);
 
         // ERC20 balance
         assertEq(erc20.balanceOf(address(recipient)), 0);
@@ -525,27 +571,49 @@ contract TempPackTest is BaseTest {
         assertEq(erc721.ownerOf(2), address(tempPack));
         assertEq(erc721.ownerOf(3), address(tempPack));
         assertEq(erc721.ownerOf(4), address(tempPack));
+        assertEq(erc721.ownerOf(5), address(tempPack));
 
         // ERC1155 balance
         assertEq(erc1155.balanceOf(address(recipient), 0), 0);
         assertEq(erc1155.balanceOf(address(tempPack), 0), 100);
 
-        vm.prank(recipient, recipient);
-        tempPack.openPack(packId, 1);
+        assertEq(erc1155.balanceOf(address(recipient), 1), 0);
+        assertEq(erc1155.balanceOf(address(tempPack), 1), 500);
 
-        if (erc20.balanceOf(address(recipient)) > 0) {
-            assertTrue(
-                erc20.balanceOf(address(recipient)) == 10 ether || erc20.balanceOf(address(recipient)) == 20 ether
-            );
-            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
-        } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
-            assertEq(erc1155.balanceOf(address(recipient), 0), 5);
-            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
-        } else if (erc721.balanceOf(address(recipient)) > 0) {
-            assertEq(erc721.balanceOf(address(recipient)), 1);
-            assertEq(tempPack.balanceOf(address(recipient), packId), 174);
-        } else {
-            assertEq(tempPack.balanceOf(address(recipient), packId), 178);
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, packsToOpen);
+        console2.log("total reward units: ", rewardUnits.length);
+
+        uint256 erc20Amount;
+        uint256[] memory erc1155Amounts = new uint256[](2);
+        uint256 erc721Amount;
+
+        for(uint256 i = 0; i < rewardUnits.length; i++) {
+            console2.log("----- reward unit number: ", i, "------");
+            console2.log("asset contract: ", rewardUnits[i].assetContract);
+            console2.log("token type: ", uint256(rewardUnits[i].tokenType));
+            console2.log("tokenId: ", rewardUnits[i].tokenId);
+            if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
+                console.log("balance of recipient: ", erc20.balanceOf(address(recipient)) / 1 ether, "ether");
+                erc20Amount += rewardUnits[i].totalAmount;
+            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+                console.log("balance of recipient: ", erc1155.balanceOf(address(recipient), rewardUnits[i].tokenId));
+                erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
+            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+                console.log("balance of recipient: ", erc721.balanceOf(address(recipient)));
+                erc721Amount += rewardUnits[i].totalAmount;
+            }
+            console2.log("");
+        }
+
+        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
+        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
+
+        for(uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
         }
     }
 
@@ -585,7 +653,6 @@ contract TempPackTest is BaseTest {
     function test_revert_openPack_openBeforeStart() public {
         uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(0x123);
-
         vm.prank(address(tokenOwner));
         tempPack.createPack(packContents, amountsPerUnit, packUri, 1000, 1, recipient);
 
@@ -688,6 +755,7 @@ contract TempPackTest is BaseTest {
     }
 
     function test_fuzz_state_openPack(uint256 x) public {
+        
         (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) = getTokensToPack(x);
         if (tokensToPack.length == 0) {
             return;
@@ -697,40 +765,38 @@ contract TempPackTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = tempPack.createPack(tokensToPack, amounts, packUri, 0, 1, recipient);
-
+        (, uint256 totalSupply) = tempPack.createPack(tokensToPack, amounts, packUri, 0, 20, recipient);
+        console2.log("total supply: ", totalSupply);
         vm.prank(recipient, recipient);
-        ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, 1);
+        ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, 50);
 
         assertEq(packUri, tempPack.uri(packId));
 
-        // if (erc20.balanceOf(address(recipient)) > 0) {
-            // assertTrue(
-            //     erc20.balanceOf(address(recipient)) == 10 ether
-            // );
-        //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        // } else if (erc1155.balanceOf(address(recipient), 0) > 0) {
-        //     assertEq(erc1155.balanceOf(address(recipient), 0), 10);
-        //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        // } else if (erc721.balanceOf(address(recipient)) > 0) {
-        //     assertEq(erc721.balanceOf(address(recipient)), 1);
-        //     assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        // } else {
-        //     // assertEq(tempPack.balanceOf(address(recipient), packId), totalSupply - 1);
-        //     revert("failing here");
-        // }
+        console2.log("total reward units: ", rewardUnits.length);
+
         uint256 erc20Amount;
         uint256[] memory erc1155Amounts = new uint256[](MAX_TOKENS);
         uint256 erc721Amount;
 
-        for(uint256 i = 0; i < rewardUnits.length; i += 1) {
+        for(uint256 i = 0; i < rewardUnits.length; i++) {
+            console2.log("----- reward unit number: ", i, "------");
+            console2.log("asset contract: ", rewardUnits[i].assetContract);
+            console2.log("token type: ", uint256(rewardUnits[i].tokenType));
+            console2.log("tokenId: ", rewardUnits[i].tokenId);
             if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
+                console.log("balance of recipient: ", erc20.balanceOf(address(recipient)) / 1 ether, "ether");
                 erc20Amount += rewardUnits[i].totalAmount;
             } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+                console.log("balance of recipient: ", erc1155.balanceOf(address(recipient), rewardUnits[i].tokenId));
                 erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
             } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+                console.log("balance of recipient: ", erc721.balanceOf(address(recipient)));
                 erc721Amount += rewardUnits[i].totalAmount;
             }
+            console2.log("");
         }
 
         assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
