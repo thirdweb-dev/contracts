@@ -9,6 +9,7 @@ import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
+
 // import "forge-std/console2.sol";
 
 contract TempPackTest is BaseTest {
@@ -514,12 +515,12 @@ contract TempPackTest is BaseTest {
         ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, packsToOpen);
         console2.log("total reward units: ", rewardUnits.length);
 
-        for(uint256 i = 0; i < rewardUnits.length; i++) {
+        for (uint256 i = 0; i < rewardUnits.length; i++) {
             console2.log("----- reward unit number: ", i, "------");
             console2.log("asset contract: ", rewardUnits[i].assetContract);
             console2.log("token type: ", uint256(rewardUnits[i].tokenType));
             console2.log("tokenId: ", rewardUnits[i].tokenId);
-            if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+            if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
                 console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
             } else {
                 console2.log("total amount: ", rewardUnits[i].totalAmount);
@@ -588,20 +589,20 @@ contract TempPackTest is BaseTest {
         uint256[] memory erc1155Amounts = new uint256[](2);
         uint256 erc721Amount;
 
-        for(uint256 i = 0; i < rewardUnits.length; i++) {
+        for (uint256 i = 0; i < rewardUnits.length; i++) {
             console2.log("----- reward unit number: ", i, "------");
             console2.log("asset contract: ", rewardUnits[i].assetContract);
             console2.log("token type: ", uint256(rewardUnits[i].tokenType));
             console2.log("tokenId: ", rewardUnits[i].tokenId);
-            if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+            if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
                 console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
                 console.log("balance of recipient: ", erc20.balanceOf(address(recipient)) / 1 ether, "ether");
                 erc20Amount += rewardUnits[i].totalAmount;
-            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
+            } else if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
                 console2.log("total amount: ", rewardUnits[i].totalAmount);
                 console.log("balance of recipient: ", erc1155.balanceOf(address(recipient), rewardUnits[i].tokenId));
                 erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
-            } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
+            } else if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
                 console2.log("total amount: ", rewardUnits[i].totalAmount);
                 console.log("balance of recipient: ", erc721.balanceOf(address(recipient)));
                 erc721Amount += rewardUnits[i].totalAmount;
@@ -612,7 +613,7 @@ contract TempPackTest is BaseTest {
         assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
         assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
 
-        for(uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
             assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
         }
     }
@@ -679,7 +680,7 @@ contract TempPackTest is BaseTest {
                             Fuzz testing
     //////////////////////////////////////////////////////////////*/
 
-    uint256 internal constant MAX_TOKENS = 1000;
+    uint256 internal constant MAX_TOKENS = 2000;
 
     function getTokensToPack(uint256 len)
         internal
@@ -727,13 +728,52 @@ contract TempPackTest is BaseTest {
                 erc1155.mint(address(tokenOwner), tokensToPack[i].tokenId, tokensToPack[i].totalAmount);
             } else if (selector == 3) {
                 tokensToPack[i] = ITokenBundle.Token({
-                        assetContract: address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE),
-                        tokenType: ITokenBundle.TokenType.ERC20,
-                        tokenId: 0,
-                        totalAmount: 5 ether
-                    });
+                    assetContract: address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE),
+                    tokenType: ITokenBundle.TokenType.ERC20,
+                    tokenId: 0,
+                    totalAmount: 5 ether
+                });
                 amounts[i] = 1 ether;
             }
+        }
+    }
+
+    function checkBalances(ITokenBundle.Token[] memory rewardUnits, address recipient)
+        internal
+        returns (
+            uint256 nativeTokenAmount,
+            uint256 erc20Amount,
+            uint256[] memory erc1155Amounts,
+            uint256 erc721Amount
+        )
+    {
+        erc1155Amounts = new uint256[](MAX_TOKENS);
+
+        for (uint256 i = 0; i < rewardUnits.length; i++) {
+            console2.log("----- reward unit number: ", i, "------");
+            console2.log("asset contract: ", rewardUnits[i].assetContract);
+            console2.log("token type: ", uint256(rewardUnits[i].tokenType));
+            console2.log("tokenId: ", rewardUnits[i].tokenId);
+            if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
+                if (rewardUnits[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                    console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
+                    console.log("balance of recipient: ", address(recipient).balance);
+                    nativeTokenAmount += rewardUnits[i].totalAmount;
+                } else {
+                    console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
+                    console.log("balance of recipient: ", erc20.balanceOf(address(recipient)) / 1 ether, "ether");
+                    erc20Amount += rewardUnits[i].totalAmount;
+                }
+            } else if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+                console.log("balance of recipient: ", erc1155.balanceOf(address(recipient), rewardUnits[i].tokenId));
+                erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
+            } else if (rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
+                console2.log("total amount: ", rewardUnits[i].totalAmount);
+                console.log("balance of recipient: ", erc721.balanceOf(address(recipient)));
+                erc721Amount += rewardUnits[i].totalAmount;
+            }
+            console2.log("");
         }
     }
 
@@ -742,23 +782,32 @@ contract TempPackTest is BaseTest {
         if (tokensToPack.length == 0) {
             return;
         }
-        vm.deal(address(tokenOwner), 100_000 ether);
 
         uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(0x123);
         uint256 totalRewardUnits;
-        uint256 nativeTokenValue;
+        uint256 nativeTokenPacked;
 
         for (uint256 i = 0; i < tokensToPack.length; i += 1) {
             totalRewardUnits += tokensToPack[i].totalAmount / amounts[i];
-            if(tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                nativeTokenValue += tokensToPack[i].totalAmount;
+            if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                nativeTokenPacked += tokensToPack[i].totalAmount;
             }
         }
+        vm.deal(address(tokenOwner), nativeTokenPacked);
         vm.assume(y > 0 && totalRewardUnits % y == 0);
 
         vm.prank(address(tokenOwner));
-        tempPack.createPack{ value: nativeTokenValue }(tokensToPack, amounts, packUri, 0, y, recipient);
+        (, uint256 totalSupply) = tempPack.createPack{ value: nativeTokenPacked }(
+            tokensToPack,
+            amounts,
+            packUri,
+            0,
+            y,
+            recipient
+        );
+        console2.log("total supply: ", totalSupply);
+        console2.log("total reward units: ", totalRewardUnits);
 
         assertEq(packId + 1, tempPack.nextTokenIdToMint());
 
@@ -774,68 +823,63 @@ contract TempPackTest is BaseTest {
         assertEq(packUri, tempPack.uri(packId));
     }
 
-    function test_fuzz_state_openPack(uint256 x, uint128 y, uint256 z) public {
+    function test_fuzz_state_openPack(
+        uint256 x,
+        uint128 y,
+        uint256 z
+    ) public {
+        // vm.assume(x == 1574 && y == 22 && z == 392);
         (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) = getTokensToPack(x);
         if (tokensToPack.length == 0) {
             return;
         }
-        vm.deal(address(tokenOwner), 100_000 ether);
 
         uint256 packId = tempPack.nextTokenIdToMint();
         address recipient = address(0x123);
         uint256 totalRewardUnits;
-        uint256 nativeTokenValue;
+        uint256 nativeTokenPacked;
 
         for (uint256 i = 0; i < tokensToPack.length; i += 1) {
             totalRewardUnits += tokensToPack[i].totalAmount / amounts[i];
-            if(tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                nativeTokenValue += tokensToPack[i].totalAmount;
+            if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                nativeTokenPacked += tokensToPack[i].totalAmount;
             }
         }
         vm.assume(y > 0 && totalRewardUnits % y == 0);
+        vm.deal(address(tokenOwner), nativeTokenPacked);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = tempPack.createPack{ value: nativeTokenValue }(tokensToPack, amounts, packUri, 0, y, recipient);
+        (, uint256 totalSupply) = tempPack.createPack{ value: nativeTokenPacked }(
+            tokensToPack,
+            amounts,
+            packUri,
+            0,
+            y,
+            recipient
+        );
         console2.log("total supply: ", totalSupply);
+        console2.log("total reward units: ", totalRewardUnits);
 
         vm.assume(z <= totalSupply);
         vm.prank(recipient, recipient);
         ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, z);
+        console2.log("received reward units: ", rewardUnits.length);
 
-        // assertEq(packUri, tempPack.uri(packId));
+        assertEq(packUri, tempPack.uri(packId));
 
-        // console2.log("total reward units: ", rewardUnits.length);
+        (
+            uint256 nativeTokenAmount,
+            uint256 erc20Amount,
+            uint256[] memory erc1155Amounts,
+            uint256 erc721Amount
+        ) = checkBalances(rewardUnits, recipient);
 
-        // uint256 erc20Amount;
-        // uint256[] memory erc1155Amounts = new uint256[](MAX_TOKENS);
-        // uint256 erc721Amount;
+        assertEq(address(recipient).balance, nativeTokenAmount);
+        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
+        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
 
-        // for(uint256 i = 0; i < rewardUnits.length; i++) {
-        //     console2.log("----- reward unit number: ", i, "------");
-        //     console2.log("asset contract: ", rewardUnits[i].assetContract);
-        //     console2.log("token type: ", uint256(rewardUnits[i].tokenType));
-        //     console2.log("tokenId: ", rewardUnits[i].tokenId);
-        //     if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC20) {
-        //         console2.log("total amount: ", rewardUnits[i].totalAmount / 1 ether, "ether");
-        //         console.log("balance of recipient: ", erc20.balanceOf(address(recipient)) / 1 ether, "ether");
-        //         erc20Amount += rewardUnits[i].totalAmount;
-        //     } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC1155) {
-        //         console2.log("total amount: ", rewardUnits[i].totalAmount);
-        //         console.log("balance of recipient: ", erc1155.balanceOf(address(recipient), rewardUnits[i].tokenId));
-        //         erc1155Amounts[rewardUnits[i].tokenId] += rewardUnits[i].totalAmount;
-        //     } else if(rewardUnits[i].tokenType == ITokenBundle.TokenType.ERC721) {
-        //         console2.log("total amount: ", rewardUnits[i].totalAmount);
-        //         console.log("balance of recipient: ", erc721.balanceOf(address(recipient)));
-        //         erc721Amount += rewardUnits[i].totalAmount;
-        //     }
-        //     console2.log("");
-        // }
-
-        // assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
-        // assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
-
-        // for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
-        //     assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
-        // }
+        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
+        }
     }
 }
