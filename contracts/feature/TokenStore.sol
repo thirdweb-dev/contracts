@@ -80,13 +80,13 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     ) internal {
         uint256 nativeTokenValue;
         for (uint256 i = 0; i < _tokens.length; i += 1) {
-            if(_tokens[i].assetContract == NATIVE_TOKEN && _to == address(this)) {
+            if (_tokens[i].assetContract == NATIVE_TOKEN && _to == address(this)) {
                 nativeTokenValue += _tokens[i].totalAmount;
             } else {
                 _transferToken(_from, _to, _tokens[i]);
             }
         }
-        if(nativeTokenValue != 0) {
+        if (nativeTokenValue != 0) {
             Token memory _nativeToken = Token({
                 assetContract: NATIVE_TOKEN,
                 tokenType: ITokenBundle.TokenType.ERC20,
