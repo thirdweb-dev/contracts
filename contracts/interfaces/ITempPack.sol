@@ -43,18 +43,18 @@ interface ITempPack is ITokenBundle {
      *  @notice Creates a pack with the stated contents.
      *
      *  @param contents                 The reward units to pack in the packs.
-     *  @param perUnitAmounts           The amount of every token to distribute as a unit, on opening a pack.
+     *  @param numOfRewardUnits         The number of reward units to create, for each asset specified in `contents`.
      *  @param packUri                  The (metadata) URI assigned to the packs created.
      *  @param openStartTimestamp       The timestamp after which packs can be opened.
      *  @param amountDistributedPerOpen The number of reward units distributed per open.
-     *  @param recipient                 The recipient of the packs created.
+     *  @param recipient                The recipient of the packs created.
      *
      *  @return packId The unique identifer of the created set of packs.
      *  @return packTotalSupply The total number of packs created.
      */
     function createPack(
         Token[] calldata contents,
-        uint256[] calldata perUnitAmounts,
+        uint256[] calldata numOfRewardUnits,
         string calldata packUri,
         uint128 openStartTimestamp,
         uint128 amountDistributedPerOpen,

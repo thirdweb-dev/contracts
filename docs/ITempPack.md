@@ -13,7 +13,7 @@ The thirdweb `Pack` contract is a lootbox mechanism. An account can bundle up ar
 ### createPack
 
 ```solidity
-function createPack(ITokenBundle.Token[] contents, uint256[] perUnitAmounts, string packUri, uint128 openStartTimestamp, uint128 amountDistributedPerOpen, address recipient) external nonpayable returns (uint256 packId, uint256 packTotalSupply)
+function createPack(ITokenBundle.Token[] contents, uint256[] perUnitAmounts, string packUri, uint128 openStartTimestamp, uint128 amountDistributedPerOpen, address recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
 ```
 
 Creates a pack with the stated contents.
@@ -41,7 +41,7 @@ Creates a pack with the stated contents.
 ### openPack
 
 ```solidity
-function openPack(uint256 packId, uint256 amountToOpen) external nonpayable
+function openPack(uint256 packId, uint256 amountToOpen) external nonpayable returns (struct ITokenBundle.Token[])
 ```
 
 Lets a pack owner open a pack and receive the pack&#39;s reward unit.
@@ -54,6 +54,12 @@ Lets a pack owner open a pack and receive the pack&#39;s reward unit.
 |---|---|---|
 | packId | uint256 | The identifier of the pack to open.
 | amountToOpen | uint256 | The number of packs to open at once.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token[] | undefined
 
 
 

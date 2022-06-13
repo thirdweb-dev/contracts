@@ -883,6 +883,67 @@ contract TempPackTest is BaseTest {
         }
     }
 
+    function test_fuzz_failing_state_openPack() public {
+        // vm.assume(x == 1574 && y == 22 && z == 392);
+
+        uint256 x = 1574;
+        uint128 y = 22;
+        uint256 z = 392;
+
+        (ITokenBundle.Token[] memory tokensToPack, uint256[] memory amounts) = getTokensToPack(x);
+        if (tokensToPack.length == 0) {
+            return;
+        }
+
+        uint256 packId = tempPack.nextTokenIdToMint();
+        address recipient = address(0x123);
+        uint256 totalRewardUnits;
+        uint256 nativeTokenPacked;
+
+        for (uint256 i = 0; i < tokensToPack.length; i += 1) {
+            totalRewardUnits += tokensToPack[i].totalAmount / amounts[i];
+            if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                nativeTokenPacked += tokensToPack[i].totalAmount;
+            }
+        }
+        vm.assume(y > 0 && totalRewardUnits % y == 0);
+        vm.deal(address(tokenOwner), nativeTokenPacked);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = tempPack.createPack{ value: nativeTokenPacked }(
+            tokensToPack,
+            amounts,
+            packUri,
+            0,
+            y,
+            recipient
+        );
+        console2.log("total supply: ", totalSupply);
+        console2.log("total reward units: ", totalRewardUnits);
+
+        vm.assume(z <= totalSupply);
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = tempPack.openPack(packId, z);
+        console2.log("received reward units: ", rewardUnits.length);
+
+        assertEq(packUri, tempPack.uri(packId));
+
+        (
+            uint256 nativeTokenAmount,
+            uint256 erc20Amount,
+            uint256[] memory erc1155Amounts,
+            uint256 erc721Amount
+        ) = checkBalances(rewardUnits, recipient);
+
+        assertEq(address(recipient).balance, nativeTokenAmount);
+        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
+        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
+
+        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Scenario/Exploit tests
     //////////////////////////////////////////////////////////////*/

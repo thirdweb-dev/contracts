@@ -178,7 +178,7 @@ contract TempPack is
     /// @dev Creates a pack with the stated contents.
     function createPack(
         Token[] calldata _contents,
-        uint256[] calldata _perUnitAmounts,
+        uint256[] calldata _numOfRewardUnits,
         string calldata _packUri,
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
@@ -192,7 +192,7 @@ contract TempPack is
         returns (uint256 packId, uint256 packTotalSupply)
     {
         require(_contents.length > 0, "nothing to pack");
-        require(_contents.length == _perUnitAmounts.length, "invalid per unit amounts");
+        require(_contents.length == _numOfRewardUnits.length, "invalid per unit amounts");
 
         if (!hasRole(ASSET_ROLE, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
@@ -203,7 +203,7 @@ contract TempPack is
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
-        packTotalSupply = escrowPackContents(_contents, _perUnitAmounts, _packUri, packId, _amountDistributedPerOpen);
+        packTotalSupply = escrowPackContents(_contents, _numOfRewardUnits, _packUri, packId, _amountDistributedPerOpen);
 
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
@@ -241,7 +241,7 @@ contract TempPack is
 
     function escrowPackContents(
         Token[] calldata _contents,
-        uint256[] calldata _perUnitAmounts,
+        uint256[] calldata _numOfRewardUnits,
         string calldata _packUri,
         uint256 packId,
         uint256 amountPerOpen
@@ -249,15 +249,15 @@ contract TempPack is
         uint256 totalRewardUnits;
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
-            require(_contents[i].totalAmount % _perUnitAmounts[i] == 0, "invalid reward units");
+            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "invalid reward units");
             require(
                 _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
                 "invalid erc721 rewards"
             );
 
-            totalRewardUnits += _contents[i].totalAmount / _perUnitAmounts[i];
+            totalRewardUnits += _numOfRewardUnits[i];
 
-            packInfo[packId].perUnitAmounts.push(_perUnitAmounts[i]);
+            packInfo[packId].perUnitAmounts.push(_contents[i].totalAmount / _numOfRewardUnits[i]);
         }
 
         require(totalRewardUnits % amountPerOpen == 0, "invalid amount to distribute per open");
@@ -273,31 +273,39 @@ contract TempPack is
         uint256 _rewardUnitsPerOpen,
         PackInfo memory pack
     ) internal returns (Token[] memory rewardUnits) {
-        rewardUnits = new Token[](_numOfPacksToOpen * _rewardUnitsPerOpen);
-        uint256 currentTotalSupply = totalSupply[_packId] * _rewardUnitsPerOpen;
-        uint256 availableRewardUnitsCount = getTokenCountOfBundle(_packId);
+
+        uint256 numOfRewardUnitsToDistribute = _numOfPacksToOpen * _rewardUnitsPerOpen;
+        rewardUnits = new Token[](numOfRewardUnitsToDistribute);
+        
+        uint256 totalRewardUnits = totalSupply[_packId] * _rewardUnitsPerOpen;
+        uint256 totalRewardKinds = getTokenCountOfBundle(_packId);
 
         uint256 random = generateRandomValue();
-        for (uint256 i = 0; i < (_numOfPacksToOpen * _rewardUnitsPerOpen); i += 1) {
-            uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
-            uint256 target = randomVal % currentTotalSupply;
-            uint256 step;
-            for (uint256 j = 0; j < availableRewardUnitsCount; j += 1) {
-                uint256 id = _packId;
-                Token memory _token = getTokenOfBundle(id, j);
-                uint256 check = _token.totalAmount / pack.perUnitAmounts[j];
 
-                if (target < step + check) {
+        for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
+
+            uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
+            uint256 target = randomVal % totalRewardUnits;
+            uint256 step;
+
+            for (uint256 j = 0; j < totalRewardKinds; j += 1) {
+                
+                uint256 id = _packId;
+                
+                Token memory _token = getTokenOfBundle(id, j);
+                uint256 totalRewardUnitsOfKind = _token.totalAmount / pack.perUnitAmounts[j];
+
+                if (target < step + totalRewardUnitsOfKind) {
                     _token.totalAmount -= pack.perUnitAmounts[j];
                     _updateTokenInBundle(_token, id, j);
                     rewardUnits[i] = _token;
                     rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
-                    currentTotalSupply -= 1;
+                    totalRewardUnits -= 1;
 
                     break;
                 } else {
-                    step += check;
+                    step += totalRewardUnitsOfKind;
                 }
             }
         }

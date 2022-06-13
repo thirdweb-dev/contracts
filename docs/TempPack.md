@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### balanceOf
 
 ```solidity
@@ -127,7 +144,7 @@ function contractVersion() external pure returns (uint8)
 ### createPack
 
 ```solidity
-function createPack(ITokenBundle.Token[] _contents, uint256[] _perUnitAmounts, string _packUri, uint128 _openStartTimestamp, uint128 _amountDistributedPerOpen, address _recipient) external nonpayable returns (uint256 packId, uint256 packTotalSupply)
+function createPack(ITokenBundle.Token[] _contents, uint256[] _numOfRewardUnits, string _packUri, uint128 _openStartTimestamp, uint128 _amountDistributedPerOpen, address _recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
 ```
 
 
@@ -139,7 +156,7 @@ function createPack(ITokenBundle.Token[] _contents, uint256[] _perUnitAmounts, s
 | Name | Type | Description |
 |---|---|---|
 | _contents | ITokenBundle.Token[] | undefined
-| _perUnitAmounts | uint256[] | undefined
+| _numOfRewardUnits | uint256[] | undefined
 | _packUri | string | undefined
 | _openStartTimestamp | uint128 | undefined
 | _amountDistributedPerOpen | uint128 | undefined
@@ -616,7 +633,7 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 ### openPack
 
 ```solidity
-function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable
+function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable returns (struct ITokenBundle.Token[])
 ```
 
 Lets a pack owner open packs and receive the packs&#39; reward units.
@@ -629,6 +646,12 @@ Lets a pack owner open packs and receive the packs&#39; reward units.
 |---|---|---|
 | _packId | uint256 | undefined
 | _amountToOpen | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token[] | undefined
 
 ### owner
 
@@ -928,6 +951,17 @@ function uri(uint256 _tokenId) external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
+
+### withdraw
+
+```solidity
+function withdraw() external nonpayable
+```
+
+
+
+
+
 
 
 
