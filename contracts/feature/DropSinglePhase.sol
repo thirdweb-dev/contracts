@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IDropSinglePhase.sol";
+import "./interface/IClaimConditionsSinglePhase.sol";
+import "./interface/IDrop.sol";
+import "./LazyMint.sol";
 import "../lib/MerkleProof.sol";
-import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
+import "../lib/TWBitMaps.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase {
-    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
+abstract contract DropSinglePhase is LazyMint, IDrop, IClaimConditionsSinglePhase {
+    using TWBitMaps for TWBitMaps.BitMap;
 
-    /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////x////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
@@ -32,7 +34,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
      *  @dev Map from a claim condition uid to whether an address in an allowlist
      *       has already claimed tokens i.e. used their place in the allowlist.
      */
-    mapping(bytes32 => BitMapsUpgradeable.BitMap) private usedAllowlistSpot;
+    mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -60,7 +62,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
         // Verify inclusion in allowlist.
         (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            msg.sender,
+            _dropMsgSender(),
             _quantity,
             _allowlistProof
         );
@@ -68,7 +70,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Verify claim validity. If not valid, revert.
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
 
-        verifyClaim(msg.sender, _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(_dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -80,7 +82,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
         // Update contract state.
         claimCondition.supplyClaimed += _quantity;
-        lastClaimTimestamp[activeConditionId][msg.sender] = block.timestamp;
+        lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_quantity, _currency, _pricePerToken);
@@ -88,32 +90,30 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Mint the relevant NFTs to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
-        emit TokensClaimed(claimCondition, msg.sender, _receiver, _quantity, startTokenId);
+        emit TokensClaimed(0, _dropMsgSender(), _receiver, startTokenId, _quantity);
 
         _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(
-        ClaimCondition calldata _condition,
-        bool _resetClaimEligibility,
-        bytes memory
-    ) external virtual override {
+    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
+        require(_canSetClaimConditions(), "Not authorized");
+
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
 
         if (_resetClaimEligibility) {
             supplyClaimedAlready = 0;
-            targetConditionId = keccak256(abi.encodePacked(msg.sender, block.number));
+            targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number));
         }
 
         require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
 
         claimCondition = ClaimCondition({
-            startTimestamp: block.timestamp,
+            startTimestamp: _condition.startTimestamp,
             maxClaimableSupply: _condition.maxClaimableSupply,
             supplyClaimed: supplyClaimedAlready,
-            quantityLimitPerTransaction: _condition.supplyClaimed,
+            quantityLimitPerTransaction: _condition.quantityLimitPerTransaction,
             waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
             merkleRoot: _condition.merkleRoot,
             pricePerToken: _condition.pricePerToken,
@@ -150,12 +150,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             "exceed max claimable supply."
         );
 
-        uint256 timestampOfLastClaim = lastClaimTimestamp[conditionId][_claimer];
-        require(
-            timestampOfLastClaim == 0 ||
-                block.timestamp >= timestampOfLastClaim + currentClaimPhase.waitTimeInSecondsBetweenClaims,
-            "cannot claim."
-        );
+        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
+        require(lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -181,9 +177,31 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
     }
 
-    /*///////////////////////////////////////////////////////////////
-        Virtual functions: to be implemented in derived contract
-    //////////////////////////////////////////////////////////////*/
+    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
+    function getClaimTimestamp(address _claimer)
+        public
+        view
+        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+    {
+        lastClaimedAt = lastClaimTimestamp[conditionId][_claimer];
+
+        unchecked {
+            nextValidClaimTimestamp = lastClaimedAt + claimCondition.waitTimeInSecondsBetweenClaims;
+
+            if (nextValidClaimTimestamp < lastClaimedAt) {
+                nextValidClaimTimestamp = type(uint256).max;
+            }
+        }
+    }
+
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender.
+    function _dropMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
 
     /// @dev Runs before every `claim` function call.
     function _beforeClaim(
@@ -217,4 +235,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         internal
         virtual
         returns (uint256 startTokenId);
+
+    function _canSetClaimConditions() internal virtual returns (bool);
 }

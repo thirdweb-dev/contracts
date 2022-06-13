@@ -2,6 +2,7 @@ import hre, { ethers } from "hardhat";
 
 import {
   DropERC1155,
+  DropERC20,
   DropERC721,
   Marketplace,
   Split,
@@ -36,6 +37,10 @@ async function main() {
     43113: "0xd00ae08403B9bbb9124bB305C09058E32C39A48c",
     250: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
     4002: "0xf1277d1Ed8AD466beddF92ef448A132661956621",
+    10: "0x4200000000000000000000000000000000000006", // optimism
+    69: "0xbC6F6b680bc61e30dB47721c6D1c5cde19C1300d", // optimism testnet
+    42161: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1", // arbitrum
+    421611: "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9", // arbitrum testnet
   };
 
   // Deploy FeeType
@@ -98,6 +103,14 @@ async function main() {
   console.log("Deploying Drop1155 at tx: ", drop1155.deployTransaction.hash);
   console.log("Drop1155 address: ", drop1155.address);
 
+  // Deploy a test implementation: DropERC20
+  const drop20: DropERC20 = await ethers
+    .getContractFactory("DropERC20")
+    .then(f => f.deploy(thirdwebFee.address, options))
+    .then(f => f.deployed());
+  console.log("Deploying DropERC20 at tx: ", drop20.deployTransaction.hash);
+  console.log("DropERC20 address: ", drop20.address);
+
   // Deploy a test implementation: TokenERC20
   const tokenERC20: TokenERC20 = await ethers
     .getContractFactory("TokenERC20")
@@ -150,6 +163,7 @@ async function main() {
     [
       thirdwebFactory.interface.encodeFunctionData("addImplementation", [drop721.address]),
       thirdwebFactory.interface.encodeFunctionData("addImplementation", [drop1155.address]),
+      thirdwebFactory.interface.encodeFunctionData("addImplementation", [drop20.address]),
       thirdwebFactory.interface.encodeFunctionData("addImplementation", [tokenERC20.address]),
       thirdwebFactory.interface.encodeFunctionData("addImplementation", [tokenERC721.address]),
       thirdwebFactory.interface.encodeFunctionData("addImplementation", [tokenERC1155.address]),
@@ -173,6 +187,7 @@ async function main() {
   await verify(thirdwebFee.address, [trustedForwarderAddress, thirdwebFactory.address]);
   await verify(drop721.address, [thirdwebFee.address]);
   await verify(drop1155.address, [thirdwebFee.address]);
+  await verify(drop20.address, [thirdwebFee.address]);
   await verify(tokenERC20.address, [thirdwebFee.address]);
   await verify(tokenERC721.address, [thirdwebFee.address]);
   await verify(tokenERC1155.address, [thirdwebFee.address]);
