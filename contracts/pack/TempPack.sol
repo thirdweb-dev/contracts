@@ -273,25 +273,22 @@ contract TempPack is
         uint256 _rewardUnitsPerOpen,
         PackInfo memory pack
     ) internal returns (Token[] memory rewardUnits) {
-
         uint256 numOfRewardUnitsToDistribute = _numOfPacksToOpen * _rewardUnitsPerOpen;
         rewardUnits = new Token[](numOfRewardUnitsToDistribute);
-        
+
         uint256 totalRewardUnits = totalSupply[_packId] * _rewardUnitsPerOpen;
         uint256 totalRewardKinds = getTokenCountOfBundle(_packId);
 
         uint256 random = generateRandomValue();
 
         for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
-
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % totalRewardUnits;
             uint256 step;
 
             for (uint256 j = 0; j < totalRewardKinds; j += 1) {
-                
                 uint256 id = _packId;
-                
+
                 Token memory _token = getTokenOfBundle(id, j);
                 uint256 totalRewardUnitsOfKind = _token.totalAmount / pack.perUnitAmounts[j];
 

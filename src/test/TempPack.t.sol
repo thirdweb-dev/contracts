@@ -975,7 +975,6 @@ contract TempPackTest is BaseTest {
         vm.expectRevert("ReentrancyGuard: reentrant call");
         tempPack.createPack(content, amount, packUri, 0, 1, recipient);
     }
-
 }
 
 contract MaliciousERC20 is MockERC20, ITokenBundle {
