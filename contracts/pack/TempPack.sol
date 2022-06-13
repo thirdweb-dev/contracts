@@ -113,10 +113,8 @@ contract TempPack is
         _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    receive() external payable {}
-
-    function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        CurrencyTransferLib.safeTransferNativeToken(_msgSender(), address(this).balance);
+    receive() external payable {
+        require(_msgSender() == nativeTokenWrapper, "Caller is not native token wrapper.");
     }
 
     /*///////////////////////////////////////////////////////////////

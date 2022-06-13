@@ -952,17 +952,6 @@ function uri(uint256 _tokenId) external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### withdraw
-
-```solidity
-function withdraw() external nonpayable
-```
-
-
-
-
-
-
 
 
 ## Events
