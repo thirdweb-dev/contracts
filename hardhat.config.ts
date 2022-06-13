@@ -25,6 +25,10 @@ const chainIds = {
   fantom_testnet: 4002,
   polygon: 137,
   mumbai: 80001,
+  optimism: 10,
+  optimism_testnet: 69,
+  arbitrum: 42161,
+  arbitrum_testnet: 421611,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -44,14 +48,31 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
       ? `https://polygon-${polygonNetworkName}.g.alchemy.com/v2/${alchemyKey}`
       : `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
 
-  if (network === "avax") {
-    nodeUrl = "https://api.avax.network/ext/bc/C/rpc";
-  } else if (network === "avax_testnet") {
-    nodeUrl = "https://api.avax-test.network/ext/bc/C/rpc";
-  } else if (network === "fantom") {
-    nodeUrl = "https://rpc.ftm.tools";
-  } else if (network === "fantom_testnet") {
-    nodeUrl = "https://rpc.testnet.fantom.network";
+  switch (network) {
+    case "optimism":
+      nodeUrl = `https://opt-mainnet.g.alchemy.com/v2/${alchemyKey}`;
+      break;
+    case "optimism_testnet":
+      nodeUrl = `https://opt-kovan.g.alchemy.com/v2/${alchemyKey}`;
+      break;
+    case "arbitrum":
+      nodeUrl = `https://arb-mainnet.g.alchemy.com/v2/${alchemyKey}`;
+      break;
+    case "arbitrum_testnet":
+      nodeUrl = `https://arb-rinkeby.g.alchemy.com/v2/${alchemyKey}`;
+      break;
+    case "avax":
+      nodeUrl = "https://api.avax.network/ext/bc/C/rpc";
+      break;
+    case "avax_testnet":
+      nodeUrl = "https://api.avax-test.network/ext/bc/C/rpc";
+      break;
+    case "fantom":
+      nodeUrl = "https://rpc.ftm.tools";
+      break;
+    case "fantom_testnet":
+      nodeUrl = "https://rpc.testnet.fantom.network";
+      break;
   }
 
   return {
@@ -72,8 +93,6 @@ const config: HardhatUserConfig = {
     version: "0.8.12",
     settings: {
       metadata: {
-        // Not including the metadata hash
-        // https://github.com/paulrberg/solidity-template/issues/31
         bytecodeHash: "ipfs",
       },
       // You should disable the optimizer when debugging
@@ -104,6 +123,10 @@ const config: HardhatUserConfig = {
       ftmTestnet: process.env.FANTOMSCAN_API_KEY || process.env.SCAN_API_KEY,
       avalanche: process.env.SNOWTRACE_API_KEY || process.env.SCAN_API_KEY,
       avalancheFujiTestnet: process.env.SNOWTRACE_API_KEY || process.env.SCAN_API_KEY,
+      optimisticEthereum: process.env.OPTIMISM_SCAN_API_KEY || process.env.SCAN_API_KEY,
+      optimisticKovan: process.env.OPTIMISM_SCAN_API_KEY || process.env.SCAN_API_KEY,
+      arbitrumOne: process.env.ARBITRUM_SCAN_API_KEY || process.env.SCAN_API_KEY,
+      arbitrumTestnet: process.env.ARBITRUM_SCAN_API_KEY || process.env.SCAN_API_KEY,
     },
   },
   gasReporter: {
@@ -127,6 +150,10 @@ if (testPrivateKey) {
     fantom_testnet: createTestnetConfig("fantom_testnet"),
     avax: createTestnetConfig("avax"),
     avax_testnet: createTestnetConfig("avax_testnet"),
+    arbitrum: createTestnetConfig("arbitrum"),
+    arbitrum_testnet: createTestnetConfig("arbitrum_testnet"),
+    optimism: createTestnetConfig("optimism"),
+    optimism_testnet: createTestnetConfig("optimism_testnet"),
   };
 }
 
