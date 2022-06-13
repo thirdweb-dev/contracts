@@ -882,4 +882,67 @@ contract TempPackTest is BaseTest {
             assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
         }
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Scenario/Exploit tests
+    //////////////////////////////////////////////////////////////*/
+    /**
+     *  note: Testing revert condition; token owner calls `createPack` to pack owned tokens.
+     */
+    function test_revert_createPack_reentrancy() public {
+        MaliciousERC20 malERC20 = new MaliciousERC20(payable(address(tempPack)));
+        ITokenBundle.Token[] memory content = new ITokenBundle.Token[](1);
+        uint256[] memory amount = new uint256[](1);
+
+        malERC20.mint(address(tokenOwner), 10 ether);
+        content[0] = ITokenBundle.Token({
+            assetContract: address(malERC20),
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+        amount[0] = 1 ether;
+
+        tokenOwner.setAllowanceERC20(address(malERC20), address(tempPack), 10 ether);
+
+        address recipient = address(0x123);
+
+        vm.prank(address(deployer));
+        tempPack.grantRole(keccak256("MINTER_ROLE"), address(malERC20));
+
+        vm.startPrank(address(tokenOwner));
+        vm.expectRevert("ReentrancyGuard: reentrant call");
+        tempPack.createPack(content, amount, packUri, 0, 1, recipient);
+    }
+
+}
+
+contract MaliciousERC20 is MockERC20, ITokenBundle {
+    TempPack public tempPack;
+
+    constructor(address payable _tempPack) {
+        tempPack = TempPack(_tempPack);
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public override returns (bool) {
+        ITokenBundle.Token[] memory content = new ITokenBundle.Token[](1);
+        uint256[] memory amounts = new uint256[](1);
+
+        address recipient = address(0x123);
+        tempPack.createPack(content, amounts, "", 0, 1, recipient);
+        return super.transferFrom(from, to, amount);
+    }
+
+    // function onERC721Received(
+    //     address,
+    //     address,
+    //     uint256,
+    //     bytes calldata
+    // ) external returns (bytes4) {
+    //     return this.onERC721Received.selector;
+    // }
 }
