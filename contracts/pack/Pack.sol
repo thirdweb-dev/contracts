@@ -190,7 +190,7 @@ contract Pack is
         returns (uint256 packId, uint256 packTotalSupply)
     {
         require(_contents.length > 0, "nothing to pack");
-        require(_contents.length == _numOfRewardUnits.length, "invalid per unit amounts");
+        require(_contents.length == _numOfRewardUnits.length, "invalid reward units");
 
         if (!hasRole(ASSET_ROLE, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
