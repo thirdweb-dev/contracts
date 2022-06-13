@@ -13,7 +13,7 @@ The thirdweb `Pack` contract is a lootbox mechanism. An account can bundle up ar
 ### createPack
 
 ```solidity
-function createPack(IPack.PackContent[] contents, string packUri, uint128 openStartTimestamp, uint128 amountDistributedPerOpen, address recipient) external nonpayable returns (uint256 packId, uint256 packTotalSupply)
+function createPack(ITokenBundle.Token[] contents, uint256[] numOfRewardUnits, string packUri, uint128 openStartTimestamp, uint128 amountDistributedPerOpen, address recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
 ```
 
 Creates a pack with the stated contents.
@@ -24,7 +24,8 @@ Creates a pack with the stated contents.
 
 | Name | Type | Description |
 |---|---|---|
-| contents | IPack.PackContent[] | The reward units to pack in the packs.
+| contents | ITokenBundle.Token[] | The reward units to pack in the packs.
+| numOfRewardUnits | uint256[] | The number of reward units to create, for each asset specified in `contents`.
 | packUri | string | The (metadata) URI assigned to the packs created.
 | openStartTimestamp | uint128 | The timestamp after which packs can be opened.
 | amountDistributedPerOpen | uint128 | The number of reward units distributed per open.
@@ -40,7 +41,7 @@ Creates a pack with the stated contents.
 ### openPack
 
 ```solidity
-function openPack(uint256 packId, uint256 amountToOpen) external nonpayable
+function openPack(uint256 packId, uint256 amountToOpen) external nonpayable returns (struct ITokenBundle.Token[])
 ```
 
 Lets a pack owner open a pack and receive the pack&#39;s reward unit.
@@ -54,6 +55,12 @@ Lets a pack owner open a pack and receive the pack&#39;s reward unit.
 | packId | uint256 | The identifier of the pack to open.
 | amountToOpen | uint256 | The number of packs to open at once.
 
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token[] | undefined
+
 
 
 ## Events
@@ -61,7 +68,7 @@ Lets a pack owner open a pack and receive the pack&#39;s reward unit.
 ### PackCreated
 
 ```solidity
-event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, IPack.PackInfo packInfo, uint256 totalPacksCreated)
+event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, uint256 totalPacksCreated)
 ```
 
 Emitted when a set of packs is created.
@@ -75,13 +82,12 @@ Emitted when a set of packs is created.
 | packId `indexed` | uint256 | undefined |
 | packCreator `indexed` | address | undefined |
 | recipient  | address | undefined |
-| packInfo  | IPack.PackInfo | undefined |
 | totalPacksCreated  | uint256 | undefined |
 
 ### PackOpened
 
 ```solidity
-event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, IPack.PackContent[] rewardUnitsDistributed)
+event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, ITokenBundle.Token[] rewardUnitsDistributed)
 ```
 
 Emitted when a pack is opened.
@@ -95,7 +101,7 @@ Emitted when a pack is opened.
 | packId `indexed` | uint256 | undefined |
 | opener `indexed` | address | undefined |
 | numOfPacksOpened  | uint256 | undefined |
-| rewardUnitsDistributed  | IPack.PackContent[] | undefined |
+| rewardUnitsDistributed  | ITokenBundle.Token[] | undefined |
 
 
 

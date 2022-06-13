@@ -91,14 +91,11 @@ contract Pack is
         __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
 
-        // Revoked at the end of the function.
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         name = _name;
         symbol = _symbol;
 
-        setContractURI(_contractURI);
-        setOwner(_defaultAdmin);
+        _setupContractURI(_contractURI);
+        _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
@@ -108,9 +105,7 @@ contract Pack is
         // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
         _setupRole(ASSET_ROLE, address(0));
 
-        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-
-        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
 
     receive() external payable {

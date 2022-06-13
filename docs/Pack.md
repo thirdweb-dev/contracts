@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### balanceOf
 
 ```solidity
@@ -127,7 +144,7 @@ function contractVersion() external pure returns (uint8)
 ### createPack
 
 ```solidity
-function createPack(IPack.PackContent[] _contents, string _packUri, uint128 _openStartTimestamp, uint128 _amountDistributedPerOpen, address _recipient) external nonpayable returns (uint256 packId, uint256 packTotalSupply)
+function createPack(ITokenBundle.Token[] _contents, uint256[] _numOfRewardUnits, string _packUri, uint128 _openStartTimestamp, uint128 _amountDistributedPerOpen, address _recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
 ```
 
 
@@ -138,7 +155,8 @@ function createPack(IPack.PackContent[] _contents, string _packUri, uint128 _ope
 
 | Name | Type | Description |
 |---|---|---|
-| _contents | IPack.PackContent[] | undefined
+| _contents | ITokenBundle.Token[] | undefined
+| _numOfRewardUnits | uint256[] | undefined
 | _packUri | string | undefined
 | _openStartTimestamp | uint128 | undefined
 | _amountDistributedPerOpen | uint128 | undefined
@@ -172,7 +190,7 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 ### getPackContents
 
 ```solidity
-function getPackContents(uint256 _packId) external view returns (struct IPack.PackContent[] contents)
+function getPackContents(uint256 _packId) external view returns (struct ITokenBundle.Token[] contents, uint256[] perUnitAmounts)
 ```
 
 
@@ -189,29 +207,8 @@ function getPackContents(uint256 _packId) external view returns (struct IPack.Pa
 
 | Name | Type | Description |
 |---|---|---|
-| contents | IPack.PackContent[] | undefined
-
-### getPackInfo
-
-```solidity
-function getPackInfo(uint256 _packId) external view returns (struct IPack.PackInfo info)
-```
-
-
-
-*Returns the info related to a set of packs.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _packId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| info | IPack.PackInfo | undefined
+| contents | ITokenBundle.Token[] | undefined
+| perUnitAmounts | uint256[] | undefined
 
 ### getRoleAdmin
 
@@ -302,6 +299,73 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
+
+### getTokenCountOfBundle
+
+```solidity
+function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256)
+```
+
+
+
+*Returns the total number of assets in a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getTokenOfBundle
+
+```solidity
+function getTokenOfBundle(uint256 _bundleId, uint256 index) external view returns (struct ITokenBundle.Token)
+```
+
+
+
+*Returns an asset contained in a particular bundle, at a particular index.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token | undefined
+
+### getUriOfBundle
+
+```solidity
+function getUriOfBundle(uint256 _bundleId) external view returns (string)
+```
+
+
+
+*Returns the uri of a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
 
 ### grantRole
 
@@ -472,10 +536,10 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### nextTokenId
+### nextTokenIdToMint
 
 ```solidity
-function nextTokenId() external view returns (uint256)
+function nextTokenIdToMint() external view returns (uint256)
 ```
 
 
@@ -569,7 +633,7 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 ### openPack
 
 ```solidity
-function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable
+function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable returns (struct ITokenBundle.Token[])
 ```
 
 Lets a pack owner open packs and receive the packs&#39; reward units.
@@ -582,6 +646,12 @@ Lets a pack owner open packs and receive the packs&#39; reward units.
 |---|---|---|
 | _packId | uint256 | undefined
 | _amountToOpen | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token[] | undefined
 
 ### owner
 
@@ -958,7 +1028,7 @@ event OwnerUpdated(address prevOwner, address newOwner)
 ### PackCreated
 
 ```solidity
-event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, IPack.PackInfo packInfo, uint256 totalPacksCreated)
+event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, uint256 totalPacksCreated)
 ```
 
 Emitted when a set of packs is created.
@@ -972,13 +1042,12 @@ Emitted when a set of packs is created.
 | packId `indexed` | uint256 | undefined |
 | packCreator `indexed` | address | undefined |
 | recipient  | address | undefined |
-| packInfo  | IPack.PackInfo | undefined |
 | totalPacksCreated  | uint256 | undefined |
 
 ### PackOpened
 
 ```solidity
-event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, IPack.PackContent[] rewardUnitsDistributed)
+event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, ITokenBundle.Token[] rewardUnitsDistributed)
 ```
 
 Emitted when a pack is opened.
@@ -992,7 +1061,7 @@ Emitted when a pack is opened.
 | packId `indexed` | uint256 | undefined |
 | opener `indexed` | address | undefined |
 | numOfPacksOpened  | uint256 | undefined |
-| rewardUnitsDistributed  | IPack.PackContent[] | undefined |
+| rewardUnitsDistributed  | ITokenBundle.Token[] | undefined |
 
 ### Paused
 
