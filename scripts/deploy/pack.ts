@@ -1,10 +1,9 @@
 import hre, { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Pack } from "typechain";
 import { nativeTokenWrapper } from "utils/nativeTokenWrapper";
 
 async function main() {
-        const [caller]: SignerWithAddress[] = await ethers.getSigners();
+        
         const chainId: number = hre.network.config.chainId as number;
         const nativeTokenWrapperAddress: string = nativeTokenWrapper[chainId];
 
