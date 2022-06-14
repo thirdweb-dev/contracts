@@ -72,9 +72,6 @@ contract DropERC1155 is
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee private immutable thirdwebFee;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
 
@@ -136,10 +133,6 @@ contract DropERC1155 is
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
-
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -401,8 +394,6 @@ contract DropERC1155 is
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
@@ -410,8 +401,7 @@ contract DropERC1155 is
 
         address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient, totalPrice - platformFees - twFee);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
@@ -600,6 +590,12 @@ contract DropERC1155 is
     function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         primarySaleRecipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
+    }
+
+    /// @dev Lets a contract admin set the recipient for all primary sales.
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
