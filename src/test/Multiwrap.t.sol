@@ -5,6 +5,7 @@ import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
 
 // Test imports
+import "contracts/lib/TWStrings.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
@@ -101,6 +102,51 @@ contract MultiwrapTest is BaseTest {
         // Grant MINTER_ROLE / requisite wrapping permissions to `tokenOwer`
         vm.prank(deployer);
         multiwrap.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: misc.
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  note: Tests whether contract revert when a non-holder renounces a role.
+     */
+    function test_revert_nonHolder_renounceRole() public {
+
+        address caller = address(0x123);
+        bytes32 role = keccak256("MINTER_ROLE");
+
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(caller), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+
+        multiwrap.renounceRole(role, caller);
+    }
+
+    /**
+     *  note: Tests whether contract revert when a role admin revokes a role for a non-holder.
+     */
+    function test_revert_revokeRoleForNonHolder() public {
+        address target = address(0x123);
+        bytes32 role = keccak256("MINTER_ROLE");
+
+        vm.prank(deployer);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(target), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+
+        multiwrap.revokeRole(role, target);
     }
 
     /**
