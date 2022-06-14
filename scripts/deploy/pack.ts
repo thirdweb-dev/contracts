@@ -1,6 +1,6 @@
 import hre, { ethers } from "hardhat";
 import { Pack } from "typechain";
-import { nativeTokenWrapper } from "utils/nativeTokenWrapper";
+import { nativeTokenWrapper } from "../../utils/nativeTokenWrapper";
 
 async function main() {
         
