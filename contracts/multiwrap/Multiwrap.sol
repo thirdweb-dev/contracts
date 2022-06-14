@@ -141,6 +141,7 @@ contract Multiwrap is
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC721Upgradeable).interfaceId ||
+            interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC2981Upgradeable).interfaceId;
     }
 
