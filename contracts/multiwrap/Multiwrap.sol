@@ -116,6 +116,11 @@ contract Multiwrap is
         return uint8(VERSION);
     }
 
+    /// @dev Lets the contract receive ether to unwrap native tokens.
+    receive() external payable {
+        require(msg.sender == nativeTokenWrapper, "Caller not native token wrapper.");
+    }
+
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/

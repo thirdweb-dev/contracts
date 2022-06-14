@@ -16,7 +16,7 @@ import "../lib/CurrencyTransferLib.sol";
 
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     /// @dev The address of the native token wrapper contract.
-    address private immutable nativeTokenWrapper;
+    address internal immutable nativeTokenWrapper;
 
     constructor(address _nativeTokenWrapper) {
         nativeTokenWrapper = _nativeTokenWrapper;
