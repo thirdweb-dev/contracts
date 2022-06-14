@@ -10,8 +10,6 @@ import { MockERC20 } from "./mocks/MockERC20.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
 
-// import "forge-std/console2.sol";
-
 contract PackTest is BaseTest {
     /// @notice Emitted when a set of packs is created.
     event PackCreated(
