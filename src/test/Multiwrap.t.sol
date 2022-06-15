@@ -670,7 +670,7 @@ function test_state_unwrap_nativeTokens() public {
         // ===== target test content =====
 
         vm.prank(recipient);
-        vm.expectRevert("Multiwrap: wrapped NFT DNE.");
+        vm.expectRevert("wrapped NFT DNE.");
         multiwrap.unwrap(expectedIdForWrappedToken + 1, recipient);
     }
 
@@ -685,7 +685,7 @@ function test_state_unwrap_nativeTokens() public {
         // ===== target test content =====
 
         vm.prank(address(0x12));
-        vm.expectRevert("Multiwrap: caller not approved for unwrapping.");
+        vm.expectRevert("caller not approved for unwrapping.");
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 
@@ -703,7 +703,7 @@ function test_state_unwrap_nativeTokens() public {
         multiwrap.transferFrom(recipient, address(0x12), 0);
 
         vm.prank(recipient);
-        vm.expectRevert("Multiwrap: caller not approved for unwrapping.");
+        vm.expectRevert("caller not approved for unwrapping.");
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 

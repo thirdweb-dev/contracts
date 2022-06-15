@@ -118,7 +118,7 @@ contract Multiwrap is
 
     /// @dev Lets the contract receive ether to unwrap native tokens.
     receive() external payable {
-        require(msg.sender == nativeTokenWrapper, "Caller not native token wrapper.");
+        require(msg.sender == nativeTokenWrapper, "caller not native token wrapper.");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -173,8 +173,8 @@ contract Multiwrap is
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
-        require(_tokenId < nextTokenIdToMint, "Multiwrap: wrapped NFT DNE.");
-        require(_isApprovedOrOwner(_msgSender(), _tokenId), "Multiwrap: caller not approved for unwrapping.");
+        require(_tokenId < nextTokenIdToMint, "wrapped NFT DNE.");
+        require(_isApprovedOrOwner(_msgSender(), _tokenId), "caller not approved for unwrapping.");
 
         _burn(_tokenId);
         _releaseTokens(_recipient, _tokenId);
