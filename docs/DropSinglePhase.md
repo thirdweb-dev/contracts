@@ -182,3 +182,83 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 s
 
 
 
+## Errors
+
+### CannotClaim
+
+```solidity
+error CannotClaim()
+```
+
+
+
+
+
+
+### ExceedMaxClaimableSupply
+
+```solidity
+error ExceedMaxClaimableSupply()
+```
+
+
+
+
+
+
+### InvalidCurrencyOrPrice
+
+```solidity
+error InvalidCurrencyOrPrice()
+```
+
+
+
+
+
+
+### InvalidQuantity
+
+```solidity
+error InvalidQuantity()
+```
+
+
+
+
+
+
+### InvalidQuantityProof
+
+```solidity
+error InvalidQuantityProof()
+```
+
+
+
+
+
+
+### NotInWhitelist
+
+```solidity
+error NotInWhitelist()
+```
+
+
+
+
+
+
+### ProofClaimed
+
+```solidity
+error ProofClaimed()
+```
+
+
+
+
+
+
+

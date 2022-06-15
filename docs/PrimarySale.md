@@ -65,3 +65,17 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 
 
 
+## Errors
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+

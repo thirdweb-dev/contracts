@@ -1139,3 +1139,39 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 
 
 
+## Errors
+
+### CanOnlyRenounceForSelf
+
+```solidity
+error CanOnlyRenounceForSelf()
+```
+
+
+
+
+
+
+### ExceedsMaxBps
+
+```solidity
+error ExceedsMaxBps()
+```
+
+
+
+
+
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
 import "../lib/TWBitMaps.sol";
+import "./Errors.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase {
     using TWBitMaps for TWBitMaps.BitMap;
@@ -33,6 +34,17 @@ abstract contract DropSinglePhase is IDropSinglePhase {
      *       has already claimed tokens i.e. used their place in the allowlist.
      */
     mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
+
+    /*///////////////////////////////////////////////////////////////
+                                Errors
+    //////////////////////////////////////////////////////////////*/
+    error InvalidCurrencyOrPrice();
+    error InvalidQuantity();
+    error ExceedMaxClaimableSupply();
+    error CannotClaim();
+    error NotInWhitelist();
+    error ProofClaimed();
+    error InvalidQuantityProof();
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -135,21 +147,25 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition;
 
-        require(
-            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price."
-        );
+        // require(
+        //     _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
+        //     "invalid currency or price."
+        // );
+        if(_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) revert InvalidCurrencyOrPrice();
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        require(
-            _quantity > 0 &&
-                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
-            "invalid quantity."
-        );
-        require(
-            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max claimable supply."
-        );
+        // require(
+        //     _quantity > 0 &&
+        //         (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
+        //     "invalid quantity."
+        // );
+        if(_quantity == 0 || (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)) revert InvalidQuantity();
+
+        // require(
+        //     currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
+        //     "exceed max claimable supply."
+        // );
+        if(currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) revert ExceedMaxClaimableSupply();
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
         require(
@@ -173,12 +189,17 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 currentClaimPhase.merkleRoot,
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
-            require(validMerkleProof, "not in whitelist.");
-            require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
-            require(
-                _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
-                "invalid quantity proof."
-            );
+            // require(validMerkleProof, "not in whitelist.");
+            if(!validMerkleProof) revert NotInWhitelist();
+
+            // require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
+            if(usedAllowlistSpot[conditionId].get(merkleProofIndex)) revert ProofClaimed();
+
+            // require(
+            //     _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
+            //     "invalid quantity proof."
+            // );
+            if(_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) revert InvalidQuantityProof();
         }
     }
 

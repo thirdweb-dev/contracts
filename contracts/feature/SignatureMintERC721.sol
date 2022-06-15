@@ -17,6 +17,9 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
+    error InvalidRequest();
+    error RequestExpired();
+
     constructor() EIP712("SignatureMintERC721", "1") {}
 
     /// @dev Verifies that a mint request is signed by an authorized account.
@@ -38,11 +41,14 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         bool success;
         (success, signer) = verify(_req, _signature);
 
-        require(success, "Invalid request");
-        require(
-            _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
-            "Request expired"
-        );
+        // require(success, "Invalid request");
+        if(!success) revert InvalidRequest();
+
+        // require(
+        //     _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
+        //     "Request expired"
+        // );
+        if(_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) revert RequestExpired();
 
         minted[_req.uid] = true;
     }

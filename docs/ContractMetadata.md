@@ -66,3 +66,17 @@ event ContractURIUpdated(string prevURI, string newURI)
 
 
 
+## Errors
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+

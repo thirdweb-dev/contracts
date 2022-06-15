@@ -66,6 +66,7 @@ abstract contract LazyMint is ILazyMint {
         uint256 _amountToMint,
         string calldata _baseURIForTokens
     ) internal returns (uint256 nextTokenIdToMint, uint256 batchId) {
+
         batchId = _startId + _amountToMint;
         nextTokenIdToMint = batchId;
 

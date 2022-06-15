@@ -206,3 +206,17 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 
 
 
+## Errors
+
+### CanOnlyRenounceForSelf
+
+```solidity
+error CanOnlyRenounceForSelf()
+```
+
+
+
+
+
+
+

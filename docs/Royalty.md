@@ -151,3 +151,28 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 
 
 
+## Errors
+
+### ExceedsMaxBps
+
+```solidity
+error ExceedsMaxBps()
+```
+
+
+
+
+
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+

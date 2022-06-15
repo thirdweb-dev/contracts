@@ -68,3 +68,28 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 
 
+## Errors
+
+### ExceedsMaxBps
+
+```solidity
+error ExceedsMaxBps()
+```
+
+
+
+
+
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+

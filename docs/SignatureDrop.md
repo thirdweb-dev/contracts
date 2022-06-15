@@ -1533,6 +1533,94 @@ Cannot query the balance for the zero address.
 
 
 
+### CanOnlyRenounceForSelf
+
+```solidity
+error CanOnlyRenounceForSelf()
+```
+
+
+
+
+
+
+### CannotClaim
+
+```solidity
+error CannotClaim()
+```
+
+
+
+
+
+
+### ExceedMaxClaimableSupply
+
+```solidity
+error ExceedMaxClaimableSupply()
+```
+
+
+
+
+
+
+### ExceedsMaxBps
+
+```solidity
+error ExceedsMaxBps()
+```
+
+
+
+
+
+
+### InvalidCurrencyOrPrice
+
+```solidity
+error InvalidCurrencyOrPrice()
+```
+
+
+
+
+
+
+### InvalidQuantity
+
+```solidity
+error InvalidQuantity()
+```
+
+
+
+
+
+
+### InvalidQuantityProof
+
+```solidity
+error InvalidQuantityProof()
+```
+
+
+
+
+
+
+### InvalidRequest
+
+```solidity
+error InvalidRequest()
+```
+
+
+
+
+
+
 ### MintToZeroAddress
 
 ```solidity
@@ -1555,6 +1643,83 @@ The quantity of tokens minted must be more than zero.
 
 
 
+### MintingZeroTokens
+
+```solidity
+error MintingZeroTokens()
+```
+
+
+
+
+
+
+### MustSendTotalPrice
+
+```solidity
+error MustSendTotalPrice()
+```
+
+
+
+
+
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+### NotEnoughMintedTokens
+
+```solidity
+error NotEnoughMintedTokens()
+```
+
+
+
+
+
+
+### NotInWhitelist
+
+```solidity
+error NotInWhitelist()
+```
+
+
+
+
+
+
+### NotTransferRole
+
+```solidity
+error NotTransferRole()
+```
+
+
+
+
+
+
+### NothingToReveal
+
+```solidity
+error NothingToReveal()
+```
+
+
+
+
+
+
 ### OwnerQueryForNonexistentToken
 
 ```solidity
@@ -1562,6 +1727,28 @@ error OwnerQueryForNonexistentToken()
 ```
 
 The token does not exist.
+
+
+
+
+### ProofClaimed
+
+```solidity
+error ProofClaimed()
+```
+
+
+
+
+
+
+### RequestExpired
+
+```solidity
+error RequestExpired()
+```
+
+
 
 
 
@@ -1617,6 +1804,17 @@ error URIQueryForNonexistentToken()
 ```
 
 The token does not exist.
+
+
+
+
+### ZeroAmount
+
+```solidity
+error ZeroAmount()
+```
+
+
 
 
 

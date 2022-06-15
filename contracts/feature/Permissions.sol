@@ -10,6 +10,8 @@ contract Permissions is IPermissions {
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
+    error CanOnlyRenounceForSelf();
+
     modifier onlyRole(bytes32 role) {
         _checkRole(role, msg.sender);
         _;
@@ -43,7 +45,8 @@ contract Permissions is IPermissions {
     }
 
     function renounceRole(bytes32 role, address account) public virtual override {
-        require(msg.sender == account, "Can only renounce for self");
+        // require(msg.sender == account, "Can only renounce for self");
+        if(msg.sender != account) revert CanOnlyRenounceForSelf();
         _revokeRole(role, account);
     }
 

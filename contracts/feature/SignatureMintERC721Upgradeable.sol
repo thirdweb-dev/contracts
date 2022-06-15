@@ -17,6 +17,9 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
+    error InvalidRequest();
+    error RequestExpired();
+
     function __SignatureMintERC721_init() internal onlyInitializing {
         __EIP712_init("SignatureMintERC721", "1");
     }
@@ -42,11 +45,14 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
         bool success;
         (success, signer) = verify(_req, _signature);
 
-        require(success, "Invalid request");
-        require(
-            _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
-            "Request expired"
-        );
+        // require(success, "Invalid request");
+        if(!success) revert InvalidRequest();
+
+        // require(
+        //     _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
+        //     "Request expired"
+        // );
+        if(_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) revert RequestExpired();
 
         minted[_req.uid] = true;
     }

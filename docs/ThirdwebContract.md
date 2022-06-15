@@ -82,3 +82,17 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 
 
+## Errors
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+

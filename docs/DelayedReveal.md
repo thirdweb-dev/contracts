@@ -126,3 +126,17 @@ function reveal(uint256 identifier, bytes key) external nonpayable returns (stri
 
 
 
+## Errors
+
+### NothingToReveal
+
+```solidity
+error NothingToReveal()
+```
+
+
+
+
+
+
+
