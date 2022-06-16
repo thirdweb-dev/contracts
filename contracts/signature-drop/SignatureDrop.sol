@@ -153,6 +153,7 @@ contract SignatureDrop is
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
     ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
+        require(_amount != 0, "Zero amount");
         uint256 startId = nextTokenIdToMint;
 
         (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);

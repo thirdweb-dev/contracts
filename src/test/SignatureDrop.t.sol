@@ -915,6 +915,23 @@ contract SignatureDropTest is BaseTest {
         sigdrop.reveal(0, "key");
     }
 
+    function test_delayedReveal_withNewLazyMintedEmptyBatch() public {
+        vm.startPrank(deployerSigner);
+
+        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
+        sigdrop.lazyMint(100, "", encryptedURI);
+        sigdrop.reveal(0, "key");
+
+        string memory uri = sigdrop.tokenURI(1);
+        assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
+
+        bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
+        vm.expectRevert("Zero amount");
+        sigdrop.lazyMint(0, "", newEncryptedURI);
+
+        vm.stopPrank();
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Reentrancy related Tests
     //////////////////////////////////////////////////////////////*/
