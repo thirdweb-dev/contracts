@@ -346,7 +346,7 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 ### getRevealURI
 
 ```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external nonpayable returns (string revealedURI)
+function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
 ```
 
 
@@ -464,7 +464,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
 
 #### Parameters
 
@@ -778,7 +778,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
 
 #### Parameters
 
@@ -818,7 +818,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
 
 #### Parameters
 
