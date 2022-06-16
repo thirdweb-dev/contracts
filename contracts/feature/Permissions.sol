@@ -33,6 +33,7 @@ contract Permissions is IPermissions {
 
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
+        require(!_hasRole[role][account], "Can only grant to non holders");
         _setupRole(role, account);
     }
 
@@ -58,6 +59,7 @@ contract Permissions is IPermissions {
     }
 
     function _revokeRole(bytes32 role, address account) internal virtual {
+        _checkRole(role, account);
         delete _hasRole[role][account];
         emit RoleRevoked(role, account, msg.sender);
     }

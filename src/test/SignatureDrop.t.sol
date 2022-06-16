@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 
 // Test imports
+import "contracts/lib/TWStrings.sol";
 import "./utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -153,6 +154,68 @@ contract SignatureDropTest is BaseTest {
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop)));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: misc.
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  note: Tests whether contract reverts when a non-holder renounces a role.
+     */
+    function test_revert_nonHolder_renounceRole() public {
+
+        address caller = address(0x123);
+        bytes32 role = keccak256("MINTER_ROLE");
+
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(caller), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+
+        sigdrop.renounceRole(role, caller);
+    }
+
+    /**
+     *  note: Tests whether contract reverts when a role admin revokes a role for a non-holder.
+     */
+    function test_revert_revokeRoleForNonHolder() public {
+        address target = address(0x123);
+        bytes32 role = keccak256("MINTER_ROLE");
+
+        vm.prank(deployerSigner);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(target), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+
+        sigdrop.revokeRole(role, target);
+    }
+
+    /**
+     *  @dev Tests whether contract reverts when a role is granted to an existent role holder.
+     */
+    function test_revert_grant_role_to_account_with_role() public {
+        bytes32 role = keccak256("ABC_ROLE");
+        address receiver = getActor(0);
+
+        vm.startPrank(deployerSigner);
+
+        sigdrop.grantRole(role, receiver);
+
+        vm.expectRevert("Can only grant to non holders");
+        sigdrop.grantRole(role, receiver);
+
+        vm.stopPrank();
     }
 
     /*///////////////////////////////////////////////////////////////
