@@ -218,6 +218,27 @@ contract SignatureDropTest is BaseTest {
         vm.stopPrank();
     }
 
+    /**
+     *  @dev Tests whether role member count is incremented correctly.
+     */
+    function test_member_count_incremented_properly_when_role_granted() public {
+        bytes32 role = keccak256("ABC_ROLE");
+        address receiver = getActor(0);
+
+        vm.startPrank(deployerSigner);
+        uint256 roleMemberCount = sigdrop.getRoleMemberCount(role);
+
+        assertEq(roleMemberCount, 0);
+
+        sigdrop.grantRole(role, receiver);
+
+        // fails here since it returns 2
+        // because there are 2 calls to PermissionsEnumerable._addMember
+        assertEq(sigdrop.getRoleMemberCount(role), 1);
+
+        vm.stopPrank();
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Lazy Mint Tests
     //////////////////////////////////////////////////////////////*/
