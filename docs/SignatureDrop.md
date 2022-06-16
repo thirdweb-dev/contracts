@@ -223,6 +223,40 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 |---|---|---|
 | _0 | bytes | undefined
 
+### getAllRoles
+
+```solidity
+function getAllRoles() external view returns (bytes32[] allRoles)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| allRoles | bytes32[] | undefined
+
+### getAllRolesWithMembers
+
+```solidity
+function getAllRolesWithMembers() external view returns (bytes32[] rolesWithMembers)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| rolesWithMembers | bytes32[] | undefined
+
 ### getApproved
 
 ```solidity

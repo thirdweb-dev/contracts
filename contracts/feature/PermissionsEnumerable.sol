@@ -13,6 +13,16 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
 
     mapping(bytes32 => RoleMembers) private roleMembers;
 
+    bytes32[] private roles;
+
+    function getAllRoles() external view returns (bytes32[] memory allRoles) {
+        allRoles = new bytes32[](roles.length);
+
+        for(uint256 i = 0; i < roles.length; i += 1) {
+            allRoles[i] = roles[i];
+        }
+    }
+
     function getRoleMember(bytes32 role, uint256 index) external view override returns (address member) {
         uint256 currentIndex = roleMembers[role].index;
         uint256 check;
@@ -28,7 +38,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
         }
     }
 
-    function getRoleMemberCount(bytes32 role) external view override returns (uint256 count) {
+    function getRoleMemberCount(bytes32 role) public view override returns (uint256 count) {
         uint256 currentIndex = roleMembers[role].index;
 
         for (uint256 i = 0; i < currentIndex; i += 1) {
@@ -60,7 +70,11 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
 
     function _addMember(bytes32 role, address account) internal {
         uint256 idx = roleMembers[role].index;
-        roleMembers[role].index += 1;
+        if(idx == 0) {
+            roles.push(role);
+        }
+
+       roleMembers[role].index += 1;
 
         roleMembers[role].members[idx] = account;
         roleMembers[role].indexOf[account] = idx;

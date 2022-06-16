@@ -117,6 +117,40 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined
 
+### getAllRoles
+
+```solidity
+function getAllRoles() external view returns (bytes32[] allRoles)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| allRoles | bytes32[] | undefined
+
+### getAllRolesWithMembers
+
+```solidity
+function getAllRolesWithMembers() external view returns (bytes32[] rolesWithMembers)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| rolesWithMembers | bytes32[] | undefined
+
 ### getApproved
 
 ```solidity
