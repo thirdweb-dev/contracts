@@ -898,6 +898,24 @@ contract SignatureDropTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+    function test_breaking_reveal() public {
+        address attacker = getActor(0);
+        bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "", encryptedURI);
+
+        uint256 batchId = sigdrop.getBatchIdAtIndex(0);
+        vm.prank(attacker);
+        sigdrop.getRevealURI(batchId, "wrong keyy");
+
+        vm.prank(deployerSigner);
+        sigdrop.reveal(0, "key");
+    }
+
+    /*///////////////////////////////////////////////////////////////
                             Reentrancy related Tests
     //////////////////////////////////////////////////////////////*/
 
