@@ -232,11 +232,35 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.grantRole(role, receiver);
 
-        // fails here since it returns 2
-        // because there are 2 calls to PermissionsEnumerable._addMember
         assertEq(sigdrop.getRoleMemberCount(role), 1);
 
         vm.stopPrank();
+    }
+
+    function test_claimCondition_with_startTimestamp() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].startTimestamp = 100;
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false);
+
+        vm.prank(getActor(5), getActor(5));
+        vm.expectRevert("cannot claim yet.");
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
     /*///////////////////////////////////////////////////////////////

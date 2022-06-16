@@ -47,6 +47,9 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
     ) public payable virtual override {
+
+        require(claimCondition.startTimestamp < block.timestamp, "cannot claim yet.");
+
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
