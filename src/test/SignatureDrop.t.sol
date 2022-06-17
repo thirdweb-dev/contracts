@@ -433,6 +433,7 @@ contract SignatureDropTest is BaseTest {
      *  note: Fuzz testing; a batch of tokens, and nextTokenIdToMint
      */
     function test_fuzz_lazyMint_batchMintAndNextTokenIdToMint(uint256 x) public {
+        vm.assume(x > 0);
         vm.startPrank(deployerSigner);
 
         sigdrop.lazyMint(x, "ipfs://", "");
@@ -867,7 +868,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        vm.expectRevert("cannot claim.");
+        vm.expectRevert("cannot claim yet.");
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
