@@ -27,7 +27,7 @@ contract Permissions is IPermissions {
         return true;
     }
 
-    function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
+    function getRoleAdmin(bytes32 role) external view override returns (bytes32) {
         return _getRoleAdmin[role];
     }
 
