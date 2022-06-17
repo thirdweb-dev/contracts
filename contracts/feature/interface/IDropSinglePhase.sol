@@ -9,6 +9,7 @@ interface IDropSinglePhase is IClaimCondition {
         uint256 maxQuantityInAllowlist;
     }
 
+    /// @dev Emitted when tokens are claimed via `claim`.
     event TokensClaimed(
         address indexed claimer,
         address indexed receiver,
@@ -16,6 +17,7 @@ interface IDropSinglePhase is IClaimCondition {
         uint256 quantityClaimed
     );
 
+    /// @dev Emitted when the contract's claim conditions are updated.
     event ClaimConditionUpdated(ClaimCondition condition, bool resetEligibility);
 
     /**

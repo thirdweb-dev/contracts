@@ -3,6 +3,14 @@ pragma solidity ^0.8.0;
 
 import "./interface/IRoyalty.sol";
 
+/**
+ *  Thirdweb's `Royalty` is a contract extension to be used with any base contract. It exposes functions for setting and reading
+ *  the recipient of royalty fee and the royalty fee basis points, and lets the inheriting contract perform conditional logic
+ *  that uses information about royalty fees, if desired.
+ *
+ *  The `Royalty` contract is ERC2981 compliant.
+ */
+
 abstract contract Royalty is IRoyalty {
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
