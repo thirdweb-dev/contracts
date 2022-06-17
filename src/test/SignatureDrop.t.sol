@@ -118,8 +118,8 @@ contract SignatureDropBenchmarkTest is BaseTest {
 contract SignatureDropTest is BaseTest {
     using StringsUpgradeable for uint256;
 
-    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 index, string revealedURI);
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokenURIRevealed(uint256 indexed index, string revealedURI);
     event TokensMintedWithSignature(
         address indexed signer,
         address indexed mintedTo,
@@ -351,7 +351,7 @@ contract SignatureDropTest is BaseTest {
     function test_event_lazyMint_TokensLazyMinted() public {
         vm.startPrank(deployerSigner);
 
-        vm.expectEmit(false, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit TokensLazyMinted(0, 99, "ipfs://", "");
         sigdrop.lazyMint(100, "ipfs://", "");
 
@@ -563,7 +563,7 @@ contract SignatureDropTest is BaseTest {
         bytes memory encryptedURI = sigdrop.encryptDecrypt("ipfs://", "key");
         sigdrop.lazyMint(100, "", encryptedURI);
 
-        vm.expectEmit(false, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit TokenURIRevealed(0, "ipfs://");
         sigdrop.reveal(0, "key");
 
