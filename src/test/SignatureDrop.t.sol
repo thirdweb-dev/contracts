@@ -435,6 +435,9 @@ contract SignatureDropTest is BaseTest {
     function test_fuzz_lazyMint_batchMintAndNextTokenIdToMint(uint256 x) public {
         vm.startPrank(deployerSigner);
 
+        if(x == 0) {
+            vm.expectRevert("Zero amount");
+        }
         sigdrop.lazyMint(x, "ipfs://", "");
 
         uint256 slot = stdstore.target(address(sigdrop)).sig("nextTokenIdToMint()").find();
