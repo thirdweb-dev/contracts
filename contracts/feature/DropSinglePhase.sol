@@ -48,8 +48,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         bytes memory _data
     ) public payable virtual override {
 
-        require(claimCondition.startTimestamp < block.timestamp, "cannot claim yet.");
-
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
@@ -152,7 +150,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         );
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
-        require(lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
+        require(claimCondition.startTimestamp < block.timestamp && (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp), "cannot claim yet.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
