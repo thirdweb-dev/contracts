@@ -512,6 +512,33 @@ contract MultiwrapTest is BaseTest {
         multiwrap.wrap(emptyContent, uriForWrappedToken, recipient);
     }
 
+    function test_revert_wrap_nativeTokens_insufficientValueProvided_multipleInstances() public {
+        address recipient = address(0x123);
+
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](2);
+
+        vm.deal(address(tokenOwner), 100 ether);
+        vm.deal(address(multiwrap), 10 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+        nativeTokenContentToWrap[1] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("msg.value != amount");
+        multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+        
+        assertEq(address(multiwrap).balance, 10 ether);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `unwrap`
     //////////////////////////////////////////////////////////////*/
