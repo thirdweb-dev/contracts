@@ -33,8 +33,8 @@ interface IRoyalty {
         returns (address receiver, uint256 royaltyAmount);
 
     /// @dev Emitted when royalty info is updated.
-    event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when royalty recipient for tokenId is set
-    event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps);
+    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
 }

@@ -12,7 +12,7 @@ interface IDropSinglePhase is IClaimCondition {
     event TokensClaimed(
         address indexed claimer,
         address indexed receiver,
-        uint256 startTokenId,
+        uint256 indexed startTokenId,
         uint256 quantityClaimed
     );
 

@@ -9,5 +9,5 @@ interface IOwnable {
     function setOwner(address _newOwner) external;
 
     /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address prevOwner, address newOwner);
+    event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
 }

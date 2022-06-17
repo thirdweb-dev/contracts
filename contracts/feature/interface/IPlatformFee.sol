@@ -9,5 +9,5 @@ interface IPlatformFee {
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external;
 
     /// @dev Emitted when fee on primary sales is updated.
-    event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps);
+    event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 }

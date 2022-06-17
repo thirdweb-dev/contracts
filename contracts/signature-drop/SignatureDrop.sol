@@ -67,8 +67,8 @@ contract SignatureDrop is
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 index, string revealedURI);
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
