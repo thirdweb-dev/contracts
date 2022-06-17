@@ -352,7 +352,7 @@ contract SignatureDropTest is BaseTest {
         vm.startPrank(deployerSigner);
 
         vm.expectEmit(false, false, false, true);
-        emit TokensLazyMinted(0, 100, "ipfs://", "");
+        emit TokensLazyMinted(0, 99, "ipfs://", "");
         sigdrop.lazyMint(100, "ipfs://", "");
 
         vm.stopPrank();

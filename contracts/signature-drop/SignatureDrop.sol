@@ -162,7 +162,7 @@ contract SignatureDrop is
             _setEncryptedBaseURI(batchId, _encryptedBaseURI);
         }
 
-        emit TokensLazyMinted(startId, startId + _amount, _baseURIForTokens, _encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
