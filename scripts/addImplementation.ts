@@ -9,7 +9,7 @@ async function main() {
 
     console.log("\nCaller address: ", caller.address);
 
-    const twFactoryAddress: string = ethers.constants.AddressZero; // replace
+    const twFactoryAddress: string = "0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0"; // replace
     const twFactory: TWFactory = await ethers.getContractAt("TWFactory", twFactoryAddress);
 
     const hasFactoryRole = await twFactory.hasRole(
