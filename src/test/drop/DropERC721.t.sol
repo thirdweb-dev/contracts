@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "contracts/drop/DropERC721.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 // Test imports
 import "../utils/BaseTest.sol";
@@ -9,6 +10,7 @@ import "../utils/BaseTest.sol";
 contract SubExploitContract is ERC721Holder, ERC1155Holder {
     DropERC721 internal drop;
     address payable internal master;
+    // using Strings for uint256;
 
     constructor(address _drop) {
         drop = DropERC721(_drop);
@@ -222,5 +224,124 @@ contract DropERC721Test is BaseTest {
             proofs,
             0
         );
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                                Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_revert_claim_claimQty(uint256 x) public {
+        vm.assume(x != 0);
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 500;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployer);
+        drop.lazyMint(500, "ipfs://", bytes(""));
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        vm.prank(getActor(5), getActor(5));
+        vm.expectRevert("invalid quantity.");
+        drop.claim(receiver, 200, address(0), 0, proofs, x);
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, true);
+
+        vm.prank(getActor(5), getActor(5));
+        vm.expectRevert("invalid quantity.");
+        drop.claim(receiver, 200, address(0), 0, proofs, x);
+    }
+
+    function test_claimCondition_merkleProof(uint256 x) public {
+        vm.assume(x != 0 && x < 500);
+        string[] memory inputs = new string[](3);
+
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = Strings.toString(x);
+        
+        bytes memory result = vm.ffi(inputs);
+        // revert();
+        bytes32 root = abi.decode(result, (bytes32));
+        
+        inputs[1] = "src/test/scripts/getProof.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+        
+        vm.warp(1);
+
+        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+
+        // bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = x;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].merkleRoot = root;
+
+        vm.prank(deployer);
+        drop.lazyMint(x, "ipfs://", "");
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        // vm.prank(getActor(5), getActor(5));
+        vm.prank(receiver, receiver);
+        drop.claim(receiver, x, address(0), 0, proofs, x);
+
+        vm.prank(address(4), address(4));
+        vm.expectRevert("not in whitelist.");
+        drop.claim(receiver, x, address(0), 0, proofs, x);
+    }
+
+    function testFail_claimCondition_merkleProof(uint256 x, uint256 y) public {
+        vm.assume(x != 0 && x < 500);
+        vm.assume(x != y);
+        string[] memory inputs = new string[](3);
+
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = Strings.toString(x);
+        
+        bytes memory result = vm.ffi(inputs);
+        // revert();
+        bytes32 root = abi.decode(result, (bytes32));
+        
+        inputs[1] = "src/test/scripts/getProof.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+        
+        vm.warp(1);
+
+        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+
+        // bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = x;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].merkleRoot = root;
+
+        vm.prank(deployer);
+        drop.lazyMint(x, "ipfs://", "");
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        // vm.prank(getActor(5), getActor(5));
+        vm.prank(receiver, receiver);
+        drop.claim(receiver, x, address(0), 0, proofs, y);
+
+        vm.prank(address(4), address(4));
+        vm.expectRevert("not in whitelist.");
+        drop.claim(receiver, x, address(0), 0, proofs, y);
     }
 }
