@@ -10,6 +10,7 @@ import "../utils/BaseTest.sol";
 contract SubExploitContract is ERC721Holder, ERC1155Holder {
     DropERC721 internal drop;
     address payable internal master;
+
     // using Strings for uint256;
 
     constructor(address _drop) {
@@ -267,15 +268,15 @@ contract DropERC721Test is BaseTest {
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = Strings.toString(x);
-        
+
         bytes memory result = vm.ffi(inputs);
         // revert();
         bytes32 root = abi.decode(result, (bytes32));
-        
+
         inputs[1] = "src/test/scripts/getProof.ts";
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
-        
+
         vm.warp(1);
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
@@ -310,15 +311,15 @@ contract DropERC721Test is BaseTest {
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = Strings.toString(x);
-        
+
         bytes memory result = vm.ffi(inputs);
         // revert();
         bytes32 root = abi.decode(result, (bytes32));
-        
+
         inputs[1] = "src/test/scripts/getProof.ts";
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
-        
+
         vm.warp(1);
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);

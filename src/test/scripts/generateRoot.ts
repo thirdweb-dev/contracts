@@ -2,7 +2,7 @@ const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 const { ethers } = require("ethers");
 
-const process = require('process');
+const process = require("process");
 
 const members = [
   "0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3",
