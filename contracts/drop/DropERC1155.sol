@@ -288,7 +288,8 @@ contract DropERC1155 is
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityPerTransaction value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
-        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0 || claimCondition[_tokenId].phases[activeConditionId].merkleRoot == bytes32(0);
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0 ||
+            claimCondition[_tokenId].phases[activeConditionId].merkleRoot == bytes32(0);
         verifyClaim(
             activeConditionId,
             _msgSender(),
