@@ -64,9 +64,6 @@ contract DropERC721 is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee private immutable thirdwebFee;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
 
@@ -132,9 +129,7 @@ contract DropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
+    constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -459,20 +454,17 @@ contract DropERC721 is
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
             primarySaleRecipient,
-            totalPrice - platformFees - twFee
+            totalPrice - platformFees
         );
     }
 

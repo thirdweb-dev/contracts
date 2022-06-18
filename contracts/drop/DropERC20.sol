@@ -56,9 +56,6 @@ contract DropERC20 is
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee private immutable thirdwebFee;
-
     /// @dev Contract level metadata.
     string public contractURI;
 
@@ -94,9 +91,7 @@ contract DropERC20 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
+    constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -319,20 +314,17 @@ contract DropERC20 is
         // `_pricePerToken` is interpreted as price per 1 ether unit of the ERC20 tokens.
         uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), twFeeRecipient, twFee);
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
             primarySaleRecipient,
-            totalPrice - platformFees - twFee
+            totalPrice - platformFees
         );
     }
 

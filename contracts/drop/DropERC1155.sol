@@ -134,6 +134,8 @@ contract DropERC1155 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
+    constructor() initializer {}
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
