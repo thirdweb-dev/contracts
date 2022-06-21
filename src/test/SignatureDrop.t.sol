@@ -934,13 +934,51 @@ contract SignatureDropTest is BaseTest {
     }
 
     /**
+     *  note: Testing quantity limit restriction when no allowlist present.
+     */
+    function test_fuzz_claim_noAllowlist(uint256 x) public {
+        vm.assume(x != 0);
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.maxQuantityInAllowlist = x;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 500;
+        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(500, "ipfs://", bytes(""));
+
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false);
+
+        vm.prank(getActor(5));
+        vm.expectRevert("invalid quantity.");
+        sigdrop.claim(receiver, 101, address(0), 0, alp, "");
+
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], true);
+
+        vm.prank(getActor(5));
+        vm.expectRevert("invalid quantity.");
+        sigdrop.claim(receiver, 101, address(0), 0, alp, "");
+    }
+
+    /**
      *  note: Testing revert condition; can't claim if not in whitelist.
      */
     function test_revert_claimCondition_merkleProof() public {
-        string[] memory inputs = new string[](2);
+        string[] memory inputs = new string[](3);
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = "1";
 
         bytes memory result = vm.ffi(inputs);
         bytes32 root = abi.decode(result, (bytes32));
@@ -955,6 +993,7 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.AllowlistProof memory alp;
         alp.proof = proofs;
+        alp.maxQuantityInAllowlist = 1;
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
@@ -969,11 +1008,11 @@ contract SignatureDropTest is BaseTest {
 
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver);
-        sigdrop.claim(receiver, 100, address(0), 0, alp, "");
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(address(4));
         vm.expectRevert("not in whitelist.");
-        sigdrop.claim(receiver, 100, address(0), 0, alp, "");
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
     /**

@@ -8,7 +8,9 @@ const members = [
   "0xFD78F7E2dF2B8c3D5bff0413c96f3237500898B3",
 ];
 
-const hashedLeafs = members.map(l => ethers.utils.solidityKeccak256(["address", "uint256"], [l, 0]));
+let val = process.argv[2];
+
+const hashedLeafs = members.map(l => ethers.utils.solidityKeccak256(["address", "uint256"], [l, val]));
 
 const tree = new MerkleTree(hashedLeafs, keccak256, {
   sort: true,
@@ -16,6 +18,6 @@ const tree = new MerkleTree(hashedLeafs, keccak256, {
   sortPairs: true,
 });
 
-const expectedProof = tree.getHexProof(ethers.utils.solidityKeccak256(["address", "uint256"], [members[0], 0]));
+const expectedProof = tree.getHexProof(ethers.utils.solidityKeccak256(["address", "uint256"], [members[0], val]));
 
 process.stdout.write(ethers.utils.defaultAbiCoder.encode(["bytes32[]"], [expectedProof]));
