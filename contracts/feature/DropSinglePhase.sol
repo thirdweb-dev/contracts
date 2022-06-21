@@ -67,7 +67,9 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         );
 
         // Verify claim validity. If not valid, revert.
-        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
+        // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
+        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being equal/less than the limit
+        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 || claimCondition.merkleRoot == bytes32(0);
 
         verifyClaim(_dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
