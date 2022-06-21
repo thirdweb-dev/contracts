@@ -164,7 +164,6 @@ contract SignatureDropTest is BaseTest {
      *  note: Tests whether contract reverts when a non-holder renounces a role.
      */
     function test_revert_nonHolder_renounceRole() public {
-
         address caller = address(0x123);
         bytes32 role = keccak256("MINTER_ROLE");
 
@@ -436,7 +435,7 @@ contract SignatureDropTest is BaseTest {
         vm.assume(x > 0);
         vm.startPrank(deployerSigner);
 
-        if(x == 0) {
+        if (x == 0) {
             vm.expectRevert("Zero amount");
         }
         sigdrop.lazyMint(x, "ipfs://", "");

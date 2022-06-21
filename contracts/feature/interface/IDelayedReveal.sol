@@ -7,7 +7,6 @@ pragma solidity ^0.8.0;
  */
 
 interface IDelayedReveal {
-
     /**
      *  @notice Reveals a batch of delayed reveal NFTs.
      *

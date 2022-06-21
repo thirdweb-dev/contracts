@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMint {
-
     /**
      *  @notice Lazy mints a given amount of NFTs.
      *
@@ -20,7 +19,7 @@ interface ILazyMint {
      *  @param extraData        Additional bytes data to be used at the discretion of the consumer of the contract.
      *
      *  @return batchId         A unique integer identifier for the batch of NFTs lazy minted together.
-     */    
+     */
     function lazyMint(
         uint256 amount,
         string calldata baseURIForTokens,

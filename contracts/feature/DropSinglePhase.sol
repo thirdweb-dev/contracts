@@ -47,7 +47,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
     ) public payable virtual override {
-
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         bytes32 activeConditionId = conditionId;
@@ -69,7 +68,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being equal/less than the limit
-        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 || claimCondition.merkleRoot == bytes32(0);
+        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 ||
+            claimCondition.merkleRoot == bytes32(0);
 
         verifyClaim(_dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
 
@@ -152,7 +152,11 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         );
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
-        require(claimCondition.startTimestamp < block.timestamp && (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp), "cannot claim yet.");
+        require(
+            claimCondition.startTimestamp < block.timestamp &&
+                (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp),
+            "cannot claim yet."
+        );
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
