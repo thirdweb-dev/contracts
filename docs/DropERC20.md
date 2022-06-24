@@ -1267,7 +1267,7 @@ event MaxWalletClaimCountUpdated(uint256 count)
 ### PlatformFeeInfoUpdated
 
 ```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
 ```
 
 
@@ -1278,7 +1278,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient  | address | undefined |
+| platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
 
 ### PrimarySaleRecipientUpdated

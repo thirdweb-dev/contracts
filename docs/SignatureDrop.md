@@ -504,7 +504,7 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 
 
 
-
+*Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions      do not apply at the time of calling this function.*
 
 #### Parameters
 
@@ -1246,7 +1246,7 @@ event ContractURIUpdated(string prevURI, string newURI)
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -1257,13 +1257,13 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -1274,13 +1274,13 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### PlatformFeeInfoUpdated
 
 ```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
 ```
 
 
@@ -1291,7 +1291,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient  | address | undefined |
+| platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
 
 ### PrimarySaleRecipientUpdated
@@ -1367,7 +1367,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -1379,13 +1379,13 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
 ### TokenURIRevealed
 
 ```solidity
-event TokenURIRevealed(uint256 index, string revealedURI)
+event TokenURIRevealed(uint256 indexed index, string revealedURI)
 ```
 
 
@@ -1396,13 +1396,13 @@ event TokenURIRevealed(uint256 index, string revealedURI)
 
 | Name | Type | Description |
 |---|---|---|
-| index  | uint256 | undefined |
+| index `indexed` | uint256 | undefined |
 | revealedURI  | string | undefined |
 
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
 ```
 
 
@@ -1415,13 +1415,13 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 s
 |---|---|---|
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
-| startTokenId  | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -1432,7 +1432,7 @@ event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI,
 
 | Name | Type | Description |
 |---|---|---|
-| startTokenId  | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
 | encryptedBaseURI  | bytes | undefined |
@@ -1533,10 +1533,10 @@ Cannot query the balance for the zero address.
 
 
 
-### CanOnlyRenounceForSelf
+### DelayedReveal__NothingToReveal
 
 ```solidity
-error CanOnlyRenounceForSelf()
+error DelayedReveal__NothingToReveal()
 ```
 
 
@@ -1544,10 +1544,10 @@ error CanOnlyRenounceForSelf()
 
 
 
-### CannotClaim
+### DropSinglePhase__CannotClaimYet
 
 ```solidity
-error CannotClaim()
+error DropSinglePhase__CannotClaimYet()
 ```
 
 
@@ -1555,10 +1555,10 @@ error CannotClaim()
 
 
 
-### ExceedMaxClaimableSupply
+### DropSinglePhase__ExceedMaxClaimableSupply
 
 ```solidity
-error ExceedMaxClaimableSupply()
+error DropSinglePhase__ExceedMaxClaimableSupply()
 ```
 
 
@@ -1566,10 +1566,10 @@ error ExceedMaxClaimableSupply()
 
 
 
-### ExceedsMaxBps
+### DropSinglePhase__InvalidCurrencyOrPrice
 
 ```solidity
-error ExceedsMaxBps()
+error DropSinglePhase__InvalidCurrencyOrPrice()
 ```
 
 
@@ -1577,10 +1577,10 @@ error ExceedsMaxBps()
 
 
 
-### InvalidCurrencyOrPrice
+### DropSinglePhase__InvalidQuantity
 
 ```solidity
-error InvalidCurrencyOrPrice()
+error DropSinglePhase__InvalidQuantity()
 ```
 
 
@@ -1588,10 +1588,10 @@ error InvalidCurrencyOrPrice()
 
 
 
-### InvalidQuantity
+### DropSinglePhase__InvalidQuantityProof
 
 ```solidity
-error InvalidQuantity()
+error DropSinglePhase__InvalidQuantityProof()
 ```
 
 
@@ -1599,10 +1599,10 @@ error InvalidQuantity()
 
 
 
-### InvalidQuantityProof
+### DropSinglePhase__NotInWhitelist
 
 ```solidity
-error InvalidQuantityProof()
+error DropSinglePhase__NotInWhitelist()
 ```
 
 
@@ -1610,10 +1610,10 @@ error InvalidQuantityProof()
 
 
 
-### InvalidRequest
+### DropSinglePhase__ProofClaimed
 
 ```solidity
-error InvalidRequest()
+error DropSinglePhase__ProofClaimed()
 ```
 
 
@@ -1643,10 +1643,10 @@ The quantity of tokens minted must be more than zero.
 
 
 
-### MintingZeroTokens
+### NotAuthorized__SetContractURI
 
 ```solidity
-error MintingZeroTokens()
+error NotAuthorized__SetContractURI()
 ```
 
 
@@ -1654,10 +1654,10 @@ error MintingZeroTokens()
 
 
 
-### MustSendTotalPrice
+### NotAuthorized__SetOwner
 
 ```solidity
-error MustSendTotalPrice()
+error NotAuthorized__SetOwner()
 ```
 
 
@@ -1665,10 +1665,10 @@ error MustSendTotalPrice()
 
 
 
-### NotAuthorized
+### NotAuthorized__SetPlatformFeeInfo
 
 ```solidity
-error NotAuthorized()
+error NotAuthorized__SetPlatformFeeInfo()
 ```
 
 
@@ -1676,10 +1676,10 @@ error NotAuthorized()
 
 
 
-### NotEnoughMintedTokens
+### NotAuthorized__SetPrimarySaleRecipient
 
 ```solidity
-error NotEnoughMintedTokens()
+error NotAuthorized__SetPrimarySaleRecipient()
 ```
 
 
@@ -1687,32 +1687,10 @@ error NotEnoughMintedTokens()
 
 
 
-### NotInWhitelist
+### NotAuthorized__SetRoyaltyInfo
 
 ```solidity
-error NotInWhitelist()
-```
-
-
-
-
-
-
-### NotTransferRole
-
-```solidity
-error NotTransferRole()
-```
-
-
-
-
-
-
-### NothingToReveal
-
-```solidity
-error NothingToReveal()
+error NotAuthorized__SetRoyaltyInfo()
 ```
 
 
@@ -1731,10 +1709,10 @@ The token does not exist.
 
 
 
-### ProofClaimed
+### Permissions__CanOnlyRenounceForSelf
 
 ```solidity
-error ProofClaimed()
+error Permissions__CanOnlyRenounceForSelf()
 ```
 
 
@@ -1742,10 +1720,98 @@ error ProofClaimed()
 
 
 
-### RequestExpired
+### PlatformFee__ExceedsMaxBps
 
 ```solidity
-error RequestExpired()
+error PlatformFee__ExceedsMaxBps()
+```
+
+
+
+
+
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps()
+```
+
+
+
+
+
+
+### SignatureDrop__MintingZeroTokens
+
+```solidity
+error SignatureDrop__MintingZeroTokens()
+```
+
+
+
+
+
+
+### SignatureDrop__MustSendTotalPrice
+
+```solidity
+error SignatureDrop__MustSendTotalPrice()
+```
+
+
+
+
+
+
+### SignatureDrop__NotEnoughMintedTokens
+
+```solidity
+error SignatureDrop__NotEnoughMintedTokens()
+```
+
+
+
+
+
+
+### SignatureDrop__NotTransferRole
+
+```solidity
+error SignatureDrop__NotTransferRole()
+```
+
+
+
+
+
+
+### SignatureDrop__ZeroAmount
+
+```solidity
+error SignatureDrop__ZeroAmount()
+```
+
+
+
+
+
+
+### SignatureMintERC721Upgradeable__InvalidRequest
+
+```solidity
+error SignatureMintERC721Upgradeable__InvalidRequest()
+```
+
+
+
+
+
+
+### SignatureMintERC721Upgradeable__RequestExpired
+
+```solidity
+error SignatureMintERC721Upgradeable__RequestExpired()
 ```
 
 
@@ -1804,17 +1870,6 @@ error URIQueryForNonexistentToken()
 ```
 
 The token does not exist.
-
-
-
-
-### ZeroAmount
-
-```solidity
-error ZeroAmount()
-```
-
-
 
 
 

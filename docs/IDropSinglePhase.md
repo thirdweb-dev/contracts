@@ -60,7 +60,7 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 
 
 
-
+*Emitted when the contract&#39;s claim conditions are updated.*
 
 #### Parameters
 
@@ -72,12 +72,12 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
 ```
 
 
 
-
+*Emitted when tokens are claimed via `claim`.*
 
 #### Parameters
 
@@ -85,7 +85,7 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 s
 |---|---|---|
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
-| startTokenId  | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 

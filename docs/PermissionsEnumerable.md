@@ -142,7 +142,7 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 
 
 
-
+*Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions      do not apply at the time of calling this function.*
 
 #### Parameters
 
@@ -253,10 +253,10 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 
 ## Errors
 
-### CanOnlyRenounceForSelf
+### Permissions__CanOnlyRenounceForSelf
 
 ```solidity
-error CanOnlyRenounceForSelf()
+error Permissions__CanOnlyRenounceForSelf()
 ```
 
 

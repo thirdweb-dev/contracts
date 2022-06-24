@@ -3,14 +3,13 @@ pragma solidity ^0.8.0;
 
 import "./interface/IPermissions.sol";
 import "../lib/TWStrings.sol";
+import "./Errors.sol";
 
 contract Permissions is IPermissions {
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
     mapping(bytes32 => bytes32) private _getRoleAdmin;
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-
-    error CanOnlyRenounceForSelf();
 
     modifier onlyRole(bytes32 role) {
         _checkRole(role, msg.sender);
@@ -46,7 +45,7 @@ contract Permissions is IPermissions {
 
     function renounceRole(bytes32 role, address account) public virtual override {
         // require(msg.sender == account, "Can only renounce for self");
-        if(msg.sender != account) revert CanOnlyRenounceForSelf();
+        if(msg.sender != account) revert Permissions__CanOnlyRenounceForSelf();
         _revokeRole(role, account);
     }
 

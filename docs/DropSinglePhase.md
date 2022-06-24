@@ -164,7 +164,7 @@ event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool reset
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
 ```
 
 
@@ -177,17 +177,17 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 s
 |---|---|---|
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
-| startTokenId  | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 
 
 ## Errors
 
-### CannotClaim
+### DropSinglePhase__CannotClaimYet
 
 ```solidity
-error CannotClaim()
+error DropSinglePhase__CannotClaimYet()
 ```
 
 
@@ -195,10 +195,10 @@ error CannotClaim()
 
 
 
-### ExceedMaxClaimableSupply
+### DropSinglePhase__ExceedMaxClaimableSupply
 
 ```solidity
-error ExceedMaxClaimableSupply()
+error DropSinglePhase__ExceedMaxClaimableSupply()
 ```
 
 
@@ -206,10 +206,10 @@ error ExceedMaxClaimableSupply()
 
 
 
-### InvalidCurrencyOrPrice
+### DropSinglePhase__InvalidCurrencyOrPrice
 
 ```solidity
-error InvalidCurrencyOrPrice()
+error DropSinglePhase__InvalidCurrencyOrPrice()
 ```
 
 
@@ -217,10 +217,10 @@ error InvalidCurrencyOrPrice()
 
 
 
-### InvalidQuantity
+### DropSinglePhase__InvalidQuantity
 
 ```solidity
-error InvalidQuantity()
+error DropSinglePhase__InvalidQuantity()
 ```
 
 
@@ -228,10 +228,10 @@ error InvalidQuantity()
 
 
 
-### InvalidQuantityProof
+### DropSinglePhase__InvalidQuantityProof
 
 ```solidity
-error InvalidQuantityProof()
+error DropSinglePhase__InvalidQuantityProof()
 ```
 
 
@@ -239,10 +239,10 @@ error InvalidQuantityProof()
 
 
 
-### NotInWhitelist
+### DropSinglePhase__NotInWhitelist
 
 ```solidity
-error NotInWhitelist()
+error DropSinglePhase__NotInWhitelist()
 ```
 
 
@@ -250,10 +250,10 @@ error NotInWhitelist()
 
 
 
-### ProofClaimed
+### DropSinglePhase__ProofClaimed
 
 ```solidity
-error ProofClaimed()
+error DropSinglePhase__ProofClaimed()
 ```
 
 

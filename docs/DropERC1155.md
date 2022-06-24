@@ -1167,7 +1167,7 @@ event ClaimConditionsUpdated(uint256 indexed tokenId, IDropClaimCondition.ClaimC
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -1178,7 +1178,7 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### MaxTotalSupplyUpdated
@@ -1218,7 +1218,7 @@ event MaxWalletClaimCountUpdated(uint256 tokenId, uint256 count)
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -1229,13 +1229,13 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### PlatformFeeInfoUpdated
 
 ```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
 ```
 
 
@@ -1246,7 +1246,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient  | address | undefined |
+| platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
 
 ### PrimarySaleRecipientUpdated
@@ -1322,7 +1322,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -1334,7 +1334,7 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
 ### TokensClaimed

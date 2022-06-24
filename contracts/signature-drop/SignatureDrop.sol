@@ -27,6 +27,8 @@ import "../feature/PermissionsEnumerable.sol";
 import "../feature/DropSinglePhase.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
 
+import "../feature/Errors.sol";
+
 contract SignatureDrop is
     Initializable,
     ContractMetadata,
@@ -62,16 +64,6 @@ contract SignatureDrop is
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     uint256 public nextTokenIdToMint;
-
-    /*///////////////////////////////////////////////////////////////
-                                Errors
-    //////////////////////////////////////////////////////////////*/
-
-    error NotEnoughMintedTokens();
-    error MintingZeroTokens();
-    error ZeroAmount();
-    error MustSendTotalPrice();
-    error NotTransferRole();
 
     /*///////////////////////////////////////////////////////////////
                                 Events
@@ -163,9 +155,7 @@ contract SignatureDrop is
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
     ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
-        if(_amount == 0) {
-            revert ZeroAmount();
-        }
+        if(_amount == 0) revert SignatureDrop__ZeroAmount();
 
         uint256 startId = nextTokenIdToMint;
 
@@ -204,15 +194,11 @@ contract SignatureDrop is
         returns (address signer)
     {
         // require(_req.quantity > 0, "minting zero tokens");
-        if(_req.quantity == 0) {
-            revert MintingZeroTokens();
-        }
+        if(_req.quantity == 0) revert SignatureDrop__MintingZeroTokens();
 
         uint256 tokenIdToMint = _currentIndex;
         // require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        if(tokenIdToMint + _req.quantity > nextTokenIdToMint) {
-            revert NotEnoughMintedTokens();
-        }
+        if(tokenIdToMint + _req.quantity > nextTokenIdToMint) revert SignatureDrop__NotEnoughMintedTokens();
 
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
@@ -249,9 +235,7 @@ contract SignatureDrop is
         bytes memory
     ) internal view override {
         // require(_currentIndex + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        if(_currentIndex + _quantity > nextTokenIdToMint) {
-            revert NotEnoughMintedTokens();
-        }
+        if(_currentIndex + _quantity > nextTokenIdToMint) revert SignatureDrop__NotEnoughMintedTokens();
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -271,9 +255,7 @@ contract SignatureDrop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             // require(msg.value == totalPrice, "must send total price.");
-            if(msg.value != totalPrice) {
-                revert MustSendTotalPrice();
-            }
+            if(msg.value != totalPrice) revert SignatureDrop__MustSendTotalPrice();
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
@@ -352,9 +334,7 @@ contract SignatureDrop is
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             // require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
-            if(!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
-                revert NotTransferRole();
-            }
+            if(!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) revert SignatureDrop__NotTransferRole();
         }
     }
 

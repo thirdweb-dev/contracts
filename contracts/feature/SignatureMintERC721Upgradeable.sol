@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ISignatureMintERC721.sol";
+import "./Errors.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
@@ -16,9 +17,6 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
-
-    error InvalidRequest();
-    error RequestExpired();
 
     function __SignatureMintERC721_init() internal onlyInitializing {
         __EIP712_init("SignatureMintERC721", "1");
@@ -46,13 +44,13 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
         (success, signer) = verify(_req, _signature);
 
         // require(success, "Invalid request");
-        if(!success) revert InvalidRequest();
+        if(!success) revert SignatureMintERC721Upgradeable__InvalidRequest();
 
         // require(
         //     _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
         //     "Request expired"
         // );
-        if(_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) revert RequestExpired();
+        if(_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) revert SignatureMintERC721Upgradeable__RequestExpired();
 
         minted[_req.uid] = true;
     }

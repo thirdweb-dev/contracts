@@ -258,7 +258,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("cannot claim yet.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("CannotClaimYet()")));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 

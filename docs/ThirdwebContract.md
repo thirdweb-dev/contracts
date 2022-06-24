@@ -66,7 +66,7 @@ function tw_initializeOwner(address deployer) external nonpayable
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -77,17 +77,17 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 
 
 ## Errors
 
-### NotAuthorized
+### NotAuthorized__SetOwner
 
 ```solidity
-error NotAuthorized()
+error NotAuthorized__SetOwner()
 ```
 
 

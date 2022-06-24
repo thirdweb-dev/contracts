@@ -4,7 +4,7 @@
 
 
 
-
+Thirdweb&#39;s `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of  &#39;delayed-reveal&#39; NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
 
 
 
@@ -106,7 +106,7 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 function reveal(uint256 identifier, bytes key) external nonpayable returns (string revealedURI)
 ```
 
-
+Reveals a batch of delayed reveal NFTs.
 
 
 
@@ -114,8 +114,8 @@ function reveal(uint256 identifier, bytes key) external nonpayable returns (stri
 
 | Name | Type | Description |
 |---|---|---|
-| identifier | uint256 | undefined
-| key | bytes | undefined
+| identifier | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
+| key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
 
 #### Returns
 
@@ -128,10 +128,10 @@ function reveal(uint256 identifier, bytes key) external nonpayable returns (stri
 
 ## Errors
 
-### NothingToReveal
+### DelayedReveal__NothingToReveal
 
 ```solidity
-error NothingToReveal()
+error DelayedReveal__NothingToReveal()
 ```
 
 

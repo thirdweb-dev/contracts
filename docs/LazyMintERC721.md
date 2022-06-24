@@ -119,7 +119,7 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes extraData)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes extraData)
 ```
 
 
@@ -130,7 +130,7 @@ event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI,
 
 | Name | Type | Description |
 |---|---|---|
-| startTokenId  | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
 | extraData  | bytes | undefined |

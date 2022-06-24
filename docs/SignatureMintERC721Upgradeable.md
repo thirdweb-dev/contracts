@@ -82,28 +82,3 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 
 
 
-## Errors
-
-### InvalidRequest
-
-```solidity
-error InvalidRequest()
-```
-
-
-
-
-
-
-### RequestExpired
-
-```solidity
-error RequestExpired()
-```
-
-
-
-
-
-
-

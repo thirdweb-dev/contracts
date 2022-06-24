@@ -384,7 +384,7 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 
 
 
-
+*Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions      do not apply at the time of calling this function.*
 
 #### Parameters
 
@@ -979,7 +979,7 @@ event ContractURIUpdated(string prevURI, string newURI)
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -990,13 +990,13 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -1007,8 +1007,8 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### RoleAdminChanged
 
@@ -1067,7 +1067,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -1079,7 +1079,7 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
 ### TokensUnwrapped
@@ -1141,10 +1141,10 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 
 ## Errors
 
-### CanOnlyRenounceForSelf
+### NotAuthorized__SetContractURI
 
 ```solidity
-error CanOnlyRenounceForSelf()
+error NotAuthorized__SetContractURI()
 ```
 
 
@@ -1152,10 +1152,10 @@ error CanOnlyRenounceForSelf()
 
 
 
-### ExceedsMaxBps
+### NotAuthorized__SetOwner
 
 ```solidity
-error ExceedsMaxBps()
+error NotAuthorized__SetOwner()
 ```
 
 
@@ -1163,10 +1163,32 @@ error ExceedsMaxBps()
 
 
 
-### NotAuthorized
+### NotAuthorized__SetRoyaltyInfo
 
 ```solidity
-error NotAuthorized()
+error NotAuthorized__SetRoyaltyInfo()
+```
+
+
+
+
+
+
+### Permissions__CanOnlyRenounceForSelf
+
+```solidity
+error Permissions__CanOnlyRenounceForSelf()
+```
+
+
+
+
+
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps()
 ```
 
 
