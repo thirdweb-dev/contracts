@@ -258,7 +258,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(bytes4(abi.encodeWithSignature("CannotClaimYet()")));
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DropSinglePhase__CannotClaimYet()")));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
@@ -532,7 +532,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "", encryptedURI);
         sigdrop.reveal(0, "key");
 
-        vm.expectRevert("nothing to reveal.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DelayedReveal__NothingToReveal()")));
         sigdrop.reveal(0, "key");
 
         vm.stopPrank();
@@ -682,7 +682,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.mintWithSignature(mintrequest, signature);
 
         signature = signMintRequest(mintrequest, 4321);
-        vm.expectRevert("Invalid request");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("SignatureMintERC721Upgradeable__InvalidRequest()")));
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -709,7 +709,7 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
-        vm.expectRevert("not enough minted tokens.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("SignatureDrop__NotEnoughMintedTokens()")));
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -738,7 +738,7 @@ contract SignatureDropTest is BaseTest {
             bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
-            vm.expectRevert("must send total price.");
+            vm.expectRevert(bytes4(abi.encodeWithSignature("SignatureDrop__MustSendTotalPrice()")));
             sigdrop.mintWithSignature{ value: 2 }(mintrequest, signature);
             vm.stopPrank();
         }
@@ -870,7 +870,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        vm.expectRevert("cannot claim yet.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DropSinglePhase__CannotClaimYet()")));
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -897,7 +897,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert("not enough minted tokens.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("SignatureDrop__NotEnoughMintedTokens()")));
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -927,7 +927,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("exceed max claimable supply.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DropSinglePhase__ExceedMaxClaimableSupply()")));
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -958,14 +958,14 @@ contract SignatureDropTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5));
-        vm.expectRevert("invalid quantity.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DropSinglePhase__InvalidQuantity()")));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], true);
 
         vm.prank(getActor(5));
-        vm.expectRevert("invalid quantity.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DropSinglePhase__InvalidQuantity()")));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -1010,7 +1010,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(address(4));
-        vm.expectRevert("not in whitelist.");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("DropSinglePhase__NotInWhitelist()")));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
@@ -1076,7 +1076,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("Zero amount");
+        vm.expectRevert(bytes4(abi.encodeWithSignature("SignatureDrop__ZeroAmount()")));
         sigdrop.lazyMint(0, "", newEncryptedURI);
 
         vm.stopPrank();
