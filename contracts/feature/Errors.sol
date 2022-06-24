@@ -17,13 +17,13 @@ error NotAuthorized();
 //////////////////////////////////////////////////////////////*/
 
 /*
-* Contract: DelayedReveal.sol
-*/
+ * Contract: DelayedReveal.sol
+ */
 error DelayedReveal__NothingToReveal();
 
 /*
-* Contract: DropSinglePhase.sol
-*/
+ * Contract: DropSinglePhase.sol
+ */
 error DropSinglePhase__InvalidCurrencyOrPrice();
 error DropSinglePhase__InvalidQuantity();
 error DropSinglePhase__ExceedMaxClaimableSupply();
@@ -33,32 +33,32 @@ error DropSinglePhase__ProofClaimed();
 error DropSinglePhase__InvalidQuantityProof();
 
 /*
-* Contract: Permissions.sol
-*/
+ * Contract: Permissions.sol
+ */
 error Permissions__CanOnlyRenounceForSelf();
 
 /*
-* Contract: PlatformFee.sol
-*/
+ * Contract: PlatformFee.sol
+ */
 error PlatformFee__ExceedsMaxBps();
 
 /*
-* Contract: Royalty.sol
-*/
+ * Contract: Royalty.sol
+ */
 error Royalty__ExceedsMaxBps();
 
 /*
-* Contract: SignatureMintERC721.sol
-* Contract: SignatureMintERC721Upgradeable.sol
-*/
+ * Contract: SignatureMintERC721.sol
+ * Contract: SignatureMintERC721Upgradeable.sol
+ */
 error SignatureMintERC721__InvalidRequest();
 error SignatureMintERC721__RequestExpired();
 error SignatureMintERC721Upgradeable__InvalidRequest();
 error SignatureMintERC721Upgradeable__RequestExpired();
 
 /*
-* Contract: SignatureDrop.sol
-*/
+ * Contract: SignatureDrop.sol
+ */
 error SignatureDrop__NotEnoughMintedTokens();
 error SignatureDrop__MintingZeroTokens();
 error SignatureDrop__ZeroAmount();

@@ -38,7 +38,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     /*///////////////////////////////////////////////////////////////
                                 Errors
     //////////////////////////////////////////////////////////////*/
-    
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -145,7 +144,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //     _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
         //     "invalid currency or price."
         // );
-        if(_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) revert DropSinglePhase__InvalidCurrencyOrPrice();
+        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken)
+            revert DropSinglePhase__InvalidCurrencyOrPrice();
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         // require(
@@ -153,13 +153,17 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //         (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
         //     "invalid quantity."
         // );
-        if(_quantity == 0 || (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)) revert DropSinglePhase__InvalidQuantity();
+        if (
+            _quantity == 0 ||
+            (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
+        ) revert DropSinglePhase__InvalidQuantity();
 
         // require(
         //     currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
         //     "exceed max claimable supply."
         // );
-        if(currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) revert DropSinglePhase__ExceedMaxClaimableSupply();
+        if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply)
+            revert DropSinglePhase__ExceedMaxClaimableSupply();
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
         // require(
@@ -167,8 +171,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //         (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp),
         //     "cannot claim yet."
         // );
-        if(claimCondition.startTimestamp >= block.timestamp ||
-                (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)) revert DropSinglePhase__CannotClaimYet();
+        if (
+            claimCondition.startTimestamp >= block.timestamp ||
+            (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
+        ) revert DropSinglePhase__CannotClaimYet();
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -186,16 +192,17 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             // require(validMerkleProof, "not in whitelist.");
-            if(!validMerkleProof) revert DropSinglePhase__NotInWhitelist();
+            if (!validMerkleProof) revert DropSinglePhase__NotInWhitelist();
 
             // require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
-            if(usedAllowlistSpot[conditionId].get(merkleProofIndex)) revert DropSinglePhase__ProofClaimed();
+            if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) revert DropSinglePhase__ProofClaimed();
 
             // require(
             //     _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
             //     "invalid quantity proof."
             // );
-            if(_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) revert DropSinglePhase__InvalidQuantityProof();
+            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist)
+                revert DropSinglePhase__InvalidQuantityProof();
         }
     }
 

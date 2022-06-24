@@ -45,7 +45,7 @@ contract Permissions is IPermissions {
 
     function renounceRole(bytes32 role, address account) public virtual override {
         // require(msg.sender == account, "Can only renounce for self");
-        if(msg.sender != account) revert Permissions__CanOnlyRenounceForSelf();
+        if (msg.sender != account) revert Permissions__CanOnlyRenounceForSelf();
         _revokeRole(role, account);
     }
 
