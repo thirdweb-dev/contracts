@@ -7,6 +7,9 @@ pragma solidity ^0.8.0;
  */
 
 interface IDelayedReveal {
+    /// @notice Emitted when encrypted URI for a given batch is empty.
+    error DelayedReveal__NothingToReveal(uint256 batchId);
+
     /**
      *  @notice Reveals a batch of delayed reveal NFTs.
      *

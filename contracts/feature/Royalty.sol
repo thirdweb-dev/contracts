@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IRoyalty.sol";
-import "./Errors.sol";
 
 /**
  *  Thirdweb's `Royalty` is a contract extension to be used with any base contract. It exposes functions for setting and reading
@@ -53,7 +52,8 @@ abstract contract Royalty is IRoyalty {
     /// @dev Lets a contract admin update the default royalty recipient and bps.
     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external override {
         // require(_canSetRoyaltyInfo(), "Not authorized");
-        if (!_canSetRoyaltyInfo()) revert NotAuthorized__SetRoyaltyInfo();
+        // if (!_canSetRoyaltyInfo()) revert NotAuthorized__SetRoyaltyInfo();
+        _canSetRoyaltyInfo();
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
@@ -61,7 +61,9 @@ abstract contract Royalty is IRoyalty {
     /// @dev Lets a contract admin update the default royalty recipient and bps.
     function _setupDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) internal {
         // require(_royaltyBps <= 10_000, "Exceeds max bps");
-        if (_royaltyBps > 10_000) revert Royalty__ExceedsMaxBps();
+        if (_royaltyBps > 10_000) {
+            revert Royalty__ExceedsMaxBps(_royaltyBps);
+        }
 
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = uint16(_royaltyBps);
@@ -76,7 +78,8 @@ abstract contract Royalty is IRoyalty {
         uint256 _bps
     ) external override {
         // require(_canSetRoyaltyInfo(), "Not authorized");
-        if (!_canSetRoyaltyInfo()) revert NotAuthorized__SetRoyaltyInfo();
+        // if (!_canSetRoyaltyInfo()) revert NotAuthorized__SetRoyaltyInfo();
+        _canSetRoyaltyInfo();
 
         _setupRoyaltyInfoForToken(_tokenId, _recipient, _bps);
     }
@@ -88,13 +91,15 @@ abstract contract Royalty is IRoyalty {
         uint256 _bps
     ) internal {
         // require(_bps <= 10_000, "Exceeds max bps");
-        if (_bps > 10_000) revert Royalty__ExceedsMaxBps();
+        if (_bps > 10_000) {
+            revert Royalty__ExceedsMaxBps(_bps);
+        }
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
-    /// @dev Returns whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal virtual returns (bool);
+    /// @dev Checks whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal virtual;
 }

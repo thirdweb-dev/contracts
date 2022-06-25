@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IOwnable.sol";
-import "./Errors.sol";
 
 /**
  *  Thirdweb's `Ownable` is a contract extension to be used with any base contract. It exposes functions for setting and reading
@@ -17,7 +16,8 @@ abstract contract Ownable is IOwnable {
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external override {
         // require(_canSetOwner(), "Not authorized");
-        if (!_canSetOwner()) revert NotAuthorized__SetOwner();
+        // if (!_canSetOwner()) revert NotAuthorized__SetOwner();
+        _canSetOwner();
         _setupOwner(_newOwner);
     }
 
@@ -29,6 +29,6 @@ abstract contract Ownable is IOwnable {
         emit OwnerUpdated(_prevOwner, _newOwner);
     }
 
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal virtual returns (bool);
+    /// @dev Checks whether owner can be set in the given execution context.
+    function _canSetOwner() internal virtual;
 }

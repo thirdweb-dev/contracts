@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IPlatformFee.sol";
-import "./Errors.sol";
 
 /**
  *  Thirdweb's `PlatformFee` is a contract extension to be used with any base contract. It exposes functions for setting and reading
@@ -25,14 +24,17 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external override {
         // require(_canSetPlatformFeeInfo(), "Not authorized");
-        if (!_canSetPlatformFeeInfo()) revert NotAuthorized__SetPlatformFeeInfo();
+        // if (!_canSetPlatformFeeInfo()) revert NotAuthorized__SetPlatformFeeInfo();
+        _canSetPlatformFeeInfo();
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         // require(_platformFeeBps <= 10_000, "Exceeds max bps");
-        if (_platformFeeBps > 10_000) revert PlatformFee__ExceedsMaxBps();
+        if (_platformFeeBps > 10_000) {
+            revert PlatformFee__ExceedsMaxBps(_platformFeeBps);
+        }
 
         platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
@@ -40,6 +42,6 @@ abstract contract PlatformFee is IPlatformFee {
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
-    /// @dev Returns whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal virtual returns (bool);
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal virtual;
 }

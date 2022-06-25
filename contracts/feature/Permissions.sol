@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "./interface/IPermissions.sol";
 import "../lib/TWStrings.sol";
-import "./Errors.sol";
 
 contract Permissions is IPermissions {
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
@@ -34,7 +33,10 @@ contract Permissions is IPermissions {
 
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
-        require(!_hasRole[role][account], "Can only grant to non holders");
+        // require(!_hasRole[role][account], "Can only grant to non holders");
+        if(_hasRole[role][account]) {
+            revert Permissions__CanOnlyGrantToNonHolders(account);
+        }
         _setupRole(role, account);
     }
 
@@ -45,7 +47,9 @@ contract Permissions is IPermissions {
 
     function renounceRole(bytes32 role, address account) public virtual override {
         // require(msg.sender == account, "Can only renounce for self");
-        if (msg.sender != account) revert Permissions__CanOnlyRenounceForSelf();
+        if (msg.sender != account) {
+            revert Permissions__CanOnlyRenounceForSelf(msg.sender, account);
+        }
         _revokeRole(role, account);
     }
 

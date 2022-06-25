@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
 import "../lib/TWBitMaps.sol";
-import "./Errors.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase {
     using TWBitMaps for TWBitMaps.BitMap;
@@ -103,7 +102,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
-        require(_canSetClaimConditions(), "Not authorized");
+        // require(_canSetClaimConditions(), "Not authorized");
+        _canSetClaimConditions();
 
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
@@ -113,7 +113,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number));
         }
 
-        require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
+        // require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
+        if(supplyClaimedAlready > _condition.maxClaimableSupply) {
+            revert DropSinglePhase__MaxSupplyClaimedAlready(supplyClaimedAlready);
+        }
 
         claimCondition = ClaimCondition({
             startTimestamp: _condition.startTimestamp,
@@ -144,8 +147,9 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //     _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
         //     "invalid currency or price."
         // );
-        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken)
-            revert DropSinglePhase__InvalidCurrencyOrPrice();
+        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
+            revert DropSinglePhase__InvalidCurrencyOrPrice(_currency, currentClaimPhase.currency, _pricePerToken, currentClaimPhase.pricePerToken);
+        }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         // require(
@@ -156,14 +160,17 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         if (
             _quantity == 0 ||
             (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
-        ) revert DropSinglePhase__InvalidQuantity();
+        ) {
+            revert DropSinglePhase__InvalidQuantity();
+        }
 
         // require(
         //     currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
         //     "exceed max claimable supply."
         // );
-        if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply)
-            revert DropSinglePhase__ExceedMaxClaimableSupply();
+        if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
+            revert DropSinglePhase__ExceedMaxClaimableSupply(currentClaimPhase.supplyClaimed, currentClaimPhase.maxClaimableSupply);
+        }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
         // require(
@@ -172,9 +179,11 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //     "cannot claim yet."
         // );
         if (
-            claimCondition.startTimestamp >= block.timestamp ||
+            currentClaimPhase.startTimestamp >= block.timestamp ||
             (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
-        ) revert DropSinglePhase__CannotClaimYet();
+        ) {
+            revert DropSinglePhase__CannotClaimYet(block.timestamp, currentClaimPhase.startTimestamp, lastClaimedAt, nextValidClaimTimestamp);
+        }
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -192,17 +201,22 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             // require(validMerkleProof, "not in whitelist.");
-            if (!validMerkleProof) revert DropSinglePhase__NotInWhitelist();
+            if (!validMerkleProof) {
+                revert DropSinglePhase__NotInWhitelist();
+            }
 
             // require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
-            if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) revert DropSinglePhase__ProofClaimed();
+            if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) {
+                revert DropSinglePhase__ProofClaimed();
+            }
 
             // require(
             //     _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
             //     "invalid quantity proof."
             // );
-            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist)
-                revert DropSinglePhase__InvalidQuantityProof();
+            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
+                revert DropSinglePhase__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
+            }
         }
     }
 
@@ -265,5 +279,5 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         virtual
         returns (uint256 startTokenId);
 
-    function _canSetClaimConditions() internal virtual returns (bool);
+    function _canSetClaimConditions() internal virtual;
 }

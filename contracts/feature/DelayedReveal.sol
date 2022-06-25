@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IDelayedReveal.sol";
-import "./Errors.sol";
 
 /**
  *  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
@@ -22,7 +21,9 @@ abstract contract DelayedReveal is IDelayedReveal {
     function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
         bytes memory encryptedURI = encryptedBaseURI[_batchId];
         // require(encryptedURI.length != 0, "nothing to reveal.");
-        if (encryptedURI.length == 0) revert DelayedReveal__NothingToReveal();
+        if (encryptedURI.length == 0) {
+            revert DelayedReveal__NothingToReveal(_batchId);
+        }
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
     }

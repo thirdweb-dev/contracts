@@ -27,8 +27,6 @@ import "../feature/PermissionsEnumerable.sol";
 import "../feature/DropSinglePhase.sol";
 import "../feature/SignatureMintERC721Upgradeable.sol";
 
-import "../feature/Errors.sol";
-
 contract SignatureDrop is
     Initializable,
     ContractMetadata,
@@ -71,6 +69,28 @@ contract SignatureDrop is
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
+
+    /*///////////////////////////////////////////////////////////////
+                            Custom Errors
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Emitted when caller is not admin.
+    error SignatureDrop__NotAuthorized(address caller);
+
+    /// @notice Emitted when minting the given quantity will exceed available quantity.
+    error SignatureDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
+
+    /// @notice Emitted when given quantity to mint is zero.
+    error SignatureDrop__MintingZeroTokens();
+
+    /// @notice Emitted when given amount for lazy-minting is zero.
+    error SignatureDrop__ZeroAmount();
+
+    /// @notice Emitted when sent value doesn't match the total price of tokens.
+    error SignatureDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
+
+    /// @notice Emitted when given address doesn't have transfer role.
+    error SignatureDrop__NotTransferRole();
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -155,7 +175,9 @@ contract SignatureDrop is
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
     ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
-        if (_amount == 0) revert SignatureDrop__ZeroAmount();
+        if (_amount == 0) {
+            revert SignatureDrop__ZeroAmount();
+        }
 
         uint256 startId = nextTokenIdToMint;
 
@@ -194,11 +216,15 @@ contract SignatureDrop is
         returns (address signer)
     {
         // require(_req.quantity > 0, "minting zero tokens");
-        if (_req.quantity == 0) revert SignatureDrop__MintingZeroTokens();
+        if (_req.quantity == 0) {
+            revert SignatureDrop__MintingZeroTokens();
+        }
 
         uint256 tokenIdToMint = _currentIndex;
         // require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        if (tokenIdToMint + _req.quantity > nextTokenIdToMint) revert SignatureDrop__NotEnoughMintedTokens();
+        if (tokenIdToMint + _req.quantity > nextTokenIdToMint) {
+            revert SignatureDrop__NotEnoughMintedTokens(tokenIdToMint, _req.quantity);
+        }
 
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
@@ -235,7 +261,9 @@ contract SignatureDrop is
         bytes memory
     ) internal view override {
         // require(_currentIndex + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        if (_currentIndex + _quantity > nextTokenIdToMint) revert SignatureDrop__NotEnoughMintedTokens();
+        if (_currentIndex + _quantity > nextTokenIdToMint) {
+            revert SignatureDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
+        }
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -255,7 +283,9 @@ contract SignatureDrop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             // require(msg.value == totalPrice, "must send total price.");
-            if (msg.value != totalPrice) revert SignatureDrop__MustSendTotalPrice();
+            if (msg.value != totalPrice) {
+                revert SignatureDrop__MustSendTotalPrice(msg.value, totalPrice);
+            }
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
@@ -282,34 +312,46 @@ contract SignatureDrop is
         return hasRole(MINTER_ROLE, _signer);
     }
 
-    /// @dev Returns whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal view override {
+        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
+            revert SignatureDrop__NotAuthorized(_msgSender());
+        }
     }
 
-    /// @dev Returns whether primary sale recipient can be set in the given execution context.
-    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Checks whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal view override {
+        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
+            revert SignatureDrop__NotAuthorized(_msgSender());
+        }
     }
 
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Checks whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override {
+        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
+            revert SignatureDrop__NotAuthorized(_msgSender());
+        }
     }
 
-    /// @dev Returns whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Checks whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view override {
+        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
+            revert SignatureDrop__NotAuthorized(_msgSender());
+        }
     }
 
-    /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Checks whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override {
+        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
+            revert SignatureDrop__NotAuthorized(_msgSender());
+        }
     }
 
-    /// @dev Returns whether platform fee info can be set in the given execution context.
-    function _canSetClaimConditions() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetClaimConditions() internal view override {
+        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
+            revert SignatureDrop__NotAuthorized(_msgSender());
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -334,7 +376,9 @@ contract SignatureDrop is
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             // require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
-            if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) revert SignatureDrop__NotTransferRole();
+            if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
+                revert SignatureDrop__NotTransferRole();
+            }
         }
     }
 

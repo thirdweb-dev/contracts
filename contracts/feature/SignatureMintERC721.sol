@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ISignatureMintERC721.sol";
-import "./Errors.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
@@ -40,14 +39,17 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         (success, signer) = verify(_req, _signature);
 
         // require(success, "Invalid request");
-        if (!success) revert SignatureMintERC721__InvalidRequest();
+        if (!success) {
+            revert SignatureMintERC721__InvalidRequest();
+        }
 
         // require(
         //     _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
         //     "Request expired"
         // );
-        if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp)
-            revert SignatureMintERC721__RequestExpired();
+        if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
+            revert SignatureMintERC721__RequestExpired(block.timestamp);
+        }
 
         minted[_req.uid] = true;
     }
