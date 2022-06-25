@@ -257,6 +257,11 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
+        vm.warp(100);
+        vm.prank(getActor(4), getActor(4));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+
+        vm.warp(99);
         vm.prank(getActor(5), getActor(5));
         vm.expectRevert("cannot claim yet.");
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");

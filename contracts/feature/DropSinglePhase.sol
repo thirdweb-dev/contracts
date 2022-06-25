@@ -153,7 +153,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
         require(
-            claimCondition.startTimestamp <= block.timestamp &&
+            currentClaimPhase.startTimestamp <= block.timestamp &&
                 (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp),
             "cannot claim yet."
         );
