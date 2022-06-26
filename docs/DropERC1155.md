@@ -951,6 +951,23 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 | _recipient | address | undefined
 | _bps | uint256 | undefined
 
+### setSaleRecipientForToken
+
+```solidity
+function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external nonpayable
+```
+
+
+
+*Lets a contract admin set the recipient for all primary sales.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined
+| _saleRecipient | address | undefined
+
 ### setWalletClaimCount
 
 ```solidity
@@ -1336,6 +1353,23 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | tokenId `indexed` | uint256 | undefined |
 | royaltyRecipient  | address | undefined |
 | royaltyBps  | uint256 | undefined |
+
+### SaleRecipientForTokenUpdated
+
+```solidity
+event SaleRecipientForTokenUpdated(uint256 indexed tokenId, address saleRecipient)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId `indexed` | uint256 | undefined |
+| saleRecipient  | address | undefined |
 
 ### TokensClaimed
 
