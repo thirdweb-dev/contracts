@@ -33,7 +33,6 @@ contract Permissions is IPermissions {
 
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
-        // require(!_hasRole[role][account], "Can only grant to non holders");
         if (_hasRole[role][account]) {
             revert Permissions__CanOnlyGrantToNonHolders(account);
         }
@@ -46,7 +45,6 @@ contract Permissions is IPermissions {
     }
 
     function renounceRole(bytes32 role, address account) public virtual override {
-        // require(msg.sender == account, "Can only renounce for self");
         if (msg.sender != account) {
             revert Permissions__CanOnlyRenounceForSelf(msg.sender, account);
         }

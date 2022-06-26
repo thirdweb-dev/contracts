@@ -31,7 +31,6 @@ abstract contract PlatformFee is IPlatformFee {
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
-        // require(_platformFeeBps <= 10_000, "Exceeds max bps");
         if (_platformFeeBps > 10_000) {
             revert PlatformFee__ExceedsMaxBps(_platformFeeBps);
         }

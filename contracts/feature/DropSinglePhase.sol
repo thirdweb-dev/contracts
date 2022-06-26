@@ -114,7 +114,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number));
         }
 
-        // require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
         if (supplyClaimedAlready > _condition.maxClaimableSupply) {
             revert DropSinglePhase__MaxSupplyClaimedAlready(supplyClaimedAlready);
         }
@@ -144,10 +143,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition;
 
-        // require(
-        //     _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-        //     "invalid currency or price."
-        // );
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
             revert DropSinglePhase__InvalidCurrencyOrPrice(
                 _currency,
@@ -158,11 +153,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        // require(
-        //     _quantity > 0 &&
-        //         (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
-        //     "invalid quantity."
-        // );
         if (
             _quantity == 0 ||
             (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
@@ -170,10 +160,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             revert DropSinglePhase__InvalidQuantity();
         }
 
-        // require(
-        //     currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-        //     "exceed max claimable supply."
-        // );
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
             revert DropSinglePhase__ExceedMaxClaimableSupply(
                 currentClaimPhase.supplyClaimed,
@@ -182,11 +168,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
-        // require(
-        //     claimCondition.startTimestamp < block.timestamp &&
-        //         (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp),
-        //     "cannot claim yet."
-        // );
         if (
             currentClaimPhase.startTimestamp >= block.timestamp ||
             (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
@@ -214,20 +195,14 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 currentClaimPhase.merkleRoot,
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
-            // require(validMerkleProof, "not in whitelist.");
             if (!validMerkleProof) {
                 revert DropSinglePhase__NotInWhitelist();
             }
 
-            // require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
             if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) {
                 revert DropSinglePhase__ProofClaimed();
             }
 
-            // require(
-            //     _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
-            //     "invalid quantity proof."
-            // );
             if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
                 revert DropSinglePhase__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
             }

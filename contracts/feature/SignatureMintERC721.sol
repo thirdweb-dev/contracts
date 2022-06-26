@@ -38,15 +38,10 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         bool success;
         (success, signer) = verify(_req, _signature);
 
-        // require(success, "Invalid request");
         if (!success) {
             revert SignatureMintERC721__InvalidRequest();
         }
 
-        // require(
-        //     _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
-        //     "Request expired"
-        // );
         if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
             revert SignatureMintERC721__RequestExpired(block.timestamp);
         }
