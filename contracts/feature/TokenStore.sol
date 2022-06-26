@@ -16,7 +16,7 @@ import "../lib/CurrencyTransferLib.sol";
 
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     /// @dev The address of the native token wrapper contract.
-    address private immutable nativeTokenWrapper;
+    address internal immutable nativeTokenWrapper;
 
     constructor(address _nativeTokenWrapper) {
         nativeTokenWrapper = _nativeTokenWrapper;
@@ -29,7 +29,7 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         string calldata _uriForTokens,
         uint256 _idForTokens
     ) internal {
-        _setBundle(_tokens, _idForTokens);
+        _createBundle(_tokens, _idForTokens);
         _setUriOfBundle(_uriForTokens, _idForTokens);
         _transferTokenBatch(_tokenOwner, address(this), _tokens);
     }
@@ -75,8 +75,22 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         address _to,
         Token[] memory _tokens
     ) internal {
+        uint256 nativeTokenValue;
         for (uint256 i = 0; i < _tokens.length; i += 1) {
-            _transferToken(_from, _to, _tokens[i]);
+            if (_tokens[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN && _to == address(this)) {
+                nativeTokenValue += _tokens[i].totalAmount;
+            } else {
+                _transferToken(_from, _to, _tokens[i]);
+            }
+        }
+        if (nativeTokenValue != 0) {
+            Token memory _nativeToken = Token({
+                assetContract: CurrencyTransferLib.NATIVE_TOKEN,
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: nativeTokenValue
+            });
+            _transferToken(_from, _to, _nativeToken);
         }
     }
 }

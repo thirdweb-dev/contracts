@@ -58,6 +58,7 @@ contract Permissions is IPermissions {
     }
 
     function _revokeRole(bytes32 role, address account) internal virtual {
+        _checkRole(role, account);
         delete _hasRole[role][account];
         emit RoleRevoked(role, account, msg.sender);
     }

@@ -19,10 +19,6 @@ library CurrencyTransferLib {
         address _to,
         uint256 _amount
     ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
         if (_currency == NATIVE_TOKEN) {
             safeTransferNativeToken(_to, _amount);
         } else {
@@ -38,10 +34,6 @@ library CurrencyTransferLib {
         uint256 _amount,
         address _nativeTokenWrapper
     ) internal {
-        if (_amount == 0) {
-            return;
-        }
-
         if (_currency == NATIVE_TOKEN) {
             if (_from == address(this)) {
                 // withdraw from weth then transfer withdrawn native token to recipient
@@ -66,10 +58,6 @@ library CurrencyTransferLib {
         address _to,
         uint256 _amount
     ) internal {
-        if (_from == _to) {
-            return;
-        }
-
         if (_from == address(this)) {
             IERC20Upgradeable(_currency).safeTransfer(_to, _amount);
         } else {
