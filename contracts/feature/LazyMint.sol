@@ -23,7 +23,9 @@ abstract contract LazyMint is ILazyMint {
 
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
-        require(_index < getBaseURICount(), "invalid index.");
+        if (_index >= getBaseURICount()) {
+            revert LazyMint__InvalidIndex(_index);
+        }
         return batchIds[_index];
     }
 
@@ -38,7 +40,7 @@ abstract contract LazyMint is ILazyMint {
             }
         }
 
-        revert("No batch id for token.");
+        revert LazyMint__NoBatchIDForToken(_tokenId);
     }
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
@@ -52,7 +54,7 @@ abstract contract LazyMint is ILazyMint {
             }
         }
 
-        revert("No base URI for token.");
+        revert LazyMint__NoBaseURIForToken(_tokenId);
     }
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.

@@ -20,4 +20,7 @@ interface IContractMetadata {
 
     /// @dev Emitted when the contract URI is updated.
     event ContractURIUpdated(string prevURI, string newURI);
+
+    /// @dev Emitted when an unauthorized caller tries to set the contract metadata URI.
+    error ContractMetadata__NotAuthorized();
 }

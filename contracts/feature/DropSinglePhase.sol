@@ -35,6 +35,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
+                                Errors
+    //////////////////////////////////////////////////////////////*/
+
+    /*///////////////////////////////////////////////////////////////
                             Drop logic
     //////////////////////////////////////////////////////////////*/
 
@@ -98,7 +102,9 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
-        require(_canSetClaimConditions(), "Not authorized");
+        if (!_canSetClaimConditions()) {
+            revert DropSinglePhase__NotAuthorized();
+        }
 
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
@@ -108,7 +114,9 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number));
         }
 
-        require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
+        if (supplyClaimedAlready > _condition.maxClaimableSupply) {
+            revert DropSinglePhase__MaxSupplyClaimedAlready(supplyClaimedAlready);
+        }
 
         claimCondition = ClaimCondition({
             startTimestamp: _condition.startTimestamp,
@@ -135,28 +143,42 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition;
 
-        require(
-            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price."
-        );
+        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
+            revert DropSinglePhase__InvalidCurrencyOrPrice(
+                _currency,
+                currentClaimPhase.currency,
+                _pricePerToken,
+                currentClaimPhase.pricePerToken
+            );
+        }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        require(
-            _quantity > 0 &&
-                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
-            "invalid quantity."
-        );
-        require(
-            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max claimable supply."
-        );
+        if (
+            _quantity == 0 ||
+            (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
+        ) {
+            revert DropSinglePhase__InvalidQuantity();
+        }
+
+        if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
+            revert DropSinglePhase__ExceedMaxClaimableSupply(
+                currentClaimPhase.supplyClaimed,
+                currentClaimPhase.maxClaimableSupply
+            );
+        }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
-        require(
-            currentClaimPhase.startTimestamp <= block.timestamp &&
-                (lastClaimedAt == 0 || block.timestamp >= nextValidClaimTimestamp),
-            "cannot claim yet."
-        );
+        if (
+            currentClaimPhase.startTimestamp >= block.timestamp ||
+            (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
+        ) {
+            revert DropSinglePhase__CannotClaimYet(
+                block.timestamp,
+                currentClaimPhase.startTimestamp,
+                lastClaimedAt,
+                nextValidClaimTimestamp
+            );
+        }
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -173,12 +195,17 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 currentClaimPhase.merkleRoot,
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
-            require(validMerkleProof, "not in whitelist.");
-            require(!usedAllowlistSpot[conditionId].get(merkleProofIndex), "proof claimed.");
-            require(
-                _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
-                "invalid quantity proof."
-            );
+            if (!validMerkleProof) {
+                revert DropSinglePhase__NotInWhitelist();
+            }
+
+            if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) {
+                revert DropSinglePhase__ProofClaimed();
+            }
+
+            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
+                revert DropSinglePhase__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
+            }
         }
     }
 

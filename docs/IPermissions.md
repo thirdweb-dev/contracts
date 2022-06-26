@@ -72,6 +72,29 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### hasRoleWithSwitch
+
+```solidity
+function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+```
+
+
+
+*Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions      do not apply at the time of calling this function.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### renounceRole
 
 ```solidity
@@ -164,5 +187,41 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
 
+
+
+## Errors
+
+### Permissions__CanOnlyGrantToNonHolders
+
+```solidity
+error Permissions__CanOnlyGrantToNonHolders(address account)
+```
+
+Emitted when specified account already has the role.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+### Permissions__CanOnlyRenounceForSelf
+
+```solidity
+error Permissions__CanOnlyRenounceForSelf(address caller, address account)
+```
+
+Emitted when calling address is different from the specified account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| caller | address | undefined |
+| account | address | undefined |
 
 

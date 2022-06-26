@@ -23,13 +23,17 @@ abstract contract PlatformFee is IPlatformFee {
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external override {
-        require(_canSetPlatformFeeInfo(), "Not authorized");
+        if (!_canSetPlatformFeeInfo()) {
+            revert PlatformFee__NotAuthorized();
+        }
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
-        require(_platformFeeBps <= 10_000, "Exceeds max bps");
+        if (_platformFeeBps > 10_000) {
+            revert PlatformFee__ExceedsMaxBps(_platformFeeBps);
+        }
 
         platformFeeBps = uint16(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;

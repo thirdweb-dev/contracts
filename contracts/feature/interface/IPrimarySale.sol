@@ -16,4 +16,7 @@ interface IPrimarySale {
 
     /// @dev Emitted when a new sale recipient is set.
     event PrimarySaleRecipientUpdated(address indexed recipient);
+
+    /// @dev Emitted when an unauthorized caller tries to set primary sales details.
+    error PrimarySale__NotAuthorized();
 }

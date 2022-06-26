@@ -16,4 +16,7 @@ interface IOwnable {
 
     /// @dev Emitted when a new Owner is set.
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
+
+    /// @dev Emitted when an unauthorized caller tries to set the owner.
+    error Ownable__NotAuthorized();
 }
