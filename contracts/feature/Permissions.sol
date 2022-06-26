@@ -27,12 +27,15 @@ contract Permissions is IPermissions {
         return true;
     }
 
-    function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
+    function getRoleAdmin(bytes32 role) external view override returns (bytes32) {
         return _getRoleAdmin[role];
     }
 
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
+        if (_hasRole[role][account]) {
+            revert Permissions__CanOnlyGrantToNonHolders(account);
+        }
         _setupRole(role, account);
     }
 
@@ -42,7 +45,9 @@ contract Permissions is IPermissions {
     }
 
     function renounceRole(bytes32 role, address account) public virtual override {
-        require(msg.sender == account, "Can only renounce for self");
+        if (msg.sender != account) {
+            revert Permissions__CanOnlyRenounceForSelf(msg.sender, account);
+        }
         _revokeRole(role, account);
     }
 

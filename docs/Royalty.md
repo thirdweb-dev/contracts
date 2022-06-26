@@ -4,7 +4,7 @@
 
 
 
-
+Thirdweb&#39;s `Royalty` is a contract extension to be used with any base contract. It exposes functions for setting and reading  the recipient of royalty fee and the royalty fee basis points, and lets the inheriting contract perform conditional logic  that uses information about royalty fees, if desired.  The `Royalty` contract is ERC2981 compliant.
 
 
 
@@ -117,7 +117,7 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -128,13 +128,13 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -146,8 +146,38 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
+
+
+
+## Errors
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps(uint256 royaltyBps)
+```
+
+Emitted when the given bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| royaltyBps | uint256 | undefined |
+
+### Royalty__NotAuthorized
+
+```solidity
+error Royalty__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 

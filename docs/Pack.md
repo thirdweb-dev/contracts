@@ -1096,7 +1096,7 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -1107,13 +1107,13 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -1124,8 +1124,8 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### PackAdded
 
@@ -1259,7 +1259,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -1271,7 +1271,7 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
 ### TransferBatch
@@ -1346,6 +1346,47 @@ event Unpaused(address account)
 | Name | Type | Description |
 |---|---|---|
 | account  | address | undefined |
+
+
+
+## Errors
+
+### Ownable__NotAuthorized
+
+```solidity
+error Ownable__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set the owner.*
+
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps(uint256 royaltyBps)
+```
+
+Emitted when the given bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| royaltyBps | uint256 | undefined |
+
+### Royalty__NotAuthorized
+
+```solidity
+error Royalty__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 

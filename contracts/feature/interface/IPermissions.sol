@@ -5,6 +5,12 @@ pragma solidity ^0.8.0;
  * @dev External interface of AccessControl declared to support ERC165 detection.
  */
 interface IPermissions {
+    /// @notice Emitted when calling address is different from the specified account.
+    error Permissions__CanOnlyRenounceForSelf(address caller, address account);
+
+    /// @notice Emitted when specified account already has the role.
+    error Permissions__CanOnlyGrantToNonHolders(address account);
+
     /**
      * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`
      *
@@ -36,6 +42,12 @@ interface IPermissions {
      * @dev Returns `true` if `account` has been granted `role`.
      */
     function hasRole(bytes32 role, address account) external view returns (bool);
+
+    /**
+     * @dev Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions
+     *      do not apply at the time of calling this function.
+     */
+    function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool);
 
     /**
      * @dev Returns the admin role that controls `role`. See {grantRole} and

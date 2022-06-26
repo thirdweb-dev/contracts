@@ -9,6 +9,12 @@ pragma solidity ^0.8.0;
  *  minted by that external party.
  */
 interface ISignatureMintERC721 {
+    /// @notice Emitted when either the signature or the request uid is invalid.
+    error SignatureMintERC721__InvalidRequest();
+
+    /// @notice Emitted when block-timestamp is outside of validity start and end range.
+    error SignatureMintERC721__RequestExpired(uint256 blockTimestamp);
+
     /**
      *  @notice The body of a request to mint tokens.
      *
