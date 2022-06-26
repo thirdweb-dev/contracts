@@ -9,8 +9,16 @@ interface IDropSinglePhase is IClaimCondition {
         uint256 maxQuantityInAllowlist;
     }
 
+    /// @dev Emitted when an unauthorized caller tries to set claim conditions.
+    error DropSinglePhase__NotAuthorized();
+
     /// @notice Emitted when given currency or price is invalid.
-    error DropSinglePhase__InvalidCurrencyOrPrice(address givenCurrency, address requiredCurrency, uint256 givenPricePerToken, uint256 requiredPricePerToken);
+    error DropSinglePhase__InvalidCurrencyOrPrice(
+        address givenCurrency,
+        address requiredCurrency,
+        uint256 givenPricePerToken,
+        uint256 requiredPricePerToken
+    );
 
     /// @notice Emitted when claiming invalid quantity of tokens.
     error DropSinglePhase__InvalidQuantity();
@@ -19,7 +27,12 @@ interface IDropSinglePhase is IClaimCondition {
     error DropSinglePhase__ExceedMaxClaimableSupply(uint256 supplyClaimed, uint256 maxClaimableSupply);
 
     /// @notice Emitted when the current timestamp is invalid for claim.
-    error DropSinglePhase__CannotClaimYet(uint256 blockTimestamp, uint256 startTimestamp, uint256 lastClaimedAt, uint256 nextValidClaimTimestamp);
+    error DropSinglePhase__CannotClaimYet(
+        uint256 blockTimestamp,
+        uint256 startTimestamp,
+        uint256 lastClaimedAt,
+        uint256 nextValidClaimTimestamp
+    );
 
     /// @notice Emitted when given allowlist proof is invalid.
     error DropSinglePhase__NotInWhitelist();

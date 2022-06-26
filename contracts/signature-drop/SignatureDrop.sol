@@ -74,9 +74,6 @@ contract SignatureDrop is
                             Custom Errors
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Emitted when caller is not admin.
-    error SignatureDrop__NotAuthorized(address caller);
-
     /// @notice Emitted when minting the given quantity will exceed available quantity.
     error SignatureDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
 
@@ -313,45 +310,33 @@ contract SignatureDrop is
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override {
-        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
-            revert SignatureDrop__NotAuthorized(_msgSender());
-        }
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
-    function _canSetPrimarySaleRecipient() internal view override {
-        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
-            revert SignatureDrop__NotAuthorized(_msgSender());
-        }
+    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
-    function _canSetOwner() internal view override {
-        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
-            revert SignatureDrop__NotAuthorized(_msgSender());
-        }
+    function _canSetOwner() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal view override {
-        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
-            revert SignatureDrop__NotAuthorized(_msgSender());
-        }
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view override {
-        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
-            revert SignatureDrop__NotAuthorized(_msgSender());
-        }
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetClaimConditions() internal view override {
-        if(!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
-            revert SignatureDrop__NotAuthorized(_msgSender());
-        }
+    function _canSetClaimConditions() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

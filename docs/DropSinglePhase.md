@@ -187,35 +187,57 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 i
 ### DropSinglePhase__CannotClaimYet
 
 ```solidity
-error DropSinglePhase__CannotClaimYet()
+error DropSinglePhase__CannotClaimYet(uint256 blockTimestamp, uint256 startTimestamp, uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
 ```
 
+Emitted when the current timestamp is invalid for claim.
 
 
 
+#### Parameters
 
+| Name | Type | Description |
+|---|---|---|
+| blockTimestamp | uint256 | undefined |
+| startTimestamp | uint256 | undefined |
+| lastClaimedAt | uint256 | undefined |
+| nextValidClaimTimestamp | uint256 | undefined |
 
 ### DropSinglePhase__ExceedMaxClaimableSupply
 
 ```solidity
-error DropSinglePhase__ExceedMaxClaimableSupply()
+error DropSinglePhase__ExceedMaxClaimableSupply(uint256 supplyClaimed, uint256 maxClaimableSupply)
 ```
 
+Emitted when claiming given quantity will exceed max claimable supply.
 
 
 
+#### Parameters
 
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimed | uint256 | undefined |
+| maxClaimableSupply | uint256 | undefined |
 
 ### DropSinglePhase__InvalidCurrencyOrPrice
 
 ```solidity
-error DropSinglePhase__InvalidCurrencyOrPrice()
+error DropSinglePhase__InvalidCurrencyOrPrice(address givenCurrency, address requiredCurrency, uint256 givenPricePerToken, uint256 requiredPricePerToken)
 ```
 
+Emitted when given currency or price is invalid.
 
 
 
+#### Parameters
 
+| Name | Type | Description |
+|---|---|---|
+| givenCurrency | address | undefined |
+| requiredCurrency | address | undefined |
+| givenPricePerToken | uint256 | undefined |
+| requiredPricePerToken | uint256 | undefined |
 
 ### DropSinglePhase__InvalidQuantity
 
@@ -223,7 +245,7 @@ error DropSinglePhase__InvalidCurrencyOrPrice()
 error DropSinglePhase__InvalidQuantity()
 ```
 
-
+Emitted when claiming invalid quantity of tokens.
 
 
 
@@ -231,12 +253,44 @@ error DropSinglePhase__InvalidQuantity()
 ### DropSinglePhase__InvalidQuantityProof
 
 ```solidity
-error DropSinglePhase__InvalidQuantityProof()
+error DropSinglePhase__InvalidQuantityProof(uint256 maxQuantityInAllowlist)
+```
+
+Emitted when claiming more than allowed quantity in allowlist.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| maxQuantityInAllowlist | uint256 | undefined |
+
+### DropSinglePhase__MaxSupplyClaimedAlready
+
+```solidity
+error DropSinglePhase__MaxSupplyClaimedAlready(uint256 supplyClaimedAlready)
+```
+
+Emitted when max claimable supply in given condition is less than supply claimed already.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedAlready | uint256 | undefined |
+
+### DropSinglePhase__NotAuthorized
+
+```solidity
+error DropSinglePhase__NotAuthorized()
 ```
 
 
 
-
+*Emitted when an unauthorized caller tries to set claim conditions.*
 
 
 ### DropSinglePhase__NotInWhitelist
@@ -245,7 +299,7 @@ error DropSinglePhase__InvalidQuantityProof()
 error DropSinglePhase__NotInWhitelist()
 ```
 
-
+Emitted when given allowlist proof is invalid.
 
 
 
@@ -256,7 +310,7 @@ error DropSinglePhase__NotInWhitelist()
 error DropSinglePhase__ProofClaimed()
 ```
 
-
+Emitted when allowlist spot is already used.
 
 
 

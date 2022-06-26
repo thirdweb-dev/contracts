@@ -1349,3 +1349,44 @@ event Unpaused(address account)
 
 
 
+## Errors
+
+### Ownable__NotAuthorized
+
+```solidity
+error Ownable__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set the owner.*
+
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps(uint256 royaltyBps)
+```
+
+Emitted when the given bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| royaltyBps | uint256 | undefined |
+
+### Royalty__NotAuthorized
+
+```solidity
+error Royalty__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set royalty details.*
+
+
+

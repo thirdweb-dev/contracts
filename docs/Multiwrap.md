@@ -1141,59 +1141,86 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 
 ## Errors
 
-### NotAuthorized__SetContractURI
+### ContractMetadata__NotAuthorized
 
 ```solidity
-error NotAuthorized__SetContractURI()
+error ContractMetadata__NotAuthorized()
 ```
 
 
 
+*Emitted when an unauthorized caller tries to set the contract metadata URI.*
 
 
-
-### NotAuthorized__SetOwner
+### Ownable__NotAuthorized
 
 ```solidity
-error NotAuthorized__SetOwner()
+error Ownable__NotAuthorized()
 ```
 
 
 
+*Emitted when an unauthorized caller tries to set the owner.*
 
 
-
-### NotAuthorized__SetRoyaltyInfo
+### Permissions__CanOnlyGrantToNonHolders
 
 ```solidity
-error NotAuthorized__SetRoyaltyInfo()
+error Permissions__CanOnlyGrantToNonHolders(address account)
 ```
 
+Emitted when specified account already has the role.
 
 
 
+#### Parameters
 
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
 
 ### Permissions__CanOnlyRenounceForSelf
 
 ```solidity
-error Permissions__CanOnlyRenounceForSelf()
+error Permissions__CanOnlyRenounceForSelf(address caller, address account)
 ```
 
+Emitted when calling address is different from the specified account.
 
 
 
+#### Parameters
 
+| Name | Type | Description |
+|---|---|---|
+| caller | address | undefined |
+| account | address | undefined |
 
 ### Royalty__ExceedsMaxBps
 
 ```solidity
-error Royalty__ExceedsMaxBps()
+error Royalty__ExceedsMaxBps(uint256 royaltyBps)
+```
+
+Emitted when the given bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| royaltyBps | uint256 | undefined |
+
+### Royalty__NotAuthorized
+
+```solidity
+error Royalty__NotAuthorized()
 ```
 
 
 
-
+*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 

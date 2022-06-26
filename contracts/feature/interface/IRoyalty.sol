@@ -18,6 +18,9 @@ interface IRoyalty {
     /// @notice Emitted when the given bps exceeds max bps.
     error Royalty__ExceedsMaxBps(uint256 royaltyBps);
 
+    /// @dev Emitted when an unauthorized caller tries to set royalty details.
+    error Royalty__NotAuthorized();
+
     /// @dev Returns the royalty recipient and fee bps.
     function getDefaultRoyaltyInfo() external view returns (address, uint16);
 

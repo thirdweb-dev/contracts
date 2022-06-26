@@ -77,9 +77,9 @@ abstract contract Royalty is IRoyalty {
         address _recipient,
         uint256 _bps
     ) external override {
-        // require(_canSetRoyaltyInfo(), "Not authorized");
-        // if (!_canSetRoyaltyInfo()) revert NotAuthorized__SetRoyaltyInfo();
-        _canSetRoyaltyInfo();
+        if (!_canSetRoyaltyInfo()) {
+            revert Royalty__NotAuthorized();
+        }
 
         _setupRoyaltyInfoForToken(_tokenId, _recipient, _bps);
     }
@@ -100,6 +100,6 @@ abstract contract Royalty is IRoyalty {
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }
 
-    /// @dev Checks whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal virtual;
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal virtual returns (bool);
 }

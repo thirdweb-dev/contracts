@@ -19,4 +19,7 @@ interface IPlatformFee {
 
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
+
+    /// @dev Emitted when an unauthorized caller tries to set platform fee details.
+    error PlatformFee__NotAuthorized();
 }

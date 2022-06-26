@@ -102,8 +102,9 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
-        // require(_canSetClaimConditions(), "Not authorized");
-        _canSetClaimConditions();
+        if (!_canSetClaimConditions()) {
+            revert DropSinglePhase__NotAuthorized();
+        }
 
         bytes32 targetConditionId = conditionId;
         uint256 supplyClaimedAlready = claimCondition.supplyClaimed;
@@ -114,7 +115,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
 
         // require(supplyClaimedAlready <= _condition.maxClaimableSupply, "max supply claimed already");
-        if(supplyClaimedAlready > _condition.maxClaimableSupply) {
+        if (supplyClaimedAlready > _condition.maxClaimableSupply) {
             revert DropSinglePhase__MaxSupplyClaimedAlready(supplyClaimedAlready);
         }
 
@@ -148,7 +149,12 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //     "invalid currency or price."
         // );
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
-            revert DropSinglePhase__InvalidCurrencyOrPrice(_currency, currentClaimPhase.currency, _pricePerToken, currentClaimPhase.pricePerToken);
+            revert DropSinglePhase__InvalidCurrencyOrPrice(
+                _currency,
+                currentClaimPhase.currency,
+                _pricePerToken,
+                currentClaimPhase.pricePerToken
+            );
         }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
@@ -169,7 +175,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         //     "exceed max claimable supply."
         // );
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert DropSinglePhase__ExceedMaxClaimableSupply(currentClaimPhase.supplyClaimed, currentClaimPhase.maxClaimableSupply);
+            revert DropSinglePhase__ExceedMaxClaimableSupply(
+                currentClaimPhase.supplyClaimed,
+                currentClaimPhase.maxClaimableSupply
+            );
         }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
@@ -182,7 +191,12 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             currentClaimPhase.startTimestamp >= block.timestamp ||
             (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
         ) {
-            revert DropSinglePhase__CannotClaimYet(block.timestamp, currentClaimPhase.startTimestamp, lastClaimedAt, nextValidClaimTimestamp);
+            revert DropSinglePhase__CannotClaimYet(
+                block.timestamp,
+                currentClaimPhase.startTimestamp,
+                lastClaimedAt,
+                nextValidClaimTimestamp
+            );
         }
     }
 
@@ -279,5 +293,5 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         virtual
         returns (uint256 startTokenId);
 
-    function _canSetClaimConditions() internal virtual;
+    function _canSetClaimConditions() internal virtual returns (bool);
 }

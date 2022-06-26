@@ -68,15 +68,15 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 ## Errors
 
-### NotAuthorized__SetOwner
+### Ownable__NotAuthorized
 
 ```solidity
-error NotAuthorized__SetOwner()
+error Ownable__NotAuthorized()
 ```
 
 
 
-
+*Emitted when an unauthorized caller tries to set the owner.*
 
 
 

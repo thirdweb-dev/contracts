@@ -34,7 +34,7 @@ contract Permissions is IPermissions {
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
         // require(!_hasRole[role][account], "Can only grant to non holders");
-        if(_hasRole[role][account]) {
+        if (_hasRole[role][account]) {
             revert Permissions__CanOnlyGrantToNonHolders(account);
         }
         _setupRole(role, account);

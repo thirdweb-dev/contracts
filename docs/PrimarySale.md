@@ -67,15 +67,15 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 
 ## Errors
 
-### NotAuthorized__SetPrimarySaleRecipient
+### PrimarySale__NotAuthorized
 
 ```solidity
-error NotAuthorized__SetPrimarySaleRecipient()
+error PrimarySale__NotAuthorized()
 ```
 
 
 
-
+*Emitted when an unauthorized caller tries to set primary sales details.*
 
 
 

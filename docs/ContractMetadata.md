@@ -68,15 +68,15 @@ event ContractURIUpdated(string prevURI, string newURI)
 
 ## Errors
 
-### NotAuthorized__SetContractURI
+### ContractMetadata__NotAuthorized
 
 ```solidity
-error NotAuthorized__SetContractURI()
+error ContractMetadata__NotAuthorized()
 ```
 
 
 
-
+*Emitted when an unauthorized caller tries to set the contract metadata URI.*
 
 
 
