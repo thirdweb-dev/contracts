@@ -25,7 +25,6 @@ import "contracts/token/TokenERC1155.sol";
 import "contracts/marketplace/Marketplace.sol";
 import "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
-import { SigMint } from "contracts/signature-drop/SigMint.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { ContractDeployer } from "contracts/ContractDeployer.sol";
 import "contracts/mock/Mock.sol";
@@ -81,11 +80,11 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new TokenERC20(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC721(fee)));
         TWFactory(factory).addImplementation(address(new TokenERC1155(fee)));
-        TWFactory(factory).addImplementation(address(new DropERC20(fee)));
+        TWFactory(factory).addImplementation(address(new DropERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC721"), 1)));
-        TWFactory(factory).addImplementation(address(new DropERC721(fee)));
+        TWFactory(factory).addImplementation(address(new DropERC721()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
-        TWFactory(factory).addImplementation(address(new DropERC1155(fee)));
+        TWFactory(factory).addImplementation(address(new DropERC1155()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
         TWFactory(factory).addImplementation(address(new SignatureDrop()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
@@ -215,8 +214,7 @@ abstract contract BaseTest is DSTest, Test {
                     royaltyRecipient,
                     royaltyBps,
                     platformFeeBps,
-                    platformFeeRecipient,
-                    address(new SigMint())
+                    platformFeeRecipient
                 )
             )
         );

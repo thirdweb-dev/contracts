@@ -7,7 +7,6 @@ import { DropERC20, TWFactory } from "typechain";
 async function main() {
   const [caller]: SignerWithAddress[] = await ethers.getSigners();
 
-  const twFeeAddress: string = ethers.constants.AddressZero; // replace
   const twFactoryAddress: string = ethers.constants.AddressZero; // replace
 
   const twFactory: TWFactory = await ethers.getContractAt("TWFactory", twFactoryAddress);
@@ -19,7 +18,7 @@ async function main() {
   if (!hasFactoryRole) {
     throw new Error("Caller does not have FACTORY_ROLE on factory");
   }
-  const dropERC20: DropERC20 = await ethers.getContractFactory("DropERC20").then(f => f.deploy(twFeeAddress));
+  const dropERC20: DropERC20 = await ethers.getContractFactory("DropERC20").then(f => f.deploy());
 
   console.log(
     "Deploying DropERC20 \ntransaction: ",
@@ -37,7 +36,7 @@ async function main() {
   console.log("\n");
 
   console.log("Verifying contract.");
-  await verify(dropERC20.address, [twFeeAddress]);
+  await verify(dropERC20.address, []);
 }
 
 async function verify(address: string, args: any[]) {

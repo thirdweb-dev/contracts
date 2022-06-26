@@ -8,8 +8,13 @@ abstract contract ContractMetadata is IContractMetadata {
     string public override contractURI;
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
-    function setContractURI(string memory _uri) public override {
+    function setContractURI(string memory _uri) external override {
         require(_canSetContractURI(), "Not authorized");
+        _setupContractURI(_uri);
+    }
+
+    /// @dev Lets a contract admin set the URI for contract-level metadata.
+    function _setupContractURI(string memory _uri) internal {
         string memory prevURI = contractURI;
         contractURI = _uri;
 

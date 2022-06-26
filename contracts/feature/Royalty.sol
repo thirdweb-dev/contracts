@@ -42,8 +42,13 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) public override {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external override {
         require(_canSetRoyaltyInfo(), "Not authorized");
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+    }
+
+    /// @dev Lets a contract admin update the default royalty recipient and bps.
+    function _setupDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) internal {
         require(_royaltyBps <= 10_000, "Exceeds max bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -59,6 +64,15 @@ abstract contract Royalty is IRoyalty {
         uint256 _bps
     ) external override {
         require(_canSetRoyaltyInfo(), "Not authorized");
+        _setupRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+    }
+
+    /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
+    function _setupRoyaltyInfoForToken(
+        uint256 _tokenId,
+        address _recipient,
+        uint256 _bps
+    ) internal {
         require(_bps <= 10_000, "Exceeds max bps");
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });

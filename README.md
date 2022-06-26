@@ -3,7 +3,7 @@
 <a href="https://thirdweb.com"><img src="https://github.com/thirdweb-dev/typescript-sdk/blob/main/logo.svg?raw=true" width="200" alt=""/></a>
 <br />
 </p>
-<h1 align="center">Thirdweb Contracts</h1>
+<h1 align="center">thirdweb Contracts</h1>
 <p align="center">
 <a href="https://www.npmjs.com/package/@thirdweb-dev/contracts"><img src="https://img.shields.io/npm/v/@thirdweb-dev/contracts?color=red&logo=npm" alt="npm version"/></a>
 <a href="https://github.com/thirdweb-dev/contracts/actions"><img alt="Build Status" src="https://github.com/thirdweb-dev/contracts/actions/workflows/tests.yml/badge.svg"/></a>
@@ -18,22 +18,6 @@
 ```shell
 npm i @thirdweb-dev/contracts
 ```
-
-## Usage
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
-
-import "@thirdweb-dev/contracts/ThirdwebContract.sol";
-
-contract HellowWorldContract is ThirdwebContract {
-  // your contract code
-}
-
-```
-
-By extending `ThirdwebContract` you can use the [thirdeb cli](https://github.com/thirdweb-dev/thirdweb-cli) to publish, deploy and manage your contracts on your [thirdweb dashboard](https://thirdweb.com/dashboard).
 
 ## Deployed addresses
 
@@ -117,6 +101,11 @@ The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deploye
 
 - `TWFactory`: [0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0](https://blockscan.com/address/0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0)
 - `TWFactory` (Fantom mainnet): [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B)
+
+
+## Bug reports
+
+Found a security issue with our smart contracts? Send bug reports to security@thirdweb.com and we'll continue communicating with you from there. We're actively developing a bug bounty program; bug report payouts happen on a case by case basis, for now.
 
 ## Feedback
 

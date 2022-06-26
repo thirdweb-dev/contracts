@@ -134,6 +134,8 @@ contract DropERC1155 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
+    constructor() initializer {}
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -284,7 +286,10 @@ contract DropERC1155 is
         );
 
         // Verify claim validity. If not valid, revert.
-        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0;
+        // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityPerTransaction value with hashed leaf in the allowlist
+        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
+        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0 ||
+            claimCondition[_tokenId].phases[activeConditionId].merkleRoot == bytes32(0);
         verifyClaim(
             activeConditionId,
             _msgSender(),

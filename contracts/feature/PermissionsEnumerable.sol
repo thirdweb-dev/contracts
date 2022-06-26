@@ -21,6 +21,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
             if (roleMembers[role].members[i] != address(0)) {
                 if (check == index) {
                     member = roleMembers[role].members[i];
+                    return member;
                 }
             } else {
                 check += 1;

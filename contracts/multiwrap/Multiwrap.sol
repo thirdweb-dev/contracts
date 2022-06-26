@@ -74,13 +74,10 @@ contract Multiwrap is
         __ERC2771Context_init(_trustedForwarders);
         __ERC721_init(_name, _symbol);
 
-        // Revoked at the end of the function.
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         // Initialize this contract's state.
-        setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        setOwner(_defaultAdmin);
-        setContractURI(_contractURI);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setupOwner(_defaultAdmin);
+        _setupContractURI(_contractURI);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -94,8 +91,6 @@ contract Multiwrap is
 
         // note: see `onlyRoleWithSwitch` for UNWRAP_ROLE behaviour.
         _setupRole(ASSET_ROLE, address(0));
-
-        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -121,6 +116,11 @@ contract Multiwrap is
         return uint8(VERSION);
     }
 
+    /// @dev Lets the contract receive ether to unwrap native tokens.
+    receive() external payable {
+        require(msg.sender == nativeTokenWrapper, "caller not native token wrapper.");
+    }
+
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
@@ -141,6 +141,7 @@ contract Multiwrap is
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC721Upgradeable).interfaceId ||
+            interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC2981Upgradeable).interfaceId;
     }
 
@@ -172,8 +173,8 @@ contract Multiwrap is
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
     function unwrap(uint256 _tokenId, address _recipient) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
-        require(_tokenId < nextTokenIdToMint, "Multiwrap: wrapped NFT DNE.");
-        require(_isApprovedOrOwner(_msgSender(), _tokenId), "Multiwrap: caller not approved for unwrapping.");
+        require(_tokenId < nextTokenIdToMint, "wrapped NFT DNE.");
+        require(_isApprovedOrOwner(_msgSender(), _tokenId), "caller not approved for unwrapping.");
 
         _burn(_tokenId);
         _releaseTokens(_recipient, _tokenId);
