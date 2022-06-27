@@ -169,7 +169,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
         if (
-            currentClaimPhase.startTimestamp >= block.timestamp ||
+            currentClaimPhase.startTimestamp > block.timestamp ||
             (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
         ) {
             revert DropSinglePhase__CannotClaimYet(
