@@ -399,7 +399,7 @@ contract MultiwrapTest is BaseTest {
     /**
      *  note: Testing revert condition; token owner calls `wrap` to wrap native tokens, but with multiple instances in `tokensToWrap` array.
      */
-    function test_revert_wrap_nativeTokens_insufficientValue_multipleInstances() public {
+    function test_balances_wrap_nativeTokens_multipleInstances() public {
         address recipient = address(0x123);
 
         ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](2);
@@ -419,8 +419,9 @@ contract MultiwrapTest is BaseTest {
         });
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("msg.value != amount");
         multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+
+        assertEq(weth.balanceOf(address(multiwrap)), 10 ether);
     }
 
     /**
