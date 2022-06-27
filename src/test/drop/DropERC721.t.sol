@@ -10,6 +10,7 @@ import "../utils/BaseTest.sol";
 contract SubExploitContract is ERC721Holder, ERC1155Holder {
     DropERC721 internal drop;
     address payable internal master;
+
     // using Strings for uint256;
 
     // using Strings for uint256;

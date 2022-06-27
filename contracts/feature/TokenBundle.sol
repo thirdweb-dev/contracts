@@ -24,9 +24,8 @@ abstract contract TokenBundle is ITokenBundle {
 
     /// @dev Lets the calling contract create a bundle, by passing in a list of tokens and a unique id.
     function _createBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
-        
         uint256 targetCount = _tokensToBind.length;
-        
+
         require(targetCount > 0, "TokenBundle: no tokens to bind.");
         require(bundle[_bundleId].count == 0, "TokenBundle: existent at bundleId");
 

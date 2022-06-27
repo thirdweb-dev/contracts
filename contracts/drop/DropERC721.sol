@@ -461,12 +461,7 @@ contract DropERC721 is
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            primarySaleRecipient,
-            totalPrice - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), primarySaleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.

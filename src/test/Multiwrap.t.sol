@@ -112,7 +112,6 @@ contract MultiwrapTest is BaseTest {
      *  note: Tests whether contract revert when a non-holder renounces a role.
      */
     function test_revert_nonHolder_renounceRole() public {
-
         address caller = address(0x123);
         bytes32 role = keccak256("MINTER_ROLE");
 
@@ -535,7 +534,7 @@ contract MultiwrapTest is BaseTest {
         vm.prank(address(tokenOwner));
         vm.expectRevert("msg.value != amount");
         multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
-        
+
         assertEq(address(multiwrap).balance, 10 ether);
     }
 
@@ -570,36 +569,36 @@ contract MultiwrapTest is BaseTest {
     }
 
     /**
- *  note: Testing state changes; wrapped token owner calls `unwrap` to unwrap native tokens.
- */
-function test_state_unwrap_nativeTokens() public {
-    // ===== setup: wrap tokens =====
-    uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
-    address recipient = address(0x123);
+     *  note: Testing state changes; wrapped token owner calls `unwrap` to unwrap native tokens.
+     */
+    function test_state_unwrap_nativeTokens() public {
+        // ===== setup: wrap tokens =====
+        uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
+        address recipient = address(0x123);
 
-    ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](1);
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](1);
 
-    vm.deal(address(tokenOwner), 100 ether);
-    nativeTokenContentToWrap[0] = ITokenBundle.Token({
-        assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
-        tokenType: ITokenBundle.TokenType.ERC20,
-        tokenId: 0,
-        totalAmount: 10 ether
-    });
+        vm.deal(address(tokenOwner), 100 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
 
-    vm.prank(address(tokenOwner));
-    multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+        vm.prank(address(tokenOwner));
+        multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
 
-    // ===== target test content =====
+        // ===== target test content =====
 
-    assertEq(address(recipient).balance, 0);
+        assertEq(address(recipient).balance, 0);
 
-    vm.prank(recipient);
-    // it fails here and it shouldn't
-    multiwrap.unwrap(expectedIdForWrappedToken, recipient);
-	
-    assertEq(address(recipient).balance, 10 ether);
-}
+        vm.prank(recipient);
+        // it fails here and it shouldn't
+        multiwrap.unwrap(expectedIdForWrappedToken, recipient);
+
+        assertEq(address(recipient).balance, 10 ether);
+    }
 
     /**
      *  note: Testing state changes; wrapped token owner calls `unwrap` to unwrap underlying tokens.
