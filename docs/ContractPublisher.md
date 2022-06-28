@@ -44,23 +44,6 @@ Lets an account add a published contract (and all its versions). The account mus
 | _publisher | address | undefined
 | _contractId | string | undefined
 
-### approveOperator
-
-```solidity
-function approveOperator(address _operator, bool _toApprove) external nonpayable
-```
-
-Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _operator | address | undefined
-| _toApprove | bool | undefined
-
 ### getAllPublicPublishedContracts
 
 ```solidity
@@ -269,29 +252,6 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | role | bytes32 | undefined
 | account | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### isApprovedByPublisher
-
-```solidity
-function isApprovedByPublisher(address, address) external view returns (bool)
-```
-
-
-
-*Mapping from publisher address =&gt; operator address =&gt; whether publisher has approved operator       to publish / unpublish contracts on their behalf.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
 
 #### Returns
 
@@ -523,24 +483,6 @@ event AddedContractToPublicList(address indexed publisher, string indexed contra
 |---|---|---|
 | publisher `indexed` | address | undefined |
 | contractId `indexed` | string | undefined |
-
-### Approved
-
-```solidity
-event Approved(address indexed publisher, address indexed operator, bool isApproved)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| publisher `indexed` | address | undefined |
-| operator `indexed` | address | undefined |
-| isApproved  | bool | undefined |
 
 ### ContractPublished
 

@@ -27,23 +27,6 @@ Lets an account add a published contract (and all its versions). The account mus
 | publisher | address | The address of the publisher.
 | contractId | string | The identifier for a published contract (that can have multiple verisons).
 
-### approveOperator
-
-```solidity
-function approveOperator(address operator, bool toApprove) external nonpayable
-```
-
-Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| operator | address | The address of the operator who publishes/unpublishes on behalf of the publisher.
-| toApprove | bool | whether to an operator to publish / unpublish contracts on the publisher&#39;s behalf.
-
 ### getAllPublicPublishedContracts
 
 ```solidity
@@ -152,29 +135,6 @@ Returns all versions of a published contract.
 |---|---|---|
 | published | IContractPublisher.CustomContractInstance[] | The desired contracts published by the publisher.
 
-### isApprovedByPublisher
-
-```solidity
-function isApprovedByPublisher(address publisher, address operator) external view returns (bool isApproved)
-```
-
-Returns whether a publisher has approved an operator to publish / unpublish contracts on their behalf.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| publisher | address | The address of the publisher.
-| operator | address | The address of the operator who publishes/unpublishes on behalf of the publisher.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| isApproved | bool | Whether the publisher has approved the operator to publish / unpublish contracts on their behalf.
-
 ### publishContract
 
 ```solidity
@@ -249,24 +209,6 @@ event AddedContractToPublicList(address indexed publisher, string indexed contra
 |---|---|---|
 | publisher `indexed` | address | undefined |
 | contractId `indexed` | string | undefined |
-
-### Approved
-
-```solidity
-event Approved(address indexed publisher, address indexed operator, bool isApproved)
-```
-
-
-
-*Emitted when a publisher&#39;s approval of an operator is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| publisher `indexed` | address | undefined |
-| operator `indexed` | address | undefined |
-| isApproved  | bool | undefined |
 
 ### ContractPublished
 

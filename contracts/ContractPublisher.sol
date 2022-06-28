@@ -27,12 +27,6 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                                 Mappings
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     *  @dev Mapping from publisher address => operator address => whether publisher has approved operator
-     *       to publish / unpublish contracts on their behalf.
-     */
-    mapping(address => mapping(address => bool)) public isApprovedByPublisher;
-
     /// @dev Mapping from public Id => publicly published contract.
     mapping(uint256 => PublicContract) private publicContracts;
 
@@ -43,9 +37,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                     Constructor + modifiers
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Checks whether caller is publisher or approved by publisher.
-    modifier onlyApprovedOrPublisher(address _publisher) {
-        require(_msgSender() == _publisher || isApprovedByPublisher[_publisher][_msgSender()], "unapproved caller");
+    /// @dev Checks whether caller is publisher TODO enable external approvals
+    modifier onlyPublisher(address _publisher) {
+        require(_msgSender() == _publisher, "unapproved caller");
 
         _;
     }
@@ -139,12 +133,6 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                             Publish logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-    function approveOperator(address _operator, bool _toApprove) external {
-        isApprovedByPublisher[_msgSender()][_operator] = _toApprove;
-        emit Approved(_msgSender(), _operator, _toApprove);
-    }
-
     /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
     function publishContract(
         address _publisher,
@@ -152,7 +140,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         bytes32 _bytecodeHash,
         address _implementation,
         string memory _contractId
-    ) external onlyApprovedOrPublisher(_publisher) onlyUnpausedOrAdmin {
+    ) external onlyPublisher(_publisher) onlyUnpausedOrAdmin {
         CustomContractInstance memory publishedContract = CustomContractInstance({
             contractId: _contractId,
             publishTimestamp: block.timestamp,
@@ -177,7 +165,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     /// @notice Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
     function unpublishContract(address _publisher, string memory _contractId)
         external
-        onlyApprovedOrPublisher(_publisher)
+        onlyPublisher(_publisher)
         onlyUnpausedOrAdmin
     {
         bytes32 contractIdInBytes = keccak256(bytes(_contractId));
