@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### balanceOf
 
 ```solidity
@@ -73,42 +90,6 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined
 
-### burn
-
-```solidity
-function burn(address account, uint256 id, uint256 value) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
-| value | uint256 | undefined
-
-### burnBatch
-
-```solidity
-function burnBatch(address account, uint256[] ids, uint256[] values) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined
-| ids | uint256[] | undefined
-| values | uint256[] | undefined
-
 ### contractType
 
 ```solidity
@@ -117,7 +98,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-*Returns the module type of the contract.*
+*Returns the type of the contract.*
 
 
 #### Returns
@@ -134,7 +115,7 @@ function contractURI() external view returns (string)
 
 
 
-*Collection level metadata.*
+
 
 
 #### Returns
@@ -160,28 +141,33 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined
 
-### currentRequestId
+### createPack
 
 ```solidity
-function currentRequestId(uint256, address) external view returns (bytes32)
+function createPack(ITokenBundle.Token[] _contents, uint256[] _numOfRewardUnits, string _packUri, uint128 _openStartTimestamp, uint128 _amountDistributedPerOpen, address _recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
 ```
 
 
 
-*pack tokenId =&gt; pack opener =&gt; Chainlink VRF request ID if there is an incomplete pack opening process.*
+*Creates a pack with the stated contents.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
-| _1 | address | undefined
+| _contents | ITokenBundle.Token[] | undefined
+| _numOfRewardUnits | uint256[] | undefined
+| _packUri | string | undefined
+| _openStartTimestamp | uint128 | undefined
+| _amountDistributedPerOpen | uint128 | undefined
+| _recipient | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| packId | uint256 | undefined
+| packTotalSupply | uint256 | undefined
 
 ### getDefaultRoyaltyInfo
 
@@ -191,7 +177,7 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 
 
 
-*Returns the platform fee bps and recipient.*
+*Returns the default royalty recipient and bps.*
 
 
 #### Returns
@@ -201,15 +187,15 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
-### getPackWithRewards
+### getPackContents
 
 ```solidity
-function getPackWithRewards(uint256 _packId) external view returns (struct Pack.PackState pack, uint256 packTotalSupply, address source, uint256[] tokenIds, uint256[] amountsPacked)
+function getPackContents(uint256 _packId) external view returns (struct ITokenBundle.Token[] contents, uint256[] perUnitAmounts)
 ```
 
 
 
-*Returns a pack with its underlying rewards*
+*Returns the underlying contents of a pack.*
 
 #### Parameters
 
@@ -221,11 +207,8 @@ function getPackWithRewards(uint256 _packId) external view returns (struct Pack.
 
 | Name | Type | Description |
 |---|---|---|
-| pack | Pack.PackState | undefined
-| packTotalSupply | uint256 | undefined
-| source | address | undefined
-| tokenIds | uint256[] | undefined
-| amountsPacked | uint256[] | undefined
+| contents | ITokenBundle.Token[] | undefined
+| perUnitAmounts | uint256[] | undefined
 
 ### getRoleAdmin
 
@@ -235,7 +218,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 
 
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
+*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
 
 #### Parameters
 
@@ -252,7 +235,7 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ### getRoleMember
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address)
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
 
@@ -270,12 +253,12 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| member | address | undefined
 
 ### getRoleMemberCount
 
 ```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256)
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
 
@@ -292,7 +275,7 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| count | uint256 | undefined
 
 ### getRoyaltyInfoForToken
 
@@ -302,7 +285,7 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 
 
 
-*Returns the royalty recipient for a particular token Id.*
+*Returns the royalty recipient and bps for a particular token Id.*
 
 #### Parameters
 
@@ -317,6 +300,73 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
+### getTokenCountOfBundle
+
+```solidity
+function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256)
+```
+
+
+
+*Returns the total number of assets in a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getTokenOfBundle
+
+```solidity
+function getTokenOfBundle(uint256 _bundleId, uint256 index) external view returns (struct ITokenBundle.Token)
+```
+
+
+
+*Returns an asset contained in a particular bundle, at a particular index.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token | undefined
+
+### getUriOfBundle
+
+```solidity
+function getUriOfBundle(uint256 _bundleId) external view returns (string)
+```
+
+
+
+*Returns the uri of a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### grantRole
 
 ```solidity
@@ -325,7 +375,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -357,10 +407,33 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### hasRoleWithSwitch
+
+```solidity
+function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _royaltyRecipient, uint128 _royaltyBps, uint128 _fees, bytes32 _keyHash) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
 ```
 
 
@@ -377,9 +450,7 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _contractURI | string | undefined
 | _trustedForwarders | address[] | undefined
 | _royaltyRecipient | address | undefined
-| _royaltyBps | uint128 | undefined
-| _fees | uint128 | undefined
-| _keyHash | bytes32 | undefined
+| _royaltyBps | uint256 | undefined
 
 ### isApprovedForAll
 
@@ -426,44 +497,6 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### mint
-
-```solidity
-function mint(address, uint256, uint256, bytes) external nonpayable
-```
-
-
-
-*See {ERC1155-_mint}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint256 | undefined
-| _2 | uint256 | undefined
-| _3 | bytes | undefined
-
-### mintBatch
-
-```solidity
-function mintBatch(address, uint256[], uint256[], bytes) external nonpayable
-```
-
-
-
-*See {ERC1155-_mintBatch}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint256[] | undefined
-| _2 | uint256[] | undefined
-| _3 | bytes | undefined
-
 ### multicall
 
 ```solidity
@@ -503,15 +536,15 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### nextTokenId
+### nextTokenIdToMint
 
 ```solidity
-function nextTokenId() external view returns (uint256)
+function nextTokenIdToMint() external view returns (uint256)
 ```
 
 
 
-*The token Id of the next token to be minted.*
+*The token Id of the next set of packs to be minted.*
 
 
 #### Returns
@@ -523,22 +556,22 @@ function nextTokenId() external view returns (uint256)
 ### onERC1155BatchReceived
 
 ```solidity
-function onERC1155BatchReceived(address _operator, address, uint256[] _ids, uint256[] _values, bytes _data) external nonpayable returns (bytes4)
+function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
 ```
 
 
 
-*Creates pack on receiving ERC 1155 reward tokens*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _operator | address | undefined
+| _0 | address | undefined
 | _1 | address | undefined
-| _ids | uint256[] | undefined
-| _values | uint256[] | undefined
-| _data | bytes | undefined
+| _2 | uint256[] | undefined
+| _3 | uint256[] | undefined
+| _4 | bytes | undefined
 
 #### Returns
 
@@ -600,18 +633,25 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 ### openPack
 
 ```solidity
-function openPack(uint256 _packId) external nonpayable
+function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable returns (struct ITokenBundle.Token[])
 ```
 
+Lets a pack owner open packs and receive the packs&#39; reward units.
 
 
-*Lets a pack owner request to open a single pack.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _packId | uint256 | undefined
+| _amountToOpen | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token[] | undefined
 
 ### owner
 
@@ -621,7 +661,7 @@ function owner() external view returns (address)
 
 
 
-*Returns the address of the current owner.*
+
 
 
 #### Returns
@@ -629,41 +669,6 @@ function owner() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined
-
-### packs
-
-```solidity
-function packs(uint256) external view returns (string uri, address creator, uint256 openStart)
-```
-
-
-
-*pack tokenId =&gt; The state of packs with id `tokenId`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| uri | string | undefined
-| creator | address | undefined
-| openStart | uint256 | undefined
-
-### pause
-
-```solidity
-function pause() external nonpayable
-```
-
-
-
-*Pauses all token transfers. See {ERC1155Pausable} and {Pausable-_pause}. Requirements: - the caller must have the `PAUSER_ROLE`.*
-
 
 ### paused
 
@@ -682,46 +687,6 @@ function paused() external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### randomnessRequests
-
-```solidity
-function randomnessRequests(bytes32) external view returns (uint256 packId, address opener)
-```
-
-
-
-*Chainlink VRF requestId =&gt; Chainlink VRF request state with id `requestId`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| packId | uint256 | undefined
-| opener | address | undefined
-
-### rawFulfillRandomness
-
-```solidity
-function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| requestId | bytes32 | undefined
-| randomness | uint256 | undefined
-
 ### renounceRole
 
 ```solidity
@@ -730,7 +695,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+
 
 #### Parameters
 
@@ -747,7 +712,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
 
 #### Parameters
 
@@ -755,29 +720,6 @@ function revokeRole(bytes32 role, address account) external nonpayable
 |---|---|---|
 | role | bytes32 | undefined
 | account | address | undefined
-
-### rewards
-
-```solidity
-function rewards(uint256) external view returns (address source, uint256 rewardsPerOpen)
-```
-
-
-
-*pack tokenId =&gt; rewards in pack with id `tokenId`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| source | address | undefined
-| rewardsPerOpen | uint256 | undefined
 
 ### royaltyInfo
 
@@ -787,7 +729,7 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 
 
-*See EIP-2981*
+*Returns the royalty recipient and amount, given a tokenId and sale price.*
 
 #### Parameters
 
@@ -860,22 +802,6 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined
 | approved | bool | undefined
 
-### setChainlinkFees
-
-```solidity
-function setChainlinkFees(uint256 _newFees) external nonpayable
-```
-
-
-
-*Lets a module admin change the Chainlink VRF fee.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newFees | uint256 | undefined
-
 ### setContractURI
 
 ```solidity
@@ -884,7 +810,7 @@ function setContractURI(string _uri) external nonpayable
 
 
 
-*Sets contract URI for the storefront-level metadata of the contract.*
+*Lets a contract admin set the URI for contract-level metadata.*
 
 #### Parameters
 
@@ -900,7 +826,7 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 
 
 
-*Lets a module admin update the royalty bps and recipient.*
+*Lets a contract admin update the default royalty recipient and bps.*
 
 #### Parameters
 
@@ -917,7 +843,7 @@ function setOwner(address _newOwner) external nonpayable
 
 
 
-*Lets a module admin set a new owner for the contract. The new owner must be a module admin.*
+*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
 
 #### Parameters
 
@@ -933,7 +859,7 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 
 
 
-*Lets a module admin set the royalty recipient for a particular token Id.*
+*Lets a contract admin set the royalty recipient and bps for a particular token Id.*
 
 #### Parameters
 
@@ -951,7 +877,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*See EIP 165*
+*See ERC 165*
 
 #### Parameters
 
@@ -982,38 +908,21 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### thirdwebFee
-
-```solidity
-function thirdwebFee() external view returns (contract ITWFee)
-```
-
-
-
-*The thirdweb contract with fee related information.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract ITWFee | undefined
-
 ### totalSupply
 
 ```solidity
-function totalSupply(uint256 id) external view returns (uint256)
+function totalSupply(uint256) external view returns (uint256)
 ```
 
 
 
-*Total amount of tokens in with a given id.*
+*Mapping from token ID =&gt; total circulating supply of token with that ID.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| id | uint256 | undefined
+| _0 | uint256 | undefined
 
 #### Returns
 
@@ -1021,55 +930,27 @@ function totalSupply(uint256 id) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### unpause
-
-```solidity
-function unpause() external nonpayable
-```
-
-
-
-*Unpauses all token transfers. See {ERC1155Pausable} and {Pausable-_unpause}. Requirements: - the caller must have the `PAUSER_ROLE`.*
-
-
 ### uri
 
 ```solidity
-function uri(uint256 _id) external view returns (string)
+function uri(uint256 _tokenId) external view returns (string)
 ```
 
 
 
-*See EIP 1155*
+*Returns the URI for a given tokenId.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _id | uint256 | undefined
+| _tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
-
-### withdrawLink
-
-```solidity
-function withdrawLink(address _to, uint256 _amount) external nonpayable
-```
-
-
-
-*Lets a module admin withdraw link from the contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _to | address | undefined
-| _amount | uint256 | undefined
 
 
 
@@ -1092,6 +973,23 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 | account `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### DefaultRoyalty
 
@@ -1127,56 +1025,34 @@ event OwnerUpdated(address prevOwner, address newOwner)
 | prevOwner  | address | undefined |
 | newOwner  | address | undefined |
 
-### PackAdded
+### PackCreated
 
 ```solidity
-event PackAdded(uint256 indexed packId, address indexed rewardContract, address indexed creator, uint256 packTotalSupply, Pack.PackState packState, Pack.Rewards rewards)
+event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, uint256 totalPacksCreated)
 ```
 
+Emitted when a set of packs is created.
 
 
-*Emitted when a set of packs is created.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | packId `indexed` | uint256 | undefined |
-| rewardContract `indexed` | address | undefined |
-| creator `indexed` | address | undefined |
-| packTotalSupply  | uint256 | undefined |
-| packState  | Pack.PackState | undefined |
-| rewards  | Pack.Rewards | undefined |
+| packCreator `indexed` | address | undefined |
+| recipient  | address | undefined |
+| totalPacksCreated  | uint256 | undefined |
 
-### PackOpenFulfilled
+### PackOpened
 
 ```solidity
-event PackOpenFulfilled(uint256 indexed packId, address indexed opener, bytes32 requestId, address indexed rewardContract, uint256[] rewardIds)
+event PackOpened(uint256 indexed packId, address indexed opener, uint256 numOfPacksOpened, ITokenBundle.Token[] rewardUnitsDistributed)
 ```
 
+Emitted when a pack is opened.
 
 
-*Emitted when a request to open a pack is fulfilled.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| packId `indexed` | uint256 | undefined |
-| opener `indexed` | address | undefined |
-| requestId  | bytes32 | undefined |
-| rewardContract `indexed` | address | undefined |
-| rewardIds  | uint256[] | undefined |
-
-### PackOpenRequested
-
-```solidity
-event PackOpenRequested(uint256 indexed packId, address indexed opener, bytes32 requestId)
-```
-
-
-
-*Emitted on a request to open a pack.*
 
 #### Parameters
 
@@ -1184,7 +1060,8 @@ event PackOpenRequested(uint256 indexed packId, address indexed opener, bytes32 
 |---|---|---|
 | packId `indexed` | uint256 | undefined |
 | opener `indexed` | address | undefined |
-| requestId  | bytes32 | undefined |
+| numOfPacksOpened  | uint256 | undefined |
+| rewardUnitsDistributed  | ITokenBundle.Token[] | undefined |
 
 ### Paused
 
