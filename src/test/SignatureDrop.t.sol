@@ -80,23 +80,23 @@ contract SignatureDropBenchmarkTest is BaseTest {
         erc20.approve(address(sigdrop), 1);
     }
 
-    function signMintRequest(SignatureDrop.MintRequest memory _mintrequest, uint256 privateKey)
+    function signMintRequest(SignatureDrop.MintRequest memory _request, uint256 privateKey)
         internal
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
-            _mintrequest.to,
-            _mintrequest.royaltyRecipient,
-            _mintrequest.royaltyBps,
-            _mintrequest.primarySaleRecipient,
-            keccak256(bytes(_mintrequest.uri)),
-            _mintrequest.quantity,
-            _mintrequest.pricePerToken,
-            _mintrequest.currency,
-            _mintrequest.validityStartTimestamp,
-            _mintrequest.validityEndTimestamp,
-            _mintrequest.uid
+            _request.to,
+            _request.royaltyRecipient,
+            _request.royaltyBps,
+            _request.primarySaleRecipient,
+            keccak256(bytes(_request.uri)),
+            _request.quantity,
+            _request.pricePerToken,
+            _request.currency,
+            _request.validityStartTimestamp,
+            _request.validityEndTimestamp,
+            _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));

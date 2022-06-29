@@ -738,6 +738,7 @@ contract PackTest is BaseTest {
 
     function checkBalances(ITokenBundle.Token[] memory rewardUnits, address recipient)
         internal
+        view
         returns (
             uint256 nativeTokenAmount,
             uint256 erc20Amount,
