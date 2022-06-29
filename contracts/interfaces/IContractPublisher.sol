@@ -32,9 +32,6 @@ interface IContractPublisher {
     /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
 
-    /// @dev Emitted when a publisher's approval of an operator is updated.
-    event Approved(address indexed publisher, address indexed operator, bool isApproved);
-
     /// @dev Emitted when a contract is published.
     event ContractPublished(
         address indexed operator,
@@ -50,24 +47,6 @@ interface IContractPublisher {
 
     /// @dev Emitted when a published contract is removed from the public list.
     event RemovedContractToPublicList(address indexed publisher, string indexed contractId);
-
-    /**
-     *  @notice Returns whether a publisher has approved an operator to publish / unpublish contracts on their behalf.
-     *
-     *  @param publisher The address of the publisher.
-     *  @param operator  The address of the operator who publishes/unpublishes on behalf of the publisher.
-     *
-     *  @return isApproved Whether the publisher has approved the operator to publish / unpublish contracts on their behalf.
-     */
-    function isApprovedByPublisher(address publisher, address operator) external view returns (bool isApproved);
-
-    /**
-     *  @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-     *
-     *  @param operator  The address of the operator who publishes/unpublishes on behalf of the publisher.
-     *  @param toApprove whether to an operator to publish / unpublish contracts on the publisher's behalf.
-     */
-    function approveOperator(address operator, bool toApprove) external;
 
     /**
      *  @notice Returns the latest version of all contracts published by a publisher.

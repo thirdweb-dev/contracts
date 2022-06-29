@@ -15,6 +15,9 @@ import "./TokenBundle.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
+    /// @dev The address interpreted as native token of the chain.
+    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     /// @dev The address of the native token wrapper contract.
     address internal immutable nativeTokenWrapper;
 

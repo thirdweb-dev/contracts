@@ -1,7 +1,11 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "Collection of smart contracts deployable via the thirdweb SDK, dashboard and CLI",
+<<<<<<< HEAD
   "version": "2.3.15-1",
+=======
+  "version": "2.4.1",
+>>>>>>> main
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

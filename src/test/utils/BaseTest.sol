@@ -14,7 +14,7 @@ import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
-import "contracts/Pack.sol";
+import { Pack } from "contracts/pack/Pack.sol";
 import "contracts/Split.sol";
 import "contracts/drop/DropERC20.sol";
 import "contracts/drop/DropERC721.sol";
@@ -90,8 +90,9 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth), fee)));
         TWFactory(factory).addImplementation(address(new Split(fee)));
-        // TWFactory(factory).addImplementation(address(new Pack(address(0), address(0), fee)));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
+        TWFactory(factory).addImplementation(address(new Pack(address(weth))));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
@@ -229,6 +230,13 @@ abstract contract BaseTest is DSTest, Test {
             "Multiwrap",
             abi.encodeCall(
                 Multiwrap.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
+            )
+        );
+        deployContractProxy(
+            "Pack",
+            abi.encodeCall(
+                Pack.initialize,
                 (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
             )
         );
