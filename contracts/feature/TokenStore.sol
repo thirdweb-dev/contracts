@@ -32,7 +32,7 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         string calldata _uriForTokens,
         uint256 _idForTokens
     ) internal {
-        _setBundle(_tokens, _idForTokens);
+        _createBundle(_tokens, _idForTokens);
         _setUriOfBundle(_uriForTokens, _idForTokens);
         _transferTokenBatch(_tokenOwner, address(this), _tokens);
     }
@@ -80,7 +80,7 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     ) internal {
         uint256 nativeTokenValue;
         for (uint256 i = 0; i < _tokens.length; i += 1) {
-            if (_tokens[i].assetContract == NATIVE_TOKEN && _to == address(this)) {
+            if (_tokens[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN && _to == address(this)) {
                 nativeTokenValue += _tokens[i].totalAmount;
             } else {
                 _transferToken(_from, _to, _tokens[i]);
@@ -88,7 +88,7 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         }
         if (nativeTokenValue != 0) {
             Token memory _nativeToken = Token({
-                assetContract: NATIVE_TOKEN,
+                assetContract: CurrencyTransferLib.NATIVE_TOKEN,
                 tokenType: ITokenBundle.TokenType.ERC20,
                 tokenId: 0,
                 totalAmount: nativeTokenValue

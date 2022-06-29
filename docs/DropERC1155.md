@@ -951,6 +951,23 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 | _recipient | address | undefined
 | _bps | uint256 | undefined
 
+### setSaleRecipientForToken
+
+```solidity
+function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external nonpayable
+```
+
+
+
+*Lets a contract admin set the recipient for all primary sales.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined
+| _saleRecipient | address | undefined
+
 ### setWalletClaimCount
 
 ```solidity
@@ -1167,7 +1184,7 @@ event ClaimConditionsUpdated(uint256 indexed tokenId, IDropClaimCondition.ClaimC
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -1178,7 +1195,7 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### MaxTotalSupplyUpdated
@@ -1218,7 +1235,7 @@ event MaxWalletClaimCountUpdated(uint256 tokenId, uint256 count)
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -1229,13 +1246,13 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### PlatformFeeInfoUpdated
 
 ```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
 ```
 
 
@@ -1246,7 +1263,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient  | address | undefined |
+| platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
 
 ### PrimarySaleRecipientUpdated
@@ -1322,7 +1339,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -1334,8 +1351,25 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
+
+### SaleRecipientForTokenUpdated
+
+```solidity
+event SaleRecipientForTokenUpdated(uint256 indexed tokenId, address saleRecipient)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId `indexed` | uint256 | undefined |
+| saleRecipient  | address | undefined |
 
 ### TokensClaimed
 
@@ -1449,6 +1483,85 @@ event WalletClaimCountUpdated(uint256 tokenId, address indexed wallet, uint256 c
 | tokenId  | uint256 | undefined |
 | wallet `indexed` | address | undefined |
 | count  | uint256 | undefined |
+
+
+
+## Errors
+
+### Ownable__NotAuthorized
+
+```solidity
+error Ownable__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set the owner.*
+
+
+### PlatformFee__ExceedsMaxBps
+
+```solidity
+error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps)
+```
+
+Emitted when given platform-fee bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeBps | uint256 | undefined |
+
+### PlatformFee__NotAuthorized
+
+```solidity
+error PlatformFee__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set platform fee details.*
+
+
+### PrimarySale__NotAuthorized
+
+```solidity
+error PrimarySale__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set primary sales details.*
+
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps(uint256 royaltyBps)
+```
+
+Emitted when the given bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| royaltyBps | uint256 | undefined |
+
+### Royalty__NotAuthorized
+
+```solidity
+error Royalty__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 

@@ -226,7 +226,9 @@ contract PackTest is BaseTest {
         vm.startPrank(deployer);
         pack.revokeRole(keccak256("ASSET_ROLE"), address(0));
         for (uint256 i = 0; i < packContents.length; i += 1) {
-            pack.grantRole(keccak256("ASSET_ROLE"), packContents[i].assetContract);
+            if (!pack.hasRole(keccak256("ASSET_ROLE"), packContents[i].assetContract)) {
+                pack.grantRole(keccak256("ASSET_ROLE"), packContents[i].assetContract);
+            }
         }
         vm.stopPrank();
 
@@ -738,6 +740,7 @@ contract PackTest is BaseTest {
 
     function checkBalances(ITokenBundle.Token[] memory rewardUnits, address recipient)
         internal
+        view
         returns (
             uint256 nativeTokenAmount,
             uint256 erc20Amount,

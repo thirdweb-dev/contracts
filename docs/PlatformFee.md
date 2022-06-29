@@ -4,7 +4,7 @@
 
 
 
-
+Thirdweb&#39;s `PlatformFee` is a contract extension to be used with any base contract. It exposes functions for setting and reading  the recipient of platform fee and the platform fee basis points, and lets the inheriting contract perform conditional logic  that uses information about platform fees, if desired.
 
 
 
@@ -52,7 +52,7 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 ### PlatformFeeInfoUpdated
 
 ```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
 ```
 
 
@@ -63,8 +63,38 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient  | address | undefined |
+| platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+
+
+## Errors
+
+### PlatformFee__ExceedsMaxBps
+
+```solidity
+error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps)
+```
+
+Emitted when given platform-fee bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeBps | uint256 | undefined |
+
+### PlatformFee__NotAuthorized
+
+```solidity
+error PlatformFee__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set platform fee details.*
 
 
 

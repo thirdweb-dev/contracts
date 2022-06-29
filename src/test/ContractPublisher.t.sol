@@ -85,31 +85,32 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         assertEq(customContract.implementation, address(0));
     }
 
-    function test_publish_viaOperator() public {
-        string memory contractId = "MyContract";
+    // Deprecated
+    // function test_publish_viaOperator() public {
+    //     string memory contractId = "MyContract";
 
-        vm.prank(publisher);
-        byoc.approveOperator(operator, true);
+    //     vm.prank(publisher);
+    //     byoc.approveOperator(operator, true);
 
-        vm.prank(operator);
-        byoc.publishContract(
-            publisher,
-            publishMetadataUri,
-            keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
-        );
+    //     vm.prank(operator);
+    //     byoc.publishContract(
+    //         publisher,
+    //         publishMetadataUri,
+    //         keccak256(type(MockCustomContract).creationCode),
+    //         address(0),
+    //         contractId
+    //     );
 
-        IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
-            publisher,
-            contractId
-        );
+    //     IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
+    //         publisher,
+    //         contractId
+    //     );
 
-        assertEq(customContract.contractId, contractId);
-        assertEq(customContract.publishMetadataUri, publishMetadataUri);
-        assertEq(customContract.bytecodeHash, keccak256(type(MockCustomContract).creationCode));
-        assertEq(customContract.implementation, address(0));
-    }
+    //     assertEq(customContract.contractId, contractId);
+    //     assertEq(customContract.publishMetadataUri, publishMetadataUri);
+    //     assertEq(customContract.bytecodeHash, keccak256(type(MockCustomContract).creationCode));
+    //     assertEq(customContract.implementation, address(0));
+    // }
 
     function test_publish_revert_unapprovedCaller() public {
         string memory contractId = "MyContract";
@@ -144,34 +145,35 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         );
     }
 
-    function test_publish_emit_ContractPublished() public {
-        string memory contractId = "MyContract";
+    // Deprecated
+    // function test_publish_emit_ContractPublished() public {
+    //     string memory contractId = "MyContract";
 
-        vm.prank(publisher);
-        byoc.approveOperator(operator, true);
+    //     vm.prank(publisher);
+    //     byoc.approveOperator(operator, true);
 
-        IContractPublisher.CustomContractInstance memory expectedCustomContract = IContractPublisher
-            .CustomContractInstance({
-                contractId: contractId,
-                publishTimestamp: 100,
-                publishMetadataUri: publishMetadataUri,
-                bytecodeHash: keccak256(type(MockCustomContract).creationCode),
-                implementation: address(0)
-            });
+    //     IContractPublisher.CustomContractInstance memory expectedCustomContract = IContractPublisher
+    //         .CustomContractInstance({
+    //             contractId: contractId,
+    //             publishTimestamp: 100,
+    //             publishMetadataUri: publishMetadataUri,
+    //             bytecodeHash: keccak256(type(MockCustomContract).creationCode),
+    //             implementation: address(0)
+    //         });
 
-        vm.expectEmit(true, true, true, true);
-        emit ContractPublished(operator, publisher, expectedCustomContract);
+    //     vm.expectEmit(true, true, true, true);
+    //     emit ContractPublished(operator, publisher, expectedCustomContract);
 
-        vm.warp(100);
-        vm.prank(operator);
-        byoc.publishContract(
-            publisher,
-            publishMetadataUri,
-            keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
-        );
-    }
+    //     vm.warp(100);
+    //     vm.prank(operator);
+    //     byoc.publishContract(
+    //         publisher,
+    //         publishMetadataUri,
+    //         keccak256(type(MockCustomContract).creationCode),
+    //         address(0),
+    //         contractId
+    //     );
+    // }
 
     function test_unpublish() public {
         string memory contractId = "MyContract";
@@ -199,34 +201,35 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         assertEq(customContract.implementation, address(0));
     }
 
-    function test_unpublish_viaOperator() public {
-        string memory contractId = "MyContract";
+    // Deprecated
+    // function test_unpublish_viaOperator() public {
+    //     string memory contractId = "MyContract";
 
-        vm.prank(publisher);
-        byoc.publishContract(
-            publisher,
-            publishMetadataUri,
-            keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
-        );
+    //     vm.prank(publisher);
+    //     byoc.publishContract(
+    //         publisher,
+    //         publishMetadataUri,
+    //         keccak256(type(MockCustomContract).creationCode),
+    //         address(0),
+    //         contractId
+    //     );
 
-        vm.prank(publisher);
-        byoc.approveOperator(operator, true);
+    //     vm.prank(publisher);
+    //     byoc.approveOperator(operator, true);
 
-        vm.prank(operator);
-        byoc.unpublishContract(publisher, contractId);
+    //     vm.prank(operator);
+    //     byoc.unpublishContract(publisher, contractId);
 
-        IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
-            publisher,
-            contractId
-        );
+    //     IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
+    //         publisher,
+    //         contractId
+    //     );
 
-        assertEq(customContract.contractId, "");
-        assertEq(customContract.publishMetadataUri, "");
-        assertEq(customContract.bytecodeHash, bytes32(0));
-        assertEq(customContract.implementation, address(0));
-    }
+    //     assertEq(customContract.contractId, "");
+    //     assertEq(customContract.publishMetadataUri, "");
+    //     assertEq(customContract.bytecodeHash, bytes32(0));
+    //     assertEq(customContract.implementation, address(0));
+    // }
 
     function test_unpublish_revert_unapprovedCaller() public {
         string memory contractId = "MyContract";
@@ -267,25 +270,26 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         byoc.unpublishContract(publisher, contractId);
     }
 
-    function test_unpublish_emit_ContractUnpublished() public {
-        string memory contractId = "MyContract";
+    // Deprecated
+    // function test_unpublish_emit_ContractUnpublished() public {
+    //     string memory contractId = "MyContract";
 
-        vm.prank(publisher);
-        byoc.publishContract(
-            publisher,
-            publishMetadataUri,
-            keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
-        );
+    //     vm.prank(publisher);
+    //     byoc.publishContract(
+    //         publisher,
+    //         publishMetadataUri,
+    //         keccak256(type(MockCustomContract).creationCode),
+    //         address(0),
+    //         contractId
+    //     );
 
-        vm.prank(publisher);
-        byoc.approveOperator(operator, true);
+    //     vm.prank(publisher);
+    //     byoc.approveOperator(operator, true);
 
-        vm.expectEmit(true, true, true, true);
-        emit ContractUnpublished(operator, publisher, contractId);
+    //     vm.expectEmit(true, true, true, true);
+    //     emit ContractUnpublished(operator, publisher, contractId);
 
-        vm.prank(operator);
-        byoc.unpublishContract(publisher, contractId);
-    }
+    //     vm.prank(operator);
+    //     byoc.unpublishContract(publisher, contractId);
+    // }
 }

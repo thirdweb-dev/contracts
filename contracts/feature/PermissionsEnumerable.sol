@@ -21,6 +21,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
             if (roleMembers[role].members[i] != address(0)) {
                 if (check == index) {
                     member = roleMembers[role].members[i];
+                    return member;
                 }
             } else {
                 check += 1;
@@ -38,18 +39,8 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
         }
     }
 
-    function grantRole(bytes32 role, address account) public override(IPermissions, Permissions) {
-        super.grantRole(role, account);
-        _addMember(role, account);
-    }
-
-    function revokeRole(bytes32 role, address account) public override(IPermissions, Permissions) {
-        super.revokeRole(role, account);
-        _removeMember(role, account);
-    }
-
-    function renounceRole(bytes32 role, address account) public override(IPermissions, Permissions) {
-        super.renounceRole(role, account);
+    function _revokeRole(bytes32 role, address account) internal override {
+        super._revokeRole(role, account);
         _removeMember(role, account);
     }
 

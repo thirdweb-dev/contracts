@@ -42,11 +42,13 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
         bool success;
         (success, signer) = verify(_req, _signature);
 
-        require(success, "Invalid request");
-        require(
-            _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
-            "Request expired"
-        );
+        if (!success) {
+            revert SignatureMintERC721__InvalidRequest();
+        }
+
+        if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
+            revert SignatureMintERC721__RequestExpired(block.timestamp);
+        }
 
         minted[_req.uid] = true;
     }

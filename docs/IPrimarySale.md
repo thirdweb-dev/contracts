@@ -4,7 +4,7 @@
 
 
 
-
+Thirdweb&#39;s `Primary` is a contract extension to be used with any base contract. It exposes functions for setting and reading  the recipient of primary sales, and lets the inheriting contract perform conditional logic that uses information about  primary sales, if desired.
 
 
 
@@ -62,6 +62,20 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 | Name | Type | Description |
 |---|---|---|
 | recipient `indexed` | address | undefined |
+
+
+
+## Errors
+
+### PrimarySale__NotAuthorized
+
+```solidity
+error PrimarySale__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set primary sales details.*
 
 
 
