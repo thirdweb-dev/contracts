@@ -226,7 +226,7 @@ contract PackTest is BaseTest {
         vm.startPrank(deployer);
         pack.revokeRole(keccak256("ASSET_ROLE"), address(0));
         for (uint256 i = 0; i < packContents.length; i += 1) {
-            if(!pack.hasRole(keccak256("ASSET_ROLE"), packContents[i].assetContract)) {
+            if (!pack.hasRole(keccak256("ASSET_ROLE"), packContents[i].assetContract)) {
                 pack.grantRole(keccak256("ASSET_ROLE"), packContents[i].assetContract);
             }
         }

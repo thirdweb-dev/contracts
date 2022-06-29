@@ -84,7 +84,7 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         assertEq(customContract.bytecodeHash, keccak256(type(MockCustomContract).creationCode));
         assertEq(customContract.implementation, address(0));
     }
-    
+
     // Deprecated
     // function test_publish_viaOperator() public {
     //     string memory contractId = "MyContract";
