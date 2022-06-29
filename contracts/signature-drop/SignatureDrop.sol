@@ -255,6 +255,7 @@ contract SignatureDrop is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
+        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToMint) {
             revert SignatureDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
         }

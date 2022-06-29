@@ -74,7 +74,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         _mintrequest.uid = bytes32(id);
 
         _signature = signMintRequest(_mintrequest, privateKey);
-        vm.startPrank(deployerSigner);
+        vm.startPrank(deployerSigner, deployerSigner);
 
         vm.warp(1000);
         erc20.approve(address(sigdrop), 1);
@@ -983,14 +983,14 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.prank(getActor(5));
+        vm.prank(getActor(5), getActor(5));
         vm.expectRevert(abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__InvalidQuantity.selector));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], true);
 
-        vm.prank(getActor(5));
+        vm.prank(getActor(5), getActor(5));
         vm.expectRevert(abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__InvalidQuantity.selector));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -1032,10 +1032,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
 
         // vm.prank(getActor(5), getActor(5));
-        vm.prank(receiver);
+        vm.prank(receiver, receiver);
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        vm.prank(address(4));
+        vm.prank(address(4), address(4));
         vm.expectRevert(abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__NotInWhitelist.selector));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
