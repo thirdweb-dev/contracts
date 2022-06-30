@@ -824,65 +824,65 @@ contract PackTest is BaseTest {
         assertEq(packUri, pack.uri(packId));
     }
 
-    function test_fuzz_state_openPack(
-        uint256 x,
-        uint128 y,
-        uint256 z
-    ) public {
-        // vm.assume(x == 1574 && y == 22 && z == 392);
-        (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits) = getTokensToPack(x);
-        if (tokensToPack.length == 0) {
-            return;
-        }
+    // function test_fuzz_state_openPack(
+    //     uint256 x,
+    //     uint128 y,
+    //     uint256 z
+    // ) public {
+    //     // vm.assume(x == 1574 && y == 22 && z == 392);
+    //     (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits) = getTokensToPack(x);
+    //     if (tokensToPack.length == 0) {
+    //         return;
+    //     }
 
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(0x123);
-        uint256 totalRewardUnits;
-        uint256 nativeTokenPacked;
+    //     uint256 packId = pack.nextTokenIdToMint();
+    //     address recipient = address(0x123);
+    //     uint256 totalRewardUnits;
+    //     uint256 nativeTokenPacked;
 
-        for (uint256 i = 0; i < tokensToPack.length; i += 1) {
-            totalRewardUnits += rewardUnits[i];
-            if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                nativeTokenPacked += tokensToPack[i].totalAmount;
-            }
-        }
-        vm.assume(y > 0 && totalRewardUnits % y == 0);
-        vm.deal(address(tokenOwner), nativeTokenPacked);
+    //     for (uint256 i = 0; i < tokensToPack.length; i += 1) {
+    //         totalRewardUnits += rewardUnits[i];
+    //         if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+    //             nativeTokenPacked += tokensToPack[i].totalAmount;
+    //         }
+    //     }
+    //     vm.assume(y > 0 && totalRewardUnits % y == 0);
+    //     vm.deal(address(tokenOwner), nativeTokenPacked);
 
-        vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack{ value: nativeTokenPacked }(
-            tokensToPack,
-            rewardUnits,
-            packUri,
-            0,
-            y,
-            recipient
-        );
-        console2.log("total supply: ", totalSupply);
-        console2.log("total reward units: ", totalRewardUnits);
+    //     vm.prank(address(tokenOwner));
+    //     (, uint256 totalSupply) = pack.createPack{ value: nativeTokenPacked }(
+    //         tokensToPack,
+    //         rewardUnits,
+    //         packUri,
+    //         0,
+    //         y,
+    //         recipient
+    //     );
+    //     console2.log("total supply: ", totalSupply);
+    //     console2.log("total reward units: ", totalRewardUnits);
 
-        vm.assume(z <= totalSupply);
-        vm.prank(recipient, recipient);
-        ITokenBundle.Token[] memory rewardsReceived = pack.openPack(packId, z);
-        console2.log("received reward units: ", rewardsReceived.length);
+    //     vm.assume(z <= totalSupply);
+    //     vm.prank(recipient, recipient);
+    //     ITokenBundle.Token[] memory rewardsReceived = pack.openPack(packId, z);
+    //     console2.log("received reward units: ", rewardsReceived.length);
 
-        assertEq(packUri, pack.uri(packId));
+    //     assertEq(packUri, pack.uri(packId));
 
-        (
-            uint256 nativeTokenAmount,
-            uint256 erc20Amount,
-            uint256[] memory erc1155Amounts,
-            uint256 erc721Amount
-        ) = checkBalances(rewardsReceived, recipient);
+    //     (
+    //         uint256 nativeTokenAmount,
+    //         uint256 erc20Amount,
+    //         uint256[] memory erc1155Amounts,
+    //         uint256 erc721Amount
+    //     ) = checkBalances(rewardsReceived, recipient);
 
-        assertEq(address(recipient).balance, nativeTokenAmount);
-        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
-        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
+    //     assertEq(address(recipient).balance, nativeTokenAmount);
+    //     assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
+    //     assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
 
-        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
-            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
-        }
-    }
+    //     for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
+    //         assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
+    //     }
+    // }
 
     // function test_fuzz_failing_state_openPack() public {
     //     // vm.assume(x == 1574 && y == 22 && z == 392);
