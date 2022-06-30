@@ -13,6 +13,14 @@ abstract contract Ownable is IOwnable {
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address public override owner;
 
+    /// @dev Reverts if caller is not the owner.
+    modifier onlyOwner() {
+        if (msg.sender != owner) {
+            revert Ownable__NotAuthorized();
+        }
+        _;
+    }
+
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external override {
         if (!_canSetOwner()) {
