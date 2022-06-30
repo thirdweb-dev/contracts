@@ -51,6 +51,7 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
     address internal deployerOfPublished;
 
     string internal publishMetadataUri = "ipfs://QmeXyz";
+    string internal compilerMetadataUri = "ipfs://QmeXyz";
 
     function setUp() public override {
         super.setUp();
@@ -68,10 +69,11 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         vm.prank(publisher);
         byoc.publishContract(
             publisher,
+            contractId,
             publishMetadataUri,
+            compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
+            address(0)
         );
 
         IContractPublisher.CustomContractInstance memory customContract = byoc.getPublishedContract(
@@ -120,10 +122,11 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         vm.prank(operator);
         byoc.publishContract(
             publisher,
+            contractId,
             publishMetadataUri,
+            compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
+            address(0)
         );
     }
 
@@ -138,10 +141,11 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         vm.prank(publisher);
         byoc.publishContract(
             publisher,
+            contractId,
             publishMetadataUri,
+            compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
+            address(0)
         );
     }
 
@@ -181,10 +185,11 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         vm.prank(publisher);
         byoc.publishContract(
             publisher,
+            contractId,
             publishMetadataUri,
+            compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
+            address(0)
         );
 
         vm.prank(publisher);
@@ -237,10 +242,11 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         vm.prank(publisher);
         byoc.publishContract(
             publisher,
+            contractId,
             publishMetadataUri,
+            compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
+            address(0)
         );
 
         vm.expectRevert("unapproved caller");
@@ -255,10 +261,11 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         vm.prank(publisher);
         byoc.publishContract(
             publisher,
+            contractId,
             publishMetadataUri,
+            compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
-            address(0),
-            contractId
+            address(0)
         );
 
         vm.prank(factoryAdmin);
