@@ -18,7 +18,7 @@ function owner() external view returns (address)
 
 
 
-*Owner of the contract (purpose: OpenSea compatibility)*
+*Returns the owner of the contract.*
 
 
 #### Returns

@@ -11,12 +11,12 @@ contract ThirdwebContract is Ownable {
     function tw_initializeOwner(address deployer) external {
         require(hasSetOwner == 0, "Owner already initialized");
         hasSetOwner = 1;
-        owner = deployer;
+        _setupOwner(deployer);
     }
 
     /// @dev Returns whether owner can be set
     function _canSetOwner() internal virtual override returns (bool) {
-        return msg.sender == owner;
+        return msg.sender == owner();
     }
 
     /// @dev Enable access to the original contract deployer in the constructor. If this function is called outside of a constructor, it will return address(0) instead.
