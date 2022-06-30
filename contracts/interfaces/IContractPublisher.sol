@@ -23,6 +23,11 @@ interface IContractPublisher {
         mapping(bytes32 => CustomContract) contracts;
     }
 
+    struct PublishedMetadataSet {
+        uint256 index;
+        mapping(uint256 => string) uris;
+    }
+
     /// @dev Emitted when the registry is paused.
     event Paused(bool isPaused);
 
@@ -118,5 +123,5 @@ interface IContractPublisher {
     function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
         external
         view
-        returns (string memory publishedMetadataUri);
+        returns (string[] memory publishedMetadataUris);
 }

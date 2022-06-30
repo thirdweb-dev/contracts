@@ -29,7 +29,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     /// @dev Mapping publisher address => profile uri
     mapping(address => string) private profileUriOfPublisher;
     /// @dev Mapping compilerMetadataUri => publishedMetadataUri
-    mapping(string => string) private compilerMetadataUriToPublishedMetadataUri;
+    mapping(string => PublishedMetadataSet) private compilerMetadataUriToPublishedMetadataUris;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
@@ -128,7 +128,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].total += 1;
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[index] = publishedContract;
 
-        compilerMetadataUriToPublishedMetadataUri[_compilerMetadataUri] = _publishMetadataUri;
+        uint256 metadataIndex = compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index;
+        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[index] = _publishMetadataUri;
+        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index = metadataIndex + 1;
 
         emit ContractPublished(_msgSender(), _publisher, publishedContract);
     }
@@ -163,9 +165,13 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
         public
         view
-        returns (string memory publishedMetadataUri)
+        returns (string[] memory publishedMetadataUris)
     {
-        publishedMetadataUri = compilerMetadataUriToPublishedMetadataUri[compilerMetadataUri];
+        uint256 length = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
+        publishedMetadataUris = new string[](length);
+        for (uint256 i = 0; i < length; i += 1) {
+            publishedMetadataUris[i] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[i];
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
