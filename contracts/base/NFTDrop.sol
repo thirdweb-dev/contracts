@@ -86,7 +86,6 @@ contract NFTDrop is
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
-    
 
     /// @dev Initiliazes the contract, like a constructor.
     constructor(
@@ -100,10 +99,7 @@ contract NFTDrop is
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
-    )
-        ERC2771Context(_trustedForwarders)
-        ERC721A(_name, _symbol)
-    {
+    ) ERC2771Context(_trustedForwarders) ERC721A(_name, _symbol) {
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
 
@@ -301,23 +297,11 @@ contract NFTDrop is
         return _msgSender();
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }
