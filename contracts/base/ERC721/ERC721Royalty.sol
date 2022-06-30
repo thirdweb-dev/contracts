@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import "./ERC721Base.sol";
 
-import "../feature/Royalty.sol";
+import "../../feature/Royalty.sol";
 
 contract ERC721Royalty is 
     ERC721Base,
@@ -18,7 +18,7 @@ contract ERC721Royalty is
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
 
-    function _canSetRoyaltyInfo() internal override view returns (bool) {
-        return msg.sender == owner();
+    function _canSetRoyaltyInfo() internal virtual override view returns (bool) {
+        return msg.sender == owner;
     }
 }

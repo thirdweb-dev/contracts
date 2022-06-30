@@ -1,34 +1,40 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0;
 
-import "./ERC721A.sol";
+import "./ERC721.sol";
 
-import "../feature/ContractMetadata.sol";
-import "../feature/Multicall.sol";
+import "../../feature/ContractMetadata.sol";
+import "../../feature/Multicall.sol";
+import "../../feature/Ownable.sol";
 
 // import "../eip/interface/IERC721Metadata.sol";
 
-contract ERC721ABase is 
-    ERC721A,
+contract ERC721Base is 
+    ERC721,
     ContractMetadata,
-    Multicall
+    Multicall,
+    Ownable
 {
     uint256 public nextTokenIdToMint;
     string public baseURI;
-    address private _owner;
+    // address private _owner;
 
     mapping(uint256 => string) private _tokenURIs;
 
-    constructor(string memory _name, string memory _symbol) ERC721A(_name, _symbol) {
-        _owner = msg.sender;
+    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) {
+        owner = msg.sender;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == _owner, "Not Owner");
+        require(msg.sender == owner, "Not Owner");
         _;
     }
 
-    function tokenURI(uint256 _tokenId) public virtual override view returns (string memory) {
+    // function owner() public view returns (address) {
+    //     return _owner;
+    // } 
+
+    function tokenURI(uint256 _tokenId) public virtual view returns (string memory) {
         require(ownerOf(_tokenId) != address(0), "Invalid Id");
 
         string memory _tokenURI = _tokenURIs[_tokenId];
@@ -53,15 +59,6 @@ contract ERC721ABase is
         _setTokenURI(_id, _tokenURI);
     }
 
-    function burn(uint256 _id) external virtual {
-        address tokenOwner = ownerOf(_id);
-
-        require(tokenOwner != address(0), "Invalid Id");
-        require(msg.sender == tokenOwner || isApprovedForAll[tokenOwner][msg.sender] || msg.sender == getApproved[_id], "NOT_AUTHORIZED");
-        
-        _burn(_id);
-    }
-
 
     function setBaseURI(string memory _baseURI) external virtual onlyOwner {
         // require(bytes(baseURI).length == 0, "Base URI already set");
@@ -73,7 +70,13 @@ contract ERC721ABase is
         _tokenURIs[tokenId] = _tokenURI;
     }
 
-    function _canSetContractURI() internal override returns (bool) {
-        return msg.sender == _owner;
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal virtual view override returns (bool) {
+        return msg.sender == owner;
+    }
+
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal virtual view override returns (bool) {
+        return msg.sender == owner;
     }
 }
