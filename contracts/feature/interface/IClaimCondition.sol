@@ -49,32 +49,4 @@ interface IClaimCondition {
         uint256 pricePerToken;
         address currency;
     }
-
-    /**
-     *  @notice The set of all claim conditions, at any given moment.
-     *  Claim Phase ID = [currentStartId, currentStartId + length - 1];
-     *
-     *  @param currentStartId           The uid for the first claim condition amongst the current set of
-     *                                  claim conditions. The uid for each next claim condition is one
-     *                                  more than the previous claim condition's uid.
-     *
-     *  @param count                    The total number of phases / claim conditions in the list
-     *                                  of claim conditions.
-     *
-     *  @param conditions                   The claim conditions at a given uid. Claim conditions
-     *                                  are ordered in an ascending order by their `startTimestamp`.
-     *
-     *  @param lastClaimTimestamp       Map from an account and uid for a claim condition, to the last timestamp
-     *                                  at which the account claimed tokens under that claim condition.
-     *
-     *  @param usedAllowlistSpot        Map from a claim condition uid to whether an address in an allowlist
-     *                                  has already claimed tokens i.e. used their place in the allowlist.
-     */
-    struct ClaimConditionList {
-        uint256 currentStartId;
-        uint256 count;
-        mapping(uint256 => ClaimCondition) conditions;
-        mapping(uint256 => mapping(address => uint256)) lastClaimTimestamp;
-        mapping(uint256 => TWBitMaps.BitMap) usedAllowlistSpot;
-    }
 }
