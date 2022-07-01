@@ -6,14 +6,15 @@ import "./ERC721.sol";
 import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
 import "../../feature/Ownable.sol";
+import "../../feature/Royalty.sol";
 
-contract ERC721Burnable is 
+contract ERC721RoyaltyURIAutoID is 
     ERC721,
     ContractMetadata,
     Multicall,
-    Ownable
+    Ownable,
+    Royalty
 {
-    uint256 public nextTokenIdToMint;
     string public baseURI;
 
     mapping(uint256 => string) private _tokenURIs;
@@ -21,11 +22,14 @@ contract ERC721Burnable is
     constructor(
         string memory _name, 
         string memory _symbol,
-        string memory _contractURI
+        string memory _contractURI,
+        address _royaltyRecipient,
+        uint128 _royaltyBps
     ) ERC721(_name, _symbol) 
     {
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
 
     function tokenURI(uint256 _tokenId) public virtual view returns (string memory) {
@@ -45,21 +49,9 @@ contract ERC721Burnable is
         return base;
     }
 
-    function mint(address _to, string memory _tokenURI, bytes memory _data) external virtual onlyOwner {
-        uint256 _id = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
-
-        _safeMint(_to, _id, _data);
-        _setTokenURI(_id, _tokenURI);
-    }
-
-    function burn(uint256 _id) external virtual {
-        address tokenOwner = ownerOf(_id);
-
-        require(tokenOwner != address(0), "Invalid Id");
-        require(msg.sender == tokenOwner || isApprovedForAll[tokenOwner][msg.sender] || msg.sender == getApproved[_id], "NOT_AUTHORIZED");
-        
-        _burn(_id);
+    function mint(address _to, uint256 _tokenId, string memory _tokenURI, bytes memory _data) external virtual onlyOwner {
+        _safeMint(_to, _tokenId, _data);
+        _setTokenURI(_tokenId, _tokenURI);
     }
 
     function setBaseURI(string memory _baseURI) external virtual onlyOwner {
@@ -81,5 +73,9 @@ contract ERC721Burnable is
     function _canSetOwner() internal virtual view override returns (bool) {
         return msg.sender == owner();
     }
-}
 
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal virtual override view returns (bool) {
+        return msg.sender == owner();
+    }
+}

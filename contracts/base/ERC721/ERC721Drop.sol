@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "./ERC721.sol";
+
+import "../../lib/TWStrings.sol";
 
 import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
@@ -18,7 +19,7 @@ contract ERC721Drop is
     Royalty,
     DropSinglePhase
 {
-    using Strings for uint256;
+    using TWStrings for uint256;
 
     uint256 public nextTokenIdToMint;
 

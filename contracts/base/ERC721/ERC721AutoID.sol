@@ -9,7 +9,7 @@ import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
 import "../../feature/Ownable.sol";
 
-contract ERC721Base is 
+contract ERC721AutoID is 
     ERC721,
     ContractMetadata,
     Multicall,
@@ -17,6 +17,7 @@ contract ERC721Base is
 {
     using TWStrings for uint256;
 
+    uint256 public nextTokenIdToMint;
     string public baseURI;
 
     constructor(
@@ -31,13 +32,16 @@ contract ERC721Base is
 
     function tokenURI(uint256 _tokenId) public view virtual returns (string memory) {
         require(ownerOf(_tokenId) != address(0), "Invalid Id");
-        
+
         string memory _baseURI = baseURI;
         return bytes(_baseURI).length > 0 ? string(abi.encodePacked(_baseURI, _tokenId.toString())) : "";
     }
 
-    function mint(address _to, uint256 _tokenId, bytes memory _data) external virtual onlyOwner {
-        _safeMint(_to, _tokenId, _data);
+    function mint(address _to, bytes memory _data) external virtual onlyOwner {
+        uint256 _id = nextTokenIdToMint;
+        nextTokenIdToMint += 1;
+
+        _safeMint(_to, _id, _data);
     }
 
     function setBaseURI(string memory _baseURI) external virtual onlyOwner {
