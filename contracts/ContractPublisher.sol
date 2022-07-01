@@ -17,9 +17,6 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev The global Id for publicly published contracts.
-    uint256 public nextPublicId = 1;
-
     /// @dev Whether the registry is paused.
     bool public isPaused;
 
@@ -27,25 +24,20 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                                 Mappings
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     *  @dev Mapping from publisher address => operator address => whether publisher has approved operator
-     *       to publish / unpublish contracts on their behalf.
-     */
-    mapping(address => mapping(address => bool)) public isApprovedByPublisher;
-
-    /// @dev Mapping from public Id => publicly published contract.
-    mapping(uint256 => PublicContract) private publicContracts;
-
     /// @dev Mapping from publisher address => set of published contracts.
     mapping(address => CustomContractSet) private contractsOfPublisher;
+    /// @dev Mapping publisher address => profile uri
+    mapping(address => string) private profileUriOfPublisher;
+    /// @dev Mapping compilerMetadataUri => publishedMetadataUri
+    mapping(string => PublishedMetadataSet) private compilerMetadataUriToPublishedMetadataUris;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + modifiers
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Checks whether caller is publisher or approved by publisher.
-    modifier onlyApprovedOrPublisher(address _publisher) {
-        require(_msgSender() == _publisher || isApprovedByPublisher[_publisher][_msgSender()], "unapproved caller");
+    /// @dev Checks whether caller is publisher TODO enable external approvals
+    modifier onlyPublisher(address _publisher) {
+        require(_msgSender() == _publisher, "unapproved caller");
 
         _;
     }
@@ -64,29 +56,6 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     /*///////////////////////////////////////////////////////////////
                             Getter logic
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns the latest version of all contracts published by a publisher.
-    function getAllPublicPublishedContracts() external view returns (CustomContractInstance[] memory published) {
-        uint256 net;
-
-        for (uint256 i = 0; i < nextPublicId; i += 1) {
-            PublicContract memory publicContract = publicContracts[i];
-            if (publicContract.publisher != address(0)) {
-                net += 1;
-            }
-        }
-
-        published = new CustomContractInstance[](net);
-
-        for (uint256 i = 0; i < net; i += 1) {
-            PublicContract memory publicContract = publicContracts[i];
-            if (publicContract.publisher != address(0)) {
-                published[i] = contractsOfPublisher[publicContract.publisher]
-                    .contracts[keccak256(bytes(publicContract.contractId))]
-                    .latest;
-            }
-        }
-    }
 
     /// @notice Returns the latest version of all contracts published by a publisher.
     function getAllPublishedContracts(address _publisher)
@@ -129,30 +98,19 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         published = contractsOfPublisher[_publisher].contracts[keccak256(bytes(_contractId))].latest;
     }
 
-    /// @notice Returns the public id of a published contract, if it is public.
-    function getPublicId(address _publisher, string memory _contractId) external view returns (uint256 publicId) {
-        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
-        publicId = contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId;
-    }
-
     /*///////////////////////////////////////////////////////////////
                             Publish logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Lets a publisher (caller) approve an operator to publish / unpublish contracts on their behalf.
-    function approveOperator(address _operator, bool _toApprove) external {
-        isApprovedByPublisher[_msgSender()][_operator] = _toApprove;
-        emit Approved(_msgSender(), _operator, _toApprove);
-    }
-
     /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
     function publishContract(
         address _publisher,
+        string memory _contractId,
         string memory _publishMetadataUri,
+        string memory _compilerMetadataUri,
         bytes32 _bytecodeHash,
-        address _implementation,
-        string memory _contractId
-    ) external onlyApprovedOrPublisher(_publisher) onlyUnpausedOrAdmin {
+        address _implementation
+    ) external onlyPublisher(_publisher) onlyUnpausedOrAdmin {
         CustomContractInstance memory publishedContract = CustomContractInstance({
             contractId: _contractId,
             publishTimestamp: block.timestamp,
@@ -168,8 +126,11 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
 
         uint256 index = contractsOfPublisher[_publisher].contracts[contractIdInBytes].total;
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].total += 1;
-
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[index] = publishedContract;
+
+        uint256 metadataIndex = compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index;
+        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[index] = _publishMetadataUri;
+        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index = metadataIndex + 1;
 
         emit ContractPublished(_msgSender(), _publisher, publishedContract);
     }
@@ -177,7 +138,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     /// @notice Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
     function unpublishContract(address _publisher, string memory _contractId)
         external
-        onlyApprovedOrPublisher(_publisher)
+        onlyPublisher(_publisher)
         onlyUnpausedOrAdmin
     {
         bytes32 contractIdInBytes = keccak256(bytes(_contractId));
@@ -190,31 +151,27 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         emit ContractUnpublished(_msgSender(), _publisher, _contractId);
     }
 
-    /// @notice Lets an account add a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
-    function addToPublicList(address _publisher, string memory _contractId) external {
-        uint256 publicId = nextPublicId;
-        nextPublicId += 1;
-
-        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
-
-        PublicContract memory publicContract = PublicContract({ publisher: _publisher, contractId: _contractId });
-
-        contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId = publicId;
-        publicContracts[publicId] = publicContract;
-
-        emit AddedContractToPublicList(_publisher, _contractId);
+    /// @notice Lets an account set its own publisher profile uri
+    function setPublisherProfileUri(address publisher, string memory uri) public onlyPublisher(publisher) {
+        profileUriOfPublisher[publisher] = uri;
     }
 
-    /// @notice Lets an account remove a published contract (and all its versions). The account must be approved by the publisher, or be the publisher.
-    function removeFromPublicList(address _publisher, string memory _contractId) external {
-        bytes32 contractIdInBytes = keccak256(bytes(_contractId));
-        uint256 publicId = contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId;
+    // @notice Get a publisher profile uri
+    function getPublisherProfileUri(address publisher) public view returns (string memory uri) {
+        uri = profileUriOfPublisher[publisher];
+    }
 
-        delete contractsOfPublisher[_publisher].contracts[contractIdInBytes].publicId;
-
-        delete publicContracts[publicId];
-
-        emit RemovedContractToPublicList(_publisher, _contractId);
+    /// @notice Retrieve the published metadata URI from a compiler metadata URI
+    function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
+        public
+        view
+        returns (string[] memory publishedMetadataUris)
+    {
+        uint256 length = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
+        publishedMetadataUris = new string[](length);
+        for (uint256 i = 0; i < length; i += 1) {
+            publishedMetadataUris[i] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[i];
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

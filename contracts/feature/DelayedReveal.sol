@@ -3,6 +3,11 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDelayedReveal.sol";
 
+/**
+ *  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
+ *  'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
+ */
+
 abstract contract DelayedReveal is IDelayedReveal {
     /// @dev Mapping from id of a batch of tokens => to encrypted base URI for the respective batch of tokens.
     mapping(uint256 => bytes) public encryptedBaseURI;
@@ -13,14 +18,13 @@ abstract contract DelayedReveal is IDelayedReveal {
     }
 
     /// @dev Returns the decrypted i.e. revealed URI for a batch of tokens.
-    function getRevealURI(uint256 _batchId, bytes calldata _key) public returns (string memory revealedURI) {
+    function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
         bytes memory encryptedURI = encryptedBaseURI[_batchId];
-        require(encryptedURI.length != 0, "nothing to reveal.");
+        if (encryptedURI.length == 0) {
+            revert DelayedReveal__NothingToReveal(_batchId);
+        }
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
-
-        // yash - added this, and removed view mutability
-        delete encryptedBaseURI[_batchId];
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain

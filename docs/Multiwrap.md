@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### approve
 
 ```solidity
@@ -344,7 +361,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
 
 #### Parameters
 
@@ -607,7 +624,7 @@ function owner() external view returns (address)
 
 
 
-
+*Returns the owner of the contract.*
 
 
 #### Returns
@@ -646,7 +663,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
 
 #### Parameters
 
@@ -663,7 +680,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-
+*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
 
 #### Parameters
 
@@ -979,7 +996,7 @@ event ContractURIUpdated(string prevURI, string newURI)
 ### DefaultRoyalty
 
 ```solidity
-event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 ```
 
 
@@ -990,13 +1007,13 @@ event DefaultRoyalty(address newRoyaltyRecipient, uint256 newRoyaltyBps)
 
 | Name | Type | Description |
 |---|---|---|
-| newRoyaltyRecipient  | address | undefined |
+| newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
 ### OwnerUpdated
 
 ```solidity
-event OwnerUpdated(address prevOwner, address newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -1007,8 +1024,8 @@ event OwnerUpdated(address prevOwner, address newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner  | address | undefined |
-| newOwner  | address | undefined |
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### RoleAdminChanged
 
@@ -1067,7 +1084,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### RoyaltyForToken
 
 ```solidity
-event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256 royaltyBps)
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
 ```
 
 
@@ -1079,7 +1096,7 @@ event RoyaltyForToken(uint256 indexed tokenId, address royaltyRecipient, uint256
 | Name | Type | Description |
 |---|---|---|
 | tokenId `indexed` | uint256 | undefined |
-| royaltyRecipient  | address | undefined |
+| royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
 ### TokensUnwrapped
@@ -1136,6 +1153,91 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
+
+
+
+## Errors
+
+### ContractMetadata__NotAuthorized
+
+```solidity
+error ContractMetadata__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set the contract metadata URI.*
+
+
+### Ownable__NotAuthorized
+
+```solidity
+error Ownable__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set the owner.*
+
+
+### Permissions__CanOnlyGrantToNonHolders
+
+```solidity
+error Permissions__CanOnlyGrantToNonHolders(address account)
+```
+
+Emitted when specified account already has the role.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+### Permissions__CanOnlyRenounceForSelf
+
+```solidity
+error Permissions__CanOnlyRenounceForSelf(address caller, address account)
+```
+
+Emitted when calling address is different from the specified account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| caller | address | undefined |
+| account | address | undefined |
+
+### Royalty__ExceedsMaxBps
+
+```solidity
+error Royalty__ExceedsMaxBps(uint256 royaltyBps)
+```
+
+Emitted when the given bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| royaltyBps | uint256 | undefined |
+
+### Royalty__NotAuthorized
+
+```solidity
+error Royalty__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 

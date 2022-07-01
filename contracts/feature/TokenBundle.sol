@@ -22,8 +22,22 @@ abstract contract TokenBundle is ITokenBundle {
         return bundle[_bundleId].uri;
     }
 
-    /// @dev Lets the calling contract create/update a bundle, by passing in a list of tokens and a unique id.
-    function _setBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
+    /// @dev Lets the calling contract create a bundle, by passing in a list of tokens and a unique id.
+    function _createBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
+        uint256 targetCount = _tokensToBind.length;
+
+        require(targetCount > 0, "TokenBundle: no tokens to bind.");
+        require(bundle[_bundleId].count == 0, "TokenBundle: existent at bundleId");
+
+        for (uint256 i = 0; i < targetCount; i += 1) {
+            bundle[_bundleId].tokens[i] = _tokensToBind[i];
+        }
+
+        bundle[_bundleId].count = targetCount;
+    }
+
+    /// @dev Lets the calling contract update a bundle, by passing in a list of tokens and a unique id.
+    function _updateBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
         require(_tokensToBind.length > 0, "TokenBundle: no tokens to bind.");
 
         uint256 currentCount = bundle[_bundleId].count;

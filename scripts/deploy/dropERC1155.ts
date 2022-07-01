@@ -6,20 +6,8 @@ import { TWFactory, DropERC1155 } from "typechain";
 
 async function main() {
   const [caller]: SignerWithAddress[] = await ethers.getSigners();
-
-  const twFactoryAddress: string = ethers.constants.AddressZero; // replace
-
-  const twFactory: TWFactory = await ethers.getContractAt("TWFactory", twFactoryAddress);
-
-  const hasFactoryRole = await twFactory.hasRole(
-    ethers.utils.solidityKeccak256(["string"], ["FACTORY_ROLE"]),
-    caller.address,
-  );
-  if (!hasFactoryRole) {
-    throw new Error("Caller does not have FACTORY_ROLE on factory");
-  }
+  
   const dropERC1155: DropERC1155 = await ethers.getContractFactory("DropERC1155").then(f => f.deploy());
-
   console.log(
     "Deploying DropERC1155 \ntransaction: ",
     dropERC1155.deployTransaction.hash,
@@ -28,12 +16,6 @@ async function main() {
   );
 
   await dropERC1155.deployTransaction.wait();
-
-  console.log("\n");
-
-  const addImplementationTx = await twFactory.addImplementation(dropERC1155.address);
-  console.log("Adding DropERC1155 implementation to TWFactory: ", addImplementationTx.hash);
-  await addImplementationTx.wait();
 
   console.log("\n");
 

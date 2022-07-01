@@ -13,6 +13,8 @@ contract SubExploitContract is ERC721Holder, ERC1155Holder {
 
     // using Strings for uint256;
 
+    // using Strings for uint256;
+
     constructor(address _drop) {
         drop = DropERC721(_drop);
         master = payable(msg.sender);

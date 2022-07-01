@@ -4,7 +4,7 @@
 
 
 
-
+Thirdweb&#39;s `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of  &#39;delayed-reveal&#39; NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
 
 
 
@@ -16,7 +16,7 @@
 function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
 ```
 
-
+Performs XOR encryption/decryption.
 
 
 
@@ -24,8 +24,8 @@ function encryptDecrypt(bytes data, bytes key) external pure returns (bytes resu
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes | undefined
-| key | bytes | undefined
+| data | bytes | The data to encrypt. In the case of delayed-reveal NFTs, this is the &quot;revealed&quot; state              base URI of the relevant batch of NFTs.
+| key | bytes | The key with which to encrypt data
 
 #### Returns
 
@@ -39,7 +39,7 @@ function encryptDecrypt(bytes data, bytes key) external pure returns (bytes resu
 function reveal(uint256 identifier, bytes key) external nonpayable returns (string revealedURI)
 ```
 
-
+Reveals a batch of delayed reveal NFTs.
 
 
 
@@ -47,8 +47,8 @@ function reveal(uint256 identifier, bytes key) external nonpayable returns (stri
 
 | Name | Type | Description |
 |---|---|---|
-| identifier | uint256 | undefined
-| key | bytes | undefined
+| identifier | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
+| key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
 
 #### Returns
 
@@ -57,5 +57,24 @@ function reveal(uint256 identifier, bytes key) external nonpayable returns (stri
 | revealedURI | string | undefined
 
 
+
+
+## Errors
+
+### DelayedReveal__NothingToReveal
+
+```solidity
+error DelayedReveal__NothingToReveal(uint256 batchId)
+```
+
+Emitted when encrypted URI for a given batch is empty.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| batchId | uint256 | undefined |
 
 

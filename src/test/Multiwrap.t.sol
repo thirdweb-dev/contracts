@@ -5,6 +5,7 @@ import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
 
 // Test imports
+import "contracts/lib/TWStrings.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
@@ -13,7 +14,7 @@ contract MultiwrapReentrant is MockERC20, ITokenBundle {
     Multiwrap internal multiwrap;
     uint256 internal tokenIdOfWrapped = 0;
 
-    constructor(address _multiwrap) {
+    constructor(address payable _multiwrap) {
         multiwrap = Multiwrap(_multiwrap);
     }
 
@@ -57,7 +58,7 @@ contract MultiwrapTest is BaseTest {
         super.setUp();
 
         // Get target contract
-        multiwrap = Multiwrap(getContract("Multiwrap"));
+        multiwrap = Multiwrap(payable(getContract("Multiwrap")));
 
         // Set test vars
         tokenOwner = getWallet();
@@ -101,6 +102,50 @@ contract MultiwrapTest is BaseTest {
         // Grant MINTER_ROLE / requisite wrapping permissions to `tokenOwer`
         vm.prank(deployer);
         multiwrap.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: misc.
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  note: Tests whether contract revert when a non-holder renounces a role.
+     */
+    function test_revert_nonHolder_renounceRole() public {
+        address caller = address(0x123);
+        bytes32 role = keccak256("MINTER_ROLE");
+
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(caller), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+
+        multiwrap.renounceRole(role, caller);
+    }
+
+    /**
+     *  note: Tests whether contract revert when a role admin revokes a role for a non-holder.
+     */
+    function test_revert_revokeRoleForNonHolder() public {
+        address target = address(0x123);
+        bytes32 role = keccak256("MINTER_ROLE");
+
+        vm.prank(deployer);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(target), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+
+        multiwrap.revokeRole(role, target);
     }
 
     /**
@@ -263,7 +308,7 @@ contract MultiwrapTest is BaseTest {
      *  note: Testing revert condition; token owner calls `wrap` to wrap owned tokens.
      */
     function test_revert_wrap_reentrancy() public {
-        MultiwrapReentrant reentrant = new MultiwrapReentrant(address(multiwrap));
+        MultiwrapReentrant reentrant = new MultiwrapReentrant(payable(address(multiwrap)));
         ITokenBundle.Token[] memory reentrantContentToWrap = new ITokenBundle.Token[](1);
 
         reentrant.mint(address(tokenOwner), 10 ether);
@@ -354,7 +399,7 @@ contract MultiwrapTest is BaseTest {
     /**
      *  note: Testing revert condition; token owner calls `wrap` to wrap native tokens, but with multiple instances in `tokensToWrap` array.
      */
-    function test_revert_wrap_nativeTokens_insufficientValue_multipleInstances() public {
+    function test_balances_wrap_nativeTokens_multipleInstances() public {
         address recipient = address(0x123);
 
         ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](2);
@@ -374,8 +419,9 @@ contract MultiwrapTest is BaseTest {
         });
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("msg.value != amount");
         multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+
+        assertEq(weth.balanceOf(address(multiwrap)), 10 ether);
     }
 
     /**
@@ -466,6 +512,33 @@ contract MultiwrapTest is BaseTest {
         multiwrap.wrap(emptyContent, uriForWrappedToken, recipient);
     }
 
+    function test_revert_wrap_nativeTokens_insufficientValueProvided_multipleInstances() public {
+        address recipient = address(0x123);
+
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](2);
+
+        vm.deal(address(tokenOwner), 100 ether);
+        vm.deal(address(multiwrap), 10 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+        nativeTokenContentToWrap[1] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+
+        vm.prank(address(tokenOwner));
+        vm.expectRevert("msg.value != amount");
+        multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+
+        assertEq(address(multiwrap).balance, 10 ether);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `unwrap`
     //////////////////////////////////////////////////////////////*/
@@ -494,6 +567,38 @@ contract MultiwrapTest is BaseTest {
 
         ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
+    }
+
+    /**
+     *  note: Testing state changes; wrapped token owner calls `unwrap` to unwrap native tokens.
+     */
+    function test_state_unwrap_nativeTokens() public {
+        // ===== setup: wrap tokens =====
+        uint256 expectedIdForWrappedToken = multiwrap.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        ITokenBundle.Token[] memory nativeTokenContentToWrap = new ITokenBundle.Token[](1);
+
+        vm.deal(address(tokenOwner), 100 ether);
+        nativeTokenContentToWrap[0] = ITokenBundle.Token({
+            assetContract: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 10 ether
+        });
+
+        vm.prank(address(tokenOwner));
+        multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
+
+        // ===== target test content =====
+
+        assertEq(address(recipient).balance, 0);
+
+        vm.prank(recipient);
+        // it fails here and it shouldn't
+        multiwrap.unwrap(expectedIdForWrappedToken, recipient);
+
+        assertEq(address(recipient).balance, 10 ether);
     }
 
     /**
@@ -592,7 +697,7 @@ contract MultiwrapTest is BaseTest {
         // ===== target test content =====
 
         vm.prank(recipient);
-        vm.expectRevert("Multiwrap: wrapped NFT DNE.");
+        vm.expectRevert("wrapped NFT DNE.");
         multiwrap.unwrap(expectedIdForWrappedToken + 1, recipient);
     }
 
@@ -607,7 +712,7 @@ contract MultiwrapTest is BaseTest {
         // ===== target test content =====
 
         vm.prank(address(0x12));
-        vm.expectRevert("Multiwrap: caller not approved for unwrapping.");
+        vm.expectRevert("caller not approved for unwrapping.");
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 
@@ -625,7 +730,7 @@ contract MultiwrapTest is BaseTest {
         multiwrap.transferFrom(recipient, address(0x12), 0);
 
         vm.prank(recipient);
-        vm.expectRevert("Multiwrap: caller not approved for unwrapping.");
+        vm.expectRevert("caller not approved for unwrapping.");
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 

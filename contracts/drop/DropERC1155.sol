@@ -597,6 +597,12 @@ contract DropERC1155 is
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 
+    /// @dev Lets a contract admin set the recipient for all primary sales.
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
+    }
+
     /// @dev Lets a contract admin update the default royalty recipient and bps.
     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
         external

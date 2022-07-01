@@ -892,7 +892,7 @@ event NewSale(uint256 indexed listingId, address indexed assetContract, address 
 ### PlatformFeeInfoUpdated
 
 ```solidity
-event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBps)
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
 ```
 
 
@@ -903,7 +903,7 @@ event PlatformFeeInfoUpdated(address platformFeeRecipient, uint256 platformFeeBp
 
 | Name | Type | Description |
 |---|---|---|
-| platformFeeRecipient  | address | undefined |
+| platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
 
 ### RoleAdminChanged
@@ -959,6 +959,36 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | role `indexed` | bytes32 | undefined |
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
+
+
+
+## Errors
+
+### PlatformFee__ExceedsMaxBps
+
+```solidity
+error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps)
+```
+
+Emitted when given platform-fee bps exceeds max bps.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeBps | uint256 | undefined |
+
+### PlatformFee__NotAuthorized
+
+```solidity
+error PlatformFee__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set platform fee details.*
 
 
 
