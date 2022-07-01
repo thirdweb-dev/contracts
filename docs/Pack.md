@@ -415,7 +415,7 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 
 
 
-*Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions      do not apply at the time of calling this function.*
+
 
 #### Parameters
 
@@ -661,7 +661,7 @@ function owner() external view returns (address)
 
 
 
-
+*Returns the owner of the contract.*
 
 
 #### Returns

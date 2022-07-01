@@ -11,7 +11,20 @@ import "./interface/IOwnable.sol";
 
 abstract contract Ownable is IOwnable {
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address public override owner;
+    address private _owner;
+
+    /// @dev Reverts if caller is not the owner.
+    modifier onlyOwner() {
+        if (msg.sender != _owner) {
+            revert Ownable__NotAuthorized();
+        }
+        _;
+    }
+
+    /// @dev Returns the owner of the contract.
+    function owner() public view returns (address) {
+        return _owner;
+    }
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external override {
@@ -23,8 +36,8 @@ abstract contract Ownable is IOwnable {
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function _setupOwner(address _newOwner) internal {
-        address _prevOwner = owner;
-        owner = _newOwner;
+        address _prevOwner = _owner;
+        _owner = _newOwner;
 
         emit OwnerUpdated(_prevOwner, _newOwner);
     }
