@@ -9,6 +9,7 @@ import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
 import "../../feature/Ownable.sol";
 import "../../feature/Royalty.sol";
+import "../../feature/LazyMint.sol";
 import "../../feature/DropSinglePhase.sol";
 
 contract ERC721Drop is 
@@ -17,6 +18,7 @@ contract ERC721Drop is
     Multicall,
     Ownable,
     Royalty,
+    LazyMint,
     DropSinglePhase
 {
     using TWStrings for uint256;
@@ -34,11 +36,6 @@ contract ERC721Drop is
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not Owner");
-        _;
     }
 
     function tokenURI(uint256 _tokenId) public virtual view returns (string memory) {
@@ -83,21 +80,21 @@ contract ERC721Drop is
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal virtual view override returns (bool) {
-        return msg.sender == owner;
+        return msg.sender == owner();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal virtual view override returns (bool) {
-        return msg.sender == owner;
+        return msg.sender == owner();
     }
 
     /// @dev Returns whether platform fee info can be set in the given execution context.
     function _canSetClaimConditions() internal virtual override view returns (bool) {
-        return msg.sender == owner;
+        return msg.sender == owner();
     }
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal virtual override view returns (bool) {
-        return msg.sender == owner;
+        return msg.sender == owner();
     }
 }
