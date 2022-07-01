@@ -661,7 +661,7 @@ function owner() external view returns (address)
 
 
 
-
+*Returns the owner of the contract.*
 
 
 #### Returns
