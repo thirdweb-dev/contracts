@@ -13,6 +13,8 @@ async function main() {
     dropERC20.address,
   );
 
+  await dropERC20.deployTransaction.wait();
+
   console.log("\n");
 
   console.log("Verifying contract.");
