@@ -1,4 +1,4 @@
-# NFTDrop
+# ERC721Drop
 
 
 
@@ -325,24 +325,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee recipient and bps.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
 ### getRevealURI
 
 ```solidity
@@ -504,7 +486,7 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 
 
 
-*Returns `true` if  either (1) `account` has been granted `role`, or (2) the relevant role restrictions      do not apply at the time of calling this function.*
+
 
 #### Parameters
 
@@ -557,28 +539,6 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _batchId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### isTrustedForwarder
-
-```solidity
-function isTrustedForwarder(address forwarder) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| forwarder | address | undefined
 
 #### Returns
 
@@ -674,7 +634,7 @@ function owner() external view returns (address)
 
 
 
-
+*Returns the owner of the contract.*
 
 
 #### Returns
@@ -904,23 +864,6 @@ function setOwner(address _newOwner) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _newOwner | address | undefined
-
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
-
-
-
-*Lets a contract admin update the platform fee recipient and bps*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
 
 ### setPrimarySaleRecipient
 
@@ -1206,23 +1149,6 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 |---|---|---|
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient `indexed` | address | undefined |
-| platformFeeBps  | uint256 | undefined |
 
 ### PrimarySaleRecipientUpdated
 
@@ -1794,33 +1720,6 @@ Emitted when calling address is different from the specified account.
 |---|---|---|
 | caller | address | undefined |
 | account | address | undefined |
-
-### PlatformFee__ExceedsMaxBps
-
-```solidity
-error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps)
-```
-
-Emitted when given platform-fee bps exceeds max bps.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeBps | uint256 | undefined |
-
-### PlatformFee__NotAuthorized
-
-```solidity
-error PlatformFee__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set platform fee details.*
-
 
 ### PrimarySale__NotAuthorized
 

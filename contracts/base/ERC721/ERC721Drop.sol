@@ -11,24 +11,23 @@ import "erc721a/contracts/ERC721A.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../openzeppelin-presets/metatx/ERC2771Context.sol";
-import "../lib/CurrencyTransferLib.sol";
+import "../../openzeppelin-presets/metatx/ERC2771Context.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/ContractMetadata.sol";
-import "../feature/PlatformFee.sol";
-import "../feature/Royalty.sol";
-import "../feature/PrimarySale.sol";
-import "../feature/Ownable.sol";
-import "../feature/DelayedReveal.sol";
-import "../feature/LazyMint.sol";
-import "../feature/PermissionsEnumerable.sol";
-import "../feature/Drop.sol";
+import "../../feature/ContractMetadata.sol";
+import "../../feature/PlatformFee.sol";
+import "../../feature/Royalty.sol";
+import "../../feature/PrimarySale.sol";
+import "../../feature/Ownable.sol";
+import "../../feature/DelayedReveal.sol";
+import "../../feature/LazyMint.sol";
+import "../../feature/PermissionsEnumerable.sol";
+import "../../feature/Drop.sol";
 
-contract NFTDrop is
+contract ERC721Drop is
     ContractMetadata,
-    PlatformFee,
     Royalty,
     PrimarySale,
     Ownable,
@@ -36,7 +35,6 @@ contract NFTDrop is
     LazyMint,
     PermissionsEnumerable,
     Drop,
-    ERC2771Context,
     Multicall,
     ERC721A
 {
@@ -93,13 +91,10 @@ contract NFTDrop is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] memory _trustedForwarders,
         address _saleRecipient,
         address _royaltyRecipient,
-        uint128 _royaltyBps,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
-    ) ERC2771Context(_trustedForwarders) ERC721A(_name, _symbol) {
+        uint128 _royaltyBps
+    ) ERC721A(_name, _symbol) {
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
 
@@ -108,7 +103,6 @@ contract NFTDrop is
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
 
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
     }
@@ -190,7 +184,7 @@ contract NFTDrop is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
-        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
+        require(msg.sender == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToMint) {
             revert NFTDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
         }
@@ -206,10 +200,7 @@ contract NFTDrop is
             return;
         }
 
-        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
@@ -217,12 +208,11 @@ contract NFTDrop is
             }
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(
             _currency,
-            _msgSender(),
+            msg.sender,
             primarySaleRecipient(),
-            totalPrice - platformFees
+            totalPrice
         );
     }
 
@@ -236,34 +226,29 @@ contract NFTDrop is
         _safeMint(_to, _quantityBeingClaimed);
     }
 
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
     function _canSetOwner() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
     function _canSetClaimConditions() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -294,14 +279,6 @@ contract NFTDrop is
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {
-        return _msgSender();
-    }
-
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
-    }
-
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+        return msg.sender;
     }
 }
