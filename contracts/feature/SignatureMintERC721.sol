@@ -27,11 +27,11 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         returns (bool success, address signer)
     {
         signer = _recoverAddress(_req, _signature);
-        success = !minted[_req.uid] && _isAuthorizedSigner(signer);
+        success = !minted[_req.uid] && _canSignMintRequest(signer);
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _isAuthorizedSigner(address _signer) internal view virtual returns (bool);
+    function _canSignMintRequest(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a mint request and marks the request as minted.
     function _processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address signer) {
