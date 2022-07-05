@@ -1,26 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721.sol";
+import "./ERC721Base.sol";
 
-import "../../feature/ContractMetadata.sol";
-import "../../feature/Multicall.sol";
-import "../../feature/Ownable.sol";
-import "../../feature/Royalty.sol";
+import "../../feature/PrimarySale.sol";
+import "../../feature/PermissionsEnumerable.sol";
 import "../../feature/SignatureMintERC721.sol";
 
-contract ERC721Base is 
-    ERC721,
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    Royalty,
+import "../../lib/CurrencyTransferLib.sol";
+
+contract ERC721SignatureMint is 
+    ERC721Base,
+    PrimarySale,
+    PermissionsEnumerable,
     SignatureMintERC721
 {
-    uint256 public nextTokenIdToMint;
-    string public baseURI;
-
-    mapping(uint256 => string) private _tokenURIs;
+    /*//////////////////////////////////////////////////////////////
+                            Constructor
+    //////////////////////////////////////////////////////////////*/
 
     constructor(
         string memory _name, 
@@ -28,49 +25,29 @@ contract ERC721Base is
         string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721(_name, _symbol) 
-    {
-        _setupContractURI(_contractURI);
-        _setupOwner(msg.sender);
-        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-    }
+    )
+        ERC721Base(
+            _name,
+            _symbol,
+            contractURI,
+            _royaltyRecipient,
+            _royaltyBps
+        ) 
+    {}
 
-    function tokenURI(uint256 _tokenId) public virtual view returns (string memory) {
-        require(ownerOf(_tokenId) != address(0), "Invalid Id");
+    /*//////////////////////////////////////////////////////////////
+                        Signature minting logic
+    //////////////////////////////////////////////////////////////*/
 
-        string memory _tokenURI = _tokenURIs[_tokenId];
-        string memory base = baseURI;
-
-        if (bytes(base).length == 0) {
-            return _tokenURI;
-        }
-
-        if (bytes(_tokenURI).length > 0) {
-            return string(abi.encodePacked(base, _tokenURI));
-        }
-
-        return base;
-    }
-
-    function mint(address _to, string memory _tokenURI, bytes memory _data) external virtual onlyOwner {
-        uint256 _id = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
-
-        _safeMint(_to, _id, _data);
-        _setTokenURI(_id, _tokenURI);
-    }
-
+    /// @dev Claim lazy minted tokens via signature.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
-        returns (address signer) 
+        returns (address signer)
     {
-        require(_req.quantity == 1, "can mint exactly one");
+        require(_req.quantity > 0, "Minting zero tokens.");
 
-        uint256 tokenIdToMint = nextTokenIdToMint;
-        // require(tokenIdToMint + _req.quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        
-        nextTokenIdToMint += 1;
+        uint256 tokenIdToMint = _nextTokenIdToMint();
 
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
@@ -85,43 +62,49 @@ contract ERC721Base is
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        // collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
-        _safeMint(receiver, tokenIdToMint, "");
-
-        _setTokenURI(tokenIdToMint, _req.uri);
+        _safeMint(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
-    function setBaseURI(string memory _baseURI) external virtual onlyOwner {
-        // require(bytes(baseURI).length == 0, "Base URI already set");
-        baseURI = _baseURI;
-    }
-
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
-        require(ownerOf(tokenId) != address(0), "Invalid Id");
-        _tokenURIs[tokenId] = _tokenURI;
-    }
+    /*//////////////////////////////////////////////////////////////
+                            Internal functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _isAuthorizedSigner(address _signer) internal view virtual override returns (bool) {
+    function _canSignMintRequest(address _signer) internal view virtual override returns (bool) {
         return _signer == owner();
     }
 
-    /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal virtual view override returns (bool) {
-        return msg.sender == owner();
+    /// @dev Returns whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
+        return msg.sender == owner();      
     }
 
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal virtual view override returns (bool) {
-        return msg.sender == owner();
-    }
+    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
+    function collectPriceOnClaim(
+        uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken
+    ) internal virtual {
+        if (_pricePerToken == 0) {
+            return;
+        }
 
-    /// @dev Returns whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal virtual override view returns (bool) {
-        return msg.sender == owner();
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == totalPrice, "Must send total price.");
+        }
+
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            msg.sender,
+            primarySaleRecipient(),
+            totalPrice
+        );
     }
 }
