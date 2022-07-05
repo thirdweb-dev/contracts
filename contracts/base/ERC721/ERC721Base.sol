@@ -19,7 +19,7 @@ contract ERC721Base is
                         State variables
     //////////////////////////////////////////////////////////////*/
 
-    uint256 private nextId;
+    uint256 public nextTokenIdToMint;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -56,14 +56,14 @@ contract ERC721Base is
     //////////////////////////////////////////////////////////////*/
 
     function _nextTokenIdToMint() internal virtual returns (uint256) {
-        uint256 id = nextId;
+        uint256 id = nextTokenIdToMint;
         uint256 startId = _startTokenId();
 
         if(id < startId) {
             id = startId;
         }
 
-        nextId = id + 1;
+        nextTokenIdToMint = id + 1;
 
         return id;
     }
