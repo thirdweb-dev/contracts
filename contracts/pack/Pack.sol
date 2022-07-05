@@ -109,7 +109,7 @@ contract Pack is
     }
 
     receive() external payable {
-        require(_msgSender() == nativeTokenWrapper, "Caller is not native token wrapper.");
+        require(msg.sender == nativeTokenWrapper, "Caller is not native token wrapper.");
     }
 
     /*///////////////////////////////////////////////////////////////
