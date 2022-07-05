@@ -2,12 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IDrop.sol";
-import "./interface/IClaimConditionsMultiPhase.sol";
-import "./LazyMint.sol";
 import "../lib/MerkleProof.sol";
 import "../lib/TWBitMaps.sol";
 
-abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
+abstract contract Drop is IDrop {
     using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
@@ -32,8 +30,8 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
     ) public payable virtual override {
         _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
-        // bytes32 activeConditionId = conditionId;
         uint256 activeConditionId = getActiveClaimConditionId();
+        ClaimCondition memory currentClaimPhase = claimCondition.conditions[activeConditionId];
 
         /**
          *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
@@ -51,7 +49,10 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
         );
 
         // Verify claim validity. If not valid, revert.
-        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0;
+        // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
+        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being equal/less than the limit
+        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 ||
+            currentClaimPhase.merkleRoot == bytes32(0);
 
         verifyClaim(
             activeConditionId,
@@ -67,13 +68,10 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            // usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
             claimCondition.usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
         }
 
         // Update contract state.
-        // claimCondition.supplyClaimed += _quantity;
-        // lastClaimTimestamp[activeConditionId][_msgSender()] = block.timestamp;
         claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
         claimCondition.lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
 
@@ -94,7 +92,9 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
         virtual
         override
     {
-        require(_canSetClaimConditions(), "Not authorized");
+        if (!_canSetClaimConditions()) {
+            revert Drop__NotAuthorized();
+        }
 
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
@@ -120,7 +120,9 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
             require(i == 0 || lastConditionStartTimestamp < _conditions[i].startTimestamp, "ST");
 
             uint256 supplyClaimedAlready = claimCondition.conditions[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready <= _conditions[i].maxClaimableSupply, "max supply claimed already");
+            if (supplyClaimedAlready > _conditions[i].maxClaimableSupply) {
+                revert Drop__MaxSupplyClaimedAlready(supplyClaimedAlready);
+            }
 
             claimCondition.conditions[newStartIndex + i] = _conditions[i];
             claimCondition.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
@@ -152,7 +154,7 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
             }
         }
 
-        emit ClaimConditionsUpdated(_conditions);
+        emit ClaimConditionsUpdated(_conditions, _resetClaimEligibility);
     }
 
     /// @dev Checks a request to claim NFTs against the active claim condition's criteria.
@@ -166,24 +168,41 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.conditions[_conditionId];
 
-        require(
-            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price."
-        );
+        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
+            revert Drop__InvalidCurrencyOrPrice(
+                _currency,
+                currentClaimPhase.currency,
+                _pricePerToken,
+                currentClaimPhase.pricePerToken
+            );
+        }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        require(
-            _quantity > 0 &&
-                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
-            "invalid quantity."
-        );
-        require(
-            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max claimable supply."
-        );
+        if (
+            _quantity == 0 ||
+            (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
+        ) {
+            revert Drop__InvalidQuantity();
+        }
+        if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
+            revert Drop__ExceedMaxClaimableSupply(
+                currentClaimPhase.supplyClaimed,
+                currentClaimPhase.maxClaimableSupply
+            );
+        }
 
-        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
+        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
+        if (
+            currentClaimPhase.startTimestamp > block.timestamp ||
+            (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
+        ) {
+            revert Drop__CannotClaimYet(
+                block.timestamp,
+                currentClaimPhase.startTimestamp,
+                lastClaimedAt,
+                nextValidClaimTimestamp
+            );
+        }
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -201,12 +220,17 @@ abstract contract Drop is LazyMint, IDrop, IClaimConditionsMultiPhase {
                 currentClaimPhase.merkleRoot,
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
-            require(validMerkleProof, "not in whitelist.");
-            require(!claimCondition.usedAllowlistSpot[_conditionId].get(merkleProofIndex), "proof claimed.");
-            require(
-                _allowlistProof.maxQuantityInAllowlist == 0 || _quantity <= _allowlistProof.maxQuantityInAllowlist,
-                "invalid quantity proof."
-            );
+            if (!validMerkleProof) {
+                revert Drop__NotInWhitelist();
+            }
+
+            if (claimCondition.usedAllowlistSpot[_conditionId].get(merkleProofIndex)) {
+                revert Drop__ProofClaimed();
+            }
+
+            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
+                revert Drop__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
+            }
         }
     }
 

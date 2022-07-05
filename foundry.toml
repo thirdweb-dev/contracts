@@ -18,6 +18,7 @@ remappings = [
   '@std=lib/forge-std/src/',
   'contracts/=contracts/',
   'erc721a-upgradeable/=node_modules/erc721a-upgradeable/',
+  'erc721a/=node_modules/erc721a/',
 ]
 src = 'contracts'
 test = 'src/test'
