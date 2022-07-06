@@ -1,0 +1,105 @@
+# BatchMintMetadata
+
+
+
+
+
+
+
+
+
+## Methods
+
+### getBaseURICount
+
+```solidity
+function getBaseURICount() external view returns (uint256)
+```
+
+
+
+*Returns the number of batches of tokens having the same baseURI.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getBatchIdAtIndex
+
+```solidity
+function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
+```
+
+
+
+*Returns the id for the batch of tokens the given tokenId belongs to.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+
+
+
+## Errors
+
+### BatchMintMetadata__InvalidIndex
+
+```solidity
+error BatchMintMetadata__InvalidIndex(uint256 index)
+```
+
+Emitted when the given index is equal to or higher than total number of batches.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index | uint256 | undefined |
+
+### BatchMintMetadata__NoBaseURIForToken
+
+```solidity
+error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId)
+```
+
+Emitted when there&#39;s no Base URI set for the given token ID.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+### BatchMintMetadata__NoBatchIDForToken
+
+```solidity
+error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId)
+```
+
+Emitted when the given token ID doesn&#39;t belong to any batch.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+
