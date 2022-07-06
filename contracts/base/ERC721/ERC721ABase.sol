@@ -7,6 +7,7 @@ import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
 import "../../feature/Ownable.sol";
 import "../../feature/Royalty.sol";
+import "../../feature/BatchMintMetadata.sol";
 
 import "../../lib/TWStrings.sol";
 
@@ -15,7 +16,8 @@ contract ERC721ABase is
     ContractMetadata,
     Multicall,
     Ownable,
-    Royalty
+    Royalty,
+    BatchMintMetadata
 {
 
     using TWStrings for uint256;
@@ -80,11 +82,6 @@ contract ERC721ABase is
                         Public getters
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the number of batches of tokens having the same baseURI.
-    function getBaseURICount() public view returns (uint256) {
-        return batchIds.length;
-    }
-
     /// @dev Returns the next tokenId that will be issued by the contract.
     function nextTokenIdToMint() public view virtual returns (uint256) {
         return _currentIndex;
@@ -93,25 +90,6 @@ contract ERC721ABase is
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
-    function getBaseURI(uint256 _tokenId) internal view returns (string memory) {
-        uint256 numOfTokenBatches = getBaseURICount();
-        uint256[] memory indices = batchIds;
-
-        for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
-            if (_tokenId < indices[i]) {
-                return baseURI[indices[i]];
-            }
-        }
-
-        revert("No baseURI for token");
-    }
-
-    /// @dev Sets the base URI for the batch of tokens with the given batchId.
-    function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
-        baseURI[_batchId] = _baseURI;
-    }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal virtual view override returns (bool) {

@@ -23,7 +23,7 @@ abstract contract LazyMintUpdated is ILazyMint, BatchMintMetadata {
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) external virtual returns (uint256 batchId) {
+    ) public virtual returns (uint256 batchId) {
         if(!_canLazyMint()) {
             revert LazyMint__NotAuthorized();
         }
@@ -37,6 +37,8 @@ abstract contract LazyMintUpdated is ILazyMint, BatchMintMetadata {
         (nextTokenIdToLazyMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
 
         emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
+
+        return batchId;
     }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.

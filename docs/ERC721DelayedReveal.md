@@ -13,19 +13,19 @@
 ### approve
 
 ```solidity
-function approve(address spender, uint256 id) external nonpayable
+function approve(address to, uint256 tokenId) external nonpayable
 ```
 
 
 
-
+*See {IERC721-approve}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| id | uint256 | undefined
+| to | address | undefined
+| tokenId | uint256 | undefined
 
 ### balanceOf
 
@@ -35,7 +35,7 @@ function balanceOf(address owner) external view returns (uint256)
 
 
 
-
+*See {IERC721-balanceOf}.*
 
 #### Parameters
 
@@ -114,18 +114,18 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 ### getApproved
 
 ```solidity
-function getApproved(uint256) external view returns (address)
+function getApproved(uint256 tokenId) external view returns (address)
 ```
 
 
 
-
+*See {IERC721-getApproved}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| tokenId | uint256 | undefined
 
 #### Returns
 
@@ -239,19 +239,19 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 ### isApprovedForAll
 
 ```solidity
-function isApprovedForAll(address, address) external view returns (bool)
+function isApprovedForAll(address owner, address operator) external view returns (bool)
 ```
 
 
 
-
+*See {IERC721-isApprovedForAll}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
+| owner | address | undefined
+| operator | address | undefined
 
 #### Returns
 
@@ -284,20 +284,20 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes extraData) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
 ```
 
 
 
-*lazy mint a batch of tokens*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | undefined
-| baseURIForTokens | string | undefined
-| extraData | bytes | undefined
+| _amount | uint256 | undefined
+| _baseURIForTokens | string | undefined
+| _encryptedBaseURI | bytes | undefined
 
 #### Returns
 
@@ -308,7 +308,7 @@ function lazyMint(uint256 amount, string baseURIForTokens, bytes extraData) exte
 ### mint
 
 ```solidity
-function mint(address _to, string _tokenURI, bytes _data) external nonpayable
+function mint(address _to, uint256 _quantity, string, bytes _data) external nonpayable
 ```
 
 
@@ -320,7 +320,8 @@ function mint(address _to, string _tokenURI, bytes _data) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _to | address | undefined
-| _tokenURI | string | undefined
+| _quantity | uint256 | undefined
+| _2 | string | undefined
 | _data | bytes | undefined
 
 ### multicall
@@ -353,7 +354,7 @@ function name() external view returns (string)
 
 
 
-
+*See {IERC721Metadata-name}.*
 
 
 #### Returns
@@ -387,7 +388,7 @@ function nextTokenIdToMint() external view returns (uint256)
 
 
 
-
+*Returns the next tokenId that will be issued by the contract.*
 
 
 #### Returns
@@ -416,24 +417,24 @@ function owner() external view returns (address)
 ### ownerOf
 
 ```solidity
-function ownerOf(uint256 id) external view returns (address owner)
+function ownerOf(uint256 tokenId) external view returns (address)
 ```
 
 
 
-
+*See {IERC721-ownerOf}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| id | uint256 | undefined
+| tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| _0 | address | undefined
 
 ### reveal
 
@@ -485,12 +486,12 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 id, bytes data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
 ```
 
 
 
-
+*See {IERC721-safeTransferFrom}.*
 
 #### Parameters
 
@@ -498,8 +499,8 @@ function safeTransferFrom(address from, address to, uint256 id, bytes data) exte
 |---|---|---|
 | from | address | undefined
 | to | address | undefined
-| id | uint256 | undefined
-| data | bytes | undefined
+| tokenId | uint256 | undefined
+| _data | bytes | undefined
 
 ### setApprovalForAll
 
@@ -509,7 +510,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-
+*See {IERC721-setApprovalForAll}.*
 
 #### Parameters
 
@@ -593,7 +594,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-
+*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -615,7 +616,7 @@ function symbol() external view returns (string)
 
 
 
-
+*See {IERC721Metadata-symbol}.*
 
 
 #### Returns
@@ -646,15 +647,32 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### transferFrom
+### totalSupply
 
 ```solidity
-function transferFrom(address from, address to, uint256 id) external nonpayable
+function totalSupply() external view returns (uint256)
 ```
 
 
 
+*Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.*
 
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### transferFrom
+
+```solidity
+function transferFrom(address from, address to, uint256 tokenId) external nonpayable
+```
+
+
+
+*See {IERC721-transferFrom}.*
 
 #### Parameters
 
@@ -662,7 +680,7 @@ function transferFrom(address from, address to, uint256 id) external nonpayable
 |---|---|---|
 | from | address | undefined
 | to | address | undefined
-| id | uint256 | undefined
+| tokenId | uint256 | undefined
 
 
 
@@ -671,7 +689,7 @@ function transferFrom(address from, address to, uint256 id) external nonpayable
 ### Approval
 
 ```solidity
-event Approval(address indexed owner, address indexed spender, uint256 indexed id)
+event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)
 ```
 
 
@@ -683,8 +701,8 @@ event Approval(address indexed owner, address indexed spender, uint256 indexed i
 | Name | Type | Description |
 |---|---|---|
 | owner `indexed` | address | undefined |
-| spender `indexed` | address | undefined |
-| id `indexed` | uint256 | undefined |
+| approved `indexed` | address | undefined |
+| tokenId `indexed` | uint256 | undefined |
 
 ### ApprovalForAll
 
@@ -793,7 +811,7 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes extraData)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data)
 ```
 
 
@@ -807,12 +825,12 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| extraData  | bytes | undefined |
+| data  | bytes | undefined |
 
 ### Transfer
 
 ```solidity
-event Transfer(address indexed from, address indexed to, uint256 indexed id)
+event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
 ```
 
 
@@ -825,11 +843,114 @@ event Transfer(address indexed from, address indexed to, uint256 indexed id)
 |---|---|---|
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
-| id `indexed` | uint256 | undefined |
+| tokenId `indexed` | uint256 | undefined |
 
 
 
 ## Errors
+
+### ApprovalCallerNotOwnerNorApproved
+
+```solidity
+error ApprovalCallerNotOwnerNorApproved()
+```
+
+The caller must own the token or be an approved operator.
+
+
+
+
+### ApprovalQueryForNonexistentToken
+
+```solidity
+error ApprovalQueryForNonexistentToken()
+```
+
+The token does not exist.
+
+
+
+
+### ApprovalToCurrentOwner
+
+```solidity
+error ApprovalToCurrentOwner()
+```
+
+The caller cannot approve to the current owner.
+
+
+
+
+### ApproveToCaller
+
+```solidity
+error ApproveToCaller()
+```
+
+The caller cannot approve to their own address.
+
+
+
+
+### BalanceQueryForZeroAddress
+
+```solidity
+error BalanceQueryForZeroAddress()
+```
+
+Cannot query the balance for the zero address.
+
+
+
+
+### BatchMintMetadata__InvalidIndex
+
+```solidity
+error BatchMintMetadata__InvalidIndex(uint256 index)
+```
+
+Emitted when the given index is equal to or higher than total number of batches.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index | uint256 | undefined |
+
+### BatchMintMetadata__NoBaseURIForToken
+
+```solidity
+error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId)
+```
+
+Emitted when there&#39;s no Base URI set for the given token ID.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+### BatchMintMetadata__NoBatchIDForToken
+
+```solidity
+error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId)
+```
+
+Emitted when the given token ID doesn&#39;t belong to any batch.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
 
 ### ContractMetadata__NotAuthorized
 
@@ -906,6 +1027,50 @@ Emitted when the given token ID doesn&#39;t belong to any batch.
 |---|---|---|
 | tokenId | uint256 | undefined |
 
+### LazyMint__NotAuthorized
+
+```solidity
+error LazyMint__NotAuthorized()
+```
+
+
+
+
+
+
+### LazyMint__ZeroAmount
+
+```solidity
+error LazyMint__ZeroAmount()
+```
+
+
+
+
+
+
+### MintToZeroAddress
+
+```solidity
+error MintToZeroAddress()
+```
+
+Cannot mint to the zero address.
+
+
+
+
+### MintZeroQuantity
+
+```solidity
+error MintZeroQuantity()
+```
+
+The quantity of tokens minted must be more than zero.
+
+
+
+
 ### Ownable__NotAuthorized
 
 ```solidity
@@ -915,6 +1080,17 @@ error Ownable__NotAuthorized()
 
 
 *Emitted when an unauthorized caller tries to set the owner.*
+
+
+### OwnerQueryForNonexistentToken
+
+```solidity
+error OwnerQueryForNonexistentToken()
+```
+
+The token does not exist.
+
+
 
 
 ### Royalty__ExceedsMaxBps
@@ -942,6 +1118,61 @@ error Royalty__NotAuthorized()
 
 
 *Emitted when an unauthorized caller tries to set royalty details.*
+
+
+### TransferCallerNotOwnerNorApproved
+
+```solidity
+error TransferCallerNotOwnerNorApproved()
+```
+
+The caller must own the token or be an approved operator.
+
+
+
+
+### TransferFromIncorrectOwner
+
+```solidity
+error TransferFromIncorrectOwner()
+```
+
+The token must be owned by `from`.
+
+
+
+
+### TransferToNonERC721ReceiverImplementer
+
+```solidity
+error TransferToNonERC721ReceiverImplementer()
+```
+
+Cannot safely transfer to a contract that does not implement the ERC721Receiver interface.
+
+
+
+
+### TransferToZeroAddress
+
+```solidity
+error TransferToZeroAddress()
+```
+
+Cannot transfer to the zero address.
+
+
+
+
+### URIQueryForNonexistentToken
+
+```solidity
+error URIQueryForNonexistentToken()
+```
+
+The token does not exist.
+
+
 
 
 

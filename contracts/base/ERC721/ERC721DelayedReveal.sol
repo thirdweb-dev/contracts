@@ -52,6 +52,22 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
     }
 
     /*//////////////////////////////////////////////////////////////
+                        Lazy minting logic
+    //////////////////////////////////////////////////////////////*/
+
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _encryptedBaseURI
+    ) public virtual override returns (uint256 batchId) {
+        if (_encryptedBaseURI.length != 0) {
+            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+        }
+
+        return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                         Delayed reveal logic
     //////////////////////////////////////////////////////////////*/
 

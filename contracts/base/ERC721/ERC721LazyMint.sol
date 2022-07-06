@@ -1,23 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721Base.sol";
+import "./ERC721ABase.sol";
 
-import "../../feature/LazyMint.sol";
+import "../../feature/LazyMintUpdated.sol";
 
 import "../../lib/TWStrings.sol";
 
-contract ERC721LazyMint is ERC721Base, LazyMint {
+contract ERC721LazyMint is ERC721ABase, LazyMintUpdated {
 
     using TWStrings for uint256;
-
-    uint256 public nextTokenIdToLazyMint;
-
-    /*//////////////////////////////////////////////////////////////
-                            Events
-    //////////////////////////////////////////////////////////////*/
-
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes extraData);
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -30,7 +22,7 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
         address _royaltyRecipient,
         uint128 _royaltyBps
     )
-        ERC721Base(
+        ERC721ABase(
             _name,
             _symbol,
             contractURI,
@@ -50,33 +42,30 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
     }
 
     /*//////////////////////////////////////////////////////////////
-                        Lazy minting logic
+                            Minting logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev lazy mint a batch of tokens
-    function lazyMint(
-        uint256 amount,
-        string calldata baseURIForTokens,
-        bytes calldata extraData
-    ) external virtual override returns (uint256 batchId) {
-        require(amount > 0, "Amount must be greater than 0");
-        require(_canLazyMint(), "Not authorized");
+    function mint(
+        address _to,
+        uint256 _quantity,
+        string memory,
+        bytes memory _data
+    ) public virtual override {
+        require(_canMint(), "Not authorized to mint.");
+        require(
+            nextTokenIdToMint() + _quantity <= nextTokenIdToLazyMint,
+            "Not enough lazy minted tokens."
+        );
 
-        uint256 startId = nextTokenIdToLazyMint;
-        (nextTokenIdToLazyMint, batchId) = _batchMint(startId, amount, baseURIForTokens);
-
-        emit TokensLazyMinted(startId, startId + amount, baseURIForTokens, extraData);
+        _safeMint(_to, _quantity, _data);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                        Internal functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
-    function _canLazyMint() internal view virtual returns (bool) {
+    function _canLazyMint() internal view virtual override returns (bool) {
         return msg.sender == owner();
-    }
-
-    function mint(address _to, string memory _tokenURI, bytes memory _data) public virtual override {
-        require(nextTokenIdToMint < nextTokenIdToLazyMint, "No tokens left to mint.");
-        require(bytes(_tokenURI).length == 0, "Cannot reassign metadata for token.");
-
-        super.mint(_to, _tokenURI, _data);
     }
 }
