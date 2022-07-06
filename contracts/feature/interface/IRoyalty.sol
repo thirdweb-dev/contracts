@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "../../eip/interface/IERC2981.sol";
+
 /**
  *  Thirdweb's `Royalty` is a contract extension to be used with any base contract. It exposes functions for setting and reading
  *  the recipient of royalty fee and the royalty fee basis points, and lets the inheriting contract perform conditional logic
@@ -9,7 +11,7 @@ pragma solidity ^0.8.0;
  *  The `Royalty` contract is ERC2981 compliant.
  */
 
-interface IRoyalty {
+interface IRoyalty is IERC2981 {
     struct RoyaltyInfo {
         address recipient;
         uint256 bps;
@@ -36,15 +38,6 @@ interface IRoyalty {
 
     /// @dev Returns the royalty recipient for a particular token Id.
     function getRoyaltyInfoForToken(uint256 tokenId) external view returns (address, uint16);
-
-    /**
-     * @dev Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of
-     * exchange. The royalty amount is denominated and should be payed in that same unit of exchange.
-     */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        returns (address receiver, uint256 royaltyAmount);
 
     /// @dev Emitted when royalty info is updated.
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);

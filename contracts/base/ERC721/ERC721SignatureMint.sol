@@ -43,6 +43,7 @@ contract ERC721SignatureMint is
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
+        virtual
         returns (address signer)
     {
         require(_req.quantity > 0, "Minting zero tokens.");

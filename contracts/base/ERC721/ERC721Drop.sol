@@ -3,42 +3,23 @@ pragma solidity ^0.8.0;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-
-import "erc721a/contracts/ERC721A.sol";
-
-//  ==========  Internal imports    ==========
-
-import "../../openzeppelin-presets/metatx/ERC2771Context.sol";
-import "../../lib/CurrencyTransferLib.sol";
-
 //  ==========  Features    ==========
 
-import "../../feature/ContractMetadata.sol";
-import "../../feature/PlatformFee.sol";
-import "../../feature/Royalty.sol";
+import "./ERC721DelayedReveal.sol";
+import "./ERC721SignatureMint.sol";
+
 import "../../feature/PrimarySale.sol";
-import "../../feature/Ownable.sol";
-import "../../feature/DelayedReveal.sol";
-import "../../feature/LazyMint.sol";
 import "../../feature/PermissionsEnumerable.sol";
 import "../../feature/Drop.sol";
 
 contract ERC721Drop is
-    ContractMetadata,
-    Royalty,
-    PrimarySale,
-    Ownable,
-    DelayedReveal,
-    LazyMint,
-    PermissionsEnumerable,
+    ERC721DelayedReveal,
+    ERC721SignatureMint,
     Drop,
-    Multicall,
-    ERC721A
+    PrimarySale,
+    PermissionsEnumerable
 {
-    using Strings for uint256;
+    using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -48,12 +29,6 @@ contract ERC721Drop is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    /// @dev Max bps in the thirdweb system.
-    uint256 private constant MAX_BPS = 10_000;
-
-    /// @dev The tokenId of the next NFT that will be minted / lazy minted.
-    uint256 public nextTokenIdToMint;
 
     /*///////////////////////////////////////////////////////////////
                                 Events
@@ -67,19 +42,13 @@ contract ERC721Drop is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when minting the given quantity will exceed available quantity.
-    error NFTDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
-
-    /// @notice Emitted when given quantity to mint is zero.
-    error NFTDrop__MintingZeroTokens();
-
-    /// @notice Emitted when given amount for lazy-minting is zero.
-    error NFTDrop__ZeroAmount();
+    error ERC721Drop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
 
     /// @notice Emitted when sent value doesn't match the total price of tokens.
-    error NFTDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
+    error ERC721Drop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
 
     /// @notice Emitted when given address doesn't have transfer role.
-    error NFTDrop__NotTransferRole();
+    error ERC721Drop__NotTransferRole();
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -91,86 +60,71 @@ contract ERC721Drop is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address _saleRecipient,
         address _royaltyRecipient,
-        uint128 _royaltyBps
-    ) ERC721A(_name, _symbol) {
-        _setupContractURI(_contractURI);
-        _setupOwner(_defaultAdmin);
-
+        uint128 _royaltyBps,
+        address _primarySaleRecipient
+    )
+        ERC721DelayedReveal(
+            _name,
+            _symbol,
+            _contractURI,
+            _royaltyRecipient,
+            _royaltyBps
+        ) 
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
 
-        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setupPrimarySaleRecipient(_saleRecipient);
+        _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint256 batchId = getBatchId(_tokenId);
-        string memory batchUri = getBaseURI(_tokenId);
-
-        if (isEncryptedBatch(batchId)) {
-            return string(abi.encodePacked(batchUri, "0"));
-        } else {
-            return string(abi.encodePacked(batchUri, _tokenId.toString()));
-        }
-    }
-
     /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
-    /*///////////////////////////////////////////////////////////////
-                    Lazy minting + delayed-reveal logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
-     *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
-     */
-    function lazyMint(
-        uint256 _amount,
-        string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
-    ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
-        if (_amount == 0) {
-            revert NFTDrop__ZeroAmount();
-        }
-
-        uint256 startId = nextTokenIdToMint;
-
-        (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
-
-        if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(batchId, _encryptedBaseURI);
-        }
-
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
-    }
-
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
+    /// @dev Claim lazy minted tokens via signature.
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
-        onlyRole(MINTER_ROLE)
-        returns (string memory revealedURI)
+        payable
+        virtual
+        returns (address signer)
     {
-        uint256 batchId = getBatchIdAtIndex(_index);
-        revealedURI = getRevealURI(batchId, _key);
+        require(_req.quantity > 0, "Minting zero tokens.");
 
-        _setEncryptedBaseURI(batchId, "");
-        _setBaseURI(batchId, revealedURI);
+        uint256 tokenIdToMint = nextTokenIdToMint();
+        require(
+            tokenIdToMint + _req.quantity <= nextTokenIdToLazyMint,
+            "Not enough lazy minted tokens."
+        );
 
-        emit TokenURIRevealed(_index, revealedURI);
+        // Verify and process payload.
+        signer = _processRequest(_req, _signature);
+
+        /**
+         *  Get receiver of tokens.
+         *
+         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
+         *        mempool can be frontrun by copying the input data, since the minted tokens
+         *        will be sent to the `_msgSender()` in this case.
+         */
+        address receiver = _req.to == address(0) ? msg.sender : _req.to;
+
+        // Collect price
+        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+
+        // Mint tokens.
+        _safeMint(receiver, _req.quantity);
+
+        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
-
+    
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -185,8 +139,8 @@ contract ERC721Drop is
         bytes memory
     ) internal view override {
         require(msg.sender == tx.origin, "BOT");
-        if (_currentIndex + _quantity > nextTokenIdToMint) {
-            revert NFTDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
+        if (nextTokenIdToMint() + _quantity > nextTokenIdToLazyMint) {
+            revert ERC721Drop__NotEnoughMintedTokens(_currentIndex, _quantity);
         }
     }
 
@@ -204,7 +158,7 @@ contract ERC721Drop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert NFTDrop__MustSendTotalPrice(msg.value, totalPrice);
+                revert ERC721Drop__MustSendTotalPrice(msg.value, totalPrice);
             }
         }
 
@@ -222,7 +176,7 @@ contract ERC721Drop is
         override
         returns (uint256 startTokenId)
     {
-        startTokenId = _currentIndex;
+        startTokenId = nextTokenIdToMint();
         _safeMint(_to, _quantityBeingClaimed);
     }
 
@@ -251,6 +205,16 @@ contract ERC721Drop is
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /// @dev Returns whether lazy minting can be done in the given execution context.
+    function _canLazyMint() internal view virtual override returns (bool) {
+        return hasRole(MINTER_ROLE, msg.sender);
+    }
+
+    /// @dev Checks whether NFTs can be revealed in the given execution context.
+    function _canReveal() internal view virtual override returns (bool) {
+        return hasRole(MINTER_ROLE, msg.sender);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -273,7 +237,7 @@ contract ERC721Drop is
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
-                revert NFTDrop__NotTransferRole();
+                revert ERC721Drop__NotTransferRole();
             }
         }
     }
