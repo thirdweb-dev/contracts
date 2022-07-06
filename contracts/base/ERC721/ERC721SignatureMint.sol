@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721Base.sol";
+import "./ERC721ABase.sol";
 
 import "../../feature/PrimarySale.sol";
 import "../../feature/PermissionsEnumerable.sol";
@@ -10,7 +10,7 @@ import "../../feature/SignatureMintERC721.sol";
 import "../../lib/CurrencyTransferLib.sol";
 
 contract ERC721SignatureMint is 
-    ERC721Base,
+    ERC721ABase,
     PrimarySale,
     PermissionsEnumerable,
     SignatureMintERC721
@@ -26,7 +26,7 @@ contract ERC721SignatureMint is
         address _royaltyRecipient,
         uint128 _royaltyBps
     )
-        ERC721Base(
+        ERC721ABase(
             _name,
             _symbol,
             contractURI,
@@ -47,7 +47,7 @@ contract ERC721SignatureMint is
     {
         require(_req.quantity > 0, "Minting zero tokens.");
 
-        uint256 tokenIdToMint = _nextTokenIdToMint();
+        uint256 tokenIdToMint = nextTokenIdToMint();
 
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
@@ -65,6 +65,7 @@ contract ERC721SignatureMint is
         collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
+        _batchMintMetadata(nextTokenIdToMint(), _req.quantity, _req.uri);
         _safeMint(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
