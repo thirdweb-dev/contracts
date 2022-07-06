@@ -34,7 +34,7 @@ abstract contract LazyMintUpdated is ILazyMint, BatchMintMetadata {
 
         uint256 startId = nextTokenIdToLazyMint;
 
-        (nextTokenIdToLazyMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
+        (nextTokenIdToLazyMint, batchId) = _batchMintMetadata(startId, _amount, _baseURIForTokens);
 
         emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
 

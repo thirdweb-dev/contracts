@@ -65,10 +65,10 @@ contract BatchMintMetadata {
     }
 
     /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.
-    function _batchMint(
+    function _batchMintMetadata(
         uint256 _startId,
         uint256 _amountToMint,
-        string calldata _baseURIForTokens
+        string memory _baseURIForTokens
     ) internal returns (uint256 nextTokenIdToMint, uint256 batchId) {
         batchId = _startId + _amountToMint;
         nextTokenIdToMint = batchId;

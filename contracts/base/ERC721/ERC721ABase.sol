@@ -60,11 +60,7 @@ contract ERC721ABase is
         bytes memory _data
     ) public virtual {
         require(_canMint(), "Not authorized to mint.");
-        
-        uint256 batchId = nextTokenIdToMint() + _quantity;
-        batchIds.push(batchId);
-        baseURI[batchId] = _baseURI;
-
+        _batchMintMetadata(nextTokenIdToMint(), _quantity, _baseURI);
         _safeMint(_to, _quantity, _data);
     }
 
