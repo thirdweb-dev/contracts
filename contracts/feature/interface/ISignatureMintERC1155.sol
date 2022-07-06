@@ -68,5 +68,5 @@ interface ISignatureMintERC1155 {
      *  @param req The payload / mint request.
      *  @param signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable;
+    function mintWithSignature(MintRequest calldata req, bytes calldata signature) external payable returns (address signer);
 }

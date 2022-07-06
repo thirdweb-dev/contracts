@@ -57,21 +57,21 @@ contract ERC1155Base is
     function mint(address _to, uint256 _tokenId, string memory _tokenURI, uint256 _amount, bytes memory _data) public virtual {
         require(_canMint(), "Not authorized to mint.");
 
-        uint256 _id;
+        uint256 tokenIdToMint;
         
         if (_tokenId == type(uint256).max) {
-            _id = _nextTokenIdToMint();
+            tokenIdToMint = _nextTokenIdToMint();
 
             require(bytes(_tokenURI).length > 0, "empty uri.");
-            _setTokenURI(_id, _tokenURI);
+            _setTokenURI(tokenIdToMint, _tokenURI);
 
         } else {
             require(_tokenId < nextTokenIdToMint, "invalid id");
-            _id = _tokenId;
+            tokenIdToMint = _tokenId;
         }
 
-        _mint(_to, _id, _amount, _data);
-        totalSupply[_id] += _amount;
+        _mint(_to, tokenIdToMint, _amount, _data);
+        totalSupply[tokenIdToMint] += _amount;
     }
 
     /*//////////////////////////////////////////////////////////////
