@@ -13,7 +13,7 @@
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMintERC20.MintRequest req, bytes signature) external payable
+function mintWithSignature(ISignatureMintERC20.MintRequest req, bytes signature) external payable returns (address signer)
 ```
 
 Mints tokens according to the provided mint request.
@@ -26,6 +26,12 @@ Mints tokens according to the provided mint request.
 |---|---|---|
 | req | ISignatureMintERC20.MintRequest | The payload / mint request.
 | signature | bytes | The signature produced by an account signing the mint request.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined
 
 ### verify
 
