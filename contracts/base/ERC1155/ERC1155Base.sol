@@ -54,7 +54,13 @@ contract ERC1155Base is
                             Minting logic
     //////////////////////////////////////////////////////////////*/
 
-    function mint(address _to, uint256 _tokenId, string memory _tokenURI, uint256 _amount, bytes memory _data) public virtual {
+    function mint(
+        address _to, 
+        uint256 _tokenId, 
+        string memory _tokenURI, 
+        uint256 _amount, 
+        bytes memory _data
+    ) public virtual {
         require(_canMint(), "Not authorized to mint.");
 
         uint256 tokenIdToMint;
@@ -74,7 +80,13 @@ contract ERC1155Base is
         totalSupply[tokenIdToMint] += _amount;
     }
 
-    function batchMint(address _to, uint256[] memory _tokenIds, string[] memory _tokenURIs, uint256[] memory _amounts, bytes memory _data) public virtual {
+    function batchMint(
+        address _to, 
+        uint256[] memory _tokenIds, 
+        string[] memory _tokenURIs, 
+        uint256[] memory _amounts, 
+        bytes memory _data
+    ) public virtual {
         require(_canMint(), "Not authorized to mint.");
 
         uint256 tokenIdsLength = _tokenIds.length;
