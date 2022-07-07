@@ -74,6 +74,34 @@ contract ERC1155Base is
         totalSupply[tokenIdToMint] += _amount;
     }
 
+    function batchMint(address _to, uint256[] memory _tokenIds, string[] memory _tokenURIs, uint256[] memory _amounts, bytes memory _data) public virtual {
+        require(_canMint(), "Not authorized to mint.");
+
+        uint256 tokenIdsLength = _tokenIds.length;
+
+        require(tokenIdsLength == _tokenURIs.length && tokenIdsLength == _amounts.length, "unequal length of inputs");
+
+        for(uint256 i = 0; i < tokenIdsLength;) {
+            if (_tokenIds[i] == type(uint256).max) {
+                _tokenIds[i] = _nextTokenIdToMint();
+
+                require(bytes(_tokenURIs[i]).length > 0, "empty uri.");
+                _setTokenURI(_tokenIds[i], _tokenURIs[i]);
+
+            } else {
+                require(_tokenIds[i] < nextTokenIdToMint, "invalid id");
+            }
+            
+            totalSupply[_tokenIds[i]] += _amounts[i];
+
+            unchecked {
+                ++i;
+            }
+        }
+    
+        _batchMint(_to, _tokenIds, _amounts, _data);
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
