@@ -89,6 +89,22 @@ contract ERC721Base is
         _setTokenURI(_id, _tokenURI);
     }
 
+    /**
+     *  @notice         Lets an owner or approved operator burn the NFT of the given tokenId.
+     *
+     *  @param _tokenId The tokenId of the NFT to burn.
+     */
+    function burn(uint256 _tokenId) external virtual {
+
+        address ownerOfToken = ownerOf(_tokenId);
+        bool isApprovedOrOwner = (msg.sender ==  ownerOfToken ||
+            isApprovedForAll[ownerOfToken][msg.sender] ||
+            getApproved[_tokenId] == msg.sender);
+
+        require(isApprovedOrOwner, "Caller not owner nor approved.");
+        _burn(_tokenId);
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
