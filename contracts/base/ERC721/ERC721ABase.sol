@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "erc721a/contracts/ERC721A.sol";
+import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 
 import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
@@ -10,6 +10,23 @@ import "../../feature/Royalty.sol";
 import "../../feature/BatchMintMetadata.sol";
 
 import "../../lib/TWStrings.sol";
+
+/**
+ *  The `ERC721ABase` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.
+ *  It includes the following additions to standard ERC721 logic:
+ *
+ *      - Ability to mint NFTs via the provided `mint` function.
+ *
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use 
+ *        off-chain information to distribute roaylties.
+ *
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability for fetching NFT data.
+ *
+ *      - EIP 2981 compliance for outright royalty support on NFT marketplaces.
+ */
 
 contract ERC721ABase is 
     ERC721A,
@@ -21,16 +38,6 @@ contract ERC721ABase is
 {
 
     using TWStrings for uint256;
-
-    /*//////////////////////////////////////////////////////////////
-                        State variables
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Largest tokenId of each batch of tokens with the same baseURI.
-    uint256[] private batchIds;
-
-    /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
-    mapping(uint256 => string) private baseURI;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -50,9 +57,46 @@ contract ERC721ABase is
     }
 
     /*//////////////////////////////////////////////////////////////
+                            ERC165 Logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
+            interfaceId == 0x5b5e139f || // ERC165 Interface ID for ERC721Metadata
+            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        Overriden ERC721 logic
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice         Returns the metadata URI for an NFT.
+     *  @dev            See `BatchMintMetadata` for handling of metadata in this contract.
+     *
+     *  @param _tokenId The tokenId of an NFT.
+     */
+    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+        string memory batchUri = getBaseURI(_tokenId);
+        return string(abi.encodePacked(batchUri, _tokenId.toString()));
+    }
+
+    /*//////////////////////////////////////////////////////////////
                             Minting logic
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice          Lets an authorized address mint an NFT to a recipient.
+     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *
+     *  @param _to       The recipient of the NFT to mint.
+     *  @param _quantity The number of NFTs to mint.
+     *  @param _baseURI  The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
+     *  @param _data     Additional data to pass along during the minting of the NFT.
+     */
     function mint(
         address _to,
         uint256 _quantity,
@@ -65,20 +109,10 @@ contract ERC721ABase is
     }
 
     /*//////////////////////////////////////////////////////////////
-                        Overriden ERC721 logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the URI for a given tokenId
-    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
-        string memory batchUri = getBaseURI(_tokenId);
-        return string(abi.encodePacked(batchUri, _tokenId.toString()));
-    }
-
-    /*//////////////////////////////////////////////////////////////
                         Public getters
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the next tokenId that will be issued by the contract.
+    /// @notice The tokenId assigned to the next new NFT to be minted.
     function nextTokenIdToMint() public view virtual returns (uint256) {
         return _currentIndex;
     }
