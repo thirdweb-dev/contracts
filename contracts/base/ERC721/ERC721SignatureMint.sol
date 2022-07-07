@@ -9,6 +9,18 @@ import "../../feature/SignatureMintERC721.sol";
 
 import "../../lib/CurrencyTransferLib.sol";
 
+/**
+ *      BASE:      ERC721A
+ *      EXTENSION: SignatureMintERC721
+ *
+ *  The `ERC721SignatureMint` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` extension.
+ *
+ *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
+ *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize 
+ *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *
+ */
+
 contract ERC721SignatureMint is 
     ERC721ABase,
     PrimarySale,
@@ -39,7 +51,12 @@ contract ERC721SignatureMint is
                         Signature minting logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Claim lazy minted tokens via signature.
+    /**
+     *  @notice           Mints tokens according to the provided mint request.
+     *
+     *  @param _req       The payload / mint request.
+     *  @param _signature The signature produced by an account signing the mint request.
+     */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
