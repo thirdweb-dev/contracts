@@ -10,6 +10,9 @@ interface IDelayedReveal {
     /// @notice Emitted when encrypted URI for a given batch is empty.
     error DelayedReveal__NothingToReveal(uint256 batchId);
 
+    /// @dev Emitted when the metadata for a batch of NFTs is revealed.
+    event TokenURIRevealed(uint256 indexed index, string revealedURI);
+
     /**
      *  @notice Reveals a batch of delayed reveal NFTs.
      *

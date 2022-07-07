@@ -5,15 +5,27 @@ import "./ERC721LazyMint.sol";
 
 import "../../feature/DelayedReveal.sol";
 
+/**
+ *      BASE:      ERC721A
+ *      EXTENSION: LazyMint, DelayedReveal
+ *
+ *  The `ERC721DelayedReveal` contract uses the `ERC721ABase` contract, along with the `LazyMint` and `DelayedReveal` extension.
+ *
+ *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
+ *  of  NFTs means actually assigning an owner to an NFT.
+ *
+ *  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,
+ *  without paying the gas cost for actually minting the NFTs.
+ *  
+ *  'Delayed reveal' is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed
+ *  NFTs, after the fact. 
+ *
+ *  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
+ */
+
 contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
 
     using TWStrings for uint256;
-
-    /*//////////////////////////////////////////////////////////////
-                            Events
-    //////////////////////////////////////////////////////////////*/
-
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -39,7 +51,12 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
                         Overriden ERC721 logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the URI for a given tokenId.
+    /**
+     *  @notice         Returns the metadata URI for an NFT.
+     *  @dev            See `BatchMintMetadata` for handling of metadata in this contract.
+     *
+     *  @param _tokenId The tokenId of an NFT.
+     */
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         uint256 batchId = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
@@ -55,6 +72,15 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
                         Lazy minting logic
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
+     *
+     *  @param _amount           The number of NFTs to lazy mint.
+     *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
+     *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
+     *  @param _encryptedBaseURI The encrypted base URI for the batch of NFTs being lazy minted.
+     *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
+     */
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
@@ -71,7 +97,12 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
                         Delayed reveal logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
+    /**
+     *  @notice       Lets an authorized address reveal a batch of delayed reveal NFTs.
+     *
+     *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
+     *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
+     */
     function reveal(uint256 _index, bytes calldata _key)
         external
         returns (string memory revealedURI)
