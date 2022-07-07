@@ -1,24 +1,29 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/ILazyMint.sol";
+import "./interface/ILazyMintUpdated.sol";
 import "./BatchMintMetadata.sol";
 
 /**
- *  Thirdweb's `LazyMint` is a contract extension for any base NFT contract. It lets you 'lazy mint' any number of NFTs
+ *  The `LazyMint` is a contract extension for any base NFT contract. It lets you 'lazy mint' any number of NFTs
  *  at once. Here, 'lazy mint' means defining the metadata for particular tokenIds of your NFT contract, without actually
  *  minting a non-zero balance of NFTs of those tokenIds.
  */
 
-abstract contract LazyMintUpdated is ILazyMint, BatchMintMetadata {
+abstract contract LazyMintUpdated is ILazyMintUpdated, BatchMintMetadata {
 
-    error LazyMint__ZeroAmount();
-    error LazyMint__NotAuthorized();
-
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data);
-
+    /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     uint256 public nextTokenIdToLazyMint;
 
+   /**
+     *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
+     *
+     *  @param _amount           The number of NFTs to lazy mint.
+     *  @param _baseURIForTokens The base URI for the 'n' number of NFTs being lazy minted, where the metadata for each
+     *                           of those NFTs is `${baseURIForTokens}/${tokenId}`.
+     *  @param _data             Additional bytes data to be used at the discretion of the consumer of the contract.
+     *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
+     */
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
@@ -41,6 +46,6 @@ abstract contract LazyMintUpdated is ILazyMint, BatchMintMetadata {
         return batchId;
     }
 
-    /// @dev Returns whether lazy minting can be done in the given execution context.
+    /// @dev Returns whether lazy minting can be performed in the given execution context.
     function _canLazyMint() internal view virtual returns (bool);
 }

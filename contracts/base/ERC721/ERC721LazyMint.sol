@@ -7,6 +7,20 @@ import "../../feature/LazyMintUpdated.sol";
 
 import "../../lib/TWStrings.sol";
 
+/**
+ *      BASE:      ERC721ABase
+ *      EXTENSION: LazyMint
+ *
+ *  The `ERC721LazyMint` contract uses the `ERC721ABase` contract, along with the `LazyMint` extension.
+ *
+ *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
+ *  of  NFTs means actually assigning an owner to an NFT.
+ *
+ *  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,
+ *  without paying the gas cost for actually minting the NFTs.
+ *  
+ */
+
 contract ERC721LazyMint is ERC721ABase, LazyMintUpdated {
 
     using TWStrings for uint256;
@@ -30,16 +44,6 @@ contract ERC721LazyMint is ERC721ABase, LazyMintUpdated {
             _royaltyBps
         ) 
     {}
-
-    /*//////////////////////////////////////////////////////////////
-                        Overriden ERC721 logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the URI for a given tokenId
-    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
-        string memory batchUri = getBaseURI(_tokenId);
-        return string(abi.encodePacked(batchUri, _tokenId.toString()));
-    }
 
     /*//////////////////////////////////////////////////////////////
                             Minting logic
