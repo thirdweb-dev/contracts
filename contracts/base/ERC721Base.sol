@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721A } from "../../eip/ERC721A.sol";
+import { ERC721A } from "../eip/ERC721A.sol";
 
-import "../../extension/ContractMetadata.sol";
-import "../../extension/Multicall.sol";
-import "../../extension/Ownable.sol";
-import "../../extension/RoyaltyUpdated.sol";
-import "../../extension/BatchMintMetadata.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/Multicall.sol";
+import "../extension/Ownable.sol";
+import "../extension/RoyaltyUpdated.sol";
+import "../extension/BatchMintMetadata.sol";
 
-import "../../lib/TWStrings.sol";
+import "../lib/TWStrings.sol";
 
 /**
  *  The `ERC721Base` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.

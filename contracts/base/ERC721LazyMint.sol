@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import "./ERC721Base.sol";
 
-import "../../extension/LazyMintUpdated.sol";
+import "../extension/LazyMintUpdated.sol";
 
-import "../../lib/TWStrings.sol";
+import "../lib/TWStrings.sol";
 
 /**
  *      BASE:      ERC721Base
