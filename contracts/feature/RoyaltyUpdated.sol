@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IRoyalty.sol";
+import "./interface/IRoyaltyUpdated.sol";
 
 /**
  *  Thirdweb's `Royalty` is a contract extension to be used with any base contract. It exposes functions for setting and reading
