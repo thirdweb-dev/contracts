@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC721ABase      EXTENSION: LazyMint  The `ERC721LazyMint` contract uses the `ERC721ABase` contract, along with the `LazyMint` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  
+BASE:      ERC721ABase      EXTENSION: LazyMint  The `ERC721LazyMint` contract uses the `ERC721ABase` contract, along with the `LazyMint` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.
 
 
 

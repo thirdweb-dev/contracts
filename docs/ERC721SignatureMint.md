@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC721A      EXTENSION: SignatureMintERC721  The `ERC721SignatureMint` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` extension.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize   some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+BASE:      ERC721A      EXTENSION: SignatureMintERC721  The `ERC721SignatureMint` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` extension.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
 
 
 

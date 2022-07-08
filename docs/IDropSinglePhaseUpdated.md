@@ -29,7 +29,7 @@ Lets an account claim a given quantity of NFTs.
 | currency | address | The currency in which to pay for the claim.
 | pricePerToken | uint256 | The price per token to pay for the claim.
 | allowlistProof | IDropSinglePhaseUpdated.AllowlistProof | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
-| data | bytes | Arbitrary bytes data that can be leveraged in the implementation of this interface.   
+| data | bytes | Arbitrary bytes data that can be leveraged in the implementation of this interface.
 
 ### setClaimConditions
 

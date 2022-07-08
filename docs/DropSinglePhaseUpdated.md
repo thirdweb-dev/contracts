@@ -39,7 +39,7 @@ function claimCondition(uint256) external view returns (uint256 startTimestamp, 
 
 
 
-*Mapping from token ID =&gt; the claim condition,       at any given moment, for tokens of the token ID.*
+*Mapping from token ID =&gt; the claim condition,      at any given moment, for tokens of the token ID.*
 
 #### Parameters
 
