@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721A } from "erc721a/contracts/ERC721A.sol";
+import { ERC721A } from "../../eip/ERC721A.sol";
 
 import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
