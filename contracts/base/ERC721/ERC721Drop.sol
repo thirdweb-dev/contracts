@@ -1,41 +1,39 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-//  ==========  External imports    ==========
-
-//  ==========  Features    ==========
-
 import "./ERC721DelayedReveal.sol";
 import "./ERC721SignatureMint.sol";
 
-import "../../feature/PrimarySale.sol";
-import "../../feature/PermissionsEnumerable.sol";
-import "../../feature/Drop.sol";
+import "../../feature/DropSinglePhase.sol";
+import "../../feature/LazyMintUpdated.sol";
+import "../../feature/DelayedReveal.sol";
+
+import "../../lib/TWStrings.sol";
+
+/**
+ *      BASE:      ERC721A
+ *      EXTENSION: SignatureMintERC721, DropSinglePhase
+ *
+ *  The `ERC721Drop` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` and `DropSinglePhase` extension.
+ *
+ *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
+ *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize 
+ *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *
+ *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for lazy minted tokens. It lets
+ *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.
+ *
+ *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or
+ *  via the drop mechanism.
+ */
 
 contract ERC721Drop is
-    ERC721DelayedReveal,
     ERC721SignatureMint,
-    Drop,
-    PrimarySale,
-    PermissionsEnumerable
+    LazyMintUpdated,
+    DelayedReveal,
+    DropSinglePhase
 {
     using TWStrings for uint256;
-
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     /*///////////////////////////////////////////////////////////////
                             Custom Errors
@@ -51,10 +49,9 @@ contract ERC721Drop is
     error ERC721Drop__NotTransferRole();
 
     /*///////////////////////////////////////////////////////////////
-                    Constructor + initializer logic
+                            Constructor
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Initiliazes the contract, like a constructor.
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -64,36 +61,52 @@ contract ERC721Drop is
         uint128 _royaltyBps,
         address _primarySaleRecipient
     )
-        ERC721DelayedReveal(
+        ERC721SignatureMint(
             _name,
             _symbol,
             _contractURI,
             _royaltyRecipient,
-            _royaltyBps
+            _royaltyBps,
+            _primarySaleRecipient
         ) 
-    {
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(MINTER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
+    {}
 
-        _setupPrimarySaleRecipient(_primarySaleRecipient);
+    /*///////////////////////////////////////////////////////////////
+                    Overriden ERC 721 logic
+    //////////////////////////////////////////////////////////////*/
+
+     /**
+     *  @notice         Returns the metadata URI for an NFT.
+     *  @dev            See `BatchMintMetadata` for handling of metadata in this contract.
+     *
+     *  @param _tokenId The tokenId of an NFT.
+     */
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        uint256 batchId = getBatchId(_tokenId);
+        string memory batchUri = getBaseURI(_tokenId);
+
+        if (isEncryptedBatch(batchId)) {
+            return string(abi.encodePacked(batchUri, "0"));
+        } else {
+            return string(abi.encodePacked(batchUri, _tokenId.toString()));
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 / 2981 logic
+                Overriden signature minting logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A) returns (bool) {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
-    }
-
-    /// @dev Claim lazy minted tokens via signature.
+    /**
+     *  @notice           Mints tokens according to the provided mint request.
+     *
+     *  @param _req       The payload / mint request.
+     *  @param _signature The signature produced by an account signing the mint request.
+     */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
         virtual
+        override
         returns (address signer)
     {
         require(_req.quantity > 0, "Minting zero tokens.");
@@ -124,6 +137,56 @@ contract ERC721Drop is
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                    Overriden lazy minting logic
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
+     *
+     *  @param _amount           The number of NFTs to lazy mint.
+     *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
+     *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
+     *  @param _encryptedBaseURI The encrypted base URI for the batch of NFTs being lazy minted.
+     *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
+     */
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _encryptedBaseURI
+    ) public virtual override returns (uint256 batchId) {
+        if (_encryptedBaseURI.length != 0) {
+            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+        }
+
+        return LazyMintUpdated.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Delayed reveal logic
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice       Lets an authorized address reveal a batch of delayed reveal NFTs.
+     *
+     *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
+     *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
+     */
+    function reveal(uint256 _index, bytes calldata _key)
+        external
+        returns (string memory revealedURI)
+    {
+        require(_canReveal(), "Not authorized");
+
+        uint256 batchId = getBatchIdAtIndex(_index);
+        revealedURI = getRevealURI(batchId, _key);
+
+        _setEncryptedBaseURI(batchId, "");
+        _setBaseURI(batchId, revealedURI);
+
+        emit TokenURIRevealed(_index, revealedURI);
+    }
     
     /*///////////////////////////////////////////////////////////////
                         Internal functions
@@ -149,7 +212,7 @@ contract ERC721Drop is
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal override {
+    ) internal override(DropSinglePhase, ERC721SignatureMint) {
         if (_pricePerToken == 0) {
             return;
         }
@@ -182,67 +245,53 @@ contract ERC721Drop is
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return msg.sender == owner();
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
     function _canSetOwner() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return msg.sender == owner();
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return msg.sender == owner();
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return msg.sender == owner();
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
     function _canSetClaimConditions() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return msg.sender == owner();
     }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return hasRole(MINTER_ROLE, msg.sender);
+        return msg.sender == owner();
     }
 
     /// @dev Checks whether NFTs can be revealed in the given execution context.
-    function _canReveal() internal view virtual override returns (bool) {
-        return hasRole(MINTER_ROLE, msg.sender);
+    function _canReveal() internal view virtual returns (bool) {
+        return msg.sender == owner();
     }
 
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burn(uint256 tokenId) external virtual {
-        // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.
-        _burn(tokenId, true);
-    }
-
-    /// @dev See {ERC721-_beforeTokenTransfer}.
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual override {
-        super._beforeTokenTransfers(from, to, startTokenId, quantity);
-
-        // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
-                revert ERC721Drop__NotTransferRole();
-            }
-        }
-    }
-
     function _dropMsgSender() internal view virtual override returns (address) {
         return msg.sender;
+    }
+
+    function mint(
+        address,
+        uint256,
+        string memory,
+        bytes memory
+    ) public virtual override {
+        revert("Not authorized to mint.");
     }
 }
