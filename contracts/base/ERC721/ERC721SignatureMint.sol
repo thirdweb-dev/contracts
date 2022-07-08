@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import "./ERC721ABase.sol";
 
-import "../../feature/PrimarySale.sol";
-import "../../feature/PermissionsEnumerable.sol";
-import "../../feature/SignatureMintERC721.sol";
+import "../../extension/PrimarySale.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import "../../extension/SignatureMintERC721.sol";
 
 import "../../lib/CurrencyTransferLib.sol";
 

@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import { ERC721A } from "../../eip/ERC721A.sol";
 
-import "../../feature/ContractMetadata.sol";
-import "../../feature/Multicall.sol";
-import "../../feature/Ownable.sol";
-import "../../feature/RoyaltyUpdated.sol";
-import "../../feature/BatchMintMetadata.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/Multicall.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/RoyaltyUpdated.sol";
+import "../../extension/BatchMintMetadata.sol";
 
 import "../../lib/TWStrings.sol";
 

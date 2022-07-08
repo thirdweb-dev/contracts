@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../feature/interface/ITokenBundle.sol";
+import "../extension/interface/ITokenBundle.sol";
 
 /**
  *  Thirdweb's Multiwrap contract lets you wrap arbitrary ERC20, ERC721 and ERC1155

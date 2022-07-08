@@ -15,11 +15,11 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/ContractMetadata.sol";
-import "../feature/Royalty.sol";
-import "../feature/Ownable.sol";
-import "../feature/PermissionsEnumerable.sol";
-import "../feature/TokenStore.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/Royalty.sol";
+import "../extension/Ownable.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "../extension/TokenStore.sol";
 
 contract Multiwrap is
     Initializable,

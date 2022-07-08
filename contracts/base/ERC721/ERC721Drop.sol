@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import "./ERC721DelayedReveal.sol";
 import "./ERC721SignatureMint.sol";
 
-import "../../feature/DropSinglePhase.sol";
-import "../../feature/LazyMintUpdated.sol";
-import "../../feature/DelayedReveal.sol";
+import "../../extension/DropSinglePhase.sol";
+import "../../extension/LazyMintUpdated.sol";
+import "../../extension/DelayedReveal.sol";
 
 import "../../lib/TWStrings.sol";
 

@@ -21,10 +21,10 @@ import "../interfaces/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/interface/IPlatformFee.sol";
-import "../feature/interface/IPrimarySale.sol";
-import "../feature/interface/IRoyalty.sol";
-import "../feature/interface/IOwnable.sol";
+import "../extension/interface/IPlatformFee.sol";
+import "../extension/interface/IPrimarySale.sol";
+import "../extension/interface/IRoyalty.sol";
+import "../extension/interface/IOwnable.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 

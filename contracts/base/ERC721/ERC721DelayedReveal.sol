@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./ERC721LazyMint.sol";
 
-import "../../feature/DelayedReveal.sol";
+import "../../extension/DelayedReveal.sol";
 
 /**
  *      BASE:      ERC721A

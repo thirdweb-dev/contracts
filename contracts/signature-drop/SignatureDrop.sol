@@ -16,16 +16,16 @@ import "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/ContractMetadata.sol";
-import "../feature/PlatformFee.sol";
-import "../feature/Royalty.sol";
-import "../feature/PrimarySale.sol";
-import "../feature/Ownable.sol";
-import "../feature/DelayedReveal.sol";
-import "../feature/LazyMint.sol";
-import "../feature/PermissionsEnumerable.sol";
-import "../feature/DropSinglePhase.sol";
-import "../feature/SignatureMintERC721Upgradeable.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/PlatformFee.sol";
+import "../extension/Royalty.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/Ownable.sol";
+import "../extension/DelayedReveal.sol";
+import "../extension/LazyMint.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "../extension/DropSinglePhase.sol";
+import "../extension/SignatureMintERC721Upgradeable.sol";
 
 contract SignatureDrop is
     Initializable,
