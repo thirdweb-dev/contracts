@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMint {
-
     /**
      *  @notice Lazy mints a given amount of NFTs.
      *

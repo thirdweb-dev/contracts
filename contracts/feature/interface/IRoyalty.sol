@@ -14,7 +14,7 @@ interface IRoyalty {
         address recipient;
         uint256 bps;
     }
-    
+
     /// @dev Returns the royalty recipient and fee bps.
     function getDefaultRoyaltyInfo() external view returns (address, uint16);
 

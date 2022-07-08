@@ -9,7 +9,6 @@ pragma solidity ^0.8.0;
  *  minted by that external party.
  */
 interface ISignatureMintERC721 {
-
     /**
      *  @notice The body of a request to mint tokens.
      *

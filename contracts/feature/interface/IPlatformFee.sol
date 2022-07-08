@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 interface IPlatformFee {
-
     /// @dev Returns the platform fee bps and recipient.
     function getPlatformFeeInfo() external view returns (address, uint16);
 
