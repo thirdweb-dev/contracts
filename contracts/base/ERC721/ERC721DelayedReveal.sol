@@ -16,15 +16,14 @@ import "../../extension/DelayedReveal.sol";
  *
  *  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,
  *  without paying the gas cost for actually minting the NFTs.
- *  
+ *
  *  'Delayed reveal' is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed
- *  NFTs, after the fact. 
+ *  NFTs, after the fact.
  *
  *  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
  */
 
 contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
-
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -32,20 +31,12 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        string memory _name, 
+        string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    )
-        ERC721LazyMint(
-            _name,
-            _symbol,
-            contractURI,
-            _royaltyRecipient,
-            _royaltyBps
-        ) 
-    {}
+    ) ERC721LazyMint(_name, _symbol, contractURI, _royaltyRecipient, _royaltyBps) {}
 
     /*//////////////////////////////////////////////////////////////
                         Overriden ERC721 logic
@@ -103,10 +94,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        returns (string memory revealedURI)
-    {
+    function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -122,5 +110,4 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
     function _canReveal() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
-
 }

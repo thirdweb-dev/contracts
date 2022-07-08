@@ -91,7 +91,7 @@ interface IDropSinglePhaseUpdated is IClaimCondition {
      *  @param allowlistProof                 The proof of the claimer's inclusion in the merkle root allowlist
      *                                        of the claim conditions that apply.
      *  @param data                           Arbitrary bytes data that can be leveraged in the implementation of this interface.
-     *   
+     *
      */
     function claim(
         address receiver,

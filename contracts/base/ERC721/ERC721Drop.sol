@@ -17,7 +17,7 @@ import "../../lib/TWStrings.sol";
  *  The `ERC721Drop` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` and `DropSinglePhase` extension.
  *
  *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
- *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize 
+ *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
  *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
  *
  *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for lazy minted tokens. It lets
@@ -27,12 +27,7 @@ import "../../lib/TWStrings.sol";
  *  via the drop mechanism.
  */
 
-contract ERC721Drop is
-    ERC721SignatureMint,
-    LazyMintUpdated,
-    DelayedReveal,
-    DropSinglePhase
-{
+contract ERC721Drop is ERC721SignatureMint, LazyMintUpdated, DelayedReveal, DropSinglePhase {
     using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
@@ -60,22 +55,13 @@ contract ERC721Drop is
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    )
-        ERC721SignatureMint(
-            _name,
-            _symbol,
-            _contractURI,
-            _royaltyRecipient,
-            _royaltyBps,
-            _primarySaleRecipient
-        ) 
-    {}
+    ) ERC721SignatureMint(_name, _symbol, _contractURI, _royaltyRecipient, _royaltyBps, _primarySaleRecipient) {}
 
     /*///////////////////////////////////////////////////////////////
                     Overriden ERC 721 logic
     //////////////////////////////////////////////////////////////*/
 
-     /**
+    /**
      *  @notice         Returns the metadata URI for an NFT.
      *  @dev            See `BatchMintMetadata` for handling of metadata in this contract.
      *
@@ -112,10 +98,7 @@ contract ERC721Drop is
         require(_req.quantity > 0, "Minting zero tokens.");
 
         uint256 tokenIdToMint = nextTokenIdToMint();
-        require(
-            tokenIdToMint + _req.quantity <= nextTokenIdToLazyMint,
-            "Not enough lazy minted tokens."
-        );
+        require(tokenIdToMint + _req.quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
 
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
@@ -173,10 +156,7 @@ contract ERC721Drop is
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        returns (string memory revealedURI)
-    {
+    function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -187,7 +167,7 @@ contract ERC721Drop is
 
         emit TokenURIRevealed(_index, revealedURI);
     }
-    
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -225,12 +205,7 @@ contract ERC721Drop is
             }
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            msg.sender,
-            primarySaleRecipient(),
-            totalPrice
-        );
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.

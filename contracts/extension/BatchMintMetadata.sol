@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 contract BatchMintMetadata {
-
     /// @notice Emitted when the given index is equal to or higher than total number of batches.
     error BatchMintMetadata__InvalidIndex(uint256 index);
 

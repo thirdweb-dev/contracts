@@ -131,13 +131,14 @@ abstract contract DropUpdated is IDropUpdated {
         bool verifyMaxQuantityPerTransaction
     ) public view {
         _verifyClaim(
-            _conditionId, 
-            _claimer, 
-            type(uint256).max, 
-            _quantity, 
-            _currency, 
-            _pricePerToken, 
-            verifyMaxQuantityPerTransaction);
+            _conditionId,
+            _claimer,
+            type(uint256).max,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            verifyMaxQuantityPerTransaction
+        );
     }
 
     /// @dev Checks a request to claim NFTs against the active claim condition's criteria.
@@ -151,13 +152,14 @@ abstract contract DropUpdated is IDropUpdated {
         bool verifyMaxQuantityPerTransaction
     ) public view {
         _verifyClaim(
-            _conditionId, 
-            _claimer, 
-            _tokenId, 
-            _quantity, 
-            _currency, 
-            _pricePerToken, 
-            verifyMaxQuantityPerTransaction);
+            _conditionId,
+            _claimer,
+            _tokenId,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            verifyMaxQuantityPerTransaction
+        );
     }
 
     function _verifyClaim(
@@ -333,8 +335,7 @@ abstract contract DropUpdated is IDropUpdated {
         uint256 _tokenId,
         ClaimCondition[] calldata _conditions,
         bool _resetClaimEligibility
-    ) external virtual override
-    {
+    ) external virtual override {
         if (!_canSetClaimConditions()) {
             revert Drop__NotAuthorized();
         }
@@ -370,9 +371,7 @@ abstract contract DropUpdated is IDropUpdated {
         ClaimConditionList storage claimConditionList,
         ClaimCondition[] calldata _conditions,
         bool _resetClaimEligibility
-    ) internal
-    {
-
+    ) internal {
         uint256 existingStartIndex = claimConditionList.currentStartId;
         uint256 existingPhaseCount = claimConditionList.count;
 
@@ -435,7 +434,11 @@ abstract contract DropUpdated is IDropUpdated {
     /// @dev At any given moment, returns the uid for the active claim condition, for a given tokenId.
     function _activeClaimConditionId(uint256 _tokenId) internal view returns (uint256) {
         ClaimConditionList storage claimConditionList = claimCondition[_tokenId];
-        for (uint256 i = claimConditionList.currentStartId + claimConditionList.count; i > claimConditionList.currentStartId; i--) {
+        for (
+            uint256 i = claimConditionList.currentStartId + claimConditionList.count;
+            i > claimConditionList.currentStartId;
+            i--
+        ) {
             if (block.timestamp >= claimConditionList.conditions[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -488,10 +491,11 @@ abstract contract DropUpdated is IDropUpdated {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal virtual returns (uint256 startTokenId);
 
     /// @dev Determine what wallet can update claim conditions
     function _canSetClaimConditions() internal virtual returns (bool);

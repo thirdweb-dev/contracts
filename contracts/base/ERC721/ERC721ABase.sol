@@ -17,7 +17,7 @@ import "../../lib/TWStrings.sol";
  *
  *      - Ability to mint NFTs via the provided `mint` function.
  *
- *      - Contract metadata for royalty support on platforms such as OpenSea that use 
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use
  *        off-chain information to distribute roaylties.
  *
  *      - Ownership of the contract, with the ability to restrict certain functions to
@@ -28,15 +28,7 @@ import "../../lib/TWStrings.sol";
  *      - EIP 2981 compliance for outright royalty support on NFT marketplaces.
  */
 
-contract ERC721ABase is 
-    ERC721A,
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    Royalty,
-    BatchMintMetadata
-{
-
+contract ERC721ABase is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -44,13 +36,12 @@ contract ERC721ABase is
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        string memory _name, 
+        string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721A(_name, _symbol) 
-    {
+    ) ERC721A(_name, _symbol) {
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -132,22 +123,22 @@ contract ERC721ABase is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal virtual view override returns (bool) {
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether a token can be minted in the given execution context.
-    function _canMint() internal virtual view returns (bool) {
+    function _canMint() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal virtual view override returns (bool) {
+    function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal virtual override view returns (bool) {
+    function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

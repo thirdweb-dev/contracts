@@ -11,11 +11,10 @@ import "./BatchMintMetadata.sol";
  */
 
 abstract contract LazyMintUpdated is ILazyMintUpdated, BatchMintMetadata {
-
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     uint256 public nextTokenIdToLazyMint;
 
-   /**
+    /**
      *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
      *
      *  @param _amount           The number of NFTs to lazy mint.
@@ -29,10 +28,10 @@ abstract contract LazyMintUpdated is ILazyMintUpdated, BatchMintMetadata {
         string calldata _baseURIForTokens,
         bytes calldata _data
     ) public virtual returns (uint256 batchId) {
-        if(!_canLazyMint()) {
+        if (!_canLazyMint()) {
             revert LazyMint__NotAuthorized();
         }
-        
+
         if (_amount == 0) {
             revert LazyMint__ZeroAmount();
         }

@@ -25,7 +25,7 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
     mapping(uint256 => bytes32) private conditionId;
 
     /**
-     * @dev Mapping from token ID => the claim condition, 
+     * @dev Mapping from token ID => the claim condition,
      *      at any given moment, for tokens of the token ID.
      */
     mapping(uint256 => ClaimCondition) public claimCondition;
@@ -151,12 +151,13 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
         bool verifyMaxQuantityPerTransaction
     ) public view {
         _verifyClaim(
-            _claimer, 
-            type(uint256).max, 
-            _quantity, 
-            _currency, 
-            _pricePerToken, 
-            verifyMaxQuantityPerTransaction);
+            _claimer,
+            type(uint256).max,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            verifyMaxQuantityPerTransaction
+        );
     }
 
     /// @dev Checks a request to claim NFTs against the active claim condition's criteria.
@@ -168,13 +169,7 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
         uint256 _pricePerToken,
         bool verifyMaxQuantityPerTransaction
     ) public view {
-        _verifyClaim(
-            _claimer, 
-            _tokenId, 
-            _quantity, 
-            _currency, 
-            _pricePerToken, 
-            verifyMaxQuantityPerTransaction);
+        _verifyClaim(_claimer, _tokenId, _quantity, _currency, _pricePerToken, verifyMaxQuantityPerTransaction);
     }
 
     function _verifyClaim(
@@ -245,23 +240,23 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(
-        uint256 _tokenId,
-        address _claimer
-    ) public view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) {
+    function getClaimTimestamp(uint256 _tokenId, address _claimer)
+        public
+        view
+        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+    {
         return _claimTimestamp(_tokenId, _claimer);
     }
 
-    function _claimTimestamp(
-        uint256 _tokenId,
-        address _claimer
-    ) internal view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) {
+    function _claimTimestamp(uint256 _tokenId, address _claimer)
+        internal
+        view
+        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+    {
         lastClaimedAt = lastClaimTimestamp[conditionId[_tokenId]][_claimer];
 
         unchecked {
-            nextValidClaimTimestamp =
-                lastClaimedAt +
-                claimCondition[_tokenId].waitTimeInSecondsBetweenClaims;
+            nextValidClaimTimestamp = lastClaimedAt + claimCondition[_tokenId].waitTimeInSecondsBetweenClaims;
 
             if (nextValidClaimTimestamp < lastClaimedAt) {
                 nextValidClaimTimestamp = type(uint256).max;
@@ -344,8 +339,7 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
         uint256 _tokenId,
         ClaimCondition calldata _condition,
         bool _resetClaimEligibility
-    ) external virtual override
-    {
+    ) external virtual override {
         if (!_canSetClaimConditions()) {
             revert DropSinglePhase__NotAuthorized();
         }
@@ -376,9 +370,7 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
         uint256 _tokenId,
         ClaimCondition calldata _condition,
         bool _resetClaimEligibility
-    ) internal
-    {
-
+    ) internal {
         bytes32 targetConditionId = conditionId[_tokenId];
         uint256 supplyClaimedAlready = claimCondition[_tokenId].supplyClaimed;
 
@@ -415,7 +407,7 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
 
     /// @dev At any given moment, returns the uid for the active claim condition, for a given tokenId.
     function _activeClaimConditionId(uint256 _tokenId) internal view returns (bytes32) {
-        if(conditionId[_tokenId] != 0) return conditionId[_tokenId];
+        if (conditionId[_tokenId] != 0) return conditionId[_tokenId];
 
         revert("!CONDITION.");
     }
@@ -464,10 +456,11 @@ abstract contract DropSinglePhaseUpdated is IDropSinglePhaseUpdated {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal virtual returns (uint256 startTokenId);
 
     /// @dev Determine what wallet can update claim conditions
     function _canSetClaimConditions() internal virtual returns (bool);

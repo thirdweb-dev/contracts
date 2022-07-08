@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMintUpdated {
-    
     /// @dev Emitted when caller attempts to lazy mint zero tokens.
     error LazyMint__ZeroAmount();
 

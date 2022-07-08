@@ -16,36 +16,24 @@ import "../../lib/CurrencyTransferLib.sol";
  *  The `ERC721SignatureMint` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` extension.
  *
  *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
- *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize 
+ *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
  *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
  *
  */
 
-contract ERC721SignatureMint is 
-    ERC721ABase,
-    PrimarySale,
-    SignatureMintERC721
-{
+contract ERC721SignatureMint is ERC721ABase, PrimarySale, SignatureMintERC721 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        string memory _name, 
+        string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    )
-        ERC721ABase(
-            _name,
-            _symbol,
-            _contractURI,
-            _royaltyRecipient,
-            _royaltyBps
-        ) 
-    {
+    ) ERC721ABase(_name, _symbol, _contractURI, _royaltyRecipient, _royaltyBps) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
@@ -102,7 +90,7 @@ contract ERC721SignatureMint is
 
     /// @dev Returns whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
-        return msg.sender == owner();      
+        return msg.sender == owner();
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -121,11 +109,6 @@ contract ERC721SignatureMint is
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            msg.sender,
-            primarySaleRecipient(),
-            totalPrice
-        );
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
     }
 }
