@@ -50,12 +50,12 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("SignatureDrop");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private transferRole = keccak256("TRANSFER_ROLE");
+    bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
-    bytes32 private minterRole = keccak256("MINTER_ROLE");
+    bytes32 private minterRole;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -87,6 +87,9 @@ contract SignatureDrop is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
+        transferRole = keccak256("TRANSFER_ROLE");
+        minterRole = keccak256("MINTER_ROLE");
+
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);

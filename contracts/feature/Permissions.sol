@@ -34,7 +34,7 @@ contract Permissions is IPermissions {
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
         if (_hasRole[role][account]) {
-            revert("Cna only grant to non holders");
+            revert("Can only grant to non holders");
         }
         _setupRole(role, account);
     }
