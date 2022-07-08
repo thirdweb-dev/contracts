@@ -16,7 +16,8 @@ abstract contract Ownable is IOwnable {
     /// @dev Reverts if caller is not the owner.
     modifier onlyOwner() {
         if (msg.sender != _owner) {
-            revert Ownable__NotAuthorized();
+            // revert Ownable__NotAuthorized();
+            revert("O1");
         }
         _;
     }
@@ -29,7 +30,8 @@ abstract contract Ownable is IOwnable {
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function setOwner(address _newOwner) external override {
         if (!_canSetOwner()) {
-            revert Ownable__NotAuthorized();
+            // revert Ownable__NotAuthorized();
+            revert("O1");
         }
         _setupOwner(_newOwner);
     }

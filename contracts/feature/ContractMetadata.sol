@@ -17,7 +17,8 @@ abstract contract ContractMetadata is IContractMetadata {
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function setContractURI(string memory _uri) external override {
         if (!_canSetContractURI()) {
-            revert ContractMetadata__NotAuthorized();
+            // revert ContractMetadata__NotAuthorized();
+            revert("CM1");
         }
 
         _setupContractURI(_uri);

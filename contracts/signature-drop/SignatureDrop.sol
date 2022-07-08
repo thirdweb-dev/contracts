@@ -75,16 +75,16 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when minting the given quantity will exceed available quantity.
-    error SignatureDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
+    // error SignatureDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
 
     /// @notice Emitted when given quantity to mint is zero.
-    error SignatureDrop__MintingZeroTokens();
+    // error SignatureDrop__MintingZeroTokens();
 
     /// @notice Emitted when given amount for lazy-minting is zero.
-    error SignatureDrop__ZeroAmount();
+    // error SignatureDrop__ZeroAmount();
 
     /// @notice Emitted when sent value doesn't match the total price of tokens.
-    error SignatureDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
+    // error SignatureDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
 
     /// @notice Emitted when given address doesn't have transfer role.
     error SignatureDrop__NotTransferRole();
@@ -173,7 +173,8 @@ contract SignatureDrop is
         bytes calldata _encryptedBaseURI
     ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
         if (_amount == 0) {
-            revert SignatureDrop__ZeroAmount();
+            // revert SignatureDrop__ZeroAmount();
+            revert("SD3");
         }
 
         uint256 startId = nextTokenIdToMint;
@@ -212,13 +213,25 @@ contract SignatureDrop is
         payable
         returns (address signer)
     {
+        // require(
+        //     _req.quantity > 0,
+        //     "SD2"
+        // );
         if (_req.quantity == 0) {
-            revert SignatureDrop__MintingZeroTokens();
+            revert("SD2");
         }
+        // if (_req.quantity == 0) {
+        //     revert SignatureDrop__MintingZeroTokens();
+        // }
 
         uint256 tokenIdToMint = _currentIndex;
+        // require(
+        //     tokenIdToMint + _req.quantity <= nextTokenIdToMint,
+        //     "SD1"
+        // );
         if (tokenIdToMint + _req.quantity > nextTokenIdToMint) {
-            revert SignatureDrop__NotEnoughMintedTokens(tokenIdToMint, _req.quantity);
+            // revert SignatureDrop__NotEnoughMintedTokens(tokenIdToMint, _req.quantity);
+            revert("SD1");
         }
 
         // Verify and process payload.
@@ -257,7 +270,8 @@ contract SignatureDrop is
     ) internal view override {
         require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToMint) {
-            revert SignatureDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
+            // revert SignatureDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
+            revert("SD1");
         }
     }
 
@@ -278,7 +292,8 @@ contract SignatureDrop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert SignatureDrop__MustSendTotalPrice(msg.value, totalPrice);
+                // revert SignatureDrop__MustSendTotalPrice(msg.value, totalPrice);
+                revert("SD4");
             }
         }
 
@@ -358,7 +373,8 @@ contract SignatureDrop is
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
-                revert SignatureDrop__NotTransferRole();
+                // revert SignatureDrop__NotTransferRole();
+                revert("SD5");
             }
         }
     }

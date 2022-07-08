@@ -21,7 +21,8 @@ abstract contract DelayedReveal is IDelayedReveal {
     function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
         bytes memory encryptedURI = encryptedBaseURI[_batchId];
         if (encryptedURI.length == 0) {
-            revert DelayedReveal__NothingToReveal(_batchId);
+            // revert DelayedReveal__NothingToReveal(_batchId);
+            revert("DR1");
         }
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
