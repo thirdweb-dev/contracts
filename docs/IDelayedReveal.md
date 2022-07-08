@@ -59,22 +59,3 @@ Reveals a batch of delayed reveal NFTs.
 
 
 
-## Errors
-
-### DelayedReveal__NothingToReveal
-
-```solidity
-error DelayedReveal__NothingToReveal(uint256 batchId)
-```
-
-Emitted when encrypted URI for a given batch is empty.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| batchId | uint256 | undefined |
-
-

@@ -82,33 +82,3 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 
 
 
-## Errors
-
-### SignatureMintERC721__InvalidRequest
-
-```solidity
-error SignatureMintERC721__InvalidRequest()
-```
-
-Emitted when either the signature or the request uid is invalid.
-
-
-
-
-### SignatureMintERC721__RequestExpired
-
-```solidity
-error SignatureMintERC721__RequestExpired(uint256 blockTimestamp)
-```
-
-Emitted when block-timestamp is outside of validity start and end range.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| blockTimestamp | uint256 | undefined |
-
-

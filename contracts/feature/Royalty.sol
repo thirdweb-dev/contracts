@@ -52,8 +52,7 @@ abstract contract Royalty is IRoyalty {
     /// @dev Lets a contract admin update the default royalty recipient and bps.
     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external override {
         if (!_canSetRoyaltyInfo()) {
-            // revert Royalty__NotAuthorized();
-            revert("R1");
+            revert("Not authorized");
         }
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -62,8 +61,7 @@ abstract contract Royalty is IRoyalty {
     /// @dev Lets a contract admin update the default royalty recipient and bps.
     function _setupDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) internal {
         if (_royaltyBps > 10_000) {
-            // revert Royalty__ExceedsMaxBps(_royaltyBps);
-            revert("R2");
+            revert("Exceeds max bps");
         }
 
         royaltyRecipient = _royaltyRecipient;
@@ -79,8 +77,7 @@ abstract contract Royalty is IRoyalty {
         uint256 _bps
     ) external override {
         if (!_canSetRoyaltyInfo()) {
-            // revert Royalty__NotAuthorized();
-            revert("R1");
+            revert("Not authorized");
         }
 
         _setupRoyaltyInfoForToken(_tokenId, _recipient, _bps);
@@ -93,8 +90,7 @@ abstract contract Royalty is IRoyalty {
         uint256 _bps
     ) internal {
         if (_bps > 10_000) {
-            // revert Royalty__ExceedsMaxBps(_royaltyBps);
-            revert("R2");
+            revert("Exceeds max bps");
         }
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });

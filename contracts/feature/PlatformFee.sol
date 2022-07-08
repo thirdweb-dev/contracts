@@ -24,8 +24,7 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external override {
         if (!_canSetPlatformFeeInfo()) {
-            // revert PlatformFee__NotAuthorized();
-            revert("PF1");
+            revert("Not authorized");
         }
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
@@ -33,8 +32,7 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         if (_platformFeeBps > 10_000) {
-            // revert PlatformFee__ExceedsMaxBps(_platformFeeBps);
-            revert("PF2");
+            revert("Exceeds max bps");
         }
 
         platformFeeBps = uint16(_platformFeeBps);
