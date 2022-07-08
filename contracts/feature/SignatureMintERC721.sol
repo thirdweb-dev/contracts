@@ -2,9 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ISignatureMintERC721.sol";
-
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "../openzeppelin-presets/utils/cryptography/EIP712.sol";
 
 abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
     using ECDSA for bytes32;
