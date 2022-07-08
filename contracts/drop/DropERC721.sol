@@ -632,7 +632,6 @@ contract DropERC721 is
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxTotalSupply < nextTokenIdToMint, "existing > desired max supply");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }

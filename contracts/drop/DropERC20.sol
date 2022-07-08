@@ -463,7 +463,6 @@ contract DropERC20 is
 
     /// @dev Lets a contract admin set the global maximum supply of tokens.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxTotalSupply < totalSupply(), "already minted more than desired max supply");
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }

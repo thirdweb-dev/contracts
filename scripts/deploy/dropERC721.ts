@@ -1,23 +1,9 @@
 import hre, { ethers } from "hardhat";
 
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-
-import { TWFactory, DropERC721 } from "typechain";
+import { DropERC721 } from "typechain";
 
 async function main() {
-  const [caller]: SignerWithAddress[] = await ethers.getSigners();
 
-  const twFactoryAddress: string = ethers.constants.AddressZero; // replace
-
-  const twFactory: TWFactory = await ethers.getContractAt("TWFactory", twFactoryAddress);
-
-  const hasFactoryRole = await twFactory.hasRole(
-    ethers.utils.solidityKeccak256(["string"], ["FACTORY_ROLE"]),
-    caller.address,
-  );
-  if (!hasFactoryRole) {
-    throw new Error("Caller does not have FACTORY_ROLE on factory");
-  }
   const dropERC721: DropERC721 = await ethers.getContractFactory("DropERC721").then(f => f.deploy());
 
   console.log(
@@ -28,12 +14,6 @@ async function main() {
   );
 
   await dropERC721.deployTransaction.wait();
-
-  console.log("\n");
-
-  const addImplementationTx = await twFactory.addImplementation(dropERC721.address);
-  console.log("Adding DropERC721 implementation to TWFactory: ", addImplementationTx.hash);
-  await addImplementationTx.wait();
 
   console.log("\n");
 
