@@ -4,28 +4,11 @@
 
 
 
-
+BASE:      ERC721A      EXTENSION: SignatureMintERC721  The `ERC721SignatureMint` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` extension.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize   some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
 
 
 
 ## Methods
-
-### DEFAULT_ADMIN_ROLE
-
-```solidity
-function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
 
 ### approve
 
@@ -65,6 +48,22 @@ function balanceOf(address owner) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
+
+### burn
+
+```solidity
+function burn(uint256 _tokenId) external nonpayable
+```
+
+Lets an owner or approved operator burn the NFT of the given tokenId.
+
+*ERC721A&#39;s `_burn(uint256,bool)` internally checks for token approvals.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | The tokenId of the NFT to burn.
 
 ### contractURI
 
@@ -162,73 +161,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
-### getRoleAdmin
-
-```solidity
-function getRoleAdmin(bytes32 role) external view returns (bytes32)
-```
-
-
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
-
-### getRoleMember
-
-```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
-```
-
-
-
-*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| member | address | undefined
-
-### getRoleMemberCount
-
-```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
-```
-
-
-
-*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 | undefined
-
 ### getRoyaltyInfoForToken
 
 ```solidity
@@ -251,69 +183,6 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### grantRole
-
-```solidity
-function grantRole(bytes32 role, address account) external nonpayable
-```
-
-
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-### hasRole
-
-```solidity
-function hasRole(bytes32 role, address account) external view returns (bool)
-```
-
-
-
-*Returns `true` if `account` has been granted `role`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### hasRoleWithSwitch
-
-```solidity
-function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
 
 ### isApprovedForAll
 
@@ -344,18 +213,18 @@ function isApprovedForAll(address owner, address operator) external view returns
 function mint(address _to, uint256 _quantity, string _baseURI, bytes _data) external nonpayable
 ```
 
+Lets an authorized address mint an NFT to a recipient.
 
-
-
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | undefined
-| _quantity | uint256 | undefined
-| _baseURI | string | undefined
-| _data | bytes | undefined
+| _to | address | The recipient of the NFT to mint.
+| _quantity | uint256 | The number of NFTs to mint.
+| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
+| _data | bytes | Additional data to pass along during the minting of the NFT.
 
 ### mintWithSignature
 
@@ -363,16 +232,16 @@ function mint(address _to, uint256 _quantity, string _baseURI, bytes _data) exte
 function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable returns (address signer)
 ```
 
+Mints tokens according to the provided mint request.
 
 
-*Claim lazy minted tokens via signature.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMintERC721.MintRequest | undefined
-| _signature | bytes | undefined
+| _req | ISignatureMintERC721.MintRequest | The payload / mint request.
+| _signature | bytes | The signature produced by an account signing the mint request.
 
 #### Returns
 
@@ -425,9 +294,9 @@ function name() external view returns (string)
 function nextTokenIdToMint() external view returns (uint256)
 ```
 
+The tokenId assigned to the next new NFT to be minted.
 
 
-*Returns the next tokenId that will be issued by the contract.*
 
 
 #### Returns
@@ -491,40 +360,6 @@ function primarySaleRecipient() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined
-
-### renounceRole
-
-```solidity
-function renounceRole(bytes32 role, address account) external nonpayable
-```
-
-
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-### revokeRole
-
-```solidity
-function revokeRole(bytes32 role, address account) external nonpayable
-```
-
-
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
 
 ### royaltyInfo
 
@@ -677,7 +512,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*See {IERC165-supportsInterface}.*
+*See ERC165: https://eips.ethereum.org/EIPS/eip-165*
 
 #### Parameters
 
@@ -714,15 +549,15 @@ function symbol() external view returns (string)
 function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
+Returns the metadata URI for an NFT.
 
-
-*Returns the URI for a given tokenId*
+*See `BatchMintMetadata` for handling of metadata in this contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenId of an NFT.
 
 #### Returns
 
@@ -895,60 +730,6 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 | Name | Type | Description |
 |---|---|---|
 | recipient `indexed` | address | undefined |
-
-### RoleAdminChanged
-
-```solidity
-event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| previousAdminRole `indexed` | bytes32 | undefined |
-| newAdminRole `indexed` | bytes32 | undefined |
-
-### RoleGranted
-
-```solidity
-event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-
-### RoleRevoked
-
-```solidity
-event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
 
 ### RoyaltyForToken
 
@@ -1166,39 +947,6 @@ The token does not exist.
 
 
 
-
-### Permissions__CanOnlyGrantToNonHolders
-
-```solidity
-error Permissions__CanOnlyGrantToNonHolders(address account)
-```
-
-Emitted when specified account already has the role.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-### Permissions__CanOnlyRenounceForSelf
-
-```solidity
-error Permissions__CanOnlyRenounceForSelf(address caller, address account)
-```
-
-Emitted when calling address is different from the specified account.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| caller | address | undefined |
-| account | address | undefined |
 
 ### PrimarySale__NotAuthorized
 

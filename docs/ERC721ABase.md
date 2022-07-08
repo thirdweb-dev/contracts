@@ -4,7 +4,7 @@
 
 
 
-
+The `ERC721ABase` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.  It includes the following additions to standard ERC721 logic:      - Ability to mint NFTs via the provided `mint` function.      - Contract metadata for royalty support on platforms such as OpenSea that use         off-chain information to distribute roaylties.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability for fetching NFT data.      - EIP 2981 compliance for outright royalty support on NFT marketplaces.
 
 
 
@@ -48,6 +48,22 @@ function balanceOf(address owner) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
+
+### burn
+
+```solidity
+function burn(uint256 _tokenId) external nonpayable
+```
+
+Lets an owner or approved operator burn the NFT of the given tokenId.
+
+*ERC721A&#39;s `_burn(uint256,bool)` internally checks for token approvals.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | The tokenId of the NFT to burn.
 
 ### contractURI
 
@@ -197,18 +213,18 @@ function isApprovedForAll(address owner, address operator) external view returns
 function mint(address _to, uint256 _quantity, string _baseURI, bytes _data) external nonpayable
 ```
 
+Lets an authorized address mint an NFT to a recipient.
 
-
-
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | undefined
-| _quantity | uint256 | undefined
-| _baseURI | string | undefined
-| _data | bytes | undefined
+| _to | address | The recipient of the NFT to mint.
+| _quantity | uint256 | The number of NFTs to mint.
+| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
+| _data | bytes | Additional data to pass along during the minting of the NFT.
 
 ### multicall
 
@@ -255,9 +271,9 @@ function name() external view returns (string)
 function nextTokenIdToMint() external view returns (uint256)
 ```
 
+The tokenId assigned to the next new NFT to be minted.
 
 
-*Returns the next tokenId that will be issued by the contract.*
 
 
 #### Returns
@@ -440,7 +456,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*See {IERC165-supportsInterface}.*
+*See ERC165: https://eips.ethereum.org/EIPS/eip-165*
 
 #### Parameters
 
@@ -477,15 +493,15 @@ function symbol() external view returns (string)
 function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
+Returns the metadata URI for an NFT.
 
-
-*Returns the URI for a given tokenId*
+*See `BatchMintMetadata` for handling of metadata in this contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenId of an NFT.
 
 #### Returns
 

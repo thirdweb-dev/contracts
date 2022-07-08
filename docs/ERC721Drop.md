@@ -4,28 +4,11 @@
 
 
 
-
+BASE:      ERC721A      EXTENSION: SignatureMintERC721, DropSinglePhase  The `ERC721Drop` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` and `DropSinglePhase` extension.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize   some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for lazy minted tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or  via the drop mechanism.
 
 
 
 ## Methods
-
-### DEFAULT_ADMIN_ROLE
-
-```solidity
-function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
 
 ### approve
 
@@ -69,23 +52,23 @@ function balanceOf(address owner) external view returns (uint256)
 ### burn
 
 ```solidity
-function burn(uint256 tokenId) external nonpayable
+function burn(uint256 _tokenId) external nonpayable
 ```
 
+Lets an owner or approved operator burn the NFT of the given tokenId.
 
-
-*Burns `tokenId`. See {ERC721-_burn}.*
+*ERC721A&#39;s `_burn(uint256,bool)` internally checks for token approvals.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenId of the NFT to burn.
 
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof, bytes _data) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
@@ -100,13 +83,13 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _quantity | uint256 | undefined
 | _currency | address | undefined
 | _pricePerToken | uint256 | undefined
-| _allowlistProof | IDrop.AllowlistProof | undefined
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
 | _data | bytes | undefined
 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 currentStartId, uint256 count)
+function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
 ```
 
 
@@ -118,8 +101,14 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| currentStartId | uint256 | undefined
-| count | uint256 | undefined
+| startTimestamp | uint256 | undefined
+| maxClaimableSupply | uint256 | undefined
+| supplyClaimed | uint256 | undefined
+| quantityLimitPerTransaction | uint256 | undefined
+| waitTimeInSecondsBetweenClaims | uint256 | undefined
+| merkleRoot | bytes32 | undefined
+| pricePerToken | uint256 | undefined
+| currency | address | undefined
 
 ### contractURI
 
@@ -183,23 +172,6 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 |---|---|---|
 | _0 | bytes | undefined
 
-### getActiveClaimConditionId
-
-```solidity
-function getActiveClaimConditionId() external view returns (uint256)
-```
-
-
-
-*At any given moment, returns the uid for the active claim condition.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### getApproved
 
 ```solidity
@@ -261,32 +233,10 @@ function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### getClaimConditionById
-
-```solidity
-function getClaimConditionById(uint256 _conditionId) external view returns (struct IClaimCondition.ClaimCondition condition)
-```
-
-
-
-*Returns the claim condition at the given uid.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| condition | IClaimCondition.ClaimCondition | undefined
-
 ### getClaimTimestamp
 
 ```solidity
-function getClaimTimestamp(uint256 _conditionId, address _claimer) external view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
+function getClaimTimestamp(address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
 ```
 
 
@@ -297,14 +247,13 @@ function getClaimTimestamp(uint256 _conditionId, address _claimer) external view
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| lastClaimTimestamp | uint256 | undefined
+| lastClaimedAt | uint256 | undefined
 | nextValidClaimTimestamp | uint256 | undefined
 
 ### getDefaultRoyaltyInfo
@@ -348,73 +297,6 @@ function getRevealURI(uint256 _batchId, bytes _key) external view returns (strin
 |---|---|---|
 | revealedURI | string | undefined
 
-### getRoleAdmin
-
-```solidity
-function getRoleAdmin(bytes32 role) external view returns (bytes32)
-```
-
-
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
-
-### getRoleMember
-
-```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
-```
-
-
-
-*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| member | address | undefined
-
-### getRoleMemberCount
-
-```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
-```
-
-
-
-*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 | undefined
-
 ### getRoyaltyInfoForToken
 
 ```solidity
@@ -437,69 +319,6 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### grantRole
-
-```solidity
-function grantRole(bytes32 role, address account) external nonpayable
-```
-
-
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-### hasRole
-
-```solidity
-function hasRole(bytes32 role, address account) external view returns (bool)
-```
-
-
-
-*Returns `true` if `account` has been granted `role`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### hasRoleWithSwitch
-
-```solidity
-function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
 
 ### isApprovedForAll
 
@@ -552,23 +371,65 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
 ```
 
+Lets an authorized address lazy mint a given amount of NFTs.
 
 
-*Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _amount | uint256 | undefined
-| _baseURIForTokens | string | undefined
-| _encryptedBaseURI | bytes | undefined
+| _amount | uint256 | The number of NFTs to lazy mint.
+| _baseURIForTokens | string | The placeholder base URI for the &#39;n&#39; number of NFTs being lazy minted, where the                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
+| _encryptedBaseURI | bytes | The encrypted base URI for the batch of NFTs being lazy minted.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 | undefined
+| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
+
+### mint
+
+```solidity
+function mint(address, uint256, string, bytes) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | uint256 | undefined
+| _2 | string | undefined
+| _3 | bytes | undefined
+
+### mintWithSignature
+
+```solidity
+function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable returns (address signer)
+```
+
+Mints tokens according to the provided mint request.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | ISignatureMintERC721.MintRequest | The payload / mint request.
+| _signature | bytes | The signature produced by an account signing the mint request.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined
 
 ### multicall
 
@@ -609,15 +470,32 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
+### nextTokenIdToLazyMint
+
+```solidity
+function nextTokenIdToLazyMint() external view returns (uint256)
+```
+
+The tokenId assigned to the next new NFT to be lazy minted.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### nextTokenIdToMint
 
 ```solidity
 function nextTokenIdToMint() external view returns (uint256)
 ```
 
+The tokenId assigned to the next new NFT to be minted.
 
 
-*The tokenId of the next NFT that will be minted / lazy minted.*
 
 
 #### Returns
@@ -682,62 +560,28 @@ function primarySaleRecipient() external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
-### renounceRole
-
-```solidity
-function renounceRole(bytes32 role, address account) external nonpayable
-```
-
-
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
-
 ### reveal
 
 ```solidity
 function reveal(uint256 _index, bytes _key) external nonpayable returns (string revealedURI)
 ```
 
+Lets an authorized address reveal a batch of delayed reveal NFTs.
 
 
-*Lets an account with `MINTER_ROLE` reveal the URI for a batch of &#39;delayed-reveal&#39; NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | undefined
-| _key | bytes | undefined
+| _index | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
+| _key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | revealedURI | string | undefined
-
-### revokeRole
-
-```solidity
-function revokeRole(bytes32 role, address account) external nonpayable
-```
-
-
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
 
 ### royaltyInfo
 
@@ -802,7 +646,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
 ```
 
 
@@ -813,7 +657,7 @@ function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _
 
 | Name | Type | Description |
 |---|---|---|
-| _conditions | IClaimCondition.ClaimCondition[] | undefined
+| _condition | IClaimCondition.ClaimCondition | undefined
 | _resetClaimEligibility | bool | undefined
 
 ### setContractURI
@@ -907,7 +751,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*See ERC 165*
+*See ERC165: https://eips.ethereum.org/EIPS/eip-165*
 
 #### Parameters
 
@@ -944,15 +788,15 @@ function symbol() external view returns (string)
 function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
+Returns the metadata URI for an NFT.
 
-
-*Returns the URI for a given tokenId.*
+*See `BatchMintMetadata` for handling of metadata in this contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenId of an NFT.
 
 #### Returns
 
@@ -995,10 +839,34 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined
 | tokenId | uint256 | undefined
 
+### verify
+
+```solidity
+function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+```
+
+
+
+*Verifies that a mint request is signed by an authorized account.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | ISignatureMintERC721.MintRequest | undefined
+| _signature | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined
+| signer | address | undefined
+
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
 ```
 
 
@@ -1009,7 +877,6 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
 | _currency | address | undefined
@@ -1019,7 +886,7 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, IDrop.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
@@ -1030,10 +897,9 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
 | _claimer | address | undefined
 | _quantity | uint256 | undefined
-| _allowlistProof | IDrop.AllowlistProof | undefined
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
 
 #### Returns
 
@@ -1082,10 +948,10 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
-### ClaimConditionsUpdated
+### ClaimConditionUpdated
 
 ```solidity
-event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
+event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
 ```
 
 
@@ -1096,7 +962,7 @@ event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, b
 
 | Name | Type | Description |
 |---|---|---|
-| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+| condition  | IClaimCondition.ClaimCondition | undefined |
 | resetEligibility  | bool | undefined |
 
 ### ContractURIUpdated
@@ -1166,60 +1032,6 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 |---|---|---|
 | recipient `indexed` | address | undefined |
 
-### RoleAdminChanged
-
-```solidity
-event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| previousAdminRole `indexed` | bytes32 | undefined |
-| newAdminRole `indexed` | bytes32 | undefined |
-
-### RoleGranted
-
-```solidity
-event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-
-### RoleRevoked
-
-```solidity
-event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-
 ### RoyaltyForToken
 
 ```solidity
@@ -1258,7 +1070,7 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
 ```
 
 
@@ -1269,16 +1081,15 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 
 | Name | Type | Description |
 |---|---|---|
-| claimConditionIndex `indexed` | uint256 | undefined |
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
-| startTokenId  | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data)
 ```
 
 
@@ -1292,7 +1103,26 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
+| data  | bytes | undefined |
+
+### TokensMintedWithSignature
+
+```solidity
+event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMintERC721.MintRequest mintRequest)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer `indexed` | address | undefined |
+| mintedTo `indexed` | address | undefined |
+| tokenIdMinted `indexed` | uint256 | undefined |
+| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
 
 ### Transfer
 
@@ -1371,6 +1201,54 @@ Cannot query the balance for the zero address.
 
 
 
+### BatchMintMetadata__InvalidIndex
+
+```solidity
+error BatchMintMetadata__InvalidIndex(uint256 index)
+```
+
+Emitted when the given index is equal to or higher than total number of batches.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index | uint256 | undefined |
+
+### BatchMintMetadata__NoBaseURIForToken
+
+```solidity
+error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId)
+```
+
+Emitted when there&#39;s no Base URI set for the given token ID.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+### BatchMintMetadata__NoBatchIDForToken
+
+```solidity
+error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId)
+```
+
+Emitted when the given token ID doesn&#39;t belong to any batch.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
 ### ContractMetadata__NotAuthorized
 
 ```solidity
@@ -1398,10 +1276,10 @@ Emitted when encrypted URI for a given batch is empty.
 |---|---|---|
 | batchId | uint256 | undefined |
 
-### Drop__CannotClaimYet
+### DropSinglePhase__CannotClaimYet
 
 ```solidity
-error Drop__CannotClaimYet(uint256 blockTimestamp, uint256 startTimestamp, uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+error DropSinglePhase__CannotClaimYet(uint256 blockTimestamp, uint256 startTimestamp, uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
 ```
 
 Emitted when the current timestamp is invalid for claim.
@@ -1417,10 +1295,10 @@ Emitted when the current timestamp is invalid for claim.
 | lastClaimedAt | uint256 | undefined |
 | nextValidClaimTimestamp | uint256 | undefined |
 
-### Drop__ExceedMaxClaimableSupply
+### DropSinglePhase__ExceedMaxClaimableSupply
 
 ```solidity
-error Drop__ExceedMaxClaimableSupply(uint256 supplyClaimed, uint256 maxClaimableSupply)
+error DropSinglePhase__ExceedMaxClaimableSupply(uint256 supplyClaimed, uint256 maxClaimableSupply)
 ```
 
 Emitted when claiming given quantity will exceed max claimable supply.
@@ -1434,10 +1312,10 @@ Emitted when claiming given quantity will exceed max claimable supply.
 | supplyClaimed | uint256 | undefined |
 | maxClaimableSupply | uint256 | undefined |
 
-### Drop__InvalidCurrencyOrPrice
+### DropSinglePhase__InvalidCurrencyOrPrice
 
 ```solidity
-error Drop__InvalidCurrencyOrPrice(address givenCurrency, address requiredCurrency, uint256 givenPricePerToken, uint256 requiredPricePerToken)
+error DropSinglePhase__InvalidCurrencyOrPrice(address givenCurrency, address requiredCurrency, uint256 givenPricePerToken, uint256 requiredPricePerToken)
 ```
 
 Emitted when given currency or price is invalid.
@@ -1453,10 +1331,10 @@ Emitted when given currency or price is invalid.
 | givenPricePerToken | uint256 | undefined |
 | requiredPricePerToken | uint256 | undefined |
 
-### Drop__InvalidQuantity
+### DropSinglePhase__InvalidQuantity
 
 ```solidity
-error Drop__InvalidQuantity()
+error DropSinglePhase__InvalidQuantity()
 ```
 
 Emitted when claiming invalid quantity of tokens.
@@ -1464,10 +1342,10 @@ Emitted when claiming invalid quantity of tokens.
 
 
 
-### Drop__InvalidQuantityProof
+### DropSinglePhase__InvalidQuantityProof
 
 ```solidity
-error Drop__InvalidQuantityProof(uint256 maxQuantityInAllowlist)
+error DropSinglePhase__InvalidQuantityProof(uint256 maxQuantityInAllowlist)
 ```
 
 Emitted when claiming more than allowed quantity in allowlist.
@@ -1480,10 +1358,10 @@ Emitted when claiming more than allowed quantity in allowlist.
 |---|---|---|
 | maxQuantityInAllowlist | uint256 | undefined |
 
-### Drop__MaxSupplyClaimedAlready
+### DropSinglePhase__MaxSupplyClaimedAlready
 
 ```solidity
-error Drop__MaxSupplyClaimedAlready(uint256 supplyClaimedAlready)
+error DropSinglePhase__MaxSupplyClaimedAlready(uint256 supplyClaimedAlready)
 ```
 
 Emitted when max claimable supply in given condition is less than supply claimed already.
@@ -1496,10 +1374,10 @@ Emitted when max claimable supply in given condition is less than supply claimed
 |---|---|---|
 | supplyClaimedAlready | uint256 | undefined |
 
-### Drop__NotAuthorized
+### DropSinglePhase__NotAuthorized
 
 ```solidity
-error Drop__NotAuthorized()
+error DropSinglePhase__NotAuthorized()
 ```
 
 
@@ -1507,10 +1385,10 @@ error Drop__NotAuthorized()
 *Emitted when an unauthorized caller tries to set claim conditions.*
 
 
-### Drop__NotInWhitelist
+### DropSinglePhase__NotInWhitelist
 
 ```solidity
-error Drop__NotInWhitelist()
+error DropSinglePhase__NotInWhitelist()
 ```
 
 Emitted when given allowlist proof is invalid.
@@ -1518,10 +1396,10 @@ Emitted when given allowlist proof is invalid.
 
 
 
-### Drop__ProofClaimed
+### DropSinglePhase__ProofClaimed
 
 ```solidity
-error Drop__ProofClaimed()
+error DropSinglePhase__ProofClaimed()
 ```
 
 Emitted when allowlist spot is already used.
@@ -1529,13 +1407,13 @@ Emitted when allowlist spot is already used.
 
 
 
-### LazyMint__InvalidIndex
+### ERC721Drop__MustSendTotalPrice
 
 ```solidity
-error LazyMint__InvalidIndex(uint256 index)
+error ERC721Drop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice)
 ```
 
-Emitted when the given index is equal to or higher than total number of batches.
+Emitted when sent value doesn&#39;t match the total price of tokens.
 
 
 
@@ -1543,15 +1421,16 @@ Emitted when the given index is equal to or higher than total number of batches.
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined |
+| sentValue | uint256 | undefined |
+| totalPrice | uint256 | undefined |
 
-### LazyMint__NoBaseURIForToken
+### ERC721Drop__NotEnoughMintedTokens
 
 ```solidity
-error LazyMint__NoBaseURIForToken(uint256 tokenId)
+error ERC721Drop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity)
 ```
 
-Emitted when there&#39;s no Base URI set for the given token ID.
+Emitted when minting the given quantity will exceed available quantity.
 
 
 
@@ -1559,23 +1438,41 @@ Emitted when there&#39;s no Base URI set for the given token ID.
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined |
+| currentIndex | uint256 | undefined |
+| quantity | uint256 | undefined |
 
-### LazyMint__NoBatchIDForToken
+### ERC721Drop__NotTransferRole
 
 ```solidity
-error LazyMint__NoBatchIDForToken(uint256 tokenId)
+error ERC721Drop__NotTransferRole()
 ```
 
-Emitted when the given token ID doesn&#39;t belong to any batch.
+Emitted when given address doesn&#39;t have transfer role.
 
 
 
-#### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
+### LazyMint__NotAuthorized
+
+```solidity
+error LazyMint__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized address attempts to lazy mint tokens.*
+
+
+### LazyMint__ZeroAmount
+
+```solidity
+error LazyMint__ZeroAmount()
+```
+
+
+
+*Emitted when caller attempts to lazy mint zero tokens.*
+
 
 ### MintToZeroAddress
 
@@ -1595,73 +1492,6 @@ error MintZeroQuantity()
 ```
 
 The quantity of tokens minted must be more than zero.
-
-
-
-
-### NFTDrop__MintingZeroTokens
-
-```solidity
-error NFTDrop__MintingZeroTokens()
-```
-
-Emitted when given quantity to mint is zero.
-
-
-
-
-### NFTDrop__MustSendTotalPrice
-
-```solidity
-error NFTDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice)
-```
-
-Emitted when sent value doesn&#39;t match the total price of tokens.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| sentValue | uint256 | undefined |
-| totalPrice | uint256 | undefined |
-
-### NFTDrop__NotEnoughMintedTokens
-
-```solidity
-error NFTDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity)
-```
-
-Emitted when minting the given quantity will exceed available quantity.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| currentIndex | uint256 | undefined |
-| quantity | uint256 | undefined |
-
-### NFTDrop__NotTransferRole
-
-```solidity
-error NFTDrop__NotTransferRole()
-```
-
-Emitted when given address doesn&#39;t have transfer role.
-
-
-
-
-### NFTDrop__ZeroAmount
-
-```solidity
-error NFTDrop__ZeroAmount()
-```
-
-Emitted when given amount for lazy-minting is zero.
 
 
 
@@ -1687,39 +1517,6 @@ The token does not exist.
 
 
 
-
-### Permissions__CanOnlyGrantToNonHolders
-
-```solidity
-error Permissions__CanOnlyGrantToNonHolders(address account)
-```
-
-Emitted when specified account already has the role.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-### Permissions__CanOnlyRenounceForSelf
-
-```solidity
-error Permissions__CanOnlyRenounceForSelf(address caller, address account)
-```
-
-Emitted when calling address is different from the specified account.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| caller | address | undefined |
-| account | address | undefined |
 
 ### PrimarySale__NotAuthorized
 
@@ -1758,6 +1555,33 @@ error Royalty__NotAuthorized()
 
 *Emitted when an unauthorized caller tries to set royalty details.*
 
+
+### SignatureMintERC721__InvalidRequest
+
+```solidity
+error SignatureMintERC721__InvalidRequest()
+```
+
+Emitted when either the signature or the request uid is invalid.
+
+
+
+
+### SignatureMintERC721__RequestExpired
+
+```solidity
+error SignatureMintERC721__RequestExpired(uint256 blockTimestamp)
+```
+
+Emitted when block-timestamp is outside of validity start and end range.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| blockTimestamp | uint256 | undefined |
 
 ### TransferCallerNotOwnerNorApproved
 
