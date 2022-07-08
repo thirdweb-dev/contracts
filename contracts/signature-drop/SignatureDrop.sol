@@ -68,7 +68,6 @@ contract SignatureDrop is
     //////////////////////////////////////////////////////////////*/
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     /*///////////////////////////////////////////////////////////////
                             Custom Errors

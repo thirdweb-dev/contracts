@@ -6,7 +6,7 @@ import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 import "../../feature/ContractMetadata.sol";
 import "../../feature/Multicall.sol";
 import "../../feature/Ownable.sol";
-import "../../feature/Royalty.sol";
+import "../../feature/RoyaltyUpdated.sol";
 import "../../feature/BatchMintMetadata.sol";
 
 import "../../lib/TWStrings.sol";
