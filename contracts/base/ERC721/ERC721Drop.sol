@@ -14,7 +14,7 @@ import "../../lib/TWStrings.sol";
  *      BASE:      ERC721A
  *      EXTENSION: SignatureMintERC721, DropSinglePhase
  *
- *  The `ERC721Drop` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` and `DropSinglePhase` extension.
+ *  The `ERC721Drop` contract uses the `ERC721Base` contract, along with the `SignatureMintERC721` and `DropSinglePhase` extension.
  *
  *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
  *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize

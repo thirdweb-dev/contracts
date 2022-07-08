@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721ABase.sol";
+import "./ERC721Base.sol";
 
 import "../../extension/PrimarySale.sol";
 import "../../extension/PermissionsEnumerable.sol";
@@ -13,7 +13,7 @@ import "../../lib/CurrencyTransferLib.sol";
  *      BASE:      ERC721A
  *      EXTENSION: SignatureMintERC721
  *
- *  The `ERC721SignatureMint` contract uses the `ERC721ABase` contract, along with the `SignatureMintERC721` extension.
+ *  The `ERC721SignatureMint` contract uses the `ERC721Base` contract, along with the `SignatureMintERC721` extension.
  *
  *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
  *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
@@ -21,7 +21,7 @@ import "../../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC721SignatureMint is ERC721ABase, PrimarySale, SignatureMintERC721 {
+contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -33,7 +33,7 @@ contract ERC721SignatureMint is ERC721ABase, PrimarySale, SignatureMintERC721 {
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC721ABase(_name, _symbol, _contractURI, _royaltyRecipient, _royaltyBps) {
+    ) ERC721Base(_name, _symbol, _contractURI, _royaltyRecipient, _royaltyBps) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 

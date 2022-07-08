@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721ABase.sol";
+import "./ERC721Base.sol";
 
 import "../../extension/LazyMintUpdated.sol";
 
 import "../../lib/TWStrings.sol";
 
 /**
- *      BASE:      ERC721ABase
+ *      BASE:      ERC721Base
  *      EXTENSION: LazyMint
  *
- *  The `ERC721LazyMint` contract uses the `ERC721ABase` contract, along with the `LazyMint` extension.
+ *  The `ERC721LazyMint` contract uses the `ERC721Base` contract, along with the `LazyMint` extension.
  *
  *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
  *  of  NFTs means actually assigning an owner to an NFT.
@@ -21,7 +21,7 @@ import "../../lib/TWStrings.sol";
  *
  */
 
-contract ERC721LazyMint is ERC721ABase, LazyMintUpdated {
+contract ERC721LazyMint is ERC721Base, LazyMintUpdated {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ contract ERC721LazyMint is ERC721ABase, LazyMintUpdated {
         string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721ABase(_name, _symbol, contractURI, _royaltyRecipient, _royaltyBps) {}
+    ) ERC721Base(_name, _symbol, contractURI, _royaltyRecipient, _royaltyBps) {}
 
     /*//////////////////////////////////////////////////////////////
                             Minting logic

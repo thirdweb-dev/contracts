@@ -12,7 +12,7 @@ import "../../extension/BatchMintMetadata.sol";
 import "../../lib/TWStrings.sol";
 
 /**
- *  The `ERC721ABase` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.
+ *  The `ERC721Base` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.
  *  It includes the following additions to standard ERC721 logic:
  *
  *      - Ability to mint NFTs via the provided `mint` function.
@@ -28,7 +28,7 @@ import "../../lib/TWStrings.sol";
  *      - EIP 2981 compliance for outright royalty support on NFT marketplaces.
  */
 
-contract ERC721ABase is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
+contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
