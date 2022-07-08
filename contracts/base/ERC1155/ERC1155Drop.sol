@@ -7,38 +7,24 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "../../lib/CurrencyTransferLib.sol";
-import "../../lib/TWStrings.sol";
 
-import "./ERC1155.sol";
+import "./ERC1155DelayedReveal.sol";
+import "./ERC1155SignatureMint.sol";
 
 //  ==========  Features    ==========
 
-import "../../feature/ContractMetadata.sol";
-import "../../feature/PlatformFee.sol";
-import "../../feature/Royalty.sol";
 import "../../feature/PrimarySale.sol";
-import "../../feature/Ownable.sol";
-import "../../feature/DelayedReveal.sol";
-import "../../feature/LazyMint.sol";
 import "../../feature/PermissionsEnumerable.sol";
-import "../../feature/Drop.sol";
-import "../../feature/Multicall.sol";
+import "../../feature/DropUpdated.sol";
 
 contract ERC1155Drop is
-    ERC1155,
-    ContractMetadata,
-    Royalty,
+    ERC1155DelayedReveal,
+    ERC1155SignatureMint,
+    DropUpdated,
     PrimarySale,
-    Ownable,
-    DelayedReveal,
-    LazyMint,
-    PermissionsEnumerable,
-    Drop,
-    Multicall
+    PermissionsEnumerable
 {
-    using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -48,15 +34,6 @@ contract ERC1155Drop is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    /// @dev Max bps in the thirdweb system.
-    uint256 private constant MAX_BPS = 10_000;
-
-    string public name;
-    string public symbol;
-
-    /// @dev The tokenId of the next NFT that will be minted / lazy minted.
-    uint256 public nextTokenIdToMint;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
@@ -68,6 +45,12 @@ contract ERC1155Drop is
     /// @dev Mapping from token ID => maximum possible total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public maxTotalSupply;
 
+    /// @dev Mapping from token ID => claimer wallet address => total number of NFTs of the token ID a wallet has claimed.
+    mapping(uint256 => mapping(address => uint256)) public walletClaimCount;
+
+    /// @dev Mapping from token ID => the max number of NFTs of the token ID a wallet can claim.
+    mapping(uint256 => uint256) public maxWalletClaimCount;
+
     /*///////////////////////////////////////////////////////////////
                                 Events
     //////////////////////////////////////////////////////////////*/
@@ -75,24 +58,30 @@ contract ERC1155Drop is
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
+    /// @dev Emitted when the global max supply of a token is updated.
+    event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
+
+    /// @dev Emitted when the wallet claim count for a given tokenId and address is updated.
+    event WalletClaimCountUpdated(uint256 tokenId, address indexed wallet, uint256 count);
+
+    /// @dev Emitted when the max wallet claim count for a given tokenId is updated.
+    event MaxWalletClaimCountUpdated(uint256 tokenId, uint256 count);
+
     /*///////////////////////////////////////////////////////////////
                             Custom Errors
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when minting the given quantity will exceed available quantity.
-    error NFTDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
+    error ERC1155Drop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
 
     /// @notice Emitted when given quantity to mint is zero.
-    error NFTDrop__MintingZeroTokens();
-
-    /// @notice Emitted when given amount for lazy-minting is zero.
-    error NFTDrop__ZeroAmount();
+    error ERC1155Drop__MintingZeroTokens();
 
     /// @notice Emitted when sent value doesn't match the total price of tokens.
-    error NFTDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
+    error ERC1155Drop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
 
     /// @notice Emitted when given address doesn't have transfer role.
-    error NFTDrop__NotTransferRole();
+    error ERC1155Drop__NotTransferRole();
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -107,37 +96,27 @@ contract ERC1155Drop is
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) {
-        name = _name;
-        symbol = _symbol;
-        
-        _setupContractURI(_contractURI);
-        _setupOwner(_defaultAdmin);
+    ) 
+        ERC1155DelayedReveal(
+            _name,
+            _symbol,
+            _contractURI,
+            _royaltyRecipient,
+            _royaltyBps
+        ) 
+    {
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
 
-        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 / 2981 logic
+                        ERC 165 / 1155 / 2981 logic
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the URI for a given tokenId.
-    function uri(uint256 _tokenId) public view override returns (string memory _tokenURI) {
-        uint256 batchId = getBatchId(_tokenId);
-        string memory batchUri = getBaseURI(_tokenId);
-
-        if (isEncryptedBatch(batchId)) {
-            return string(abi.encodePacked(batchUri, "0"));
-        } else {
-            return string(abi.encodePacked(batchUri, _tokenId.toString()));
-        }
-    }
 
     /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId)
@@ -150,47 +129,76 @@ contract ERC1155Drop is
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
-    /*///////////////////////////////////////////////////////////////
-                    Lazy minting + delayed-reveal logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
-     *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
-     */
-    function lazyMint(
-        uint256 _amount,
-        string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
-    ) external onlyRole(MINTER_ROLE) returns (uint256 batchId) {
-        if (_amount == 0) {
-            revert NFTDrop__ZeroAmount();
+    /// @dev Claim lazy minted tokens via signature.
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        returns (address signer)
+    {
+        if(_req.quantity == 0) {
+            revert ERC1155Drop__MintingZeroTokens();
         }
 
-        uint256 startId = nextTokenIdToMint;
+        // Verify and process payload.
+        signer = _processRequest(_req, _signature);
+        
+        // validate/set token-id and uri
+        uint256 tokenIdToMint;
+        if (_req.tokenId == type(uint256).max) {
+            tokenIdToMint = _nextTokenIdToMint();
 
-        (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
+            require(bytes(_req.uri).length > 0, "empty uri.");
+            _setTokenURI(tokenIdToMint, _req.uri);
 
-        if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(batchId, _encryptedBaseURI);
+        } else {
+            require(_req.tokenId < nextTokenIdToMint, "invalid id");
+            tokenIdToMint = _req.tokenId;
         }
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
+        /**
+         *  Get receiver of tokens.
+         *
+         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
+         *        mempool can be frontrun by copying the input data, since the minted tokens
+         *        will be sent to the `_msgSender()` in this case.
+         */
+        address receiver = _req.to == address(0) ? msg.sender : _req.to;
+
+        // Collect price
+        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+
+        // Mint tokens.
+        _mint(receiver, tokenIdToMint, _req.quantity, "");
+
+        totalSupply[tokenIdToMint] += _req.quantity;
+
+        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(MINTER_ROLE)
-        returns (string memory revealedURI)
-    {
-        uint256 batchId = getBatchIdAtIndex(_index);
-        revealedURI = getRevealURI(batchId, _key);
+    /*///////////////////////////////////////////////////////////////
+                        Setter functions
+    //////////////////////////////////////////////////////////////*/
 
-        _setEncryptedBaseURI(batchId, "");
-        _setBaseURI(batchId, revealedURI);
+    /// @dev Lets a contract admin set a claim count for a wallet.
+    function setWalletClaimCount(
+        uint256 _tokenId,
+        address _claimer,
+        uint256 _count
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        walletClaimCount[_tokenId][_claimer] = _count;
+        emit WalletClaimCountUpdated(_tokenId, _claimer, _count);
+    }
 
-        emit TokenURIRevealed(_index, revealedURI);
+    /// @dev Lets a contract admin set a maximum number of NFTs of a tokenId that can be claimed by any wallet.
+    function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxWalletClaimCount[_tokenId] = _count;
+        emit MaxWalletClaimCountUpdated(_tokenId, _count);
+    }
+
+    /// @dev Lets a module admin set a max total supply for token.
+    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxTotalSupply[_tokenId] = _maxTotalSupply;
+        emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -200,6 +208,7 @@ contract ERC1155Drop is
     /// @dev Runs before every `claim` function call.
     function _beforeClaim(
         address,
+        uint256 _tokenId,
         uint256 _quantity,
         address,
         uint256,
@@ -207,16 +216,24 @@ contract ERC1155Drop is
         bytes memory
     ) internal view override {
         require(msg.sender == tx.origin, "BOT");
-        if (_currentIndex + _quantity > nextTokenIdToMint) {
-            revert NFTDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
-        }
+
+        require(
+            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
+            "exceed max total supply"
+        );
+        require(
+            maxWalletClaimCount[_tokenId] == 0 ||
+                walletClaimCount[_tokenId][_claimer] + _quantity <= maxWalletClaimCount[_tokenId],
+            "exceed claim limit for wallet"
+        );
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
         uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _pricePerToken,
+        uint256
     ) internal override {
         if (_pricePerToken == 0) {
             return;
@@ -226,7 +243,7 @@ contract ERC1155Drop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert NFTDrop__MustSendTotalPrice(msg.value, totalPrice);
+                revert ERC1155Drop__MustSendTotalPrice(msg.value, totalPrice);
             }
         }
 
@@ -239,13 +256,14 @@ contract ERC1155Drop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
         internal
         override
         returns (uint256 startTokenId)
     {
-        startTokenId = _currentIndex;
-        _safeMint(_to, _quantityBeingClaimed);
+        startTokenId = _tokenId;
+        walletClaimCount[_tokenId][_dropMsgSender()] += _quantityBeingClaimed;
+        _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
@@ -273,31 +291,26 @@ contract ERC1155Drop is
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /// @dev Returns whether lazy minting can be done in the given execution context.
+    function _canLazyMint() internal view virtual override returns (bool) {
+        return hasRole(MINTER_ROLE, msg.sender);
+    }
+
+    /// @dev Checks whether NFTs can be revealed in the given execution context.
+    function _canReveal() internal view virtual override returns (bool) {
+        return hasRole(MINTER_ROLE, msg.sender);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burn(uint256 tokenId) external virtual {
-        // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.
-        _burn(tokenId, true);
-    }
+    /// @dev Burns `tokenId`. See {ERC1155-_burn}.
+    function burn(address from, uint256 tokenId, uint256 amount) external virtual {
 
-    /// @dev See {ERC721-_beforeTokenTransfer}.
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual override {
-        super._beforeTokenTransfers(from, to, startTokenId, quantity);
-
-        // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
-                revert NFTDrop__NotTransferRole();
-            }
-        }
+        require(msg.sender == from || isApprovedForAll[from][msg.sender], "NOT_AUTHORIZED");
+        require(balanceOf[from][tokenId] >= amount, "burning more than owned");
+        _burn(tokenId, amount);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {
