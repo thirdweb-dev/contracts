@@ -24,7 +24,6 @@ import "../../lib/CurrencyTransferLib.sol";
 contract ERC721SignatureMint is 
     ERC721ABase,
     PrimarySale,
-    PermissionsEnumerable,
     SignatureMintERC721
 {
     /*//////////////////////////////////////////////////////////////
@@ -36,16 +35,19 @@ contract ERC721SignatureMint is
         string memory _symbol,
         string memory _contractURI,
         address _royaltyRecipient,
-        uint128 _royaltyBps
+        uint128 _royaltyBps,
+        address _primarySaleRecipient
     )
         ERC721ABase(
             _name,
             _symbol,
-            contractURI,
+            _contractURI,
             _royaltyRecipient,
             _royaltyBps
         ) 
-    {}
+    {
+        _setupPrimarySaleRecipient(_primarySaleRecipient);
+    }
 
     /*//////////////////////////////////////////////////////////////
                         Signature minting logic
