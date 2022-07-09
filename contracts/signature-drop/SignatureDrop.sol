@@ -49,9 +49,6 @@ contract SignatureDrop is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 public contractType = bytes32("SignatureDrop");
-    uint256 public contractVersion = 2;
-
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
@@ -133,7 +130,17 @@ contract SignatureDrop is
      * Returns the total amount of tokens minted in the contract.
      */
     function totalMinted() external view returns (uint256) {
-        return _totalMinted();
+        unchecked {
+            return _currentIndex - _startTokenId();
+        }
+    }
+
+    function contractType() public pure returns (bytes32) {
+        return bytes32("SignatureDrop");
+    }
+
+    function contractVersion() public pure returns (uint256) {
+        return 2;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -150,7 +157,7 @@ contract SignatureDrop is
         bytes calldata _encryptedBaseURI
     ) external onlyRole(minterRole) returns (uint256 batchId) {
         if (_amount == 0) {
-            revert("Minting zero amount");
+            revert("Zero amt");
         }
 
         uint256 startId = nextTokenIdToMint;
@@ -190,7 +197,7 @@ contract SignatureDrop is
         returns (address signer)
     {
         if (_req.quantity == 0) {
-            revert("Minting zero amount");
+            revert("Zero qty");
         }
 
         uint256 tokenIdToMint = _currentIndex;
@@ -234,7 +241,7 @@ contract SignatureDrop is
     ) internal view override {
         require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToMint) {
-            revert("Not enough minted tokens.");
+            revert("Not enough minted tokens");
         }
     }
 
@@ -255,7 +262,7 @@ contract SignatureDrop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert("Must send total price.");
+                revert("Must send total price");
             }
         }
 

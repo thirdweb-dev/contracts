@@ -344,7 +344,7 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.lazyMint(100, "ipfs://", "");
 
-        vm.expectRevert("No batchId for token");
+        vm.expectRevert("Invalid tokenId");
         sigdrop.tokenURI(100);
 
         vm.stopPrank();
@@ -744,7 +744,7 @@ contract SignatureDropTest is BaseTest {
             bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
-            vm.expectRevert("Must send total price.");
+            vm.expectRevert("Must send total price");
             sigdrop.mintWithSignature{ value: 2 }(mintrequest, signature);
             vm.stopPrank();
         }
@@ -903,7 +903,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert("Not enough minted tokens.");
+        vm.expectRevert("Not enough minted tokens");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -1082,7 +1082,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("Minting zero amount");
+        vm.expectRevert("Zero amt");
         sigdrop.lazyMint(0, "", newEncryptedURI);
 
         vm.stopPrank();
