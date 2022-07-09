@@ -130,12 +130,12 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 ### contractType
 
 ```solidity
-function contractType() external pure returns (bytes32)
+function contractType() external view returns (bytes32)
 ```
 
 
 
-*Returns the type of the contract.*
+
 
 
 #### Returns
@@ -164,19 +164,19 @@ function contractURI() external view returns (string)
 ### contractVersion
 
 ```solidity
-function contractVersion() external pure returns (uint8)
+function contractVersion() external view returns (uint256)
 ```
 
 
 
-*Returns the version of the contract.*
+
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint256 | undefined
 
 ### encryptDecrypt
 
@@ -1064,6 +1064,23 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
+
+### totalMinted
+
+```solidity
+function totalMinted() external view returns (uint256)
+```
+
+Returns the total amount of tokens minted in the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
 
 ### totalSupply
 

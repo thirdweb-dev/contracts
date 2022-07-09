@@ -49,8 +49,8 @@ contract SignatureDrop is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("SignatureDrop");
-    uint256 private constant VERSION = 2;
+    bytes32 public contractType = bytes32("SignatureDrop");
+    uint256 public contractVersion = 2;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private transferRole;
@@ -109,20 +109,6 @@ contract SignatureDrop is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
@@ -141,6 +127,13 @@ contract SignatureDrop is
     /// @dev See ERC 165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721AUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
+    }
+
+    /**
+     * Returns the total amount of tokens minted in the contract.
+     */
+    function totalMinted() external view returns (uint256) {
+        return _totalMinted();
     }
 
     /*///////////////////////////////////////////////////////////////
