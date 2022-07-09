@@ -35,10 +35,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
-                                Errors
-    //////////////////////////////////////////////////////////////*/
-
-    /*///////////////////////////////////////////////////////////////
                             Drop logic
     //////////////////////////////////////////////////////////////*/
 
@@ -103,7 +99,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
         if (!_canSetClaimConditions()) {
-            revert DropSinglePhase__NotAuthorized();
+            revert("Not authorized");
         }
 
         bytes32 targetConditionId = conditionId;
@@ -115,7 +111,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
 
         if (supplyClaimedAlready > _condition.maxClaimableSupply) {
-            revert DropSinglePhase__MaxSupplyClaimedAlready(supplyClaimedAlready);
+            revert("max supply claimed already");
         }
 
         claimCondition = ClaimCondition({
@@ -144,12 +140,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         ClaimCondition memory currentClaimPhase = claimCondition;
 
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
-            revert DropSinglePhase__InvalidCurrencyOrPrice(
-                _currency,
-                currentClaimPhase.currency,
-                _pricePerToken,
-                currentClaimPhase.pricePerToken
-            );
+            revert("Invalid price or currency");
         }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
@@ -157,14 +148,11 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             _quantity == 0 ||
             (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
         ) {
-            revert DropSinglePhase__InvalidQuantity();
+            revert("Invalid quantity");
         }
 
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert DropSinglePhase__ExceedMaxClaimableSupply(
-                currentClaimPhase.supplyClaimed,
-                currentClaimPhase.maxClaimableSupply
-            );
+            revert("exceeds max supply");
         }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
@@ -172,12 +160,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             currentClaimPhase.startTimestamp > block.timestamp ||
             (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
         ) {
-            revert DropSinglePhase__CannotClaimYet(
-                block.timestamp,
-                currentClaimPhase.startTimestamp,
-                lastClaimedAt,
-                nextValidClaimTimestamp
-            );
+            revert("cant claim yet");
         }
     }
 
@@ -196,15 +179,15 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             if (!validMerkleProof) {
-                revert DropSinglePhase__NotInWhitelist();
+                revert("not in allowlist");
             }
 
             if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) {
-                revert DropSinglePhase__ProofClaimed();
+                revert("proof claimed");
             }
 
             if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
-                revert DropSinglePhase__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
+                revert("Invalid qty proof");
             }
         }
     }

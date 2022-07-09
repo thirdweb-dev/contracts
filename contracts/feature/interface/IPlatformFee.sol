@@ -8,9 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 interface IPlatformFee {
-    /// @notice Emitted when given platform-fee bps exceeds max bps.
-    error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps);
-
     /// @dev Returns the platform fee bps and recipient.
     function getPlatformFeeInfo() external view returns (address, uint16);
 
@@ -19,7 +16,4 @@ interface IPlatformFee {
 
     /// @dev Emitted when fee on primary sales is updated.
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
-
-    /// @dev Emitted when an unauthorized caller tries to set platform fee details.
-    error PlatformFee__NotAuthorized();
 }

@@ -962,33 +962,3 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 
 
 
-## Errors
-
-### PlatformFee__ExceedsMaxBps
-
-```solidity
-error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps)
-```
-
-Emitted when given platform-fee bps exceeds max bps.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeBps | uint256 | undefined |
-
-### PlatformFee__NotAuthorized
-
-```solidity
-error PlatformFee__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set platform fee details.*
-
-
-
