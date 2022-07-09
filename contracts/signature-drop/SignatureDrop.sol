@@ -133,7 +133,9 @@ contract SignatureDrop is
      * Returns the total amount of tokens minted in the contract.
      */
     function totalMinted() external view returns (uint256) {
-        return _totalMinted();
+        unchecked {
+            return _currentIndex - _startTokenId();   
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
