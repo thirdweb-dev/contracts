@@ -134,7 +134,7 @@ contract SignatureDrop is
      */
     function totalMinted() external view returns (uint256) {
         unchecked {
-            return _currentIndex - _startTokenId();   
+            return _currentIndex - _startTokenId();
         }
     }
 
