@@ -111,7 +111,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
 
         if (supplyClaimedAlready > _condition.maxClaimableSupply) {
-            revert("max supply claimed already");
+            revert("max supply claimed");
         }
 
         claimCondition = ClaimCondition({
