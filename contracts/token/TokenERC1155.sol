@@ -486,7 +486,7 @@ contract TokenERC1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable, IERC165)
         returns (bool)
     {
         return
