@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./ERC721Base.sol";
 
-import "../extension/LazyMintUpdated.sol";
+import "../extension/LazyMint.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -21,7 +21,7 @@ import "../lib/TWStrings.sol";
  *
  */
 
-contract ERC721LazyMint is ERC721Base, LazyMintUpdated {
+contract ERC721LazyMint is ERC721Base, LazyMint {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////

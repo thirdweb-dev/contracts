@@ -7,15 +7,15 @@ pragma solidity ^0.8.0;
  *  minting a non-zero balance of NFTs of those tokenIds.
  */
 
-interface ILazyMint {
-    /// @notice Emitted when the given index is equal to or higher than total number of batches.
-    error LazyMint__InvalidIndex(uint256 index);
+interface ILazyMint{
+    /// @dev Emitted when caller attempts to lazy mint zero tokens.
+    error LazyMint__ZeroAmount();
 
-    /// @notice Emitted when the given token ID doesn't belong to any batch.
-    error LazyMint__NoBatchIDForToken(uint256 tokenId);
+    /// @dev Emitted when an unauthorized address attempts to lazy mint tokens.
+    error LazyMint__NotAuthorized();
 
-    /// @notice Emitted when there's no Base URI set for the given token ID.
-    error LazyMint__NoBaseURIForToken(uint256 tokenId);
+    /// @dev Emitted when tokens are lazy minted.
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data);
 
     /**
      *  @notice Lazy mints a given amount of NFTs.

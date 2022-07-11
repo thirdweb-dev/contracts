@@ -697,6 +697,23 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
+### nextTokenIdToLazyMint
+
+```solidity
+function nextTokenIdToLazyMint() external view returns (uint256)
+```
+
+The tokenId assigned to the next new NFT to be lazy minted.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### nextTokenIdToMint
 
 ```solidity
@@ -1421,7 +1438,7 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 i
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data)
 ```
 
 
@@ -1435,7 +1452,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
+| data  | bytes | undefined |
 
 ### TokensMintedWithSignature
 
@@ -1532,6 +1549,54 @@ Cannot query the balance for the zero address.
 
 
 
+
+### BatchMintMetadata__InvalidIndex
+
+```solidity
+error BatchMintMetadata__InvalidIndex(uint256 index)
+```
+
+Emitted when the given index is equal to or higher than total number of batches.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index | uint256 | undefined |
+
+### BatchMintMetadata__NoBaseURIForToken
+
+```solidity
+error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId)
+```
+
+Emitted when there&#39;s no Base URI set for the given token ID.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+### BatchMintMetadata__NoBatchIDForToken
+
+```solidity
+error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId)
+```
+
+Emitted when the given token ID doesn&#39;t belong to any batch.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
 
 ### ContractMetadata__NotAuthorized
 
@@ -1691,53 +1756,27 @@ Emitted when allowlist spot is already used.
 
 
 
-### LazyMint__InvalidIndex
+### LazyMint__NotAuthorized
 
 ```solidity
-error LazyMint__InvalidIndex(uint256 index)
+error LazyMint__NotAuthorized()
 ```
 
-Emitted when the given index is equal to or higher than total number of batches.
 
 
+*Emitted when an unauthorized address attempts to lazy mint tokens.*
 
-#### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| index | uint256 | undefined |
-
-### LazyMint__NoBaseURIForToken
+### LazyMint__ZeroAmount
 
 ```solidity
-error LazyMint__NoBaseURIForToken(uint256 tokenId)
+error LazyMint__ZeroAmount()
 ```
 
-Emitted when there&#39;s no Base URI set for the given token ID.
 
 
+*Emitted when caller attempts to lazy mint zero tokens.*
 
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### LazyMint__NoBatchIDForToken
-
-```solidity
-error LazyMint__NoBatchIDForToken(uint256 tokenId)
-```
-
-Emitted when the given token ID doesn&#39;t belong to any batch.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
 
 ### MintToZeroAddress
 

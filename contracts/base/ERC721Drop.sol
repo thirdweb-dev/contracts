@@ -5,7 +5,7 @@ import "./ERC721DelayedReveal.sol";
 import "./ERC721SignatureMint.sol";
 
 import "../extension/DropSinglePhase.sol";
-import "../extension/LazyMintUpdated.sol";
+import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
 import "../lib/TWStrings.sol";
@@ -27,7 +27,7 @@ import "../lib/TWStrings.sol";
  *  via the drop mechanism.
  */
 
-contract ERC721Drop is ERC721SignatureMint, LazyMintUpdated, DelayedReveal, DropSinglePhase {
+contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSinglePhase {
     using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
@@ -143,7 +143,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMintUpdated, DelayedReveal, Drop
             _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
         }
 
-        return LazyMintUpdated.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return LazyMint.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /*///////////////////////////////////////////////////////////////

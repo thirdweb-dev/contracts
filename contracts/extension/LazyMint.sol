@@ -2,77 +2,49 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ILazyMint.sol";
+import "./BatchMintMetadata.sol";
 
 /**
- *  Thirdweb's `LazyMint` is a contract extension for any base NFT contract. It lets you 'lazy mint' any number of NFTs
+ *  The `LazyMint` is a contract extension for any base NFT contract. It lets you 'lazy mint' any number of NFTs
  *  at once. Here, 'lazy mint' means defining the metadata for particular tokenIds of your NFT contract, without actually
  *  minting a non-zero balance of NFTs of those tokenIds.
  */
 
-abstract contract LazyMint is ILazyMint {
-    /// @dev Largest tokenId of each batch of tokens with the same baseURI.
-    uint256[] private batchIds;
+abstract contract LazyMint is ILazyMint, BatchMintMetadata {
+    /// @notice The tokenId assigned to the next new NFT to be lazy minted.
+    uint256 public nextTokenIdToLazyMint;
 
-    /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
-    mapping(uint256 => string) private baseURI;
-
-    /// @dev Returns the number of batches of tokens having the same baseURI.
-    function getBaseURICount() public view returns (uint256) {
-        return batchIds.length;
-    }
-
-    /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
-    function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
-        if (_index >= getBaseURICount()) {
-            revert LazyMint__InvalidIndex(_index);
-        }
-        return batchIds[_index];
-    }
-
-    /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
-    function getBatchId(uint256 _tokenId) internal view returns (uint256) {
-        uint256 numOfTokenBatches = getBaseURICount();
-        uint256[] memory indices = batchIds;
-
-        for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
-            if (_tokenId < indices[i]) {
-                return indices[i];
-            }
+    /**
+     *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
+     *
+     *  @param _amount           The number of NFTs to lazy mint.
+     *  @param _baseURIForTokens The base URI for the 'n' number of NFTs being lazy minted, where the metadata for each
+     *                           of those NFTs is `${baseURIForTokens}/${tokenId}`.
+     *  @param _data             Additional bytes data to be used at the discretion of the consumer of the contract.
+     *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
+     */
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _data
+    ) public virtual returns (uint256 batchId) {
+        if (!_canLazyMint()) {
+            revert LazyMint__NotAuthorized();
         }
 
-        revert LazyMint__NoBatchIDForToken(_tokenId);
-    }
-
-    /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
-    function getBaseURI(uint256 _tokenId) internal view returns (string memory) {
-        uint256 numOfTokenBatches = getBaseURICount();
-        uint256[] memory indices = batchIds;
-
-        for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
-            if (_tokenId < indices[i]) {
-                return baseURI[indices[i]];
-            }
+        if (_amount == 0) {
+            revert LazyMint__ZeroAmount();
         }
 
-        revert LazyMint__NoBaseURIForToken(_tokenId);
+        uint256 startId = nextTokenIdToLazyMint;
+
+        (nextTokenIdToLazyMint, batchId) = _batchMintMetadata(startId, _amount, _baseURIForTokens);
+
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
+
+        return batchId;
     }
 
-    /// @dev Sets the base URI for the batch of tokens with the given batchId.
-    function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
-        baseURI[_batchId] = _baseURI;
-    }
-
-    /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.
-    function _batchMint(
-        uint256 _startId,
-        uint256 _amountToMint,
-        string calldata _baseURIForTokens
-    ) internal returns (uint256 nextTokenIdToMint, uint256 batchId) {
-        batchId = _startId + _amountToMint;
-        nextTokenIdToMint = batchId;
-
-        batchIds.push(batchId);
-
-        baseURI[batchId] = _baseURIForTokens;
-    }
+    /// @dev Returns whether lazy minting can be performed in the given execution context.
+    function _canLazyMint() internal view virtual returns (bool);
 }
