@@ -130,7 +130,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 ### contractType
 
 ```solidity
-function contractType() external view returns (bytes32)
+function contractType() external pure returns (bytes32)
 ```
 
 
