@@ -145,7 +145,13 @@ contract SignatureDrop is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721AUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -318,7 +324,7 @@ contract SignatureDrop is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-     /// @dev Returns whether lazy minting can be done in the given execution context.
+    /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }

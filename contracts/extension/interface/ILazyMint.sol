@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
  *  minting a non-zero balance of NFTs of those tokenIds.
  */
 
-interface ILazyMint{
+interface ILazyMint {
     /// @dev Emitted when caller attempts to lazy mint zero tokens.
     error LazyMint__ZeroAmount();
 
