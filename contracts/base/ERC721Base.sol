@@ -6,7 +6,7 @@ import { ERC721A } from "../eip/ERC721A.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
-import "../extension/RoyaltyUpdated.sol";
+import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 
 import "../lib/TWStrings.sol";
