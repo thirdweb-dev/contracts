@@ -97,7 +97,7 @@ The tokenId assigned to the next new NFT to be lazy minted.
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -111,80 +111,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| data  | bytes | undefined |
-
-
-
-## Errors
-
-### BatchMintMetadata__InvalidIndex
-
-```solidity
-error BatchMintMetadata__InvalidIndex(uint256 index)
-```
-
-Emitted when the given index is equal to or higher than total number of batches.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| index | uint256 | undefined |
-
-### BatchMintMetadata__NoBaseURIForToken
-
-```solidity
-error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId)
-```
-
-Emitted when there&#39;s no Base URI set for the given token ID.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### BatchMintMetadata__NoBatchIDForToken
-
-```solidity
-error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId)
-```
-
-Emitted when the given token ID doesn&#39;t belong to any batch.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### LazyMint__NotAuthorized
-
-```solidity
-error LazyMint__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized address attempts to lazy mint tokens.*
-
-
-### LazyMint__ZeroAmount
-
-```solidity
-error LazyMint__ZeroAmount()
-```
-
-
-
-*Emitted when caller attempts to lazy mint zero tokens.*
+| encryptedBaseURI  | bytes | undefined |
 
 
 

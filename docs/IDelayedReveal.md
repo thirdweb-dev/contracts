@@ -68,7 +68,7 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 
 
 
-*Emitted when the metadata for a batch of NFTs is revealed.*
+*Emitted when tokens are revealed.*
 
 #### Parameters
 
@@ -77,24 +77,5 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 | index `indexed` | uint256 | undefined |
 | revealedURI  | string | undefined |
 
-
-
-## Errors
-
-### DelayedReveal__NothingToReveal
-
-```solidity
-error DelayedReveal__NothingToReveal(uint256 batchId)
-```
-
-Emitted when encrypted URI for a given batch is empty.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| batchId | uint256 | undefined |
 
 

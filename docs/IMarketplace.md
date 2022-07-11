@@ -397,33 +397,3 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 
 
 
-## Errors
-
-### PlatformFee__ExceedsMaxBps
-
-```solidity
-error PlatformFee__ExceedsMaxBps(uint256 platformFeeBps)
-```
-
-Emitted when given platform-fee bps exceeds max bps.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeBps | uint256 | undefined |
-
-### PlatformFee__NotAuthorized
-
-```solidity
-error PlatformFee__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set platform fee details.*
-
-
-

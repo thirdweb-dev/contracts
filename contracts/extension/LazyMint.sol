@@ -29,11 +29,11 @@ abstract contract LazyMint is ILazyMint, BatchMintMetadata {
         bytes calldata _data
     ) public virtual returns (uint256 batchId) {
         if (!_canLazyMint()) {
-            revert LazyMint__NotAuthorized();
+            revert("Not authorized");
         }
 
         if (_amount == 0) {
-            revert LazyMint__ZeroAmount();
+            revert("Minting 0 tokens");
         }
 
         uint256 startId = nextTokenIdToLazyMint;

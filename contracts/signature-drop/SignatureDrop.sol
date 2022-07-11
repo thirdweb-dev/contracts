@@ -49,35 +49,13 @@ contract SignatureDrop is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("SignatureDrop");
-    uint256 private constant VERSION = 1;
-
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 private minterRole;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
-
-    /*///////////////////////////////////////////////////////////////
-                            Custom Errors
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Emitted when minting the given quantity will exceed available quantity.
-    error SignatureDrop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
-
-    /// @notice Emitted when given quantity to mint is zero.
-    error SignatureDrop__MintingZeroTokens();
-
-    /// @notice Emitted when given amount for lazy-minting is zero.
-    error SignatureDrop__ZeroAmount();
-
-    /// @notice Emitted when sent value doesn't match the total price of tokens.
-    error SignatureDrop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
-
-    /// @notice Emitted when given address doesn't have transfer role.
-    error SignatureDrop__NotTransferRole();
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -96,6 +74,9 @@ contract SignatureDrop is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
+        transferRole = keccak256("TRANSFER_ROLE");
+        minterRole = keccak256("MINTER_ROLE");
+
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
@@ -105,27 +86,13 @@ contract SignatureDrop is
         _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(MINTER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
+        _setupRole(minterRole, _defaultAdmin);
+        _setupRole(transferRole, _defaultAdmin);
+        _setupRole(transferRole, address(0));
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -155,6 +122,14 @@ contract SignatureDrop is
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
+    function contractType() external pure returns (bytes32) {
+        return bytes32("SignatureDrop");
+    }
+
+    function contractVersion() external pure returns (uint256) {
+        return 2;
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Lazy minting + delayed-reveal logic
     //////////////////////////////////////////////////////////////*/
@@ -167,7 +142,7 @@ contract SignatureDrop is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
-    ) public override onlyRole(MINTER_ROLE) returns (uint256 batchId) {
+    ) public override onlyRole(minterRole) returns (uint256 batchId) {
         if (_encryptedBaseURI.length != 0) {
             _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
         }
@@ -178,7 +153,7 @@ contract SignatureDrop is
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 _index, bytes calldata _key)
         external
-        onlyRole(MINTER_ROLE)
+        onlyRole(minterRole)
         returns (string memory revealedURI)
     {
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -201,12 +176,12 @@ contract SignatureDrop is
         returns (address signer)
     {
         if (_req.quantity == 0) {
-            revert SignatureDrop__MintingZeroTokens();
+            revert("0 qty");
         }
 
         uint256 tokenIdToMint = _currentIndex;
-        if (tokenIdToMint + _req.quantity > nextTokenIdToMint()) {
-            revert SignatureDrop__NotEnoughMintedTokens(tokenIdToMint, _req.quantity);
+        if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
+            revert("Not enough tokens");
         }
 
         // Verify and process payload.
@@ -243,10 +218,9 @@ contract SignatureDrop is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
-        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
-        if (_currentIndex + _quantity > nextTokenIdToMint()) {
-            revert SignatureDrop__NotEnoughMintedTokens(_currentIndex, _quantity);
-        }
+        bool bot = isTrustedForwarder(msg.sender) || _msgSender() == tx.origin;
+        require(bot, "BOT");
+        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough tokens");
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -266,7 +240,7 @@ contract SignatureDrop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert SignatureDrop__MustSendTotalPrice(msg.value, totalPrice);
+                revert("Must send total price");
             }
         }
 
@@ -291,7 +265,7 @@ contract SignatureDrop is
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
     function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
-        return hasRole(MINTER_ROLE, _signer);
+        return hasRole(minterRole, _signer);
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
@@ -333,8 +307,17 @@ contract SignatureDrop is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * Returns the total amount of tokens minted in the contract.
+     */
+    function totalMinted() external view returns (uint256) {
+        unchecked {
+            return _currentIndex - _startTokenId();
+        }
+    }
+
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
-    function nextTokenIdToMint() public view returns (uint256) {
+    function nextTokenIdToMint() external view returns (uint256) {
         return nextTokenIdToLazyMint;
     }
 
@@ -354,9 +337,9 @@ contract SignatureDrop is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
-                revert SignatureDrop__NotTransferRole();
+        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+            if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
+                revert("!Transfer-Role");
             }
         }
     }

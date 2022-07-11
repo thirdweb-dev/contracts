@@ -730,65 +730,6 @@ Cannot query the balance for the zero address.
 
 
 
-### BatchMintMetadata__InvalidIndex
-
-```solidity
-error BatchMintMetadata__InvalidIndex(uint256 index)
-```
-
-Emitted when the given index is equal to or higher than total number of batches.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| index | uint256 | undefined |
-
-### BatchMintMetadata__NoBaseURIForToken
-
-```solidity
-error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId)
-```
-
-Emitted when there&#39;s no Base URI set for the given token ID.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### BatchMintMetadata__NoBatchIDForToken
-
-```solidity
-error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId)
-```
-
-Emitted when the given token ID doesn&#39;t belong to any batch.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### ContractMetadata__NotAuthorized
-
-```solidity
-error ContractMetadata__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set the contract metadata URI.*
-
-
 ### MintToZeroAddress
 
 ```solidity
@@ -811,17 +752,6 @@ The quantity of tokens minted must be more than zero.
 
 
 
-### Ownable__NotAuthorized
-
-```solidity
-error Ownable__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set the owner.*
-
-
 ### OwnerQueryForNonexistentToken
 
 ```solidity
@@ -831,33 +761,6 @@ error OwnerQueryForNonexistentToken()
 The token does not exist.
 
 
-
-
-### Royalty__ExceedsMaxBps
-
-```solidity
-error Royalty__ExceedsMaxBps(uint256 royaltyBps)
-```
-
-Emitted when the given bps exceeds max bps.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| royaltyBps | uint256 | undefined |
-
-### Royalty__NotAuthorized
-
-```solidity
-error Royalty__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 ### TransferCallerNotOwnerNorApproved

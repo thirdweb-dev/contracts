@@ -39,7 +39,7 @@ contract BatchMintMetadata {
             }
         }
 
-        revert("No batchId for token");
+        revert("Invalid tokenId");
     }
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
@@ -52,8 +52,7 @@ contract BatchMintMetadata {
                 return baseURI[indices[i]];
             }
         }
-
-        revert("No baseURI for token");
+        revert("Invalid tokenId");
     }
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.

@@ -41,7 +41,7 @@ Lazy mints a given amount of NFTs.
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes data)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -55,32 +55,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| data  | bytes | undefined |
-
-
-
-## Errors
-
-### LazyMint__NotAuthorized
-
-```solidity
-error LazyMint__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized address attempts to lazy mint tokens.*
-
-
-### LazyMint__ZeroAmount
-
-```solidity
-error LazyMint__ZeroAmount()
-```
-
-
-
-*Emitted when caller attempts to lazy mint zero tokens.*
+| encryptedBaseURI  | bytes | undefined |
 
 
 
