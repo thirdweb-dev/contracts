@@ -7,7 +7,6 @@ pragma solidity ^0.8.0;
  */
 
 interface IDelayedReveal {
-
     /// @dev Emitted when tokens are revealed.
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 

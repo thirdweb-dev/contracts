@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 interface ILazyMint {
-
     /// @dev Emitted when tokens are lazy minted.
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 

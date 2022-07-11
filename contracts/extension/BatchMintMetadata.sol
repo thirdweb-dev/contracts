@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 contract BatchMintMetadata {
-
     /// @dev Largest tokenId of each batch of tokens with the same baseURI.
     uint256[] private batchIds;
 
