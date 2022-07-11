@@ -31,19 +31,6 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
-                            Custom Errors
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Emitted when minting the given quantity will exceed available quantity.
-    error ERC721Drop__NotEnoughMintedTokens(uint256 currentIndex, uint256 quantity);
-
-    /// @notice Emitted when sent value doesn't match the total price of tokens.
-    error ERC721Drop__MustSendTotalPrice(uint256 sentValue, uint256 totalPrice);
-
-    /// @notice Emitted when given address doesn't have transfer role.
-    error ERC721Drop__NotTransferRole();
-
-    /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
@@ -183,7 +170,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     ) internal view override {
         require(msg.sender == tx.origin, "BOT");
         if (nextTokenIdToMint() + _quantity > nextTokenIdToLazyMint) {
-            revert ERC721Drop__NotEnoughMintedTokens(_currentIndex, _quantity);
+            revert("Not enough minted tokens");
         }
     }
 
@@ -201,7 +188,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert ERC721Drop__MustSendTotalPrice(msg.value, totalPrice);
+                revert("Must send total price");
             }
         }
 

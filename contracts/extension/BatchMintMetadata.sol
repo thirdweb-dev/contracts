@@ -8,14 +8,6 @@ pragma solidity ^0.8.0;
  */
 
 contract BatchMintMetadata {
-    /// @notice Emitted when the given index is equal to or higher than total number of batches.
-    error BatchMintMetadata__InvalidIndex(uint256 index);
-
-    /// @notice Emitted when the given token ID doesn't belong to any batch.
-    error BatchMintMetadata__NoBatchIDForToken(uint256 tokenId);
-
-    /// @notice Emitted when there's no Base URI set for the given token ID.
-    error BatchMintMetadata__NoBaseURIForToken(uint256 tokenId);
 
     /// @dev Largest tokenId of each batch of tokens with the same baseURI.
     uint256[] private batchIds;
@@ -31,7 +23,7 @@ contract BatchMintMetadata {
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
         if (_index >= getBaseURICount()) {
-            revert BatchMintMetadata__InvalidIndex(_index);
+            revert("Invalid index");
         }
         return batchIds[_index];
     }
@@ -47,7 +39,7 @@ contract BatchMintMetadata {
             }
         }
 
-        revert BatchMintMetadata__NoBatchIDForToken(_tokenId);
+        revert("No batchId for token");
     }
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
@@ -61,7 +53,7 @@ contract BatchMintMetadata {
             }
         }
 
-        revert BatchMintMetadata__NoBaseURIForToken(_tokenId);
+        revert("No baseURI for token");
     }
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
