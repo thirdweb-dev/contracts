@@ -715,7 +715,7 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
-        vm.expectRevert("Not enough minted tokens");
+        vm.expectRevert("Not enough tokens");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -903,7 +903,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert("Not enough minted tokens");
+        vm.expectRevert("Not enough tokens");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -1082,7 +1082,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("Zero amt");
+        vm.expectRevert("Minting 0 tokens");
         sigdrop.lazyMint(0, "", newEncryptedURI);
 
         vm.stopPrank();
