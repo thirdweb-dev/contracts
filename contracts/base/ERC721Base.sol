@@ -75,9 +75,8 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *  @param _tokenId The tokenId of an NFT.
      */
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
-
         string memory fullUriForToken = fullURI[_tokenId];
-        if(bytes(fullUriForToken).length > 0) {
+        if (bytes(fullUriForToken).length > 0) {
             return fullUriForToken;
         }
 
