@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "../../../../eip/interface/IERC20.sol";
-import "../../../utils/Address.sol";
+import "../../../../lib/TWAddress.sol";
 
 /**
  * @title SafeERC20
@@ -16,7 +16,7 @@ import "../../../utils/Address.sol";
  * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
  */
 library SafeERC20 {
-    using Address for address;
+    using TWAddress for address;
 
     function safeTransfer(
         IERC20 token,

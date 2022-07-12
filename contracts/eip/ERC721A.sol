@@ -6,9 +6,9 @@ pragma solidity ^0.8.4;
 
 import "./interface/IERC721A.sol";
 import "../openzeppelin-presets/token/ERC721/IERC721Receiver.sol";
-import "../openzeppelin-presets/utils/Address.sol";
+import "../lib/TWAddress.sol";
 import "../openzeppelin-presets/utils/Context.sol";
-import "../openzeppelin-presets/utils/Strings.sol";
+import "../lib/TWStrings.sol";
 import { ERC165 } from "./ERC165.sol";
 
 /**
@@ -22,8 +22,8 @@ import { ERC165 } from "./ERC165.sol";
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
 contract ERC721A is Context, ERC165, IERC721A {
-    using Address for address;
-    using Strings for uint256;
+    using TWAddress for address;
+    using TWStrings for uint256;
 
     // The tokenId of the next token to be minted.
     uint256 internal _currentIndex;
