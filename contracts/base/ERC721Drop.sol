@@ -81,7 +81,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     {
         require(_req.quantity > 0, "Minting zero tokens.");
 
-        uint256 tokenIdToMint = nextTokenIdToMint();
+        uint256 tokenIdToMint = _currentIndex;
         require(tokenIdToMint + _req.quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
 
         // Verify and process payload.
@@ -166,7 +166,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         bytes memory
     ) internal view override {
         require(msg.sender == tx.origin, "BOT");
-        if (nextTokenIdToMint() + _quantity > nextTokenIdToLazyMint) {
+        if (_currentIndex + _quantity > nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
         }
     }
@@ -198,7 +198,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         override
         returns (uint256 startTokenId)
     {
-        startTokenId = nextTokenIdToMint();
+        startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }
 

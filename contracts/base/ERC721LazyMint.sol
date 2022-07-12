@@ -47,7 +47,7 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
      */
     function mintTo(address _to, string memory) public virtual override {
         require(_canMint(), "Not authorized to mint.");
-        require(nextTokenIdToMint() + 1 <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+        require(_currentIndex + 1 <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
 
         _safeMint(_to, 1, "");
     }
@@ -67,9 +67,14 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
         bytes memory _data
     ) public virtual override {
         require(_canMint(), "Not authorized to mint.");
-        require(nextTokenIdToMint() + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
 
         _safeMint(_to, _quantity, _data);
+    }
+
+    /// @notice The tokenId assigned to the next new NFT to be lazy minted.
+    function nextTokenIdToMint() public view virtual override returns (uint256) {
+        return nextTokenIdToLazyMint;
     }
 
     /*//////////////////////////////////////////////////////////////
