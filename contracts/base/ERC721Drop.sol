@@ -34,7 +34,6 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _royaltyRecipient,
