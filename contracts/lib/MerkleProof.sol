@@ -2,7 +2,7 @@
 // Modified from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.3.0/contracts/utils/cryptography/MerkleProof.sol
 // Copied from https://github.com/ensdomains/governance/blob/master/contracts/MerkleProof.sol
 
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 /**
  * @dev These functions deal with verification of Merkle Trees proofs.
