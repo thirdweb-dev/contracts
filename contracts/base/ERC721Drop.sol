@@ -254,6 +254,6 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         string memory,
         bytes memory
     ) public virtual override {
-        revert("Not authorized to mint.");
+        revert("Not implemented. Use lazymint instead.");
     }
 }
