@@ -9,7 +9,7 @@ import "../openzeppelin-presets/token/ERC721/IERC721Receiver.sol";
 import "../lib/TWAddress.sol";
 import "../openzeppelin-presets/utils/Context.sol";
 import "../lib/TWStrings.sol";
-import { ERC165 } from "./ERC165.sol";
+import "./ERC165.sol";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including

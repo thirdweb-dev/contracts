@@ -100,9 +100,9 @@ function isApprovedForAll(address owner, address operator) external view returns
 function name() external view returns (string)
 ```
 
+A descriptive name for a collection of NFTs in this contract
 
 
-*Returns the token collection name.*
 
 
 #### Returns
@@ -197,9 +197,9 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 function symbol() external view returns (string)
 ```
 
+An abbreviated name for NFTs in this contract
 
 
-*Returns the token collection symbol.*
 
 
 #### Returns
@@ -211,18 +211,18 @@ function symbol() external view returns (string)
 ### tokenURI
 
 ```solidity
-function tokenURI(uint256 tokenId) external view returns (string)
+function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
+A distinct Uniform Resource Identifier (URI) for a given asset.
 
-
-*Returns the Uniform Resource Identifier (URI) for `tokenId` token.*
+*Throws if `_tokenId` is not a valid NFT. URIs are defined in RFC  3986. The URI may point to a JSON file that conforms to the &quot;ERC721  Metadata JSON Schema&quot;.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined
 
 #### Returns
 
