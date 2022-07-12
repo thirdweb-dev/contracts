@@ -250,6 +250,13 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
 
     function mint(
         address,
+        string memory
+    ) public virtual override {
+        revert("Not implemented. Use lazymint instead.");
+    }
+
+    function batchMint(
+        address,
         uint256,
         string memory,
         bytes memory

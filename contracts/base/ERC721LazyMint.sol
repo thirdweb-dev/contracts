@@ -40,7 +40,31 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
                             Minting logic
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice          Lets an authorized address mint a lazy minted NFT to a recipient.
+     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *
+     *  @param _to       The recipient of the NFT to mint.
+     */
     function mint(
+        address _to,
+        string memory
+    ) public virtual override {
+        require(_canMint(), "Not authorized to mint.");
+        require(nextTokenIdToMint() + 1 <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+
+        _safeMint(_to, 1, "");
+    }
+
+    /**
+     *  @notice          Lets an authorized address mint multiple lazy minted NFTs at once to a recipient.
+     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *
+     *  @param _to       The recipient of the NFT to mint.
+     *  @param _quantity The number of NFTs to mint.
+     *  @param _data     Additional data to pass along during the minting of the NFT.
+     */
+    function batchMint(
         address _to,
         uint256 _quantity,
         string memory,

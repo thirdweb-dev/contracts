@@ -49,6 +49,25 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### batchMint
+
+```solidity
+function batchMint(address _to, uint256 _quantity, string, bytes _data) external nonpayable
+```
+
+Lets an authorized address mint multiple lazy minted NFTs at once to a recipient.
+
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _to | address | The recipient of the NFT to mint.
+| _quantity | uint256 | The number of NFTs to mint.
+| _2 | string | undefined
+| _data | bytes | Additional data to pass along during the minting of the NFT.
+
 ### burn
 
 ```solidity
@@ -234,21 +253,19 @@ Lets an authorized address lazy mint a given amount of NFTs.
 ### mint
 
 ```solidity
-function mint(address _to, uint256 _quantity, string, bytes _data) external nonpayable
+function mint(address _to, string) external nonpayable
 ```
 
+Lets an authorized address mint a lazy minted NFT to a recipient.
 
-
-
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | undefined
-| _quantity | uint256 | undefined
-| _2 | string | undefined
-| _data | bytes | undefined
+| _to | address | The recipient of the NFT to mint.
+| _1 | string | undefined
 
 ### multicall
 

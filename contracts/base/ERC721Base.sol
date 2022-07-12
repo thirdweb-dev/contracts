@@ -84,11 +84,27 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
      *
      *  @param _to       The recipient of the NFT to mint.
+     *  @param _baseURI  The baseURI for the NFT minted. The metadata for the NFT is `baseURI/tokenId`
+     */
+    function mint(
+        address _to,
+        string memory _baseURI
+    ) public virtual {
+        require(_canMint(), "Not authorized to mint.");
+        _batchMintMetadata(nextTokenIdToMint(), 1, _baseURI);
+        _safeMint(_to, 1, "");
+    }
+
+    /**
+     *  @notice          Lets an authorized address mint multiple NFTs at once to a recipient.
+     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *
+     *  @param _to       The recipient of the NFT to mint.
      *  @param _quantity The number of NFTs to mint.
      *  @param _baseURI  The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
      *  @param _data     Additional data to pass along during the minting of the NFT.
      */
-    function mint(
+    function batchMint(
         address _to,
         uint256 _quantity,
         string memory _baseURI,

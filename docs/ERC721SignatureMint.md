@@ -49,6 +49,25 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### batchMint
+
+```solidity
+function batchMint(address _to, uint256 _quantity, string _baseURI, bytes _data) external nonpayable
+```
+
+Lets an authorized address mint multiple NFTs at once to a recipient.
+
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _to | address | The recipient of the NFT to mint.
+| _quantity | uint256 | The number of NFTs to mint.
+| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
+| _data | bytes | Additional data to pass along during the minting of the NFT.
+
 ### burn
 
 ```solidity
@@ -210,7 +229,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 ### mint
 
 ```solidity
-function mint(address _to, uint256 _quantity, string _baseURI, bytes _data) external nonpayable
+function mint(address _to, string _baseURI) external nonpayable
 ```
 
 Lets an authorized address mint an NFT to a recipient.
@@ -222,9 +241,7 @@ Lets an authorized address mint an NFT to a recipient.
 | Name | Type | Description |
 |---|---|---|
 | _to | address | The recipient of the NFT to mint.
-| _quantity | uint256 | The number of NFTs to mint.
-| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
-| _data | bytes | Additional data to pass along during the minting of the NFT.
+| _baseURI | string | The baseURI for the NFT minted. The metadata for the NFT is `baseURI/tokenId`
 
 ### mintWithSignature
 
