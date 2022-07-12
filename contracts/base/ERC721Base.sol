@@ -23,9 +23,9 @@ import "../lib/TWStrings.sol";
  *      - Ownership of the contract, with the ability to restrict certain functions to
  *        only be called by the contract's owner.
  *
- *      - Multicall capability for fetching NFT data.
+ *      - Multicall capability to perform multiple actions atomically
  *
- *      - EIP 2981 compliance for outright royalty support on NFT marketplaces.
+ *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
 contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
