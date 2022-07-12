@@ -32,6 +32,12 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
+                            Mappings
+    //////////////////////////////////////////////////////////////*/
+
+    mapping(uint256 => string) private fullURI;
+
+    /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
@@ -69,6 +75,12 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *  @param _tokenId The tokenId of an NFT.
      */
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+
+        string memory fullUriForToken = fullURI[_tokenId];
+        if(bytes(fullUriForToken).length > 0) {
+            return fullUriForToken;
+        }
+
         string memory batchUri = getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
@@ -82,11 +94,11 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
      *
      *  @param _to       The recipient of the NFT to mint.
-     *  @param _baseURI  The baseURI for the NFT minted. The metadata for the NFT is `baseURI/tokenId`
+     *  @param _tokenURI The full metadata URI for the NFT minted.
      */
-    function mintTo(address _to, string memory _baseURI) public virtual {
+    function mintTo(address _to, string memory _tokenURI) public virtual {
         require(_canMint(), "Not authorized to mint.");
-        _batchMintMetadata(nextTokenIdToMint(), 1, _baseURI);
+        fullURI[nextTokenIdToMint()] = _tokenURI;
         _safeMint(_to, 1, "");
     }
 

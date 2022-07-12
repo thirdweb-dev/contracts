@@ -229,7 +229,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 ### mintTo
 
 ```solidity
-function mintTo(address _to, string _baseURI) external nonpayable
+function mintTo(address _to, string _tokenURI) external nonpayable
 ```
 
 Lets an authorized address mint an NFT to a recipient.
@@ -241,7 +241,7 @@ Lets an authorized address mint an NFT to a recipient.
 | Name | Type | Description |
 |---|---|---|
 | _to | address | The recipient of the NFT to mint.
-| _baseURI | string | The baseURI for the NFT minted. The metadata for the NFT is `baseURI/tokenId`
+| _tokenURI | string | The full metadata URI for the NFT minted.
 
 ### mintWithSignature
 
