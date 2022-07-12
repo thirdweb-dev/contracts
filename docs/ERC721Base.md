@@ -226,10 +226,10 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
-### mint
+### mintTo
 
 ```solidity
-function mint(address _to, string _baseURI) external nonpayable
+function mintTo(address _to, string _baseURI) external nonpayable
 ```
 
 Lets an authorized address mint an NFT to a recipient.

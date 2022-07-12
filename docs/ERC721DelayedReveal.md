@@ -340,10 +340,10 @@ Lets an authorized address lazy mint a given amount of NFTs.
 |---|---|---|
 | batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
 
-### mint
+### mintTo
 
 ```solidity
-function mint(address _to, string) external nonpayable
+function mintTo(address _to, string) external nonpayable
 ```
 
 Lets an authorized address mint a lazy minted NFT to a recipient.
