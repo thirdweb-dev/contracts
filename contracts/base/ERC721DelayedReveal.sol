@@ -33,10 +33,9 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
     constructor(
         string memory _name,
         string memory _symbol,
-        string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721LazyMint(_name, _symbol, contractURI, _royaltyRecipient, _royaltyBps) {}
+    ) ERC721LazyMint(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
 
     /*//////////////////////////////////////////////////////////////
                         Overriden ERC721 logic

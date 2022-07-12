@@ -31,10 +31,9 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
     constructor(
         string memory _name,
         string memory _symbol,
-        string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721Base(_name, _symbol, contractURI, _royaltyRecipient, _royaltyBps) {}
+    ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
 
     /*//////////////////////////////////////////////////////////////
                             Minting logic

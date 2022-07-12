@@ -38,11 +38,10 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         address _defaultAdmin,
         string memory _name,
         string memory _symbol,
-        string memory _contractURI,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC721SignatureMint(_name, _symbol, _contractURI, _royaltyRecipient, _royaltyBps, _primarySaleRecipient) {}
+    ) ERC721SignatureMint(_name, _symbol, _royaltyRecipient, _royaltyBps, _primarySaleRecipient) {}
 
     /*///////////////////////////////////////////////////////////////
                     Overriden ERC 721 logic
