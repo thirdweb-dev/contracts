@@ -51,6 +51,7 @@ contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
         external
         payable
         virtual
+        override
         returns (address signer)
     {
         require(_req.quantity > 0, "Minting zero tokens.");

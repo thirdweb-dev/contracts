@@ -22,7 +22,7 @@ abstract contract Ownable is IOwnable {
     }
 
     /// @dev Returns the owner of the contract.
-    function owner() public view returns (address) {
+    function owner() public view override returns (address) {
         return _owner;
     }
 
