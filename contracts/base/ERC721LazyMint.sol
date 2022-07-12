@@ -46,10 +46,7 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
      *
      *  @param _to       The recipient of the NFT to mint.
      */
-    function mint(
-        address _to,
-        string memory
-    ) public virtual override {
+    function mint(address _to, string memory) public virtual override {
         require(_canMint(), "Not authorized to mint.");
         require(nextTokenIdToMint() + 1 <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
 

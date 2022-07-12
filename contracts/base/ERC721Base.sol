@@ -86,10 +86,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *  @param _to       The recipient of the NFT to mint.
      *  @param _baseURI  The baseURI for the NFT minted. The metadata for the NFT is `baseURI/tokenId`
      */
-    function mint(
-        address _to,
-        string memory _baseURI
-    ) public virtual {
+    function mint(address _to, string memory _baseURI) public virtual {
         require(_canMint(), "Not authorized to mint.");
         _batchMintMetadata(nextTokenIdToMint(), 1, _baseURI);
         _safeMint(_to, 1, "");

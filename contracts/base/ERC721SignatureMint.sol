@@ -15,9 +15,9 @@ import "../lib/CurrencyTransferLib.sol";
  *
  *  The `ERC721SignatureMint` contract uses the `ERC721Base` contract, along with the `SignatureMintERC721` extension.
  *
- *  The 'signature minting' mechanism in the `SignatureMintERC721` extension uses EIP 712, and is a way for a contract 
- *  admin to authorize an external party's request to mint tokens on the admin's contract. At a high level, this means 
- *  you can authorize some external party to mint tokens on your contract, and specify what exactly will be minted by 
+ *  The 'signature minting' mechanism in the `SignatureMintERC721` extension uses EIP 712, and is a way for a contract
+ *  admin to authorize an external party's request to mint tokens on the admin's contract. At a high level, this means
+ *  you can authorize some external party to mint tokens on your contract, and specify what exactly will be minted by
  *  that external party.
  *
  */
