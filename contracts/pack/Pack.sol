@@ -170,7 +170,7 @@ contract Pack is
 
     /// @dev Creates a pack with the stated contents.
     function createPack(
-        Token[] calldata _contents,
+        Token[] calldata _contents, //check
         uint256[] calldata _numOfRewardUnits,
         string calldata _packUri,
         uint128 _openStartTimestamp,
@@ -219,7 +219,7 @@ contract Pack is
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
 
         PackInfo memory pack = packInfo[_packId];
-        require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
+        require(pack.openStartTimestamp <= block.timestamp, "cannot open yet");
 
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
@@ -242,7 +242,8 @@ contract Pack is
         uint256 totalRewardUnits;
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
-            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "invalid reward units");
+            require(_contents[i].totalAmount != 0, "amount can't be zero");
+            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "invalid reward units"); //check
             require(
                 _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
                 "invalid erc721 rewards"
@@ -312,7 +313,7 @@ contract Pack is
         returns (Token[] memory contents, uint256[] memory perUnitAmounts)
     {
         PackInfo memory pack = packInfo[_packId];
-        uint256 total = getTokenCountOfBundle(_packId);
+        uint256 total = getTokenCountOfBundle(_packId); //check
         contents = new Token[](total);
         perUnitAmounts = new uint256[](total);
 

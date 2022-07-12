@@ -469,6 +469,52 @@ contract PackTest is BaseTest {
     }
 
     /**
+     *  note: Testing revert condition; token owner calls `createPack` with invalid token-type.
+     */
+    function test_revert_createPack_invalidTokenType() public {
+        ITokenBundle.Token[] memory invalidContent = new ITokenBundle.Token[](1);
+        uint256[] memory rewardUnits = new uint256[](1);
+
+        invalidContent[0] = ITokenBundle.Token({
+            assetContract: address(erc721),
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 1
+        });
+        rewardUnits[0] = 1;
+
+        address recipient = address(0x123);
+
+        vm.startPrank(address(tokenOwner));
+        vm.expectRevert();
+        pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; token owner calls `createPack` with total-amount as 0.
+     */
+    function test_revert_createPack_zeroTotalAmount() public {
+        ITokenBundle.Token[] memory invalidContent = new ITokenBundle.Token[](1);
+        uint256[] memory rewardUnits = new uint256[](1);
+
+        invalidContent[0] = ITokenBundle.Token({
+            assetContract: address(erc20),
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 0
+        });
+        rewardUnits[0] = 10;
+
+        address recipient = address(0x123);
+
+        vm.startPrank(address(tokenOwner));
+        vm.expectRevert("amount can't be zero");
+        (, uint256 totalSupply) = pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
+
+        // assertEq(totalSupply, 10); 
+    }
+
+    /**
      *  note: Testing revert condition; token owner calls `createPack` with no tokens to pack.
      */
     function test_revert_createPack_noTokensToPack() public {
@@ -885,14 +931,20 @@ contract PackTest is BaseTest {
     }
 
     function test_fuzz_failing_state_openPack() public {
-        // vm.assume(x == 1574 && y == 22 && z == 392);
-        // (23, 1, 241)
-        // (446, 22, 890)
-        // (2, 1, 314)
+        // (446, 22, 890).. (gas: 8937393460518282035), total supply: 10203, total reward units: 224466
+        // (335, 3, 1570).. (gas: 8937393460517864076), total supply: 54915, total reward units: 164745
+        // (1478, 4, 1890).. (gas: 8937393460521767975), total supply: 177189, total reward units: 708756
+        // (1962, 282, 219).. (gas: 8937393460523355524), total supply: 3239, total reward units: 913398
+        // (472, 1, 543).. (gas: 8937393460518373840), total supply: 236220, total reward units: 236220
+        // (96, 112, 447).. (gas: 8937393460517062690), total supply: 467, total reward units: 52304
+        // (506, 6, 12950).. (gas: 8937393460518476945), total supply: 41699, total reward units: 250194
+        // (164, 20, 922).. (gas: 8937393460517318850), total supply: 4335, total reward units: 86700
+        // (138, 2, 948).. (gas: 8937393460517220399), total supply: 37959, total reward units: 75918
+        // (32, 11, 978).. (gas: 8937393460516848598), total supply: 1456, total reward units: 16016
 
-        uint256 x = 2;
-        uint128 y = 1;
-        uint256 z = 314;
+        uint256 x = 32;
+        uint128 y = 11;
+        uint256 z = 978;
 
         (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits) = getTokensToPack(x);
         if (tokensToPack.length == 0) {
@@ -925,6 +977,7 @@ contract PackTest is BaseTest {
         console2.log("total supply: ", totalSupply);
         console2.log("total reward units: ", totalRewardUnits);
 
+        vm.roll(5);
         vm.assume(z <= totalSupply);
         vm.prank(recipient, recipient);
         ITokenBundle.Token[] memory rewardsReceived = pack.openPack(packId, z);
