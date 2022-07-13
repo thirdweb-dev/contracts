@@ -38,7 +38,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
                 count += 1;
             }
         }
-        if(hasRole(role, address(0))) {
+        if (hasRole(role, address(0))) {
             count += 1;
         }
     }

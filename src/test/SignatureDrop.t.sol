@@ -273,7 +273,7 @@ contract SignatureDropTest is BaseTest {
 
         roleMemberCount = sigdrop.getRoleMemberCount(role);
         console.log(roleMemberCount);
-        for(uint256 i = 0; i < roleMemberCount; i++) {
+        for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(sigdrop.getRoleMember(role, i));
         }
         console.log("");
@@ -281,7 +281,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.revokeRole(role, address(2));
         roleMemberCount = sigdrop.getRoleMemberCount(role);
         console.log(roleMemberCount);
-        for(uint256 i = 0; i < roleMemberCount; i++) {
+        for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(sigdrop.getRoleMember(role, i));
         }
         console.log("");
@@ -289,7 +289,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.revokeRole(role, address(0));
         roleMemberCount = sigdrop.getRoleMemberCount(role);
         console.log(roleMemberCount);
-        for(uint256 i = 0; i < roleMemberCount; i++) {
+        for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(sigdrop.getRoleMember(role, i));
         }
         console.log("");
@@ -297,7 +297,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.grantRole(role, address(5));
         roleMemberCount = sigdrop.getRoleMemberCount(role);
         console.log(roleMemberCount);
-        for(uint256 i = 0; i < roleMemberCount; i++) {
+        for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(sigdrop.getRoleMember(role, i));
         }
         console.log("");
@@ -305,7 +305,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.grantRole(role, address(0));
         roleMemberCount = sigdrop.getRoleMemberCount(role);
         console.log(roleMemberCount);
-        for(uint256 i = 0; i < roleMemberCount; i++) {
+        for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(sigdrop.getRoleMember(role, i));
         }
         console.log("");
@@ -313,7 +313,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.grantRole(role, address(6));
         roleMemberCount = sigdrop.getRoleMemberCount(role);
         console.log(roleMemberCount);
-        for(uint256 i = 0; i < roleMemberCount; i++) {
+        for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(sigdrop.getRoleMember(role, i));
         }
         console.log("");
