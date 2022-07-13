@@ -58,4 +58,24 @@ Reveals a batch of delayed reveal NFTs.
 
 
 
+## Events
+
+### TokenURIRevealed
+
+```solidity
+event TokenURIRevealed(uint256 indexed index, string revealedURI)
+```
+
+
+
+*Emitted when tokens are revealed.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index `indexed` | uint256 | undefined |
+| revealedURI  | string | undefined |
+
+
 

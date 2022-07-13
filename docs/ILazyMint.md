@@ -36,4 +36,26 @@ Lazy mints a given amount of NFTs.
 
 
 
+## Events
+
+### TokensLazyMinted
+
+```solidity
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+```
+
+
+
+*Emitted when tokens are lazy minted.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startTokenId `indexed` | uint256 | undefined |
+| endTokenId  | uint256 | undefined |
+| baseURI  | string | undefined |
+| encryptedBaseURI  | bytes | undefined |
+
+
 

@@ -31,13 +31,13 @@ Lets an account claim a given quantity of NFTs.
 | allowlistProof | IDrop.AllowlistProof | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
 | data | bytes | Arbitrary bytes data that can be leveraged in the implementation of this interface.
 
-### lazyMint
+### setClaimConditions
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes extraData) external nonpayable returns (uint256 batchId)
+function setClaimConditions(IClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
 ```
 
-Lazy mints a given amount of NFTs.
+Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 
 
@@ -45,19 +45,29 @@ Lazy mints a given amount of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | The number of NFTs to lazy mint.
-| baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                          of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| extraData | bytes | Additional bytes data to be used at the discretion of the consumer of the contract.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| batchId | uint256 |         A unique integer identifier for the batch of NFTs lazy minted together.
+| phases | IClaimCondition.ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`.
+| resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new                                  claim conditions.
 
 
 
 ## Events
+
+### ClaimConditionsUpdated
+
+```solidity
+event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
+```
+
+
+
+*Emitted when the contract&#39;s claim conditions are updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+| resetEligibility  | bool | undefined |
 
 ### TokensClaimed
 
@@ -67,7 +77,7 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 
 
 
-
+*Emitted when tokens are claimed via `claim`.*
 
 #### Parameters
 
@@ -78,6 +88,140 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 | receiver `indexed` | address | undefined |
 | startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
+
+
+
+## Errors
+
+### Drop__CannotClaimYet
+
+```solidity
+error Drop__CannotClaimYet(uint256 blockTimestamp, uint256 startTimestamp, uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+```
+
+Emitted when the current timestamp is invalid for claim.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| blockTimestamp | uint256 | undefined |
+| startTimestamp | uint256 | undefined |
+| lastClaimedAt | uint256 | undefined |
+| nextValidClaimTimestamp | uint256 | undefined |
+
+### Drop__ExceedMaxClaimableSupply
+
+```solidity
+error Drop__ExceedMaxClaimableSupply(uint256 supplyClaimed, uint256 maxClaimableSupply)
+```
+
+Emitted when claiming given quantity will exceed max claimable supply.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimed | uint256 | undefined |
+| maxClaimableSupply | uint256 | undefined |
+
+### Drop__InvalidCurrencyOrPrice
+
+```solidity
+error Drop__InvalidCurrencyOrPrice(address givenCurrency, address requiredCurrency, uint256 givenPricePerToken, uint256 requiredPricePerToken)
+```
+
+Emitted when given currency or price is invalid.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| givenCurrency | address | undefined |
+| requiredCurrency | address | undefined |
+| givenPricePerToken | uint256 | undefined |
+| requiredPricePerToken | uint256 | undefined |
+
+### Drop__InvalidQuantity
+
+```solidity
+error Drop__InvalidQuantity()
+```
+
+Emitted when claiming invalid quantity of tokens.
+
+
+
+
+### Drop__InvalidQuantityProof
+
+```solidity
+error Drop__InvalidQuantityProof(uint256 maxQuantityInAllowlist)
+```
+
+Emitted when claiming more than allowed quantity in allowlist.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| maxQuantityInAllowlist | uint256 | undefined |
+
+### Drop__MaxSupplyClaimedAlready
+
+```solidity
+error Drop__MaxSupplyClaimedAlready(uint256 supplyClaimedAlready)
+```
+
+Emitted when max claimable supply in given condition is less than supply claimed already.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedAlready | uint256 | undefined |
+
+### Drop__NotAuthorized
+
+```solidity
+error Drop__NotAuthorized()
+```
+
+
+
+*Emitted when an unauthorized caller tries to set claim conditions.*
+
+
+### Drop__NotInWhitelist
+
+```solidity
+error Drop__NotInWhitelist()
+```
+
+Emitted when given allowlist proof is invalid.
+
+
+
+
+### Drop__ProofClaimed
+
+```solidity
+error Drop__ProofClaimed()
+```
+
+Emitted when allowlist spot is already used.
+
+
 
 
 

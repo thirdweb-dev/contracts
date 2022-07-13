@@ -219,6 +219,139 @@ contract SignatureDropTest is BaseTest {
     }
 
     /**
+     *  @dev Tests contract state for Transfer role.
+     */
+    function test_state_grant_transferRole() public {
+        bytes32 role = keccak256("TRANSFER_ROLE");
+
+        // check if admin and address(0) have transfer role in the beginning
+        bool checkAddressZero = sigdrop.hasRole(role, address(0));
+        bool checkAdmin = sigdrop.hasRole(role, deployerSigner);
+        assertTrue(checkAddressZero);
+        assertTrue(checkAdmin);
+
+        // check if transfer role can be granted to a non-holder
+        address receiver = getActor(0);
+        vm.startPrank(deployerSigner);
+        sigdrop.grantRole(role, receiver);
+
+        // expect revert when granting to a holder
+        vm.expectRevert("Can only grant to non holders");
+        sigdrop.grantRole(role, receiver);
+
+        // check if receiver has transfer role
+        bool checkReceiver = sigdrop.hasRole(role, receiver);
+        assertTrue(checkReceiver);
+
+        // check if role is correctly revoked
+        sigdrop.revokeRole(role, receiver);
+        checkReceiver = sigdrop.hasRole(role, receiver);
+        assertFalse(checkReceiver);
+        sigdrop.revokeRole(role, address(0));
+        checkAddressZero = sigdrop.hasRole(role, address(0));
+        assertFalse(checkAddressZero);
+
+        vm.stopPrank();
+    }
+
+    /**
+     *  @dev Tests contract state for Transfer role.
+     */
+    function test_state_getRoleMember_transferRole() public {
+        bytes32 role = keccak256("TRANSFER_ROLE");
+
+        uint256 roleMemberCount = sigdrop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 2);
+
+        address roleMember = sigdrop.getRoleMember(role, 1);
+        assertEq(roleMember, address(0));
+
+        vm.startPrank(deployerSigner);
+        sigdrop.grantRole(role, address(2));
+        sigdrop.grantRole(role, address(3));
+        sigdrop.grantRole(role, address(4));
+
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.revokeRole(role, address(2));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.revokeRole(role, address(0));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.grantRole(role, address(5));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.grantRole(role, address(0));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.grantRole(role, address(6));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+    }
+
+    /**
+     *  note: Testing transfer of tokens when transfer-role is restricted
+     */
+    function test_claim_transferRole() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false);
+
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+
+        // revoke transfer role from address(0)
+        vm.prank(deployerSigner);
+        sigdrop.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
+        vm.startPrank(receiver);
+        vm.expectRevert("!Transfer-Role");
+        sigdrop.transferFrom(receiver, address(123), 0);
+    }
+
+    /**
      *  @dev Tests whether role member count is incremented correctly.
      */
     function test_member_count_incremented_properly_when_role_granted() public {
@@ -715,7 +848,7 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
-        vm.expectRevert("Not enough minted tokens");
+        vm.expectRevert("Not enough tokens");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -903,7 +1036,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert("Not enough minted tokens");
+        vm.expectRevert("Not enough tokens");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -1082,7 +1215,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("Zero amt");
+        vm.expectRevert("Minting 0 tokens");
         sigdrop.lazyMint(0, "", newEncryptedURI);
 
         vm.stopPrank();

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/drop/DropERC1155.sol";
+import { DropERC1155 } from "contracts/drop/DropERC1155.sol";
 
 // Test imports
 import "../utils/BaseTest.sol";

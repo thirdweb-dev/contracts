@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 // Helper interfaces
 import { IWETH } from "../interfaces/IWETH.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+
+import "../openzeppelin-presets/token/ERC20/utils/SafeERC20.sol";
 
 library CurrencyTransferLib {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
 
     /// @dev The address interpreted as native token of the chain.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -71,9 +71,9 @@ library CurrencyTransferLib {
         }
 
         if (_from == address(this)) {
-            IERC20Upgradeable(_currency).safeTransfer(_to, _amount);
+            IERC20(_currency).safeTransfer(_to, _amount);
         } else {
-            IERC20Upgradeable(_currency).safeTransferFrom(_from, _to, _amount);
+            IERC20(_currency).safeTransferFrom(_from, _to, _amount);
         }
     }
 
@@ -96,7 +96,7 @@ library CurrencyTransferLib {
         (bool success, ) = to.call{ value: value }("");
         if (!success) {
             IWETH(_nativeTokenWrapper).deposit{ value: value }();
-            IERC20Upgradeable(_nativeTokenWrapper).safeTransfer(to, value);
+            IERC20(_nativeTokenWrapper).safeTransfer(to, value);
         }
     }
 }

@@ -13,7 +13,7 @@ The &#39;signature minting&#39; mechanism used in thirdweb Token smart contracts
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(ISignatureMintERC1155.MintRequest req, bytes signature) external payable
+function mintWithSignature(ISignatureMintERC1155.MintRequest req, bytes signature) external payable returns (address signer)
 ```
 
 Mints tokens according to the provided mint request.
@@ -26,6 +26,12 @@ Mints tokens according to the provided mint request.
 |---|---|---|
 | req | ISignatureMintERC1155.MintRequest | The payload / mint request.
 | signature | bytes | The signature produced by an account signing the mint request.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined
 
 ### verify
 

@@ -5,8 +5,8 @@ pragma solidity ^0.8.11;
 import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
 
 import "../interfaces/IThirdwebContract.sol";
-import "../feature/interface/IPlatformFee.sol";
-import "../feature/interface/IPrimarySale.sol";
+import "../extension/interface/IPlatformFee.sol";
+import "../extension/interface/IPrimarySale.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";

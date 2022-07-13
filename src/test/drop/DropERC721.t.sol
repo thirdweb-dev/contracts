@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/drop/DropERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 // Test imports

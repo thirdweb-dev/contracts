@@ -16,16 +16,16 @@ import "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/ContractMetadata.sol";
-import "../feature/PlatformFee.sol";
-import "../feature/Royalty.sol";
-import "../feature/PrimarySale.sol";
-import "../feature/Ownable.sol";
-import "../feature/DelayedReveal.sol";
-import "../feature/LazyMint.sol";
-import "../feature/PermissionsEnumerable.sol";
-import "../feature/DropSinglePhase.sol";
-import "../feature/SignatureMintERC721Upgradeable.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/PlatformFee.sol";
+import "../extension/Royalty.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/Ownable.sol";
+import "../extension/DelayedReveal.sol";
+import "../extension/LazyMint.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "../extension/DropSinglePhase.sol";
+import "../extension/SignatureMintERC721Upgradeable.sol";
 
 contract SignatureDrop is
     Initializable,
@@ -56,16 +56,6 @@ contract SignatureDrop is
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
-
-    /// @dev The tokenId of the next NFT that will be minted / lazy minted.
-    uint256 public nextTokenIdToMint;
-
-    /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -122,24 +112,21 @@ contract SignatureDrop is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721AUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721AUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
-    /**
-     * Returns the total amount of tokens minted in the contract.
-     */
-    function totalMinted() external view returns (uint256) {
-        unchecked {
-            return _currentIndex - _startTokenId();
-        }
-    }
-
-    function contractType() public pure returns (bytes32) {
+    function contractType() external pure returns (bytes32) {
         return bytes32("SignatureDrop");
     }
 
-    function contractVersion() public pure returns (uint256) {
+    function contractVersion() external pure returns (uint256) {
         return 2;
     }
 
@@ -155,20 +142,12 @@ contract SignatureDrop is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _encryptedBaseURI
-    ) external onlyRole(minterRole) returns (uint256 batchId) {
-        if (_amount == 0) {
-            revert("Zero amt");
-        }
-
-        uint256 startId = nextTokenIdToMint;
-
-        (nextTokenIdToMint, batchId) = _batchMint(startId, _amount, _baseURIForTokens);
-
+    ) public override onlyRole(minterRole) returns (uint256 batchId) {
         if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(batchId, _encryptedBaseURI);
+            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
         }
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
+        return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -197,12 +176,12 @@ contract SignatureDrop is
         returns (address signer)
     {
         if (_req.quantity == 0) {
-            revert("Zero qty");
+            revert("0 qty");
         }
 
         uint256 tokenIdToMint = _currentIndex;
-        if (tokenIdToMint + _req.quantity > nextTokenIdToMint) {
-            revert("Not enough minted tokens");
+        if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
+            revert("Not enough tokens");
         }
 
         // Verify and process payload.
@@ -239,10 +218,9 @@ contract SignatureDrop is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
-        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
-        if (_currentIndex + _quantity > nextTokenIdToMint) {
-            revert("Not enough minted tokens");
-        }
+        bool bot = isTrustedForwarder(msg.sender) || _msgSender() == tx.origin;
+        require(bot, "BOT");
+        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough tokens");
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -320,9 +298,28 @@ contract SignatureDrop is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    /// @dev Returns whether lazy minting can be done in the given execution context.
+    function _canLazyMint() internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     * Returns the total amount of tokens minted in the contract.
+     */
+    function totalMinted() external view returns (uint256) {
+        unchecked {
+            return _currentIndex - _startTokenId();
+        }
+    }
+
+    /// @dev The tokenId of the next NFT that will be minted / lazy minted.
+    function nextTokenIdToMint() external view returns (uint256) {
+        return nextTokenIdToLazyMint;
+    }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) external virtual {
