@@ -3,12 +3,10 @@
 
 pragma solidity ^0.8.0;
 
-import "./IERC165.sol";
-
 /**
  * @dev Required interface of an ERC721 compliant contract.
  */
-interface IERC721 is IERC165 {
+interface IERC721 {
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
@@ -27,7 +25,7 @@ interface IERC721 is IERC165 {
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
-    function balanceOf(address owner) external view returns (uint256 balance);
+    function balanceOf(address owner) external view returns (uint256);
 
     /**
      * @dev Returns the owner of the `tokenId` token.
@@ -36,7 +34,7 @@ interface IERC721 is IERC165 {
      *
      * - `tokenId` must exist.
      */
-    function ownerOf(uint256 tokenId) external view returns (address owner);
+    function ownerOf(uint256 tokenId) external view returns (address);
 
     /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
@@ -100,7 +98,7 @@ interface IERC721 is IERC165 {
      *
      * - `tokenId` must exist.
      */
-    function getApproved(uint256 tokenId) external view returns (address operator);
+    function getApproved(uint256 tokenId) external view returns (address);
 
     /**
      * @dev Approve or remove `operator` as an operator for the caller.

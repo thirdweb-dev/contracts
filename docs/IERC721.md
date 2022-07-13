@@ -30,7 +30,7 @@ function approve(address to, uint256 tokenId) external nonpayable
 ### balanceOf
 
 ```solidity
-function balanceOf(address owner) external view returns (uint256 balance)
+function balanceOf(address owner) external view returns (uint256)
 ```
 
 
@@ -47,12 +47,12 @@ function balanceOf(address owner) external view returns (uint256 balance)
 
 | Name | Type | Description |
 |---|---|---|
-| balance | uint256 | undefined
+| _0 | uint256 | undefined
 
 ### getApproved
 
 ```solidity
-function getApproved(uint256 tokenId) external view returns (address operator)
+function getApproved(uint256 tokenId) external view returns (address)
 ```
 
 
@@ -69,7 +69,7 @@ function getApproved(uint256 tokenId) external view returns (address operator)
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
+| _0 | address | undefined
 
 ### isApprovedForAll
 
@@ -97,7 +97,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 ### ownerOf
 
 ```solidity
-function ownerOf(uint256 tokenId) external view returns (address owner)
+function ownerOf(uint256 tokenId) external view returns (address)
 ```
 
 
@@ -114,7 +114,7 @@ function ownerOf(uint256 tokenId) external view returns (address owner)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| _0 | address | undefined
 
 ### safeTransferFrom
 
@@ -151,28 +151,6 @@ function setApprovalForAll(address operator, bool _approved) external nonpayable
 |---|---|---|
 | operator | address | undefined
 | _approved | bool | undefined
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-
-
-*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
 
 ### transferFrom
 
