@@ -697,23 +697,6 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### nextTokenIdToLazyMint
-
-```solidity
-function nextTokenIdToLazyMint() external view returns (uint256)
-```
-
-The tokenId assigned to the next new NFT to be lazy minted.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### nextTokenIdToMint
 
 ```solidity
