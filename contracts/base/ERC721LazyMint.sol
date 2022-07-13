@@ -60,7 +60,7 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
      *  @param _quantity The number of NFTs to mint.
      *  @param _data     Additional data to pass along during the minting of the NFT.
      */
-    function batchMint(
+    function batchMintTo(
         address _to,
         uint256 _quantity,
         string memory,

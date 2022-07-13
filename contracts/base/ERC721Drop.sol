@@ -249,7 +249,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         revert("Not implemented. Use lazymint instead.");
     }
 
-    function batchMint(
+    function batchMintTo(
         address,
         uint256,
         string memory,
