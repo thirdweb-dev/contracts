@@ -510,7 +510,7 @@ The tokenId assigned to the next new NFT to be lazy minted.
 function nextTokenIdToMint() external view returns (uint256)
 ```
 
-The tokenId assigned to the next new NFT to be minted.
+The tokenId assigned to the next new NFT to be lazy minted.
 
 
 
