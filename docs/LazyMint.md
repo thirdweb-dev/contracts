@@ -73,23 +73,6 @@ Lets an authorized address lazy mint a given amount of NFTs.
 |---|---|---|
 | batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
 
-### nextTokenIdToLazyMint
-
-```solidity
-function nextTokenIdToLazyMint() external view returns (uint256)
-```
-
-The tokenId assigned to the next new NFT to be lazy minted.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 
 
 ## Events
