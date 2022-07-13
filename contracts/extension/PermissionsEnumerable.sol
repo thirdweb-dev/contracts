@@ -23,7 +23,8 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
                     member = roleMembers[role].members[i];
                     return member;
                 }
-            } else {
+                check += 1;
+            } else if (hasRole(role, address(0)) && i == roleMembers[role].indexOf[address(0)]) {
                 check += 1;
             }
         }
@@ -36,6 +37,9 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
             if (roleMembers[role].members[i] != address(0)) {
                 count += 1;
             }
+        }
+        if(hasRole(role, address(0))) {
+            count += 1;
         }
     }
 
