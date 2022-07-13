@@ -49,10 +49,10 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### batchMint
+### batchMintTo
 
 ```solidity
-function batchMint(address _to, uint256 _quantity, string, bytes _data) external nonpayable
+function batchMintTo(address _to, uint256 _quantity, string, bytes _data) external nonpayable
 ```
 
 Lets an authorized address mint multiple lazy minted NFTs at once to a recipient.

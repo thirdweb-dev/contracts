@@ -110,7 +110,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *  @param _baseURI  The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
      *  @param _data     Additional data to pass along during the minting of the NFT.
      */
-    function batchMint(
+    function batchMintTo(
         address _to,
         uint256 _quantity,
         string memory _baseURI,

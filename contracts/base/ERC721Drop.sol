@@ -130,6 +130,11 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         return LazyMint.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
+    /// @notice The tokenId assigned to the next new NFT to be lazy minted.
+    function nextTokenIdToMint() public view virtual override returns (uint256) {
+        return nextTokenIdToLazyMint;
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Delayed reveal logic
     //////////////////////////////////////////////////////////////*/
@@ -249,7 +254,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         revert("Not implemented. Use lazymint instead.");
     }
 
-    function batchMint(
+    function batchMintTo(
         address,
         uint256,
         string memory,
