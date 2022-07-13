@@ -49,10 +49,10 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### batchMint
+### batchMintTo
 
 ```solidity
-function batchMint(address, uint256, string, bytes) external nonpayable
+function batchMintTo(address, uint256, string, bytes) external nonpayable
 ```
 
 
