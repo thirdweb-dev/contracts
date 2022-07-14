@@ -164,6 +164,7 @@ contract PackTest is BaseTest {
         console2.logBytes4(type(IERC721).interfaceId);
         console2.logBytes4(type(IERC1155).interfaceId);
     }
+
     /**
      *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
      */
@@ -491,7 +492,7 @@ contract PackTest is BaseTest {
         address recipient = address(0x123);
 
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert("Asset 20 doesn't match TokenType");
+        vm.expectRevert("Asset doesn't match TokenType");
         pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -516,7 +517,7 @@ contract PackTest is BaseTest {
         vm.expectRevert("amount can't be zero");
         (, uint256 totalSupply) = pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
 
-        // assertEq(totalSupply, 10); 
+        // assertEq(totalSupply, 10);
     }
 
     /**
