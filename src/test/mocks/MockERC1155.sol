@@ -27,4 +27,8 @@ contract MockERC1155 is ERC1155PresetMinterPauser {
 
         _mintBatch(to, ids, amounts, "");
     }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 }

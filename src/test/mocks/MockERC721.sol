@@ -17,4 +17,8 @@ contract MockERC721 is ERC721Burnable {
             tokenId += 1;
         }
     }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 }

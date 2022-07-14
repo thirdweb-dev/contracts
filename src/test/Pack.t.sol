@@ -159,6 +159,12 @@ contract PackTest is BaseTest {
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
 
+    function test_interface() public {
+        console2.logBytes4(type(IERC20).interfaceId);
+        console2.logBytes4(type(IERC721).interfaceId);
+        console2.logBytes4(type(IERC1155).interfaceId);
+    }
+
     /**
      *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
      */
@@ -383,7 +389,7 @@ contract PackTest is BaseTest {
                 totalAmount: 20 ether
             })
         );
-        numOfRewardUnits.push(1 ether);
+        numOfRewardUnits.push(1);
 
         vm.prank(address(tokenOwner));
         vm.expectRevert("msg.value != amount");
@@ -466,6 +472,52 @@ contract PackTest is BaseTest {
         vm.startPrank(address(tokenOwner));
         vm.expectRevert("ERC1155: caller is not owner nor approved");
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; token owner calls `createPack` with invalid token-type.
+     */
+    function test_revert_createPack_invalidTokenType() public {
+        ITokenBundle.Token[] memory invalidContent = new ITokenBundle.Token[](1);
+        uint256[] memory rewardUnits = new uint256[](1);
+
+        invalidContent[0] = ITokenBundle.Token({
+            assetContract: address(erc721),
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 1
+        });
+        rewardUnits[0] = 1;
+
+        address recipient = address(0x123);
+
+        vm.startPrank(address(tokenOwner));
+        vm.expectRevert("Asset doesn't match TokenType");
+        pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; token owner calls `createPack` with total-amount as 0.
+     */
+    function test_revert_createPack_zeroTotalAmount() public {
+        ITokenBundle.Token[] memory invalidContent = new ITokenBundle.Token[](1);
+        uint256[] memory rewardUnits = new uint256[](1);
+
+        invalidContent[0] = ITokenBundle.Token({
+            assetContract: address(erc20),
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 0
+        });
+        rewardUnits[0] = 10;
+
+        address recipient = address(0x123);
+
+        vm.startPrank(address(tokenOwner));
+        vm.expectRevert("amount can't be zero");
+        (, uint256 totalSupply) = pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
+
+        // assertEq(totalSupply, 10);
     }
 
     /**

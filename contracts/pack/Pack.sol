@@ -109,7 +109,7 @@ contract Pack is
     }
 
     receive() external payable {
-        require(_msgSender() == nativeTokenWrapper, "Caller is not native token wrapper.");
+        require(msg.sender == nativeTokenWrapper, "Caller is not native token wrapper.");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -215,11 +215,11 @@ contract Pack is
     {
         address opener = _msgSender();
 
-        require(opener == tx.origin, "opener must be eoa");
+        require(isTrustedForwarder(opener) || opener == tx.origin, "opener must be eoa");
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
 
         PackInfo memory pack = packInfo[_packId];
-        require(pack.openStartTimestamp < block.timestamp, "cannot open yet");
+        require(pack.openStartTimestamp <= block.timestamp, "cannot open yet");
 
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
@@ -232,6 +232,7 @@ contract Pack is
         return rewardUnits;
     }
 
+    /// @dev Stores assets within the contract.
     function escrowPackContents(
         Token[] calldata _contents,
         uint256[] calldata _numOfRewardUnits,
@@ -242,6 +243,7 @@ contract Pack is
         uint256 totalRewardUnits;
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
+            require(_contents[i].totalAmount != 0, "amount can't be zero");
             require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "invalid reward units");
             require(
                 _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
