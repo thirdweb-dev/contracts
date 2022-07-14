@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "./interface/IDelayedReveal.sol";
 
 /**
- *  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
- *  'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
+ *  @title   Delayed Reveal
+ *  @notice  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
+ *           'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
  */
 
 abstract contract DelayedReveal is IDelayedReveal {
