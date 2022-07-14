@@ -17,11 +17,11 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 
-import "../feature/ContractMetadata.sol";
-import "../feature/Royalty.sol";
-import "../feature/Ownable.sol";
-import "../feature/PermissionsEnumerable.sol";
-import "../feature/TokenStore.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/Royalty.sol";
+import "../extension/Ownable.sol";
+import "../extension/PermissionsEnumerable.sol";
+import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
 contract Pack is
     Initializable,
@@ -158,7 +158,7 @@ contract Pack is
         public
         view
         virtual
-        override(ERC1155Receiver, ERC1155Upgradeable)
+        override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;

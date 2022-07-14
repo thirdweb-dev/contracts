@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { Pack } from "contracts/pack/Pack.sol";
 import { IPack } from "contracts/interfaces/IPack.sol";
-import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
+import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
 import { MockERC20 } from "./mocks/MockERC20.sol";

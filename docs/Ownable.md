@@ -66,17 +66,3 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 
 
-## Errors
-
-### Ownable__NotAuthorized
-
-```solidity
-error Ownable__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set the owner.*
-
-
-

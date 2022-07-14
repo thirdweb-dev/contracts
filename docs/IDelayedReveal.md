@@ -58,23 +58,24 @@ Reveals a batch of delayed reveal NFTs.
 
 
 
+## Events
 
-## Errors
-
-### DelayedReveal__NothingToReveal
+### TokenURIRevealed
 
 ```solidity
-error DelayedReveal__NothingToReveal(uint256 batchId)
+event TokenURIRevealed(uint256 indexed index, string revealedURI)
 ```
 
-Emitted when encrypted URI for a given batch is empty.
 
 
+*Emitted when tokens are revealed.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 | undefined |
+| index `indexed` | uint256 | undefined |
+| revealedURI  | string | undefined |
+
 
 

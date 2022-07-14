@@ -212,10 +212,143 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.grantRole(role, receiver);
 
-        vm.expectRevert(abi.encodeWithSelector(IPermissions.Permissions__CanOnlyGrantToNonHolders.selector, receiver));
+        vm.expectRevert("Can only grant to non holders");
         sigdrop.grantRole(role, receiver);
 
         vm.stopPrank();
+    }
+
+    /**
+     *  @dev Tests contract state for Transfer role.
+     */
+    function test_state_grant_transferRole() public {
+        bytes32 role = keccak256("TRANSFER_ROLE");
+
+        // check if admin and address(0) have transfer role in the beginning
+        bool checkAddressZero = sigdrop.hasRole(role, address(0));
+        bool checkAdmin = sigdrop.hasRole(role, deployerSigner);
+        assertTrue(checkAddressZero);
+        assertTrue(checkAdmin);
+
+        // check if transfer role can be granted to a non-holder
+        address receiver = getActor(0);
+        vm.startPrank(deployerSigner);
+        sigdrop.grantRole(role, receiver);
+
+        // expect revert when granting to a holder
+        vm.expectRevert("Can only grant to non holders");
+        sigdrop.grantRole(role, receiver);
+
+        // check if receiver has transfer role
+        bool checkReceiver = sigdrop.hasRole(role, receiver);
+        assertTrue(checkReceiver);
+
+        // check if role is correctly revoked
+        sigdrop.revokeRole(role, receiver);
+        checkReceiver = sigdrop.hasRole(role, receiver);
+        assertFalse(checkReceiver);
+        sigdrop.revokeRole(role, address(0));
+        checkAddressZero = sigdrop.hasRole(role, address(0));
+        assertFalse(checkAddressZero);
+
+        vm.stopPrank();
+    }
+
+    /**
+     *  @dev Tests contract state for Transfer role.
+     */
+    function test_state_getRoleMember_transferRole() public {
+        bytes32 role = keccak256("TRANSFER_ROLE");
+
+        uint256 roleMemberCount = sigdrop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 2);
+
+        address roleMember = sigdrop.getRoleMember(role, 1);
+        assertEq(roleMember, address(0));
+
+        vm.startPrank(deployerSigner);
+        sigdrop.grantRole(role, address(2));
+        sigdrop.grantRole(role, address(3));
+        sigdrop.grantRole(role, address(4));
+
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.revokeRole(role, address(2));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.revokeRole(role, address(0));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.grantRole(role, address(5));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.grantRole(role, address(0));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        sigdrop.grantRole(role, address(6));
+        roleMemberCount = sigdrop.getRoleMemberCount(role);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(sigdrop.getRoleMember(role, i));
+        }
+        console.log("");
+    }
+
+    /**
+     *  note: Testing transfer of tokens when transfer-role is restricted
+     */
+    function test_claim_transferRole() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerTransaction = 100;
+
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", "");
+        vm.prank(deployerSigner);
+        sigdrop.setClaimConditions(conditions[0], false);
+
+        vm.prank(getActor(5), getActor(5));
+        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+
+        // revoke transfer role from address(0)
+        vm.prank(deployerSigner);
+        sigdrop.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
+        vm.startPrank(receiver);
+        vm.expectRevert("!Transfer-Role");
+        sigdrop.transferFrom(receiver, address(123), 0);
     }
 
     /**
@@ -264,15 +397,7 @@ contract SignatureDropTest is BaseTest {
 
         vm.warp(99);
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IDropSinglePhase.DropSinglePhase__CannotClaimYet.selector,
-                block.timestamp,
-                conditions[0].startTimestamp,
-                0,
-                type(uint256).max
-            )
-        );
+        vm.expectRevert("cant claim yet");
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
@@ -352,7 +477,7 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.lazyMint(100, "ipfs://", "");
 
-        vm.expectRevert(abi.encodeWithSelector(ILazyMint.LazyMint__NoBatchIDForToken.selector, 100));
+        vm.expectRevert("Invalid tokenId");
         sigdrop.tokenURI(100);
 
         vm.stopPrank();
@@ -508,9 +633,9 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory errorMessage = abi.encodePacked(
             "Permissions: account ",
-            Strings.toHexString(uint160(address(this)), 20),
+            TWStrings.toHexString(uint160(address(this)), 20),
             " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+            TWStrings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
         );
 
         vm.expectRevert(errorMessage);
@@ -530,7 +655,7 @@ contract SignatureDropTest is BaseTest {
         console.log(sigdrop.getBaseURICount());
 
         sigdrop.lazyMint(100, "", encryptedURI);
-        vm.expectRevert(abi.encodeWithSelector(ILazyMint.LazyMint__InvalidIndex.selector, 2));
+        vm.expectRevert("Invalid index");
         sigdrop.reveal(2, "key");
 
         vm.stopPrank();
@@ -546,7 +671,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "", encryptedURI);
         sigdrop.reveal(0, "key");
 
-        vm.expectRevert(abi.encodeWithSelector(IDelayedReveal.DelayedReveal__NothingToReveal.selector, 100));
+        vm.expectRevert("Nothing to reveal");
         sigdrop.reveal(0, "key");
 
         vm.stopPrank();
@@ -696,7 +821,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.mintWithSignature(mintrequest, signature);
 
         signature = signMintRequest(mintrequest, 4321);
-        vm.expectRevert(abi.encodeWithSelector(ISignatureMintERC721.SignatureMintERC721__InvalidRequest.selector));
+        vm.expectRevert("Invalid req");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -723,9 +848,7 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
-        vm.expectRevert(
-            abi.encodeWithSelector(SignatureDrop.SignatureDrop__NotEnoughMintedTokens.selector, 0, mintrequest.quantity)
-        );
+        vm.expectRevert("Not enough tokens");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -754,7 +877,7 @@ contract SignatureDropTest is BaseTest {
             bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
-            vm.expectRevert(abi.encodeWithSelector(SignatureDrop.SignatureDrop__MustSendTotalPrice.selector, 2, 1));
+            vm.expectRevert("Must send total price");
             sigdrop.mintWithSignature{ value: 2 }(mintrequest, signature);
             vm.stopPrank();
         }
@@ -886,15 +1009,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IDropSinglePhase.DropSinglePhase__CannotClaimYet.selector,
-                block.timestamp,
-                0,
-                1,
-                type(uint256).max
-            )
-        );
+        vm.expectRevert("cant claim yet");
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -921,7 +1036,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert(abi.encodeWithSelector(SignatureDrop.SignatureDrop__NotEnoughMintedTokens.selector, 0, 101));
+        vm.expectRevert("Not enough tokens");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -951,9 +1066,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__ExceedMaxClaimableSupply.selector, 100, 100)
-        );
+        vm.expectRevert("exceeds max supply");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -984,14 +1097,14 @@ contract SignatureDropTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__InvalidQuantity.selector));
+        vm.expectRevert("Invalid quantity");
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], true);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__InvalidQuantity.selector));
+        vm.expectRevert("Invalid quantity");
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -1036,7 +1149,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
-        vm.expectRevert(abi.encodeWithSelector(IDropSinglePhase.DropSinglePhase__NotInWhitelist.selector));
+        vm.expectRevert("not in allowlist");
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
@@ -1102,7 +1215,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert(abi.encodeWithSelector(SignatureDrop.SignatureDrop__ZeroAmount.selector));
+        vm.expectRevert("Minting 0 tokens");
         sigdrop.lazyMint(0, "", newEncryptedURI);
 
         vm.stopPrank();

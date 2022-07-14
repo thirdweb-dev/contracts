@@ -5,10 +5,10 @@ pragma solidity ^0.8.11;
 import { ITokenERC1155 } from "../interfaces/token/ITokenERC1155.sol";
 
 import "../interfaces/IThirdwebContract.sol";
-import "../feature/interface/IPlatformFee.sol";
-import "../feature/interface/IPrimarySale.sol";
-import "../feature/interface/IRoyalty.sol";
-import "../feature/interface/IOwnable.sol";
+import "../extension/interface/IPlatformFee.sol";
+import "../extension/interface/IPrimarySale.sol";
+import "../extension/interface/IRoyalty.sol";
+import "../extension/interface/IOwnable.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -486,7 +486,7 @@ contract TokenERC1155 is
         public
         view
         virtual
-        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable)
+        override(AccessControlEnumerableUpgradeable, ERC1155Upgradeable, IERC165Upgradeable, IERC165)
         returns (bool)
     {
         return

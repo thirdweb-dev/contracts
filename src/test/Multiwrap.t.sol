@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
-import { ITokenBundle } from "contracts/feature/interface/ITokenBundle.sol";
+import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";

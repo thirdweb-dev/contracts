@@ -4,7 +4,7 @@
 
 
 
-Thirdweb&#39;s `LazyMint` is a contract extension for any base NFT contract. It lets you &#39;lazy mint&#39; any number of NFTs  at once. Here, &#39;lazy mint&#39; means defining the metadata for particular tokenIds of your NFT contract, without actually  minting a non-zero balance of NFTs of those tokenIds.
+The `LazyMint` is a contract extension for any base NFT contract. It lets you &#39;lazy mint&#39; any number of NFTs  at once. Here, &#39;lazy mint&#39; means defining the metadata for particular tokenIds of your NFT contract, without actually  minting a non-zero balance of NFTs of those tokenIds.
 
 
 
@@ -52,10 +52,10 @@ function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes extraData) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable returns (uint256 batchId)
 ```
 
-Lazy mints a given amount of NFTs.
+Lets an authorized address lazy mint a given amount of NFTs.
 
 
 
@@ -63,28 +63,27 @@ Lazy mints a given amount of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | The number of NFTs to lazy mint.
-| baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                          of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| extraData | bytes | Additional bytes data to be used at the discretion of the consumer of the contract.
+| _amount | uint256 | The number of NFTs to lazy mint.
+| _baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                           of those NFTs is `${baseURIForTokens}/${tokenId}`.
+| _data | bytes | Additional bytes data to be used at the discretion of the consumer of the contract.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 |         A unique integer identifier for the batch of NFTs lazy minted together.
+| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
 
 
 
+## Events
 
-## Errors
-
-### LazyMint__InvalidIndex
+### TokensLazyMinted
 
 ```solidity
-error LazyMint__InvalidIndex(uint256 index)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
-Emitted when the given index is equal to or higher than total number of batches.
+
 
 
 
@@ -92,38 +91,10 @@ Emitted when the given index is equal to or higher than total number of batches.
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined |
+| startTokenId `indexed` | uint256 | undefined |
+| endTokenId  | uint256 | undefined |
+| baseURI  | string | undefined |
+| encryptedBaseURI  | bytes | undefined |
 
-### LazyMint__NoBaseURIForToken
-
-```solidity
-error LazyMint__NoBaseURIForToken(uint256 tokenId)
-```
-
-Emitted when there&#39;s no Base URI set for the given token ID.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### LazyMint__NoBatchIDForToken
-
-```solidity
-error LazyMint__NoBatchIDForToken(uint256 tokenId)
-```
-
-Emitted when the given token ID doesn&#39;t belong to any batch.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
 
 

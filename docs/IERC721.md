@@ -2,173 +2,173 @@
 
 
 
-> ERC-721 Non-Fungible Token Standard
 
 
 
-*See https://eips.ethereum.org/EIPS/eip-721  Note: the ERC-165 identifier for this interface is 0x80ac58cd.*
+
+*Required interface of an ERC721 compliant contract.*
 
 ## Methods
 
 ### approve
 
 ```solidity
-function approve(address _approved, uint256 _tokenId) external payable
+function approve(address to, uint256 tokenId) external nonpayable
 ```
 
-Change or reaffirm the approved address for an NFT
 
-*The zero address indicates there is no approved address.  Throws unless `msg.sender` is the current NFT owner, or an authorized  operator of the current owner.*
+
+*Gives permission to `to` to transfer `tokenId` token to another account. The approval is cleared when the token is transferred. Only a single account can be approved at a time, so approving the zero address clears previous approvals. Requirements: - The caller must own the token or be an approved operator. - `tokenId` must exist. Emits an {Approval} event.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _approved | address | The new approved NFT controller
-| _tokenId | uint256 | The NFT to approve
+| to | address | undefined
+| tokenId | uint256 | undefined
 
 ### balanceOf
 
 ```solidity
-function balanceOf(address _owner) external view returns (uint256)
+function balanceOf(address owner) external view returns (uint256)
 ```
 
-Count all NFTs assigned to an owner
 
-*NFTs assigned to the zero address are considered invalid, and this  function throws for queries about the zero address.*
+
+*Returns the number of tokens in ``owner``&#39;s account.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _owner | address | An address for whom to query the balance
+| owner | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | The number of NFTs owned by `_owner`, possibly zero
+| _0 | uint256 | undefined
 
 ### getApproved
 
 ```solidity
-function getApproved(uint256 _tokenId) external view returns (address)
+function getApproved(uint256 tokenId) external view returns (address)
 ```
 
-Get the approved address for a single NFT
 
-*Throws if `_tokenId` is not a valid NFT.*
+
+*Returns the account approved for `tokenId` token. Requirements: - `tokenId` must exist.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The NFT to find the approved address for
+| tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | The approved address for this NFT, or the zero address if there is none
+| _0 | address | undefined
 
 ### isApprovedForAll
 
 ```solidity
-function isApprovedForAll(address _owner, address _operator) external view returns (bool)
+function isApprovedForAll(address owner, address operator) external view returns (bool)
 ```
 
-Query if an address is an authorized operator for another address
 
 
+*Returns if the `operator` is allowed to manage all of the assets of `owner`. See {setApprovalForAll}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _owner | address | The address that owns the NFTs
-| _operator | address | The address that acts on behalf of the owner
+| owner | address | undefined
+| operator | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | True if `_operator` is an approved operator for `_owner`, false otherwise
+| _0 | bool | undefined
 
 ### ownerOf
 
 ```solidity
-function ownerOf(uint256 _tokenId) external view returns (address)
+function ownerOf(uint256 tokenId) external view returns (address)
 ```
 
-Find the owner of an NFT
 
-*NFTs assigned to zero address are considered invalid, and queries  about them do throw.*
+
+*Returns the owner of the `tokenId` token. Requirements: - `tokenId` must exist.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The identifier for an NFT
+| tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | The address of the owner of the NFT
+| _0 | address | undefined
 
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes data) external payable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
 ```
 
-Transfers the ownership of an NFT from one address to another address
 
-*Throws unless `msg.sender` is the current owner, an authorized  operator, or the approved address for this NFT. Throws if `_from` is  not the current owner. Throws if `_to` is the zero address. Throws if  `_tokenId` is not a valid NFT. When transfer is complete, this function  checks if `_to` is a smart contract (code size &gt; 0). If so, it calls  `onERC721Received` on `_to` and throws if the return value is not  `bytes4(keccak256(&quot;onERC721Received(address,address,uint256,bytes)&quot;))`.*
+
+*Safely transfers `tokenId` token from `from` to `to`. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must exist and be owned by `from`. - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}. - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer. Emits a {Transfer} event.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _from | address | The current owner of the NFT
-| _to | address | The new owner
-| _tokenId | uint256 | The NFT to transfer
-| data | bytes | Additional data with no specified format, sent in call to `_to`
+| from | address | undefined
+| to | address | undefined
+| tokenId | uint256 | undefined
+| data | bytes | undefined
 
 ### setApprovalForAll
 
 ```solidity
-function setApprovalForAll(address _operator, bool _approved) external nonpayable
+function setApprovalForAll(address operator, bool _approved) external nonpayable
 ```
 
-Enable or disable approval for a third party (&quot;operator&quot;) to manage  all of `msg.sender`&#39;s assets
 
-*Emits the ApprovalForAll event. The contract MUST allow  multiple operators per owner.*
+
+*Approve or remove `operator` as an operator for the caller. Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller. Requirements: - The `operator` cannot be the caller. Emits an {ApprovalForAll} event.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _operator | address | Address to add to the set of authorized operators
-| _approved | bool | True if the operator is approved, false to revoke approval
+| operator | address | undefined
+| _approved | bool | undefined
 
 ### transferFrom
 
 ```solidity
-function transferFrom(address _from, address _to, uint256 _tokenId) external payable
+function transferFrom(address from, address to, uint256 tokenId) external nonpayable
 ```
 
-Transfer ownership of an NFT -- THE CALLER IS RESPONSIBLE  TO CONFIRM THAT `_to` IS CAPABLE OF RECEIVING NFTS OR ELSE  THEY MAY BE PERMANENTLY LOST
 
-*Throws unless `msg.sender` is the current owner, an authorized  operator, or the approved address for this NFT. Throws if `_from` is  not the current owner. Throws if `_to` is the zero address. Throws if  `_tokenId` is not a valid NFT.*
+
+*Transfers `tokenId` token from `from` to `to`. WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must be owned by `from`. - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}. Emits a {Transfer} event.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _from | address | The current owner of the NFT
-| _to | address | The new owner
-| _tokenId | uint256 | The NFT to transfer
+| from | address | undefined
+| to | address | undefined
+| tokenId | uint256 | undefined
 
 
 
@@ -177,56 +177,56 @@ Transfer ownership of an NFT -- THE CALLER IS RESPONSIBLE  TO CONFIRM THAT `_to`
 ### Approval
 
 ```solidity
-event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId)
+event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)
 ```
 
 
 
-*This emits when the approved address for an NFT is changed or  reaffirmed. The zero address indicates there is no approved address.  When a Transfer event emits, this also indicates that the approved  address for that NFT (if any) is reset to none.*
+*Emitted when `owner` enables `approved` to manage the `tokenId` token.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _owner `indexed` | address | undefined |
-| _approved `indexed` | address | undefined |
-| _tokenId `indexed` | uint256 | undefined |
+| owner `indexed` | address | undefined |
+| approved `indexed` | address | undefined |
+| tokenId `indexed` | uint256 | undefined |
 
 ### ApprovalForAll
 
 ```solidity
-event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved)
+event ApprovalForAll(address indexed owner, address indexed operator, bool approved)
 ```
 
 
 
-*This emits when an operator is enabled or disabled for an owner.  The operator can manage all NFTs of the owner.*
+*Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _owner `indexed` | address | undefined |
-| _operator `indexed` | address | undefined |
-| _approved  | bool | undefined |
+| owner `indexed` | address | undefined |
+| operator `indexed` | address | undefined |
+| approved  | bool | undefined |
 
 ### Transfer
 
 ```solidity
-event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId)
+event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
 ```
 
 
 
-*This emits when ownership of any NFT changes by any mechanism.  This event emits when NFTs are created (`from` == 0) and destroyed  (`to` == 0). Exception: during contract creation, any number of NFTs  may be created and assigned without emitting Transfer. At the time of  any transfer, the approved address for that NFT (if any) is reset to none.*
+*Emitted when `tokenId` token is transferred from `from` to `to`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _from `indexed` | address | undefined |
-| _to `indexed` | address | undefined |
-| _tokenId `indexed` | uint256 | undefined |
+| from `indexed` | address | undefined |
+| to `indexed` | address | undefined |
+| tokenId `indexed` | uint256 | undefined |
 
 
 

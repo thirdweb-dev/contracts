@@ -110,6 +110,28 @@ function setRoyaltyInfoForToken(uint256 tokenId, address recipient, uint256 bps)
 | recipient | address | undefined
 | bps | uint256 | undefined
 
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 
 
 ## Events
@@ -148,36 +170,6 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | tokenId `indexed` | uint256 | undefined |
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
-
-
-
-## Errors
-
-### Royalty__ExceedsMaxBps
-
-```solidity
-error Royalty__ExceedsMaxBps(uint256 royaltyBps)
-```
-
-Emitted when the given bps exceeds max bps.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| royaltyBps | uint256 | undefined |
-
-### Royalty__NotAuthorized
-
-```solidity
-error Royalty__NotAuthorized()
-```
-
-
-
-*Emitted when an unauthorized caller tries to set royalty details.*
 
 
 
