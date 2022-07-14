@@ -9,12 +9,13 @@ import "../lib/TWStrings.sol";
 *  @dev     This contracts provides extending-contracts with role-based access control mechanisms
 */
 contract Permissions is IPermissions {
-    /// @dev map from keccak256 hash of a role => a map from address => whether address has role.
+    /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
 
-    /// @dev map from keccak256 hash of a role to role admin. See {getRoleAdmin}.
+    /// @dev Map from keccak256 hash of a role to role admin. See {getRoleAdmin}.
     mapping(bytes32 => bytes32) private _getRoleAdmin;
 
+    /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     /// @dev Modifier that checks if an account has the specified role; reverts otherwise.
@@ -28,7 +29,7 @@ contract Permissions is IPermissions {
      *  @dev            Returns `true` if `account` has been granted `role`.
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     *  @param account  address of the account for which the role is being checked.
+     *  @param account  Address of the account for which the role is being checked.
      */
     function hasRole(bytes32 role, address account) public view override returns (bool) {
         return _hasRole[role][account];
@@ -46,7 +47,7 @@ contract Permissions is IPermissions {
      *                        restrictions will apply.
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     *  @param account  address of the account for which the role is being checked.
+     *  @param account  Address of the account for which the role is being checked.
      */
     function hasRoleWithSwitch(bytes32 role, address account) public view returns (bool) {
         if (!_hasRole[role][address(0)]) {
@@ -73,7 +74,7 @@ contract Permissions is IPermissions {
      *                  Emits {RoleGranted Event}.
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     *  @param account  address of the account to which the role is being granted.
+     *  @param account  Address of the account to which the role is being granted.
      */
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
@@ -89,7 +90,7 @@ contract Permissions is IPermissions {
      *                  Emits {RoleRevoked Event}.
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     *  @param account  address of the account from which the role is being revoked.
+     *  @param account  Address of the account from which the role is being revoked.
      */
     function revokeRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
@@ -102,7 +103,7 @@ contract Permissions is IPermissions {
      *                  Emits {RoleRevoked Event}.
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     *  @param account  address of the account from which the role is being revoked.
+     *  @param account  Address of the account from which the role is being revoked.
      */
     function renounceRole(bytes32 role, address account) public virtual override {
         if (msg.sender != account) {

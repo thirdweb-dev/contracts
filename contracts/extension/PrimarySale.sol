@@ -13,11 +13,19 @@ abstract contract PrimarySale is IPrimarySale {
     /// @dev The address that receives all primary sales value.
     address private recipient;
 
+    /// @dev Returns primary sale recipient address.
     function primarySaleRecipient() public view override returns (address) {
         return recipient;
     }
 
-    /// @dev Lets a contract admin set the recipient for all primary sales.
+    /**
+     *  @notice         Updates primary sale recipient.
+     *  @dev            Caller should be authorized to set primary sales info.
+     *                  See {_canSetPrimarySaleRecipient}.
+     *                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.
+     *
+     *  @param _saleRecipient   Address to be set as new recipient of primary sales.
+     */
     function setPrimarySaleRecipient(address _saleRecipient) external override {
         if (!_canSetPrimarySaleRecipient()) {
             revert("Not authorized");
