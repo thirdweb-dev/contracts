@@ -33,7 +33,9 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *                  See struct {RoleMembers}, and mapping {roleMembers}
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     *  @param index    index in list of current members for the role.
+     *  @param index    Index in list of current members for the role.
+     *
+     *  @return member  Address of account that has `role`
      */
     function getRoleMember(bytes32 role, uint256 index) external view override returns (address member) {
         uint256 currentIndex = roleMembers[role].index;
@@ -58,6 +60,8 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *                  See struct {RoleMembers}, and mapping {roleMembers}
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
+     *
+     *  @return count   Total number of accounts that have `role`
      */
     function getRoleMemberCount(bytes32 role) external view override returns (uint256 count) {
         uint256 currentIndex = roleMembers[role].index;

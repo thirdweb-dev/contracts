@@ -14,12 +14,20 @@ contract BatchMintMetadata {
     /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
     mapping(uint256 => string) private baseURI;
 
-    /// @dev Returns the number of batches of tokens having the same baseURI.
+    /**
+     *  @notice         Returns the count of batches of NFTs.
+     *  @dev            Each batch of tokens has an in ID and an associated `baseURI`.
+     *                  See {batchIds}.
+     */
     function getBaseURICount() public view returns (uint256) {
         return batchIds.length;
     }
 
-    /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
+    /**
+     *  @notice         Returns the ID for the batch of tokens the given tokenId belongs to.
+     *  @dev            See {getBaseURICount}.
+     *  @param _index   ID of a token.
+     */
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
         if (_index >= getBaseURICount()) {
             revert("Invalid index");

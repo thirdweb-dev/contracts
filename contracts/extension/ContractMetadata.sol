@@ -14,7 +14,14 @@ abstract contract ContractMetadata is IContractMetadata {
     /// @dev Contract level metadata.
     string public override contractURI;
 
-    /// @dev Lets a contract admin set the URI for contract-level metadata.
+    /**
+     *  @notice         Lets a contract admin set the URI for contract-level metadata.
+     *  @dev            Caller should be authorized to setup contractURI, e.g. contract admin.
+     *                  See {_canSetContractURI}.
+     *                  Emits {ContractURIUpdated Event}.
+     *
+     *  @param _uri     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
+     */
     function setContractURI(string memory _uri) external override {
         if (!_canSetContractURI()) {
             revert("Not authorized");
