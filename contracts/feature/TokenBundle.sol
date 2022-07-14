@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ITokenBundle.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
@@ -81,23 +82,35 @@ abstract contract TokenBundle is ITokenBundle {
         bundle[_bundleId].tokens[_index] = _tokenToBind;
     }
 
+    /// @dev Checks if the type of asset-contract is same as the TokenType specified.
     function _checkTokenType(Token memory _token) internal view {
         if(_token.tokenType == TokenType.ERC721) {
-            try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported) {
-                require(supported, "Asset doesn't match TokenType");
+            try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported721) {
+                require(supported721, "Asset 721 doesn't match TokenType");
             } catch {
                 revert("Asset doesn't match TokenType");
             }
         } else if(_token.tokenType == TokenType.ERC1155) {
-            try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported) {
-                require(supported, "Asset doesn't match TokenType");
+            try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported1155) {
+                require(supported1155, "Asset 1155 doesn't match TokenType");
             } catch {
                 revert("Asset doesn't match TokenType");
             }
         } else if(_token.tokenType == TokenType.ERC20) {
-            try IERC165(_token.assetContract).supportsInterface(0x36372b07) returns (bool supported) {
-                require(supported, "Asset doesn't match TokenType");
-            } catch {}
+            if(_token.assetContract != CurrencyTransferLib.NATIVE_TOKEN) {
+                // 0x36372b07
+                try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported721) {
+                    require(!supported721, "Asset 20 doesn't match TokenType");
+
+                    try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported1155) {
+                        require(!supported1155, "Asset 20 doesn't match TokenType"); 
+                    } catch Error(string memory) {
+
+                    } catch {}
+                } catch Error(string memory) {
+
+                } catch {}
+            }
         }
     }
 

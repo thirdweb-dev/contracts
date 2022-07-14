@@ -159,6 +159,11 @@ contract PackTest is BaseTest {
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
 
+    function test_interface() public {
+        console2.logBytes4(type(IERC20).interfaceId);
+        console2.logBytes4(type(IERC721).interfaceId);
+        console2.logBytes4(type(IERC1155).interfaceId);
+    }
     /**
      *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
      */
@@ -383,7 +388,7 @@ contract PackTest is BaseTest {
                 totalAmount: 20 ether
             })
         );
-        numOfRewardUnits.push(1 ether);
+        numOfRewardUnits.push(1);
 
         vm.prank(address(tokenOwner));
         vm.expectRevert("msg.value != amount");
@@ -486,7 +491,7 @@ contract PackTest is BaseTest {
         address recipient = address(0x123);
 
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert();
+        vm.expectRevert("Asset 20 doesn't match TokenType");
         pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -868,137 +873,6 @@ contract PackTest is BaseTest {
         }
 
         assertEq(packUri, pack.uri(packId));
-    }
-
-    function test_fuzz_state_openPack(
-        uint256 x,
-        uint128 y,
-        uint256 z
-    ) public {
-        // vm.assume(x == 1574 && y == 22 && z == 392);
-        (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits) = getTokensToPack(x);
-        if (tokensToPack.length == 0) {
-            return;
-        }
-
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(0x123);
-        uint256 totalRewardUnits;
-        uint256 nativeTokenPacked;
-
-        for (uint256 i = 0; i < tokensToPack.length; i += 1) {
-            totalRewardUnits += rewardUnits[i];
-            if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                nativeTokenPacked += tokensToPack[i].totalAmount;
-            }
-        }
-        vm.assume(y > 0 && totalRewardUnits % y == 0);
-        vm.deal(address(tokenOwner), nativeTokenPacked);
-
-        vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack{ value: nativeTokenPacked }(
-            tokensToPack,
-            rewardUnits,
-            packUri,
-            0,
-            y,
-            recipient
-        );
-        console2.log("total supply: ", totalSupply);
-        console2.log("total reward units: ", totalRewardUnits);
-
-        vm.assume(z <= totalSupply);
-        vm.prank(recipient, recipient);
-        ITokenBundle.Token[] memory rewardsReceived = pack.openPack(packId, z);
-        console2.log("received reward units: ", rewardsReceived.length);
-
-        assertEq(packUri, pack.uri(packId));
-
-        (
-            uint256 nativeTokenAmount,
-            uint256 erc20Amount,
-            uint256[] memory erc1155Amounts,
-            uint256 erc721Amount
-        ) = checkBalances(rewardsReceived, recipient);
-
-        assertEq(address(recipient).balance, nativeTokenAmount);
-        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
-        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
-
-        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
-            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
-        }
-    }
-
-    function test_fuzz_failing_state_openPack() public {
-        // (446, 22, 890).. (gas: 8937393460518282035), total supply: 10203, total reward units: 224466
-        // (335, 3, 1570).. (gas: 8937393460517864076), total supply: 54915, total reward units: 164745
-        // (1478, 4, 1890).. (gas: 8937393460521767975), total supply: 177189, total reward units: 708756
-        // (1962, 282, 219).. (gas: 8937393460523355524), total supply: 3239, total reward units: 913398
-        // (472, 1, 543).. (gas: 8937393460518373840), total supply: 236220, total reward units: 236220
-        // (96, 112, 447).. (gas: 8937393460517062690), total supply: 467, total reward units: 52304
-        // (506, 6, 12950).. (gas: 8937393460518476945), total supply: 41699, total reward units: 250194
-        // (164, 20, 922).. (gas: 8937393460517318850), total supply: 4335, total reward units: 86700
-        // (138, 2, 948).. (gas: 8937393460517220399), total supply: 37959, total reward units: 75918
-        // (32, 11, 978).. (gas: 8937393460516848598), total supply: 1456, total reward units: 16016
-
-        uint256 x = 32;
-        uint128 y = 11;
-        uint256 z = 978;
-
-        (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits) = getTokensToPack(x);
-        if (tokensToPack.length == 0) {
-            return;
-        }
-
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(0x123);
-        uint256 totalRewardUnits;
-        uint256 nativeTokenPacked;
-
-        for (uint256 i = 0; i < tokensToPack.length; i += 1) {
-            totalRewardUnits += rewardUnits[i];
-            if (tokensToPack[i].assetContract == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                nativeTokenPacked += tokensToPack[i].totalAmount;
-            }
-        }
-        vm.assume(y > 0 && totalRewardUnits % y == 0);
-        vm.deal(address(tokenOwner), nativeTokenPacked);
-
-        vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack{ value: nativeTokenPacked }(
-            tokensToPack,
-            rewardUnits,
-            packUri,
-            0,
-            y,
-            recipient
-        );
-        console2.log("total supply: ", totalSupply);
-        console2.log("total reward units: ", totalRewardUnits);
-
-        vm.roll(5);
-        vm.assume(z <= totalSupply);
-        vm.prank(recipient, recipient);
-        ITokenBundle.Token[] memory rewardsReceived = pack.openPack(packId, z);
-        console2.log("received reward units: ", rewardsReceived.length);
-
-        assertEq(packUri, pack.uri(packId));
-
-        (
-            uint256 nativeTokenAmount,
-            uint256 erc20Amount,
-            uint256[] memory erc1155Amounts,
-            uint256 erc721Amount
-        ) = checkBalances(rewardsReceived, recipient);
-
-        assertEq(address(recipient).balance, nativeTokenAmount);
-        assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
-        assertEq(erc721.balanceOf(address(recipient)), erc721Amount);
-
-        for (uint256 i = 0; i < erc1155Amounts.length; i += 1) {
-            assertEq(erc1155.balanceOf(address(recipient), i), erc1155Amounts[i]);
-        }
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 //  ==========  Internal imports    ==========
 
-import "./TokenBundle.sol";
+import { TokenBundle, ITokenBundle } from "./TokenBundle.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
