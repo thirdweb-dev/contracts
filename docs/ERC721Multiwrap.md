@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC721Base      EXTENSION: TokenStore, SoulboundERC721A  The `ERC721Multiwrap` contract uses the `ERC721Base` contract, along with the `TokenStore` and   `SoulboundERC721A` extension.  The `ERC721Multiwrap` contract lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own  into a single wrapped token / NFT.  The `SoulboundERC721A` extension lets you make your NFTs &#39;soulbound&#39; i.e. non-transferrable. 
+BASE:      ERC721Base      EXTENSION: TokenStore, SoulboundERC721A  The `ERC721Multiwrap` contract uses the `ERC721Base` contract, along with the `TokenStore` and   `SoulboundERC721A` extension.  The `ERC721Multiwrap` contract lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own  into a single wrapped token / NFT.  The `SoulboundERC721A` extension lets you make your NFTs &#39;soulbound&#39; i.e. non-transferrable.
 
 
 

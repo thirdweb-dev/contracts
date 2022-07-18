@@ -4,7 +4,7 @@
 
 
 
-The `SoulboundERC721A` extension smart contract is meant to be used with ERC721A contracts as its base. It  provides the appropriate `before transfer` hook for ERC721A, where it checks whether a given transfer is   valid to go through or not.  This contract uses the `Permissions` extension, and creates a role &#39;TRANSFER_ROLE&#39;.      - If `address(0)` holds the transfer role, then all transfers go through.      - Else, a transfer goes through only if either the sender or recipient holds the transfe role.
+The `SoulboundERC721A` extension smart contract is meant to be used with ERC721A contracts as its base. It  provides the appropriate `before transfer` hook for ERC721A, where it checks whether a given transfer is  valid to go through or not.  This contract uses the `Permissions` extension, and creates a role &#39;TRANSFER_ROLE&#39;.      - If `address(0)` holds the transfer role, then all transfers go through.      - Else, a transfer goes through only if either the sender or recipient holds the transfe role.
 
 
 
