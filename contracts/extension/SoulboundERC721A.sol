@@ -13,12 +13,31 @@ import "./Permissions.sol";
  *      - Else, a transfer goes through only if either the sender or recipient holds the transfe role.
  */
 
-contract SoulboundERC721A is Permissions {
+abstract contract SoulboundERC721A is Permissions {
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
+    event TransfersRestricted(bool isRestricted);
 
+    /**
+     *  @notice           Restrict transfers of NFTs.
+     *  @dev              Restricting transfers means revoking the TRANSFER_ROLE from address(0). Making
+     *                    transfers unrestricted means granting the TRANSFER_ROLE to address(0).
+     *
+     *  @param _toRestrict Whether to restrict transfers or not.
+     */
+    function restrictTransfers(bool _toRestrict) public virtual {
+        if(_toRestrict) {
+            _revokeRole(TRANSFER_ROLE, address(0));
+        } else {
+            _setupRole(TRANSFER_ROLE, address(0));
+        }
+    }
+
+    /// @dev Returns whether transfers can be restricted in a given execution context.
+    function _canRestrictTransfers() internal virtual returns (bool);
+    
     /// @dev See {ERC721A-_beforeTokenTransfers}.
     function _beforeTokenTransfers(
         address from,
@@ -34,5 +53,4 @@ contract SoulboundERC721A is Permissions {
             }
         }
     }
-
 }
