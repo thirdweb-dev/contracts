@@ -1,14 +1,65 @@
-# ERC721Base
+# ERC721Multiwrap
 
 
 
 
 
-The `ERC721Base` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.  It includes the following additions to standard ERC721 logic:      - Ability to mint NFTs via the provided `mint` function.      - Contract metadata for royalty support on platforms such as OpenSea that use        off-chain information to distribute roaylties.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically      - EIP 2981 compliance for royalty support on NFT marketplaces.
+BASE:      ERC721Base      EXTENSION: TokenStore, SoulboundERC721A  The `ERC721Multiwrap` contract uses the `ERC721Base` contract, along with the `TokenStore` and   `SoulboundERC721A` extension.  The `ERC721Multiwrap` contract lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own  into a single wrapped token / NFT.  The `SoulboundERC721A` extension lets you make your NFTs &#39;soulbound&#39; i.e. non-transferrable.
 
 
 
 ## Methods
+
+### DEFAULT_ADMIN_ROLE
+
+```solidity
+function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
+### TRANSFER_ROLE
+
+```solidity
+function TRANSFER_ROLE() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
 
 ### approve
 
@@ -180,6 +231,28 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
+### getRoleAdmin
+
+```solidity
+function getRoleAdmin(bytes32 role) external view returns (bytes32)
+```
+
+
+
+*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
 ### getRoyaltyInfoForToken
 
 ```solidity
@@ -202,6 +275,136 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
+
+### getTokenCountOfBundle
+
+```solidity
+function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256)
+```
+
+
+
+*Returns the total number of assets in a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getTokenOfBundle
+
+```solidity
+function getTokenOfBundle(uint256 _bundleId, uint256 index) external view returns (struct ITokenBundle.Token)
+```
+
+
+
+*Returns an asset contained in a particular bundle, at a particular index.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token | undefined
+
+### getUriOfBundle
+
+```solidity
+function getUriOfBundle(uint256 _bundleId) external view returns (string)
+```
+
+
+
+*Returns the uri of a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
+### grantRole
+
+```solidity
+function grantRole(bytes32 role, address account) external nonpayable
+```
+
+
+
+*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+### hasRole
+
+```solidity
+function hasRole(bytes32 role, address account) external view returns (bool)
+```
+
+
+
+*Returns `true` if `account` has been granted `role`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### hasRoleWithSwitch
+
+```solidity
+function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
 
 ### isApprovedForAll
 
@@ -322,6 +525,83 @@ The tokenId assigned to the next new NFT to be minted.
 |---|---|---|
 | _0 | uint256 | undefined
 
+### onERC1155BatchReceived
+
+```solidity
+function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | address | undefined
+| _2 | uint256[] | undefined
+| _3 | uint256[] | undefined
+| _4 | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined
+
+### onERC1155Received
+
+```solidity
+function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | address | undefined
+| _2 | uint256 | undefined
+| _3 | uint256 | undefined
+| _4 | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined
+
+### onERC721Received
+
+```solidity
+function onERC721Received(address, address, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+*See {IERC721Receiver-onERC721Received}. Always returns `IERC721Receiver.onERC721Received.selector`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | address | undefined
+| _2 | uint256 | undefined
+| _3 | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined
+
 ### owner
 
 ```solidity
@@ -360,6 +640,56 @@ function ownerOf(uint256 tokenId) external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined
+
+### renounceRole
+
+```solidity
+function renounceRole(bytes32 role, address account) external nonpayable
+```
+
+
+
+*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
+
+### restrictTransfers
+
+```solidity
+function restrictTransfers(bool _toRestrict) external nonpayable
+```
+
+Restrict transfers of NFTs.
+
+*Restricting transfers means revoking the TRANSFER_ROLE from address(0). Making                    transfers unrestricted means granting the TRANSFER_ROLE to address(0).*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _toRestrict | bool | Whether to restrict transfers or not.
+
+### revokeRole
+
+```solidity
+function revokeRole(bytes32 role, address account) external nonpayable
+```
+
+
+
+*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| account | address | undefined
 
 ### royaltyInfo
 
@@ -496,7 +826,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*See ERC165: https://eips.ethereum.org/EIPS/eip-165*
+*See ERC-165*
 
 #### Parameters
 
@@ -583,6 +913,47 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | from | address | undefined
 | to | address | undefined
 | tokenId | uint256 | undefined
+
+### unwrap
+
+```solidity
+function unwrap(uint256 _tokenId, address _recipient) external nonpayable
+```
+
+Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | The token Id of the wrapped NFT to unwrap.
+| _recipient | address | The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
+
+### wrap
+
+```solidity
+function wrap(ITokenBundle.Token[] _tokensToWrap, string _uriForWrappedToken, address _recipient) external payable returns (uint256 tokenId)
+```
+
+Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokensToWrap | ITokenBundle.Token[] | The tokens to wrap.
+| _uriForWrappedToken | string | The metadata URI for the wrapped NFT.
+| _recipient | address | The recipient of the wrapped NFT.
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | The tokenId of the wrapped NFT minted.
 
 
 
@@ -675,6 +1046,60 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
+### RoleAdminChanged
+
+```solidity
+event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role `indexed` | bytes32 | undefined |
+| previousAdminRole `indexed` | bytes32 | undefined |
+| newAdminRole `indexed` | bytes32 | undefined |
+
+### RoleGranted
+
+```solidity
+event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role `indexed` | bytes32 | undefined |
+| account `indexed` | address | undefined |
+| sender `indexed` | address | undefined |
+
+### RoleRevoked
+
+```solidity
+event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role `indexed` | bytes32 | undefined |
+| account `indexed` | address | undefined |
+| sender `indexed` | address | undefined |
+
 ### RoyaltyForToken
 
 ```solidity
@@ -693,6 +1118,43 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
+### TokensUnwrapped
+
+```solidity
+event TokensUnwrapped(address indexed unwrapper, address indexed recipientOfWrappedContents, uint256 indexed tokenIdOfWrappedToken)
+```
+
+
+
+*Emitted when tokens are unwrapped.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| unwrapper `indexed` | address | undefined |
+| recipientOfWrappedContents `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+
+### TokensWrapped
+
+```solidity
+event TokensWrapped(address indexed wrapper, address indexed recipientOfWrappedToken, uint256 indexed tokenIdOfWrappedToken, ITokenBundle.Token[] wrappedContents)
+```
+
+
+
+*Emitted when tokens are wrapped.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| wrapper `indexed` | address | undefined |
+| recipientOfWrappedToken `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| wrappedContents  | ITokenBundle.Token[] | undefined |
+
 ### Transfer
 
 ```solidity
@@ -710,6 +1172,22 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
+
+### TransfersRestricted
+
+```solidity
+event TransfersRestricted(bool isRestricted)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| isRestricted  | bool | undefined |
 
 
 
