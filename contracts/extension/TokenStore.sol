@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../eip/interface/IERC1155.sol";
+import "../eip/interface/IERC721.sol";
 
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "../openzeppelin-presets/utils/ERC1155/ERC1155Holder.sol";
+import "../openzeppelin-presets/utils/ERC721/ERC721Holder.sol";
 
 //  ==========  Internal imports    ==========
 
