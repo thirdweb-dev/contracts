@@ -10,6 +10,9 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 //  ==========  Internal imports    ==========
 import { IContractPublisher } from "./interfaces/IContractPublisher.sol";
 
+//  ==========  Custom Errors    ==========
+error ContractPublisher__UnapprovedCaller();
+
 contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlEnumerable, Multicall {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
@@ -37,15 +40,15 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
 
     /// @dev Checks whether caller is publisher TODO enable external approvals
     modifier onlyPublisher(address _publisher) {
-        require(_msgSender() == _publisher, "unapproved caller");
-
+        if (_msgSender() != _publisher) {
+            revert ContractPublisher__UnapprovedCaller();
+        }
         _;
     }
 
     /// @dev Checks whether contract is unpaused or the caller is a contract admin.
     modifier onlyUnpausedOrAdmin() {
         require(!isPaused || hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "registry paused");
-
         _;
     }
 
