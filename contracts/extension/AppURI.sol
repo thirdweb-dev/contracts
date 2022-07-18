@@ -30,6 +30,6 @@ abstract contract AppURI is IAppURI {
         emit AppURIUpdated(prevURI, _uri);
     }
 
-    /// @dev Returns whether contract metadata can be set in the given execution context.
+    /// @dev Returns whether appUri can be set in the given execution context.
     function _canSetAppURI() internal virtual returns (bool);
 }
