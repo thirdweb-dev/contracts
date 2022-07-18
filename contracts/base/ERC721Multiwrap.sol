@@ -17,13 +17,11 @@ import "../extension/SoulboundERC721A.sol";
  *  The `ERC721Multiwrap` contract lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own
  *  into a single wrapped token / NFT.
  *
- *  The `SoulboundERC721A` extension lets you make your NFTs 'soulbound' i.e. non-transferrable. 
+ *  The `SoulboundERC721A` extension lets you make your NFTs 'soulbound' i.e. non-transferrable.
  *
  */
 
-
 contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base {
-
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -74,10 +72,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _nativeTokenWrapper
-    )
-        ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps)
-        TokenStore(_nativeTokenWrapper)
-    {
+    ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) TokenStore(_nativeTokenWrapper) {
         restrictTransfers(false);
     }
 
@@ -93,10 +88,10 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         override(ERC1155Receiver, ERC721Base)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) ||
+        return
+            super.supportsInterface(interfaceId) ||
             ERC721Base.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Receiver).interfaceId;
-
     }
 
     /*///////////////////////////////////////////////////////////////

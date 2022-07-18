@@ -5,7 +5,7 @@ import "./Permissions.sol";
 
 /**
  *  The `SoulboundERC721A` extension smart contract is meant to be used with ERC721A contracts as its base. It
- *  provides the appropriate `before transfer` hook for ERC721A, where it checks whether a given transfer is 
+ *  provides the appropriate `before transfer` hook for ERC721A, where it checks whether a given transfer is
  *  valid to go through or not.
  *
  *  This contract uses the `Permissions` extension, and creates a role 'TRANSFER_ROLE'.
@@ -14,7 +14,6 @@ import "./Permissions.sol";
  */
 
 abstract contract SoulboundERC721A is Permissions {
-
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
@@ -28,7 +27,7 @@ abstract contract SoulboundERC721A is Permissions {
      *  @param _toRestrict Whether to restrict transfers or not.
      */
     function restrictTransfers(bool _toRestrict) public virtual {
-        if(_toRestrict) {
+        if (_toRestrict) {
             _revokeRole(TRANSFER_ROLE, address(0));
         } else {
             _setupRole(TRANSFER_ROLE, address(0));
@@ -37,7 +36,7 @@ abstract contract SoulboundERC721A is Permissions {
 
     /// @dev Returns whether transfers can be restricted in a given execution context.
     function _canRestrictTransfers() internal virtual returns (bool);
-    
+
     /// @dev See {ERC721A-_beforeTokenTransfers}.
     function _beforeTokenTransfers(
         address from,
@@ -45,7 +44,6 @@ abstract contract SoulboundERC721A is Permissions {
         uint256,
         uint256
     ) internal virtual {
-
         // If transfers are restricted on the contract, we still want to allow burning and minting.
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
