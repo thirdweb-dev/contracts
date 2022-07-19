@@ -73,7 +73,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
      *  @param _signature The signature produced by an account signing the mint request.
      */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
+        public
         payable
         virtual
         override
@@ -145,7 +145,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(uint256 _index, bytes calldata _key) external override returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key) public virtual override returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
