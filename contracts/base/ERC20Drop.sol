@@ -20,21 +20,17 @@ import "../extension/DropSinglePhase.sol";
  *
  */
 
-contract ERC20Drop is 
-    ERC20SignatureMint,
-    DropSinglePhase
-{
+contract ERC20Drop is ERC20SignatureMint, DropSinglePhase {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        string memory _name, 
+        string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _primarySaleRecipient
-    ) ERC20SignatureMint(_name, _symbol, _contractURI, _primarySaleRecipient)
-    {}
+    ) ERC20SignatureMint(_name, _symbol, _contractURI, _primarySaleRecipient) {}
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPriceOnClaim(
@@ -52,20 +48,11 @@ contract ERC20Drop is
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            msg.sender,
-            primarySaleRecipient(),
-            totalPrice
-        );
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256)
-    {
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }

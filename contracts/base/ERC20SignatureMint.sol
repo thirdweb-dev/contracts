@@ -21,27 +21,17 @@ import "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20SignatureMint is 
-    ERC20Base,
-    PrimarySale,
-    SignatureMintERC20Alt
-{
+contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20Alt {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        string memory _name, 
+        string memory _name,
         string memory _symbol,
         string memory _contractURI,
         address _primarySaleRecipient
-    )
-        ERC20Base(
-            _name,
-            _symbol,
-            _contractURI
-        ) 
-    {
+    ) ERC20Base(_name, _symbol, _contractURI) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
@@ -94,7 +84,7 @@ contract ERC20SignatureMint is
 
     /// @dev Returns whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
-        return msg.sender == owner();      
+        return msg.sender == owner();
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
@@ -113,11 +103,6 @@ contract ERC20SignatureMint is
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            msg.sender,
-            primarySaleRecipient(),
-            totalPrice
-        );
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
     }
 }

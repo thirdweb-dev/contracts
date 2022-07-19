@@ -17,29 +17,23 @@ import "../extension/Ownable.sol";
  *        only be called by the contract's owner.
  *
  *      - Multicall capability to perform multiple actions atomically
- *      
+ *
  *      - Extension of ERC20 to support voting and delegation.
  *
  *      - EIP 2612 compliance: See {permit} method, which can be used to change an account's ERC20 allowance by
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Base is 
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    ERC20Votes
-{
+contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Votes {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        string memory _name, 
+        string memory _name,
         string memory _symbol,
         string memory _contractURI
-    ) ERC20(_name, _symbol) ERC20Permit(_name)
-    {
+    ) ERC20(_name, _symbol) ERC20Permit(_name) {
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
     }
@@ -75,19 +69,19 @@ contract ERC20Base is
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
-    
+
     /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal virtual view override returns (bool) {
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether tokens can be minted in the given execution context.
-    function _canMint() internal virtual view returns (bool) {
+    function _canMint() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal virtual view override returns (bool) {
+    function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 }
