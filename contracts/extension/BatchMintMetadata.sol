@@ -36,7 +36,7 @@ contract BatchMintMetadata {
             if (_tokenId < indices[i]) {
                 index = i;
                 batchId = indices[i];
-                
+
                 return (batchId, index);
             }
         }
