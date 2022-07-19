@@ -8,6 +8,19 @@ import { SignatureMintERC20Alt } from "../extension/SignatureMintERC20Alt.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 
+/**
+ *      BASE:      ERC20Votes
+ *      EXTENSION: SignatureMintERC20
+ *
+ *  The `ERC20SignatureMint` contract uses the `ERC20Base` contract, along with the `SignatureMintERC20` extension.
+ *
+ *  The 'signature minting' mechanism in the `SignatureMintERC20` extension uses EIP 712, and is a way for a contract
+ *  admin to authorize an external party's request to mint tokens on the admin's contract. At a high level, this means
+ *  you can authorize some external party to mint tokens on your contract, and specify what exactly will be minted by
+ *  that external party.
+ *
+ */
+
 contract ERC20SignatureMint is 
     ERC20Base,
     PrimarySale,
@@ -36,6 +49,12 @@ contract ERC20SignatureMint is
                         Signature minting logic
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice           Mints tokens according to the provided mint request.
+     *
+     *  @param _req       The payload / mint request.
+     *  @param _signature The signature produced by an account signing the mint request.
+     */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
@@ -88,7 +107,7 @@ contract ERC20SignatureMint is
             return;
         }
 
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+        uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "Must send total price.");

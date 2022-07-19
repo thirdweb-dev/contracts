@@ -5,6 +5,21 @@ import "./ERC20SignatureMint.sol";
 
 import "../extension/DropSinglePhase.sol";
 
+/**
+ *      BASE:      ERC20Votes
+ *      EXTENSION: SignatureMintERC20, DropSinglePhase
+ *
+ *  The `ERC20Drop` contract uses the `ERC20Base` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.
+ *
+ *  The 'signature minting' mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize
+ *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
+ *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *
+ *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism tokens. It lets
+ *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
+ *
+ */
+
 contract ERC20Drop is 
     ERC20SignatureMint,
     DropSinglePhase
@@ -31,7 +46,7 @@ contract ERC20Drop is
             return;
         }
 
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+        uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "Must send total price.");
@@ -59,4 +74,12 @@ contract ERC20Drop is
     function _canSetClaimConditions() internal view override returns (bool) {
         return msg.sender == owner();
     }
+
+    /*///////////////////////////////////////////////////////////////
+                        Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    // function mint(address, uint256) public virtual override {
+    //     revert("Not implemented.");
+    // }
 }
