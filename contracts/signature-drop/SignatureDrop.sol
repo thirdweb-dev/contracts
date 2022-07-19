@@ -126,8 +126,8 @@ contract SignatureDrop is
         return bytes32("SignatureDrop");
     }
 
-    function contractVersion() external pure returns (uint256) {
-        return 2;
+    function contractVersion() external pure returns (uint8) {
+        return uint8(2);
     }
 
     /*///////////////////////////////////////////////////////////////
