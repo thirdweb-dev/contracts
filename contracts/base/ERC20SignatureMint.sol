@@ -4,16 +4,14 @@ pragma solidity ^0.8.0;
 import "./ERC20Base.sol";
 
 import "../extension/PrimarySale.sol";
-import "../extension/PermissionsEnumerable.sol";
-import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
+import { SignatureMintERC20Alt } from "../extension/SignatureMintERC20Alt.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 
 contract ERC20SignatureMint is 
     ERC20Base,
     PrimarySale,
-    PermissionsEnumerable,
-    SignatureMintERC20
+    SignatureMintERC20Alt
 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -22,16 +20,17 @@ contract ERC20SignatureMint is
     constructor(
         string memory _name, 
         string memory _symbol,
-        uint8 _decimals,
-        string memory _contractURI
+        string memory _contractURI,
+        address _primarySaleRecipient
     )
         ERC20Base(
             _name,
             _symbol,
-            _decimals,
             _contractURI
         ) 
-    {}
+    {
+        _setupPrimarySaleRecipient(_primarySaleRecipient);
+    }
 
     /*//////////////////////////////////////////////////////////////
                         Signature minting logic

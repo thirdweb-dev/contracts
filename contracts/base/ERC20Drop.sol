@@ -1,115 +1,62 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-//  ==========  External imports    ==========
+import "./ERC20SignatureMint.sol";
 
-import "../openzeppelin-presets/token/ERC20/extensions/ERC20Votes.sol";
-
-//  ==========  Internal imports    ==========
-
-// import "./ERC20Base.sol";
-import "../lib/CurrencyTransferLib.sol";
-
-//  ==========  Features    ==========
-
-import "../extension/ContractMetadata.sol";
-import "../extension/Multicall.sol";
-import "../extension/Ownable.sol";
-import "../extension/PlatformFee.sol";
-import "../extension/PrimarySale.sol";
-import "../extension/PermissionsEnumerable.sol";
-import {SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
 import "../extension/DropSinglePhase.sol";
 
 contract ERC20Drop is 
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    PlatformFee,
-    PrimarySale,
-    PermissionsEnumerable,
-    SignatureMintERC20,
-    DropSinglePhase,
-    ERC20Votes
+    ERC20SignatureMint,
+    DropSinglePhase
 {
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-
-    /// @dev The max number of tokens a wallet can claim.
-    uint256 public maxWalletClaimCount;
-
-    /// @dev Global max total supply of tokens.
-    uint256 public maxTotalSupply;
-
-    /*///////////////////////////////////////////////////////////////
-                                Mappings
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Mapping from address => number of tokens a wallet has claimed.
-    mapping(address => uint256) public walletClaimCount;
-
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        address _defaultAdmin,
         string memory _name, 
         string memory _symbol,
         string memory _contractURI,
-        address _primarySaleRecipient,
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) ERC20(_name, _symbol) 
-    {
-        _setupContractURI(_contractURI);
-        _setupOwner(_defaultAdmin);
+        address _primarySaleRecipient
+    ) ERC20SignatureMint(_name, _symbol, _contractURI, _primarySaleRecipient)
+    {}
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
-
-        _setupPrimarySaleRecipient(_primarySaleRecipient);
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                    ERC 165 + ERC20 transfer hooks
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See ERC 165
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override
-    //     returns (bool)
-    // {
-    //     return super.supportsInterface(interfaceId);
-    // }
-
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override(ERC20Votes) {
-        super._afterTokenTransfer(from, to, amount);
-    }
-
-    /// @dev Runs on every transfer.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20) {
-        super._beforeTokenTransfer(from, to, amount);
-
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
+    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    function collectPriceOnClaim(
+        uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken
+    ) internal virtual override(DropSinglePhase, ERC20SignatureMint) {
+        if (_pricePerToken == 0) {
+            return;
         }
+
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == totalPrice, "Must send total price.");
+        }
+
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            msg.sender,
+            primarySaleRecipient(),
+            totalPrice
+        );
+    }
+
+    /// @dev Transfers the tokens being claimed.
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256)
+    {
+        _mint(_to, _quantityBeingClaimed);
+        return 0;
+    }
+
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetClaimConditions() internal view override returns (bool) {
+        return msg.sender == owner();
     }
 }

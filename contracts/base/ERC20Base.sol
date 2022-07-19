@@ -8,10 +8,10 @@ import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 
 contract ERC20Base is 
-    ERC20Votes,
     ContractMetadata,
     Multicall,
-    Ownable
+    Ownable,
+    ERC20Votes
 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -21,7 +21,7 @@ contract ERC20Base is
         string memory _name, 
         string memory _symbol,
         string memory _contractURI
-    ) ERC20(_name, _symbol) 
+    ) ERC20(_name, _symbol) ERC20Permit(_name)
     {
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
@@ -35,6 +35,11 @@ contract ERC20Base is
         require(_canMint(), "Not authorized to mint.");
 
         _mint(_to, _amount);
+    }
+
+    function burn(uint256 _amount) external virtual {
+        require(balanceOf(msg.sender) >= _amount, "not enough balance");
+        _burn(msg.sender, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////
