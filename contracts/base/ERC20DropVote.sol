@@ -20,7 +20,7 @@ import "../extension/DropSinglePhase.sol";
  *
  */
 
-contract ERC20Drop is ERC20SignatureMintVote, DropSinglePhase {
+contract ERC20DropVote is ERC20SignatureMintVote, DropSinglePhase {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/

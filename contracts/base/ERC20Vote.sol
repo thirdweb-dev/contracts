@@ -22,7 +22,7 @@ import "./ERC20Base.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes {
+contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20VotesAlt {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/

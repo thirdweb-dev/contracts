@@ -24,7 +24,7 @@ import "../openzeppelin-presets/utils/math/SafeCast.sol";
  *
  * _Available since v4.2._
  */
-abstract contract ERC20Votes is IVotes, ERC20 {
+abstract contract ERC20VotesAlt is IVotes, ERC20 {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 votes;
