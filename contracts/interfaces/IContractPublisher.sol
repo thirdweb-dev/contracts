@@ -80,7 +80,7 @@ interface IContractPublisher {
         returns (CustomContractInstance memory published);
 
     /**
-     *  @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
+     *  @notice Let's an account publish a contract.
      *
      *  @param publisher           The address of the publisher.
      *  @param contractId          The identifier for a published contract (that can have multiple verisons).
@@ -100,7 +100,7 @@ interface IContractPublisher {
     ) external;
 
     /**
-     *  @notice Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
+     *  @notice Lets a publisher unpublish a contract and all its versions.
      *
      *  @param publisher  The address of the publisher.
      *  @param contractId The identifier for a published contract (that can have multiple verisons).
@@ -113,12 +113,12 @@ interface IContractPublisher {
     function setPublisherProfileUri(address publisher, string memory uri) external;
 
     /**
-     * @notice get the publisher profile uri
+     * @notice Get the publisher profile uri for a given publisher.
      */
     function getPublisherProfileUri(address publisher) external view returns (string memory uri);
 
     /**
-     * @notice Retrieve the published metadata URI from a compiler metadata URI
+     * @notice Retrieve the published metadata URI from a compiler metadata URI.
      */
     function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
         external
