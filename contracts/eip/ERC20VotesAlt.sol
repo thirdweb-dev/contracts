@@ -152,9 +152,7 @@ abstract contract ERC20Votes is IVotes, ERC20 {
                         DOMAIN_SEPARATOR(),
                         keccak256(
                             abi.encode(
-                                keccak256(
-                                    "Delegation(address delegatee,uint256 nonce,uint256 expiry)"
-                                ),
+                                keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)"),
                                 delegatee,
                                 nonce,
                                 expiry
@@ -172,7 +170,7 @@ abstract contract ERC20Votes is IVotes, ERC20 {
             require(nonce == nonces[recoveredAddress]++, "ERC20Vote: invalid nonce");
             _delegate(recoveredAddress, delegatee);
         }
-    } 
+    }
 
     /**
      * @dev Maximum token supply. Defaults to `type(uint224).max` (2^224^ - 1).

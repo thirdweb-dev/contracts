@@ -22,7 +22,7 @@ import "./ERC20Base.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes  {
+contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -63,7 +63,7 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes  {
     function burn(uint256 _amount) external virtual {
         require(balanceOf[msg.sender] >= _amount, "not enough balance");
         _burn(msg.sender, _amount);
-    }   
+    }
 
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
