@@ -1,10 +1,10 @@
-# ERC20Base
+# ERC20Vote
 
 
 
 
 
-The `ERC20Base` smart contract implements the ERC20 standard.  It includes the following additions to standard ERC20 logic:      - Ability to mint &amp; burn tokens via the provided `mint` &amp; `burn` functions.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically      - EIP 2612 compliance: See {ERC20-permit} method, which can be used to change an account&#39;s ERC20 allowance by                             presenting a message signed by the account.
+The `ERC20Vote` smart contract implements the ERC20 standard and ERC20Votes.  It includes the following additions to standard ERC20 logic:      - Ability to mint &amp; burn tokens via the provided `mint` &amp; `burn` functions.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically      - Extension of ERC20 to support voting and delegation.      - EIP 2612 compliance: See {ERC20-permit} method, which can be used to change an account&#39;s ERC20 allowance by                             presenting a message signed by the account.
 
 
 
@@ -111,6 +111,29 @@ Lets an owner a given amount of their tokens.
 |---|---|---|
 | _amount | uint256 | The number of tokens to burn.
 
+### checkpoints
+
+```solidity
+function checkpoints(address account, uint32 pos) external view returns (struct ERC20VotesAlt.Checkpoint)
+```
+
+
+
+*Get the `pos`-th checkpoint for `account`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+| pos | uint32 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ERC20VotesAlt.Checkpoint | undefined
+
 ### contractURI
 
 ```solidity
@@ -144,6 +167,132 @@ function decimals() external view returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined
+
+### delegate
+
+```solidity
+function delegate(address delegatee) external nonpayable
+```
+
+
+
+*Delegate votes from the sender to `delegatee`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegatee | address | undefined
+
+### delegateBySig
+
+```solidity
+function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) external nonpayable
+```
+
+
+
+*Delegates votes from signer to `delegatee`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegatee | address | undefined
+| nonce | uint256 | undefined
+| expiry | uint256 | undefined
+| v | uint8 | undefined
+| r | bytes32 | undefined
+| s | bytes32 | undefined
+
+### delegates
+
+```solidity
+function delegates(address account) external view returns (address)
+```
+
+
+
+*Get the address `account` is currently delegating to.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
+### getPastTotalSupply
+
+```solidity
+function getPastTotalSupply(uint256 blockNumber) external view returns (uint256)
+```
+
+
+
+*Retrieve the `totalSupply` at the end of `blockNumber`. Note, this value is the sum of all balances. It is but NOT the sum of all the delegated votes! Requirements: - `blockNumber` must have been already mined*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| blockNumber | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getPastVotes
+
+```solidity
+function getPastVotes(address account, uint256 blockNumber) external view returns (uint256)
+```
+
+
+
+*Retrieve the number of votes for `account` at the end of `blockNumber`. Requirements: - `blockNumber` must have been already mined*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+| blockNumber | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getVotes
+
+```solidity
+function getVotes(address account) external view returns (uint256)
+```
+
+
+
+*Gets the current votes balance for `account`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
 
 ### mint
 
@@ -222,6 +371,28 @@ function nonces(address) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
+
+### numCheckpoints
+
+```solidity
+function numCheckpoints(address account) external view returns (uint32)
+```
+
+
+
+*Get number of checkpoints for `account`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint32 | undefined
 
 ### owner
 
@@ -413,6 +584,42 @@ event ContractURIUpdated(string prevURI, string newURI)
 |---|---|---|
 | prevURI  | string | undefined |
 | newURI  | string | undefined |
+
+### DelegateChanged
+
+```solidity
+event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| fromDelegate `indexed` | address | undefined |
+| toDelegate `indexed` | address | undefined |
+
+### DelegateVotesChanged
+
+```solidity
+event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegate `indexed` | address | undefined |
+| previousBalance  | uint256 | undefined |
+| newBalance  | uint256 | undefined |
 
 ### OwnerUpdated
 

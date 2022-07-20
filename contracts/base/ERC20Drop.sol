@@ -15,7 +15,7 @@ import "../extension/DropSinglePhase.sol";
  *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
  *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
  *
- *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism tokens. It lets
+ *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for tokens. It lets
  *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
  *
  */
@@ -53,13 +53,13 @@ contract ERC20Drop is ERC20SignatureMint, DropSinglePhase {
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal override returns (uint256) {
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal virtual override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetClaimConditions() internal view override returns (bool) {
+    function _canSetClaimConditions() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 

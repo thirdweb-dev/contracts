@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/extensions/ERC20Votes.sol)
 
 pragma solidity ^0.8.0;
 
-import "./ERC20Permit.sol";
-import "../../../utils/math/Math.sol";
-import "../../../governance/utils/IVotes.sol";
-import "../../../utils/math/SafeCast.sol";
-import "../../../utils/cryptography/ECDSA.sol";
+import "../../../../eip/ERC20.sol";
+
+import "../../../../openzeppelin-presets/utils/math/Math.sol";
+import "../../../../openzeppelin-presets/governance/utils/IVotes.sol";
+import "../../../../openzeppelin-presets/utils/math/SafeCast.sol";
 
 /**
  * @dev Extension of ERC20 to support Compound-like voting and delegation. This version is more generic than Compound's,
@@ -24,14 +23,11 @@ import "../../../utils/cryptography/ECDSA.sol";
  *
  * _Available since v4.2._
  */
-abstract contract ERC20Votes is IVotes, ERC20Permit {
+abstract contract ERC20VotesAlt is IVotes, ERC20 {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 votes;
     }
-
-    bytes32 private constant _DELEGATION_TYPEHASH =
-        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
     mapping(address => Checkpoint[]) private _checkpoints;
@@ -124,8 +120,13 @@ abstract contract ERC20Votes is IVotes, ERC20Permit {
      * @dev Delegate votes from the sender to `delegatee`.
      */
     function delegate(address delegatee) public virtual override {
-        _delegate(_msgSender(), delegatee);
+        // _delegate(_msgSender(), delegatee); //check
+        _delegate(msg.sender, delegatee);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                    Voting - delegation by signature
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @dev Delegates votes from signer to `delegatee`
@@ -138,15 +139,34 @@ abstract contract ERC20Votes is IVotes, ERC20Permit {
         bytes32 r,
         bytes32 s
     ) public virtual override {
-        require(block.timestamp <= expiry, "ERC20Votes: signature expired");
-        address signer = ECDSA.recover(
-            _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
-            v,
-            r,
-            s
-        );
-        require(nonce == _useNonce(signer), "ERC20Votes: invalid nonce");
-        _delegate(signer, delegatee);
+        require(expiry >= block.timestamp, "DELEGATION_DEADLINE_EXPIRED");
+
+        // Unchecked because the only math done is incrementing
+        // the owner's nonce which cannot realistically overflow.
+        unchecked {
+            address recoveredAddress = ecrecover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19\x01",
+                        DOMAIN_SEPARATOR(),
+                        keccak256(
+                            abi.encode(
+                                keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)"),
+                                delegatee,
+                                nonce,
+                                expiry
+                            )
+                        )
+                    )
+                ),
+                v,
+                r,
+                s
+            );
+
+            require(nonce == nonces[recoveredAddress]++, "ERC20Vote: invalid nonce");
+            _delegate(recoveredAddress, delegatee);
+        }
     }
 
     /**
@@ -161,7 +181,8 @@ abstract contract ERC20Votes is IVotes, ERC20Permit {
      */
     function _mint(address account, uint256 amount) internal virtual override {
         super._mint(account, amount);
-        require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
+        //check totalSupply()
+        require(totalSupply <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
 
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
     }
@@ -184,8 +205,9 @@ abstract contract ERC20Votes is IVotes, ERC20Permit {
         address from,
         address to,
         uint256 amount
-    ) internal virtual override {
-        super._afterTokenTransfer(from, to, amount);
+    ) internal virtual {
+        //check
+        // super._afterTokenTransfer(from, to, amount);
 
         _moveVotingPower(delegates(from), delegates(to), amount);
     }
@@ -197,7 +219,7 @@ abstract contract ERC20Votes is IVotes, ERC20Permit {
      */
     function _delegate(address delegator, address delegatee) internal virtual {
         address currentDelegate = delegates(delegator);
-        uint256 delegatorBalance = balanceOf(delegator);
+        uint256 delegatorBalance = balanceOf[delegator]; //check balanceOf(delegator)
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);

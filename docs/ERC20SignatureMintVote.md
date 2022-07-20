@@ -1,10 +1,10 @@
-# ERC20Drop
+# ERC20SignatureMintVote
 
 
 
 
 
-BASE:      ERC20      EXTENSION: SignatureMintERC20, DropSinglePhase  The `ERC20Drop` contract uses the `ERC20Base` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
+BASE:      ERC20Vote      EXTENSION: SignatureMintERC20  The `ERC20SignatureMint` contract uses the `ERC20Vote` contract, along with the `SignatureMintERC20` extension.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC20` extension uses EIP 712, and is a way for a contract  admin to authorize an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means  you can authorize some external party to mint tokens on your contract, and specify what exactly will be minted by  that external party.
 
 
 
@@ -111,50 +111,28 @@ Lets an owner a given amount of their tokens.
 |---|---|---|
 | _amount | uint256 | The number of tokens to burn.
 
-### claim
+### checkpoints
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof, bytes _data) external payable
+function checkpoints(address account, uint32 pos) external view returns (struct ERC20VotesAlt.Checkpoint)
 ```
 
 
 
-*Lets an account claim tokens.*
+*Get the `pos`-th checkpoint for `account`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _receiver | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
-| _data | bytes | undefined
-
-### claimCondition
-
-```solidity
-function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
-```
-
-
-
-
-
+| account | address | undefined
+| pos | uint32 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| startTimestamp | uint256 | undefined
-| maxClaimableSupply | uint256 | undefined
-| supplyClaimed | uint256 | undefined
-| quantityLimitPerTransaction | uint256 | undefined
-| waitTimeInSecondsBetweenClaims | uint256 | undefined
-| merkleRoot | bytes32 | undefined
-| pricePerToken | uint256 | undefined
-| currency | address | undefined
+| _0 | ERC20VotesAlt.Checkpoint | undefined
 
 ### contractURI
 
@@ -190,45 +168,148 @@ function decimals() external view returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined
 
-### getClaimTimestamp
+### delegate
 
 ```solidity
-function getClaimTimestamp(address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+function delegate(address delegatee) external nonpayable
 ```
 
 
 
-*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
+*Delegate votes from the sender to `delegatee`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _claimer | address | undefined
+| delegatee | address | undefined
+
+### delegateBySig
+
+```solidity
+function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) external nonpayable
+```
+
+
+
+*Delegates votes from signer to `delegatee`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegatee | address | undefined
+| nonce | uint256 | undefined
+| expiry | uint256 | undefined
+| v | uint8 | undefined
+| r | bytes32 | undefined
+| s | bytes32 | undefined
+
+### delegates
+
+```solidity
+function delegates(address account) external view returns (address)
+```
+
+
+
+*Get the address `account` is currently delegating to.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| lastClaimedAt | uint256 | undefined
-| nextValidClaimTimestamp | uint256 | undefined
+| _0 | address | undefined
 
-### mint
+### getPastTotalSupply
 
 ```solidity
-function mint(address, uint256) external nonpayable
+function getPastTotalSupply(uint256 blockNumber) external view returns (uint256)
 ```
 
 
 
-
+*Retrieve the `totalSupply` at the end of `blockNumber`. Note, this value is the sum of all balances. It is but NOT the sum of all the delegated votes! Requirements: - `blockNumber` must have been already mined*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint256 | undefined
+| blockNumber | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getPastVotes
+
+```solidity
+function getPastVotes(address account, uint256 blockNumber) external view returns (uint256)
+```
+
+
+
+*Retrieve the number of votes for `account` at the end of `blockNumber`. Requirements: - `blockNumber` must have been already mined*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+| blockNumber | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getVotes
+
+```solidity
+function getVotes(address account) external view returns (uint256)
+```
+
+
+
+*Gets the current votes balance for `account`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### mint
+
+```solidity
+function mint(address _to, uint256 _amount) external nonpayable
+```
+
+Lets an authorized address mint tokens to a recipient.
+
+*The logic in the `_canMint` function determines whether the caller is authorized to mint tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _to | address | The recipient of the tokens to mint.
+| _amount | uint256 | Quantity of tokens to mint.
 
 ### mintWithSignature
 
@@ -314,6 +395,28 @@ function nonces(address) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### numCheckpoints
+
+```solidity
+function numCheckpoints(address account) external view returns (uint32)
+```
+
+
+
+*Get number of checkpoints for `account`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint32 | undefined
+
 ### owner
 
 ```solidity
@@ -369,23 +472,6 @@ function primarySaleRecipient() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined
-
-### setClaimConditions
-
-```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
-```
-
-
-
-*Lets a contract admin set claim conditions.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _condition | IClaimCondition.ClaimCondition | undefined
-| _resetClaimEligibility | bool | undefined
 
 ### setContractURI
 
@@ -540,51 +626,6 @@ function verify(ISignatureMintERC20.MintRequest _req, bytes _signature) external
 | success | bool | undefined
 | signer | address | undefined
 
-### verifyClaim
-
-```solidity
-function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
-```
-
-
-
-*Checks a request to claim NFTs against the active claim condition&#39;s criteria.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| verifyMaxQuantityPerTransaction | bool | undefined
-
-### verifyClaimMerkleProof
-
-```solidity
-function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
-```
-
-
-
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| validMerkleProof | bool | undefined
-| merkleProofIndex | uint256 | undefined
-
 
 
 ## Events
@@ -607,23 +648,6 @@ event Approval(address indexed owner, address indexed spender, uint256 amount)
 | spender `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
-### ClaimConditionUpdated
-
-```solidity
-event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| condition  | IClaimCondition.ClaimCondition | undefined |
-| resetEligibility  | bool | undefined |
-
 ### ContractURIUpdated
 
 ```solidity
@@ -640,6 +664,42 @@ event ContractURIUpdated(string prevURI, string newURI)
 |---|---|---|
 | prevURI  | string | undefined |
 | newURI  | string | undefined |
+
+### DelegateChanged
+
+```solidity
+event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| fromDelegate `indexed` | address | undefined |
+| toDelegate `indexed` | address | undefined |
+
+### DelegateVotesChanged
+
+```solidity
+event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| delegate `indexed` | address | undefined |
+| previousBalance  | uint256 | undefined |
+| newBalance  | uint256 | undefined |
 
 ### OwnerUpdated
 
@@ -673,25 +733,6 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 | Name | Type | Description |
 |---|---|---|
 | recipient `indexed` | address | undefined |
-
-### TokensClaimed
-
-```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| claimer `indexed` | address | undefined |
-| receiver `indexed` | address | undefined |
-| startTokenId `indexed` | uint256 | undefined |
-| quantityClaimed  | uint256 | undefined |
 
 ### TokensMintedWithSignature
 

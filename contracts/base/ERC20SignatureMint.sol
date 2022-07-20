@@ -48,6 +48,7 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
      */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
+        virtual
         payable
         returns (address signer)
     {
