@@ -169,7 +169,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         uint256,
         AllowlistProof calldata,
         bytes memory
-    ) internal view override {
+    ) internal view virtual override {
         require(msg.sender == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
@@ -181,7 +181,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal override(DropSinglePhase, ERC721SignatureMint) {
+    ) internal virtual override(DropSinglePhase, ERC721SignatureMint) {
         if (_pricePerToken == 0) {
             return;
         }
@@ -200,6 +200,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     /// @dev Transfers the NFTs being claimed.
     function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
+        virtual
         override
         returns (uint256 startTokenId)
     {
@@ -208,27 +209,27 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
-    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+    function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
-    function _canSetOwner() internal view override returns (bool) {
+    function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal view override returns (bool) {
+    function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view override returns (bool) {
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetClaimConditions() internal view override returns (bool) {
+    function _canSetClaimConditions() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
