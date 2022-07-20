@@ -253,6 +253,51 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### getRoleMember
+
+```solidity
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
+```
+
+
+
+*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| member | address | undefined
+
+### getRoleMemberCount
+
+```solidity
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
+```
+
+
+
+*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| count | uint256 | undefined
+
 ### getRoyaltyInfoForToken
 
 ```solidity
