@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./Permissions.sol";
+import "./PermissionsEnumerable.sol";
 
 /**
  *  The `SoulboundERC721A` extension smart contract is meant to be used with ERC721A contracts as its base. It
@@ -13,7 +13,7 @@ import "./Permissions.sol";
  *      - Else, a transfer goes through only if either the sender or recipient holds the transfe role.
  */
 
-abstract contract SoulboundERC721A is Permissions {
+abstract contract SoulboundERC721A is PermissionsEnumerable {
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
