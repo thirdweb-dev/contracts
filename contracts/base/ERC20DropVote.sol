@@ -53,7 +53,12 @@ contract ERC20DropVote is ERC20SignatureMintVote, DropSinglePhase {
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal virtual override returns (uint256) {
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }

@@ -48,8 +48,8 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
      */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
-        virtual
         payable
+        virtual
         returns (address signer)
     {
         require(_req.quantity > 0, "Minting zero tokens.");
