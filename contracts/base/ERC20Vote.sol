@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../eip/ERC20.sol";
+import "../eip/ERC20VotesAlt.sol";
 
-import "../extension/ContractMetadata.sol";
-import "../extension/Multicall.sol";
-import "../extension/Ownable.sol";
+import "./ERC20Base.sol";
 
 /**
- *  The `ERC20Base` smart contract implements the ERC20 standard.
+ *  The `ERC20Vote` smart contract implements the ERC20 standard and ERC20Votes.
  *  It includes the following additions to standard ERC20 logic:
  *
  *      - Ability to mint & burn tokens via the provided `mint` & `burn` functions.
@@ -18,11 +16,13 @@ import "../extension/Ownable.sol";
  *
  *      - Multicall capability to perform multiple actions atomically
  *
+ *      - Extension of ERC20 to support voting and delegation.
+ *
  *      - EIP 2612 compliance: See {ERC20-permit} method, which can be used to change an account's ERC20 allowance by
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20 {
+contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes  {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -63,7 +63,7 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20 {
     function burn(uint256 _amount) external virtual {
         require(balanceOf[msg.sender] >= _amount, "not enough balance");
         _burn(msg.sender, _amount);
-    }
+    }   
 
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions

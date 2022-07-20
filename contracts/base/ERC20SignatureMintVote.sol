@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC20Base.sol";
+import "./ERC20Vote.sol";
 
 import "../extension/PrimarySale.sol";
 import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
@@ -9,10 +9,10 @@ import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 /**
- *      BASE:      ERC20
+ *      BASE:      ERC20Vote
  *      EXTENSION: SignatureMintERC20
  *
- *  The `ERC20SignatureMint` contract uses the `ERC20Base` contract, along with the `SignatureMintERC20` extension.
+ *  The `ERC20SignatureMint` contract uses the `ERC20Vote` contract, along with the `SignatureMintERC20` extension.
  *
  *  The 'signature minting' mechanism in the `SignatureMintERC20` extension uses EIP 712, and is a way for a contract
  *  admin to authorize an external party's request to mint tokens on the admin's contract. At a high level, this means
@@ -21,7 +21,7 @@ import "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
+contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -32,7 +32,7 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
         uint8 _decimals,
         string memory _contractURI,
         address _primarySaleRecipient
-    ) ERC20Base(_name, _symbol, _decimals, _contractURI) {
+    ) ERC20Vote(_name, _symbol, _decimals, _contractURI) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 

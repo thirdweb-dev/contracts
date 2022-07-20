@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC20SignatureMint.sol";
+import "./ERC20SignatureMintVote.sol";
 
 import "../extension/DropSinglePhase.sol";
 
 /**
- *      BASE:      ERC20
+ *      BASE:      ERC20Vote
  *      EXTENSION: SignatureMintERC20, DropSinglePhase
  *
- *  The `ERC20Drop` contract uses the `ERC20Base` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.
+ *  The `ERC20Drop` contract uses the `ERC20Vote` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.
  *
  *  The 'signature minting' mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize
  *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
@@ -20,7 +20,7 @@ import "../extension/DropSinglePhase.sol";
  *
  */
 
-contract ERC20Drop is ERC20SignatureMint, DropSinglePhase {
+contract ERC20Drop is ERC20SignatureMintVote, DropSinglePhase {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -31,14 +31,14 @@ contract ERC20Drop is ERC20SignatureMint, DropSinglePhase {
         uint8 _decimals,
         string memory _contractURI,
         address _primarySaleRecipient
-    ) ERC20SignatureMint(_name, _symbol, _decimals, _contractURI, _primarySaleRecipient) {}
+    ) ERC20SignatureMintVote(_name, _symbol, _decimals, _contractURI, _primarySaleRecipient) {}
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPriceOnClaim(
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal virtual override(DropSinglePhase, ERC20SignatureMint) {
+    ) internal virtual override(DropSinglePhase, ERC20SignatureMintVote) {
         if (_pricePerToken == 0) {
             return;
         }
