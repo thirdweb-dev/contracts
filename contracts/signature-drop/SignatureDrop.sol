@@ -101,7 +101,7 @@ contract SignatureDrop is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint256 batchId = getBatchId(_tokenId);
+        (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
@@ -126,8 +126,8 @@ contract SignatureDrop is
         return bytes32("SignatureDrop");
     }
 
-    function contractVersion() external pure returns (uint256) {
-        return 2;
+    function contractVersion() external pure returns (uint8) {
+        return uint8(2);
     }
 
     /*///////////////////////////////////////////////////////////////

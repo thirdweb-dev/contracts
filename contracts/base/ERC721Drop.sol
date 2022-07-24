@@ -51,8 +51,8 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint256 batchId = getBatchId(_tokenId);
+    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+        (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
@@ -73,7 +73,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
      *  @param _signature The signature produced by an account signing the mint request.
      */
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
+        public
         payable
         virtual
         override
@@ -145,7 +145,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(uint256 _index, bytes calldata _key) external override returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key) public virtual override returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -169,7 +169,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         uint256,
         AllowlistProof calldata,
         bytes memory
-    ) internal view override {
+    ) internal view virtual override {
         require(msg.sender == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
@@ -181,7 +181,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal override(DropSinglePhase, ERC721SignatureMint) {
+    ) internal virtual override(DropSinglePhase, ERC721SignatureMint) {
         if (_pricePerToken == 0) {
             return;
         }
@@ -200,6 +200,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     /// @dev Transfers the NFTs being claimed.
     function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
+        virtual
         override
         returns (uint256 startTokenId)
     {
@@ -208,27 +209,27 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
-    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+    function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
-    function _canSetOwner() internal view override returns (bool) {
+    function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal view override returns (bool) {
+    function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view override returns (bool) {
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetClaimConditions() internal view override returns (bool) {
+    function _canSetClaimConditions() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 

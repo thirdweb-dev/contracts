@@ -1,10 +1,10 @@
-# SignatureDrop
+# ERC721Multiwrap
 
 
 
 
 
-
+BASE:      ERC721Base      EXTENSION: TokenStore, SoulboundERC721A  The `ERC721Multiwrap` contract uses the `ERC721Base` contract, along with the `TokenStore` and   `SoulboundERC721A` extension.  The `ERC721Multiwrap` contract lets you wrap arbitrary ERC20, ERC721 and ERC1155 tokens you own  into a single wrapped token / NFT.  The `SoulboundERC721A` extension lets you make your NFTs &#39;soulbound&#39; i.e. non-transferrable.
 
 
 
@@ -14,6 +14,40 @@
 
 ```solidity
 function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
+### TRANSFER_ROLE
+
+```solidity
+function TRANSFER_ROLE() external view returns (bytes32)
 ```
 
 
@@ -66,83 +100,40 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### batchMintTo
+
+```solidity
+function batchMintTo(address _to, uint256 _quantity, string _baseURI, bytes _data) external nonpayable
+```
+
+Lets an authorized address mint multiple NFTs at once to a recipient.
+
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _to | address | The recipient of the NFT to mint.
+| _quantity | uint256 | The number of NFTs to mint.
+| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
+| _data | bytes | Additional data to pass along during the minting of the NFT.
+
 ### burn
 
 ```solidity
-function burn(uint256 tokenId) external nonpayable
+function burn(uint256 _tokenId) external nonpayable
 ```
 
+Lets an owner or approved operator burn the NFT of the given tokenId.
 
-
-*Burns `tokenId`. See {ERC721-_burn}.*
+*ERC721A&#39;s `_burn(uint256,bool)` internally checks for token approvals.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-
-### claim
-
-```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof, bytes _data) external payable
-```
-
-
-
-*Lets an account claim tokens.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _receiver | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
-| _data | bytes | undefined
-
-### claimCondition
-
-```solidity
-function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| startTimestamp | uint256 | undefined
-| maxClaimableSupply | uint256 | undefined
-| supplyClaimed | uint256 | undefined
-| quantityLimitPerTransaction | uint256 | undefined
-| waitTimeInSecondsBetweenClaims | uint256 | undefined
-| merkleRoot | bytes32 | undefined
-| pricePerToken | uint256 | undefined
-| currency | address | undefined
-
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined
+| _tokenId | uint256 | The tokenId of the NFT to burn.
 
 ### contractURI
 
@@ -160,68 +151,6 @@ function contractURI() external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined
-
-### encryptDecrypt
-
-```solidity
-function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
-```
-
-
-
-*See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes | undefined
-| key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | bytes | undefined
-
-### encryptedBaseURI
-
-```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined
 
 ### getApproved
 
@@ -284,29 +213,6 @@ function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### getClaimTimestamp
-
-```solidity
-function getClaimTimestamp(address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
-```
-
-
-
-*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| lastClaimedAt | uint256 | undefined
-| nextValidClaimTimestamp | uint256 | undefined
-
 ### getDefaultRoyaltyInfo
 
 ```solidity
@@ -324,47 +230,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee recipient and bps.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
-
-### getRevealURI
-
-```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
-```
-
-
-
-*Returns the decrypted i.e. revealed URI for a batch of tokens.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _batchId | uint256 | undefined
-| _key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
 
 ### getRoleAdmin
 
@@ -456,6 +321,73 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
+### getTokenCountOfBundle
+
+```solidity
+function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256)
+```
+
+
+
+*Returns the total number of assets in a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### getTokenOfBundle
+
+```solidity
+function getTokenOfBundle(uint256 _bundleId, uint256 index) external view returns (struct ITokenBundle.Token)
+```
+
+
+
+*Returns an asset contained in a particular bundle, at a particular index.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+| index | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | ITokenBundle.Token | undefined
+
+### getUriOfBundle
+
+```solidity
+function getUriOfBundle(uint256 _bundleId) external view returns (string)
+```
+
+
+
+*Returns the uri of a particular bundle.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _bundleId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### grantRole
 
 ```solidity
@@ -519,31 +451,6 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 |---|---|---|
 | _0 | bool | undefined
 
-### initialize
-
-```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint128 _royaltyBps, uint128 _platformFeeBps, address _platformFeeRecipient) external nonpayable
-```
-
-
-
-*Initiliazes the contract, like a constructor.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _defaultAdmin | address | undefined
-| _name | string | undefined
-| _symbol | string | undefined
-| _contractURI | string | undefined
-| _trustedForwarders | address[] | undefined
-| _saleRecipient | address | undefined
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint128 | undefined
-| _platformFeeBps | uint128 | undefined
-| _platformFeeRecipient | address | undefined
-
 ### isApprovedForAll
 
 ```solidity
@@ -567,35 +474,13 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
-### isEncryptedBatch
+### isApprovedOrOwner
 
 ```solidity
-function isEncryptedBatch(uint256 _batchId) external view returns (bool)
+function isApprovedOrOwner(address _operator, uint256 _tokenId) external view returns (bool isApprovedOrOwnerOf)
 ```
 
-
-
-*Returns whether the relvant batch of NFTs is subject to a delayed reveal.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _batchId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
-
-### isTrustedForwarder
-
-```solidity
-function isTrustedForwarder(address forwarder) external view returns (bool)
-```
-
-
+Returns whether a given address is the owner, or approved to transfer an NFT.
 
 
 
@@ -603,60 +488,31 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| _operator | address | undefined
+| _tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| isApprovedOrOwnerOf | bool | undefined
 
-### lazyMint
+### mintTo
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
+function mintTo(address _to, string _tokenURI) external nonpayable
 ```
 
+Lets an authorized address mint an NFT to a recipient.
 
-
-*Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.*
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _amount | uint256 | undefined
-| _baseURIForTokens | string | undefined
-| _encryptedBaseURI | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| batchId | uint256 | undefined
-
-### mintWithSignature
-
-```solidity
-function mintWithSignature(ISignatureMintERC721.MintRequest _req, bytes _signature) external payable returns (address signer)
-```
-
-
-
-*Claim lazy minted tokens via signature.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureMintERC721.MintRequest | undefined
-| _signature | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signer | address | undefined
+| _to | address | The recipient of the NFT to mint.
+| _tokenURI | string | The full metadata URI for the NFT minted.
 
 ### multicall
 
@@ -703,9 +559,9 @@ function name() external view returns (string)
 function nextTokenIdToMint() external view returns (uint256)
 ```
 
+The tokenId assigned to the next new NFT to be minted.
 
 
-*The tokenId of the next NFT that will be minted / lazy minted.*
 
 
 #### Returns
@@ -713,6 +569,83 @@ function nextTokenIdToMint() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
+
+### onERC1155BatchReceived
+
+```solidity
+function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | address | undefined
+| _2 | uint256[] | undefined
+| _3 | uint256[] | undefined
+| _4 | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined
+
+### onERC1155Received
+
+```solidity
+function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | address | undefined
+| _2 | uint256 | undefined
+| _3 | uint256 | undefined
+| _4 | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined
+
+### onERC721Received
+
+```solidity
+function onERC721Received(address, address, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+*See {IERC721Receiver-onERC721Received}. Always returns `IERC721Receiver.onERC721Received.selector`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+| _1 | address | undefined
+| _2 | uint256 | undefined
+| _3 | bytes | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined
 
 ### owner
 
@@ -753,23 +686,6 @@ function ownerOf(uint256 tokenId) external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
-### primarySaleRecipient
-
-```solidity
-function primarySaleRecipient() external view returns (address)
-```
-
-
-
-*The adress that receives all primary sales value.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
 ### renounceRole
 
 ```solidity
@@ -787,28 +703,21 @@ function renounceRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined
 | account | address | undefined
 
-### reveal
+### restrictTransfers
 
 ```solidity
-function reveal(uint256 _index, bytes _key) external nonpayable returns (string revealedURI)
+function restrictTransfers(bool _toRestrict) external nonpayable
 ```
 
+Restrict transfers of NFTs.
 
-
-*Lets an account with `MINTER_ROLE` reveal the URI for a batch of &#39;delayed-reveal&#39; NFTs.*
+*Restricting transfers means revoking the TRANSFER_ROLE from address(0). Making                    transfers unrestricted means granting the TRANSFER_ROLE to address(0).*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | undefined
-| _key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
+| _toRestrict | bool | Whether to restrict transfers or not.
 
 ### revokeRole
 
@@ -887,23 +796,6 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined
 | approved | bool | undefined
 
-### setClaimConditions
-
-```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _resetClaimEligibility) external nonpayable
-```
-
-
-
-*Lets a contract admin set claim conditions.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _condition | IClaimCondition.ClaimCondition | undefined
-| _resetClaimEligibility | bool | undefined
-
 ### setContractURI
 
 ```solidity
@@ -953,39 +845,6 @@ function setOwner(address _newOwner) external nonpayable
 |---|---|---|
 | _newOwner | address | undefined
 
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
-
-
-
-*Lets a contract admin update the platform fee recipient and bps*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
-
-### setPrimarySaleRecipient
-
-```solidity
-function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
-```
-
-
-
-*Lets a contract admin set the recipient for all primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _saleRecipient | address | undefined
-
 ### setRoyaltyInfoForToken
 
 ```solidity
@@ -1012,7 +871,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*See ERC 165*
+*See ERC-165*
 
 #### Parameters
 
@@ -1049,38 +908,21 @@ function symbol() external view returns (string)
 function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
+Returns the metadata URI for an NFT.
 
-
-*Returns the URI for a given tokenId.*
+*See `BatchMintMetadata` for handling of metadata in this contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenId of an NFT.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
-
-### totalMinted
-
-```solidity
-function totalMinted() external view returns (uint256)
-```
-
-Returns the total amount of tokens minted in the contract.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
 
 ### totalSupply
 
@@ -1117,74 +959,46 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined
 | tokenId | uint256 | undefined
 
-### verify
+### unwrap
 
 ```solidity
-function verify(ISignatureMintERC721.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
+function unwrap(uint256 _tokenId, address _recipient) external nonpayable
 ```
 
+Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
 
 
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMintERC721.MintRequest | undefined
-| _signature | bytes | undefined
+| _tokenId | uint256 | The token Id of the wrapped NFT to unwrap.
+| _recipient | address | The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
+
+### wrap
+
+```solidity
+function wrap(ITokenBundle.Token[] _tokensToWrap, string _uriForWrappedToken, address _recipient) external payable returns (uint256 tokenId)
+```
+
+Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokensToWrap | ITokenBundle.Token[] | The tokens to wrap.
+| _uriForWrappedToken | string | The metadata URI for the wrapped NFT.
+| _recipient | address | The recipient of the wrapped NFT.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
-
-### verifyClaim
-
-```solidity
-function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
-```
-
-
-
-*Checks a request to claim NFTs against the active claim condition&#39;s criteria.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| verifyMaxQuantityPerTransaction | bool | undefined
-
-### verifyClaimMerkleProof
-
-```solidity
-function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
-```
-
-
-
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| validMerkleProof | bool | undefined
-| merkleProofIndex | uint256 | undefined
+| tokenId | uint256 | The tokenId of the wrapped NFT minted.
 
 
 
@@ -1225,23 +1039,6 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | owner `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
-
-### ClaimConditionUpdated
-
-```solidity
-event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| condition  | IClaimCondition.ClaimCondition | undefined |
-| resetEligibility  | bool | undefined |
 
 ### ContractURIUpdated
 
@@ -1293,39 +1090,6 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 |---|---|---|
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient `indexed` | address | undefined |
-| platformFeeBps  | uint256 | undefined |
-
-### PrimarySaleRecipientUpdated
-
-```solidity
-event PrimarySaleRecipientUpdated(address indexed recipient)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
 
 ### RoleAdminChanged
 
@@ -1399,79 +1163,42 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
-### TokenURIRevealed
+### TokensUnwrapped
 
 ```solidity
-event TokenURIRevealed(uint256 indexed index, string revealedURI)
+event TokensUnwrapped(address indexed unwrapper, address indexed recipientOfWrappedContents, uint256 indexed tokenIdOfWrappedToken)
 ```
 
 
 
-
+*Emitted when tokens are unwrapped.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| index `indexed` | uint256 | undefined |
-| revealedURI  | string | undefined |
+| unwrapper `indexed` | address | undefined |
+| recipientOfWrappedContents `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
 
-### TokensClaimed
+### TokensWrapped
 
 ```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
+event TokensWrapped(address indexed wrapper, address indexed recipientOfWrappedToken, uint256 indexed tokenIdOfWrappedToken, ITokenBundle.Token[] wrappedContents)
 ```
 
 
 
-
+*Emitted when tokens are wrapped.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| claimer `indexed` | address | undefined |
-| receiver `indexed` | address | undefined |
-| startTokenId `indexed` | uint256 | undefined |
-| quantityClaimed  | uint256 | undefined |
-
-### TokensLazyMinted
-
-```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| startTokenId `indexed` | uint256 | undefined |
-| endTokenId  | uint256 | undefined |
-| baseURI  | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMintERC721.MintRequest mintRequest)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ISignatureMintERC721.MintRequest | undefined |
+| wrapper `indexed` | address | undefined |
+| recipientOfWrappedToken `indexed` | address | undefined |
+| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| wrappedContents  | ITokenBundle.Token[] | undefined |
 
 ### Transfer
 
@@ -1490,6 +1217,22 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
+
+### TransfersRestricted
+
+```solidity
+event TransfersRestricted(bool isRestricted)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| isRestricted  | bool | undefined |
 
 
 
