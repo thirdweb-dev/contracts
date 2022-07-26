@@ -117,7 +117,7 @@ contract DropERC721 is
      *  @dev Mapping from 'Largest tokenId of a batch of 'delayed-reveal' tokens with
      *       the same baseURI' to encrypted base URI for the respective batch of tokens.
      **/
-    mapping(uint256 => bytes) public encryptedBaseURI;
+    mapping(uint256 => bytes32) public encryptedBaseURI;
 
     /// @dev Mapping from address => total number of NFTs a wallet has claimed.
     mapping(address => uint256) public walletClaimCount;
@@ -193,7 +193,7 @@ contract DropERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                if (encryptedBaseURI[baseURIIndices[i]].length != 0) {
+                if (encryptedBaseURI[baseURIIndices[i]] != "") {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
                 } else {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
@@ -238,7 +238,7 @@ contract DropERC721 is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        bytes32 _encryptedBaseURIHash
     ) external onlyRole(MINTER_ROLE) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
@@ -247,70 +247,70 @@ contract DropERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if (_encryptedBaseURI.length != 0) {
-            encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
+        if (_encryptedBaseURIHash != "") {
+            encryptedBaseURI[baseURIIndex] = _encryptedBaseURIHash;
         }
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURIHash);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 index, bytes calldata _key)
+    function reveal(uint256 index, bytes32 _keyHash, string calldata _baseURIToReveal)
         external
         onlyRole(MINTER_ROLE)
-        returns (string memory revealedURI)
     {
         require(index < baseURIIndices.length, "invalid index.");
 
         uint256 _index = baseURIIndices[index];
-        bytes memory encryptedURI = encryptedBaseURI[_index];
-        require(encryptedURI.length != 0, "nothing to reveal.");
+        bytes32 encryptedURIHash = encryptedBaseURI[_index];
+        require(encryptedURIHash != "", "nothing to reveal.");
 
-        revealedURI = string(encryptDecrypt(encryptedURI, _key));
+        // revealedURI = string(encryptDecrypt(encryptedURI, _key));
+        bytes32 inputURIInfoHash = keccak256(abi.encodePacked(_baseURIToReveal, _keyHash));
+        require(inputURIInfoHash == encryptedURIHash, "incorrect baseURI or key");
 
-        baseURI[_index] = revealedURI;
+        // baseURI[_index] = revealedURI;
+        baseURI[_index] = _baseURIToReveal;
         delete encryptedBaseURI[_index];
 
-        emit NFTRevealed(_index, revealedURI);
-
-        return revealedURI;
+        emit NFTRevealed(_index, _baseURIToReveal);
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
-        // Store data length on stack for later use
-        uint256 length = data.length;
+    // function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
+    //     // Store data length on stack for later use
+    //     uint256 length = data.length;
 
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Set result to free memory pointer
-            result := mload(0x40)
-            // Increase free memory pointer by lenght + 32
-            mstore(0x40, add(add(result, length), 32))
-            // Set result length
-            mstore(result, length)
-        }
+    //     // solhint-disable-next-line no-inline-assembly
+    //     assembly {
+    //         // Set result to free memory pointer
+    //         result := mload(0x40)
+    //         // Increase free memory pointer by lenght + 32
+    //         mstore(0x40, add(add(result, length), 32))
+    //         // Set result length
+    //         mstore(result, length)
+    //     }
 
-        // Iterate over the data stepping by 32 bytes
-        for (uint256 i = 0; i < length; i += 32) {
-            // Generate hash of the key and offset
-            bytes32 hash = keccak256(abi.encodePacked(key, i));
+    //     // Iterate over the data stepping by 32 bytes
+    //     for (uint256 i = 0; i < length; i += 32) {
+    //         // Generate hash of the key and offset
+    //         bytes32 hash = keccak256(abi.encodePacked(key, i));
 
-            bytes32 chunk;
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                // Read 32-bytes data chunk
-                chunk := mload(add(data, add(i, 32)))
-            }
-            // XOR the chunk with hash
-            chunk ^= hash;
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                // Write 32-byte encrypted chunk
-                mstore(add(result, add(i, 32)), chunk)
-            }
-        }
-    }
+    //         bytes32 chunk;
+    //         // solhint-disable-next-line no-inline-assembly
+    //         assembly {
+    //             // Read 32-bytes data chunk
+    //             chunk := mload(add(data, add(i, 32)))
+    //         }
+    //         // XOR the chunk with hash
+    //         chunk ^= hash;
+    //         // solhint-disable-next-line no-inline-assembly
+    //         assembly {
+    //             // Write 32-byte encrypted chunk
+    //             mstore(add(result, add(i, 32)), chunk)
+    //         }
+    //     }
+    // }
 
     /*///////////////////////////////////////////////////////////////
                             Claim logic

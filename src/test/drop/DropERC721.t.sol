@@ -162,7 +162,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", bytes(""));
+        drop.lazyMint(100, "ipfs://", "");
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
 
@@ -186,7 +186,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", bytes(""));
+        drop.lazyMint(100, "ipfs://", "");
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
@@ -210,7 +210,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", bytes(""));
+        drop.lazyMint(100, "ipfs://", "");
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
@@ -246,7 +246,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(500, "ipfs://", bytes(""));
+        drop.lazyMint(500, "ipfs://", "");
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
@@ -346,5 +346,119 @@ contract DropERC721Test is BaseTest {
         vm.prank(address(4), address(4));
         vm.expectRevert("not in whitelist.");
         drop.claim(receiver, x, address(0), 0, proofs, y);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Delayed Reveal Tests
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+     *  note: Testing state changes; URI revealed for a batch of tokens.
+     */
+    function test_state_delayedReveal() public {
+        vm.startPrank(deployer);
+
+        bytes memory key = "key";
+        bytes32 keyHash = keccak256(key);
+
+        uint256 amountToLazyMint = 100;
+        string memory secretURI = "ipfs://base/";
+        string memory placeholderURI = "ipfs://abc/";
+        
+        bytes32 encryptedURIHash = keccak256(abi.encodePacked(secretURI, keyHash));
+        drop.lazyMint(amountToLazyMint, placeholderURI, encryptedURIHash);
+
+        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
+            string memory uri = drop.tokenURI(i);
+            assertEq(uri, string(abi.encodePacked(placeholderURI, "0")));
+        }
+
+        drop.reveal(0, keyHash, secretURI);
+        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
+            string memory uri = drop.tokenURI(i);
+            assertEq(uri, string(abi.encodePacked(secretURI, Strings.toString(i))));
+        }
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing state changes; revealing with an incorrect key.
+     */
+    function test_revert_delayedReveal_incorrectKey() public {
+        vm.startPrank(deployer);
+
+        bytes memory key = "key";
+        bytes32 keyHash = keccak256(key);
+
+        bytes32 encryptedURIHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        drop.lazyMint(100, "", encryptedURIHash);
+
+        bytes memory badKey = "bad key";
+        bytes32 badKeyHash = keccak256(badKey);
+
+        vm.expectRevert("incorrect baseURI or key");
+        drop.reveal(0, badKeyHash, "ipfs://");
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing state changes; revealing with incorrect baseURI.
+     */
+    function test_revert_delayedReveal_incorrectURI() public {
+        vm.startPrank(deployer);
+
+        bytes memory key = "key";
+        bytes32 keyHash = keccak256(key);
+
+        bytes32 encryptedURIHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        drop.lazyMint(100, "", encryptedURIHash);
+
+        vm.expectRevert("incorrect baseURI or key");
+        drop.reveal(0, keyHash, "random://");
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing revert condition; trying to reveal URI for non-existent batch.
+     */
+    function test_revert_delayedReveal_revealingNonExistentBatch() public {
+        vm.startPrank(deployer);
+
+        bytes memory key = "key";
+        bytes32 keyHash = keccak256(key);
+
+        bytes32 encryptedURIHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        drop.lazyMint(100, "", encryptedURIHash);
+        drop.reveal(0, keyHash, "ipfs://");
+
+        console.log(drop.getBaseURICount());
+
+        drop.lazyMint(100, "", encryptedURIHash);
+        vm.expectRevert("invalid index.");
+        drop.reveal(2, keyHash, "ipfs://");
+
+        vm.stopPrank();
+    }
+
+    /*
+     *  note: Testing revert condition; already revealed URI.
+     */
+    function test_revert_delayedReveal_alreadyRevealed() public {
+        vm.startPrank(deployer);
+
+        bytes memory key = "key";
+        bytes32 keyHash = keccak256(key);
+
+        bytes32 encryptedURIHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        drop.lazyMint(100, "", encryptedURIHash);
+        drop.reveal(0, keyHash, "ipfs://");
+
+        vm.expectRevert("nothing to reveal.");
+        drop.reveal(0, keyHash, "ipfs://");
+
+        vm.stopPrank();
     }
 }
