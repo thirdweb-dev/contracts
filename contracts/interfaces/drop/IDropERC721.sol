@@ -32,7 +32,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
     );
 
     /// @dev Emitted when tokens are lazy minted.
-    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes32 encryptedBaseURI);
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes32 baseURICommitHash);
 
     /// @dev Emitted when the URI for a batch of 'delayed-reveal' NFTs is revealed.
     event NFTRevealed(uint256 endTokenId, string revealedURI);
@@ -55,16 +55,15 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
      *
      *  @param amount           The amount of NFTs to lazy mint.
      *  @param baseURIForTokens The URI for the NFTs to lazy mint. If lazy minting
-     *                           'delayed-reveal' NFTs, the is a URI for NFTs in the
-     *                           un-revealed state.
-     *  @param encryptedBaseURI If lazy minting 'delayed-reveal' NFTs, this is the
-     *                           result of encrypting the URI of the NFTs in the revealed
-     *                           state.
+     *                           'delayed-reveal' NFTs, the is a placeholder URI for NFTs.
+     *  @param baseURICommitHash If lazy minting 'delayed-reveal' NFTs, this value
+     *                           refers to the keccak256 hash of actual URI and key-hash,
+     *                           which is the hash of a salt/password.
      */
     function lazyMint(
         uint256 amount,
         string calldata baseURIForTokens,
-        bytes32 encryptedBaseURI
+        bytes32 baseURICommitHash
     ) external;
 
     /**
