@@ -115,9 +115,9 @@ contract DropERC721 is
 
     /**
      *  @dev Mapping from 'Largest tokenId of a batch of 'delayed-reveal' tokens with
-     *       the same baseURI' to encrypted base URI for the respective batch of tokens.
+     *       the same baseURI' to base URI commitment hash for the respective batch of tokens.
      **/
-    mapping(uint256 => bytes32) public encryptedBaseURI;
+    mapping(uint256 => bytes32) public baseURICommitHash;
 
     /// @dev Mapping from address => total number of NFTs a wallet has claimed.
     mapping(address => uint256) public walletClaimCount;
@@ -193,7 +193,7 @@ contract DropERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                if (encryptedBaseURI[baseURIIndices[i]] != "") {
+                if (baseURICommitHash[baseURIIndices[i]] != "") {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
                 } else {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
@@ -238,7 +238,7 @@ contract DropERC721 is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes32 _encryptedBaseURIHash
+        bytes32 _baseURICommitHash
     ) external onlyRole(MINTER_ROLE) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
@@ -247,11 +247,11 @@ contract DropERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if (_encryptedBaseURIHash != "") {
-            encryptedBaseURI[baseURIIndex] = _encryptedBaseURIHash;
+        if (_baseURICommitHash != "") {
+            baseURICommitHash[baseURIIndex] = _baseURICommitHash;
         }
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURIHash);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _baseURICommitHash);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -262,55 +262,17 @@ contract DropERC721 is
         require(index < baseURIIndices.length, "invalid index.");
 
         uint256 _index = baseURIIndices[index];
-        bytes32 encryptedURIHash = encryptedBaseURI[_index];
-        require(encryptedURIHash != "", "nothing to reveal.");
+        bytes32 commitHash = baseURICommitHash[_index];
+        require(commitHash != "", "nothing to reveal.");
 
-        // revealedURI = string(encryptDecrypt(encryptedURI, _key));
         bytes32 inputURIInfoHash = keccak256(abi.encodePacked(_baseURIToReveal, _keyHash));
-        require(inputURIInfoHash == encryptedURIHash, "incorrect baseURI or key");
+        require(inputURIInfoHash == commitHash, "incorrect baseURI or key");
 
-        // baseURI[_index] = revealedURI;
         baseURI[_index] = _baseURIToReveal;
-        delete encryptedBaseURI[_index];
+        delete baseURICommitHash[_index];
 
         emit NFTRevealed(_index, _baseURIToReveal);
     }
-
-    /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    // function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
-    //     // Store data length on stack for later use
-    //     uint256 length = data.length;
-
-    //     // solhint-disable-next-line no-inline-assembly
-    //     assembly {
-    //         // Set result to free memory pointer
-    //         result := mload(0x40)
-    //         // Increase free memory pointer by lenght + 32
-    //         mstore(0x40, add(add(result, length), 32))
-    //         // Set result length
-    //         mstore(result, length)
-    //     }
-
-    //     // Iterate over the data stepping by 32 bytes
-    //     for (uint256 i = 0; i < length; i += 32) {
-    //         // Generate hash of the key and offset
-    //         bytes32 hash = keccak256(abi.encodePacked(key, i));
-
-    //         bytes32 chunk;
-    //         // solhint-disable-next-line no-inline-assembly
-    //         assembly {
-    //             // Read 32-bytes data chunk
-    //             chunk := mload(add(data, add(i, 32)))
-    //         }
-    //         // XOR the chunk with hash
-    //         chunk ^= hash;
-    //         // solhint-disable-next-line no-inline-assembly
-    //         assembly {
-    //             // Write 32-byte encrypted chunk
-    //             mstore(add(result, add(i, 32)), chunk)
-    //         }
-    //     }
-    // }
 
     /*///////////////////////////////////////////////////////////////
                             Claim logic
