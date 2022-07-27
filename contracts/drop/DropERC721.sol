@@ -239,7 +239,7 @@ contract DropERC721 is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes32 _baseURICommitHash
-    ) external onlyRole(MINTER_ROLE) {
+    ) external onlyRole(MINTER_ROLE) nonReentrant {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 

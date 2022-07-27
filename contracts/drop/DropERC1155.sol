@@ -238,7 +238,7 @@ contract DropERC1155 is
      *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
      *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyRole(MINTER_ROLE) {
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyRole(MINTER_ROLE) nonReentrant {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
