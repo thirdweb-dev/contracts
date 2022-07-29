@@ -22,12 +22,17 @@ abstract contract Ownable is IOwnable {
         _;
     }
 
-    /// @dev Returns the owner of the contract.
+    /**
+     *  @notice Returns the owner of the contract.
+     */
     function owner() public view override returns (address) {
         return _owner;
     }
 
-    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
+    /**
+     *  @notice Lets an authorized wallet set a new owner for the contract.
+     *  @param _newOwner The address to set as the new owner of the contract.
+     */
     function setOwner(address _newOwner) external override {
         if (!_canSetOwner()) {
             revert("Not authorized");

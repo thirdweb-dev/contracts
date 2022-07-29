@@ -11,7 +11,7 @@ import "./interface/IContractMetadata.sol";
  */
 
 abstract contract ContractMetadata is IContractMetadata {
-    /// @dev Contract level metadata.
+    /// @notice Returns the contract metadata URI.
     string public override contractURI;
 
     /**

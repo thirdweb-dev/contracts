@@ -25,7 +25,7 @@ abstract contract Royalty is IRoyalty {
     /**
      *  @notice   View royalty info for a given token and sale price.
      *  @dev      Returns royalty amount and recipient for `tokenId` and `salePrice`.
-     *  @param tokenId          token ID.
+     *  @param tokenId          The tokenID of the NFT for which to query royalty info.
      *  @param salePrice        Sale price of the token.
      *
      *  @return receiver        Address of royalty recipient account.
@@ -46,7 +46,7 @@ abstract contract Royalty is IRoyalty {
     /**
      *  @notice          View royalty info for a given token.
      *  @dev             Returns royalty recipient and bps for `_tokenId`.
-     *  @param _tokenId  token ID.
+     *  @param _tokenId  The tokenID of the NFT for which to query royalty info.
      */
     function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
@@ -57,7 +57,9 @@ abstract contract Royalty is IRoyalty {
                 : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
-    /// @dev Returns the default royalty recipient and bps.
+    /**
+     *  @notice Returns the defualt royalty recipient and BPS for this contract's NFTs.
+     */
     function getDefaultRoyaltyInfo() external view override returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
