@@ -5,9 +5,9 @@ import "./interface/IPermissions.sol";
 import "../lib/TWStrings.sol";
 
 /**
-*  @title   Permissions
-*  @dev     This contracts provides extending-contracts with role-based access control mechanisms
-*/
+ *  @title   Permissions
+ *  @dev     This contracts provides extending-contracts with role-based access control mechanisms
+ */
 contract Permissions is IPermissions {
     /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
@@ -41,9 +41,9 @@ contract Permissions is IPermissions {
      *
      *  @dev            Returns `true` if `account` has been granted `role`.
      *                  Role restrictions can be swtiched on and off:
-     *                      - If address(0) has ROLE, then the ROLE restrictions 
+     *                      - If address(0) has ROLE, then the ROLE restrictions
      *                        don't apply.
-     *                      - If address(0) does not have ROLE, then the ROLE 
+     *                      - If address(0) does not have ROLE, then the ROLE
      *                        restrictions will apply.
      *
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
