@@ -17,7 +17,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Whether the registry is paused.
+    /// @notice Whether the contract publisher is paused.
     bool public isPaused;
 
     /*///////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                             Publish logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
+    /// @notice Let's an account publish a contract.
     function publishContract(
         address _publisher,
         string memory _contractId,
@@ -135,7 +135,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         emit ContractPublished(_msgSender(), _publisher, publishedContract);
     }
 
-    /// @notice Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
+    /// @notice Lets a publisher unpublish a contract and all its versions.
     function unpublishContract(address _publisher, string memory _contractId)
         external
         onlyPublisher(_publisher)
@@ -185,10 +185,12 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         emit Paused(_pause);
     }
 
+    /// @dev ERC2771Context overrides
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
+    /// @dev ERC2771Context overrides
     function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }

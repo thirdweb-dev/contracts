@@ -2,6 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ITokenBundle.sol";
+import "../lib/CurrencyTransferLib.sol";
+
+interface IERC165 {
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
 
 /**
  *  @title   Token Bundle
@@ -37,6 +42,7 @@ abstract contract TokenBundle is ITokenBundle {
         require(bundle[_bundleId].count == 0, "TokenBundle: existent at bundleId");
 
         for (uint256 i = 0; i < targetCount; i += 1) {
+            _checkTokenType(_tokensToBind[i]);
             bundle[_bundleId].tokens[i] = _tokensToBind[i];
         }
 
@@ -53,6 +59,7 @@ abstract contract TokenBundle is ITokenBundle {
 
         for (uint256 i = 0; i < check; i += 1) {
             if (i < targetCount) {
+                _checkTokenType(_tokensToBind[i]);
                 bundle[_bundleId].tokens[i] = _tokensToBind[i];
             } else if (i < currentCount) {
                 delete bundle[_bundleId].tokens[i];
@@ -64,6 +71,7 @@ abstract contract TokenBundle is ITokenBundle {
 
     /// @dev Lets the calling contract add a token to a bundle for a unique bundle id and index.
     function _addTokenInBundle(Token memory _tokenToBind, uint256 _bundleId) internal {
+        _checkTokenType(_tokenToBind);
         uint256 id = bundle[_bundleId].count;
 
         bundle[_bundleId].tokens[id] = _tokenToBind;
@@ -77,7 +85,36 @@ abstract contract TokenBundle is ITokenBundle {
         uint256 _index
     ) internal {
         require(_index < bundle[_bundleId].count, "TokenBundle: index DNE.");
+        _checkTokenType(_tokenToBind);
         bundle[_bundleId].tokens[_index] = _tokenToBind;
+    }
+
+    /// @dev Checks if the type of asset-contract is same as the TokenType specified.
+    function _checkTokenType(Token memory _token) internal view {
+        if (_token.tokenType == TokenType.ERC721) {
+            try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported721) {
+                require(supported721, "Asset doesn't match TokenType");
+            } catch {
+                revert("Asset doesn't match TokenType");
+            }
+        } else if (_token.tokenType == TokenType.ERC1155) {
+            try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported1155) {
+                require(supported1155, "Asset doesn't match TokenType");
+            } catch {
+                revert("Asset doesn't match TokenType");
+            }
+        } else if (_token.tokenType == TokenType.ERC20) {
+            if (_token.assetContract != CurrencyTransferLib.NATIVE_TOKEN) {
+                // 0x36372b07
+                try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported721) {
+                    require(!supported721, "Asset doesn't match TokenType");
+
+                    try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported1155) {
+                        require(!supported1155, "Asset doesn't match TokenType");
+                    } catch Error(string memory) {} catch {}
+                } catch Error(string memory) {} catch {}
+            }
+        }
     }
 
     /// @dev Lets the calling contract set/update the uri of a particular bundle.
