@@ -527,9 +527,9 @@ function isApprovedForAll(address owner, address operator) external view returns
 function isDelayedRevealBatch(uint256 _identifier) external view returns (bool)
 ```
 
-Returns whether the relvant batch of NFTs is subject to a delayed reveal.
 
-*Returns `true` if `_batchId`&#39;s base URI is encrypted.*
+
+*Returns whether the relvant batch of NFTs is subject to a delayed reveal.*
 
 #### Parameters
 
