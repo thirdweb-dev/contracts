@@ -72,9 +72,9 @@ function balanceOf(address owner) external view returns (uint256)
 function baseURICommitHash(uint256) external view returns (bytes32)
 ```
 
+Returns the provenance hash of NFTs grouped by the given identifier.
 
 
-*Mapping from &#39;Largest tokenId of a batch of &#39;delayed-reveal&#39; tokens with       the same baseURI&#39; to base URI commitment hash for the respective batch of tokens.**
 
 #### Parameters
 
@@ -532,6 +532,28 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
+### isDelayedRevealBatch
+
+```solidity
+function isDelayedRevealBatch(uint256 _identifier) external view returns (bool)
+```
+
+
+
+*Returns whether the relvant batch of NFTs is subject to a delayed reveal.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _identifier | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### isTrustedForwarder
 
 ```solidity
@@ -547,6 +569,30 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | forwarder | address | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### isValidBaseURI
+
+```solidity
+function isValidBaseURI(uint256 _identifier, bytes32 _salt, string _baseURIToReveal) external view returns (bool)
+```
+
+Returns whether the given metadata URI is the true metadata URI associated with the provenance hash          for NFTs grouped by the given identifier.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _identifier | uint256 | undefined
+| _salt | bytes32 | undefined
+| _baseURIToReveal | string | undefined
 
 #### Returns
 
@@ -755,7 +801,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 ### reveal
 
 ```solidity
-function reveal(uint256 index, bytes32 _keyHash, string _baseURIToReveal) external nonpayable
+function reveal(uint256 _index, bytes32 _keyHash, string _baseURIToReveal) external nonpayable
 ```
 
 
@@ -766,7 +812,7 @@ function reveal(uint256 index, bytes32 _keyHash, string _baseURIToReveal) extern
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined
+| _index | uint256 | undefined
 | _keyHash | bytes32 | undefined
 | _baseURIToReveal | string | undefined
 
@@ -1467,6 +1513,23 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | tokenId `indexed` | uint256 | undefined |
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
+
+### TokenURIRevealed
+
+```solidity
+event TokenURIRevealed(uint256 indexed index, string revealedURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index `indexed` | uint256 | undefined |
+| revealedURI  | string | undefined |
 
 ### TokensClaimed
 

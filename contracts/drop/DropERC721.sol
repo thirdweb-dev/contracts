@@ -21,6 +21,8 @@ import "../interfaces/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
+import "../extension/DelayedRevealCommitHash.sol";
+
 import "../extension/interface/IPlatformFee.sol";
 import "../extension/interface/IPrimarySale.sol";
 import "../extension/interface/IRoyalty.sol";
@@ -39,6 +41,7 @@ contract DropERC721 is
     IRoyalty,
     IPrimarySale,
     IPlatformFee,
+    DelayedRevealCommitHash,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -112,12 +115,6 @@ contract DropERC721 is
      *       to base URI for the respective batch of tokens.
      **/
     mapping(uint256 => string) private baseURI;
-
-    /**
-     *  @dev Mapping from 'Largest tokenId of a batch of 'delayed-reveal' tokens with
-     *       the same baseURI' to base URI commitment hash for the respective batch of tokens.
-     **/
-    mapping(uint256 => bytes32) public baseURICommitHash;
 
     /// @dev Mapping from address => total number of NFTs a wallet has claimed.
     mapping(address => uint256) public walletClaimCount;
@@ -248,30 +245,27 @@ contract DropERC721 is
         baseURIIndices.push(baseURIIndex);
 
         if (_baseURICommitHash != "") {
-            baseURICommitHash[baseURIIndex] = _baseURICommitHash;
+            _setBaseURICommitHash(baseURIIndex, _baseURICommitHash);
         }
 
         emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _baseURICommitHash);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 index, bytes32 _keyHash, string calldata _baseURIToReveal)
+    function reveal(uint256 _index, bytes32 _keyHash, string calldata _baseURIToReveal)
         external
+        override
         onlyRole(MINTER_ROLE)
     {
-        require(index < baseURIIndices.length, "invalid index.");
+        require(_index < baseURIIndices.length, "invalid index.");
 
-        uint256 _index = baseURIIndices[index];
-        bytes32 commitHash = baseURICommitHash[_index];
-        require(commitHash != "", "nothing to reveal.");
+        uint256 batchId = baseURIIndices[_index];
+        require(isValidBaseURI(batchId, _keyHash, _baseURIToReveal), "Incorrect baseURI or salt.");
 
-        bytes32 inputURIInfoHash = keccak256(abi.encodePacked(_baseURIToReveal, _keyHash));
-        require(inputURIInfoHash == commitHash, "incorrect baseURI or key");
+        baseURI[batchId] = _baseURIToReveal;
+        delete baseURICommitHash[batchId];
 
-        baseURI[_index] = _baseURIToReveal;
-        delete baseURICommitHash[_index];
-
-        emit NFTRevealed(_index, _baseURIToReveal);
+        emit TokenURIRevealed(batchId, _baseURIToReveal);
     }
 
     /*///////////////////////////////////////////////////////////////

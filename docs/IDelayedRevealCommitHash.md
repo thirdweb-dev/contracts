@@ -59,7 +59,7 @@ Returns whether the given metadata URI is the true metadata URI associated with 
 ### reveal
 
 ```solidity
-function reveal(uint256 identifier, bytes32 salt, string baseURIToReveal) external nonpayable returns (string revealedURI)
+function reveal(uint256 identifier, bytes32 salt, string baseURIToReveal) external nonpayable
 ```
 
 Reveals a batch of delayed reveal NFTs grouped by the given identifier.
@@ -73,12 +73,6 @@ Reveals a batch of delayed reveal NFTs grouped by the given identifier.
 | identifier | uint256 | The identifier by which the relevant NFTs are grouped.
 | salt | bytes32 | The salt used to arrive at the relevant provenance hash.
 | baseURIToReveal | string | The metadata URI of the relevant NFTs checked against the relevant provenance hash.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
 
 
 
