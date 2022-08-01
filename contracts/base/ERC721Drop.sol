@@ -5,7 +5,7 @@ import "./ERC721SignatureMint.sol";
 
 import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
-import "../extension/DelayedReveal.sol";
+import "../extension/DelayedRevealCommitHash.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -26,7 +26,7 @@ import "../lib/TWStrings.sol";
  *  via the drop mechanism.
  */
 
-contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSinglePhase {
+contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedRevealCommitHash, DropSinglePhase {
     using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
-        if (isEncryptedBatch(batchId)) {
+        if (isDelayedRevealBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
         } else {
             return string(abi.encodePacked(batchUri, _tokenId.toString()));
@@ -110,24 +110,25 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
+     *  @notice                   Lets an authorized address lazy mint a given amount of NFTs.
      *
-     *  @param _amount           The number of NFTs to lazy mint.
-     *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
-     *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-     *  @param _encryptedBaseURI The encrypted base URI for the batch of NFTs being lazy minted.
-     *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
+     *  @param _amount            The number of NFTs to lazy mint.
+     *  @param _baseURIForTokens  The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
+     *                            metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
+     *  @param _baseURICommitHash The provenance hash for the batch of NFTs being lazy minted.
+     *  @return batchId           A unique integer identifier for the batch of NFTs lazy minted together.
      */
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        bytes calldata _baseURICommitHash
     ) public virtual override returns (uint256 batchId) {
-        if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+         bytes32 formattedCommitHash = bytes32(_baseURICommitHash);
+        if (formattedCommitHash != "") {
+            _setBaseURICommitHash(nextTokenIdToLazyMint + _amount, formattedCommitHash);
         }
 
-        return LazyMint.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return super.lazyMint(_amount, _baseURIForTokens, _baseURICommitHash);
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
@@ -140,21 +141,24 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice       Lets an authorized address reveal a batch of delayed reveal NFTs.
+     *  @notice Reveals a batch of delayed reveal NFTs grouped by the given identifier.
      *
-     *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
-     *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
+     *  @param _index           The identifier by which the relevant NFTs are grouped.
+     *  @param _salt            The salt used to arrive at the relevant provenance hash.
+     *  @param _baseURIToReveal The metadata URI of the relevant NFTs checked against the relevant provenance hash.
      */
-    function reveal(uint256 _index, bytes calldata _key) public virtual override returns (string memory revealedURI) {
-        require(_canReveal(), "Not authorized");
-
+    function reveal(
+        uint256 _index,
+        bytes32 _salt,
+        string calldata _baseURIToReveal
+    ) external override {
         uint256 batchId = getBatchIdAtIndex(_index);
-        revealedURI = getRevealURI(batchId, _key);
+        require(isValidBaseURI(batchId, _salt, _baseURIToReveal), "Incorrect baseURI or salt.");
 
-        _setEncryptedBaseURI(batchId, "");
-        _setBaseURI(batchId, revealedURI);
+        _setBaseURICommitHash(batchId, "");
+        _setBaseURI(batchId, _baseURIToReveal);
 
-        emit TokenURIRevealed(_index, revealedURI);
+        emit TokenURIRevealed(batchId, _baseURIToReveal);
     }
 
     /*///////////////////////////////////////////////////////////////

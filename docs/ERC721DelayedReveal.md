@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC721A      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
+BASE:      ERC721A      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.
 
 
 
@@ -48,6 +48,28 @@ function balanceOf(address owner) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
+
+### baseURICommitHash
+
+```solidity
+function baseURICommitHash(uint256) external view returns (bytes32)
+```
+
+Returns the provenance hash of NFTs grouped by the given identifier.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
 
 ### batchMintTo
 
@@ -100,51 +122,6 @@ function contractURI() external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined
-
-### encryptDecrypt
-
-```solidity
-function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
-```
-
-
-
-*See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes | undefined
-| key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | bytes | undefined
-
-### encryptedBaseURI
-
-```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined
 
 ### getApproved
 
@@ -225,29 +202,6 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 | _0 | address | undefined
 | _1 | uint16 | undefined
 
-### getRevealURI
-
-```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
-```
-
-
-
-*Returns the decrypted i.e. revealed URI for a batch of tokens.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _batchId | uint256 | undefined
-| _key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
-
 ### getRoyaltyInfoForToken
 
 ```solidity
@@ -317,10 +271,10 @@ Returns whether a given address is the owner, or approved to transfer an NFT.
 |---|---|---|
 | isApprovedOrOwnerOf | bool | undefined
 
-### isEncryptedBatch
+### isDelayedRevealBatch
 
 ```solidity
-function isEncryptedBatch(uint256 _batchId) external view returns (bool)
+function isDelayedRevealBatch(uint256 _identifier) external view returns (bool)
 ```
 
 
@@ -331,7 +285,31 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| _batchId | uint256 | undefined
+| _identifier | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### isValidBaseURI
+
+```solidity
+function isValidBaseURI(uint256 _identifier, bytes32 _salt, string _baseURIToReveal) external view returns (bool)
+```
+
+Returns whether the given metadata URI is the true metadata URI associated with the provenance hash          for NFTs grouped by the given identifier.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _identifier | uint256 | undefined
+| _salt | bytes32 | undefined
+| _baseURIToReveal | string | undefined
 
 #### Returns
 
@@ -342,7 +320,7 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _baseURICommitHash) external nonpayable returns (uint256 batchId)
 ```
 
 Lets an authorized address lazy mint a given amount of NFTs.
@@ -354,14 +332,14 @@ Lets an authorized address lazy mint a given amount of NFTs.
 | Name | Type | Description |
 |---|---|---|
 | _amount | uint256 | The number of NFTs to lazy mint.
-| _baseURIForTokens | string | The placeholder base URI for the &#39;n&#39; number of NFTs being lazy minted, where the                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| _encryptedBaseURI | bytes | The encrypted base URI for the batch of NFTs being lazy minted.
+| _baseURIForTokens | string | The placeholder base URI for the &#39;n&#39; number of NFTs being lazy minted, where the                            metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
+| _baseURICommitHash | bytes | The provenance hash for the batch of NFTs being lazy minted.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
+| batchId | uint256 |           A unique integer identifier for the batch of NFTs lazy minted together.
 
 ### mintTo
 
@@ -478,10 +456,10 @@ function ownerOf(uint256 tokenId) external view returns (address)
 ### reveal
 
 ```solidity
-function reveal(uint256 _index, bytes _key) external nonpayable returns (string revealedURI)
+function reveal(uint256 _index, bytes32 _salt, string _baseURIToReveal) external nonpayable
 ```
 
-Lets an authorized address reveal a batch of delayed reveal NFTs.
+Reveals a batch of delayed reveal NFTs grouped by the given identifier.
 
 
 
@@ -489,14 +467,9 @@ Lets an authorized address reveal a batch of delayed reveal NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
-| _key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
+| _index | uint256 | The identifier by which the relevant NFTs are grouped.
+| _salt | bytes32 | The salt used to arrive at the relevant provenance hash.
+| _baseURIToReveal | string | The metadata URI of the relevant NFTs checked against the relevant provenance hash.
 
 ### royaltyInfo
 
