@@ -365,7 +365,7 @@ contract DropERC721Test is BaseTest {
         string memory secretURI = "ipfs://base/";
         string memory placeholderURI = "ipfs://abc/";
         
-        bytes32 commitHash = keccak256(abi.encodePacked(secretURI, keyHash));
+        bytes memory commitHash = abi.encodePacked(keccak256(abi.encodePacked(secretURI, keyHash)));
         drop.lazyMint(amountToLazyMint, placeholderURI, commitHash);
 
         for (uint256 i = 0; i < amountToLazyMint; i += 1) {
@@ -391,13 +391,13 @@ contract DropERC721Test is BaseTest {
         bytes memory key = "key";
         bytes32 keyHash = keccak256(key);
 
-        bytes32 commitHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        bytes memory commitHash = abi.encodePacked(keccak256(abi.encodePacked("ipfs://", keyHash)));
         drop.lazyMint(100, "", commitHash);
 
         bytes memory badKey = "bad key";
         bytes32 badKeyHash = keccak256(badKey);
 
-        vm.expectRevert("incorrect baseURI or key");
+        vm.expectRevert("Incorrect baseURI or salt.");
         drop.reveal(0, badKeyHash, "ipfs://");
 
         vm.stopPrank();
@@ -412,10 +412,10 @@ contract DropERC721Test is BaseTest {
         bytes memory key = "key";
         bytes32 keyHash = keccak256(key);
 
-        bytes32 commitHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        bytes memory commitHash = abi.encodePacked(keccak256(abi.encodePacked("ipfs://", keyHash)));
         drop.lazyMint(100, "", commitHash);
 
-        vm.expectRevert("incorrect baseURI or key");
+        vm.expectRevert("Incorrect baseURI or salt.");
         drop.reveal(0, keyHash, "random://");
 
         vm.stopPrank();
@@ -430,7 +430,7 @@ contract DropERC721Test is BaseTest {
         bytes memory key = "key";
         bytes32 keyHash = keccak256(key);
 
-        bytes32 commitHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        bytes memory commitHash = abi.encodePacked(keccak256(abi.encodePacked("ipfs://", keyHash)));
         drop.lazyMint(100, "", commitHash);
         drop.reveal(0, keyHash, "ipfs://");
 
@@ -452,11 +452,11 @@ contract DropERC721Test is BaseTest {
         bytes memory key = "key";
         bytes32 keyHash = keccak256(key);
 
-        bytes32 commitHash = keccak256(abi.encodePacked("ipfs://", keyHash));
+        bytes memory commitHash = abi.encodePacked(keccak256(abi.encodePacked("ipfs://", keyHash)));
         drop.lazyMint(100, "", commitHash);
         drop.reveal(0, keyHash, "ipfs://");
 
-        vm.expectRevert("nothing to reveal.");
+        vm.expectRevert("Nothing to reveal.");
         drop.reveal(0, keyHash, "ipfs://");
 
         vm.stopPrank();

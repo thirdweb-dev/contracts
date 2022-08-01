@@ -159,12 +159,12 @@ contract SignatureDrop is
         onlyRole(minterRole)
     {
         uint256 batchId = getBatchIdAtIndex(_index);
-        require(isValidBaseURI(_index, _salt, _baseURIToReveal), "Incorrect baseURI or salt.");
+        require(isValidBaseURI(batchId, _salt, _baseURIToReveal), "Incorrect baseURI or salt.");
 
         _setBaseURICommitHash(batchId, "");
         _setBaseURI(batchId, _baseURIToReveal);
 
-        emit TokenURIRevealed(_index, _baseURIToReveal);
+        emit TokenURIRevealed(batchId, _baseURIToReveal);
     }
 
     /*///////////////////////////////////////////////////////////////
