@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "./interface/IDelayedReveal.sol";
 
 /**
- *  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
- *  'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
+ *  @title   Delayed Reveal
+ *  @notice  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
+ *           'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
  */
 
 abstract contract DelayedReveal is IDelayedReveal {
@@ -17,7 +18,17 @@ abstract contract DelayedReveal is IDelayedReveal {
         encryptedBaseURI[_batchId] = _encryptedBaseURI;
     }
 
-    /// @dev Returns the decrypted i.e. revealed URI for a batch of tokens.
+    /**
+     *  @notice             Returns revealed URI for a batch of NFTs.
+     *  @dev                Reveal encrypted base URI for `_batchId` with caller/admin's `_key` used for encryption.
+     *                      Reverts if there's no encrypted URI for `_batchId`.
+     *                      See {encryptDecrypt}.
+     *
+     *  @param _batchId     ID of the batch for which URI is being revealed.
+     *  @param _key         Secure key used by caller/admin for encryption of baseURI.
+     *
+     *  @return revealedURI Decrypted base URI.
+     */
     function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
         bytes memory encryptedURI = encryptedBaseURI[_batchId];
         if (encryptedURI.length == 0) {
@@ -27,7 +38,16 @@ abstract contract DelayedReveal is IDelayedReveal {
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
     }
 
-    /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
+    /**
+     *  @notice         Encrypt/decrypt data on chain.
+     *  @dev            Encrypt/decrypt given `data` with `key`. Uses inline assembly.
+     *                  See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
+     *
+     *  @param data     Bytes of data to encrypt/decrypt.
+     *  @param key      Secure key used by caller for encryption/decryption.
+     *
+     *  @return result  Output after encryption/decryption of given data.
+     */
     function encryptDecrypt(bytes memory data, bytes calldata key) public pure override returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
@@ -63,7 +83,11 @@ abstract contract DelayedReveal is IDelayedReveal {
         }
     }
 
-    /// @dev Returns whether the relvant batch of NFTs is subject to a delayed reveal.
+    /**
+     *  @notice         Returns whether the relvant batch of NFTs is subject to a delayed reveal.
+     *  @dev            Returns `true` if `_batchId`'s base URI is encrypted.
+     *  @param _batchId ID of a batch of NFTs.
+     */
     function isEncryptedBatch(uint256 _batchId) public view returns (bool) {
         return encryptedBaseURI[_batchId].length > 0;
     }

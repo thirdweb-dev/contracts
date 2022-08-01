@@ -157,7 +157,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 function contractURI() external view returns (string)
 ```
 
-
+Returns the contract metadata URI.
 
 
 
@@ -196,9 +196,9 @@ function getApproved(uint256 tokenId) external view returns (address)
 function getBaseURICount() external view returns (uint256)
 ```
 
+Returns the count of batches of NFTs.
 
-
-*Returns the number of batches of tokens having the same baseURI.*
+*Each batch of tokens has an in ID and an associated `baseURI`.                  See {batchIds}.*
 
 
 #### Returns
@@ -213,15 +213,15 @@ function getBaseURICount() external view returns (uint256)
 function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
 ```
 
+Returns the ID for the batch of tokens the given tokenId belongs to.
 
-
-*Returns the id for the batch of tokens the given tokenId belongs to.*
+*See {getBaseURICount}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | undefined
+| _index | uint256 | ID of a token.
 
 #### Returns
 
@@ -258,9 +258,9 @@ function getClaimTimestamp(address _claimer) external view returns (uint256 last
 function getDefaultRoyaltyInfo() external view returns (address, uint16)
 ```
 
+Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 
 
-*Returns the default royalty recipient and bps.*
 
 
 #### Returns
@@ -276,15 +276,15 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address, uint16)
 ```
 
+View royalty info for a given token.
 
-
-*Returns the royalty recipient and bps for a particular token Id.*
+*Returns royalty recipient and bps for `_tokenId`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info.
 
 #### Returns
 
@@ -345,9 +345,9 @@ Returns whether a given address is the owner, or approved to transfer an NFT.
 function isDelayedRevealBatch(uint256 _identifier) external view returns (bool)
 ```
 
+Returns whether the relvant batch of NFTs is subject to a delayed reveal.
 
-
-*Returns whether the relvant batch of NFTs is subject to a delayed reveal.*
+*Returns `true` if `_batchId`&#39;s base URI is encrypted.*
 
 #### Parameters
 
@@ -455,7 +455,7 @@ Mints tokens according to the provided mint request.
 function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ```
 
-
+Receives and executes a batch of function calls on this contract.
 
 *Receives and executes a batch of function calls on this contract.*
 
@@ -463,13 +463,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed.
 
 ### name
 
@@ -511,9 +511,9 @@ The tokenId assigned to the next new NFT to be lazy minted.
 function owner() external view returns (address)
 ```
 
+Returns the owner of the contract.
 
 
-*Returns the owner of the contract.*
 
 
 #### Returns
@@ -552,7 +552,7 @@ function primarySaleRecipient() external view returns (address)
 
 
 
-*The adress that receives all primary sales value.*
+*Returns primary sale recipient address.*
 
 
 #### Returns
@@ -585,23 +585,23 @@ Reveals a batch of delayed reveal NFTs grouped by the given identifier.
 function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount)
 ```
 
+View royalty info for a given token and sale price.
 
-
-*Returns the royalty recipient and amount, given a tokenId and sale price.*
+*Returns royalty amount and recipient for `tokenId` and `salePrice`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
+| tokenId | uint256 | The tokenID of the NFT for which to query royalty info.
+| salePrice | uint256 | Sale price of the token.
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
+| receiver | address |        Address of royalty recipient account.
+| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value.
 
 ### safeTransferFrom
 
@@ -662,15 +662,15 @@ function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _res
 function setContractURI(string _uri) external nonpayable
 ```
 
+Lets a contract admin set the URI for contract-level metadata.
 
-
-*Lets a contract admin set the URI for contract-level metadata.*
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;)
 
 ### setDefaultRoyaltyInfo
 
@@ -678,16 +678,16 @@ function setContractURI(string _uri) external nonpayable
 function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
 ```
 
+Updates default royalty recipient and bps.
 
-
-*Lets a contract admin update the default royalty recipient and bps.*
+*Caller should be authorized to set royalty info.                  See {_canSetRoyaltyInfo}.                  Emits {DefaultRoyalty Event}; See {_setupDefaultRoyaltyInfo}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
+| _royaltyRecipient | address | Address to be set as default royalty recipient.
+| _royaltyBps | uint256 | Updated royalty bps.
 
 ### setOwner
 
@@ -695,15 +695,15 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 function setOwner(address _newOwner) external nonpayable
 ```
 
+Lets an authorized wallet set a new owner for the contract.
 
 
-*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | undefined
+| _newOwner | address | The address to set as the new owner of the contract.
 
 ### setPrimarySaleRecipient
 
@@ -711,15 +711,15 @@ function setOwner(address _newOwner) external nonpayable
 function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 ```
 
+Updates primary sale recipient.
 
-
-*Lets a contract admin set the recipient for all primary sales.*
+*Caller should be authorized to set primary sales info.                  See {_canSetPrimarySaleRecipient}.                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _saleRecipient | address | undefined
+| _saleRecipient | address | Address to be set as new recipient of primary sales.
 
 ### setRoyaltyInfoForToken
 
@@ -727,17 +727,17 @@ function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external nonpayable
 ```
 
+Updates default royalty recipient and bps for a particular token.
 
-
-*Lets a contract admin set the royalty recipient and bps for a particular token Id.*
+*Sets royalty info for `_tokenId`. Caller should be authorized to set royalty info.                  See {_canSetRoyaltyInfo}.                  Emits {RoyaltyForToken Event}; See {_setupRoyaltyInfoForToken}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _tokenId | uint256 | undefined
-| _recipient | address | undefined
-| _bps | uint256 | undefined
+| _recipient | address | Address to be set as royalty recipient for given token Id.
+| _bps | uint256 | Updated royalty bps for the token Id.
 
 ### supportsInterface
 
