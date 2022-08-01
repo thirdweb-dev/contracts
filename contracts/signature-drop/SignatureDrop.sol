@@ -21,7 +21,7 @@ import "../extension/PlatformFee.sol";
 import "../extension/Royalty.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/Ownable.sol";
-import "../extension/DelayedReveal.sol";
+import "../extension/DelayedRevealCommitHash.sol";
 import "../extension/LazyMint.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/DropSinglePhase.sol";
@@ -34,7 +34,7 @@ contract SignatureDrop is
     Royalty,
     PrimarySale,
     Ownable,
-    DelayedReveal,
+    DelayedRevealCommitHash,
     LazyMint,
     PermissionsEnumerable,
     DropSinglePhase,
@@ -104,7 +104,7 @@ contract SignatureDrop is
         (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
-        if (isEncryptedBatch(batchId)) {
+        if (isDelayedRevealBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
         } else {
             return string(abi.encodePacked(batchUri, _tokenId.toString()));
@@ -144,25 +144,25 @@ contract SignatureDrop is
         bytes calldata _encryptedBaseURI
     ) public override onlyRole(minterRole) returns (uint256 batchId) {
         if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+            _setBaseURICommitHash(nextTokenIdToLazyMint + _amount, bytes32(_encryptedBaseURI));
         }
 
         return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
+    function reveal(uint256 _index, bytes32 _salt, string calldata _baseURIToReveal)
         external
+        override
         onlyRole(minterRole)
-        returns (string memory revealedURI)
     {
         uint256 batchId = getBatchIdAtIndex(_index);
-        revealedURI = getRevealURI(batchId, _key);
+        require(isValidBaseURI(_index, _salt, _baseURIToReveal), "Incorrect baseURI or salt.");
 
-        _setEncryptedBaseURI(batchId, "");
-        _setBaseURI(batchId, revealedURI);
+        _setBaseURICommitHash(batchId, "");
+        _setBaseURI(batchId, _baseURIToReveal);
 
-        emit TokenURIRevealed(_index, revealedURI);
+        emit TokenURIRevealed(_index, _baseURIToReveal);
     }
 
     /*///////////////////////////////////////////////////////////////
