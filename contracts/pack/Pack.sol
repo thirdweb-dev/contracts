@@ -227,11 +227,11 @@ contract Pack is
 
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
-        _burn(_msgSender(), _packId, _amountToOpen);
+        _burn(opener, _packId, _amountToOpen);
 
-        _transferTokenBatch(address(this), _msgSender(), rewardUnits);
+        _transferTokenBatch(address(this), opener, rewardUnits);
 
-        emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
+        emit PackOpened(_packId, opener, _amountToOpen, rewardUnits);
 
         return rewardUnits;
     }
