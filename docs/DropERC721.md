@@ -603,7 +603,7 @@ Returns whether the given metadata URI is the true metadata URI associated with 
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes32 _baseURICommitHash) external nonpayable
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _baseURICommitHash) external nonpayable
 ```
 
 
@@ -616,7 +616,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes32 _baseURICom
 |---|---|---|
 | _amount | uint256 | undefined
 | _baseURIForTokens | string | undefined
-| _baseURICommitHash | bytes32 | undefined
+| _baseURICommitHash | bytes | undefined
 
 ### maxTotalSupply
 

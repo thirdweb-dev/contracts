@@ -141,13 +141,15 @@ contract SignatureDrop is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        bytes calldata _baseURICommitHash
     ) public override onlyRole(minterRole) returns (uint256 batchId) {
-        if (_encryptedBaseURI.length != 0) {
-            _setBaseURICommitHash(nextTokenIdToLazyMint + _amount, bytes32(_encryptedBaseURI));
+
+        bytes32 formattedCommitHash = bytes32(_baseURICommitHash);
+        if (formattedCommitHash != "") {
+            _setBaseURICommitHash(nextTokenIdToLazyMint + _amount, formattedCommitHash);
         }
 
-        return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return super.lazyMint(_amount, _baseURIForTokens, _baseURICommitHash);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.

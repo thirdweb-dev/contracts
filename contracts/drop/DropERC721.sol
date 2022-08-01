@@ -235,7 +235,7 @@ contract DropERC721 is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes32 _baseURICommitHash
+        bytes calldata _baseURICommitHash
     ) external onlyRole(MINTER_ROLE) nonReentrant {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
@@ -244,11 +244,12 @@ contract DropERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if (_baseURICommitHash != "") {
-            _setBaseURICommitHash(baseURIIndex, _baseURICommitHash);
+        bytes32 formattedCommitHash = bytes32(_baseURICommitHash);
+        if (formattedCommitHash != "") {
+            _setBaseURICommitHash(baseURIIndex, formattedCommitHash);
         }
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _baseURICommitHash);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, formattedCommitHash);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.

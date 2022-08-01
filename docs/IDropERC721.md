@@ -118,7 +118,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes32 baseURICommitHash) external nonpayable
+function lazyMint(uint256 amount, string baseURIForTokens, bytes baseURICommitHash) external nonpayable
 ```
 
 Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.          The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
@@ -131,7 +131,7 @@ Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.          The URIs
 |---|---|---|
 | amount | uint256 | The amount of NFTs to lazy mint.
 | baseURIForTokens | string | The URI for the NFTs to lazy mint. If lazy minting                           &#39;delayed-reveal&#39; NFTs, the is a placeholder URI for NFTs.
-| baseURICommitHash | bytes32 | If lazy minting &#39;delayed-reveal&#39; NFTs, this value                           refers to the keccak256 hash of actual URI and key-hash,                           which is the hash of a salt/password.
+| baseURICommitHash | bytes | If lazy minting &#39;delayed-reveal&#39; NFTs, this value                           refers to the keccak256 hash of actual URI and key-hash,                           which is the hash of a salt/password.
 
 ### ownerOf
 

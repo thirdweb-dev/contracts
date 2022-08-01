@@ -63,7 +63,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
     function lazyMint(
         uint256 amount,
         string calldata baseURIForTokens,
-        bytes32 baseURICommitHash
+        bytes calldata baseURICommitHash
     ) external;
 
     /**

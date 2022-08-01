@@ -66,6 +66,28 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### baseURICommitHash
+
+```solidity
+function baseURICommitHash(uint256) external view returns (bytes32)
+```
+
+Returns the provenance hash of NFTs grouped by the given identifier.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
 ### burn
 
 ```solidity
@@ -177,51 +199,6 @@ function contractVersion() external pure returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined
-
-### encryptDecrypt
-
-```solidity
-function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
-```
-
-
-
-*See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes | undefined
-| key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | bytes | undefined
-
-### encryptedBaseURI
-
-```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined
 
 ### getApproved
 
@@ -342,29 +319,6 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined
 | _1 | uint16 | undefined
-
-### getRevealURI
-
-```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
-```
-
-
-
-*Returns the decrypted i.e. revealed URI for a batch of tokens.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _batchId | uint256 | undefined
-| _key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
 
 ### getRoleAdmin
 
@@ -567,10 +521,10 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
-### isEncryptedBatch
+### isDelayedRevealBatch
 
 ```solidity
-function isEncryptedBatch(uint256 _batchId) external view returns (bool)
+function isDelayedRevealBatch(uint256 _identifier) external view returns (bool)
 ```
 
 
@@ -581,7 +535,7 @@ function isEncryptedBatch(uint256 _batchId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| _batchId | uint256 | undefined
+| _identifier | uint256 | undefined
 
 #### Returns
 
@@ -611,10 +565,34 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### isValidBaseURI
+
+```solidity
+function isValidBaseURI(uint256 _identifier, bytes32 _salt, string _baseURIToReveal) external view returns (bool)
+```
+
+Returns whether the given metadata URI is the true metadata URI associated with the provenance hash          for NFTs grouped by the given identifier.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _identifier | uint256 | undefined
+| _salt | bytes32 | undefined
+| _baseURIToReveal | string | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _baseURICommitHash) external nonpayable returns (uint256 batchId)
 ```
 
 
@@ -627,7 +605,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBas
 |---|---|---|
 | _amount | uint256 | undefined
 | _baseURIForTokens | string | undefined
-| _encryptedBaseURI | bytes | undefined
+| _baseURICommitHash | bytes | undefined
 
 #### Returns
 
@@ -790,7 +768,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 ### reveal
 
 ```solidity
-function reveal(uint256 _index, bytes _key) external nonpayable returns (string revealedURI)
+function reveal(uint256 _index, bytes32 _salt, string _baseURIToReveal) external nonpayable
 ```
 
 
@@ -802,13 +780,8 @@ function reveal(uint256 _index, bytes _key) external nonpayable returns (string 
 | Name | Type | Description |
 |---|---|---|
 | _index | uint256 | undefined
-| _key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
+| _salt | bytes32 | undefined
+| _baseURIToReveal | string | undefined
 
 ### revokeRole
 
