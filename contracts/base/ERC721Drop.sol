@@ -123,7 +123,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedRevealCommitHash, D
         string calldata _baseURIForTokens,
         bytes calldata _baseURICommitHash
     ) public virtual override returns (uint256 batchId) {
-         bytes32 formattedCommitHash = bytes32(_baseURICommitHash);
+        bytes32 formattedCommitHash = bytes32(_baseURICommitHash);
         if (formattedCommitHash != "") {
             _setBaseURICommitHash(nextTokenIdToLazyMint + _amount, formattedCommitHash);
         }
