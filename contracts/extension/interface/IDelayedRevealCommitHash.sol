@@ -26,7 +26,11 @@ interface IDelayedRevealCommitHash {
      *  @param salt            The salt used to arrive at the relevant provenance hash.
      *  @param baseURIToReveal The metadata URI of the relevant NFTs checked against the relevant provenance hash.
      */
-    function isValidBaseURI(uint256 identifier, bytes32 salt, string calldata baseURIToReveal) external view returns (bool);
+    function isValidBaseURI(
+        uint256 identifier,
+        bytes32 salt,
+        string calldata baseURIToReveal
+    ) external view returns (bool);
 
     /**
      *  @notice Reveals a batch of delayed reveal NFTs grouped by the given identifier.
@@ -35,5 +39,9 @@ interface IDelayedRevealCommitHash {
      *  @param salt            The salt used to arrive at the relevant provenance hash.
      *  @param baseURIToReveal The metadata URI of the relevant NFTs checked against the relevant provenance hash.
      */
-    function reveal(uint256 identifier, bytes32 salt, string calldata baseURIToReveal) external;
+    function reveal(
+        uint256 identifier,
+        bytes32 salt,
+        string calldata baseURIToReveal
+    ) external;
 }

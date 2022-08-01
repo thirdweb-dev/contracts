@@ -32,7 +32,11 @@ abstract contract DelayedRevealCommitHash is IDelayedRevealCommitHash {
      *  @notice Returns whether the given metadata URI is the true metadata URI associated with the provenance hash
      *          for NFTs grouped by the given identifier.
      */
-    function isValidBaseURI(uint256 _identifier, bytes32 _salt, string calldata _baseURIToReveal) public view returns (bool) {
+    function isValidBaseURI(
+        uint256 _identifier,
+        bytes32 _salt,
+        string calldata _baseURIToReveal
+    ) public view returns (bool) {
         bytes32 commitHash = baseURICommitHash[_identifier];
         require(commitHash != "", "Nothing to reveal.");
 

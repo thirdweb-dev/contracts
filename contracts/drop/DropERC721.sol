@@ -253,11 +253,11 @@ contract DropERC721 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes32 _keyHash, string calldata _baseURIToReveal)
-        external
-        override
-        onlyRole(MINTER_ROLE)
-    {
+    function reveal(
+        uint256 _index,
+        bytes32 _keyHash,
+        string calldata _baseURIToReveal
+    ) external override onlyRole(MINTER_ROLE) {
         require(_index < baseURIIndices.length, "invalid index.");
 
         uint256 batchId = baseURIIndices[_index];

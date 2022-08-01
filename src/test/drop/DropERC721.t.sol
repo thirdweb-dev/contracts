@@ -364,7 +364,7 @@ contract DropERC721Test is BaseTest {
         uint256 amountToLazyMint = 100;
         string memory secretURI = "ipfs://base/";
         string memory placeholderURI = "ipfs://abc/";
-        
+
         bytes memory commitHash = abi.encodePacked(keccak256(abi.encodePacked(secretURI, keyHash)));
         drop.lazyMint(amountToLazyMint, placeholderURI, commitHash);
 

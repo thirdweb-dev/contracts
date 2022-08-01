@@ -143,7 +143,6 @@ contract SignatureDrop is
         string calldata _baseURIForTokens,
         bytes calldata _baseURICommitHash
     ) public override onlyRole(minterRole) returns (uint256 batchId) {
-
         bytes32 formattedCommitHash = bytes32(_baseURICommitHash);
         if (formattedCommitHash != "") {
             _setBaseURICommitHash(nextTokenIdToLazyMint + _amount, formattedCommitHash);
@@ -153,11 +152,11 @@ contract SignatureDrop is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes32 _salt, string calldata _baseURIToReveal)
-        external
-        override
-        onlyRole(minterRole)
-    {
+    function reveal(
+        uint256 _index,
+        bytes32 _salt,
+        string calldata _baseURIToReveal
+    ) external override onlyRole(minterRole) {
         uint256 batchId = getBatchIdAtIndex(_index);
         require(isValidBaseURI(batchId, _salt, _baseURIToReveal), "Incorrect baseURI or salt.");
 
