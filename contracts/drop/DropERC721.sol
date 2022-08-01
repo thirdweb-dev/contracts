@@ -57,7 +57,7 @@ contract DropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
-    uint256 private constant VERSION = 2;
+    uint256 private constant VERSION = 3;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
