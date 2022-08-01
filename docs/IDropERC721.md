@@ -118,7 +118,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 amount, string baseURIForTokens, bytes encryptedBaseURI) external nonpayable
+function lazyMint(uint256 amount, string baseURIForTokens, bytes32 baseURICommitHash) external nonpayable
 ```
 
 Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.          The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
@@ -130,8 +130,8 @@ Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.          The URIs
 | Name | Type | Description |
 |---|---|---|
 | amount | uint256 | The amount of NFTs to lazy mint.
-| baseURIForTokens | string | The URI for the NFTs to lazy mint. If lazy minting                           &#39;delayed-reveal&#39; NFTs, the is a URI for NFTs in the                           un-revealed state.
-| encryptedBaseURI | bytes | If lazy minting &#39;delayed-reveal&#39; NFTs, this is the                           result of encrypting the URI of the NFTs in the revealed                           state.
+| baseURIForTokens | string | The URI for the NFTs to lazy mint. If lazy minting                           &#39;delayed-reveal&#39; NFTs, the is a placeholder URI for NFTs.
+| baseURICommitHash | bytes32 | If lazy minting &#39;delayed-reveal&#39; NFTs, this value                           refers to the keccak256 hash of actual URI and key-hash,                           which is the hash of a salt/password.
 
 ### ownerOf
 
@@ -376,7 +376,7 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes32 baseURICommitHash)
 ```
 
 
@@ -390,7 +390,7 @@ event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI,
 | startTokenId  | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
+| baseURICommitHash  | bytes32 | undefined |
 
 ### Transfer
 

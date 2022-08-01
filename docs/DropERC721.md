@@ -66,6 +66,28 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### baseURICommitHash
+
+```solidity
+function baseURICommitHash(uint256) external view returns (bytes32)
+```
+
+
+
+*Mapping from &#39;Largest tokenId of a batch of &#39;delayed-reveal&#39; tokens with       the same baseURI&#39; to base URI commitment hash for the respective batch of tokens.**
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
 ### baseURIIndices
 
 ```solidity
@@ -193,51 +215,6 @@ function contractVersion() external pure returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined
-
-### encryptDecrypt
-
-```solidity
-function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
-```
-
-
-
-*See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes | undefined
-| key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | bytes | undefined
-
-### encryptedBaseURI
-
-```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
-```
-
-
-
-*Mapping from &#39;Largest tokenId of a batch of &#39;delayed-reveal&#39; tokens with       the same baseURI&#39; to encrypted base URI for the respective batch of tokens.**
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined
 
 ### getActiveClaimConditionId
 
@@ -580,7 +557,7 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes32 _baseURICommitHash) external nonpayable
 ```
 
 
@@ -593,7 +570,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBas
 |---|---|---|
 | _amount | uint256 | undefined
 | _baseURIForTokens | string | undefined
-| _encryptedBaseURI | bytes | undefined
+| _baseURICommitHash | bytes32 | undefined
 
 ### maxTotalSupply
 
@@ -778,7 +755,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 ### reveal
 
 ```solidity
-function reveal(uint256 index, bytes _key) external nonpayable returns (string revealedURI)
+function reveal(uint256 index, bytes32 _keyHash, string _baseURIToReveal) external nonpayable
 ```
 
 
@@ -790,13 +767,8 @@ function reveal(uint256 index, bytes _key) external nonpayable returns (string r
 | Name | Type | Description |
 |---|---|---|
 | index | uint256 | undefined
-| _key | bytes | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined
+| _keyHash | bytes32 | undefined
+| _baseURIToReveal | string | undefined
 
 ### revokeRole
 
@@ -1519,7 +1491,7 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes32 baseURICommitHash)
 ```
 
 
@@ -1533,7 +1505,7 @@ event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI,
 | startTokenId  | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
+| baseURICommitHash  | bytes32 | undefined |
 
 ### Transfer
 
