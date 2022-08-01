@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -161,7 +162,9 @@ contract Pack is
         override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) 
+                || type(IERC2981Upgradeable).interfaceId == interfaceId
+                || type(IERC721Receiver).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
