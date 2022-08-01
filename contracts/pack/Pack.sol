@@ -175,6 +175,7 @@ contract Pack is
         string calldata _packUri,
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
+        uint256 _expirationTimestamp,
         address _recipient
     )
         external
@@ -200,6 +201,8 @@ contract Pack is
 
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
+        packInfo[packId].expirationTimestamp = _expirationTimestamp == 0 ? type(uint256).max : _expirationTimestamp;
+        packInfo[packId].creator = _msgSender();
 
         _mint(_recipient, packId, packTotalSupply, "");
 
@@ -215,11 +218,12 @@ contract Pack is
     {
         address opener = _msgSender();
 
-        require(isTrustedForwarder(opener) || opener == tx.origin, "opener must be eoa");
+        require(opener == tx.origin, "opener must be eoa");
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
 
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp <= block.timestamp, "cannot open yet");
+        require(pack.expirationTimestamp > block.timestamp, "pack has expired");
 
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
@@ -230,6 +234,17 @@ contract Pack is
         emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
 
         return rewardUnits;
+    }
+
+    function withdrawUnclaimedAssets(uint256 _packId) 
+        external
+        nonReentrant
+    {
+        PackInfo memory pack = packInfo[_packId];
+        require(block.timestamp >= pack.expirationTimestamp, "pack not expired yet");
+        require(_msgSender() == pack.creator, "not creator");
+
+        _releaseTokens(_msgSender(), _packId);
     }
 
     /// @dev Stores assets within the contract.
@@ -322,6 +337,17 @@ contract Pack is
             contents[i] = getTokenOfBundle(_packId, i);
             perUnitAmounts[i] = pack.perUnitAmounts[i];
         }
+    }
+
+    /// @dev Returns opening and expiration timestamps of a pack.
+    function getPackTimestamps(uint256 _packId)
+        external
+        view
+        returns (uint128 openStartTimestamp, uint256 expirationTimestamp)
+    {
+        PackInfo memory pack = packInfo[_packId];
+        openStartTimestamp = pack.openStartTimestamp;
+        expirationTimestamp = pack.expirationTimestamp;
     }
 
     /*///////////////////////////////////////////////////////////////

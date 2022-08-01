@@ -128,7 +128,7 @@ contract CreatePackBenchmarkTest is BaseTest {
      *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
      */
     function test_benchmark_createPack() public {
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, address(0x123));
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, 0, address(0x123));
     }
 }
 
@@ -240,7 +240,7 @@ contract OpenPackBenchmarkTest is BaseTest {
         pack.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
 
         vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, address(0x123));
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, 0, address(0x123));
 
         vm.startPrank(address(0x123), address(0x123));
     }
