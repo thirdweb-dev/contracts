@@ -17,9 +17,9 @@ import "./ERC165.sol";
  *
  * Assumes serials are sequentially minted starting at _startTokenId() (defaults to 0, e.g. 0, 1, 2, 3..).
  *
- * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
+ * Assumes that an owner cannot have more than 2^64 - 1 (max value of uint64) of supply.
  *
- * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
+ * Assumes that the maximum token id cannot exceed 2^256 - 1 (max value of uint256).
  */
 contract ERC721A is Context, ERC165, IERC721A {
     using TWAddress for address;
