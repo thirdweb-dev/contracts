@@ -355,7 +355,7 @@ Lets an authorized address lazy mint a given amount of NFTs.
 |---|---|---|
 | _amount | uint256 | The number of NFTs to lazy mint.
 | _baseURIForTokens | string | The placeholder base URI for the &#39;n&#39; number of NFTs being lazy minted, where the                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| _data | bytes | The encrypted base URI for the batch of NFTs being lazy minted.
+| _data | bytes | The encrypted base URI + provenance hash for the batch of NFTs being lazy minted.
 
 #### Returns
 
