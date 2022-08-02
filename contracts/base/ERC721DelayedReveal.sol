@@ -68,7 +68,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *  @param _amount           The number of NFTs to lazy mint.
      *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
      *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-     *  @param _data             The encrypted base URI for the batch of NFTs being lazy minted.
+     *  @param _data             The encrypted base URI + provenance hash for the batch of NFTs being lazy minted.
      *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
      */
     function lazyMint(
