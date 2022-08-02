@@ -115,7 +115,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
      *  @param _amount           The number of NFTs to lazy mint.
      *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
      *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-     *  @param _date             The encrypted base URI for the batch of NFTs being lazy minted.
+     *  @param _data             The encrypted base URI for the batch of NFTs being lazy minted.
      *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
      */
     function lazyMint(
@@ -129,7 +129,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
             _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
         }
 
-        return LazyMint.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return LazyMint.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
