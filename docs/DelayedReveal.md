@@ -33,15 +33,15 @@ Encrypt/decrypt data on chain.
 |---|---|---|
 | result | bytes |  Output after encryption/decryption of given data.
 
-### encryptedBaseURI
+### encryptedData
 
 ```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
+function encryptedData(uint256) external view returns (bytes)
 ```
 
 
 
-*Mapping from id of a batch of tokens =&gt; to encrypted base URI for the respective batch of tokens.*
+*Mapping from tokenId of a batch of tokens =&gt; to delayed reveal data.*
 
 #### Parameters
 
