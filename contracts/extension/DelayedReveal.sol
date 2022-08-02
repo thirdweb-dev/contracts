@@ -39,10 +39,7 @@ abstract contract DelayedReveal is IDelayedReveal {
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
-        require(
-            keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash,
-            "Incorrect key"
-        );
+        require(keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash, "Incorrect key");
     }
 
     /**
