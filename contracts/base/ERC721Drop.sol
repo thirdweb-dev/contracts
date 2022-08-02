@@ -124,7 +124,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         bytes calldata _encryptedBaseURI
     ) public virtual override returns (uint256 batchId) {
         if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+            _setEncryptedData(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
         }
 
         return LazyMint.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
@@ -151,7 +151,7 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
-        _setEncryptedBaseURI(batchId, "");
+        _setEncryptedData(batchId, "");
         _setBaseURI(batchId, revealedURI);
 
         emit TokenURIRevealed(_index, revealedURI);
