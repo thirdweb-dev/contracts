@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -44,6 +45,8 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
 
+    address[] private forwarders;
+
     // Token name
     string public name;
 
@@ -74,7 +77,9 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper) TokenStore(_nativeTokenWrapper) initializer {}
+    constructor(address _nativeTokenWrapper, address[] memory _trustedForwarders) TokenStore(_nativeTokenWrapper) initializer {
+        forwarders = _trustedForwarders;
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -82,13 +87,12 @@ contract Pack is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] memory _trustedForwarders,
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __ERC2771Context_init(_trustedForwarders);
+        __ERC2771Context_init(forwarders);
         __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
 
@@ -162,7 +166,9 @@ contract Pack is
         override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) 
+                || type(IERC2981Upgradeable).interfaceId == interfaceId
+                || type(IERC721Receiver).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -176,6 +182,7 @@ contract Pack is
         string calldata _packUri,
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
+        uint256 _expirationTimestamp,
         address _recipient
     )
         external
@@ -201,6 +208,8 @@ contract Pack is
 
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
+        packInfo[packId].expirationTimestamp = _expirationTimestamp == 0 ? type(uint256).max : _expirationTimestamp;
+        packInfo[packId].creator = _msgSender();
 
         _mint(_recipient, packId, packTotalSupply, "");
 
@@ -215,19 +224,33 @@ contract Pack is
         returns (Token[] memory)
     {
         address opener = _msgSender();
-        require(isTrustedForwarder(opener) || opener == tx.origin, "opener must be eoa");
+
+        require(isTrustedForwarder(msg.sender) || opener == tx.origin, "opener must be eoa");
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp <= block.timestamp, "cannot open yet");
+        require(pack.expirationTimestamp > block.timestamp, "pack has expired");
+
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
-        console2.log("here 5");
-        _burn(_msgSender(), _packId, _amountToOpen);
 
-        _transferTokenBatch(address(this), _msgSender(), rewardUnits);
+        _burn(opener, _packId, _amountToOpen);
 
-        emit PackOpened(_packId, _msgSender(), _amountToOpen, rewardUnits);
+        _transferTokenBatch(address(this), opener, rewardUnits);
+
+        emit PackOpened(_packId, opener, _amountToOpen, rewardUnits);
 
         return rewardUnits;
+    }
+
+    function withdrawUnclaimedAssets(uint256 _packId) 
+        external
+        nonReentrant
+    {
+        PackInfo memory pack = packInfo[_packId];
+        require(block.timestamp >= pack.expirationTimestamp, "pack not expired yet");
+        require(_msgSender() == pack.creator, "not creator");
+
+        _releaseTokens(_msgSender(), _packId);
     }
 
     /// @dev Stores assets within the contract.
@@ -327,6 +350,17 @@ contract Pack is
             contents[i] = getTokenOfBundle(_packId, i);
             perUnitAmounts[i] = pack.perUnitAmounts[i];
         }
+    }
+
+    /// @dev Returns opening and expiration timestamps of a pack.
+    function getPackTimestamps(uint256 _packId)
+        external
+        view
+        returns (uint128 openStartTimestamp, uint256 expirationTimestamp)
+    {
+        PackInfo memory pack = packInfo[_packId];
+        openStartTimestamp = pack.openStartTimestamp;
+        expirationTimestamp = pack.expirationTimestamp;
     }
 
     /*///////////////////////////////////////////////////////////////

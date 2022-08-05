@@ -21,6 +21,8 @@ interface IPack is ITokenBundle {
         uint256[] perUnitAmounts;
         uint128 openStartTimestamp;
         uint128 amountDistributedPerOpen;
+        uint256 expirationTimestamp;
+        address creator;
     }
 
     /// @notice Emitted when a set of packs is created.
@@ -58,6 +60,7 @@ interface IPack is ITokenBundle {
         string calldata packUri,
         uint128 openStartTimestamp,
         uint128 amountDistributedPerOpen,
+        uint256 expirationTimestamp,
         address recipient
     ) external payable returns (uint256 packId, uint256 packTotalSupply);
 
