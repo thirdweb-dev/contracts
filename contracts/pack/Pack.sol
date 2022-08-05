@@ -44,6 +44,8 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
 
+    address[] private forwarders;
+
     // Token name
     string public name;
 
@@ -74,7 +76,9 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper) TokenStore(_nativeTokenWrapper) initializer {}
+    constructor(address _nativeTokenWrapper, address[] memory _trustedForwarders) TokenStore(_nativeTokenWrapper) initializer {
+        forwarders = _trustedForwarders;
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -82,13 +86,12 @@ contract Pack is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] memory _trustedForwarders,
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
-        __ERC2771Context_init(_trustedForwarders);
+        __ERC2771Context_init(forwarders);
         __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
 
@@ -221,7 +224,7 @@ contract Pack is
     {
         address opener = _msgSender();
 
-        require(opener == tx.origin, "opener must be eoa");
+        require(isTrustedForwarder(msg.sender) || opener == tx.origin, "opener must be eoa");
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
 
         PackInfo memory pack = packInfo[_packId];
