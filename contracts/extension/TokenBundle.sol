@@ -111,7 +111,7 @@ abstract contract TokenBundle is ITokenBundle {
     }
 
     /// @dev Lets the calling contract set/update the uri of a particular bundle.
-    function _setUriOfBundle(string calldata _uri, uint256 _bundleId) internal {
+    function _setUriOfBundle(string memory _uri, uint256 _bundleId) internal {
         bundle[_bundleId].uri = _uri;
     }
 

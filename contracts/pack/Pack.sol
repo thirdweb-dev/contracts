@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "/Users/yash/thirdweb/pack-audit-fixes/lib/forge-std/src/console2.sol";
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
@@ -72,6 +71,9 @@ contract Pack is
 
     /// @dev Mapping from pack ID => The state of that set of packs.
     mapping(uint256 => PackInfo) private packInfo;
+
+    /// @dev Checks if pack-creator allowed to add more tokens to a packId; set to false after first transfer
+    mapping(uint256 => bool) public canUpdatePack;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -179,7 +181,7 @@ contract Pack is
     function createPack(
         Token[] calldata _contents,
         uint256[] calldata _numOfRewardUnits,
-        string calldata _packUri,
+        string memory _packUri,
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         uint256 _expirationTimestamp,
@@ -204,16 +206,53 @@ contract Pack is
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
-        packTotalSupply = escrowPackContents(_contents, _numOfRewardUnits, _packUri, packId, _amountDistributedPerOpen);
+        packTotalSupply = escrowPackContents(_contents, _numOfRewardUnits, _packUri, packId, _amountDistributedPerOpen, false);
 
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
         packInfo[packId].expirationTimestamp = _expirationTimestamp == 0 ? type(uint256).max : _expirationTimestamp;
         packInfo[packId].creator = _msgSender();
 
+        canUpdatePack[packId] = true;
+
         _mint(_recipient, packId, packTotalSupply, "");
 
         emit PackCreated(packId, _msgSender(), _recipient, packTotalSupply);
+    }
+
+    function addPackContents(
+        uint256 _packId,
+        Token[] calldata _contents,
+        uint256[] calldata _numOfRewardUnits,
+        address _recipient
+    )
+        external
+        payable
+        onlyRoleWithSwitch(MINTER_ROLE)
+        nonReentrant
+        whenNotPaused
+        returns (uint256 packTotalSupply, uint256 newSupplyAdded)
+    {
+        require(canUpdatePack[_packId], "not allowed");
+        require(_msgSender() == packInfo[_packId].creator, "not creator");
+
+        require(_contents.length > 0, "nothing to pack");
+        require(_contents.length == _numOfRewardUnits.length, "invalid reward units");
+
+        if (!hasRole(ASSET_ROLE, address(0))) {
+            for (uint256 i = 0; i < _contents.length; i += 1) {
+                _checkRole(ASSET_ROLE, _contents[i].assetContract);
+            }
+        }
+
+        uint256 amountPerOpen = packInfo[_packId].amountDistributedPerOpen;
+
+        newSupplyAdded = escrowPackContents(_contents, _numOfRewardUnits, "", _packId, amountPerOpen, true);
+        packTotalSupply = totalSupply[_packId] + newSupplyAdded;
+
+        _mint(_recipient, _packId, newSupplyAdded, "");
+
+        emit PackUpdated(_packId, _msgSender(), _recipient, newSupplyAdded);
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
@@ -257,11 +296,12 @@ contract Pack is
     function escrowPackContents(
         Token[] calldata _contents,
         uint256[] calldata _numOfRewardUnits,
-        string calldata _packUri,
+        string memory _packUri,
         uint256 packId,
-        uint256 amountPerOpen
-    ) internal returns (uint256 packTotalSupply) {
-        uint256 totalRewardUnits;
+        uint256 amountPerOpen,
+        bool isUpdate
+    ) internal returns (uint256 supplyToMint) {
+        uint256 sumOfRewardUnits;
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "amount can't be zero");
@@ -271,15 +311,23 @@ contract Pack is
                 "invalid erc721 rewards"
             );
 
-            totalRewardUnits += _numOfRewardUnits[i];
+            sumOfRewardUnits += _numOfRewardUnits[i];
 
             packInfo[packId].perUnitAmounts.push(_contents[i].totalAmount / _numOfRewardUnits[i]);
         }
 
-        require(totalRewardUnits % amountPerOpen == 0, "invalid amount to distribute per open");
-        packTotalSupply = totalRewardUnits / amountPerOpen;
+        require(sumOfRewardUnits % amountPerOpen == 0, "invalid amount to distribute per open");
+        supplyToMint = sumOfRewardUnits / amountPerOpen;
 
-        _storeTokens(_msgSender(), _contents, _packUri, packId);
+        if(isUpdate) {
+            for(uint256 i = 0; i < _contents.length; i += 1) {
+                _addTokenInBundle(_contents[i], packId);
+            }
+            _transferTokenBatch(_msgSender(), address(this), _contents);
+        } else {
+            _storeTokens(_msgSender(), _contents, _packUri, packId);
+        }
+
     }
 
     /// @dev Returns the reward units to distribute.
@@ -411,6 +459,13 @@ contract Pack is
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
                 totalSupply[ids[i]] += amounts[i];
+            }
+        } else {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                // pack can no longer be updated after first transfer to non-zero address
+                if(canUpdatePack[ids[i]]) {
+                    canUpdatePack[ids[i]] = false;
+                }
             }
         }
 

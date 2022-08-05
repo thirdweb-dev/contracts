@@ -29,7 +29,7 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     function _storeTokens(
         address _tokenOwner,
         Token[] calldata _tokens,
-        string calldata _uriForTokens,
+        string memory _uriForTokens,
         uint256 _idForTokens
     ) internal {
         _createBundle(_tokens, _idForTokens);
