@@ -9,7 +9,7 @@ import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
-import "contracts/Forwarder.sol";
+import { Forwarder } from "contracts/Forwarder.sol";
 import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
@@ -91,7 +91,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Split(fee)));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
-        TWFactory(factory).addImplementation(address(new Pack(address(weth))));
+        TWFactory(factory).addImplementation(address(new Pack(address(weth), forwarders())));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
@@ -236,7 +236,7 @@ abstract contract BaseTest is DSTest, Test {
             "Pack",
             abi.encodeCall(
                 Pack.initialize,
-                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
+                (deployer, NAME, SYMBOL, CONTRACT_URI, royaltyRecipient, royaltyBps)
             )
         );
     }
