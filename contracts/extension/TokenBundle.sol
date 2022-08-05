@@ -43,7 +43,7 @@ abstract contract TokenBundle is ITokenBundle {
     }
 
     /// @dev Lets the calling contract update a bundle, by passing in a list of tokens and a unique id.
-    function _updateBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {
+    function _updateBundle(Token[] memory _tokensToBind, uint256 _bundleId) internal {
         require(_tokensToBind.length > 0, "TokenBundle: no tokens to bind.");
 
         uint256 currentCount = bundle[_bundleId].count;

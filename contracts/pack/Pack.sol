@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+import "/Users/yash/thirdweb/pack-audit-fixes/lib/forge-std/src/console2.sol";
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
@@ -214,15 +215,12 @@ contract Pack is
         returns (Token[] memory)
     {
         address opener = _msgSender();
-
         require(isTrustedForwarder(opener) || opener == tx.origin, "opener must be eoa");
         require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
-
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp <= block.timestamp, "cannot open yet");
-
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
-
+        console2.log("here 5");
         _burn(_msgSender(), _packId, _amountToOpen);
 
         _transferTokenBatch(address(this), _msgSender(), rewardUnits);
@@ -270,27 +268,28 @@ contract Pack is
     ) internal returns (Token[] memory rewardUnits) {
         uint256 numOfRewardUnitsToDistribute = _numOfPacksToOpen * _rewardUnitsPerOpen;
         rewardUnits = new Token[](numOfRewardUnitsToDistribute);
-
         uint256 totalRewardUnits = totalSupply[_packId] * _rewardUnitsPerOpen;
         uint256 totalRewardKinds = getTokenCountOfBundle(_packId);
 
         uint256 random = generateRandomValue();
 
+        (Token[] memory _token,) = getPackContents(_packId);
+        bool[] memory _isUpdated = new bool[](totalRewardKinds);
         for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % totalRewardUnits;
             uint256 step;
 
             for (uint256 j = 0; j < totalRewardKinds; j += 1) {
-                uint256 id = _packId;
-
-                Token memory _token = getTokenOfBundle(id, j);
-                uint256 totalRewardUnitsOfKind = _token.totalAmount / pack.perUnitAmounts[j];
+                uint256 totalRewardUnitsOfKind = _token[j].totalAmount / pack.perUnitAmounts[j];
 
                 if (target < step + totalRewardUnitsOfKind) {
-                    _token.totalAmount -= pack.perUnitAmounts[j];
-                    _updateTokenInBundle(_token, id, j);
-                    rewardUnits[i] = _token;
+                    _token[j].totalAmount -= pack.perUnitAmounts[j];
+                    _isUpdated[j] = true;
+        
+                    rewardUnits[i].assetContract = _token[j].assetContract;
+                    rewardUnits[i].tokenType = _token[j].tokenType;
+                    rewardUnits[i].tokenId = _token[j].tokenId;
                     rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
 
                     totalRewardUnits -= 1;
@@ -301,6 +300,12 @@ contract Pack is
                 }
             }
         }
+
+        for(uint256 i = 0; i < totalRewardKinds; i += 1) {
+            if(_isUpdated[i]) {
+                _updateTokenInBundle(_token[i], _packId, i);
+            }
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -309,7 +314,7 @@ contract Pack is
 
     /// @dev Returns the underlying contents of a pack.
     function getPackContents(uint256 _packId)
-        external
+        public
         view
         returns (Token[] memory contents, uint256[] memory perUnitAmounts)
     {
