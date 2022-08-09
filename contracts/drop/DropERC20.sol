@@ -490,7 +490,10 @@ contract DropERC20 is
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        string memory prevURI = contractURI;
         contractURI = _uri;
+
+        emit ContractURIUpdated(prevURI, _uri);
     }
 
     /*///////////////////////////////////////////////////////////////
