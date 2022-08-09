@@ -149,22 +149,37 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         );
     }
 
-    // function test_publish_multiple_versions() public {
-    //     string memory contractId = "MyContract";
+    function test_publish_multiple_versions() public {
+        string memory contractId = "MyContract";
 
-    //     // vm.prank(factoryAdmin);
-    //     vm.prank(publisher);
-    //     byoc.publishContract(
-    //         publisher,
-    //         contractId,
-    //         publishMetadataUri,
-    //         compilerMetadataUri,
-    //         keccak256(type(MockCustomContract).creationCode),
-    //         address(0)
-    //     );
-    //     string[] memory resolved = byoc.getPublishedUriFromCompilerUri(compilerMetadataUri);
-    //     assertEq(resolved[0], publishMetadataUri);
-    // }
+        vm.prank(publisher);
+        byoc.publishContract(
+            publisher,
+            contractId,
+            publishMetadataUri,
+            compilerMetadataUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+        string[] memory resolved = byoc.getPublishedUriFromCompilerUri(compilerMetadataUri);
+        assertEq(resolved.length, 1);
+        assertEq(resolved[0], publishMetadataUri);
+
+        string memory otherUri = "ipfs://abcd";
+        vm.prank(publisher);
+        byoc.publishContract(
+            publisher,
+            contractId,
+            publishMetadataUri,
+            otherUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+
+        string[] memory resolved2 = byoc.getPublishedUriFromCompilerUri(otherUri);
+        assertEq(resolved2.length, 1);
+        assertEq(resolved2[0], publishMetadataUri);
+    }
 
     // Deprecated
     // function test_publish_emit_ContractPublished() public {
