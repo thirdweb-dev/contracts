@@ -376,8 +376,8 @@ contract DropERC20 is
             "exceed claim limit for wallet"
         );
 
-        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
+        (, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
+        require(block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -428,15 +428,18 @@ contract DropERC20 is
     {
         lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
 
-        unchecked {
-            nextValidClaimTimestamp =
-                lastClaimTimestamp +
-                claimCondition.phases[_conditionId].waitTimeInSecondsBetweenClaims;
+        if(lastClaimTimestamp != 0) {
+            unchecked {
+                nextValidClaimTimestamp =
+                    lastClaimTimestamp +
+                    claimCondition.phases[_conditionId].waitTimeInSecondsBetweenClaims;
 
-            if (nextValidClaimTimestamp < lastClaimTimestamp) {
-                nextValidClaimTimestamp = type(uint256).max;
+                if (nextValidClaimTimestamp < lastClaimTimestamp) {
+                    nextValidClaimTimestamp = type(uint256).max;
+                }
             }
         }
+
     }
 
     /// @dev Returns the claim condition at the given uid.
