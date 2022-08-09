@@ -149,6 +149,23 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         );
     }
 
+    // function test_publish_multiple_versions() public {
+    //     string memory contractId = "MyContract";
+
+    //     // vm.prank(factoryAdmin);
+    //     vm.prank(publisher);
+    //     byoc.publishContract(
+    //         publisher,
+    //         contractId,
+    //         publishMetadataUri,
+    //         compilerMetadataUri,
+    //         keccak256(type(MockCustomContract).creationCode),
+    //         address(0)
+    //     );
+    //     string[] memory resolved = byoc.getPublishedUriFromCompilerUri(compilerMetadataUri);
+    //     assertEq(resolved[0], publishMetadataUri);
+    // }
+
     // Deprecated
     // function test_publish_emit_ContractPublished() public {
     //     string memory contractId = "MyContract";
