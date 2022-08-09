@@ -367,9 +367,12 @@ contract DropERC20 is
             currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
             "exceed max mint supply."
         );
-        require(maxTotalSupply == 0 || totalSupply() + _quantity <= maxTotalSupply, "exceed max total supply.");
+
+        uint256 _maxTotalSupply = maxTotalSupply;
+        uint256 _maxWalletClaimCount = maxWalletClaimCount;
+        require(_maxTotalSupply == 0 || totalSupply() + _quantity <= _maxTotalSupply, "exceed max total supply.");
         require(
-            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
+            _maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= _maxWalletClaimCount,
             "exceed claim limit for wallet"
         );
 
