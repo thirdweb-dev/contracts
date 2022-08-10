@@ -185,6 +185,21 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         IContractPublisher.CustomContractInstance[] memory contracts = byoc.getAllPublishedContracts(publisher);
         assertEq(contracts.length, 1);
         assertEq(contracts[0].contractId, "MockContract");
+
+        string memory contractId = "MyContract";
+        vm.prank(publisher);
+        byoc.publishContract(
+            publisher,
+            contractId,
+            publishMetadataUri,
+            compilerMetadataUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+        IContractPublisher.CustomContractInstance[] memory contracts2 = byoc.getAllPublishedContracts(publisher);
+        assertEq(contracts2.length, 2);
+        assertEq(contracts2[0].contractId, "MockContract");
+        assertEq(contracts2[1].contractId, "MyContract");
     }
 
     // Deprecated

@@ -75,9 +75,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
             published[i] = linkedData[i];
         }
         // fill in current published contracts
-        for (uint256 i = prevTotal; i < currentTotal; i += 1) {
+        for (uint256 i = 0; i < currentTotal; i += 1) {
             bytes32 contractId = EnumerableSet.at(contractsOfPublisher[_publisher].contractIds, i);
-            published[i] = contractsOfPublisher[_publisher].contracts[contractId].latest;
+            published[i + prevTotal] = contractsOfPublisher[_publisher].contracts[contractId].latest;
         }
     }
 
@@ -104,8 +104,8 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
             published[i] = linkedVersions[i];
         }
         // fill in current published contracts
-        for (uint256 i = prevTotal; i < total; i += 1) {
-            published[i] = contractsOfPublisher[_publisher].contracts[id].instances[i];
+        for (uint256 i = 0; i < currentTotal; i += 1) {
+            published[i + prevTotal] = contractsOfPublisher[_publisher].contracts[id].instances[i];
         }
     }
 
@@ -205,8 +205,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
             publishedMetadataUris[i] = linkedUris[i];
         }
         // fill in current published uris
-        for (uint256 i = prevTotal; i < total; i += 1) {
-            publishedMetadataUris[i] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[i];
+        for (uint256 i = 0; i < currentTotal; i += 1) {
+            publishedMetadataUris[i + prevTotal] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[
+                i
+            ];
         }
     }
 
