@@ -59,18 +59,19 @@ function balanceOfBatch(address[] owners, uint256[] ids) external view returns (
 ### batchMintTo
 
 ```solidity
-function batchMintTo(address _to, uint256[] _amounts, string _baseURI) external nonpayable
+function batchMintTo(address _to, uint256[] _tokenIds, uint256[] _amounts, string _baseURI) external nonpayable
 ```
 
 Lets an authorized address mint multiple NEW NFTs at once to a recipient.
 
-*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.                   The metadata for each NFT is stored at `baseURI/{tokenID of NFT}`*
+*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.                   If `_tokenIds[i] == type(uint256).max` a new NFT at tokenId `nextTokenIdToMint` is minted. If the given                   `tokenIds[i] &lt; nextTokenIdToMint`, then additional supply of an existing NFT is minted.                   The metadata for each new NFT is stored at `baseURI/{tokenID of NFT}`*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _to | address | The recipient of the NFT to mint.
+| _tokenIds | uint256[] | The tokenIds of the NFTs to mint.
 | _amounts | uint256[] | The amounts of each NFT to mint.
 | _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
 

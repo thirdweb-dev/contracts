@@ -87,34 +87,46 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     /**
      *  @notice          Lets an authorized address mint multiple NEW NFTs at once to a recipient.
      *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
-     *                   The metadata for each NFT is stored at `baseURI/{tokenID of NFT}`
+     *                   If `_tokenIds[i] == type(uint256).max` a new NFT at tokenId `nextTokenIdToMint` is minted. If the given
+     *                   `tokenIds[i] < nextTokenIdToMint`, then additional supply of an existing NFT is minted.
+     *                   The metadata for each new NFT is stored at `baseURI/{tokenID of NFT}`
      *
      *  @param _to       The recipient of the NFT to mint.
+     *  @param _tokenIds The tokenIds of the NFTs to mint.
      *  @param _amounts  The amounts of each NFT to mint.
      *  @param _baseURI  The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
      */
     function batchMintTo(
         address _to,
+        uint256[] memory _tokenIds,
         uint256[] memory _amounts,
         string memory _baseURI
     ) public virtual {
         require(_canMint(), "Not authorized to mint.");
         require(_amounts.length > 0, "Minting zero tokens.");
+        require(_tokenIds.length == _amounts.length, "Length mismatch");
 
         uint256 nextIdToMint = nextTokenIdToMint();
-        uint256 numOfNFTs = _amounts.length;
+        uint256 startNextIdToMint = nextIdToMint;
+        
+        uint256 numOfNewNFTs;
 
-        _batchMintMetadata(nextTokenIdToMint(), numOfNFTs, _baseURI);
-
-        uint256[] memory ids = new uint256[](numOfNFTs);
-        for(uint256 i = 0; i < numOfNFTs; i += 1) {
-            ids[i] = nextIdToMint;
-            nextIdToMint += 1;
+        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+            if (_tokenIds[i] == type(uint256).max) {
+                
+                _tokenIds[i] = nextIdToMint;
+                
+                nextIdToMint += 1;
+                numOfNewNFTs += 1;
+            } else {
+                require(_tokenIds[i] < nextIdToMint, "invalid id");
+            }
         }
 
         nextTokenIdToMint_ = nextIdToMint;
 
-        _batchMint(_to, ids, _amounts, "");
+        _batchMint(_to, _tokenIds, _amounts, "");
+        _batchMintMetadata(startNextIdToMint, numOfNewNFTs, _baseURI);
     }
 
     /**
@@ -144,7 +156,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
-        require(_tokenIds.length == _amounts.length, "LENGTH_MISMATCH");
+        require(_tokenIds.length == _amounts.length, "Length mismatch");
 
         for(uint256 i = 0; i < _tokenIds.length; i += 1) {
             require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
