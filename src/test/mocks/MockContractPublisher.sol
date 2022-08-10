@@ -11,7 +11,15 @@ contract MockContractPublisher is IContractPublisher {
         override
         returns (CustomContractInstance[] memory published)
     {
-        return new CustomContractInstance[](0);
+        CustomContractInstance[] memory mocks = new CustomContractInstance[](1);
+        mocks[0] = CustomContractInstance(
+            "MockContract",
+            123,
+            "ipfs://mock",
+            0x0000000000000000000000000000000000000000000000000000000000000001,
+            address(0x0000000000000000000000000000000000000000)
+        );
+        return mocks;
     }
 
     /**

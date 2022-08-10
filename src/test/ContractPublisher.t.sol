@@ -181,6 +181,12 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         assertEq(resolved2[0], publishMetadataUri);
     }
 
+    function test_read_from_linked_publisher() public {
+        IContractPublisher.CustomContractInstance[] memory contracts = byoc.getAllPublishedContracts(publisher);
+        assertEq(contracts.length, 1);
+        assertEq(contracts[0].contractId, "MockContract");
+    }
+
     // Deprecated
     // function test_publish_emit_ContractPublished() public {
     //     string memory contractId = "MyContract";
