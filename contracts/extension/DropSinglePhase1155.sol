@@ -92,7 +92,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
 
         // If there's a price, collect price.
-        collectPriceOnClaim(_quantity, _currency, _pricePerToken);
+        collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
         transferTokensOnClaim(_receiver, _tokenId, _quantity);
@@ -258,6 +258,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken

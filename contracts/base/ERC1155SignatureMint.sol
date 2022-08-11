@@ -66,10 +66,20 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+        address saleRecipient = _req.primarySaleRecipient == address(0) ? primarySaleRecipient() : _req.primarySaleRecipient;
+        collectPriceOnClaim(saleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+
+        // Set royalties, if applicable.
+        if (_req.royaltyRecipient != address(0)) {
+            _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
+        }
+
+        // Set URI
+        if(_req.tokenId == type(uint256).max) {
+            _setTokenURI(tokenIdToMint, _req.uri);
+        }
 
         // Mint tokens.
-        _setTokenURI(tokenIdToMint, _req.uri);
         _mint(receiver, tokenIdToMint, _req.quantity, "");
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
@@ -91,6 +101,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
@@ -105,6 +116,6 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, _primarySaleRecipient, totalPrice);
     }
 }

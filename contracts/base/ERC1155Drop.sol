@@ -78,7 +78,7 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(primarySaleRecipient(), _req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
         _mint(receiver, tokenIdToMint, _req.quantity, "");
@@ -160,6 +160,7 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
@@ -176,7 +177,8 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
             }
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.
