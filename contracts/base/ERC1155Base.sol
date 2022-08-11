@@ -22,6 +22,12 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     uint256 internal nextTokenIdToMint_;
 
     /*//////////////////////////////////////////////////////////////
+                            MAPPINGS
+    //////////////////////////////////////////////////////////////*/
+
+    mapping(uint256 => uint256) public totalSupply;
+
+    /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
@@ -104,7 +110,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     ) public virtual {
         require(_canMint(), "Not authorized to mint.");
         require(_amounts.length > 0, "Minting zero tokens.");
-        require(_tokenIds.length == _amounts.length, "Length mismatch");
+        require(_tokenIds.length == _amounts.length, "Length mismatch.");
 
         uint256 nextIdToMint = nextTokenIdToMint();
         uint256 startNextIdToMint = nextIdToMint;
@@ -123,10 +129,12 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
             }
         }
 
-        nextTokenIdToMint_ = nextIdToMint;
+        if(numOfNewNFTs > 0) {
+            _batchMintMetadata(startNextIdToMint, numOfNewNFTs, _baseURI);
+        }
 
+        nextTokenIdToMint_ = nextIdToMint;
         _batchMint(_to, _tokenIds, _amounts, "");
-        _batchMintMetadata(startNextIdToMint, numOfNewNFTs, _baseURI);
     }
 
     /**
@@ -208,5 +216,28 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] -= amounts[i];
+            }
+        }
     }
 }

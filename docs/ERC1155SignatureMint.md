@@ -566,6 +566,28 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
+### totalSupply
+
+```solidity
+function totalSupply(uint256) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
 ### uri
 
 ```solidity

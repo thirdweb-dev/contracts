@@ -75,6 +75,8 @@ contract ERC1155 {
     ) public virtual {
         require(msg.sender == from || isApprovedForAll[from][msg.sender], "NOT_AUTHORIZED");
 
+        _beforeTokenTransfer(msg.sender, from, to, _asSingletonArray(id), _asSingletonArray(amount), data);
+
         balanceOf[from][id] -= amount;
         balanceOf[to][id] += amount;
 
@@ -99,6 +101,8 @@ contract ERC1155 {
         require(ids.length == amounts.length, "LENGTH_MISMATCH");
 
         require(msg.sender == from || isApprovedForAll[from][msg.sender], "NOT_AUTHORIZED");
+
+        _beforeTokenTransfer(msg.sender, from, to, ids, amounts, data);
 
         // Storing these outside the loop saves ~15 gas per iteration.
         uint256 id;
@@ -174,6 +178,8 @@ contract ERC1155 {
         uint256 amount,
         bytes memory data
     ) internal virtual {
+        _beforeTokenTransfer(msg.sender, address(0), to, _asSingletonArray(id), _asSingletonArray(amount), data);
+
         balanceOf[to][id] += amount;
 
         emit TransferSingle(msg.sender, address(0), to, id, amount);
@@ -193,6 +199,8 @@ contract ERC1155 {
         uint256[] memory amounts,
         bytes memory data
     ) internal virtual {
+        _beforeTokenTransfer(msg.sender, address(0), to, ids, amounts, data);
+
         uint256 idsLength = ids.length; // Saves MLOADs.
 
         require(idsLength == amounts.length, "LENGTH_MISMATCH");
@@ -223,6 +231,8 @@ contract ERC1155 {
         uint256[] memory ids,
         uint256[] memory amounts
     ) internal virtual {
+        _beforeTokenTransfer(msg.sender, from, address(0), ids, amounts, "");
+
         uint256 idsLength = ids.length; // Saves MLOADs.
 
         require(idsLength == amounts.length, "LENGTH_MISMATCH");
@@ -245,9 +255,27 @@ contract ERC1155 {
         uint256 id,
         uint256 amount
     ) internal virtual {
+        _beforeTokenTransfer(msg.sender, from, address(0), _asSingletonArray(id), _asSingletonArray(amount), "");
+
         balanceOf[from][id] -= amount;
 
         emit TransferSingle(msg.sender, from, address(0), id, amount);
+    }
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual {}
+
+    function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
+        uint256[] memory array = new uint256[](1);
+        array[0] = element;
+
+        return array;
     }
 }
 
