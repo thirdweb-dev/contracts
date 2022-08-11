@@ -123,11 +123,9 @@ contract ERC721Drop is ERC721SignatureMint, LazyMint, DelayedReveal, DropSingleP
         string calldata _baseURIForTokens,
         bytes calldata _data
     ) public override returns (uint256 batchId) {
-        if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
-            if (encryptedURI.length != 0 && provenanceHash != "") {
-                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
-            }
+        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+        if (encryptedURI.length != 0 && provenanceHash != "") {
+            _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
         }
 
         return LazyMint.lazyMint(_amount, _baseURIForTokens, _data);
