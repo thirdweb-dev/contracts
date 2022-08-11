@@ -12,7 +12,6 @@ import "../extension/BatchMintMetadata.sol";
 import "../lib/TWStrings.sol";
 
 contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata {
-
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -70,18 +69,21 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      *  @param _tokenURI The full metadata URI for the NFTs minted (if a new NFT is being minted).
      *  @param _amount   The amount of the same NFT to mint.
      */
-    function mintTo(address _to, uint256 _tokenId, string memory _tokenURI, uint256 _amount) public virtual {
+    function mintTo(
+        address _to,
+        uint256 _tokenId,
+        string memory _tokenURI,
+        uint256 _amount
+    ) public virtual {
         require(_canMint(), "Not authorized to mint.");
 
         uint256 tokenIdToMint;
         uint256 nextIdToMint = nextTokenIdToMint();
 
         if (_tokenId == type(uint256).max) {
-            
             tokenIdToMint = nextIdToMint;
             nextTokenIdToMint_ += 1;
             _setTokenURI(nextIdToMint, _tokenURI);
-
         } else {
             require(_tokenId < nextIdToMint, "invalid id");
             tokenIdToMint = _tokenId;
@@ -114,14 +116,13 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
 
         uint256 nextIdToMint = nextTokenIdToMint();
         uint256 startNextIdToMint = nextIdToMint;
-        
+
         uint256 numOfNewNFTs;
 
-        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             if (_tokenIds[i] == type(uint256).max) {
-                
                 _tokenIds[i] = nextIdToMint;
-                
+
                 nextIdToMint += 1;
                 numOfNewNFTs += 1;
             } else {
@@ -129,7 +130,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
             }
         }
 
-        if(numOfNewNFTs > 0) {
+        if (numOfNewNFTs > 0) {
             _batchMintMetadata(startNextIdToMint, numOfNewNFTs, _baseURI);
         }
 
@@ -144,12 +145,16 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
+    function burn(
+        address _owner,
+        uint256 _tokenId,
+        uint256 _amount
+    ) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
         require(balanceOf[_owner][_tokenId] >= _amount, "Not enough tokens owned");
-        
+
         _burn(_owner, _tokenId, _amount);
     }
 
@@ -160,16 +165,20 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
+    function burnBatch(
+        address _owner,
+        uint256[] memory _tokenIds,
+        uint256[] memory _amounts
+    ) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
         require(_tokenIds.length == _amounts.length, "Length mismatch");
 
-        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
         }
-        
+
         _batchBurn(_owner, _tokenIds, _amounts);
     }
 

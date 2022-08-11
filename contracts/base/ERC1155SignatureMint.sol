@@ -9,7 +9,6 @@ import "../extension/SignatureMintERC1155.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 {
-
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/

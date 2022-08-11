@@ -9,7 +9,6 @@ import { ERC1155DelayedReveal } from "contracts/base/ERC1155DelayedReveal.sol";
 import "contracts/lib/TWStrings.sol";
 
 contract ERC1155DelayedRevealTest is DSTest, Test {
-
     using TWStrings for uint256;
 
     // Target contract
@@ -26,7 +25,6 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
     bytes internal key = "key";
 
     function setUp() public {
-
         admin = address(0x123);
         nftHolder = address(0x456);
 
@@ -41,20 +39,19 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
     function test_state_reveal() public {
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < nextId; i += 1) {
+        for (uint256 i = 0; i < nextId; i += 1) {
             assertEq(base.uri(i), string(abi.encodePacked(placeholderURI, "0")));
         }
 
         vm.prank(admin);
         base.reveal(0, key);
 
-        for(uint256 i = 0; i < nextId; i += 1) {
+        for (uint256 i = 0; i < nextId; i += 1) {
             assertEq(base.uri(i), string(abi.encodePacked(baseURI, i.toString())));
         }
     }
 
     function test_state_reveal_additionalBatch() public {
-
         uint256 nextIdBefore = base.nextTokenIdToMint();
 
         string memory newBaseURI = "ipfsNew://";
@@ -67,14 +64,14 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = nextIdBefore; i < nextId; i += 1) {
+        for (uint256 i = nextIdBefore; i < nextId; i += 1) {
             assertEq(base.uri(i), string(abi.encodePacked(newPlaceholderURI, "0")));
         }
 
         vm.prank(admin);
         base.reveal(1, newKey);
 
-        for(uint256 i = nextIdBefore; i < nextId; i += 1) {
+        for (uint256 i = nextIdBefore; i < nextId; i += 1) {
             assertEq(base.uri(i), string(abi.encodePacked(newBaseURI, i.toString())));
         }
     }

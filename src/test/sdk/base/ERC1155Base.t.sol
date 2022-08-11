@@ -9,7 +9,6 @@ import { ERC1155Base } from "contracts/base/ERC1155Base.sol";
 import "contracts/lib/TWStrings.sol";
 
 contract ERC1155BaseTest is DSTest, Test {
-
     using TWStrings for uint256;
 
     // Target contract
@@ -20,7 +19,6 @@ contract ERC1155BaseTest is DSTest, Test {
     address internal nftHolder;
 
     function setUp() public {
-
         admin = address(0x123);
         nftHolder = address(0x456);
 
@@ -39,7 +37,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         vm.prank(admin);
         base.mintTo(nftHolder, tokenId, tokenURI, amount);
-        
+
         assertEq(base.balanceOf(nftHolder, expectedTokenIdMinted), amount);
         assertEq(base.totalSupply(expectedTokenIdMinted), amount);
         assertEq(base.nextTokenIdToMint(), expectedTokenIdMinted + 1);
@@ -58,7 +56,7 @@ contract ERC1155BaseTest is DSTest, Test {
         assertEq(base.uri(tokenIdMinted), tokenURI);
         assertEq(base.totalSupply(tokenIdMinted), startAmount);
         assertEq(base.nextTokenIdToMint(), tokenIdMinted + 1);
-        
+
         uint256 additionalAmount = 100;
 
         vm.prank(admin);
@@ -90,7 +88,7 @@ contract ERC1155BaseTest is DSTest, Test {
     }
 
     // ================== `mintTo` tests ========================
-    
+
     function test_state_batchMintTo_newNFTs() public {
         uint256 numToMint = 3;
         uint256[] memory tokenIds = new uint256[](numToMint);
@@ -100,7 +98,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
 
@@ -111,7 +109,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, tokenIds, amounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), amounts[i]);
@@ -130,7 +128,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             startAmounts[i] = 1;
             nextAmounts[i] = 99;
@@ -142,7 +140,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(admin, tokenIds, startAmounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(admin, id), startAmounts[i]);
@@ -153,7 +151,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, expectedTokenIds, nextAmounts, "");
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), nextAmounts[i]);
@@ -172,7 +170,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             startAmounts[i] = 1;
             nextAmounts[i] = 99;
@@ -184,7 +182,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(admin, tokenIds, startAmounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(admin, id), startAmounts[i]);
@@ -194,7 +192,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256[] memory newAndExistingTokenIds = new uint256[](numToMint + 1);
         uint256[] memory newAmounts = new uint256[](numToMint + 1);
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             newAndExistingTokenIds[i] = expectedTokenIds[i];
             newAmounts[i] = nextAmounts[i];
         }
@@ -207,9 +205,8 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, newAndExistingTokenIds, newAmounts, baseURIForNewNFT);
 
-        for(uint256 i = 0; i < newAndExistingTokenIds.length; i += 1) {
-    
-            if(i < numToMint) {
+        for (uint256 i = 0; i < newAndExistingTokenIds.length; i += 1) {
+            if (i < numToMint) {
                 uint256 id = newAndExistingTokenIds[i];
 
                 assertEq(base.balanceOf(nftHolder, id), newAmounts[i]);
@@ -233,7 +230,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
 
@@ -255,7 +252,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
 
             expectedTokenIds[i] = nextId;
@@ -276,7 +273,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
 
@@ -298,7 +295,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = i;
             amounts[i] = 100;
 
@@ -376,7 +373,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
 
@@ -387,7 +384,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, tokenIds, amounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), amounts[i]);
@@ -397,7 +394,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(nftHolder);
         base.burnBatch(nftHolder, expectedTokenIds, amounts);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), 0);
@@ -414,7 +411,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
 
@@ -425,7 +422,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, tokenIds, amounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), amounts[i]);
@@ -447,7 +444,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
             mockAmounts[i] = 100;
@@ -459,7 +456,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, tokenIds, amounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = expectedTokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), amounts[i]);
@@ -480,7 +477,7 @@ contract ERC1155BaseTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = type(uint256).max;
             amounts[i] = 100;
 
@@ -491,7 +488,7 @@ contract ERC1155BaseTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, tokenIds, amounts, baseURI);
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             amounts[i] += 1;
         }
 

@@ -9,7 +9,6 @@ import { ERC1155LazyMint } from "contracts/base/ERC1155LazyMint.sol";
 import "contracts/lib/TWStrings.sol";
 
 contract ERC1155LazyMintTest is DSTest, Test {
-
     using TWStrings for uint256;
 
     // Target contract
@@ -24,7 +23,6 @@ contract ERC1155LazyMintTest is DSTest, Test {
     string internal baseURI = "ipfs://";
 
     function setUp() public {
-
         admin = address(0x123);
         nftHolder = address(0x456);
 
@@ -58,6 +56,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
         vm.expectRevert("Not authorized to mint.");
         base.mintTo(nftHolder, tokenId, "", amount);
     }
+
     function test_revert_mintTo_invalidId() public {
         uint256 tokenId = base.nextTokenIdToMint();
         uint256 amount = 100;
@@ -74,7 +73,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = nextId - (1 + i);
             amounts[i] = 100;
         }
@@ -82,7 +81,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
         vm.prank(admin);
         base.batchMintTo(nftHolder, tokenIds, amounts, "");
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             uint256 id = tokenIds[i];
 
             assertEq(base.balanceOf(nftHolder, id), amounts[i]);
@@ -98,7 +97,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = nextId - (1 + i);
             amounts[i] = 100;
         }
@@ -115,7 +114,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = nextId - (1 + i);
         }
 
@@ -131,7 +130,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = nextId - (1 + i);
             amounts[i] = 100;
         }
@@ -148,7 +147,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
 
         uint256 nextId = base.nextTokenIdToMint();
 
-        for(uint256 i = 0; i < numToMint; i += 1) {
+        for (uint256 i = 0; i < numToMint; i += 1) {
             tokenIds[i] = nextId;
             amounts[i] = 100;
         }

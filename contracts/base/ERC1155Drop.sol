@@ -180,11 +180,11 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        override
-    {
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal virtual override {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
@@ -222,4 +222,4 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
     function _canReveal() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
-} 
+}

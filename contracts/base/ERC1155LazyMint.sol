@@ -5,7 +5,6 @@ import "./ERC1155Base.sol";
 import "../extension/LazyMint.sol";
 
 contract ERC1155LazyMint is ERC1155Base, LazyMint {
-
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -29,7 +28,12 @@ contract ERC1155LazyMint is ERC1155Base, LazyMint {
      *  @param _tokenId  The tokenId of the lazy minted NFT to mint.
      *  @param _amount   The amount of the same NFT to mint.
      */
-    function mintTo(address _to, uint256 _tokenId, string memory, uint256 _amount) public virtual override {
+    function mintTo(
+        address _to,
+        uint256 _tokenId,
+        string memory,
+        uint256 _amount
+    ) public virtual override {
         require(_canMint(), "Not authorized to mint.");
         require(_tokenId < nextTokenIdToMint(), "invalid id");
 
@@ -54,7 +58,7 @@ contract ERC1155LazyMint is ERC1155Base, LazyMint {
         require(_amounts.length > 0, "Minting zero tokens.");
         require(_tokenIds.length == _amounts.length, "Length mismatch");
 
-        for(uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             require(_tokenIds[i] < nextTokenIdToMint(), "invalid id");
         }
 

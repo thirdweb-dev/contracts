@@ -16,7 +16,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     mapping(uint256 => ClaimCondition) public claimCondition;
 
     /// @dev Mapping from tokenId => active claim condition's UID.
-    mapping(uint256 => bytes32) private conditionId; 
+    mapping(uint256 => bytes32) private conditionId;
 
     /**
      *  @dev Map from an account and uid for a claim condition, to the last timestamp
@@ -35,7 +35,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets an account claim tokens.
-    function claim(        
+    function claim(
         address _receiver,
         uint256 _tokenId,
         uint256 _quantity,
@@ -70,7 +70,14 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 ||
             condition.merkleRoot == bytes32(0);
 
-        verifyClaim(_tokenId, _dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(
+            _tokenId,
+            _dropMsgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -96,7 +103,11 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(uint256 _tokenId, ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
+    function setClaimConditions(
+        uint256 _tokenId,
+        ClaimCondition calldata _condition,
+        bool _resetClaimEligibility
+    ) external override {
         if (!_canSetClaimConditions()) {
             revert("Not authorized");
         }
@@ -253,9 +264,11 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        virtual;
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal virtual;
 
     function _canSetClaimConditions() internal virtual returns (bool);
 }

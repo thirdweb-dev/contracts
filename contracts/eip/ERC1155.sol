@@ -171,7 +171,7 @@ contract ERC1155 {
         _uri[id] = tokenURI;
         emit URI(tokenURI, id);
     }
-    
+
     function _mint(
         address to,
         uint256 id,
