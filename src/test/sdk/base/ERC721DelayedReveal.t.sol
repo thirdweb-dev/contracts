@@ -44,12 +44,15 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
     function test_state_lazyMint_withEncryptedURI() public {
         uint256 _amount = 100;
         string memory _baseURIForTokens = "baseURI/";
-        bytes memory _encryptedBaseURI = "encryptedBaseURI/";
+        string memory secretURI = "secretURI/";
+        bytes memory key = "key";
+        bytes memory _encryptedBaseURI = base.encryptDecrypt(bytes(secretURI), key);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(secretURI, key, block.chainid));
 
         uint256 nextTokenId = base.nextTokenIdToMint();
 
         vm.startPrank(deployer);
-        uint256 batchId = base.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        uint256 batchId = base.lazyMint(_amount, _baseURIForTokens, abi.encode(_encryptedBaseURI, provenanceHash));
 
         assertEq(nextTokenId + _amount, base.nextTokenIdToMint());
         assertEq(nextTokenId + _amount, batchId);
@@ -65,10 +68,14 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
     function test_revert_lazyMint_URIForNonExistentId() public {
         uint256 _amount = 100;
         string memory _baseURIForTokens = "baseURI/";
-        bytes memory _encryptedBaseURI = "encryptedBaseURI/";
+
+        bytes memory key = "key";
+        string memory secretURI = "secretURI/";
+        bytes memory _encryptedBaseURI = base.encryptDecrypt(bytes(secretURI), key);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(secretURI, key, block.chainid));
 
         vm.startPrank(deployer);
-        base.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        base.lazyMint(_amount, _baseURIForTokens, abi.encode(_encryptedBaseURI, provenanceHash));
 
         vm.expectRevert("Invalid tokenId");
         base.tokenURI(100);
@@ -84,10 +91,12 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
         uint256 _amount = 100;
         string memory _tempURIForTokens = "tempURI/";
         string memory _baseURIForTokens = "baseURI/";
-        bytes memory _encryptedBaseURI = base.encryptDecrypt(bytes(_baseURIForTokens), "key");
+        bytes memory key = "key";
+        bytes memory _encryptedBaseURI = base.encryptDecrypt(bytes(_baseURIForTokens), key);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(_baseURIForTokens, key, block.chainid));
 
         vm.startPrank(deployer);
-        base.lazyMint(_amount, _tempURIForTokens, _encryptedBaseURI);
+        base.lazyMint(_amount, _tempURIForTokens, abi.encode(_encryptedBaseURI, provenanceHash));
 
         for (uint256 i = 0; i < _amount; i += 1) {
             string memory _tokenURI = base.tokenURI(i);
@@ -108,10 +117,12 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
         uint256 _amount = 100;
         string memory _tempURIForTokens = "tempURI/";
         string memory _baseURIForTokens = "baseURI/";
-        bytes memory _encryptedBaseURI = base.encryptDecrypt(bytes(_baseURIForTokens), "key");
+        bytes memory key = "key";
+        bytes memory _encryptedBaseURI = base.encryptDecrypt(bytes(_baseURIForTokens), key);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(_baseURIForTokens, key, block.chainid));
 
         vm.prank(deployer);
-        base.lazyMint(_amount, _tempURIForTokens, _encryptedBaseURI);
+        base.lazyMint(_amount, _tempURIForTokens, abi.encode(_encryptedBaseURI, provenanceHash));
 
         for (uint256 i = 0; i < _amount; i += 1) {
             string memory _tokenURI = base.tokenURI(i);
