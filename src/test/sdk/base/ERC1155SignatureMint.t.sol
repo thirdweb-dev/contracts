@@ -4,8 +4,8 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 
-import { ERC1155SignatureMint, ISignatureMintERC1155 } from "contracts/base/ERC1155SignatureMint.sol";
-import { SignatureMint1155Utils } from "../../utils/SignatureMint1155Utils.sol";
+import { ERC1155SignatureMint } from "contracts/base/ERC1155SignatureMint.sol";
+
 import "contracts/lib/TWStrings.sol";
 
 contract ERC1155SignatureMintTest is DSTest, Test {
@@ -13,7 +13,6 @@ contract ERC1155SignatureMintTest is DSTest, Test {
 
     // Target contract
     ERC1155SignatureMint internal base;
-    SignatureMint1155Utils internal sigUtils;
 
     // Signers
     uint256 internal adminPkey;
@@ -81,7 +80,6 @@ contract ERC1155SignatureMintTest is DSTest, Test {
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base)));
-        // sigUtils = new SignatureMint1155Utils();
     }
 
     function test_state_mintWithSignature_newNFTs() public {

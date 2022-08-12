@@ -173,7 +173,7 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert("Must send total price");
+                revert("Must send total price.");
             }
         }
 
