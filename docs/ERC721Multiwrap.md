@@ -103,21 +103,21 @@ function balanceOf(address owner) external view returns (uint256)
 ### batchMintTo
 
 ```solidity
-function batchMintTo(address _to, uint256 _quantity, string _baseURI, bytes _data) external nonpayable
+function batchMintTo(address, uint256, string, bytes) external nonpayable
 ```
 
-Lets an authorized address mint multiple NFTs at once to a recipient.
 
-*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | The recipient of the NFT to mint.
-| _quantity | uint256 | The number of NFTs to mint.
-| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
-| _data | bytes | Additional data to pass along during the minting of the NFT.
+| _0 | address | undefined
+| _1 | uint256 | undefined
+| _2 | string | undefined
+| _3 | bytes | undefined
 
 ### burn
 
@@ -500,19 +500,19 @@ Returns whether a given address is the owner, or approved to transfer an NFT.
 ### mintTo
 
 ```solidity
-function mintTo(address _to, string _tokenURI) external nonpayable
+function mintTo(address, string) external nonpayable
 ```
 
-Lets an authorized address mint an NFT to a recipient.
 
-*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | The recipient of the NFT to mint.
-| _tokenURI | string | The full metadata URI for the NFT minted.
+| _0 | address | undefined
+| _1 | string | undefined
 
 ### multicall
 
@@ -908,15 +908,15 @@ function symbol() external view returns (string)
 function tokenURI(uint256 _tokenId) external view returns (string)
 ```
 
-Returns the metadata URI for an NFT.
 
-*See `BatchMintMetadata` for handling of metadata in this contract.*
+
+*Returns the URI for a given tokenId.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The tokenId of an NFT.
+| _tokenId | uint256 | undefined
 
 #### Returns
 

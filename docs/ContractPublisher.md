@@ -307,6 +307,23 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 |---|---|---|
 | results | bytes[] | undefined
 
+### prevPublisher
+
+```solidity
+function prevPublisher() external view returns (contract IContractPublisher)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IContractPublisher | undefined
+
 ### publishContract
 
 ```solidity

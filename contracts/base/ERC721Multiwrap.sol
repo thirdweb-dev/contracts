@@ -73,6 +73,13 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         uint128 _royaltyBps,
         address _nativeTokenWrapper
     ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) TokenStore(_nativeTokenWrapper) {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
+        _setupRole(TRANSFER_ROLE, msg.sender);
+
+        _setupRole(ASSET_ROLE, address(0));
+        _setupRole(UNWRAP_ROLE, address(0));
+
         restrictTransfers(false);
     }
 
@@ -92,6 +99,15 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
             super.supportsInterface(interfaceId) ||
             ERC721Base.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Receiver).interfaceId;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        Overriden ERC721 logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the URI for a given tokenId.
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        return getUriOfBundle(_tokenId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -161,5 +177,22 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
     /// @dev Returns whether transfers can be restricted in a given execution context.
     function _canRestrictTransfers() internal virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function mintTo(address, string memory) public virtual override {
+        revert("Not implemented for Multiwrap");
+    }
+
+    function batchMintTo(
+        address,
+        uint256,
+        string memory,
+        bytes memory
+    ) public virtual override {
+        revert("Not implemented for Multiwrap");
     }
 }

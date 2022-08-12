@@ -9,6 +9,7 @@ import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
+import "../mocks/MockContractPublisher.sol";
 import "contracts/Forwarder.sol";
 import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
@@ -26,6 +27,7 @@ import { Marketplace } from "contracts/marketplace/Marketplace.sol";
 import { VoteERC20 } from "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
+import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
 import "contracts/mock/Mock.sol";
 
 abstract contract BaseTest is DSTest, Test {
@@ -72,7 +74,7 @@ abstract contract BaseTest is DSTest, Test {
         forwarder = address(new Forwarder());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
-        contractPublisher = address(new ContractPublisher(forwarder));
+        contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
         fee = address(new TWFee(forwarder, factory));
