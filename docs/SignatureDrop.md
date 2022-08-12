@@ -201,10 +201,10 @@ Encrypt/decrypt data on chain.
 |---|---|---|
 | result | bytes |  Output after encryption/decryption of given data.
 
-### encryptedBaseURI
+### encryptedData
 
 ```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
+function encryptedData(uint256) external view returns (bytes)
 ```
 
 
@@ -614,7 +614,7 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable returns (uint256 batchId)
 ```
 
 
@@ -627,7 +627,7 @@ function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBas
 |---|---|---|
 | _amount | uint256 | undefined
 | _baseURIForTokens | string | undefined
-| _encryptedBaseURI | bytes | undefined
+| _data | bytes | undefined
 
 #### Returns
 
