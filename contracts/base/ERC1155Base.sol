@@ -11,23 +11,45 @@ import "../extension/BatchMintMetadata.sol";
 
 import "../lib/TWStrings.sol";
 
+/**
+ *  The `ERC1155Base` smart contract implements the ERC1155 NFT standard.
+ *  It includes the following additions to standard ERC1155 logic:
+ *
+ *      - Ability to mint NFTs via the provided `mintTo` and `batchMintTo` functions.
+ *
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use
+ *        off-chain information to distribute roaylties.
+ *
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability to perform multiple actions atomically
+ *
+ *      - EIP 2981 compliance for royalty support on NFT marketplaces.
+ */
+
 contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
-                        STATE VARIABLES
+                        State variables
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev The tokenId of the next NFT to mint.
     uint256 internal nextTokenIdToMint_;
 
     /*//////////////////////////////////////////////////////////////
-                            MAPPINGS
+                        Mappings
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice Returns the total supply of NFTs of a given tokenId
+     *  @dev Mapping from tokenId => total circulating supply of NFTs of that tokenId.
+     */
     mapping(uint256 => uint256) public totalSupply;
 
     /*//////////////////////////////////////////////////////////////
-                            CONSTRUCTOR
+                            Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
@@ -41,9 +63,10 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     }
 
     /*//////////////////////////////////////////////////////////////
-                        OVERRIDEN METADATA LOGIC
+                    Overriden metadata logic
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Returns the metadata URI for the given tokenId.
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
         string memory uriForToken = _uri[_tokenId];
         if (bytes(uriForToken).length > 0) {
@@ -55,7 +78,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     }
 
     /*//////////////////////////////////////////////////////////////
-                        MINT / BURN LOGIC
+                        Mint / burn logic
     //////////////////////////////////////////////////////////////*/
 
     /**
@@ -183,9 +206,10 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     }
 
     /*//////////////////////////////////////////////////////////////
-                              ERC165 LOGIC
+                            ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Returns whether this contract supports the given interface.
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -195,7 +219,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     }
 
     /*//////////////////////////////////////////////////////////////
-                            VIEW FUNCTIONS
+                            View functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice The tokenId assigned to the next new NFT to be minted.
@@ -204,7 +228,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     }
 
     /*//////////////////////////////////////////////////////////////
-                        Internal (overrideable) functions
+                    Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
@@ -227,6 +251,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
         return msg.sender == owner();
     }
 
+    /// @dev Runs before every token transfer / mint / burn.
     function _beforeTokenTransfer(
         address operator,
         address from,
