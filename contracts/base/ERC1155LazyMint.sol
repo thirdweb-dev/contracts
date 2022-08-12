@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721Base.sol";
-
+import "./ERC1155Base.sol";
 import "../extension/LazyMint.sol";
 
 /**
- *      BASE:      ERC721Base
+ *      BASE:      ERC1155Base
  *      EXTENSION: LazyMint
  *
- *  The `ERC721LazyMint` contract uses the `ERC721Base` contract, along with the `LazyMint` extension.
+ *  The `ERC1155LazyMint` contract uses the `ERC1155Base` contract, along with the `LazyMint` extension.
  *
  *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
  *  of  NFTs means actually assigning an owner to an NFT.
@@ -19,7 +18,7 @@ import "../extension/LazyMint.sol";
  *
  */
 
-contract ERC721LazyMint is ERC721Base, LazyMint {
+contract ERC1155LazyMint is ERC1155Base, LazyMint {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -29,23 +28,30 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
+    ) ERC1155Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
 
     /*//////////////////////////////////////////////////////////////
-                            Minting logic
+                        OVERRIDEN MINT LOGIC
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice          Lets an authorized address mint a lazy minted NFT to a recipient.
-     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *  @notice          Lets an authorized address mint lazy minted NFTs to a recipient.
+     *  @dev             - The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
      *
-     *  @param _to       The recipient of the NFT to mint.
+     *  @param _to       The recipient of the NFTs to mint.
+     *  @param _tokenId  The tokenId of the lazy minted NFT to mint.
+     *  @param _amount   The amount of the same NFT to mint.
      */
-    function mintTo(address _to, string memory) public virtual override {
+    function mintTo(
+        address _to,
+        uint256 _tokenId,
+        string memory,
+        uint256 _amount
+    ) public virtual override {
         require(_canMint(), "Not authorized to mint.");
-        require(_currentIndex + 1 <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+        require(_tokenId < nextTokenIdToMint(), "invalid id");
 
-        _safeMint(_to, 1, "");
+        _mint(_to, _tokenId, _amount, "");
     }
 
     /**
@@ -53,19 +59,24 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
      *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
      *
      *  @param _to       The recipient of the NFT to mint.
-     *  @param _quantity The number of NFTs to mint.
-     *  @param _data     Additional data to pass along during the minting of the NFT.
+     *  @param _tokenIds The tokenIds of the NFTs to mint.
+     *  @param _amounts  The amounts of each NFT to mint.
      */
     function batchMintTo(
         address _to,
-        uint256 _quantity,
-        string memory,
-        bytes memory _data
+        uint256[] memory _tokenIds,
+        uint256[] memory _amounts,
+        string memory
     ) public virtual override {
         require(_canMint(), "Not authorized to mint.");
-        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+        require(_amounts.length > 0, "Minting zero tokens.");
+        require(_tokenIds.length == _amounts.length, "Length mismatch");
 
-        _safeMint(_to, _quantity, _data);
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+            require(_tokenIds[i] < nextTokenIdToMint(), "invalid id");
+        }
+
+        _mintBatch(_to, _tokenIds, _amounts, "");
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.

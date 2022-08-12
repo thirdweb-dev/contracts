@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721LazyMint.sol";
-
+import "./ERC1155LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
 /**
- *      BASE:      ERC721Base
+ *      BASE:      ERC1155Base
  *      EXTENSION: LazyMint, DelayedReveal
  *
- *  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.
+ *  The `ERC1155DelayedReveal` contract uses the `ERC1155Base` contract, along with the `LazyMint` and `DelayedReveal` extension.
  *
  *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
  *  of  NFTs means actually assigning an owner to an NFT.
@@ -23,7 +22,7 @@ import "../extension/DelayedReveal.sol";
  *  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
  */
 
-contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
+contract ERC1155DelayedReveal is ERC1155LazyMint, DelayedReveal {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -35,10 +34,10 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721LazyMint(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
+    ) ERC1155LazyMint(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
 
     /*//////////////////////////////////////////////////////////////
-                        Overriden ERC721 logic
+                        Overriden Metadata logic
     //////////////////////////////////////////////////////////////*/
 
     /**
@@ -47,7 +46,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+    function uri(uint256 _tokenId) public view override returns (string memory) {
         (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
@@ -75,7 +74,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override returns (uint256 batchId) {
+    ) public virtual override returns (uint256 batchId) {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {

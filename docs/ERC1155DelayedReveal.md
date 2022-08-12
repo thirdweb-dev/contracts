@@ -1,47 +1,31 @@
-# ERC721DelayedReveal
+# ERC1155DelayedReveal
 
 
 
 
 
-BASE:      ERC721Base      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
+BASE:      ERC1155Base      EXTENSION: LazyMint, DelayedReveal  The `ERC1155DelayedReveal` contract uses the `ERC1155Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
 
 
 
 ## Methods
 
-### approve
-
-```solidity
-function approve(address to, uint256 tokenId) external nonpayable
-```
-
-
-
-*See {IERC721-approve}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to | address | undefined
-| tokenId | uint256 | undefined
-
 ### balanceOf
 
 ```solidity
-function balanceOf(address owner) external view returns (uint256)
+function balanceOf(address, uint256) external view returns (uint256)
 ```
 
+Get the balance of an account&#39;s Tokens.
 
 
-*See {IERC721-balanceOf}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| _0 | address | undefined
+| _1 | uint256 | undefined
 
 #### Returns
 
@@ -49,10 +33,33 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### balanceOfBatch
+
+```solidity
+function balanceOfBatch(address[] accounts, uint256[] ids) external view returns (uint256[])
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| accounts | address[] | undefined
+| ids | uint256[] | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256[] | undefined
+
 ### batchMintTo
 
 ```solidity
-function batchMintTo(address _to, uint256 _quantity, string, bytes _data) external nonpayable
+function batchMintTo(address _to, uint256[] _tokenIds, uint256[] _amounts, string) external nonpayable
 ```
 
 Lets an authorized address mint multiple lazy minted NFTs at once to a recipient.
@@ -64,25 +71,45 @@ Lets an authorized address mint multiple lazy minted NFTs at once to a recipient
 | Name | Type | Description |
 |---|---|---|
 | _to | address | The recipient of the NFT to mint.
-| _quantity | uint256 | The number of NFTs to mint.
-| _2 | string | undefined
-| _data | bytes | Additional data to pass along during the minting of the NFT.
+| _tokenIds | uint256[] | The tokenIds of the NFTs to mint.
+| _amounts | uint256[] | The amounts of each NFT to mint.
+| _3 | string | undefined
 
 ### burn
 
 ```solidity
-function burn(uint256 _tokenId) external nonpayable
+function burn(address _owner, uint256 _tokenId, uint256 _amount) external nonpayable
 ```
 
-Lets an owner or approved operator burn the NFT of the given tokenId.
+Lets an owner or approved operator burn NFTs of the given tokenId.
 
-*ERC721A&#39;s `_burn(uint256,bool)` internally checks for token approvals.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
+| _owner | address | The owner of the NFT to burn.
 | _tokenId | uint256 | The tokenId of the NFT to burn.
+| _amount | uint256 | The amount of the NFT to burn.
+
+### burnBatch
+
+```solidity
+function burnBatch(address _owner, uint256[] _tokenIds, uint256[] _amounts) external nonpayable
+```
+
+Lets an owner or approved operator burn NFTs of the given tokenIds.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _owner | address | The owner of the NFTs to burn.
+| _tokenIds | uint256[] | The tokenIds of the NFTs to burn.
+| _amounts | uint256[] | The amounts of the NFTs to burn.
 
 ### contractURI
 
@@ -145,28 +172,6 @@ function encryptedData(uint256) external view returns (bytes)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes | undefined
-
-### getApproved
-
-```solidity
-function getApproved(uint256 tokenId) external view returns (address)
-```
-
-
-
-*See {IERC721-getApproved}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
 
 ### getBaseURICount
 
@@ -274,48 +279,25 @@ View royalty info for a given token.
 ### isApprovedForAll
 
 ```solidity
-function isApprovedForAll(address owner, address operator) external view returns (bool)
+function isApprovedForAll(address, address) external view returns (bool)
 ```
 
+Queries the approval status of an operator for a given owner.
 
 
-*See {IERC721-isApprovedForAll}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| operator | address | undefined
+| _0 | address | undefined
+| _1 | address | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
-
-### isApprovedOrOwner
-
-```solidity
-function isApprovedOrOwner(address _operator, uint256 _tokenId) external view returns (bool isApprovedOrOwnerOf)
-```
-
-Returns whether a given address is the owner, or approved to transfer an NFT.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _operator | address | undefined
-| _tokenId | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| isApprovedOrOwnerOf | bool | undefined
 
 ### isEncryptedBatch
 
@@ -366,19 +348,21 @@ Lets an authorized address lazy mint a given amount of NFTs.
 ### mintTo
 
 ```solidity
-function mintTo(address _to, string) external nonpayable
+function mintTo(address _to, uint256 _tokenId, string, uint256 _amount) external nonpayable
 ```
 
-Lets an authorized address mint a lazy minted NFT to a recipient.
+Lets an authorized address mint lazy minted NFTs to a recipient.
 
-*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
+*- The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | The recipient of the NFT to mint.
-| _1 | string | undefined
+| _to | address | The recipient of the NFTs to mint.
+| _tokenId | uint256 | The tokenId of the lazy minted NFT to mint.
+| _2 | string | undefined
+| _amount | uint256 | The amount of the same NFT to mint.
 
 ### multicall
 
@@ -410,7 +394,7 @@ function name() external view returns (string)
 
 
 
-*See {IERC721Metadata-name}.*
+
 
 
 #### Returns
@@ -446,28 +430,6 @@ Returns the owner of the contract.
 
 
 
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
-### ownerOf
-
-```solidity
-function ownerOf(uint256 tokenId) external view returns (address)
-```
-
-
-
-*See {IERC721-ownerOf}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined
 
 #### Returns
 
@@ -522,15 +484,15 @@ View royalty info for a given token and sale price.
 | receiver | address |        Address of royalty recipient account.
 | royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value.
 
-### safeTransferFrom
+### safeBatchTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
+function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[] amounts, bytes data) external nonpayable
 ```
 
 
 
-*See {IERC721-safeTransferFrom}.*
+
 
 #### Parameters
 
@@ -538,8 +500,29 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 |---|---|---|
 | from | address | undefined
 | to | address | undefined
-| tokenId | uint256 | undefined
-| _data | bytes | undefined
+| ids | uint256[] | undefined
+| amounts | uint256[] | undefined
+| data | bytes | undefined
+
+### safeTransferFrom
+
+```solidity
+function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes data) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined
+| to | address | undefined
+| id | uint256 | undefined
+| amount | uint256 | undefined
+| data | bytes | undefined
 
 ### setApprovalForAll
 
@@ -549,7 +532,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-*See {IERC721-setApprovalForAll}.*
+
 
 #### Parameters
 
@@ -631,9 +614,9 @@ Updates default royalty recipient and bps for a particular token.
 function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
+Returns whether this contract supports the given interface.
 
 
-*See ERC165: https://eips.ethereum.org/EIPS/eip-165*
 
 #### Parameters
 
@@ -655,7 +638,7 @@ function symbol() external view returns (string)
 
 
 
-*See {IERC721Metadata-symbol}.*
+
 
 
 #### Returns
@@ -664,10 +647,32 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined
 
-### tokenURI
+### totalSupply
 
 ```solidity
-function tokenURI(uint256 _tokenId) external view returns (string)
+function totalSupply(uint256) external view returns (uint256)
+```
+
+Returns the total supply of NFTs of a given tokenId
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
+
+### uri
+
+```solidity
+function uri(uint256 _tokenId) external view returns (string)
 ```
 
 Returns the metadata URI for an NFT.
@@ -686,67 +691,14 @@ Returns the metadata URI for an NFT.
 |---|---|---|
 | _0 | string | undefined
 
-### totalSupply
-
-```solidity
-function totalSupply() external view returns (uint256)
-```
-
-
-
-*Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-### transferFrom
-
-```solidity
-function transferFrom(address from, address to, uint256 tokenId) external nonpayable
-```
-
-
-
-*See {IERC721-transferFrom}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
-
 
 
 ## Events
 
-### Approval
-
-```solidity
-event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| owner `indexed` | address | undefined |
-| approved `indexed` | address | undefined |
-| tokenId `indexed` | uint256 | undefined |
-
 ### ApprovalForAll
 
 ```solidity
-event ApprovalForAll(address indexed owner, address indexed operator, bool approved)
+event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved)
 ```
 
 
@@ -757,9 +709,9 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 
 | Name | Type | Description |
 |---|---|---|
-| owner `indexed` | address | undefined |
-| operator `indexed` | address | undefined |
-| approved  | bool | undefined |
+| _owner `indexed` | address | undefined |
+| _operator `indexed` | address | undefined |
+| _approved  | bool | undefined |
 
 ### ContractURIUpdated
 
@@ -866,10 +818,10 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | baseURI  | string | undefined |
 | encryptedBaseURI  | bytes | undefined |
 
-### Transfer
+### TransferBatch
 
 ```solidity
-event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
+event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values)
 ```
 
 
@@ -880,155 +832,48 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 
 | Name | Type | Description |
 |---|---|---|
-| from `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| tokenId `indexed` | uint256 | undefined |
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _ids  | uint256[] | undefined |
+| _values  | uint256[] | undefined |
 
-
-
-## Errors
-
-### ApprovalCallerNotOwnerNorApproved
+### TransferSingle
 
 ```solidity
-error ApprovalCallerNotOwnerNorApproved()
+event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value)
 ```
 
-The caller must own the token or be an approved operator.
 
 
 
 
-### ApprovalQueryForNonexistentToken
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _id  | uint256 | undefined |
+| _value  | uint256 | undefined |
+
+### URI
 
 ```solidity
-error ApprovalQueryForNonexistentToken()
+event URI(string _value, uint256 indexed _id)
 ```
 
-The token does not exist.
 
 
 
 
-### ApprovalToCurrentOwner
+#### Parameters
 
-```solidity
-error ApprovalToCurrentOwner()
-```
-
-The caller cannot approve to the current owner.
-
-
-
-
-### ApproveToCaller
-
-```solidity
-error ApproveToCaller()
-```
-
-The caller cannot approve to their own address.
-
-
-
-
-### BalanceQueryForZeroAddress
-
-```solidity
-error BalanceQueryForZeroAddress()
-```
-
-Cannot query the balance for the zero address.
-
-
-
-
-### MintToZeroAddress
-
-```solidity
-error MintToZeroAddress()
-```
-
-Cannot mint to the zero address.
-
-
-
-
-### MintZeroQuantity
-
-```solidity
-error MintZeroQuantity()
-```
-
-The quantity of tokens minted must be more than zero.
-
-
-
-
-### OwnerQueryForNonexistentToken
-
-```solidity
-error OwnerQueryForNonexistentToken()
-```
-
-The token does not exist.
-
-
-
-
-### TransferCallerNotOwnerNorApproved
-
-```solidity
-error TransferCallerNotOwnerNorApproved()
-```
-
-The caller must own the token or be an approved operator.
-
-
-
-
-### TransferFromIncorrectOwner
-
-```solidity
-error TransferFromIncorrectOwner()
-```
-
-The token must be owned by `from`.
-
-
-
-
-### TransferToNonERC721ReceiverImplementer
-
-```solidity
-error TransferToNonERC721ReceiverImplementer()
-```
-
-Cannot safely transfer to a contract that does not implement the ERC721Receiver interface.
-
-
-
-
-### TransferToZeroAddress
-
-```solidity
-error TransferToZeroAddress()
-```
-
-Cannot transfer to the zero address.
-
-
-
-
-### URIQueryForNonexistentToken
-
-```solidity
-error URIQueryForNonexistentToken()
-```
-
-The token does not exist.
-
-
+| Name | Type | Description |
+|---|---|---|
+| _value  | string | undefined |
+| _id `indexed` | uint256 | undefined |
 
 
 
