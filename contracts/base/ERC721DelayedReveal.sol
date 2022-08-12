@@ -6,7 +6,7 @@ import "./ERC721LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
 /**
- *      BASE:      ERC721A
+ *      BASE:      ERC721Base
  *      EXTENSION: LazyMint, DelayedReveal
  *
  *  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.

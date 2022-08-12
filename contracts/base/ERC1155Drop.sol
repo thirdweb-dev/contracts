@@ -7,6 +7,23 @@ import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
+/**
+ *      BASE:      ERC1155Base
+ *      EXTENSION: SignatureMintERC1155, DropSinglePhase1155
+ *
+ *  The `ERC1155Drop` contract uses the `ERC1155Base` contract, along with the `SignatureMintERC1155` and `DropSinglePhase1155` extension.
+ *
+ *  The 'signature minting' mechanism in the `SignatureMintERC1155` extension is a way for a contract admin to authorize
+ *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
+ *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *
+ *  The `drop` mechanism in the `DropSinglePhase1155` extension is a distribution mechanism for lazy minted tokens. It lets
+ *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.
+ *
+ *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or
+ *  via the drop mechanism.
+ */
+
 contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSinglePhase1155 {
     using TWStrings for uint256;
 

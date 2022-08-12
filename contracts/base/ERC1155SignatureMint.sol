@@ -8,6 +8,19 @@ import "../extension/SignatureMintERC1155.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 
+/**
+ *      BASE:      ERC1155Base
+ *      EXTENSION: SignatureMintERC1155
+ *
+ *  The `ERC1155SignatureMint` contract uses the `ERC1155Base` contract, along with the `SignatureMintERC1155` extension.
+ *
+ *  The 'signature minting' mechanism in the `SignatureMintERC1155` extension uses EIP 712, and is a way for a contract
+ *  admin to authorize an external party's request to mint tokens on the admin's contract. At a high level, this means
+ *  you can authorize some external party to mint tokens on your contract, and specify what exactly will be minted by
+ *  that external party.
+ *
+ */
+
 contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 {
     /*//////////////////////////////////////////////////////////////
                             Constructor

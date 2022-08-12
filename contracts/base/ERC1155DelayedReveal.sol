@@ -4,6 +4,24 @@ pragma solidity ^0.8.0;
 import "./ERC1155LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
+/**
+ *      BASE:      ERC1155Base
+ *      EXTENSION: LazyMint, DelayedReveal
+ *
+ *  The `ERC1155DelayedReveal` contract uses the `ERC1155Base` contract, along with the `LazyMint` and `DelayedReveal` extension.
+ *
+ *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
+ *  of  NFTs means actually assigning an owner to an NFT.
+ *
+ *  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,
+ *  without paying the gas cost for actually minting the NFTs.
+ *
+ *  'Delayed reveal' is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed
+ *  NFTs, after the fact.
+ *
+ *  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
+ */
+
 contract ERC1155DelayedReveal is ERC1155LazyMint, DelayedReveal {
     using TWStrings for uint256;
 
