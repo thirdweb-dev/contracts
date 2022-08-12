@@ -67,19 +67,22 @@ contract ERC1155DelayedReveal is ERC1155LazyMint, DelayedReveal {
      *  @param _amount           The number of NFTs to lazy mint.
      *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
      *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-     *  @param _encryptedBaseURI The encrypted base URI for the batch of NFTs being lazy minted.
+     *  @param _data             The encrypted base URI + provenance hash for the batch of NFTs being lazy minted.
      *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
      */
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        bytes calldata _data
     ) public virtual override returns (uint256 batchId) {
-        if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
+            }
         }
 
-        return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -98,7 +101,7 @@ contract ERC1155DelayedReveal is ERC1155LazyMint, DelayedReveal {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
-        _setEncryptedBaseURI(batchId, "");
+        _setEncryptedData(batchId, "");
         _setBaseURI(batchId, revealedURI);
 
         emit TokenURIRevealed(_index, revealedURI);

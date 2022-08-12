@@ -32,8 +32,9 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
         base = new ERC1155DelayedReveal("name", "symbol", admin, 0);
 
         bytes memory encryptedBaseURI = base.encryptDecrypt(bytes(baseURI), key);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(baseURI, key, block.chainid));
         vm.prank(admin);
-        base.lazyMint(lazymintAmount, placeholderURI, encryptedBaseURI);
+        base.lazyMint(lazymintAmount, placeholderURI, abi.encode(encryptedBaseURI, provenanceHash));
     }
 
     function test_state_reveal() public {
@@ -59,8 +60,9 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
         bytes memory newKey = "newkey";
 
         bytes memory encryptedBaseURI = base.encryptDecrypt(bytes(newBaseURI), newKey);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(newBaseURI, newKey, block.chainid));
         vm.prank(admin);
-        base.lazyMint(lazymintAmount, newPlaceholderURI, encryptedBaseURI);
+        base.lazyMint(lazymintAmount, newPlaceholderURI, abi.encode(encryptedBaseURI, provenanceHash));
 
         uint256 nextId = base.nextTokenIdToMint();
 
