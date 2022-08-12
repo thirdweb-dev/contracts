@@ -28,10 +28,9 @@ contract ERC20DropVote is ERC20SignatureMintVote, DropSinglePhase {
     constructor(
         string memory _name,
         string memory _symbol,
-        uint8 _decimals,
         string memory _contractURI,
         address _primarySaleRecipient
-    ) ERC20SignatureMintVote(_name, _symbol, _decimals, _contractURI, _primarySaleRecipient) {}
+    ) ERC20SignatureMintVote(_name, _symbol, _contractURI, _primarySaleRecipient) {}
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPriceOnClaim(

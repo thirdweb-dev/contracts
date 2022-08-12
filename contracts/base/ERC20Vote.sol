@@ -22,7 +22,7 @@ import "./ERC20Base.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20VotesAlt {
+contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -30,9 +30,8 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20VotesAlt {
     constructor(
         string memory _name,
         string memory _symbol,
-        uint8 _decimals,
         string memory _contractURI
-    ) ERC20(_name, _symbol, _decimals) {
+    ) ERC20Permit(_name, _symbol) {
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
     }
@@ -61,7 +60,7 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20VotesAlt {
      *  @param _amount   The number of tokens to burn.
      */
     function burn(uint256 _amount) external virtual {
-        require(balanceOf[msg.sender] >= _amount, "not enough balance");
+        require(balanceOf(_msgSender()) >= _amount, "not enough balance");
         _burn(msg.sender, _amount);
     }
 

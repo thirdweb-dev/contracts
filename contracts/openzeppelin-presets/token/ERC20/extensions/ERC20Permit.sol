@@ -19,10 +19,19 @@ import "../../../utils/Counters.sol";
  *
  * _Available since v3.4._
  */
-abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
+abstract contract ERC20Permit is ERC20, IERC20Permit {
     using Counters for Counters.Counter;
 
     mapping(address => Counters.Counter) private _nonces;
+
+    // solhint-disable-next-line var-name-mixedcase
+    bytes32 private immutable _CACHED_DOMAIN_SEPARATOR;
+
+    // solhint-disable-next-line var-name-mixedcase
+    uint256 private immutable _CACHED_CHAIN_ID;
+
+    // solhint-disable-next-line var-name-mixedcase
+    address private immutable _CACHED_THIS;
 
     // solhint-disable-next-line var-name-mixedcase
     bytes32 private immutable _PERMIT_TYPEHASH =
@@ -33,7 +42,11 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
      *
      * It's a good idea to use the same `name` that is defined as the ERC20 token name.
      */
-    constructor(string memory name) EIP712(name, "1") {}
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
+        _CACHED_CHAIN_ID = block.chainid;
+        _CACHED_THIS = address(this);
+        _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator();
+    }
 
     /**
      * @dev See {IERC20Permit-permit}.
@@ -51,7 +64,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 
         bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, owner, spender, value, _useNonce(owner), deadline));
 
-        bytes32 hash = _hashTypedDataV4(structHash);
+        bytes32 hash = ECDSA.toTypedDataHash(DOMAIN_SEPARATOR(), structHash);
 
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "ERC20Permit: invalid signature");
@@ -70,8 +83,24 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
      * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
      */
     // solhint-disable-next-line func-name-mixedcase
-    function DOMAIN_SEPARATOR() external view override returns (bytes32) {
-        return _domainSeparatorV4();
+    function DOMAIN_SEPARATOR() public view override returns (bytes32) {
+        if (address(this) == _CACHED_THIS && block.chainid == _CACHED_CHAIN_ID) {
+            return _CACHED_DOMAIN_SEPARATOR;
+        } else {
+            return _buildDomainSeparator();
+        }
+    }
+
+    function _buildDomainSeparator() private view returns (bytes32) {
+        return keccak256(abi.encode(
+            keccak256(
+                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            ), 
+            keccak256(bytes(name())), 
+            keccak256("1"), 
+            block.chainid, 
+            address(this)
+        ));
     }
 
     /**

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../eip/ERC20.sol";
+import "../openzeppelin-presets/token/ERC20/extensions/ERC20Permit.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
@@ -22,7 +22,7 @@ import "../extension/Ownable.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20 {
+contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -30,9 +30,8 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20 {
     constructor(
         string memory _name,
         string memory _symbol,
-        uint8 _decimals,
         string memory _contractURI
-    ) ERC20(_name, _symbol, _decimals) {
+    ) ERC20Permit(_name, _symbol) {
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
     }
@@ -61,7 +60,7 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20 {
      *  @param _amount   The number of tokens to burn.
      */
     function burn(uint256 _amount) external virtual {
-        require(balanceOf[msg.sender] >= _amount, "not enough balance");
+        require(balanceOf(msg.sender) >= _amount, "not enough balance");
         _burn(msg.sender, _amount);
     }
 

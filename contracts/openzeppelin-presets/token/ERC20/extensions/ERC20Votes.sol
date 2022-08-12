@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../../../../eip/ERC20.sol";
+import "./ERC20Permit.sol";
 
 import "../../../../openzeppelin-presets/utils/math/Math.sol";
 import "../../../../openzeppelin-presets/governance/utils/IVotes.sol";
@@ -23,11 +23,14 @@ import "../../../../openzeppelin-presets/utils/math/SafeCast.sol";
  *
  * _Available since v4.2._
  */
-abstract contract ERC20VotesAlt is IVotes, ERC20 {
+abstract contract ERC20Votes is IVotes, ERC20Permit {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 votes;
     }
+
+    bytes32 private constant _DELEGATION_TYPEHASH =
+        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
     mapping(address => Checkpoint[]) private _checkpoints;
@@ -121,7 +124,7 @@ abstract contract ERC20VotesAlt is IVotes, ERC20 {
      */
     function delegate(address delegatee) public virtual override {
         // _delegate(_msgSender(), delegatee); //check
-        _delegate(msg.sender, delegatee);
+        _delegate(_msgSender(), delegatee);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -139,34 +142,14 @@ abstract contract ERC20VotesAlt is IVotes, ERC20 {
         bytes32 r,
         bytes32 s
     ) public virtual override {
-        require(expiry >= block.timestamp, "DELEGATION_DEADLINE_EXPIRED");
+        require(block.timestamp <= expiry, "ERC20Votes: signature expired");
 
-        // Unchecked because the only math done is incrementing
-        // the owner's nonce which cannot realistically overflow.
-        unchecked {
-            address recoveredAddress = ecrecover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19\x01",
-                        DOMAIN_SEPARATOR(),
-                        keccak256(
-                            abi.encode(
-                                keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)"),
-                                delegatee,
-                                nonce,
-                                expiry
-                            )
-                        )
-                    )
-                ),
-                v,
-                r,
-                s
-            );
+        bytes32 structHash = keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry));
+        bytes32 hash = ECDSA.toTypedDataHash(DOMAIN_SEPARATOR(), structHash);
+        address signer = ECDSA.recover(hash, v, r, s);
 
-            require(nonce == nonces[recoveredAddress]++, "ERC20Vote: invalid nonce");
-            _delegate(recoveredAddress, delegatee);
-        }
+        require(nonce == _useNonce(signer), "ERC20Votes: invalid nonce");
+        _delegate(signer, delegatee);
     }
 
     /**
@@ -181,8 +164,7 @@ abstract contract ERC20VotesAlt is IVotes, ERC20 {
      */
     function _mint(address account, uint256 amount) internal virtual override {
         super._mint(account, amount);
-        //check totalSupply()
-        require(totalSupply <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
+        require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
 
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
     }
@@ -205,9 +187,8 @@ abstract contract ERC20VotesAlt is IVotes, ERC20 {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {
-        //check
-        // super._afterTokenTransfer(from, to, amount);
+    ) internal virtual override {
+        super._afterTokenTransfer(from, to, amount);
 
         _moveVotingPower(delegates(from), delegates(to), amount);
     }
@@ -219,7 +200,7 @@ abstract contract ERC20VotesAlt is IVotes, ERC20 {
      */
     function _delegate(address delegator, address delegatee) internal virtual {
         address currentDelegate = delegates(delegator);
-        uint256 delegatorBalance = balanceOf[delegator]; //check balanceOf(delegator)
+        uint256 delegatorBalance = balanceOf(delegator);
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
