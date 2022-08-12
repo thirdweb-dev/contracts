@@ -96,6 +96,16 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
             interfaceId == type(IERC1155Receiver).interfaceId;
     }
 
+
+    /*//////////////////////////////////////////////////////////////
+                        Overriden ERC721 logic
+    //////////////////////////////////////////////////////////////*/
+    
+    /// @dev Returns the URI for a given tokenId.
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        return getUriOfBundle(_tokenId);
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Wrapping / Unwrapping logic
     //////////////////////////////////////////////////////////////*/

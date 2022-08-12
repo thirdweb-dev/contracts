@@ -94,6 +94,6 @@ contract BaseERC721MultiwrapTest is BaseUtilTest {
             assertEq(contentsOfWrappedToken[i].totalAmount, wrappedContent[i].totalAmount);
         }
 
-        // assertEq(string(abi.encodePacked(uriForWrappedToken, expectedIdForWrappedToken.toString())), base.tokenURI(expectedIdForWrappedToken));
+        assertEq(uriForWrappedToken, base.tokenURI(expectedIdForWrappedToken));
     }
 }
