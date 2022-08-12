@@ -74,6 +74,8 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         address _nativeTokenWrapper
     ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) TokenStore(_nativeTokenWrapper) {
         restrictTransfers(false);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(ASSET_ROLE, address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
