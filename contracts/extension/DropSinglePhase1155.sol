@@ -90,6 +90,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         // Update contract state.
         condition.supplyClaimed += _quantity;
         lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
+        claimCondition[_tokenId] = condition;
 
         // If there's a price, collect price.
         collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
