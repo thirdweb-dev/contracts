@@ -67,6 +67,8 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         nftHolder = vm.addr(nftHolderPkey);
         saleRecipient = address(0x8910);
 
+        vm.deal(nftHolder, 100 ether);
+
         vm.prank(admin);
         base = new ERC1155SignatureMint("name", "symbol", admin, 0, saleRecipient);
 
@@ -149,8 +151,91 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         assertEq(base.uri(tokenId), originalURI);
     }
 
-    // function test_state_mintWithSignature_withPrice() public {}
-    // function test_revert_mintWithSignature_withPrice_incorrectPrice() public {}
-    // function test_revert_mintWithSignature_mintingZeroTokens() public {}
-    // function test_revert_mintWithSignature_invalidId() public {}
+    function test_state_mintWithSignature_withPrice() public {
+        req.to = nftHolder;
+        req.royaltyRecipient = admin;
+        req.royaltyBps = 0;
+        req.primarySaleRecipient = saleRecipient;
+        req.tokenId = type(uint256).max;
+        req.uri = "ipfs://";
+        req.quantity = 100;
+        req.pricePerToken = 0.01 ether;
+        req.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        req.validityStartTimestamp = 0;
+        req.validityEndTimestamp = type(uint128).max;
+        req.uid = keccak256("uid");
+
+        uint256 saleRecipientBalBefore = saleRecipient.balance;
+        uint256 totalPrice = req.pricePerToken * req.quantity;
+
+        bytes memory signature = signMintRequest(req, adminPkey);
+        vm.prank(nftHolder);
+        base.mintWithSignature{value: totalPrice}(req, signature);
+
+        assertEq(saleRecipient.balance, saleRecipientBalBefore + totalPrice);
+    }
+
+    function test_revert_mintWithSignature_withPrice_incorrectPrice() public {
+        req.to = nftHolder;
+        req.royaltyRecipient = admin;
+        req.royaltyBps = 0;
+        req.primarySaleRecipient = saleRecipient;
+        req.tokenId = type(uint256).max;
+        req.uri = "ipfs://";
+        req.quantity = 100;
+        req.pricePerToken = 0.01 ether;
+        req.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        req.validityStartTimestamp = 0;
+        req.validityEndTimestamp = type(uint128).max;
+        req.uid = keccak256("uid");
+
+        uint256 totalPrice = req.pricePerToken * req.quantity;
+        bytes memory signature = signMintRequest(req, adminPkey);
+        vm.prank(nftHolder);
+        vm.expectRevert("Must send total price.");
+        base.mintWithSignature{value: totalPrice - 1}(req, signature);
+    }
+
+    function test_revert_mintWithSignature_mintingZeroTokens() public {
+        req.to = nftHolder;
+        req.royaltyRecipient = admin;
+        req.royaltyBps = 0;
+        req.primarySaleRecipient = saleRecipient;
+        req.tokenId = type(uint256).max;
+        req.uri = "ipfs://";
+        req.quantity = 0;
+        req.pricePerToken = 0;
+        req.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        req.validityStartTimestamp = 0;
+        req.validityEndTimestamp = type(uint128).max;
+        req.uid = keccak256("uid");
+
+        bytes memory signature = signMintRequest(req, adminPkey);
+        vm.prank(nftHolder);
+        vm.expectRevert("Minting zero tokens.");
+        base.mintWithSignature(req, signature);
+    }
+
+    function test_revert_mintWithSignature_invalidId() public {
+        
+        uint256 nextId = base.nextTokenIdToMint();
+        
+        req.to = nftHolder;
+        req.royaltyRecipient = admin;
+        req.royaltyBps = 0;
+        req.primarySaleRecipient = saleRecipient;
+        req.tokenId = nextId;
+        req.uri = "ipfs://";
+        req.quantity = 100;
+        req.pricePerToken = 0;
+        req.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        req.validityStartTimestamp = 0;
+        req.validityEndTimestamp = type(uint128).max;
+        req.uid = keccak256("uid");
+
+        bytes memory signature = signMintRequest(req, adminPkey);
+        vm.prank(nftHolder);
+        vm.expectRevert("invalid id");
+        base.mintWithSignature(req, signature);
+    }
 }

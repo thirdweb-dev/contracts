@@ -109,7 +109,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         if (_pricePerToken == 0) {
             return;
         }
-
+        
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
