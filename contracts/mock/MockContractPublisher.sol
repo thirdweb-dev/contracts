@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../../../contracts/interfaces/IContractPublisher.sol";
+import "../interfaces/IContractPublisher.sol";
 
 // solhint-disable const-name-snakecase
 contract MockContractPublisher is IContractPublisher {
