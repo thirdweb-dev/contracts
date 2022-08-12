@@ -5,9 +5,9 @@ import "../interfaces/IContractPublisher.sol";
 
 // solhint-disable const-name-snakecase
 contract MockContractPublisher is IContractPublisher {
-    function getAllPublishedContracts(address publisher)
+    function getAllPublishedContracts(address)
         external
-        view
+        pure
         override
         returns (CustomContractInstance[] memory published)
     {
@@ -22,49 +22,22 @@ contract MockContractPublisher is IContractPublisher {
         return mocks;
     }
 
-    /**
-     *  @notice Returns all versions of a published contract.
-     *
-     *  @param publisher  The address of the publisher.
-     *  @param contractId The identifier for a published contract (that can have multiple verisons).
-     *
-     *  @return published The desired contracts published by the publisher.
-     */
-    function getPublishedContractVersions(address publisher, string memory contractId)
+    function getPublishedContractVersions(address, string memory)
         external
-        view
+        pure
         returns (CustomContractInstance[] memory published)
     {
         return new CustomContractInstance[](0);
     }
 
-    /**
-     *  @notice Returns the latest version of a contract published by a publisher.
-     *
-     *  @param publisher  The address of the publisher.
-     *  @param contractId The identifier for a published contract (that can have multiple verisons).
-     *
-     *  @return published The desired contract published by the publisher.
-     */
-    function getPublishedContract(address publisher, string memory contractId)
+    function getPublishedContract(address, string memory)
         external
-        view
+        pure
         returns (CustomContractInstance memory published)
     {
         return CustomContractInstance("", 0, "", "", address(0));
     }
 
-    /**
-     *  @notice Let's an account publish a contract.
-     *
-     *  @param publisher           The address of the publisher.
-     *  @param contractId          The identifier for a published contract (that can have multiple verisons).
-     *  @param publishMetadataUri  The IPFS URI of the publish metadata.
-     *  @param compilerMetadataUri The IPFS URI of the compiler metadata.
-     *  @param bytecodeHash        The keccak256 hash of the contract bytecode.
-     *  @param implementation      (Optional) An implementation address that proxy contracts / clones can point to. Default value
-     *                             if such an implementation does not exist - address(0);
-     */
     function publishContract(
         address publisher,
         string memory contractId,
@@ -74,32 +47,17 @@ contract MockContractPublisher is IContractPublisher {
         address implementation
     ) external {}
 
-    /**
-     *  @notice Lets a publisher unpublish a contract and all its versions.
-     *
-     *  @param publisher  The address of the publisher.
-     *  @param contractId The identifier for a published contract (that can have multiple verisons).
-     */
     function unpublishContract(address publisher, string memory contractId) external {}
 
-    /**
-     * @notice Lets an account set its publisher profile uri
-     */
-    function setPublisherProfileUri(address publisher, string memory uri) external {}
+    function setPublisherProfileUri(address, string memory) external {}
 
-    /**
-     * @notice Get the publisher profile uri for a given publisher.
-     */
-    function getPublisherProfileUri(address publisher) external view returns (string memory uri) {
+    function getPublisherProfileUri(address) external pure returns (string memory uri) {
         return "";
     }
 
-    /**
-     * @notice Retrieve the published metadata URI from a compiler metadata URI.
-     */
-    function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
+    function getPublishedUriFromCompilerUri(string memory)
         external
-        view
+        pure
         returns (string[] memory publishedMetadataUris)
     {
         return new string[](0);
