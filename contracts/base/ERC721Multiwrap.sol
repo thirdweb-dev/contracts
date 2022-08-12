@@ -100,7 +100,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
     /*//////////////////////////////////////////////////////////////
                         Overriden ERC721 logic
     //////////////////////////////////////////////////////////////*/
-    
+
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         return getUriOfBundle(_tokenId);
@@ -173,5 +173,22 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
     /// @dev Returns whether transfers can be restricted in a given execution context.
     function _canRestrictTransfers() internal virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function mintTo(address, string memory) public virtual override {
+        revert("Not implemented for Multiwrap");
+    }
+
+    function batchMintTo(
+        address,
+        uint256,
+        string memory,
+        bytes memory
+    ) public virtual override {
+        revert("Not implemented for Multiwrap");
     }
 }
