@@ -9,7 +9,6 @@ import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
-import "../mocks/MockContractPublisher.sol";
 import "contracts/Forwarder.sol";
 import "contracts/TWFee.sol";
 import "contracts/TWRegistry.sol";
@@ -29,6 +28,7 @@ import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
 import "contracts/mock/Mock.sol";
+import "contracts/mock/MockContractPublisher.sol";
 
 abstract contract BaseTest is DSTest, Test {
     string public constant NAME = "NAME";

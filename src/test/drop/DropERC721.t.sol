@@ -61,6 +61,8 @@ contract MasterExploitContract is ERC721Holder, ERC1155Holder {
 contract DropERC721Test is BaseTest {
     DropERC721 public drop;
 
+    bytes private emptyEncodedBytes = abi.encode("", "");
+
     function setUp() public override {
         super.setUp();
         drop = DropERC721(getContract("DropERC721"));
@@ -162,7 +164,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", bytes(""));
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
 
@@ -186,7 +188,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", bytes(""));
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
@@ -210,7 +212,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", bytes(""));
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
@@ -246,7 +248,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
-        drop.lazyMint(500, "ipfs://", bytes(""));
+        drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
@@ -292,7 +294,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].merkleRoot = root;
 
         vm.prank(deployer);
-        drop.lazyMint(x, "ipfs://", "");
+        drop.lazyMint(x, "ipfs://", emptyEncodedBytes);
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
 
@@ -335,7 +337,7 @@ contract DropERC721Test is BaseTest {
         conditions[0].merkleRoot = root;
 
         vm.prank(deployer);
-        drop.lazyMint(x, "ipfs://", "");
+        drop.lazyMint(x, "ipfs://", emptyEncodedBytes);
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
 

@@ -54,7 +54,7 @@ contract DropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
-    uint256 private constant VERSION = 2;
+    uint256 private constant VERSION = 3;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
@@ -117,7 +117,7 @@ contract DropERC721 is
      *  @dev Mapping from 'Largest tokenId of a batch of 'delayed-reveal' tokens with
      *       the same baseURI' to encrypted base URI for the respective batch of tokens.
      **/
-    mapping(uint256 => bytes) public encryptedBaseURI;
+    mapping(uint256 => bytes) public encryptedData;
 
     /// @dev Mapping from address => total number of NFTs a wallet has claimed.
     mapping(address => uint256) public walletClaimCount;
@@ -193,7 +193,7 @@ contract DropERC721 is
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
-                if (encryptedBaseURI[baseURIIndices[i]].length != 0) {
+                if (encryptedData[baseURIIndices[i]].length != 0) {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
                 } else {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
@@ -238,7 +238,7 @@ contract DropERC721 is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        bytes calldata _data
     ) external onlyRole(MINTER_ROLE) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
@@ -247,11 +247,15 @@ contract DropERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        if (_encryptedBaseURI.length != 0) {
-            encryptedBaseURI[baseURIIndex] = _encryptedBaseURI;
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                encryptedData[baseURIIndex] = _data;
+            }
         }
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _encryptedBaseURI);
+        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -263,13 +267,17 @@ contract DropERC721 is
         require(index < baseURIIndices.length, "invalid index.");
 
         uint256 _index = baseURIIndices[index];
-        bytes memory encryptedURI = encryptedBaseURI[_index];
+        bytes memory data = encryptedData[_index];
+        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(data, (bytes, bytes32));
+
         require(encryptedURI.length != 0, "nothing to reveal.");
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
+        require(keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash, "Incorrect key");
+
         baseURI[_index] = revealedURI;
-        delete encryptedBaseURI[_index];
+        delete encryptedData[_index];
 
         emit NFTRevealed(_index, revealedURI);
 
