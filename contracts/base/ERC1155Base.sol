@@ -158,7 +158,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
         }
 
         nextTokenIdToMint_ = nextIdToMint;
-        _batchMint(_to, _tokenIds, _amounts, "");
+        _mintBatch(_to, _tokenIds, _amounts, "");
     }
 
     /**
@@ -202,7 +202,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
             require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
         }
 
-        _batchBurn(_owner, _tokenIds, _amounts);
+        _burnBatch(_owner, _tokenIds, _amounts);
     }
 
     /*//////////////////////////////////////////////////////////////

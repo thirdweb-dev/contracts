@@ -4,7 +4,7 @@
 
 
 
-
+BASE:      ERC1155Base      EXTENSION: LazyMint  The `ERC1155LazyMint` contract uses the `ERC1155Base` contract, along with the `LazyMint` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.
 
 
 
@@ -16,7 +16,7 @@
 function balanceOf(address, uint256) external view returns (uint256)
 ```
 
-
+Get the balance of an account&#39;s Tokens.
 
 
 
@@ -36,7 +36,7 @@ function balanceOf(address, uint256) external view returns (uint256)
 ### balanceOfBatch
 
 ```solidity
-function balanceOfBatch(address[] owners, uint256[] ids) external view returns (uint256[] balances)
+function balanceOfBatch(address[] accounts, uint256[] ids) external view returns (uint256[])
 ```
 
 
@@ -47,14 +47,14 @@ function balanceOfBatch(address[] owners, uint256[] ids) external view returns (
 
 | Name | Type | Description |
 |---|---|---|
-| owners | address[] | undefined
+| accounts | address[] | undefined
 | ids | uint256[] | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| balances | uint256[] | undefined
+| _0 | uint256[] | undefined
 
 ### batchMintTo
 
@@ -214,7 +214,7 @@ View royalty info for a given token.
 function isApprovedForAll(address, address) external view returns (bool)
 ```
 
-
+Queries the approval status of an operator for a given owner.
 
 
 
@@ -501,7 +501,7 @@ Updates default royalty recipient and bps for a particular token.
 function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
-
+Returns whether this contract supports the given interface.
 
 
 
@@ -540,7 +540,7 @@ function symbol() external view returns (string)
 function totalSupply(uint256) external view returns (uint256)
 ```
 
-
+Returns the total supply of NFTs of a given tokenId
 
 
 
@@ -562,7 +562,7 @@ function totalSupply(uint256) external view returns (uint256)
 function uri(uint256 _tokenId) external view returns (string)
 ```
 
-
+Returns the metadata URI for the given tokenId.
 
 
 
@@ -585,7 +585,7 @@ function uri(uint256 _tokenId) external view returns (string)
 ### ApprovalForAll
 
 ```solidity
-event ApprovalForAll(address indexed owner, address indexed operator, bool approved)
+event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved)
 ```
 
 
@@ -596,9 +596,9 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 
 | Name | Type | Description |
 |---|---|---|
-| owner `indexed` | address | undefined |
-| operator `indexed` | address | undefined |
-| approved  | bool | undefined |
+| _owner `indexed` | address | undefined |
+| _operator `indexed` | address | undefined |
+| _approved  | bool | undefined |
 
 ### ContractURIUpdated
 
@@ -691,7 +691,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 ### TransferBatch
 
 ```solidity
-event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] amounts)
+event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values)
 ```
 
 
@@ -702,16 +702,16 @@ event TransferBatch(address indexed operator, address indexed from, address inde
 
 | Name | Type | Description |
 |---|---|---|
-| operator `indexed` | address | undefined |
-| from `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| ids  | uint256[] | undefined |
-| amounts  | uint256[] | undefined |
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _ids  | uint256[] | undefined |
+| _values  | uint256[] | undefined |
 
 ### TransferSingle
 
 ```solidity
-event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 amount)
+event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value)
 ```
 
 
@@ -722,16 +722,16 @@ event TransferSingle(address indexed operator, address indexed from, address ind
 
 | Name | Type | Description |
 |---|---|---|
-| operator `indexed` | address | undefined |
-| from `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| id  | uint256 | undefined |
-| amount  | uint256 | undefined |
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _id  | uint256 | undefined |
+| _value  | uint256 | undefined |
 
 ### URI
 
 ```solidity
-event URI(string value, uint256 indexed id)
+event URI(string _value, uint256 indexed _id)
 ```
 
 
@@ -742,8 +742,8 @@ event URI(string value, uint256 indexed id)
 
 | Name | Type | Description |
 |---|---|---|
-| value  | string | undefined |
-| id `indexed` | uint256 | undefined |
+| _value  | string | undefined |
+| _id `indexed` | uint256 | undefined |
 
 
 

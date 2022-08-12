@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC721A      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
+BASE:      ERC721Base      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
 
 
 

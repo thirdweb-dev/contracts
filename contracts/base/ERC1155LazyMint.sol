@@ -76,7 +76,7 @@ contract ERC1155LazyMint is ERC1155Base, LazyMint {
             require(_tokenIds[i] < nextTokenIdToMint(), "invalid id");
         }
 
-        _batchMint(_to, _tokenIds, _amounts, "");
+        _mintBatch(_to, _tokenIds, _amounts, "");
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
