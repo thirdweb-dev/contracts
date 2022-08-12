@@ -29,11 +29,7 @@ contract SignatureMint1155Utils {
     }
 
     // computes the hash of a permit
-    function getStructHash(ISignatureMintERC1155.MintRequest memory _req)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function getStructHash(ISignatureMintERC1155.MintRequest memory _req) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -50,23 +46,12 @@ contract SignatureMint1155Utils {
                     _req.validityStartTimestamp,
                     _req.validityEndTimestamp,
                     _req.uid
-                )   
+                )
             );
     }
 
     // computes the hash of the fully encoded EIP-712 message for the domain, which can be used to recover the signer
-    function getTypedDataHash(ISignatureMintERC1155.MintRequest memory _req)
-        public
-        view
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR,
-                    getStructHash(_req)
-                )
-            );
+    function getTypedDataHash(ISignatureMintERC1155.MintRequest memory _req) public view returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getStructHash(_req)));
     }
 }

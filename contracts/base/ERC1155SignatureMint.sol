@@ -66,7 +66,9 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        address saleRecipient = _req.primarySaleRecipient == address(0) ? primarySaleRecipient() : _req.primarySaleRecipient;
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? primarySaleRecipient()
+            : _req.primarySaleRecipient;
         collectPriceOnClaim(saleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
@@ -75,7 +77,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         }
 
         // Set URI
-        if(_req.tokenId == type(uint256).max) {
+        if (_req.tokenId == type(uint256).max) {
             _setTokenURI(tokenIdToMint, _req.uri);
         }
 
@@ -109,7 +111,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         if (_pricePerToken == 0) {
             return;
         }
-        
+
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {

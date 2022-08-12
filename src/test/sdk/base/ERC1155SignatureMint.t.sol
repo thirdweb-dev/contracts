@@ -83,7 +83,6 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_state_mintWithSignature_newNFTs() public {
-        
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -98,7 +97,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         req.uid = keccak256("uid");
 
         bytes memory signature = signMintRequest(req, adminPkey);
-        
+
         uint256 tokenId = base.nextTokenIdToMint();
         assertEq(base.totalSupply(tokenId), 0);
 
@@ -125,7 +124,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         req.uid = keccak256("uid");
 
         bytes memory signature = signMintRequest(req, adminPkey);
-        
+
         uint256 tokenId = base.nextTokenIdToMint();
         assertEq(base.totalSupply(tokenId), 0);
 
@@ -168,7 +167,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
 
         bytes memory signature = signMintRequest(req, adminPkey);
         vm.prank(nftHolder);
-        base.mintWithSignature{value: totalPrice}(req, signature);
+        base.mintWithSignature{ value: totalPrice }(req, signature);
 
         assertEq(saleRecipient.balance, saleRecipientBalBefore + totalPrice);
     }
@@ -191,7 +190,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         bytes memory signature = signMintRequest(req, adminPkey);
         vm.prank(nftHolder);
         vm.expectRevert("Must send total price.");
-        base.mintWithSignature{value: totalPrice - 1}(req, signature);
+        base.mintWithSignature{ value: totalPrice - 1 }(req, signature);
     }
 
     function test_revert_mintWithSignature_mintingZeroTokens() public {
@@ -215,9 +214,8 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_revert_mintWithSignature_invalidId() public {
-        
         uint256 nextId = base.nextTokenIdToMint();
-        
+
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;

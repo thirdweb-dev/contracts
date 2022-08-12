@@ -101,14 +101,23 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, true);
 
-        (,uint256 maxClaimable,,uint256 quantityLimitPerTransaction,uint256 waitTimeInSecondsBetweenClaims,,,address currency) = base.claimCondition(targetTokenId);
+        (
+            ,
+            uint256 maxClaimable,
+            ,
+            uint256 quantityLimitPerTransaction,
+            uint256 waitTimeInSecondsBetweenClaims,
+            ,
+            ,
+            address currency
+        ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimable, 100);
         assertEq(quantityLimitPerTransaction, 5);
@@ -130,29 +139,21 @@ contract ERC1155DropTest is DSTest, Test {
         base.setClaimConditions(targetTokenId, condition, false);
 
         vm.prank(nftHolder, nftHolder);
-        base.claim(
-            nftHolder,
-            targetTokenId,
-            1, 
-            condition.currency, 
-            condition.pricePerToken,
-            allowlistProof,
-            ""
-        );
+        base.claim(nftHolder, targetTokenId, 1, condition.currency, condition.pricePerToken, allowlistProof, "");
 
-        (,,uint256 supplyClaimedBefore,,,,,) = base.claimCondition(targetTokenId);
+        (, , uint256 supplyClaimedBefore, , , , , ) = base.claimCondition(targetTokenId);
         assertEq(supplyClaimedBefore, 1);
 
-        (,uint256 claimTimestampBefore) = base.getClaimTimestamp(targetTokenId, nftHolder);
+        (, uint256 claimTimestampBefore) = base.getClaimTimestamp(targetTokenId, nftHolder);
         assertEq(claimTimestampBefore, block.timestamp + claimTimestampBefore - 1);
 
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, false);
 
-        (,,uint256 supplyClaimedAfter,,,,,) = base.claimCondition(targetTokenId);
+        (, , uint256 supplyClaimedAfter, , , , , ) = base.claimCondition(targetTokenId);
         assertEq(supplyClaimedBefore, supplyClaimedAfter);
 
-        (,uint256 claimTimestampAfter) = base.getClaimTimestamp(targetTokenId, nftHolder);
+        (, uint256 claimTimestampAfter) = base.getClaimTimestamp(targetTokenId, nftHolder);
         assertEq(claimTimestampBefore, claimTimestampAfter);
     }
 
@@ -166,7 +167,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -192,8 +193,8 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            condition.quantityLimitPerTransaction, 
-            condition.currency, 
+            condition.quantityLimitPerTransaction,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -216,7 +217,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -228,17 +229,17 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
         );
 
-        (,,uint256 supplyClaimed,,,,,) = base.claimCondition(targetTokenId);
+        (, , uint256 supplyClaimed, , , , , ) = base.claimCondition(targetTokenId);
         assertEq(supplyClaimed, quantityToClaim);
 
-        (,uint256 nextClaimTimestamp) = base.getClaimTimestamp(targetTokenId, nftHolder);
+        (, uint256 nextClaimTimestamp) = base.getClaimTimestamp(targetTokenId, nftHolder);
         assertEq(nextClaimTimestamp, block.timestamp + nextClaimTimestamp - 1);
 
         assertEq(base.balanceOf(nftHolder, targetTokenId), quantityToClaim);
@@ -255,7 +256,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -268,11 +269,11 @@ contract ERC1155DropTest is DSTest, Test {
         uint256 saleRecipientBalBefore = saleRecipient.balance;
 
         vm.prank(nftHolder, nftHolder);
-        base.claim{value: totalPrice}(
+        base.claim{ value: totalPrice }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -306,7 +307,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -322,17 +323,17 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
         );
 
-        (,,uint256 supplyClaimed,,,,,) = base.claimCondition(targetTokenId);
+        (, , uint256 supplyClaimed, , , , , ) = base.claimCondition(targetTokenId);
         assertEq(supplyClaimed, quantityToClaim);
 
-        (,uint256 nextClaimTimestamp) = base.getClaimTimestamp(targetTokenId, nftHolder);
+        (, uint256 nextClaimTimestamp) = base.getClaimTimestamp(targetTokenId, nftHolder);
         assertEq(nextClaimTimestamp, block.timestamp + nextClaimTimestamp - 1);
 
         assertEq(base.balanceOf(nftHolder, targetTokenId), quantityToClaim);
@@ -362,7 +363,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -379,8 +380,8 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -412,7 +413,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -428,17 +429,17 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
         );
 
-        (,,uint256 supplyClaimed,,,,,) = base.claimCondition(targetTokenId);
+        (, , uint256 supplyClaimed, , , , , ) = base.claimCondition(targetTokenId);
         assertEq(supplyClaimed, quantityToClaim);
 
-        (,uint256 nextClaimTimestamp) = base.getClaimTimestamp(targetTokenId, nftHolder);
+        (, uint256 nextClaimTimestamp) = base.getClaimTimestamp(targetTokenId, nftHolder);
         assertEq(nextClaimTimestamp, block.timestamp + nextClaimTimestamp - 1);
 
         assertEq(base.balanceOf(nftHolder, targetTokenId), quantityToClaim);
@@ -449,8 +450,8 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -482,7 +483,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -499,14 +500,13 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
         );
     }
-
 
     function test_revert_claim_invalidPrice() public {
         condition.startTimestamp = block.timestamp;
@@ -518,7 +518,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -530,11 +530,11 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("Invalid price or currency");
-        base.claim{value: totalPrice - 1}(
+        base.claim{ value: totalPrice - 1 }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             0,
             allowlistProof,
             ""
@@ -551,7 +551,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -563,11 +563,11 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("Must send total price.");
-        base.claim{value: totalPrice - 1}(
+        base.claim{ value: totalPrice - 1 }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -584,7 +584,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = address(0x123);
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -596,11 +596,11 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("Invalid price or currency");
-        base.claim{value: totalPrice}(
+        base.claim{ value: totalPrice }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, 
+            quantityToClaim,
+            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -617,7 +617,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -629,11 +629,11 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("Invalid quantity");
-        base.claim{value: totalPrice}(
+        base.claim{ value: totalPrice }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -650,7 +650,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -662,11 +662,11 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("exceeds max supply");
-        base.claim{value: totalPrice}(
+        base.claim{ value: totalPrice }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -683,7 +683,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.pricePerToken = 0.01 ether;
         condition.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-        (,uint256 maxClaimableSupplyBefore,,,,,,) = base.claimCondition(targetTokenId);
+        (, uint256 maxClaimableSupplyBefore, , , , , , ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimableSupplyBefore, 0);
 
@@ -694,11 +694,11 @@ contract ERC1155DropTest is DSTest, Test {
         uint256 totalPrice = quantityToClaim * condition.pricePerToken;
 
         vm.prank(nftHolder, nftHolder);
-        base.claim{value: totalPrice}(
+        base.claim{ value: totalPrice }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -706,11 +706,11 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("cant claim yet");
-        base.claim{value: totalPrice}(
+        base.claim{ value: totalPrice }(
             nftHolder,
             targetTokenId,
-            quantityToClaim, 
-            condition.currency, 
+            quantityToClaim,
+            condition.currency,
             condition.pricePerToken,
             allowlistProof,
             ""
@@ -718,7 +718,6 @@ contract ERC1155DropTest is DSTest, Test {
     }
 
     function test_state_mintWithSignature() public {
-
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
@@ -730,7 +729,7 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, false);
-        
+
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -745,7 +744,7 @@ contract ERC1155DropTest is DSTest, Test {
         req.uid = keccak256("uid");
 
         bytes memory signature = signMintRequest(req, adminPkey);
-        
+
         assertEq(base.totalSupply(targetTokenId), 0);
 
         vm.prank(nftHolder);
@@ -756,7 +755,6 @@ contract ERC1155DropTest is DSTest, Test {
     }
 
     function test_state_mintWithSignature_withPrice() public {
-
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
@@ -787,13 +785,12 @@ contract ERC1155DropTest is DSTest, Test {
 
         bytes memory signature = signMintRequest(req, adminPkey);
         vm.prank(nftHolder);
-        base.mintWithSignature{value: totalPrice}(req, signature);
+        base.mintWithSignature{ value: totalPrice }(req, signature);
 
         assertEq(saleRecipient.balance, saleRecipientBalBefore + totalPrice);
     }
 
     function test_revert_mintWithSignature_withPrice_incorrectPrice() public {
-
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
@@ -823,11 +820,10 @@ contract ERC1155DropTest is DSTest, Test {
         bytes memory signature = signMintRequest(req, adminPkey);
         vm.prank(nftHolder);
         vm.expectRevert("Must send total price.");
-        base.mintWithSignature{value: totalPrice - 1}(req, signature);
+        base.mintWithSignature{ value: totalPrice - 1 }(req, signature);
     }
 
     function test_revert_mintWithSignature_mintingZeroTokens() public {
-
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
@@ -860,7 +856,6 @@ contract ERC1155DropTest is DSTest, Test {
     }
 
     function test_revert_mintWithSignature_invalidId() public {
-
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
@@ -872,9 +867,9 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, false);
-        
+
         uint256 nextId = base.nextTokenIdToMint();
-        
+
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
