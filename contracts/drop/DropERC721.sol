@@ -247,10 +247,12 @@ contract DropERC721 is
         baseURI[baseURIIndex] = _baseURIForTokens;
         baseURIIndices.push(baseURIIndex);
 
-        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
 
-        if (encryptedURI.length != 0 && provenanceHash != "") {
-            encryptedData[baseURIIndex] = _data;
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                encryptedData[baseURIIndex] = _data;
+            }
         }
 
         emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
