@@ -1,43 +1,27 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-contract ERC1155 {
+import "./interface/IERC1155.sol";
+import "./interface/IERC1155Metadata.sol";
+import "./interface/IERC1155Receiver.sol";
+
+contract ERC1155 is IERC1155, IERC1155Metadata {
     /*//////////////////////////////////////////////////////////////
-                                EVENTS
-    //////////////////////////////////////////////////////////////*/
-
-    event TransferSingle(
-        address indexed operator,
-        address indexed from,
-        address indexed to,
-        uint256 id,
-        uint256 amount
-    );
-
-    event TransferBatch(
-        address indexed operator,
-        address indexed from,
-        address indexed to,
-        uint256[] ids,
-        uint256[] amounts
-    );
-
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-
-    event URI(string value, uint256 indexed id);
-
-    /*//////////////////////////////////////////////////////////////
-                            ERC1155 STORAGE
+                        State variables
     //////////////////////////////////////////////////////////////*/
 
     string public name;
     string public symbol;
 
-    mapping(uint256 => string) internal _uri;
+    /*//////////////////////////////////////////////////////////////
+                            Mappings
+    //////////////////////////////////////////////////////////////*/
 
     mapping(address => mapping(uint256 => uint256)) public balanceOf;
 
     mapping(address => mapping(address => bool)) public isApprovedForAll;
+
+    mapping(uint256 => string) internal _uri;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -49,111 +33,7 @@ contract ERC1155 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            METADATA LOGIC
-    //////////////////////////////////////////////////////////////*/
-
-    function uri(uint256 id) public view virtual returns (string memory) {
-        return _uri[id];
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            ERC1155 LOGIC
-    //////////////////////////////////////////////////////////////*/
-
-    function setApprovalForAll(address operator, bool approved) public virtual {
-        isApprovedForAll[msg.sender][operator] = approved;
-
-        emit ApprovalForAll(msg.sender, operator, approved);
-    }
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes calldata data
-    ) public virtual {
-        require(msg.sender == from || isApprovedForAll[from][msg.sender], "NOT_AUTHORIZED");
-
-        _beforeTokenTransfer(msg.sender, from, to, _asSingletonArray(id), _asSingletonArray(amount), data);
-
-        balanceOf[from][id] -= amount;
-        balanceOf[to][id] += amount;
-
-        emit TransferSingle(msg.sender, from, to, id, amount);
-
-        require(
-            to.code.length == 0
-                ? to != address(0)
-                : ERC1155TokenReceiver(to).onERC1155Received(msg.sender, from, id, amount, data) ==
-                    ERC1155TokenReceiver.onERC1155Received.selector,
-            "UNSAFE_RECIPIENT"
-        );
-    }
-
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) public virtual {
-        require(ids.length == amounts.length, "LENGTH_MISMATCH");
-
-        require(msg.sender == from || isApprovedForAll[from][msg.sender], "NOT_AUTHORIZED");
-
-        _beforeTokenTransfer(msg.sender, from, to, ids, amounts, data);
-
-        // Storing these outside the loop saves ~15 gas per iteration.
-        uint256 id;
-        uint256 amount;
-
-        for (uint256 i = 0; i < ids.length; ) {
-            id = ids[i];
-            amount = amounts[i];
-
-            balanceOf[from][id] -= amount;
-            balanceOf[to][id] += amount;
-
-            // An array can't have a total length
-            // larger than the max uint256 value.
-            unchecked {
-                ++i;
-            }
-        }
-
-        emit TransferBatch(msg.sender, from, to, ids, amounts);
-
-        require(
-            to.code.length == 0
-                ? to != address(0)
-                : ERC1155TokenReceiver(to).onERC1155BatchReceived(msg.sender, from, ids, amounts, data) ==
-                    ERC1155TokenReceiver.onERC1155BatchReceived.selector,
-            "UNSAFE_RECIPIENT"
-        );
-    }
-
-    function balanceOfBatch(address[] calldata owners, uint256[] calldata ids)
-        public
-        view
-        virtual
-        returns (uint256[] memory balances)
-    {
-        require(owners.length == ids.length, "LENGTH_MISMATCH");
-
-        balances = new uint256[](owners.length);
-
-        // Unchecked because the only math done is incrementing
-        // the array index counter which cannot possibly overflow.
-        unchecked {
-            for (uint256 i = 0; i < owners.length; ++i) {
-                balances[i] = balanceOf[owners[i]][ids[i]];
-            }
-        }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                              ERC165 LOGIC
+                            View functions
     //////////////////////////////////////////////////////////////*/
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -163,13 +43,123 @@ contract ERC1155 {
             interfaceId == 0x0e89341c; // ERC165 Interface ID for ERC1155MetadataURI
     }
 
+    function uri(uint256 tokenId) public view virtual override returns (string memory) {
+        return _uri[tokenId];
+    }
+
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
+        public
+        view
+        virtual
+        override
+        returns (uint256[] memory)
+    {
+        require(accounts.length == ids.length, "LENGTH_MISMATCH");
+
+        uint256[] memory batchBalances = new uint256[](accounts.length);
+
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            batchBalances[i] = balanceOf[accounts[i]][ids[i]];
+        }
+
+        return batchBalances;
+    }
+
     /*//////////////////////////////////////////////////////////////
-                            INTERNAL LOGIC
+                            ERC1155 logic
     //////////////////////////////////////////////////////////////*/
 
-    function _setTokenURI(uint256 id, string memory tokenURI) internal virtual {
-        _uri[id] = tokenURI;
-        emit URI(tokenURI, id);
+    function setApprovalForAll(address operator, bool approved) public virtual override {
+        address owner = msg.sender;
+        require(owner != operator, "APPROVING_SELF");
+        isApprovedForAll[owner][operator] = approved;
+        emit ApprovalForAll(owner, operator, approved);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public virtual override {
+        require(from == msg.sender || isApprovedForAll[from][msg.sender], "!OWNER_OR_APPROVED");
+        _safeTransferFrom(from, to, id, amount, data);
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public virtual override {
+        require(from == msg.sender || isApprovedForAll[from][msg.sender], "!OWNER_OR_APPROVED");
+        _safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            Internal logic
+    //////////////////////////////////////////////////////////////*/
+
+    function _safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual {
+        require(to != address(0), "TO_ZERO_ADDR");
+
+        address operator = msg.sender;
+
+        _beforeTokenTransfer(operator, from, to, _asSingletonArray(id), _asSingletonArray(amount), data);
+
+        uint256 fromBalance = balanceOf[from][id];
+        require(fromBalance >= amount, "INSUFFICIENT_BAL");
+        unchecked {
+            balanceOf[from][id] = fromBalance - amount;
+        }
+        balanceOf[to][id] += amount;
+
+        emit TransferSingle(operator, from, to, id, amount);
+
+        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
+    }
+
+    function _safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual {
+        require(ids.length == amounts.length, "LENGTH_MISMATCH");
+        require(to != address(0), "TO_ZERO_ADDR");
+
+        address operator = msg.sender;
+
+        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        for (uint256 i = 0; i < ids.length; ++i) {
+            uint256 id = ids[i];
+            uint256 amount = amounts[i];
+
+            uint256 fromBalance = balanceOf[from][id];
+            require(fromBalance >= amount, "INSUFFICIENT_BAL");
+            unchecked {
+                balanceOf[from][id] = fromBalance - amount;
+            }
+            balanceOf[to][id] += amount;
+        }
+
+        emit TransferBatch(operator, from, to, ids, amounts);
+
+        _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
+    }
+
+    function _setTokenURI(uint256 tokenId, string memory newuri) internal virtual {
+        _uri[tokenId] = newuri;
     }
 
     function _mint(
@@ -178,76 +168,38 @@ contract ERC1155 {
         uint256 amount,
         bytes memory data
     ) internal virtual {
-        _beforeTokenTransfer(msg.sender, address(0), to, _asSingletonArray(id), _asSingletonArray(amount), data);
+        require(to != address(0), "TO_ZERO_ADDR");
+
+        address operator = msg.sender;
+
+        _beforeTokenTransfer(operator, address(0), to, _asSingletonArray(id), _asSingletonArray(amount), data);
 
         balanceOf[to][id] += amount;
+        emit TransferSingle(operator, address(0), to, id, amount);
 
-        emit TransferSingle(msg.sender, address(0), to, id, amount);
-
-        require(
-            to.code.length == 0
-                ? to != address(0)
-                : ERC1155TokenReceiver(to).onERC1155Received(msg.sender, address(0), id, amount, data) ==
-                    ERC1155TokenReceiver.onERC1155Received.selector,
-            "UNSAFE_RECIPIENT"
-        );
+        _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
     }
 
-    function _batchMint(
+    function _mintBatch(
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
     ) internal virtual {
-        _beforeTokenTransfer(msg.sender, address(0), to, ids, amounts, data);
+        require(to != address(0), "TO_ZERO_ADDR");
+        require(ids.length == amounts.length, "LENGTH_MISMATCH");
 
-        uint256 idsLength = ids.length; // Saves MLOADs.
+        address operator = msg.sender;
 
-        require(idsLength == amounts.length, "LENGTH_MISMATCH");
+        _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
 
-        for (uint256 i = 0; i < idsLength; ) {
+        for (uint256 i = 0; i < ids.length; i++) {
             balanceOf[to][ids[i]] += amounts[i];
-
-            // An array can't have a total length
-            // larger than the max uint256 value.
-            unchecked {
-                ++i;
-            }
         }
 
-        emit TransferBatch(msg.sender, address(0), to, ids, amounts);
+        emit TransferBatch(operator, address(0), to, ids, amounts);
 
-        require(
-            to.code.length == 0
-                ? to != address(0)
-                : ERC1155TokenReceiver(to).onERC1155BatchReceived(msg.sender, address(0), ids, amounts, data) ==
-                    ERC1155TokenReceiver.onERC1155BatchReceived.selector,
-            "UNSAFE_RECIPIENT"
-        );
-    }
-
-    function _batchBurn(
-        address from,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual {
-        _beforeTokenTransfer(msg.sender, from, address(0), ids, amounts, "");
-
-        uint256 idsLength = ids.length; // Saves MLOADs.
-
-        require(idsLength == amounts.length, "LENGTH_MISMATCH");
-
-        for (uint256 i = 0; i < idsLength; ) {
-            balanceOf[from][ids[i]] -= amounts[i];
-
-            // An array can't have a total length
-            // larger than the max uint256 value.
-            unchecked {
-                ++i;
-            }
-        }
-
-        emit TransferBatch(msg.sender, from, address(0), ids, amounts);
+        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
     }
 
     function _burn(
@@ -255,11 +207,45 @@ contract ERC1155 {
         uint256 id,
         uint256 amount
     ) internal virtual {
-        _beforeTokenTransfer(msg.sender, from, address(0), _asSingletonArray(id), _asSingletonArray(amount), "");
+        require(from != address(0), "FROM_ZERO_ADDR");
 
-        balanceOf[from][id] -= amount;
+        address operator = msg.sender;
 
-        emit TransferSingle(msg.sender, from, address(0), id, amount);
+        _beforeTokenTransfer(operator, from, address(0), _asSingletonArray(id), _asSingletonArray(amount), "");
+
+        uint256 fromBalance = balanceOf[from][id];
+        require(fromBalance >= amount, "INSUFFICIENT_BAL");
+        unchecked {
+            balanceOf[from][id] = fromBalance - amount;
+        }
+
+        emit TransferSingle(operator, from, address(0), id, amount);
+    }
+
+    function _burnBatch(
+        address from,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual {
+        require(from != address(0), "FROM_ZERO_ADDR");
+        require(ids.length == amounts.length, "LENGTH_MISMATCH");
+
+        address operator = msg.sender;
+
+        _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
+
+        for (uint256 i = 0; i < ids.length; i++) {
+            uint256 id = ids[i];
+            uint256 amount = amounts[i];
+
+            uint256 fromBalance = balanceOf[from][id];
+            require(fromBalance >= amount, "INSUFFICIENT_BAL");
+            unchecked {
+                balanceOf[from][id] = fromBalance - amount;
+            }
+        }
+
+        emit TransferBatch(operator, from, address(0), ids, amounts);
     }
 
     function _beforeTokenTransfer(
@@ -271,32 +257,54 @@ contract ERC1155 {
         bytes memory data
     ) internal virtual {}
 
+    function _doSafeTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) private {
+        if (to.code.length > 0) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("TOKENS_REJECTED");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("!ERC1155RECEIVER");
+            }
+        }
+    }
+
+    function _doSafeBatchTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) private {
+        if (to.code.length > 0) {
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+                bytes4 response
+            ) {
+                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
+                    revert("TOKENS_REJECTED");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("!ERC1155RECEIVER");
+            }
+        }
+    }
+
     function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
         uint256[] memory array = new uint256[](1);
         array[0] = element;
 
         return array;
-    }
-}
-
-abstract contract ERC1155TokenReceiver {
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external virtual returns (bytes4) {
-        return ERC1155TokenReceiver.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] calldata,
-        uint256[] calldata,
-        bytes calldata
-    ) external virtual returns (bytes4) {
-        return ERC1155TokenReceiver.onERC1155BatchReceived.selector;
     }
 }
