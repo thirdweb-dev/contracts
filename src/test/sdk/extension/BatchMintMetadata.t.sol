@@ -59,11 +59,10 @@ contract ExtensionBatchMintMetadata is DSTest, Test {
         string memory baseUriTwo = "two";
 
         (, uint256 batchId) = ext.batchMintMetadata(0, 100, baseUriOne);
-        
+
         assertEq(baseUriOne, ext.viewBaseURI(10));
 
         ext.setBaseURI(batchId, baseUriTwo);
         assertEq(baseUriTwo, ext.viewBaseURI(10));
-        
     }
 }

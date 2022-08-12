@@ -91,12 +91,14 @@ contract ExtensionPermissions is DSTest, Test {
         address caller = address(0x345);
 
         vm.startPrank(caller);
-        vm.expectRevert(abi.encodePacked(
-                        "Permissions: account ",
-                        TWStrings.toHexString(uint160(caller), 20),
-                        " is missing role ",
-                        TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
-                    ));
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(caller), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+            )
+        );
         ext.grantRole(keccak256("role"), address(0x1));
     }
 
@@ -136,22 +138,26 @@ contract ExtensionPermissions is DSTest, Test {
         assertTrue(ext.hasRole(keccak256("role"), address(0x567)));
 
         vm.startPrank(address(0x345));
-        vm.expectRevert(abi.encodePacked(
-                        "Permissions: account ",
-                        TWStrings.toHexString(uint160(address(0x345)), 20),
-                        " is missing role ",
-                        TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
-                    ));
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(address(0x345)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+            )
+        );
         ext.revokeRole(keccak256("role"), address(0x567));
         vm.stopPrank();
 
         vm.startPrank(defaultAdmin);
-        vm.expectRevert(abi.encodePacked(
-                        "Permissions: account ",
-                        TWStrings.toHexString(uint160(address(0x789)), 20),
-                        " is missing role ",
-                        TWStrings.toHexString(uint256(keccak256("role")), 32)
-                    ));
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(address(0x789)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(keccak256("role")), 32)
+            )
+        );
         ext.revokeRole(keccak256("role"), address(0x789));
         vm.stopPrank();
     }
@@ -183,12 +189,14 @@ contract ExtensionPermissions is DSTest, Test {
 
     function test_revert_renounceRole_missingRole() public {
         vm.startPrank(defaultAdmin);
-        vm.expectRevert(abi.encodePacked(
-                        "Permissions: account ",
-                        TWStrings.toHexString(uint160(defaultAdmin), 20),
-                        " is missing role ",
-                        TWStrings.toHexString(uint256(keccak256("role")), 32)
-                    ));
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(defaultAdmin), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(keccak256("role")), 32)
+            )
+        );
         ext.renounceRole(keccak256("role"), defaultAdmin);
         vm.stopPrank();
     }
@@ -209,12 +217,14 @@ contract ExtensionPermissions is DSTest, Test {
 
     function test_modifier_onlyRole() public {
         vm.startPrank(address(0x345));
-        vm.expectRevert(abi.encodePacked(
-                        "Permissions: account ",
-                        TWStrings.toHexString(uint160(address(0x345)), 20),
-                        " is missing role ",
-                        TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
-                    ));
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(address(0x345)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+            )
+        );
         ext.checkModifier();
     }
 }

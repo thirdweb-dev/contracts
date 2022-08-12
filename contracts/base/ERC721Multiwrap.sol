@@ -73,14 +73,13 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         uint128 _royaltyBps,
         address _nativeTokenWrapper
     ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) TokenStore(_nativeTokenWrapper) {
-
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(TRANSFER_ROLE, msg.sender);
 
         _setupRole(ASSET_ROLE, address(0));
         _setupRole(UNWRAP_ROLE, address(0));
-        
+
         restrictTransfers(false);
     }
 
@@ -101,7 +100,6 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
             ERC721Base.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Receiver).interfaceId;
     }
-
 
     /*//////////////////////////////////////////////////////////////
                         Overriden ERC721 logic

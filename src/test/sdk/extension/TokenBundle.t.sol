@@ -258,11 +258,11 @@ contract ExtensionTokenBundle is DSTest, Test {
         ext.createBundle(bundleContent, 0);
 
         ITokenBundle.Token memory newToken = ITokenBundle.Token({
-                assetContract: address(erc1155),
-                tokenType: ITokenBundle.TokenType.ERC1155,
-                tokenId: 1,
-                totalAmount: 200
-            });
+            assetContract: address(erc1155),
+            tokenType: ITokenBundle.TokenType.ERC1155,
+            tokenId: 1,
+            totalAmount: 200
+        });
 
         ext.addTokenInBundle(newToken, 0);
 
@@ -292,11 +292,11 @@ contract ExtensionTokenBundle is DSTest, Test {
         ext.createBundle(bundleContent, 0);
 
         ITokenBundle.Token memory newToken = ITokenBundle.Token({
-                assetContract: address(erc1155),
-                tokenType: ITokenBundle.TokenType.ERC1155,
-                tokenId: 1,
-                totalAmount: 200
-            });
+            assetContract: address(erc1155),
+            tokenType: ITokenBundle.TokenType.ERC1155,
+            tokenId: 1,
+            totalAmount: 200
+        });
 
         ext.updateTokenInBundle(newToken, 0, 1);
 
@@ -314,11 +314,11 @@ contract ExtensionTokenBundle is DSTest, Test {
         ext.createBundle(bundleContent, 0);
 
         ITokenBundle.Token memory newToken = ITokenBundle.Token({
-                assetContract: address(erc1155),
-                tokenType: ITokenBundle.TokenType.ERC1155,
-                tokenId: 1,
-                totalAmount: 200
-            });
+            assetContract: address(erc1155),
+            tokenType: ITokenBundle.TokenType.ERC1155,
+            tokenId: 1,
+            totalAmount: 200
+        });
 
         vm.expectRevert("TokenBundle: index DNE.");
         ext.updateTokenInBundle(newToken, 0, 3);

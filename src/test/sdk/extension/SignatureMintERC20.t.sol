@@ -20,13 +20,14 @@ contract MySigMint20 is SignatureMintERC20 {
     function mintWithSignature(MintRequest calldata req, bytes calldata signature)
         external
         payable
-        returns (address signer) {
-            if(!_canSignMintRequest(msg.sender)) {
-                revert("not authorized");
-            }
-
-            signer = _processRequest(req, signature);
+        returns (address signer)
+    {
+        if (!_canSignMintRequest(msg.sender)) {
+            revert("not authorized");
         }
+
+        signer = _processRequest(req, signature);
+    }
 }
 
 contract ExtensionSignatureMintERC20 is DSTest, Test {
@@ -112,7 +113,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
     function test_revert_mintWithSignature_InvalidReq() public {
         vm.warp(1000);
         ext.setCondition(true);
-        
+
         vm.prank(signer);
         ext.mintWithSignature(_mintrequest, _signature);
 
@@ -123,7 +124,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
     function test_revert_mintWithSignature_RequestExpired() public {
         vm.warp(3000);
         ext.setCondition(true);
-        
+
         vm.prank(signer);
         vm.expectRevert("Request expired");
         ext.mintWithSignature(_mintrequest, _signature);

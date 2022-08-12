@@ -61,7 +61,7 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
 
         vm.stopPrank();
     }
-    
+
     function test_revert_lazyMint_URIForNonExistentId() public {
         uint256 _amount = 100;
         string memory _baseURIForTokens = "baseURI/";

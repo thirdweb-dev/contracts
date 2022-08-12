@@ -48,7 +48,7 @@ contract ExtensionPermissionsEnumerable is DSTest, Test {
         ext.grantRole(role1, members[2]);
         assertEq(3, ext.getRoleMemberCount(role1));
 
-        for(uint256 i = 0; i < members.length; i++) {
+        for (uint256 i = 0; i < members.length; i++) {
             assertEq(members[i], ext.getRoleMember(role1, i));
         }
     }
@@ -77,7 +77,7 @@ contract ExtensionPermissionsEnumerable is DSTest, Test {
         ext.grantRole(role1, members[2]);
         assertEq(3, ext.getRoleMemberCount(role1));
 
-        for(uint256 i = 0; i < members.length; i++) {
+        for (uint256 i = 0; i < members.length; i++) {
             assertEq(members[i], ext.getRoleMember(role1, i));
         }
 

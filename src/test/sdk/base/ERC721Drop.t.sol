@@ -291,7 +291,7 @@ contract BaseERC721ERC721DropTest is BaseUtilTest {
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");
-        
+
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
 
@@ -313,7 +313,7 @@ contract BaseERC721ERC721DropTest is BaseUtilTest {
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");
-        
+
         _mintrequest.quantity = 101;
         _signature = signMintRequest(_mintrequest, privateKey);
 

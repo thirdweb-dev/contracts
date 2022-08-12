@@ -25,7 +25,7 @@ abstract contract BaseUtilTest is DSTest, Test {
     WETH9 public weth;
 
     address public forwarder;
-    
+
     address public deployer = address(0x20000);
     address public saleRecipient = address(0x30000);
     address public royaltyRecipient = address(0x30001);
@@ -47,7 +47,7 @@ abstract contract BaseUtilTest is DSTest, Test {
         erc1155 = new MockERC1155();
         weth = new WETH9();
         forwarder = address(new Forwarder());
-    }    
+    }
 
     function getActor(uint160 _index) public pure returns (address) {
         return address(uint160(0x50000 + _index));

@@ -89,7 +89,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
 
     function test_state_mintWithSignature_ZeroPrice() public {
         vm.warp(1000);
-        
+
         uint256 nextTokenId = base.nextTokenIdToMint();
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
@@ -112,7 +112,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
 
         vm.prank(recipient);
         erc20.approve(address(base), 1);
-        
+
         uint256 nextTokenId = base.nextTokenIdToMint();
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
@@ -133,7 +133,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         _mintrequest.pricePerToken = 1;
         _mintrequest.currency = address(NATIVE_TOKEN);
         _signature = signMintRequest(_mintrequest, privateKey);
-        
+
         uint256 nextTokenId = base.nextTokenIdToMint();
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
@@ -169,6 +169,4 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         vm.expectRevert("Minting zero tokens.");
         base.mintWithSignature(_mintrequest, _signature);
     }
-
-    
 }

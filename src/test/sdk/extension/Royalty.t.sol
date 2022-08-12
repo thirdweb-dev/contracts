@@ -17,13 +17,7 @@ contract MyRoyalty is Royalty {
         return condition;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == 0x01ffc9a7;
     }
 }
@@ -50,7 +44,7 @@ contract ExtensionRoyaltyTest is DSTest, Test {
 
         (address receiver, uint256 royaltyAmount) = ext.royaltyInfo(0, 100);
         assertEq(receiver, _royaltyRecipient);
-        assertEq(royaltyAmount, (100 * 1000)/10_000);
+        assertEq(royaltyAmount, (100 * 1000) / 10_000);
     }
 
     function test_revert_setDefaultRoyaltyInfo_ExceedsMaxBps() public {
@@ -73,7 +67,7 @@ contract ExtensionRoyaltyTest is DSTest, Test {
 
         (address receiver, uint256 royaltyAmount) = ext.royaltyInfo(_tokenId, 100);
         assertEq(receiver, _recipient);
-        assertEq(royaltyAmount, (100 * 1000)/10_000);
+        assertEq(royaltyAmount, (100 * 1000) / 10_000);
     }
 
     function test_revert_setRoyaltyInfo_NotAuthorized() public {
@@ -113,7 +107,7 @@ contract ExtensionRoyaltyTest is DSTest, Test {
 
         vm.expectEmit(true, true, true, true);
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
-        
+
         ext.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
     }
 }
