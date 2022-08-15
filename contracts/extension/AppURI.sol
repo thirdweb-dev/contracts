@@ -14,7 +14,7 @@ abstract contract AppURI is IAppURI {
     string public override appURI;
 
     /// @dev Lets a contract admin set the URI for app metadata.
-    function setAppURI(string memory _uri) external override {
+    function setAppURI(string memory _uri) public override {
         if (!_canSetAppURI()) {
             revert("Not authorized");
         }
