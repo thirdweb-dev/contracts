@@ -24,10 +24,11 @@ contract MyDropSinglePhase1155 is DropSinglePhase1155 {
         uint256 _pricePerToken
     ) internal override {}
 
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        override
-    {}
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal override {}
 }
 
 contract ExtensionDropSinglePhase1155 is DSTest, Test {
@@ -39,7 +40,11 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         uint256 indexed tokenId,
         uint256 quantityClaimed
     );
-    event ClaimConditionUpdated(uint256 indexed tokenId, MyDropSinglePhase1155.ClaimCondition condition, bool resetEligibility);
+    event ClaimConditionUpdated(
+        uint256 indexed tokenId,
+        MyDropSinglePhase1155.ClaimCondition condition,
+        bool resetEligibility
+    );
 
     function setUp() public {
         ext = new MyDropSinglePhase1155();
