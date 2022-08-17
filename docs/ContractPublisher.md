@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getAllPublishedContracts
 
@@ -41,13 +41,13 @@ Returns the latest version of all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| _publisher | address | undefined
+| _publisher | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined |
 
 ### getPublishedContract
 
@@ -63,14 +63,14 @@ Returns the latest version of a contract published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| _publisher | address | undefined
-| _contractId | string | undefined
+| _publisher | address | undefined |
+| _contractId | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance | undefined
+| published | IContractPublisher.CustomContractInstance | undefined |
 
 ### getPublishedContractVersions
 
@@ -86,14 +86,14 @@ Returns all versions of a published contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _publisher | address | undefined
-| _contractId | string | undefined
+| _publisher | address | undefined |
+| _contractId | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined |
 
 ### getPublishedUriFromCompilerUri
 
@@ -109,13 +109,13 @@ Retrieve the published metadata URI from a compiler metadata URI
 
 | Name | Type | Description |
 |---|---|---|
-| compilerMetadataUri | string | undefined
+| compilerMetadataUri | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| publishedMetadataUris | string[] | undefined
+| publishedMetadataUris | string[] | undefined |
 
 ### getPublisherProfileUri
 
@@ -131,13 +131,13 @@ Get the publisher profile uri for a given publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | undefined
+| publisher | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| uri | string | undefined
+| uri | string | undefined |
 
 ### getRoleAdmin
 
@@ -153,13 +153,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -175,14 +175,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -198,13 +198,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### grantRole
 
@@ -220,8 +220,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -237,14 +237,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isPaused
 
@@ -261,7 +261,7 @@ Whether the contract publisher is paused.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isTrustedForwarder
 
@@ -277,13 +277,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -299,13 +299,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### prevPublisher
 
@@ -322,7 +322,7 @@ function prevPublisher() external view returns (contract IContractPublisher)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IContractPublisher | undefined
+| _0 | contract IContractPublisher | undefined |
 
 ### publishContract
 
@@ -338,12 +338,12 @@ Let&#39;s an account publish a contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _publisher | address | undefined
-| _contractId | string | undefined
-| _publishMetadataUri | string | undefined
-| _compilerMetadataUri | string | undefined
-| _bytecodeHash | bytes32 | undefined
-| _implementation | address | undefined
+| _publisher | address | undefined |
+| _contractId | string | undefined |
+| _publishMetadataUri | string | undefined |
+| _compilerMetadataUri | string | undefined |
+| _bytecodeHash | bytes32 | undefined |
+| _implementation | address | undefined |
 
 ### renounceRole
 
@@ -359,8 +359,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -376,8 +376,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### setPause
 
@@ -393,7 +393,7 @@ function setPause(bool _pause) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _pause | bool | undefined
+| _pause | bool | undefined |
 
 ### setPublisherProfileUri
 
@@ -409,8 +409,8 @@ Lets an account set its own publisher profile uri
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | undefined
-| uri | string | undefined
+| publisher | address | undefined |
+| uri | string | undefined |
 
 ### supportsInterface
 
@@ -426,13 +426,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### unpublishContract
 
@@ -448,8 +448,8 @@ Lets a publisher unpublish a contract and all its versions.
 
 | Name | Type | Description |
 |---|---|---|
-| _publisher | address | undefined
-| _contractId | string | undefined
+| _publisher | address | undefined |
+| _contractId | string | undefined |
 
 
 
