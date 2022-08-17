@@ -137,6 +137,7 @@ const config: HardhatUserConfig = {
   dodoc: {
     runOnCompile: true,
     exclude: ["**/node_modules/**"],
+    keepFileStructure: false,
   },
 };
 
