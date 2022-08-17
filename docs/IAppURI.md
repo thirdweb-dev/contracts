@@ -25,7 +25,7 @@ function appURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### setAppURI
 
@@ -41,7 +41,7 @@ function setAppURI(string _uri) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | undefined |
 
 
 
