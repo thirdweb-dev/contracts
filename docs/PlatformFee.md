@@ -25,8 +25,8 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### setPlatformFeeInfo
 
@@ -42,8 +42,8 @@ Updates the platform fee recipient and bps.
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient.
-| _platformFeeBps | uint256 | Updated platformFeeBps.
+| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
+| _platformFeeBps | uint256 | Updated platformFeeBps. |
 
 
 

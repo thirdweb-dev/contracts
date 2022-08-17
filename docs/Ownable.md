@@ -25,7 +25,7 @@ Returns the owner of the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### setOwner
 
@@ -41,7 +41,7 @@ Lets an authorized wallet set a new owner for the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract.
+| _newOwner | address | The address to set as the new owner of the contract. |
 
 
 

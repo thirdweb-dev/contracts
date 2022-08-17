@@ -24,10 +24,10 @@ Lets an account with MINTER_ROLE mint an NFT.
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | The address to mint the NFT to.
-| tokenId | uint256 | The tokenId of the NFTs to mint
-| uri | string | The URI to assign to the NFT.
-| amount | uint256 | The number of copies of the NFT to mint.
+| to | address | The address to mint the NFT to. |
+| tokenId | uint256 | The tokenId of the NFTs to mint |
+| uri | string | The URI to assign to the NFT. |
+| amount | uint256 | The number of copies of the NFT to mint. |
 
 
 

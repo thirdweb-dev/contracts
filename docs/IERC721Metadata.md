@@ -25,7 +25,7 @@ A descriptive name for a collection of NFTs in this contract
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### symbol
 
@@ -42,7 +42,7 @@ An abbreviated name for NFTs in this contract
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### tokenURI
 
@@ -58,13 +58,13 @@ A distinct Uniform Resource Identifier (URI) for a given asset.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 
 

@@ -16,7 +16,7 @@ The &#39;signature minting&#39; mechanism used in thirdweb Token smart contracts
 function mintWithSignature(ISignatureMintERC1155.MintRequest req, bytes signature) external payable returns (address signer)
 ```
 
-Mints tokens according to the provided mint request.
+
 
 
 
@@ -24,14 +24,14 @@ Mints tokens according to the provided mint request.
 
 | Name | Type | Description |
 |---|---|---|
-| req | ISignatureMintERC1155.MintRequest | The payload / mint request.
-| signature | bytes | The signature produced by an account signing the mint request.
+| req | ISignatureMintERC1155.MintRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined
+| signer | address | undefined |
 
 ### verify
 
@@ -39,7 +39,7 @@ Mints tokens according to the provided mint request.
 function verify(ISignatureMintERC1155.MintRequest req, bytes signature) external view returns (bool success, address signer)
 ```
 
-Verifies that a mint request is signed by an account holding          MINTER_ROLE (at the time of the function call).
+
 
 
 
@@ -47,15 +47,15 @@ Verifies that a mint request is signed by an account holding          MINTER_ROL
 
 | Name | Type | Description |
 |---|---|---|
-| req | ISignatureMintERC1155.MintRequest | The payload / mint request.
-| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
+| req | ISignatureMintERC1155.MintRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| success | bool | undefined |
+| signer | address | undefined |
 
 
 

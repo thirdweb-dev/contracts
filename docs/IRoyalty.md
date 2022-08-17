@@ -25,8 +25,8 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRoyaltyInfoForToken
 
@@ -42,14 +42,14 @@ function getRoyaltyInfoForToken(uint256 tokenId) external view returns (address,
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### royaltyInfo
 
@@ -65,15 +65,15 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
+| tokenId | uint256 | undefined |
+| salePrice | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
+| receiver | address | undefined |
+| royaltyAmount | uint256 | undefined |
 
 ### setDefaultRoyaltyInfo
 
@@ -89,8 +89,8 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint256 | undefined |
 
 ### setRoyaltyInfoForToken
 
@@ -106,9 +106,9 @@ function setRoyaltyInfoForToken(uint256 tokenId, address recipient, uint256 bps)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-| recipient | address | undefined
-| bps | uint256 | undefined
+| tokenId | uint256 | undefined |
+| recipient | address | undefined |
+| bps | uint256 | undefined |
 
 ### supportsInterface
 
@@ -124,13 +124,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

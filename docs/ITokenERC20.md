@@ -24,14 +24,14 @@ function allowance(address owner, address spender) external view returns (uint25
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| spender | address | undefined
+| owner | address | undefined |
+| spender | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### approve
 
@@ -47,14 +47,14 @@ function approve(address spender, uint256 amount) external nonpayable returns (b
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| amount | uint256 | undefined
+| spender | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### balanceOf
 
@@ -70,13 +70,13 @@ function balanceOf(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### decimals
 
@@ -93,7 +93,7 @@ function decimals() external view returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### mintTo
 
@@ -109,8 +109,8 @@ function mintTo(address to, uint256 amount) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| amount | uint256 | undefined
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 ### mintWithSignature
 
@@ -118,7 +118,7 @@ function mintTo(address to, uint256 amount) external nonpayable
 function mintWithSignature(ITokenERC20.MintRequest req, bytes signature) external payable
 ```
 
-Mints an NFT according to the provided mint request.
+
 
 
 
@@ -126,8 +126,8 @@ Mints an NFT according to the provided mint request.
 
 | Name | Type | Description |
 |---|---|---|
-| req | ITokenERC20.MintRequest | The mint request.
-| signature | bytes | he signature produced by an account signing the mint request.
+| req | ITokenERC20.MintRequest | undefined |
+| signature | bytes | undefined |
 
 ### name
 
@@ -144,7 +144,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### symbol
 
@@ -161,7 +161,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -178,7 +178,7 @@ function totalSupply() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transfer
 
@@ -194,14 +194,14 @@ function transfer(address to, uint256 amount) external nonpayable returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| amount | uint256 | undefined
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### transferFrom
 
@@ -217,15 +217,15 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| amount | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### verify
 
@@ -233,7 +233,7 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 function verify(ITokenERC20.MintRequest req, bytes signature) external view returns (bool success, address signer)
 ```
 
-Verifies that a mint request is signed by an account holding         MINTER_ROLE (at the time of the function call).
+
 
 
 
@@ -241,15 +241,15 @@ Verifies that a mint request is signed by an account holding         MINTER_ROLE
 
 | Name | Type | Description |
 |---|---|---|
-| req | ITokenERC20.MintRequest | The mint request.
-| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
+| req | ITokenERC20.MintRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| success | bool | undefined |
+| signer | address | undefined |
 
 
 

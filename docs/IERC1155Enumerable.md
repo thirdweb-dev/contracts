@@ -25,7 +25,7 @@ Returns the next token ID available for minting
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | The token identifier for the `_index`th NFT,  (sort order not specified)
+| _0 | uint256 | The token identifier for the `_index`th NFT,  (sort order not specified) |
 
 
 

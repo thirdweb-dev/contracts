@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### balanceOf
 
@@ -41,14 +41,14 @@ function balanceOf(address account, uint256 id) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
+| account | address | undefined |
+| id | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### balanceOfBatch
 
@@ -64,14 +64,14 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| accounts | address[] | undefined
-| ids | uint256[] | undefined
+| accounts | address[] | undefined |
+| ids | uint256[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256[] | undefined
+| _0 | uint256[] | undefined |
 
 ### burn
 
@@ -87,9 +87,9 @@ function burn(address account, uint256 id, uint256 value) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
-| value | uint256 | undefined
+| account | address | undefined |
+| id | uint256 | undefined |
+| value | uint256 | undefined |
 
 ### burnBatch
 
@@ -105,9 +105,9 @@ function burnBatch(address account, uint256[] ids, uint256[] values) external no
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| ids | uint256[] | undefined
-| values | uint256[] | undefined
+| account | address | undefined |
+| ids | uint256[] | undefined |
+| values | uint256[] | undefined |
 
 ### claim
 
@@ -123,13 +123,13 @@ function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _
 
 | Name | Type | Description |
 |---|---|---|
-| _receiver | address | undefined
-| _tokenId | uint256 | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| _proofs | bytes32[] | undefined
-| _proofMaxQuantityPerTransaction | uint256 | undefined
+| _receiver | address | undefined |
+| _tokenId | uint256 | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _proofs | bytes32[] | undefined |
+| _proofMaxQuantityPerTransaction | uint256 | undefined |
 
 ### claimCondition
 
@@ -145,14 +145,14 @@ function claimCondition(uint256) external view returns (uint256 currentStartId, 
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| currentStartId | uint256 | undefined
-| count | uint256 | undefined
+| currentStartId | uint256 | undefined |
+| count | uint256 | undefined |
 
 ### contractType
 
@@ -169,7 +169,7 @@ function contractType() external pure returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractURI
 
@@ -186,7 +186,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### contractVersion
 
@@ -203,7 +203,7 @@ function contractVersion() external pure returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### getActiveClaimConditionId
 
@@ -219,13 +219,13 @@ function getActiveClaimConditionId(uint256 _tokenId) external view returns (uint
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getClaimConditionById
 
@@ -241,14 +241,14 @@ function getClaimConditionById(uint256 _tokenId, uint256 _conditionId) external 
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _conditionId | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _conditionId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| condition | IDropClaimCondition.ClaimCondition | undefined
+| condition | IDropClaimCondition.ClaimCondition | undefined |
 
 ### getClaimTimestamp
 
@@ -264,16 +264,16 @@ function getClaimTimestamp(uint256 _tokenId, uint256 _conditionId, address _clai
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
+| _tokenId | uint256 | undefined |
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| lastClaimTimestamp | uint256 | undefined
-| nextValidClaimTimestamp | uint256 | undefined
+| lastClaimTimestamp | uint256 | undefined |
+| nextValidClaimTimestamp | uint256 | undefined |
 
 ### getDefaultRoyaltyInfo
 
@@ -290,8 +290,8 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getPlatformFeeInfo
 
@@ -308,8 +308,8 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRoleAdmin
 
@@ -325,13 +325,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -347,14 +347,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -370,13 +370,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getRoyaltyInfoForToken
 
@@ -392,14 +392,14 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### grantRole
 
@@ -415,8 +415,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -432,14 +432,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### initialize
 
@@ -455,16 +455,16 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 
 | Name | Type | Description |
 |---|---|---|
-| _defaultAdmin | address | undefined
-| _name | string | undefined
-| _symbol | string | undefined
-| _contractURI | string | undefined
-| _trustedForwarders | address[] | undefined
-| _saleRecipient | address | undefined
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint128 | undefined
-| _platformFeeBps | uint128 | undefined
-| _platformFeeRecipient | address | undefined
+| _defaultAdmin | address | undefined |
+| _name | string | undefined |
+| _symbol | string | undefined |
+| _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
+| _saleRecipient | address | undefined |
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint128 | undefined |
+| _platformFeeBps | uint128 | undefined |
+| _platformFeeRecipient | address | undefined |
 
 ### isApprovedForAll
 
@@ -480,14 +480,14 @@ function isApprovedForAll(address account, address operator) external view retur
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| operator | address | undefined
+| account | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isTrustedForwarder
 
@@ -503,13 +503,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### lazyMint
 
@@ -525,8 +525,8 @@ function lazyMint(uint256 _amount, string _baseURIForTokens) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _amount | uint256 | undefined
-| _baseURIForTokens | string | undefined
+| _amount | uint256 | undefined |
+| _baseURIForTokens | string | undefined |
 
 ### maxTotalSupply
 
@@ -542,13 +542,13 @@ function maxTotalSupply(uint256) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### maxWalletClaimCount
 
@@ -564,13 +564,13 @@ function maxWalletClaimCount(uint256) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### multicall
 
@@ -586,13 +586,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### name
 
@@ -609,7 +609,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### nextTokenIdToMint
 
@@ -626,7 +626,7 @@ function nextTokenIdToMint() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### owner
 
@@ -643,7 +643,7 @@ function owner() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### primarySaleRecipient
 
@@ -660,7 +660,7 @@ function primarySaleRecipient() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### renounceRole
 
@@ -676,8 +676,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -693,8 +693,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### royaltyInfo
 
@@ -710,15 +710,15 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
+| tokenId | uint256 | undefined |
+| salePrice | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
+| receiver | address | undefined |
+| royaltyAmount | uint256 | undefined |
 
 ### safeBatchTransferFrom
 
@@ -734,11 +734,11 @@ function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| ids | uint256[] | undefined
-| amounts | uint256[] | undefined
-| data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| ids | uint256[] | undefined |
+| amounts | uint256[] | undefined |
+| data | bytes | undefined |
 
 ### safeTransferFrom
 
@@ -754,11 +754,11 @@ function safeTransferFrom(address from, address to, uint256 id, uint256 amount, 
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| id | uint256 | undefined
-| amount | uint256 | undefined
-| data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| id | uint256 | undefined |
+| amount | uint256 | undefined |
+| data | bytes | undefined |
 
 ### saleRecipient
 
@@ -774,13 +774,13 @@ function saleRecipient(uint256) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### setApprovalForAll
 
@@ -796,8 +796,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### setClaimConditions
 
@@ -807,15 +807,15 @@ function setClaimConditions(uint256 _tokenId, IDropClaimCondition.ClaimCondition
 
 
 
-*Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions, for a tokenId.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _phases | IDropClaimCondition.ClaimCondition[] | undefined
-| _resetClaimEligibility | bool | undefined
+| _tokenId | uint256 | undefined |
+| _phases | IDropClaimCondition.ClaimCondition[] | undefined |
+| _resetClaimEligibility | bool | undefined |
 
 ### setContractURI
 
@@ -831,7 +831,7 @@ function setContractURI(string _uri) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | undefined |
 
 ### setDefaultRoyaltyInfo
 
@@ -847,8 +847,8 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint256 | undefined |
 
 ### setMaxTotalSupply
 
@@ -864,8 +864,8 @@ function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external n
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _maxTotalSupply | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _maxTotalSupply | uint256 | undefined |
 
 ### setMaxWalletClaimCount
 
@@ -881,8 +881,8 @@ function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count) external nonpa
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _count | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _count | uint256 | undefined |
 
 ### setOwner
 
@@ -898,7 +898,7 @@ function setOwner(address _newOwner) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | undefined
+| _newOwner | address | undefined |
 
 ### setPlatformFeeInfo
 
@@ -914,8 +914,8 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
+| _platformFeeRecipient | address | undefined |
+| _platformFeeBps | uint256 | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -931,7 +931,7 @@ function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _saleRecipient | address | undefined
+| _saleRecipient | address | undefined |
 
 ### setRoyaltyInfoForToken
 
@@ -947,9 +947,9 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _recipient | address | undefined
-| _bps | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _recipient | address | undefined |
+| _bps | uint256 | undefined |
 
 ### setSaleRecipientForToken
 
@@ -965,8 +965,8 @@ function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) exte
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _saleRecipient | address | undefined
+| _tokenId | uint256 | undefined |
+| _saleRecipient | address | undefined |
 
 ### setWalletClaimCount
 
@@ -982,9 +982,9 @@ function setWalletClaimCount(uint256 _tokenId, address _claimer, uint256 _count)
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _claimer | address | undefined
-| _count | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _claimer | address | undefined |
+| _count | uint256 | undefined |
 
 ### supportsInterface
 
@@ -1000,13 +1000,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### symbol
 
@@ -1023,7 +1023,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -1039,13 +1039,13 @@ function totalSupply(uint256) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### uri
 
@@ -1061,13 +1061,13 @@ function uri(uint256 _tokenId) external view returns (string _tokenURI)
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenURI | string | undefined
+| _tokenURI | string | undefined |
 
 ### verifyClaim
 
@@ -1083,13 +1083,13 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, u
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
-| _tokenId | uint256 | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| verifyMaxQuantityPerTransaction | bool | undefined
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+| _tokenId | uint256 | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| verifyMaxQuantityPerTransaction | bool | undefined |
 
 ### verifyClaimMerkleProof
 
@@ -1105,19 +1105,19 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
-| _tokenId | uint256 | undefined
-| _quantity | uint256 | undefined
-| _proofs | bytes32[] | undefined
-| _proofMaxQuantityPerTransaction | uint256 | undefined
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+| _tokenId | uint256 | undefined |
+| _quantity | uint256 | undefined |
+| _proofs | bytes32[] | undefined |
+| _proofMaxQuantityPerTransaction | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| validMerkleProof | bool | undefined
-| merkleProofIndex | uint256 | undefined
+| validMerkleProof | bool | undefined |
+| merkleProofIndex | uint256 | undefined |
 
 ### walletClaimCount
 
@@ -1133,14 +1133,14 @@ function walletClaimCount(uint256, address) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
-| _1 | address | undefined
+| _0 | uint256 | undefined |
+| _1 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 
 

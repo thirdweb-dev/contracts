@@ -25,8 +25,8 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRoyaltyInfoForToken
 
@@ -42,14 +42,14 @@ View royalty info for a given token.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info.
+| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### royaltyInfo
 
@@ -65,15 +65,15 @@ View royalty info for a given token and sale price.
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | The tokenID of the NFT for which to query royalty info.
-| salePrice | uint256 | Sale price of the token.
+| tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
+| salePrice | uint256 | Sale price of the token. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address |        Address of royalty recipient account.
-| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value.
+| receiver | address |        Address of royalty recipient account. |
+| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value. |
 
 ### setDefaultRoyaltyInfo
 
@@ -89,8 +89,8 @@ Updates default royalty recipient and bps.
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | Address to be set as default royalty recipient.
-| _royaltyBps | uint256 | Updated royalty bps.
+| _royaltyRecipient | address | Address to be set as default royalty recipient. |
+| _royaltyBps | uint256 | Updated royalty bps. |
 
 ### setRoyaltyInfoForToken
 
@@ -106,9 +106,9 @@ Updates default royalty recipient and bps for a particular token.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _recipient | address | Address to be set as royalty recipient for given token Id.
-| _bps | uint256 | Updated royalty bps for the token Id.
+| _tokenId | uint256 | undefined |
+| _recipient | address | Address to be set as royalty recipient for given token Id. |
+| _bps | uint256 | Updated royalty bps for the token Id. |
 
 ### supportsInterface
 
@@ -124,13 +124,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

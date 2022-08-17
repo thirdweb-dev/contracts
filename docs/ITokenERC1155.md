@@ -24,14 +24,14 @@ function balanceOf(address account, uint256 id) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
+| account | address | undefined |
+| id | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### balanceOfBatch
 
@@ -47,14 +47,14 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| accounts | address[] | undefined
-| ids | uint256[] | undefined
+| accounts | address[] | undefined |
+| ids | uint256[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256[] | undefined
+| _0 | uint256[] | undefined |
 
 ### isApprovedForAll
 
@@ -70,14 +70,14 @@ function isApprovedForAll(address account, address operator) external view retur
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| operator | address | undefined
+| account | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### mintTo
 
@@ -93,10 +93,10 @@ Lets an account with MINTER_ROLE mint an NFT.
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | The address to mint the NFT to.
-| tokenId | uint256 | The tokenId of the NFTs to mint
-| uri | string | The URI to assign to the NFT.
-| amount | uint256 | The number of copies of the NFT to mint.
+| to | address | The address to mint the NFT to. |
+| tokenId | uint256 | The tokenId of the NFTs to mint |
+| uri | string | The URI to assign to the NFT. |
+| amount | uint256 | The number of copies of the NFT to mint. |
 
 ### mintWithSignature
 
@@ -104,7 +104,7 @@ Lets an account with MINTER_ROLE mint an NFT.
 function mintWithSignature(ITokenERC1155.MintRequest req, bytes signature) external payable
 ```
 
-Mints an NFT according to the provided mint request.
+
 
 
 
@@ -112,8 +112,8 @@ Mints an NFT according to the provided mint request.
 
 | Name | Type | Description |
 |---|---|---|
-| req | ITokenERC1155.MintRequest | The mint request.
-| signature | bytes | he signature produced by an account signing the mint request.
+| req | ITokenERC1155.MintRequest | undefined |
+| signature | bytes | undefined |
 
 ### safeBatchTransferFrom
 
@@ -129,11 +129,11 @@ function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| ids | uint256[] | undefined
-| amounts | uint256[] | undefined
-| data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| ids | uint256[] | undefined |
+| amounts | uint256[] | undefined |
+| data | bytes | undefined |
 
 ### safeTransferFrom
 
@@ -149,11 +149,11 @@ function safeTransferFrom(address from, address to, uint256 id, uint256 amount, 
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| id | uint256 | undefined
-| amount | uint256 | undefined
-| data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| id | uint256 | undefined |
+| amount | uint256 | undefined |
+| data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -169,8 +169,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### supportsInterface
 
@@ -186,13 +186,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### verify
 
@@ -200,7 +200,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 function verify(ITokenERC1155.MintRequest req, bytes signature) external view returns (bool success, address signer)
 ```
 
-Verifies that a mint request is signed by an account holding         MINTER_ROLE (at the time of the function call).
+
 
 
 
@@ -208,15 +208,15 @@ Verifies that a mint request is signed by an account holding         MINTER_ROLE
 
 | Name | Type | Description |
 |---|---|---|
-| req | ITokenERC1155.MintRequest | The mint request.
-| signature | bytes | The signature produced by an account signing the mint request.  returns (success, signer) Result of verification and the recovered address.
+| req | ITokenERC1155.MintRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| success | bool | undefined |
+| signer | address | undefined |
 
 
 

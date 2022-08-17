@@ -24,13 +24,13 @@ function getAllPublishedContracts(address) external pure returns (struct IContra
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined |
 
 ### getPublishedContract
 
@@ -46,14 +46,14 @@ function getPublishedContract(address, string) external pure returns (struct ICo
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | string | undefined
+| _0 | address | undefined |
+| _1 | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance | undefined
+| published | IContractPublisher.CustomContractInstance | undefined |
 
 ### getPublishedContractVersions
 
@@ -69,14 +69,14 @@ function getPublishedContractVersions(address, string) external pure returns (st
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | string | undefined
+| _0 | address | undefined |
+| _1 | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance[] | undefined
+| published | IContractPublisher.CustomContractInstance[] | undefined |
 
 ### getPublishedUriFromCompilerUri
 
@@ -92,13 +92,13 @@ function getPublishedUriFromCompilerUri(string) external pure returns (string[] 
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| publishedMetadataUris | string[] | undefined
+| publishedMetadataUris | string[] | undefined |
 
 ### getPublisherProfileUri
 
@@ -114,13 +114,13 @@ function getPublisherProfileUri(address) external pure returns (string uri)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| uri | string | undefined
+| uri | string | undefined |
 
 ### publishContract
 
@@ -136,12 +136,12 @@ Let&#39;s an account publish a contract.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
-| contractId | string | The identifier for a published contract (that can have multiple verisons).
-| publishMetadataUri | string | The IPFS URI of the publish metadata.
-| compilerMetadataUri | string | The IPFS URI of the compiler metadata.
-| bytecodeHash | bytes32 | The keccak256 hash of the contract bytecode.
-| implementation | address | (Optional) An implementation address that proxy contracts / clones can point to. Default value                             if such an implementation does not exist - address(0);
+| publisher | address | The address of the publisher. |
+| contractId | string | The identifier for a published contract (that can have multiple verisons). |
+| publishMetadataUri | string | The IPFS URI of the publish metadata. |
+| compilerMetadataUri | string | The IPFS URI of the compiler metadata. |
+| bytecodeHash | bytes32 | The keccak256 hash of the contract bytecode. |
+| implementation | address | (Optional) An implementation address that proxy contracts / clones can point to. Default value                             if such an implementation does not exist - address(0); |
 
 ### setPublisherProfileUri
 
@@ -157,8 +157,8 @@ function setPublisherProfileUri(address, string) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | string | undefined
+| _0 | address | undefined |
+| _1 | string | undefined |
 
 ### unpublishContract
 
@@ -174,8 +174,8 @@ Lets a publisher unpublish a contract and all its versions.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
-| contractId | string | The identifier for a published contract (that can have multiple verisons).
+| publisher | address | The address of the publisher. |
+| contractId | string | The identifier for a published contract (that can have multiple verisons). |
 
 
 

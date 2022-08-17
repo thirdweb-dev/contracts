@@ -16,7 +16,7 @@
 function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, IDropSinglePhase.AllowlistProof allowlistProof, bytes data) external payable
 ```
 
-Lets an account claim a given quantity of NFTs.
+
 
 
 
@@ -24,12 +24,12 @@ Lets an account claim a given quantity of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | The receiver of the NFTs to claim.
-| quantity | uint256 | The quantity of NFTs to claim.
-| currency | address | The currency in which to pay for the claim.
-| pricePerToken | uint256 | The price per token to pay for the claim.
-| allowlistProof | IDropSinglePhase.AllowlistProof | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
-| data | bytes | Arbitrary bytes data that can be leveraged in the implementation of this interface.
+| receiver | address | undefined |
+| quantity | uint256 | undefined |
+| currency | address | undefined |
+| pricePerToken | uint256 | undefined |
+| allowlistProof | IDropSinglePhase.AllowlistProof | undefined |
+| data | bytes | undefined |
 
 ### setClaimConditions
 
@@ -37,7 +37,7 @@ Lets an account claim a given quantity of NFTs.
 function setClaimConditions(IClaimCondition.ClaimCondition phase, bool resetClaimEligibility) external nonpayable
 ```
 
-Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+
 
 
 
@@ -45,8 +45,8 @@ Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 | Name | Type | Description |
 |---|---|---|
-| phase | IClaimCondition.ClaimCondition | Claim condition to set.
-| resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new                                  claim conditions.
+| phase | IClaimCondition.ClaimCondition | undefined |
+| resetClaimEligibility | bool | undefined |
 
 
 

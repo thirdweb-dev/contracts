@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### FACTORY_ROLE
 
@@ -42,7 +42,7 @@ function FACTORY_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### addImplementation
 
@@ -58,7 +58,7 @@ function addImplementation(address _implementation) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _implementation | address | undefined
+| _implementation | address | undefined |
 
 ### approval
 
@@ -74,13 +74,13 @@ function approval(address) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### approveImplementation
 
@@ -96,8 +96,8 @@ function approveImplementation(address _implementation, bool _toApprove) externa
 
 | Name | Type | Description |
 |---|---|---|
-| _implementation | address | undefined
-| _toApprove | bool | undefined
+| _implementation | address | undefined |
+| _toApprove | bool | undefined |
 
 ### currentVersion
 
@@ -113,13 +113,13 @@ function currentVersion(bytes32) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### deployProxy
 
@@ -135,14 +135,14 @@ function deployProxy(bytes32 _type, bytes _data) external nonpayable returns (ad
 
 | Name | Type | Description |
 |---|---|---|
-| _type | bytes32 | undefined
-| _data | bytes | undefined
+| _type | bytes32 | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### deployProxyByImplementation
 
@@ -158,15 +158,15 @@ function deployProxyByImplementation(address _implementation, bytes _data, bytes
 
 | Name | Type | Description |
 |---|---|---|
-| _implementation | address | undefined
-| _data | bytes | undefined
-| _salt | bytes32 | undefined
+| _implementation | address | undefined |
+| _data | bytes | undefined |
+| _salt | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| deployedProxy | address | undefined
+| deployedProxy | address | undefined |
 
 ### deployProxyDeterministic
 
@@ -182,15 +182,15 @@ function deployProxyDeterministic(bytes32 _type, bytes _data, bytes32 _salt) ext
 
 | Name | Type | Description |
 |---|---|---|
-| _type | bytes32 | undefined
-| _data | bytes | undefined
-| _salt | bytes32 | undefined
+| _type | bytes32 | undefined |
+| _data | bytes | undefined |
+| _salt | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### deployer
 
@@ -206,13 +206,13 @@ function deployer(address) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getImplementation
 
@@ -228,14 +228,14 @@ function getImplementation(bytes32 _type, uint256 _version) external view return
 
 | Name | Type | Description |
 |---|---|---|
-| _type | bytes32 | undefined
-| _version | uint256 | undefined
+| _type | bytes32 | undefined |
+| _version | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getLatestImplementation
 
@@ -251,13 +251,13 @@ function getLatestImplementation(bytes32 _type) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _type | bytes32 | undefined
+| _type | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleAdmin
 
@@ -273,13 +273,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -295,14 +295,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -318,13 +318,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### grantRole
 
@@ -340,8 +340,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -357,14 +357,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### implementation
 
@@ -380,14 +380,14 @@ function implementation(bytes32, uint256) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
-| _1 | uint256 | undefined
+| _0 | bytes32 | undefined |
+| _1 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### isTrustedForwarder
 
@@ -403,13 +403,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -425,13 +425,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### registry
 
@@ -448,7 +448,7 @@ function registry() external view returns (contract TWRegistry)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract TWRegistry | undefined
+| _0 | contract TWRegistry | undefined |
 
 ### renounceRole
 
@@ -464,8 +464,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -481,8 +481,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### supportsInterface
 
@@ -498,13 +498,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

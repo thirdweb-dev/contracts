@@ -25,7 +25,7 @@ function primarySaleRecipient() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -41,7 +41,7 @@ Updates primary sale recipient.
 
 | Name | Type | Description |
 |---|---|---|
-| _saleRecipient | address | Address to be set as new recipient of primary sales.
+| _saleRecipient | address | Address to be set as new recipient of primary sales. |
 
 
 

@@ -25,7 +25,7 @@ Returns the count of batches of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getBatchIdAtIndex
 
@@ -41,13 +41,13 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | ID of a token.
+| _index | uint256 | ID of a token. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 
 

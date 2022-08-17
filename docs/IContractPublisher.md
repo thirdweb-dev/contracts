@@ -24,13 +24,13 @@ Returns the latest version of all contracts published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
+| publisher | address | The address of the publisher. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance[] | An array of all contracts published by the publisher.
+| published | IContractPublisher.CustomContractInstance[] | An array of all contracts published by the publisher. |
 
 ### getPublishedContract
 
@@ -46,14 +46,14 @@ Returns the latest version of a contract published by a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
-| contractId | string | The identifier for a published contract (that can have multiple verisons).
+| publisher | address | The address of the publisher. |
+| contractId | string | The identifier for a published contract (that can have multiple verisons). |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance | The desired contract published by the publisher.
+| published | IContractPublisher.CustomContractInstance | The desired contract published by the publisher. |
 
 ### getPublishedContractVersions
 
@@ -69,14 +69,14 @@ Returns all versions of a published contract.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
-| contractId | string | The identifier for a published contract (that can have multiple verisons).
+| publisher | address | The address of the publisher. |
+| contractId | string | The identifier for a published contract (that can have multiple verisons). |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| published | IContractPublisher.CustomContractInstance[] | The desired contracts published by the publisher.
+| published | IContractPublisher.CustomContractInstance[] | The desired contracts published by the publisher. |
 
 ### getPublishedUriFromCompilerUri
 
@@ -92,13 +92,13 @@ Retrieve the published metadata URI from a compiler metadata URI.
 
 | Name | Type | Description |
 |---|---|---|
-| compilerMetadataUri | string | undefined
+| compilerMetadataUri | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| publishedMetadataUris | string[] | undefined
+| publishedMetadataUris | string[] | undefined |
 
 ### getPublisherProfileUri
 
@@ -114,13 +114,13 @@ Get the publisher profile uri for a given publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | undefined
+| publisher | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| uri | string | undefined
+| uri | string | undefined |
 
 ### publishContract
 
@@ -136,12 +136,12 @@ Let&#39;s an account publish a contract.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
-| contractId | string | The identifier for a published contract (that can have multiple verisons).
-| publishMetadataUri | string | The IPFS URI of the publish metadata.
-| compilerMetadataUri | string | The IPFS URI of the compiler metadata.
-| bytecodeHash | bytes32 | The keccak256 hash of the contract bytecode.
-| implementation | address | (Optional) An implementation address that proxy contracts / clones can point to. Default value                             if such an implementation does not exist - address(0);
+| publisher | address | The address of the publisher. |
+| contractId | string | The identifier for a published contract (that can have multiple verisons). |
+| publishMetadataUri | string | The IPFS URI of the publish metadata. |
+| compilerMetadataUri | string | The IPFS URI of the compiler metadata. |
+| bytecodeHash | bytes32 | The keccak256 hash of the contract bytecode. |
+| implementation | address | (Optional) An implementation address that proxy contracts / clones can point to. Default value                             if such an implementation does not exist - address(0); |
 
 ### setPublisherProfileUri
 
@@ -157,8 +157,8 @@ Lets an account set its publisher profile uri
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | undefined
-| uri | string | undefined
+| publisher | address | undefined |
+| uri | string | undefined |
 
 ### unpublishContract
 
@@ -174,8 +174,8 @@ Lets a publisher unpublish a contract and all its versions.
 
 | Name | Type | Description |
 |---|---|---|
-| publisher | address | The address of the publisher.
-| contractId | string | The identifier for a published contract (that can have multiple verisons).
+| publisher | address | The address of the publisher. |
+| contractId | string | The identifier for a published contract (that can have multiple verisons). |
 
 
 

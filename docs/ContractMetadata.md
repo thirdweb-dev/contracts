@@ -25,7 +25,7 @@ Returns the contract metadata URI.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### setContractURI
 
@@ -41,7 +41,7 @@ Lets a contract admin set the URI for contract-level metadata.
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;)
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 
 
