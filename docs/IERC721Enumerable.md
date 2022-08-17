@@ -24,13 +24,13 @@ Enumerate valid NFTs
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | A counter less than `totalSupply()`
+| _index | uint256 | A counter less than `totalSupply()` |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | The token identifier for the `_index`th NFT,  (sort order not specified)
+| _0 | uint256 | The token identifier for the `_index`th NFT,  (sort order not specified) |
 
 ### tokenOfOwnerByIndex
 
@@ -46,14 +46,14 @@ Enumerate NFTs assigned to an owner
 
 | Name | Type | Description |
 |---|---|---|
-| _owner | address | An address where we are interested in NFTs owned by them
-| _index | uint256 | A counter less than `balanceOf(_owner)`
+| _owner | address | An address where we are interested in NFTs owned by them |
+| _index | uint256 | A counter less than `balanceOf(_owner)` |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | The token identifier for the `_index`th NFT assigned to `_owner`,   (sort order not specified)
+| _0 | uint256 | The token identifier for the `_index`th NFT assigned to `_owner`,   (sort order not specified) |
 
 
 

@@ -24,8 +24,8 @@ function registerMetadata(address contractAddress, string metadataUri) external 
 
 | Name | Type | Description |
 |---|---|---|
-| contractAddress | address | undefined
-| metadataUri | string | undefined
+| contractAddress | address | undefined |
+| metadataUri | string | undefined |
 
 
 

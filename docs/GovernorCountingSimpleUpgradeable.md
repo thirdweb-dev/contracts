@@ -25,7 +25,7 @@ function BALLOT_TYPEHASH() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### COUNTING_MODE
 
@@ -42,7 +42,7 @@ function COUNTING_MODE() external pure returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### castVote
 
@@ -58,14 +58,14 @@ function castVote(uint256 proposalId, uint8 support) external nonpayable returns
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
-| support | uint8 | undefined
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### castVoteBySig
 
@@ -81,17 +81,17 @@ function castVoteBySig(uint256 proposalId, uint8 support, uint8 v, bytes32 r, by
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
-| support | uint8 | undefined
-| v | uint8 | undefined
-| r | bytes32 | undefined
-| s | bytes32 | undefined
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### castVoteWithReason
 
@@ -107,15 +107,15 @@ function castVoteWithReason(uint256 proposalId, uint8 support, string reason) ex
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
-| support | uint8 | undefined
-| reason | string | undefined
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
+| reason | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### execute
 
@@ -131,16 +131,16 @@ function execute(address[] targets, uint256[] values, bytes[] calldatas, bytes32
 
 | Name | Type | Description |
 |---|---|---|
-| targets | address[] | undefined
-| values | uint256[] | undefined
-| calldatas | bytes[] | undefined
-| descriptionHash | bytes32 | undefined
+| targets | address[] | undefined |
+| values | uint256[] | undefined |
+| calldatas | bytes[] | undefined |
+| descriptionHash | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getVotes
 
@@ -156,14 +156,14 @@ module:reputation
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| blockNumber | uint256 | undefined
+| account | address | undefined |
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### hasVoted
 
@@ -179,14 +179,14 @@ function hasVoted(uint256 proposalId, address account) external view returns (bo
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
-| account | address | undefined
+| proposalId | uint256 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### hashProposal
 
@@ -202,16 +202,16 @@ function hashProposal(address[] targets, uint256[] values, bytes[] calldatas, by
 
 | Name | Type | Description |
 |---|---|---|
-| targets | address[] | undefined
-| values | uint256[] | undefined
-| calldatas | bytes[] | undefined
-| descriptionHash | bytes32 | undefined
+| targets | address[] | undefined |
+| values | uint256[] | undefined |
+| calldatas | bytes[] | undefined |
+| descriptionHash | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### name
 
@@ -228,7 +228,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### proposalDeadline
 
@@ -244,13 +244,13 @@ function proposalDeadline(uint256 proposalId) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
+| proposalId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### proposalSnapshot
 
@@ -266,13 +266,13 @@ function proposalSnapshot(uint256 proposalId) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
+| proposalId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### proposalThreshold
 
@@ -289,7 +289,7 @@ function proposalThreshold() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### proposalVotes
 
@@ -305,15 +305,15 @@ function proposalVotes(uint256 proposalId) external view returns (uint256 agains
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
+| proposalId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| againstVotes | uint256 | undefined
-| forVotes | uint256 | undefined
-| abstainVotes | uint256 | undefined
+| againstVotes | uint256 | undefined |
+| forVotes | uint256 | undefined |
+| abstainVotes | uint256 | undefined |
 
 ### propose
 
@@ -329,16 +329,16 @@ function propose(address[] targets, uint256[] values, bytes[] calldatas, string 
 
 | Name | Type | Description |
 |---|---|---|
-| targets | address[] | undefined
-| values | uint256[] | undefined
-| calldatas | bytes[] | undefined
-| description | string | undefined
+| targets | address[] | undefined |
+| values | uint256[] | undefined |
+| calldatas | bytes[] | undefined |
+| description | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### quorum
 
@@ -354,13 +354,13 @@ module:user-config
 
 | Name | Type | Description |
 |---|---|---|
-| blockNumber | uint256 | undefined
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### relay
 
@@ -376,9 +376,9 @@ function relay(address target, uint256 value, bytes data) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| target | address | undefined
-| value | uint256 | undefined
-| data | bytes | undefined
+| target | address | undefined |
+| value | uint256 | undefined |
+| data | bytes | undefined |
 
 ### state
 
@@ -394,13 +394,13 @@ function state(uint256 proposalId) external view returns (enum IGovernorUpgradea
 
 | Name | Type | Description |
 |---|---|---|
-| proposalId | uint256 | undefined
+| proposalId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | enum IGovernorUpgradeable.ProposalState | undefined
+| _0 | enum IGovernorUpgradeable.ProposalState | undefined |
 
 ### supportsInterface
 
@@ -416,13 +416,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### version
 
@@ -439,7 +439,7 @@ function version() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### votingDelay
 
@@ -456,7 +456,7 @@ module:user-config
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### votingPeriod
 
@@ -473,7 +473,7 @@ module:user-config
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 
 

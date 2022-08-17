@@ -24,7 +24,7 @@ function burn(uint256 amount) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | undefined
+| amount | uint256 | undefined |
 
 ### burnFrom
 
@@ -40,8 +40,8 @@ function burnFrom(address account, uint256 amount) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| amount | uint256 | undefined
+| account | address | undefined |
+| amount | uint256 | undefined |
 
 
 

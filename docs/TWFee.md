@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### MAX_FEE_BPS
 
@@ -42,7 +42,7 @@ function MAX_FEE_BPS() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### factory
 
@@ -59,7 +59,7 @@ function factory() external view returns (contract TWFactory)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract TWFactory | undefined
+| _0 | contract TWFactory | undefined |
 
 ### feeInfo
 
@@ -75,15 +75,15 @@ function feeInfo(uint256, uint256) external view returns (uint256 bps, address r
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
-| _1 | uint256 | undefined
+| _0 | uint256 | undefined |
+| _1 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| bps | uint256 | undefined
-| recipient | address | undefined
+| bps | uint256 | undefined |
+| recipient | address | undefined |
 
 ### getFeeInfo
 
@@ -99,15 +99,15 @@ function getFeeInfo(address _proxy, uint256 _feeType) external view returns (add
 
 | Name | Type | Description |
 |---|---|---|
-| _proxy | address | undefined
-| _feeType | uint256 | undefined
+| _proxy | address | undefined |
+| _feeType | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| recipient | address | undefined
-| bps | uint256 | undefined
+| recipient | address | undefined |
+| bps | uint256 | undefined |
 
 ### getFeeTier
 
@@ -123,15 +123,15 @@ function getFeeTier(address _deployer, address _proxy) external view returns (ui
 
 | Name | Type | Description |
 |---|---|---|
-| _deployer | address | undefined
-| _proxy | address | undefined
+| _deployer | address | undefined |
+| _proxy | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tierId | uint128 | undefined
-| validUntilTimestamp | uint128 | undefined
+| tierId | uint128 | undefined |
+| validUntilTimestamp | uint128 | undefined |
 
 ### getRoleAdmin
 
@@ -147,13 +147,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -169,14 +169,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -192,13 +192,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### grantRole
 
@@ -214,8 +214,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -231,14 +231,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isTrustedForwarder
 
@@ -254,13 +254,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -276,13 +276,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### renounceRole
 
@@ -298,8 +298,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -315,8 +315,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### setFeeInfoForTier
 
@@ -332,10 +332,10 @@ function setFeeInfoForTier(uint256 _tierId, uint256 _feeBps, address _feeRecipie
 
 | Name | Type | Description |
 |---|---|---|
-| _tierId | uint256 | undefined
-| _feeBps | uint256 | undefined
-| _feeRecipient | address | undefined
-| _feeType | uint256 | undefined
+| _tierId | uint256 | undefined |
+| _feeBps | uint256 | undefined |
+| _feeRecipient | address | undefined |
+| _feeType | uint256 | undefined |
 
 ### setFeeTierPlacementExtension
 
@@ -351,7 +351,7 @@ function setFeeTierPlacementExtension(address _extension) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _extension | address | undefined
+| _extension | address | undefined |
 
 ### setTier
 
@@ -367,9 +367,9 @@ function setTier(address _proxyOrDeployer, uint128 _tierId, uint128 _validUntilT
 
 | Name | Type | Description |
 |---|---|---|
-| _proxyOrDeployer | address | undefined
-| _tierId | uint128 | undefined
-| _validUntilTimestamp | uint128 | undefined
+| _proxyOrDeployer | address | undefined |
+| _tierId | uint128 | undefined |
+| _validUntilTimestamp | uint128 | undefined |
 
 ### supportsInterface
 
@@ -385,13 +385,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### tierPlacementExtension
 
@@ -408,7 +408,7 @@ function tierPlacementExtension() external view returns (contract IFeeTierPlacem
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IFeeTierPlacementExtension | undefined
+| _0 | contract IFeeTierPlacementExtension | undefined |
 
 
 

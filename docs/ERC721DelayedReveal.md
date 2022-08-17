@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC721A      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
+BASE:      ERC721Base      EXTENSION: LazyMint, DelayedReveal  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.  &#39;Delayed reveal&#39; is a mechanism by which you can distribute NFTs to your audience and reveal the metadata of the distributed  NFTs, after the fact.  You can read more about how the `DelayedReveal` extension works, here: https://blog.thirdweb.com/delayed-reveal-nfts
 
 
 
@@ -24,8 +24,8 @@ function approve(address to, uint256 tokenId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| tokenId | uint256 | undefined
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### balanceOf
 
@@ -41,13 +41,13 @@ function balanceOf(address owner) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| owner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### batchMintTo
 
@@ -63,10 +63,10 @@ Lets an authorized address mint multiple lazy minted NFTs at once to a recipient
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | The recipient of the NFT to mint.
-| _quantity | uint256 | The number of NFTs to mint.
-| _2 | string | undefined
-| _data | bytes | Additional data to pass along during the minting of the NFT.
+| _to | address | The recipient of the NFT to mint. |
+| _quantity | uint256 | The number of NFTs to mint. |
+| _2 | string | undefined |
+| _data | bytes | Additional data to pass along during the minting of the NFT. |
 
 ### burn
 
@@ -82,7 +82,7 @@ Lets an owner or approved operator burn the NFT of the given tokenId.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The tokenId of the NFT to burn.
+| _tokenId | uint256 | The tokenId of the NFT to burn. |
 
 ### contractURI
 
@@ -99,7 +99,7 @@ Returns the contract metadata URI.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### encryptDecrypt
 
@@ -115,19 +115,19 @@ Encrypt/decrypt data on chain.
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes | Bytes of data to encrypt/decrypt.
-| key | bytes | Secure key used by caller for encryption/decryption.
+| data | bytes | Bytes of data to encrypt/decrypt. |
+| key | bytes | Secure key used by caller for encryption/decryption. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| result | bytes |  Output after encryption/decryption of given data.
+| result | bytes |  Output after encryption/decryption of given data. |
 
-### encryptedBaseURI
+### encryptedData
 
 ```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
+function encryptedData(uint256) external view returns (bytes)
 ```
 
 
@@ -138,13 +138,13 @@ function encryptedBaseURI(uint256) external view returns (bytes)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes | undefined
+| _0 | bytes | undefined |
 
 ### getApproved
 
@@ -160,13 +160,13 @@ function getApproved(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getBaseURICount
 
@@ -183,7 +183,7 @@ Returns the count of batches of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getBatchIdAtIndex
 
@@ -199,13 +199,13 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | ID of a token.
+| _index | uint256 | ID of a token. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getDefaultRoyaltyInfo
 
@@ -222,8 +222,8 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRevealURI
 
@@ -239,14 +239,14 @@ Returns revealed URI for a batch of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _batchId | uint256 | ID of the batch for which URI is being revealed.
-| _key | bytes | Secure key used by caller/admin for encryption of baseURI.
+| _batchId | uint256 | ID of the batch for which URI is being revealed. |
+| _key | bytes | Secure key used by caller/admin for encryption of baseURI. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| revealedURI | string | Decrypted base URI.
+| revealedURI | string | Decrypted base URI. |
 
 ### getRoyaltyInfoForToken
 
@@ -262,14 +262,14 @@ View royalty info for a given token.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info.
+| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### isApprovedForAll
 
@@ -285,14 +285,14 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| operator | address | undefined
+| owner | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isApprovedOrOwner
 
@@ -308,14 +308,14 @@ Returns whether a given address is the owner, or approved to transfer an NFT.
 
 | Name | Type | Description |
 |---|---|---|
-| _operator | address | undefined
-| _tokenId | uint256 | undefined
+| _operator | address | undefined |
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| isApprovedOrOwnerOf | bool | undefined
+| isApprovedOrOwnerOf | bool | undefined |
 
 ### isEncryptedBatch
 
@@ -331,18 +331,18 @@ Returns whether the relvant batch of NFTs is subject to a delayed reveal.
 
 | Name | Type | Description |
 |---|---|---|
-| _batchId | uint256 | ID of a batch of NFTs.
+| _batchId | uint256 | ID of a batch of NFTs. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _encryptedBaseURI) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable returns (uint256 batchId)
 ```
 
 Lets an authorized address lazy mint a given amount of NFTs.
@@ -353,15 +353,15 @@ Lets an authorized address lazy mint a given amount of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _amount | uint256 | The number of NFTs to lazy mint.
-| _baseURIForTokens | string | The placeholder base URI for the &#39;n&#39; number of NFTs being lazy minted, where the                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| _encryptedBaseURI | bytes | The encrypted base URI for the batch of NFTs being lazy minted.
+| _amount | uint256 | The number of NFTs to lazy mint. |
+| _baseURIForTokens | string | The placeholder base URI for the &#39;n&#39; number of NFTs being lazy minted, where the                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`. |
+| _data | bytes | The encrypted base URI + provenance hash for the batch of NFTs being lazy minted. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
+| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
 
 ### mintTo
 
@@ -377,8 +377,8 @@ Lets an authorized address mint a lazy minted NFT to a recipient.
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | The recipient of the NFT to mint.
-| _1 | string | undefined
+| _to | address | The recipient of the NFT to mint. |
+| _1 | string | undefined |
 
 ### multicall
 
@@ -394,13 +394,13 @@ Receives and executes a batch of function calls on this contract.
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute.
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed.
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### name
 
@@ -417,7 +417,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### nextTokenIdToMint
 
@@ -434,7 +434,7 @@ The tokenId assigned to the next new NFT to be lazy minted.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### owner
 
@@ -451,7 +451,7 @@ Returns the owner of the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### ownerOf
 
@@ -467,13 +467,13 @@ function ownerOf(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### reveal
 
@@ -489,14 +489,14 @@ Lets an authorized address reveal a batch of delayed reveal NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
-| _key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
+| _index | uint256 | The ID for the batch of delayed-reveal NFTs to reveal. |
+| _key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| revealedURI | string | undefined
+| revealedURI | string | undefined |
 
 ### royaltyInfo
 
@@ -512,15 +512,33 @@ View royalty info for a given token and sale price.
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | The tokenID of the NFT for which to query royalty info.
-| salePrice | uint256 | Sale price of the token.
+| tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
+| salePrice | uint256 | Sale price of the token. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address |        Address of royalty recipient account.
-| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value.
+| receiver | address |        Address of royalty recipient account. |
+| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value. |
+
+### safeTransferFrom
+
+```solidity
+function safeTransferFrom(address from, address to, uint256 tokenId) external nonpayable
+```
+
+
+
+*See {IERC721-safeTransferFrom}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### safeTransferFrom
 
@@ -536,10 +554,10 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
-| _data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
+| _data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -555,8 +573,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### setContractURI
 
@@ -572,7 +590,7 @@ Lets a contract admin set the URI for contract-level metadata.
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;)
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 ### setDefaultRoyaltyInfo
 
@@ -588,8 +606,8 @@ Updates default royalty recipient and bps.
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | Address to be set as default royalty recipient.
-| _royaltyBps | uint256 | Updated royalty bps.
+| _royaltyRecipient | address | Address to be set as default royalty recipient. |
+| _royaltyBps | uint256 | Updated royalty bps. |
 
 ### setOwner
 
@@ -605,7 +623,7 @@ Lets an authorized wallet set a new owner for the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract.
+| _newOwner | address | The address to set as the new owner of the contract. |
 
 ### setRoyaltyInfoForToken
 
@@ -621,9 +639,9 @@ Updates default royalty recipient and bps for a particular token.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _recipient | address | Address to be set as royalty recipient for given token Id.
-| _bps | uint256 | Updated royalty bps for the token Id.
+| _tokenId | uint256 | undefined |
+| _recipient | address | Address to be set as royalty recipient for given token Id. |
+| _bps | uint256 | Updated royalty bps for the token Id. |
 
 ### supportsInterface
 
@@ -639,13 +657,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### symbol
 
@@ -662,7 +680,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### tokenURI
 
@@ -678,13 +696,13 @@ Returns the metadata URI for an NFT.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | The tokenId of an NFT.
+| _tokenId | uint256 | The tokenId of an NFT. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -701,7 +719,7 @@ function totalSupply() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transferFrom
 
@@ -717,9 +735,9 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 
 

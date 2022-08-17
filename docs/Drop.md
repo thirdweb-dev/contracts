@@ -18,18 +18,18 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 
 
 
-*Lets an account claim tokens.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _receiver | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| _allowlistProof | IDrop.AllowlistProof | undefined
-| _data | bytes | undefined
+| _receiver | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDrop.AllowlistProof | undefined |
+| _data | bytes | undefined |
 
 ### claimCondition
 
@@ -46,8 +46,8 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| currentStartId | uint256 | undefined
-| count | uint256 | undefined
+| currentStartId | uint256 | undefined |
+| count | uint256 | undefined |
 
 ### getActiveClaimConditionId
 
@@ -64,7 +64,7 @@ function getActiveClaimConditionId() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getClaimConditionById
 
@@ -80,13 +80,13 @@ function getClaimConditionById(uint256 _conditionId) external view returns (stru
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
+| _conditionId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| condition | IClaimCondition.ClaimCondition | undefined
+| condition | IClaimCondition.ClaimCondition | undefined |
 
 ### getClaimTimestamp
 
@@ -102,15 +102,15 @@ function getClaimTimestamp(uint256 _conditionId, address _claimer) external view
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| lastClaimTimestamp | uint256 | undefined
-| nextValidClaimTimestamp | uint256 | undefined
+| lastClaimTimestamp | uint256 | undefined |
+| nextValidClaimTimestamp | uint256 | undefined |
 
 ### setClaimConditions
 
@@ -120,14 +120,14 @@ function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _
 
 
 
-*Lets a contract admin set claim conditions.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _conditions | IClaimCondition.ClaimCondition[] | undefined
-| _resetClaimEligibility | bool | undefined
+| _conditions | IClaimCondition.ClaimCondition[] | undefined |
+| _resetClaimEligibility | bool | undefined |
 
 ### verifyClaim
 
@@ -143,12 +143,12 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| verifyMaxQuantityPerTransaction | bool | undefined
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| verifyMaxQuantityPerTransaction | bool | undefined |
 
 ### verifyClaimMerkleProof
 
@@ -158,23 +158,23 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 
 
 
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _conditionId | uint256 | undefined
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _allowlistProof | IDrop.AllowlistProof | undefined
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+| _quantity | uint256 | undefined |
+| _allowlistProof | IDrop.AllowlistProof | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| validMerkleProof | bool | undefined
-| merkleProofIndex | uint256 | undefined
+| validMerkleProof | bool | undefined |
+| merkleProofIndex | uint256 | undefined |
 
 
 

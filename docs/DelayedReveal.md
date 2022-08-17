@@ -24,36 +24,36 @@ Encrypt/decrypt data on chain.
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes | Bytes of data to encrypt/decrypt.
-| key | bytes | Secure key used by caller for encryption/decryption.
+| data | bytes | Bytes of data to encrypt/decrypt. |
+| key | bytes | Secure key used by caller for encryption/decryption. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| result | bytes |  Output after encryption/decryption of given data.
+| result | bytes |  Output after encryption/decryption of given data. |
 
-### encryptedBaseURI
+### encryptedData
 
 ```solidity
-function encryptedBaseURI(uint256) external view returns (bytes)
+function encryptedData(uint256) external view returns (bytes)
 ```
 
 
 
-*Mapping from id of a batch of tokens =&gt; to encrypted base URI for the respective batch of tokens.*
+*Mapping from tokenId of a batch of tokens =&gt; to delayed reveal data.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes | undefined
+| _0 | bytes | undefined |
 
 ### getRevealURI
 
@@ -69,14 +69,14 @@ Returns revealed URI for a batch of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _batchId | uint256 | ID of the batch for which URI is being revealed.
-| _key | bytes | Secure key used by caller/admin for encryption of baseURI.
+| _batchId | uint256 | ID of the batch for which URI is being revealed. |
+| _key | bytes | Secure key used by caller/admin for encryption of baseURI. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| revealedURI | string | Decrypted base URI.
+| revealedURI | string | Decrypted base URI. |
 
 ### isEncryptedBatch
 
@@ -92,13 +92,13 @@ Returns whether the relvant batch of NFTs is subject to a delayed reveal.
 
 | Name | Type | Description |
 |---|---|---|
-| _batchId | uint256 | ID of a batch of NFTs.
+| _batchId | uint256 | ID of a batch of NFTs. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### reveal
 
@@ -114,14 +114,14 @@ Reveals a batch of delayed reveal NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| identifier | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
-| key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
+| identifier | uint256 | The ID for the batch of delayed-reveal NFTs to reveal. |
+| key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| revealedURI | string | undefined
+| revealedURI | string | undefined |
 
 
 

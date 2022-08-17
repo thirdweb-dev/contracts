@@ -25,7 +25,7 @@ Returns the count of batches of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getBatchIdAtIndex
 
@@ -41,13 +41,13 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 
 | Name | Type | Description |
 |---|---|---|
-| _index | uint256 | ID of a token.
+| _index | uint256 | ID of a token. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### lazyMint
 
@@ -63,15 +63,15 @@ Lets an authorized address lazy mint a given amount of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| _amount | uint256 | The number of NFTs to lazy mint.
-| _baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                           of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| _data | bytes | Additional bytes data to be used at the discretion of the consumer of the contract.
+| _amount | uint256 | The number of NFTs to lazy mint. |
+| _baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                           of those NFTs is `${baseURIForTokens}/${tokenId}`. |
+| _data | bytes | Additional bytes data to be used at the discretion of the consumer of the contract. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together.
+| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
 
 
 

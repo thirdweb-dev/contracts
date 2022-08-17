@@ -24,7 +24,7 @@ function burn(uint256 tokenId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 
 

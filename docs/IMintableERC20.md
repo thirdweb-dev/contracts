@@ -24,8 +24,8 @@ function mintTo(address to, uint256 amount) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| amount | uint256 | undefined
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 
 
