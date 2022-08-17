@@ -428,7 +428,7 @@ contract DropERC20 is
     {
         lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
 
-        if(lastClaimTimestamp != 0) {
+        if (lastClaimTimestamp != 0) {
             unchecked {
                 nextValidClaimTimestamp =
                     lastClaimTimestamp +
@@ -439,7 +439,6 @@ contract DropERC20 is
                 }
             }
         }
-
     }
 
     /// @dev Returns the claim condition at the given uid.
