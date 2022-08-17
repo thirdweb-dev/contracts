@@ -4,7 +4,7 @@
 
 
 
-Thirdweb&#39;s `AppURI` is a contract extension for any contract   that wants to add an official App URI that follows the appUri spec
+Thirdweb&#39;s `AppURI` is a contract extension for any contract  that wants to add an official App URI that follows the appUri spec
 
 
 
