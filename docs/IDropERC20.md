@@ -24,14 +24,14 @@ function allowance(address owner, address spender) external view returns (uint25
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| spender | address | undefined
+| owner | address | undefined |
+| spender | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### approve
 
@@ -47,14 +47,14 @@ function approve(address spender, uint256 amount) external nonpayable returns (b
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| amount | uint256 | undefined
+| spender | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### balanceOf
 
@@ -70,13 +70,13 @@ function balanceOf(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### claim
 
@@ -92,12 +92,12 @@ Lets an account claim a given quantity of tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | The receiver of the tokens to claim.
-| quantity | uint256 | The quantity of tokens to claim.
-| currency | address | The currency in which to pay for the claim.
-| pricePerToken | uint256 | The price per token (i.e. price per 1 ether unit of the token)                                         to pay for the claim.
-| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
-| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of tokens an address included in an                                        allowlist can claim.
+| receiver | address | The receiver of the tokens to claim. |
+| quantity | uint256 | The quantity of tokens to claim. |
+| currency | address | The currency in which to pay for the claim. |
+| pricePerToken | uint256 | The price per token (i.e. price per 1 ether unit of the token)                                         to pay for the claim. |
+| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
+| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of tokens an address included in an                                        allowlist can claim. |
 
 ### setClaimConditions
 
@@ -105,7 +105,7 @@ Lets an account claim a given quantity of tokens.
 function setClaimConditions(IDropClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
 ```
 
-Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+
 
 
 
@@ -113,8 +113,8 @@ Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 | Name | Type | Description |
 |---|---|---|
-| phases | IDropClaimCondition.ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`.
-| resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and                               `limitMerkleProofClaim` values when setting new                               claim conditions.
+| phases | IDropClaimCondition.ClaimCondition[] | undefined |
+| resetClaimEligibility | bool | undefined |
 
 ### totalSupply
 
@@ -131,7 +131,7 @@ function totalSupply() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transfer
 
@@ -147,14 +147,14 @@ function transfer(address to, uint256 amount) external nonpayable returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| amount | uint256 | undefined
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### transferFrom
 
@@ -170,15 +170,15 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| amount | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

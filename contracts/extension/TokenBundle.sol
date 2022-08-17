@@ -8,6 +8,13 @@ interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }
 
+/**
+ *  @title   Token Bundle
+ *  @notice  `TokenBundle` contract extension allows bundling-up of ERC20/ERC721/ERC1155 and native-tokan assets
+ *           in a data structure, and provides logic for setting/getting IDs and URIs for created bundles.
+ *  @dev     See {ITokenBundle}
+ */
+
 abstract contract TokenBundle is ITokenBundle {
     /// @dev Mapping from bundle UID => bundle info.
     mapping(uint256 => BundleInfo) private bundle;

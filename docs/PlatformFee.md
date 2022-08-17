@@ -2,9 +2,9 @@
 
 
 
+> Platform Fee
 
-
-Thirdweb&#39;s `PlatformFee` is a contract extension to be used with any base contract. It exposes functions for setting and reading  the recipient of platform fee and the platform fee basis points, and lets the inheriting contract perform conditional logic  that uses information about platform fees, if desired.
+Thirdweb&#39;s `PlatformFee` is a contract extension to be used with any base contract. It exposes functions for setting and reading           the recipient of platform fee and the platform fee basis points, and lets the inheriting contract perform conditional logic           that uses information about platform fees, if desired.
 
 
 
@@ -25,8 +25,8 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### setPlatformFeeInfo
 
@@ -34,16 +34,16 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
 ```
 
+Updates the platform fee recipient and bps.
 
-
-*Lets a contract admin update the platform fee recipient and bps*
+*Caller should be authorized to set platform fee info.                  See {_canSetPlatformFeeInfo}.                  Emits {PlatformFeeInfoUpdated Event}; See {_setupPlatformFeeInfo}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
+| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
+| _platformFeeBps | uint256 | Updated platformFeeBps. |
 
 
 

@@ -24,13 +24,13 @@ A distinct Uniform Resource Identifier (URI) for a given token.
 
 | Name | Type | Description |
 |---|---|---|
-| _id | uint256 | undefined
+| _id | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | URI string
+| _0 | string | URI string |
 
 
 

@@ -2,11 +2,11 @@
 
 
 
+> PermissionsEnumerable
 
 
 
-
-
+*This contracts provides extending-contracts with role-based access control mechanisms.           Also provides interfaces to view all members with a given role, and total count of members.*
 
 ## Methods
 
@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleAdmin
 
@@ -33,21 +33,21 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ```
 
+Returns the admin role that controls the specified role.
 
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
+*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -55,22 +55,22 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
+Returns the role-member from a list of members for a role,                  at a given index.
 
-
-*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
+*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| index | uint256 | Index in list of current members for the role. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| member | address | undefined
+| member | address |  Address of account that has `role` |
 
 ### getRoleMemberCount
 
@@ -78,21 +78,21 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
+Returns total number of accounts that have a role.
 
-
-*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
+*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| count | uint256 | undefined
+| count | uint256 |   Total number of accounts that have `role` |
 
 ### grantRole
 
@@ -100,16 +100,16 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 function grantRole(bytes32 role, address account) external nonpayable
 ```
 
+Grants a role to an account, if not previously granted.
 
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account to which the role is being granted. |
 
 ### hasRole
 
@@ -117,7 +117,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 function hasRole(bytes32 role, address account) external view returns (bool)
 ```
 
-
+Checks whether an account has a particular role.
 
 *Returns `true` if `account` has been granted `role`.*
 
@@ -125,14 +125,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### hasRoleWithSwitch
 
@@ -140,22 +140,22 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
 ```
 
+Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
 
-
-
+*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### renounceRole
 
@@ -163,16 +163,16 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 function renounceRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from the account.
 
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 ### revokeRole
 
@@ -180,16 +180,16 @@ function renounceRole(bytes32 role, address account) external nonpayable
 function revokeRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from an account.
 
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 
 

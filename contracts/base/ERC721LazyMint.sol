@@ -5,8 +5,6 @@ import "./ERC721Base.sol";
 
 import "../extension/LazyMint.sol";
 
-import "../lib/TWStrings.sol";
-
 /**
  *      BASE:      ERC721Base
  *      EXTENSION: LazyMint
@@ -22,8 +20,6 @@ import "../lib/TWStrings.sol";
  */
 
 contract ERC721LazyMint is ERC721Base, LazyMint {
-    using TWStrings for uint256;
-
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/

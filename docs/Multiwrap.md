@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### NATIVE_TOKEN
 
@@ -42,7 +42,7 @@ function NATIVE_TOKEN() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### approve
 
@@ -58,8 +58,8 @@ function approve(address to, uint256 tokenId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| tokenId | uint256 | undefined
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### balanceOf
 
@@ -75,13 +75,13 @@ function balanceOf(address owner) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| owner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### contractType
 
@@ -98,7 +98,7 @@ function contractType() external pure returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractURI
 
@@ -106,7 +106,7 @@ function contractType() external pure returns (bytes32)
 function contractURI() external view returns (string)
 ```
 
-
+Returns the contract metadata URI.
 
 
 
@@ -115,7 +115,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### contractVersion
 
@@ -132,7 +132,7 @@ function contractVersion() external pure returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### getApproved
 
@@ -148,13 +148,13 @@ function getApproved(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getDefaultRoyaltyInfo
 
@@ -162,17 +162,17 @@ function getApproved(uint256 tokenId) external view returns (address)
 function getDefaultRoyaltyInfo() external view returns (address, uint16)
 ```
 
+Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 
 
-*Returns the default royalty recipient and bps.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRoleAdmin
 
@@ -180,21 +180,21 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ```
 
+Returns the admin role that controls the specified role.
 
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
+*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -202,22 +202,22 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
+Returns the role-member from a list of members for a role,                  at a given index.
 
-
-*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
+*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| index | uint256 | Index in list of current members for the role. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| member | address | undefined
+| member | address |  Address of account that has `role` |
 
 ### getRoleMemberCount
 
@@ -225,21 +225,21 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
+Returns total number of accounts that have a role.
 
-
-*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
+*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| count | uint256 | undefined
+| count | uint256 |   Total number of accounts that have `role` |
 
 ### getRoyaltyInfoForToken
 
@@ -247,22 +247,22 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address, uint16)
 ```
 
+View royalty info for a given token.
 
-
-*Returns the royalty recipient and bps for a particular token Id.*
+*Returns royalty recipient and bps for `_tokenId`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getTokenCountOfBundle
 
@@ -278,13 +278,13 @@ function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined
+| _bundleId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getTokenOfBundle
 
@@ -300,14 +300,14 @@ function getTokenOfBundle(uint256 _bundleId, uint256 index) external view return
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined
-| index | uint256 | undefined
+| _bundleId | uint256 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | ITokenBundle.Token | undefined
+| _0 | ITokenBundle.Token | undefined |
 
 ### getUriOfBundle
 
@@ -323,13 +323,13 @@ function getUriOfBundle(uint256 _bundleId) external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined
+| _bundleId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### getWrappedContents
 
@@ -345,13 +345,13 @@ function getWrappedContents(uint256 _tokenId) external view returns (struct ITok
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| contents | ITokenBundle.Token[] | undefined
+| contents | ITokenBundle.Token[] | undefined |
 
 ### grantRole
 
@@ -359,16 +359,16 @@ function getWrappedContents(uint256 _tokenId) external view returns (struct ITok
 function grantRole(bytes32 role, address account) external nonpayable
 ```
 
+Grants a role to an account, if not previously granted.
 
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account to which the role is being granted. |
 
 ### hasRole
 
@@ -376,7 +376,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 function hasRole(bytes32 role, address account) external view returns (bool)
 ```
 
-
+Checks whether an account has a particular role.
 
 *Returns `true` if `account` has been granted `role`.*
 
@@ -384,14 +384,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### hasRoleWithSwitch
 
@@ -399,22 +399,22 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
 ```
 
+Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
 
-
-
+*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### initialize
 
@@ -430,13 +430,13 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 
 | Name | Type | Description |
 |---|---|---|
-| _defaultAdmin | address | undefined
-| _name | string | undefined
-| _symbol | string | undefined
-| _contractURI | string | undefined
-| _trustedForwarders | address[] | undefined
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
+| _defaultAdmin | address | undefined |
+| _name | string | undefined |
+| _symbol | string | undefined |
+| _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint256 | undefined |
 
 ### isApprovedForAll
 
@@ -452,14 +452,14 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| operator | address | undefined
+| owner | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isTrustedForwarder
 
@@ -475,13 +475,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -497,13 +497,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### name
 
@@ -520,7 +520,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### nextTokenIdToMint
 
@@ -537,7 +537,7 @@ function nextTokenIdToMint() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### onERC1155BatchReceived
 
@@ -553,17 +553,17 @@ function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) e
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256[] | undefined
-| _3 | uint256[] | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256[] | undefined |
+| _3 | uint256[] | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC1155Received
 
@@ -579,17 +579,17 @@ function onERC1155Received(address, address, uint256, uint256, bytes) external n
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | uint256 | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC721Received
 
@@ -605,16 +605,16 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### owner
 
@@ -622,16 +622,16 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 function owner() external view returns (address)
 ```
 
+Returns the owner of the contract.
 
 
-*Returns the owner of the contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### ownerOf
 
@@ -647,13 +647,13 @@ function ownerOf(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### renounceRole
 
@@ -661,16 +661,16 @@ function ownerOf(uint256 tokenId) external view returns (address)
 function renounceRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from the account.
 
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 ### revokeRole
 
@@ -678,16 +678,16 @@ function renounceRole(bytes32 role, address account) external nonpayable
 function revokeRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from an account.
 
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 ### royaltyInfo
 
@@ -695,23 +695,41 @@ function revokeRole(bytes32 role, address account) external nonpayable
 function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount)
 ```
 
+View royalty info for a given token and sale price.
 
-
-*Returns the royalty recipient and amount, given a tokenId and sale price.*
+*Returns royalty amount and recipient for `tokenId` and `salePrice`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
+| tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
+| salePrice | uint256 | Sale price of the token. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
+| receiver | address |        Address of royalty recipient account. |
+| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value. |
+
+### safeTransferFrom
+
+```solidity
+function safeTransferFrom(address from, address to, uint256 tokenId) external nonpayable
+```
+
+
+
+*See {IERC721-safeTransferFrom}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### safeTransferFrom
 
@@ -727,10 +745,10 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
-| _data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
+| _data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -746,8 +764,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### setContractURI
 
@@ -755,15 +773,15 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 function setContractURI(string _uri) external nonpayable
 ```
 
+Lets a contract admin set the URI for contract-level metadata.
 
-
-*Lets a contract admin set the URI for contract-level metadata.*
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 ### setDefaultRoyaltyInfo
 
@@ -771,16 +789,16 @@ function setContractURI(string _uri) external nonpayable
 function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
 ```
 
+Updates default royalty recipient and bps.
 
-
-*Lets a contract admin update the default royalty recipient and bps.*
+*Caller should be authorized to set royalty info.                  See {_canSetRoyaltyInfo}.                  Emits {DefaultRoyalty Event}; See {_setupDefaultRoyaltyInfo}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
+| _royaltyRecipient | address | Address to be set as default royalty recipient. |
+| _royaltyBps | uint256 | Updated royalty bps. |
 
 ### setOwner
 
@@ -788,15 +806,15 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 function setOwner(address _newOwner) external nonpayable
 ```
 
+Lets an authorized wallet set a new owner for the contract.
 
 
-*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | undefined
+| _newOwner | address | The address to set as the new owner of the contract. |
 
 ### setRoyaltyInfoForToken
 
@@ -804,17 +822,17 @@ function setOwner(address _newOwner) external nonpayable
 function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external nonpayable
 ```
 
+Updates default royalty recipient and bps for a particular token.
 
-
-*Lets a contract admin set the royalty recipient and bps for a particular token Id.*
+*Sets royalty info for `_tokenId`. Caller should be authorized to set royalty info.                  See {_canSetRoyaltyInfo}.                  Emits {RoyaltyForToken Event}; See {_setupRoyaltyInfoForToken}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _recipient | address | undefined
-| _bps | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _recipient | address | Address to be set as royalty recipient for given token Id. |
+| _bps | uint256 | Updated royalty bps for the token Id. |
 
 ### supportsInterface
 
@@ -830,13 +848,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### symbol
 
@@ -853,7 +871,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### tokenURI
 
@@ -869,13 +887,13 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### transferFrom
 
@@ -891,9 +909,9 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### unwrap
 
@@ -909,8 +927,8 @@ function unwrap(uint256 _tokenId, address _recipient) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _recipient | address | undefined
+| _tokenId | uint256 | undefined |
+| _recipient | address | undefined |
 
 ### wrap
 
@@ -920,21 +938,21 @@ function wrap(ITokenBundle.Token[] _tokensToWrap, string _uriForWrappedToken, ad
 
 
 
-*Wrap multiple ERC1155, ERC721, ERC20 tokens into a single wrapped NFT.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokensToWrap | ITokenBundle.Token[] | undefined
-| _uriForWrappedToken | string | undefined
-| _recipient | address | undefined
+| _tokensToWrap | ITokenBundle.Token[] | undefined |
+| _uriForWrappedToken | string | undefined |
+| _recipient | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 
 

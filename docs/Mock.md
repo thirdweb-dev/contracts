@@ -25,7 +25,7 @@ function erc1155() external view returns (contract IERC1155)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IERC1155 | undefined
+| _0 | contract IERC1155 | undefined |
 
 ### erc20
 
@@ -42,7 +42,7 @@ function erc20() external view returns (contract IERC20)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IERC20 | undefined
+| _0 | contract IERC20 | undefined |
 
 ### erc721
 
@@ -59,7 +59,7 @@ function erc721() external view returns (contract IERC721)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IERC721 | undefined
+| _0 | contract IERC721 | undefined |
 
 
 

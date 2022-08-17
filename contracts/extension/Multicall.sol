@@ -13,7 +13,11 @@ import "./interface/IMulticall.sol";
  */
 contract Multicall is IMulticall {
     /**
-     * @dev Receives and executes a batch of function calls on this contract.
+     *  @notice Receives and executes a batch of function calls on this contract.
+     *  @dev Receives and executes a batch of function calls on this contract.
+     *
+     *  @param data The bytes data that makes up the batch of function calls to execute.
+     *  @return results The bytes data that makes up the result of the batch of function calls executed.
      */
     function multicall(bytes[] calldata data) external virtual override returns (bytes[] memory results) {
         results = new bytes[](data.length);

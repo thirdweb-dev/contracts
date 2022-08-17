@@ -12,14 +12,14 @@ import "../lib/TWStrings.sol";
 import "./ERC165.sol";
 
 /**
- * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
+ * @dev Implementation of [ERC721](https://eips.ethereum.org/EIPS/eip-721) Non-Fungible Token Standard, including
  * the Metadata extension. Built to optimize for lower gas during batch mints.
  *
  * Assumes serials are sequentially minted starting at _startTokenId() (defaults to 0, e.g. 0, 1, 2, 3..).
  *
- * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
+ * Assumes that an owner cannot have more than 2^64 - 1 (max value of uint64) of supply.
  *
- * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
+ * Assumes that the maximum token id cannot exceed 2^256 - 1 (max value of uint256).
  */
 contract ERC721A is Context, ERC165, IERC721A {
     using TWAddress for address;

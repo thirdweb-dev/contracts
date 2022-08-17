@@ -6,7 +6,7 @@
 
 
 
-*Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including the Metadata extension. Built to optimize for lower gas during batch mints. Assumes serials are sequentially minted starting at _startTokenId() (defaults to 0, e.g. 0, 1, 2, 3..). Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply. Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).*
+*Implementation of [ERC721](https://eips.ethereum.org/EIPS/eip-721) Non-Fungible Token Standard, including the Metadata extension. Built to optimize for lower gas during batch mints. Assumes serials are sequentially minted starting at _startTokenId() (defaults to 0, e.g. 0, 1, 2, 3..). Assumes that an owner cannot have more than 2^64 - 1 (max value of uint64) of supply. Assumes that the maximum token id cannot exceed 2^256 - 1 (max value of uint256).*
 
 ## Methods
 
@@ -24,8 +24,8 @@ function approve(address to, uint256 tokenId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| tokenId | uint256 | undefined
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### balanceOf
 
@@ -41,13 +41,13 @@ function balanceOf(address owner) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| owner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getApproved
 
@@ -63,13 +63,13 @@ function getApproved(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### isApprovedForAll
 
@@ -85,14 +85,14 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| operator | address | undefined
+| owner | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### name
 
@@ -109,7 +109,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### ownerOf
 
@@ -125,13 +125,31 @@ function ownerOf(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
+
+### safeTransferFrom
+
+```solidity
+function safeTransferFrom(address from, address to, uint256 tokenId) external nonpayable
+```
+
+
+
+*See {IERC721-safeTransferFrom}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### safeTransferFrom
 
@@ -147,10 +165,10 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
-| _data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
+| _data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -166,8 +184,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### supportsInterface
 
@@ -183,13 +201,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### symbol
 
@@ -206,7 +224,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### tokenURI
 
@@ -222,13 +240,13 @@ function tokenURI(uint256 tokenId) external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -245,7 +263,7 @@ function totalSupply() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transferFrom
 
@@ -261,9 +279,9 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 
 

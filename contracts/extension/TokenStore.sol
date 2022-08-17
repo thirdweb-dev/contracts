@@ -14,6 +14,13 @@ import "../openzeppelin-presets/utils/ERC721/ERC721Holder.sol";
 import { TokenBundle, ITokenBundle } from "./TokenBundle.sol";
 import "../lib/CurrencyTransferLib.sol";
 
+/**
+ *  @title   Token Store
+ *  @notice  `TokenStore` contract extension allows bundling-up of ERC20/ERC721/ERC1155 and native-tokan assets
+ *           and provides logic for storing, releasing, and transferring them from the extending contract.
+ *  @dev     See {CurrencyTransferLib}
+ */
+
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     /// @dev The address interpreted as native token of the chain.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;

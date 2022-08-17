@@ -2,11 +2,11 @@
 
 
 
+> Token Store
 
+`TokenStore` contract extension allows bundling-up of ERC20/ERC721/ERC1155 and native-tokan assets           and provides logic for storing, releasing, and transferring them from the extending contract.
 
-
-
-
+*See {CurrencyTransferLib}*
 
 ## Methods
 
@@ -25,7 +25,7 @@ function NATIVE_TOKEN() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getTokenCountOfBundle
 
@@ -41,13 +41,13 @@ function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined
+| _bundleId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getTokenOfBundle
 
@@ -63,14 +63,14 @@ function getTokenOfBundle(uint256 _bundleId, uint256 index) external view return
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined
-| index | uint256 | undefined
+| _bundleId | uint256 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | ITokenBundle.Token | undefined
+| _0 | ITokenBundle.Token | undefined |
 
 ### getUriOfBundle
 
@@ -86,13 +86,13 @@ function getUriOfBundle(uint256 _bundleId) external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined
+| _bundleId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### onERC1155BatchReceived
 
@@ -108,17 +108,17 @@ function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) e
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256[] | undefined
-| _3 | uint256[] | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256[] | undefined |
+| _3 | uint256[] | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC1155Received
 
@@ -134,17 +134,17 @@ function onERC1155Received(address, address, uint256, uint256, bytes) external n
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | uint256 | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC721Received
 
@@ -160,16 +160,16 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### supportsInterface
 
@@ -185,13 +185,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

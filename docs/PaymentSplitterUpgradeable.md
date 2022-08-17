@@ -24,13 +24,13 @@ function payee(uint256 index) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### payeeCount
 
@@ -47,7 +47,23 @@ function payeeCount() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
+
+### release
+
+```solidity
+function release(address payable account) external nonpayable
+```
+
+
+
+*Triggers a transfer to `account` of the amount of Ether they are owed, according to their percentage of the total shares and their previous withdrawals.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address payable | undefined |
 
 ### release
 
@@ -63,13 +79,13 @@ function release(contract IERC20Upgradeable token, address account) external non
 
 | Name | Type | Description |
 |---|---|---|
-| token | contract IERC20Upgradeable | undefined
-| account | address | undefined
+| token | contract IERC20Upgradeable | undefined |
+| account | address | undefined |
 
 ### released
 
 ```solidity
-function released(address account) external view returns (uint256)
+function released(contract IERC20Upgradeable token, address account) external view returns (uint256)
 ```
 
 
@@ -80,13 +96,36 @@ function released(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| token | contract IERC20Upgradeable | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
+
+### released
+
+```solidity
+function released(address account) external view returns (uint256)
+```
+
+
+
+*Getter for the amount of Ether already released to a payee.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### shares
 
@@ -102,13 +141,35 @@ function shares(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
+
+### totalReleased
+
+```solidity
+function totalReleased(contract IERC20Upgradeable token) external view returns (uint256)
+```
+
+
+
+*Getter for the total amount of `token` already released. `token` should be the address of an IERC20 contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | contract IERC20Upgradeable | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### totalReleased
 
@@ -118,14 +179,14 @@ function totalReleased() external view returns (uint256)
 
 
 
-*Getter for the total amount of `token` already released. `token` should be the address of an IERC20 contract.*
+*Getter for the total amount of Ether already released.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### totalShares
 
@@ -142,7 +203,7 @@ function totalShares() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 
 

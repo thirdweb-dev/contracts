@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### MAX_BPS
 
@@ -42,7 +42,7 @@ function MAX_BPS() external view returns (uint64)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint64 | undefined
+| _0 | uint64 | undefined |
 
 ### acceptOffer
 
@@ -58,10 +58,10 @@ function acceptOffer(uint256 _listingId, address _offeror, address _currency, ui
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | undefined
-| _offeror | address | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
+| _listingId | uint256 | undefined |
+| _offeror | address | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
 
 ### bidBufferBps
 
@@ -78,7 +78,7 @@ function bidBufferBps() external view returns (uint64)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint64 | undefined
+| _0 | uint64 | undefined |
 
 ### buy
 
@@ -94,11 +94,11 @@ function buy(uint256 _listingId, address _buyFor, uint256 _quantityToBuy, addres
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | undefined
-| _buyFor | address | undefined
-| _quantityToBuy | uint256 | undefined
-| _currency | address | undefined
-| _totalPrice | uint256 | undefined
+| _listingId | uint256 | undefined |
+| _buyFor | address | undefined |
+| _quantityToBuy | uint256 | undefined |
+| _currency | address | undefined |
+| _totalPrice | uint256 | undefined |
 
 ### cancelDirectListing
 
@@ -114,7 +114,7 @@ function cancelDirectListing(uint256 _listingId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | undefined
+| _listingId | uint256 | undefined |
 
 ### closeAuction
 
@@ -130,8 +130,8 @@ function closeAuction(uint256 _listingId, address _closeFor) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | undefined
-| _closeFor | address | undefined
+| _listingId | uint256 | undefined |
+| _closeFor | address | undefined |
 
 ### contractType
 
@@ -148,7 +148,7 @@ function contractType() external pure returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractURI
 
@@ -165,7 +165,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### contractVersion
 
@@ -182,7 +182,7 @@ function contractVersion() external pure returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### createListing
 
@@ -192,13 +192,13 @@ function createListing(IMarketplace.ListingParameters _params) external nonpayab
 
 
 
-*Lets a token owner list tokens for sale: Direct Listing or Auction.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IMarketplace.ListingParameters | undefined
+| _params | IMarketplace.ListingParameters | undefined |
 
 ### getPlatformFeeInfo
 
@@ -215,8 +215,8 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRoleAdmin
 
@@ -232,13 +232,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -254,14 +254,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -277,13 +277,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### grantRole
 
@@ -299,8 +299,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -316,14 +316,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### initialize
 
@@ -339,11 +339,11 @@ function initialize(address _defaultAdmin, string _contractURI, address[] _trust
 
 | Name | Type | Description |
 |---|---|---|
-| _defaultAdmin | address | undefined
-| _contractURI | string | undefined
-| _trustedForwarders | address[] | undefined
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
+| _defaultAdmin | address | undefined |
+| _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
+| _platformFeeRecipient | address | undefined |
+| _platformFeeBps | uint256 | undefined |
 
 ### isTrustedForwarder
 
@@ -359,13 +359,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### listings
 
@@ -381,24 +381,24 @@ function listings(uint256) external view returns (uint256 listingId, address tok
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| listingId | uint256 | undefined
-| tokenOwner | address | undefined
-| assetContract | address | undefined
-| tokenId | uint256 | undefined
-| startTime | uint256 | undefined
-| endTime | uint256 | undefined
-| quantity | uint256 | undefined
-| currency | address | undefined
-| reservePricePerToken | uint256 | undefined
-| buyoutPricePerToken | uint256 | undefined
-| tokenType | enum IMarketplace.TokenType | undefined
-| listingType | enum IMarketplace.ListingType | undefined
+| listingId | uint256 | undefined |
+| tokenOwner | address | undefined |
+| assetContract | address | undefined |
+| tokenId | uint256 | undefined |
+| startTime | uint256 | undefined |
+| endTime | uint256 | undefined |
+| quantity | uint256 | undefined |
+| currency | address | undefined |
+| reservePricePerToken | uint256 | undefined |
+| buyoutPricePerToken | uint256 | undefined |
+| tokenType | enum IMarketplace.TokenType | undefined |
+| listingType | enum IMarketplace.ListingType | undefined |
 
 ### multicall
 
@@ -414,13 +414,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### offer
 
@@ -436,11 +436,11 @@ function offer(uint256 _listingId, uint256 _quantityWanted, address _currency, u
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | undefined
-| _quantityWanted | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| _expirationTimestamp | uint256 | undefined
+| _listingId | uint256 | undefined |
+| _quantityWanted | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _expirationTimestamp | uint256 | undefined |
 
 ### offers
 
@@ -456,19 +456,19 @@ function offers(uint256, address) external view returns (uint256 listingId, addr
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
-| _1 | address | undefined
+| _0 | uint256 | undefined |
+| _1 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| listingId | uint256 | undefined
-| offeror | address | undefined
-| quantityWanted | uint256 | undefined
-| currency | address | undefined
-| pricePerToken | uint256 | undefined
-| expirationTimestamp | uint256 | undefined
+| listingId | uint256 | undefined |
+| offeror | address | undefined |
+| quantityWanted | uint256 | undefined |
+| currency | address | undefined |
+| pricePerToken | uint256 | undefined |
+| expirationTimestamp | uint256 | undefined |
 
 ### onERC1155BatchReceived
 
@@ -484,17 +484,17 @@ function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) e
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256[] | undefined
-| _3 | uint256[] | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256[] | undefined |
+| _3 | uint256[] | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC1155Received
 
@@ -510,17 +510,17 @@ function onERC1155Received(address, address, uint256, uint256, bytes) external n
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | uint256 | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC721Received
 
@@ -536,16 +536,16 @@ function onERC721Received(address, address, uint256, bytes) external pure return
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### renounceRole
 
@@ -561,8 +561,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -578,8 +578,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### setAuctionBuffers
 
@@ -595,8 +595,8 @@ function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps) external 
 
 | Name | Type | Description |
 |---|---|---|
-| _timeBuffer | uint256 | undefined
-| _bidBufferBps | uint256 | undefined
+| _timeBuffer | uint256 | undefined |
+| _bidBufferBps | uint256 | undefined |
 
 ### setContractURI
 
@@ -612,7 +612,7 @@ function setContractURI(string _uri) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | undefined |
 
 ### setPlatformFeeInfo
 
@@ -628,8 +628,8 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
+| _platformFeeRecipient | address | undefined |
+| _platformFeeBps | uint256 | undefined |
 
 ### supportsInterface
 
@@ -645,13 +645,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### thirdwebFee
 
@@ -668,7 +668,7 @@ function thirdwebFee() external view returns (contract ITWFee)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract ITWFee | undefined
+| _0 | contract ITWFee | undefined |
 
 ### timeBuffer
 
@@ -685,7 +685,7 @@ function timeBuffer() external view returns (uint64)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint64 | undefined
+| _0 | uint64 | undefined |
 
 ### totalListings
 
@@ -702,7 +702,7 @@ function totalListings() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### updateListing
 
@@ -718,13 +718,13 @@ function updateListing(uint256 _listingId, uint256 _quantityToList, uint256 _res
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | undefined
-| _quantityToList | uint256 | undefined
-| _reservePricePerToken | uint256 | undefined
-| _buyoutPricePerToken | uint256 | undefined
-| _currencyToAccept | address | undefined
-| _startTime | uint256 | undefined
-| _secondsUntilEndTime | uint256 | undefined
+| _listingId | uint256 | undefined |
+| _quantityToList | uint256 | undefined |
+| _reservePricePerToken | uint256 | undefined |
+| _buyoutPricePerToken | uint256 | undefined |
+| _currencyToAccept | address | undefined |
+| _startTime | uint256 | undefined |
+| _secondsUntilEndTime | uint256 | undefined |
 
 ### winningBid
 
@@ -740,18 +740,18 @@ function winningBid(uint256) external view returns (uint256 listingId, address o
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| listingId | uint256 | undefined
-| offeror | address | undefined
-| quantityWanted | uint256 | undefined
-| currency | address | undefined
-| pricePerToken | uint256 | undefined
-| expirationTimestamp | uint256 | undefined
+| listingId | uint256 | undefined |
+| offeror | address | undefined |
+| quantityWanted | uint256 | undefined |
+| currency | address | undefined |
+| pricePerToken | uint256 | undefined |
+| expirationTimestamp | uint256 | undefined |
 
 
 

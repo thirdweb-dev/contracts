@@ -16,7 +16,7 @@
 function mintWithSignature(ISignatureMintERC20.MintRequest req, bytes signature) external payable returns (address signer)
 ```
 
-Mints tokens according to the provided mint request.
+
 
 
 
@@ -24,14 +24,14 @@ Mints tokens according to the provided mint request.
 
 | Name | Type | Description |
 |---|---|---|
-| req | ISignatureMintERC20.MintRequest | The payload / mint request.
-| signature | bytes | The signature produced by an account signing the mint request.
+| req | ISignatureMintERC20.MintRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined
+| signer | address | undefined |
 
 ### verify
 
@@ -41,21 +41,21 @@ function verify(ISignatureMintERC20.MintRequest _req, bytes _signature) external
 
 
 
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMintERC20.MintRequest | undefined
-| _signature | bytes | undefined
+| _req | ISignatureMintERC20.MintRequest | undefined |
+| _signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| success | bool | undefined |
+| signer | address | undefined |
 
 
 

@@ -24,17 +24,17 @@ function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) e
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256[] | undefined
-| _3 | uint256[] | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256[] | undefined |
+| _3 | uint256[] | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### onERC1155Received
 
@@ -50,17 +50,17 @@ function onERC1155Received(address, address, uint256, uint256, bytes) external n
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
-| _2 | uint256 | undefined
-| _3 | uint256 | undefined
-| _4 | bytes | undefined
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 ### supportsInterface
 
@@ -76,13 +76,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

@@ -25,7 +25,7 @@ function owner() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### setOwner
 
@@ -41,7 +41,7 @@ function setOwner(address _newOwner) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | undefined
+| _newOwner | address | undefined |
 
 
 
