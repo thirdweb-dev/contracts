@@ -6,7 +6,7 @@ import "./ERC721LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
 /**
- *      BASE:      ERC721A
+ *      BASE:      ERC721Base
  *      EXTENSION: LazyMint, DelayedReveal
  *
  *  The `ERC721DelayedReveal` contract uses the `ERC721Base` contract, along with the `LazyMint` and `DelayedReveal` extension.
@@ -48,7 +48,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *  @param _tokenId The tokenId of an NFT.
      */
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint256 batchId = getBatchId(_tokenId);
+        (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
@@ -68,19 +68,22 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *  @param _amount           The number of NFTs to lazy mint.
      *  @param _baseURIForTokens The placeholder base URI for the 'n' number of NFTs being lazy minted, where the
      *                           metadata for each of those NFTs is `${baseURIForTokens}/${tokenId}`.
-     *  @param _encryptedBaseURI The encrypted base URI for the batch of NFTs being lazy minted.
+     *  @param _data             The encrypted base URI + provenance hash for the batch of NFTs being lazy minted.
      *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
      */
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
-    ) public virtual override returns (uint256 batchId) {
-        if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+        bytes calldata _data
+    ) public override returns (uint256 batchId) {
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
+            }
         }
 
-        return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -99,7 +102,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
-        _setEncryptedBaseURI(batchId, "");
+        _setEncryptedData(batchId, "");
         _setBaseURI(batchId, revealedURI);
 
         emit TokenURIRevealed(_index, revealedURI);

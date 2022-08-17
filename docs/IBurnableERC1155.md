@@ -24,9 +24,9 @@ function burn(address account, uint256 id, uint256 value) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
-| value | uint256 | undefined
+| account | address | undefined |
+| id | uint256 | undefined |
+| value | uint256 | undefined |
 
 ### burnBatch
 
@@ -42,9 +42,9 @@ function burnBatch(address account, uint256[] ids, uint256[] values) external no
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| ids | uint256[] | undefined
-| values | uint256[] | undefined
+| account | address | undefined |
+| ids | uint256[] | undefined |
+| values | uint256[] | undefined |
 
 
 

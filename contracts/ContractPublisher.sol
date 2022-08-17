@@ -17,8 +17,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Whether the registry is paused.
+    /// @notice Whether the contract publisher is paused.
     bool public isPaused;
+    IContractPublisher public prevPublisher;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
@@ -49,8 +50,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         _;
     }
 
-    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(address _trustedForwarder, IContractPublisher _prevPublisher) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        prevPublisher = _prevPublisher;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -63,13 +65,19 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         view
         returns (CustomContractInstance[] memory published)
     {
-        uint256 total = EnumerableSet.length(contractsOfPublisher[_publisher].contractIds);
-
+        CustomContractInstance[] memory linkedData = prevPublisher.getAllPublishedContracts(_publisher);
+        uint256 currentTotal = EnumerableSet.length(contractsOfPublisher[_publisher].contractIds);
+        uint256 prevTotal = linkedData.length;
+        uint256 total = prevTotal + currentTotal;
         published = new CustomContractInstance[](total);
-
-        for (uint256 i = 0; i < total; i += 1) {
+        // fill in previously published contracts
+        for (uint256 i = 0; i < prevTotal; i += 1) {
+            published[i] = linkedData[i];
+        }
+        // fill in current published contracts
+        for (uint256 i = 0; i < currentTotal; i += 1) {
             bytes32 contractId = EnumerableSet.at(contractsOfPublisher[_publisher].contractIds, i);
-            published[i] = contractsOfPublisher[_publisher].contracts[contractId].latest;
+            published[i + prevTotal] = contractsOfPublisher[_publisher].contracts[contractId].latest;
         }
     }
 
@@ -79,13 +87,25 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         view
         returns (CustomContractInstance[] memory published)
     {
+        CustomContractInstance[] memory linkedVersions = prevPublisher.getPublishedContractVersions(
+            _publisher,
+            _contractId
+        );
+        uint256 prevTotal = linkedVersions.length;
+
         bytes32 id = keccak256(bytes(_contractId));
-        uint256 total = contractsOfPublisher[_publisher].contracts[id].total;
+        uint256 currentTotal = contractsOfPublisher[_publisher].contracts[id].total;
+        uint256 total = prevTotal + currentTotal;
 
         published = new CustomContractInstance[](total);
 
-        for (uint256 i = 0; i < total; i += 1) {
-            published[i] = contractsOfPublisher[_publisher].contracts[id].instances[i];
+        // fill in previously published contracts
+        for (uint256 i = 0; i < prevTotal; i += 1) {
+            published[i] = linkedVersions[i];
+        }
+        // fill in current published contracts
+        for (uint256 i = 0; i < currentTotal; i += 1) {
+            published[i + prevTotal] = contractsOfPublisher[_publisher].contracts[id].instances[i];
         }
     }
 
@@ -96,13 +116,17 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         returns (CustomContractInstance memory published)
     {
         published = contractsOfPublisher[_publisher].contracts[keccak256(bytes(_contractId))].latest;
+        // if not found, check the previous publisher
+        if (published.publishTimestamp == 0) {
+            published = prevPublisher.getPublishedContract(_publisher, _contractId);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                             Publish logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Let's an account publish a contract. The account must be approved by the publisher, or be the publisher.
+    /// @notice Let's an account publish a contract.
     function publishContract(
         address _publisher,
         string memory _contractId,
@@ -129,13 +153,13 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[index] = publishedContract;
 
         uint256 metadataIndex = compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index;
-        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[index] = _publishMetadataUri;
+        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[metadataIndex] = _publishMetadataUri;
         compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index = metadataIndex + 1;
 
         emit ContractPublished(_msgSender(), _publisher, publishedContract);
     }
 
-    /// @notice Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
+    /// @notice Lets a publisher unpublish a contract and all its versions.
     function unpublishContract(address _publisher, string memory _contractId)
         external
         onlyPublisher(_publisher)
@@ -159,6 +183,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     // @notice Get a publisher profile uri
     function getPublisherProfileUri(address publisher) public view returns (string memory uri) {
         uri = profileUriOfPublisher[publisher];
+        // if not found, check the previous publisher
+        if (bytes(uri).length == 0) {
+            uri = prevPublisher.getPublisherProfileUri(publisher);
+        }
     }
 
     /// @notice Retrieve the published metadata URI from a compiler metadata URI
@@ -167,10 +195,20 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         view
         returns (string[] memory publishedMetadataUris)
     {
-        uint256 length = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
-        publishedMetadataUris = new string[](length);
-        for (uint256 i = 0; i < length; i += 1) {
-            publishedMetadataUris[i] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[i];
+        string[] memory linkedUris = prevPublisher.getPublishedUriFromCompilerUri(compilerMetadataUri);
+        uint256 prevTotal = linkedUris.length;
+        uint256 currentTotal = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
+        uint256 total = prevTotal + currentTotal;
+        publishedMetadataUris = new string[](total);
+        // fill in previously published uris
+        for (uint256 i = 0; i < prevTotal; i += 1) {
+            publishedMetadataUris[i] = linkedUris[i];
+        }
+        // fill in current published uris
+        for (uint256 i = 0; i < currentTotal; i += 1) {
+            publishedMetadataUris[i + prevTotal] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[
+                i
+            ];
         }
     }
 
@@ -185,10 +223,12 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         emit Paused(_pause);
     }
 
+    /// @dev ERC2771Context overrides
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
+    /// @dev ERC2771Context overrides
     function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }

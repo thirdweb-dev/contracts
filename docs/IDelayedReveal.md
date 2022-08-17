@@ -24,14 +24,14 @@ Performs XOR encryption/decryption.
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes | The data to encrypt. In the case of delayed-reveal NFTs, this is the &quot;revealed&quot; state              base URI of the relevant batch of NFTs.
-| key | bytes | The key with which to encrypt data
+| data | bytes | The data to encrypt. In the case of delayed-reveal NFTs, this is the &quot;revealed&quot; state              base URI of the relevant batch of NFTs. |
+| key | bytes | The key with which to encrypt data |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| result | bytes | undefined
+| result | bytes | undefined |
 
 ### reveal
 
@@ -47,14 +47,14 @@ Reveals a batch of delayed reveal NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| identifier | uint256 | The ID for the batch of delayed-reveal NFTs to reveal.
-| key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted.
+| identifier | uint256 | The ID for the batch of delayed-reveal NFTs to reveal. |
+| key | bytes | The key with which the base URI for the relevant batch of NFTs was encrypted. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| revealedURI | string | undefined
+| revealedURI | string | undefined |
 
 
 

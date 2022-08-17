@@ -3,16 +3,23 @@ pragma solidity ^0.8.0;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../eip/interface/IERC1155.sol";
+import "../eip/interface/IERC721.sol";
 
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "../openzeppelin-presets/utils/ERC1155/ERC1155Holder.sol";
+import "../openzeppelin-presets/utils/ERC721/ERC721Holder.sol";
 
 //  ==========  Internal imports    ==========
 
 import { TokenBundle, ITokenBundle } from "./TokenBundle.sol";
 import "../lib/CurrencyTransferLib.sol";
+
+/**
+ *  @title   Token Store
+ *  @notice  `TokenStore` contract extension allows bundling-up of ERC20/ERC721/ERC1155 and native-tokan assets
+ *           and provides logic for storing, releasing, and transferring them from the extending contract.
+ *  @dev     See {CurrencyTransferLib}
+ */
 
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     /// @dev The address interpreted as native token of the chain.

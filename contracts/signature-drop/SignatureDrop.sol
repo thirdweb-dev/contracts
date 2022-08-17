@@ -101,7 +101,7 @@ contract SignatureDrop is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint256 batchId = getBatchId(_tokenId);
+        (uint256 batchId, ) = getBatchId(_tokenId);
         string memory batchUri = getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
@@ -126,8 +126,8 @@ contract SignatureDrop is
         return bytes32("SignatureDrop");
     }
 
-    function contractVersion() external pure returns (uint256) {
-        return 2;
+    function contractVersion() external pure returns (uint8) {
+        return uint8(3);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -141,13 +141,16 @@ contract SignatureDrop is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        bytes calldata _encryptedBaseURI
+        bytes calldata _data
     ) public override onlyRole(minterRole) returns (uint256 batchId) {
-        if (_encryptedBaseURI.length != 0) {
-            _setEncryptedBaseURI(nextTokenIdToLazyMint + _amount, _encryptedBaseURI);
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
+            }
         }
 
-        return super.lazyMint(_amount, _baseURIForTokens, _encryptedBaseURI);
+        return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -159,7 +162,7 @@ contract SignatureDrop is
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
-        _setEncryptedBaseURI(batchId, "");
+        _setEncryptedData(batchId, "");
         _setBaseURI(batchId, revealedURI);
 
         emit TokenURIRevealed(_index, revealedURI);

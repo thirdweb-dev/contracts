@@ -24,13 +24,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 
 

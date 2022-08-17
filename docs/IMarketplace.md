@@ -24,10 +24,10 @@ Lets a listing&#39;s creator accept an offer to their direct listing.
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | The unique ID of the listing for which to accept the offer.
-| _offeror | address | The address of the buyer whose offer is to be accepted.
-| _currency | address | The currency of the offer that is to be accepted.
-| _totalPrice | uint256 | The total price of the offer that is to be accepted.
+| _listingId | uint256 | The unique ID of the listing for which to accept the offer. |
+| _offeror | address | The address of the buyer whose offer is to be accepted. |
+| _currency | address | The currency of the offer that is to be accepted. |
+| _totalPrice | uint256 | The total price of the offer that is to be accepted. |
 
 ### buy
 
@@ -43,11 +43,11 @@ Lets someone buy a given quantity of tokens from a direct listing by paying the 
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | The uid of the direct lisitng to buy from.
-| _buyFor | address | The receiver of the NFT being bought.
-| _quantity | uint256 | The amount of NFTs to buy from the direct listing.
-| _currency | address | The currency to pay the price in.
-| _totalPrice | uint256 | The total price to pay for the tokens being bought.
+| _listingId | uint256 | The uid of the direct lisitng to buy from. |
+| _buyFor | address | The receiver of the NFT being bought. |
+| _quantity | uint256 | The amount of NFTs to buy from the direct listing. |
+| _currency | address | The currency to pay the price in. |
+| _totalPrice | uint256 | The total price to pay for the tokens being bought. |
 
 ### cancelDirectListing
 
@@ -63,7 +63,7 @@ Lets a direct listing creator cancel their listing.
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | The unique Id of the lisitng to cancel.
+| _listingId | uint256 | The unique Id of the lisitng to cancel. |
 
 ### closeAuction
 
@@ -79,8 +79,8 @@ Lets any account close an auction on behalf of either the (1) auction&#39;s crea
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | The uid of the listing (the auction to close).
-| _closeFor | address | For whom the auction is being closed - the auction creator or winning bidder.
+| _listingId | uint256 | The uid of the listing (the auction to close). |
+| _closeFor | address | For whom the auction is being closed - the auction creator or winning bidder. |
 
 ### contractType
 
@@ -97,7 +97,7 @@ function contractType() external pure returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractURI
 
@@ -114,7 +114,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### contractVersion
 
@@ -131,7 +131,7 @@ function contractVersion() external pure returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### createListing
 
@@ -139,15 +139,15 @@ function contractVersion() external pure returns (uint8)
 function createListing(IMarketplace.ListingParameters _params) external nonpayable
 ```
 
-Lets a token owner list tokens (ERC 721 or ERC 1155) for sale in a direct listing, or an auction.
 
-*NFTs to list for sale in an auction are escrowed in Marketplace. For direct listings, the contract       only checks whether the listing&#39;s creator owns and has approved Marketplace to transfer the NFTs to list.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IMarketplace.ListingParameters | The parameters that govern the listing to be created.
+| _params | IMarketplace.ListingParameters | undefined |
 
 ### getPlatformFeeInfo
 
@@ -164,8 +164,8 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### offer
 
@@ -181,11 +181,11 @@ Lets someone make an offer to a direct listing, or bid in an auction.
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | The unique ID of the lisitng to make an offer/bid to.
-| _quantityWanted | uint256 | For auction listings: the &#39;quantity wanted&#39; is the total amount of NFTs                           being auctioned, regardless of the value of `_quantityWanted` passed.                           For direct listings: `_quantityWanted` is the quantity of NFTs from the                           listing, for which the offer is being made.
-| _currency | address | For auction listings: the &#39;currency of the bid&#39; is the currency accepted                           by the auction, regardless of the value of `_currency` passed. For direct                           listings: this is the currency in which the offer is made.
-| _pricePerToken | uint256 | For direct listings: offered price per token. For auction listings: the bid                           amount per token. The total offer/bid amount is `_quantityWanted * _pricePerToken`.
-| _expirationTimestamp | uint256 | For aution listings: inapplicable. For direct listings: The timestamp after which                              the seller can no longer accept the offer.
+| _listingId | uint256 | The unique ID of the lisitng to make an offer/bid to. |
+| _quantityWanted | uint256 | For auction listings: the &#39;quantity wanted&#39; is the total amount of NFTs                           being auctioned, regardless of the value of `_quantityWanted` passed.                           For direct listings: `_quantityWanted` is the quantity of NFTs from the                           listing, for which the offer is being made. |
+| _currency | address | For auction listings: the &#39;currency of the bid&#39; is the currency accepted                           by the auction, regardless of the value of `_currency` passed. For direct                           listings: this is the currency in which the offer is made. |
+| _pricePerToken | uint256 | For direct listings: offered price per token. For auction listings: the bid                           amount per token. The total offer/bid amount is `_quantityWanted * _pricePerToken`. |
+| _expirationTimestamp | uint256 | For aution listings: inapplicable. For direct listings: The timestamp after which                              the seller can no longer accept the offer. |
 
 ### setContractURI
 
@@ -201,7 +201,7 @@ function setContractURI(string _uri) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | undefined |
 
 ### setPlatformFeeInfo
 
@@ -217,8 +217,8 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
+| _platformFeeRecipient | address | undefined |
+| _platformFeeBps | uint256 | undefined |
 
 ### updateListing
 
@@ -234,13 +234,13 @@ Lets a listing&#39;s creator edit the listing&#39;s parameters. A direct listing
 
 | Name | Type | Description |
 |---|---|---|
-| _listingId | uint256 | The uid of the lisitng to edit.
-| _quantityToList | uint256 | The amount of NFTs to list for sale in the listing. For direct lisitngs, the contract                               only checks whether the listing creator owns and has approved Marketplace to transfer                               `_quantityToList` amount of NFTs to list for sale. For auction listings, the contract                               ensures that exactly `_quantityToList` amount of NFTs to list are escrowed.
-| _reservePricePerToken | uint256 | For direct listings: this value is ignored. For auctions: the minimum bid amount of                               the auction is `reservePricePerToken * quantityToList`
-| _buyoutPricePerToken | uint256 | For direct listings: interpreted as &#39;price per token&#39; listed. For auctions: if                               `buyoutPricePerToken` is greater than 0, and a bidder&#39;s bid is at least as great as                               `buyoutPricePerToken * quantityToList`, the bidder wins the auction, and the auction                               is closed.
-| _currencyToAccept | address | For direct listings: the currency in which a buyer must pay the listing&#39;s fixed price                               to buy the NFT(s). For auctions: the currency in which the bidders must make bids.
-| _startTime | uint256 | The unix timestamp after which listing is active. For direct listings:                               &#39;active&#39; means NFTs can be bought from the listing. For auctions,                               &#39;active&#39; means bids can be made in the auction.
-| _secondsUntilEndTime | uint256 | No. of seconds after the provided `_startTime`, after which the listing is inactive.                               For direct listings: &#39;inactive&#39; means NFTs cannot be bought from the listing.                               For auctions: &#39;inactive&#39; means bids can no longer be made in the auction.
+| _listingId | uint256 | The uid of the lisitng to edit. |
+| _quantityToList | uint256 | The amount of NFTs to list for sale in the listing. For direct lisitngs, the contract                               only checks whether the listing creator owns and has approved Marketplace to transfer                               `_quantityToList` amount of NFTs to list for sale. For auction listings, the contract                               ensures that exactly `_quantityToList` amount of NFTs to list are escrowed. |
+| _reservePricePerToken | uint256 | For direct listings: this value is ignored. For auctions: the minimum bid amount of                               the auction is `reservePricePerToken * quantityToList` |
+| _buyoutPricePerToken | uint256 | For direct listings: interpreted as &#39;price per token&#39; listed. For auctions: if                               `buyoutPricePerToken` is greater than 0, and a bidder&#39;s bid is at least as great as                               `buyoutPricePerToken * quantityToList`, the bidder wins the auction, and the auction                               is closed. |
+| _currencyToAccept | address | For direct listings: the currency in which a buyer must pay the listing&#39;s fixed price                               to buy the NFT(s). For auctions: the currency in which the bidders must make bids. |
+| _startTime | uint256 | The unix timestamp after which listing is active. For direct listings:                               &#39;active&#39; means NFTs can be bought from the listing. For auctions,                               &#39;active&#39; means bids can be made in the auction. |
+| _secondsUntilEndTime | uint256 | No. of seconds after the provided `_startTime`, after which the listing is inactive.                               For direct listings: &#39;inactive&#39; means NFTs cannot be bought from the listing.                               For auctions: &#39;inactive&#39; means bids can no longer be made in the auction. |
 
 
 

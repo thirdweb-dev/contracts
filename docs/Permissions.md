@@ -2,11 +2,11 @@
 
 
 
+> Permissions
 
 
 
-
-
+*This contracts provides extending-contracts with role-based access control mechanisms*
 
 ## Methods
 
@@ -18,14 +18,14 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 
 
-
+*Default admin role for all roles. Only accounts with this role can grant/revoke other roles.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleAdmin
 
@@ -33,21 +33,21 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ```
 
+Returns the admin role that controls the specified role.
 
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {AccessControl-_setRoleAdmin}.*
+*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### grantRole
 
@@ -55,16 +55,16 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 function grantRole(bytes32 role, address account) external nonpayable
 ```
 
+Grants a role to an account, if not previously granted.
 
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account to which the role is being granted. |
 
 ### hasRole
 
@@ -72,7 +72,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 function hasRole(bytes32 role, address account) external view returns (bool)
 ```
 
-
+Checks whether an account has a particular role.
 
 *Returns `true` if `account` has been granted `role`.*
 
@@ -80,14 +80,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### hasRoleWithSwitch
 
@@ -95,22 +95,22 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
 ```
 
+Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
 
-
-
+*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### renounceRole
 
@@ -118,16 +118,16 @@ function hasRoleWithSwitch(bytes32 role, address account) external view returns 
 function renounceRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from the account.
 
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 ### revokeRole
 
@@ -135,16 +135,16 @@ function renounceRole(bytes32 role, address account) external nonpayable
 function revokeRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from an account.
 
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 
 

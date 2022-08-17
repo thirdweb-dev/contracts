@@ -24,15 +24,15 @@ function getFeeInfo(address _proxy, uint256 _type) external view returns (addres
 
 | Name | Type | Description |
 |---|---|---|
-| _proxy | address | undefined
-| _type | uint256 | undefined
+| _proxy | address | undefined |
+| _type | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| recipient | address | undefined
-| bps | uint256 | undefined
+| recipient | address | undefined |
+| bps | uint256 | undefined |
 
 
 

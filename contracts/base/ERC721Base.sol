@@ -140,6 +140,19 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
         return _currentIndex;
     }
 
+    /// @notice Returns whether a given address is the owner, or approved to transfer an NFT.
+    function isApprovedOrOwner(address _operator, uint256 _tokenId)
+        public
+        view
+        virtual
+        returns (bool isApprovedOrOwnerOf)
+    {
+        address owner = ownerOf(_tokenId);
+        isApprovedOrOwnerOf = (_operator == owner ||
+            isApprovedForAll(owner, _operator) ||
+            getApproved(_tokenId) == _operator);
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/

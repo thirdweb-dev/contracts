@@ -24,16 +24,16 @@ function onERC721Received(address operator, address from, uint256 tokenId, bytes
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| from | address | undefined
-| tokenId | uint256 | undefined
-| data | bytes | undefined
+| operator | address | undefined |
+| from | address | undefined |
+| tokenId | uint256 | undefined |
+| data | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes4 | undefined
+| _0 | bytes4 | undefined |
 
 
 

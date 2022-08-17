@@ -4,7 +4,7 @@
   "rules": {
     "imports-on-top": "error",
     "no-unused-vars": "error",
-    "code-complexity": ["error", 7],
+    "code-complexity": ["error", 9],
     "compiler-version": ["error", "^0.8.0"],
     "const-name-snakecase": "error",
     "contract-name-camelcase": "error",

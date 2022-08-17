@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### approve
 
@@ -41,8 +41,8 @@ function approve(address to, uint256 tokenId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| tokenId | uint256 | undefined
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### balanceOf
 
@@ -58,13 +58,13 @@ function balanceOf(address owner) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| owner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### burn
 
@@ -80,7 +80,7 @@ function burn(uint256 tokenId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 ### contractType
 
@@ -97,7 +97,7 @@ function contractType() external pure returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractURI
 
@@ -114,7 +114,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### contractVersion
 
@@ -131,7 +131,7 @@ function contractVersion() external pure returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### getApproved
 
@@ -147,13 +147,13 @@ function getApproved(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getDefaultRoyaltyInfo
 
@@ -170,8 +170,8 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getPlatformFeeInfo
 
@@ -188,8 +188,8 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### getRoleAdmin
 
@@ -205,13 +205,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -227,14 +227,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -250,13 +250,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getRoyaltyInfoForToken
 
@@ -272,14 +272,14 @@ function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint16 | undefined
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
 
 ### grantRole
 
@@ -295,8 +295,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -312,14 +312,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### initialize
 
@@ -335,16 +335,16 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 
 | Name | Type | Description |
 |---|---|---|
-| _defaultAdmin | address | undefined
-| _name | string | undefined
-| _symbol | string | undefined
-| _contractURI | string | undefined
-| _trustedForwarders | address[] | undefined
-| _saleRecipient | address | undefined
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint128 | undefined
-| _platformFeeBps | uint128 | undefined
-| _platformFeeRecipient | address | undefined
+| _defaultAdmin | address | undefined |
+| _name | string | undefined |
+| _symbol | string | undefined |
+| _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
+| _saleRecipient | address | undefined |
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint128 | undefined |
+| _platformFeeBps | uint128 | undefined |
+| _platformFeeRecipient | address | undefined |
 
 ### isApprovedForAll
 
@@ -360,14 +360,14 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| operator | address | undefined
+| owner | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### isTrustedForwarder
 
@@ -383,13 +383,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### mintTo
 
@@ -405,14 +405,14 @@ function mintTo(address _to, string _uri) external nonpayable returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _to | address | undefined
-| _uri | string | undefined
+| _to | address | undefined |
+| _uri | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### mintWithSignature
 
@@ -422,20 +422,20 @@ function mintWithSignature(ITokenERC721.MintRequest _req, bytes _signature) exte
 
 
 
-*Mints an NFT according to the provided mint request.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ITokenERC721.MintRequest | undefined
-| _signature | bytes | undefined
+| _req | ITokenERC721.MintRequest | undefined |
+| _signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tokenIdMinted | uint256 | undefined
+| tokenIdMinted | uint256 | undefined |
 
 ### multicall
 
@@ -451,13 +451,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### name
 
@@ -474,7 +474,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### nextTokenIdToMint
 
@@ -491,7 +491,7 @@ function nextTokenIdToMint() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### owner
 
@@ -508,7 +508,7 @@ function owner() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### ownerOf
 
@@ -524,13 +524,13 @@ function ownerOf(uint256 tokenId) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
+| tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### platformFeeBps
 
@@ -547,7 +547,7 @@ function platformFeeBps() external view returns (uint128)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint128 | undefined
+| _0 | uint128 | undefined |
 
 ### platformFeeRecipient
 
@@ -564,7 +564,7 @@ function platformFeeRecipient() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### primarySaleRecipient
 
@@ -581,7 +581,7 @@ function primarySaleRecipient() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### renounceRole
 
@@ -597,8 +597,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -614,8 +614,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### royaltyInfo
 
@@ -631,15 +631,33 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined
-| salePrice | uint256 | undefined
+| tokenId | uint256 | undefined |
+| salePrice | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | undefined
-| royaltyAmount | uint256 | undefined
+| receiver | address | undefined |
+| royaltyAmount | uint256 | undefined |
+
+### safeTransferFrom
+
+```solidity
+function safeTransferFrom(address from, address to, uint256 tokenId) external nonpayable
+```
+
+
+
+*See {IERC721-safeTransferFrom}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### safeTransferFrom
 
@@ -655,10 +673,10 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
-| _data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
+| _data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -674,8 +692,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### setContractURI
 
@@ -691,7 +709,7 @@ function setContractURI(string _uri) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | undefined |
 
 ### setDefaultRoyaltyInfo
 
@@ -707,8 +725,8 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 
 | Name | Type | Description |
 |---|---|---|
-| _royaltyRecipient | address | undefined
-| _royaltyBps | uint256 | undefined
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint256 | undefined |
 
 ### setOwner
 
@@ -724,7 +742,7 @@ function setOwner(address _newOwner) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | undefined
+| _newOwner | address | undefined |
 
 ### setPlatformFeeInfo
 
@@ -740,8 +758,8 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined
-| _platformFeeBps | uint256 | undefined
+| _platformFeeRecipient | address | undefined |
+| _platformFeeBps | uint256 | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -757,7 +775,7 @@ function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _saleRecipient | address | undefined
+| _saleRecipient | address | undefined |
 
 ### setRoyaltyInfoForToken
 
@@ -773,9 +791,9 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
-| _recipient | address | undefined
-| _bps | uint256 | undefined
+| _tokenId | uint256 | undefined |
+| _recipient | address | undefined |
+| _bps | uint256 | undefined |
 
 ### supportsInterface
 
@@ -791,13 +809,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### symbol
 
@@ -814,7 +832,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### thirdwebFee
 
@@ -831,7 +849,7 @@ function thirdwebFee() external view returns (contract ITWFee)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract ITWFee | undefined
+| _0 | contract ITWFee | undefined |
 
 ### tokenByIndex
 
@@ -847,13 +865,13 @@ function tokenByIndex(uint256 index) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### tokenOfOwnerByIndex
 
@@ -869,14 +887,14 @@ function tokenOfOwnerByIndex(address owner, uint256 index) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| index | uint256 | undefined
+| owner | address | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### tokenURI
 
@@ -892,13 +910,13 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenId | uint256 | undefined
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -915,7 +933,7 @@ function totalSupply() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transferFrom
 
@@ -931,9 +949,9 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| tokenId | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| tokenId | uint256 | undefined |
 
 ### verify
 
@@ -943,21 +961,21 @@ function verify(ITokenERC721.MintRequest _req, bytes _signature) external view r
 
 
 
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ITokenERC721.MintRequest | undefined
-| _signature | bytes | undefined
+| _req | ITokenERC721.MintRequest | undefined |
+| _signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
-| _1 | address | undefined
+| _0 | bool | undefined |
+| _1 | address | undefined |
 
 
 

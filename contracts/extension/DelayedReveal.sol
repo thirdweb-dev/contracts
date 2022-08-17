@@ -4,30 +4,54 @@ pragma solidity ^0.8.0;
 import "./interface/IDelayedReveal.sol";
 
 /**
- *  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
- *  'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
+ *  @title   Delayed Reveal
+ *  @notice  Thirdweb's `DelayedReveal` is a contract extension for base NFT contracts. It lets you create batches of
+ *           'delayed-reveal' NFTs. You can learn more about the usage of delayed reveal NFTs here - https://blog.thirdweb.com/delayed-reveal-nfts
  */
 
 abstract contract DelayedReveal is IDelayedReveal {
-    /// @dev Mapping from id of a batch of tokens => to encrypted base URI for the respective batch of tokens.
-    mapping(uint256 => bytes) public encryptedBaseURI;
+    /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.
+    mapping(uint256 => bytes) public encryptedData;
 
-    /// @dev Sets the encrypted baseURI for a batch of tokenIds.
-    function _setEncryptedBaseURI(uint256 _batchId, bytes memory _encryptedBaseURI) internal {
-        encryptedBaseURI[_batchId] = _encryptedBaseURI;
+    /// @dev Sets the delayed reveal data for a batchId.
+    function _setEncryptedData(uint256 _batchId, bytes memory _encryptedData) internal {
+        encryptedData[_batchId] = _encryptedData;
     }
 
-    /// @dev Returns the decrypted i.e. revealed URI for a batch of tokens.
+    /**
+     *  @notice             Returns revealed URI for a batch of NFTs.
+     *  @dev                Reveal encrypted base URI for `_batchId` with caller/admin's `_key` used for encryption.
+     *                      Reverts if there's no encrypted URI for `_batchId`.
+     *                      See {encryptDecrypt}.
+     *
+     *  @param _batchId     ID of the batch for which URI is being revealed.
+     *  @param _key         Secure key used by caller/admin for encryption of baseURI.
+     *
+     *  @return revealedURI Decrypted base URI.
+     */
     function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
-        bytes memory encryptedURI = encryptedBaseURI[_batchId];
-        if (encryptedURI.length == 0) {
+        bytes memory data = encryptedData[_batchId];
+        if (data.length == 0) {
             revert("Nothing to reveal");
         }
 
+        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(data, (bytes, bytes32));
+
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
+
+        require(keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash, "Incorrect key");
     }
 
-    /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
+    /**
+     *  @notice         Encrypt/decrypt data on chain.
+     *  @dev            Encrypt/decrypt given `data` with `key`. Uses inline assembly.
+     *                  See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
+     *
+     *  @param data     Bytes of data to encrypt/decrypt.
+     *  @param key      Secure key used by caller for encryption/decryption.
+     *
+     *  @return result  Output after encryption/decryption of given data.
+     */
     function encryptDecrypt(bytes memory data, bytes calldata key) public pure override returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
@@ -63,8 +87,12 @@ abstract contract DelayedReveal is IDelayedReveal {
         }
     }
 
-    /// @dev Returns whether the relvant batch of NFTs is subject to a delayed reveal.
+    /**
+     *  @notice         Returns whether the relvant batch of NFTs is subject to a delayed reveal.
+     *  @dev            Returns `true` if `_batchId`'s base URI is encrypted.
+     *  @param _batchId ID of a batch of NFTs.
+     */
     function isEncryptedBatch(uint256 _batchId) public view returns (bool) {
-        return encryptedBaseURI[_batchId].length > 0;
+        return encryptedData[_batchId].length > 0;
     }
 }

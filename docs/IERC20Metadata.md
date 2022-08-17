@@ -25,7 +25,7 @@ function decimals() external view returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### name
 
@@ -42,7 +42,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### symbol
 
@@ -59,7 +59,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 
 

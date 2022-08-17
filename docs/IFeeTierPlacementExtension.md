@@ -24,15 +24,15 @@ function getFeeTier(address deployer, address proxy) external view returns (uint
 
 | Name | Type | Description |
 |---|---|---|
-| deployer | address | undefined
-| proxy | address | undefined
+| deployer | address | undefined |
+| proxy | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tierId | uint128 | undefined
-| validUntilTimestamp | uint128 | undefined
+| tierId | uint128 | undefined |
+| validUntilTimestamp | uint128 | undefined |
 
 
 

@@ -25,7 +25,7 @@ function DOMAIN_SEPARATOR() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### allowance
 
@@ -41,14 +41,14 @@ function allowance(address owner, address spender) external view returns (uint25
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| spender | address | undefined
+| owner | address | undefined |
+| spender | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### approve
 
@@ -64,14 +64,14 @@ function approve(address spender, uint256 amount) external nonpayable returns (b
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| amount | uint256 | undefined
+| spender | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### balanceOf
 
@@ -87,13 +87,13 @@ function balanceOf(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### checkpoints
 
@@ -109,14 +109,14 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| pos | uint32 | undefined
+| account | address | undefined |
+| pos | uint32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | ERC20VotesUpgradeable.Checkpoint | undefined
+| _0 | ERC20VotesUpgradeable.Checkpoint | undefined |
 
 ### decimals
 
@@ -133,7 +133,7 @@ function decimals() external view returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
 
 ### decreaseAllowance
 
@@ -149,14 +149,14 @@ function decreaseAllowance(address spender, uint256 subtractedValue) external no
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| subtractedValue | uint256 | undefined
+| spender | address | undefined |
+| subtractedValue | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### delegate
 
@@ -172,7 +172,7 @@ function delegate(address delegatee) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| delegatee | address | undefined
+| delegatee | address | undefined |
 
 ### delegateBySig
 
@@ -188,12 +188,12 @@ function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v
 
 | Name | Type | Description |
 |---|---|---|
-| delegatee | address | undefined
-| nonce | uint256 | undefined
-| expiry | uint256 | undefined
-| v | uint8 | undefined
-| r | bytes32 | undefined
-| s | bytes32 | undefined
+| delegatee | address | undefined |
+| nonce | uint256 | undefined |
+| expiry | uint256 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 ### delegates
 
@@ -209,13 +209,13 @@ function delegates(address account) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getPastTotalSupply
 
@@ -231,13 +231,13 @@ function getPastTotalSupply(uint256 blockNumber) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| blockNumber | uint256 | undefined
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getPastVotes
 
@@ -253,14 +253,14 @@ function getPastVotes(address account, uint256 blockNumber) external view return
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| blockNumber | uint256 | undefined
+| account | address | undefined |
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getVotes
 
@@ -276,13 +276,13 @@ function getVotes(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### increaseAllowance
 
@@ -298,14 +298,14 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| addedValue | uint256 | undefined
+| spender | address | undefined |
+| addedValue | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### name
 
@@ -322,7 +322,7 @@ function name() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### nonces
 
@@ -338,13 +338,13 @@ function nonces(address owner) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| owner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### numCheckpoints
 
@@ -360,13 +360,13 @@ function numCheckpoints(address account) external view returns (uint32)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint32 | undefined |
 
 ### permit
 
@@ -382,13 +382,13 @@ function permit(address owner, address spender, uint256 value, uint256 deadline,
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| spender | address | undefined
-| value | uint256 | undefined
-| deadline | uint256 | undefined
-| v | uint8 | undefined
-| r | bytes32 | undefined
-| s | bytes32 | undefined
+| owner | address | undefined |
+| spender | address | undefined |
+| value | uint256 | undefined |
+| deadline | uint256 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 ### symbol
 
@@ -405,7 +405,7 @@ function symbol() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -422,7 +422,7 @@ function totalSupply() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transfer
 
@@ -438,14 +438,14 @@ function transfer(address to, uint256 amount) external nonpayable returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| amount | uint256 | undefined
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### transferFrom
 
@@ -461,15 +461,15 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| amount | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

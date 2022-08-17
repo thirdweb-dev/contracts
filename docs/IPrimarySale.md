@@ -25,7 +25,7 @@ function primarySaleRecipient() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -41,7 +41,7 @@ function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _saleRecipient | address | undefined
+| _saleRecipient | address | undefined |
 
 
 

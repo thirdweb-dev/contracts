@@ -24,14 +24,14 @@ Lets an account mint an NFT.
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | The address to mint the NFT to.
-| uri | string | The URI to assign to the NFT.
+| to | address | The address to mint the NFT to. |
+| uri | string | The URI to assign to the NFT. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | tokenId of the NFT minted.
+| _0 | uint256 | tokenId of the NFT minted. |
 
 
 
