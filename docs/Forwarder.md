@@ -24,15 +24,15 @@ function execute(MinimalForwarder.ForwardRequest req, bytes signature) external 
 
 | Name | Type | Description |
 |---|---|---|
-| req | MinimalForwarder.ForwardRequest | undefined
-| signature | bytes | undefined
+| req | MinimalForwarder.ForwardRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
-| _1 | bytes | undefined
+| _0 | bool | undefined |
+| _1 | bytes | undefined |
 
 ### getNonce
 
@@ -48,13 +48,13 @@ function getNonce(address from) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
+| from | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### verify
 
@@ -70,14 +70,14 @@ function verify(MinimalForwarder.ForwardRequest req, bytes signature) external v
 
 | Name | Type | Description |
 |---|---|---|
-| req | MinimalForwarder.ForwardRequest | undefined
-| signature | bytes | undefined
+| req | MinimalForwarder.ForwardRequest | undefined |
+| signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 
