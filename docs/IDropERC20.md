@@ -218,6 +218,23 @@ event ClaimConditionsUpdated(IDropClaimCondition.ClaimCondition[] claimCondition
 |---|---|---|
 | claimConditions  | IDropClaimCondition.ClaimCondition[] | undefined |
 
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+*Emitted when the contract URI is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
+
 ### MaxTotalSupplyUpdated
 
 ```solidity
