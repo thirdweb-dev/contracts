@@ -177,7 +177,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
 
     /// @notice Lets an account set its own publisher profile uri
     function setPublisherProfileUri(address publisher, string memory uri) public onlyPublisher(publisher) {
+        string memory currentURI = profileUriOfPublisher[publisher];
         profileUriOfPublisher[publisher] = uri;
+
+        emit PublisherProfileUpdated(publisher, currentURI, uri);
     }
 
     // @notice Get a publisher profile uri
