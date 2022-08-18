@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TokenERC721 } from "contracts/token/TokenERC721.sol";
+import { TokenERC20 } from "contracts/token/TokenERC20.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";
@@ -9,32 +9,30 @@ import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract TokenERC721Test is BaseTest {
+contract TokenERC20Test is BaseTest {
     using StringsUpgradeable for uint256;
 
-    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);
+    event TokensMinted(address indexed mintedTo, uint256 quantityMinted);
     event TokensMintedWithSignature(
         address indexed signer,
         address indexed mintedTo,
-        uint256 indexed tokenIdMinted,
-        TokenERC721.MintRequest mintRequest
+        TokenERC20.MintRequest mintRequest
     );
-    event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
-    event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
-    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+
     event PrimarySaleRecipientUpdated(address indexed recipient);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 
-    TokenERC721 public tokenContract;
+    TokenERC20 public tokenContract;
     bytes32 internal typehashMintRequest;
     bytes32 internal nameHash;
     bytes32 internal versionHash;
     bytes32 internal typehashEip712;
     bytes32 internal domainSeparator;
+    bytes32 internal permitTypehash;
 
     bytes private emptyEncodedBytes = abi.encode("", "");
 
-    TokenERC721.MintRequest _mintrequest;
+    TokenERC20.MintRequest _mintrequest;
     bytes _signature;
 
     address internal deployerSigner;
@@ -46,7 +44,7 @@ contract TokenERC721Test is BaseTest {
         super.setUp();
         deployerSigner = signer;
         recipient = address(0x123);
-        tokenContract = TokenERC721(getContract("TokenERC721"));
+        tokenContract = TokenERC20(getContract("TokenERC20"));
 
         erc20.mint(deployerSigner, 1_000);
         vm.deal(deployerSigner, 1_000);
@@ -55,9 +53,9 @@ contract TokenERC721Test is BaseTest {
         vm.deal(recipient, 1_000);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
-        nameHash = keccak256(bytes("TokenERC721"));
+        nameHash = keccak256(bytes(NAME));
         versionHash = keccak256(bytes("1"));
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
@@ -65,13 +63,14 @@ contract TokenERC721Test is BaseTest {
         domainSeparator = keccak256(
             abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(tokenContract))
         );
+        permitTypehash = keccak256(
+            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+        );
 
         // construct default mintrequest
         _mintrequest.to = recipient;
-        _mintrequest.royaltyRecipient = royaltyRecipient;
-        _mintrequest.royaltyBps = royaltyBps;
         _mintrequest.primarySaleRecipient = saleRecipient;
-        _mintrequest.uri = "ipfs://";
+        _mintrequest.quantity = 100;
         _mintrequest.price = 0;
         _mintrequest.currency = address(0);
         _mintrequest.validityStartTimestamp = 1000;
@@ -81,17 +80,15 @@ contract TokenERC721Test is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(TokenERC721.MintRequest memory _request, uint256 _privateKey)
+    function signMintRequest(TokenERC20.MintRequest memory _request, uint256 _privateKey)
         internal
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
-            _request.royaltyRecipient,
-            _request.royaltyBps,
             _request.primarySaleRecipient,
-            keccak256(bytes(_request.uri)),
+            _request.quantity,
             _request.price,
             _request.currency,
             _request.validityStartTimestamp,
@@ -115,7 +112,6 @@ contract TokenERC721Test is BaseTest {
         vm.warp(1000);
 
         // initial balances and state
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
         uint256 currentTotalSupply = tokenContract.totalSupply();
         uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient);
 
@@ -124,11 +120,8 @@ contract TokenERC721Test is BaseTest {
         tokenContract.mintWithSignature(_mintrequest, _signature);
 
         // check state after minting
-        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
-        assertEq(tokenContract.tokenURI(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.totalSupply(), currentTotalSupply + 1);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + 1);
-        assertEq(tokenContract.ownerOf(nextTokenId), recipient);
+        assertEq(tokenContract.totalSupply(), currentTotalSupply + _mintrequest.quantity);
+        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
     }
 
     function test_state_mintWithSignature_NonZeroPrice_ERC20() public {
@@ -141,10 +134,9 @@ contract TokenERC721Test is BaseTest {
 
         // approve erc20 tokens to tokenContract
         vm.prank(recipient);
-        erc20.approve(address(tokenContract), 1);
+        erc20.approve(address(tokenContract), _mintrequest.price);
 
         // initial balances and state
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
         uint256 currentTotalSupply = tokenContract.totalSupply();
         uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient);
 
@@ -156,11 +148,8 @@ contract TokenERC721Test is BaseTest {
         tokenContract.mintWithSignature(_mintrequest, _signature);
 
         // check state after minting
-        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
-        assertEq(tokenContract.tokenURI(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.totalSupply(), currentTotalSupply + 1);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + 1);
-        assertEq(tokenContract.ownerOf(nextTokenId), recipient);
+        assertEq(tokenContract.totalSupply(), currentTotalSupply + _mintrequest.quantity);
+        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
 
         // check erc20 balances after minting
         uint256 _platformFees = (_mintrequest.price * platformFeeBps) / MAX_BPS;
@@ -177,7 +166,6 @@ contract TokenERC721Test is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
 
         // initial balances and state
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
         uint256 currentTotalSupply = tokenContract.totalSupply();
         uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient);
 
@@ -186,16 +174,13 @@ contract TokenERC721Test is BaseTest {
 
         // mint with signature
         vm.prank(recipient);
-        tokenContract.mintWithSignature{ value: 1 }(_mintrequest, _signature);
+        tokenContract.mintWithSignature{ value: _mintrequest.price }(_mintrequest, _signature);
 
         // check state after minting
-        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
-        assertEq(tokenContract.tokenURI(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.totalSupply(), currentTotalSupply + 1);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + 1);
-        assertEq(tokenContract.ownerOf(nextTokenId), recipient);
+        assertEq(tokenContract.totalSupply(), currentTotalSupply + _mintrequest.quantity);
+        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
 
-        // check erc20 balances after minting
+        // check balances after minting
         uint256 _platformFees = (_mintrequest.price * platformFeeBps) / MAX_BPS;
         assertEq(address(recipient).balance, etherBalanceOfRecipient - _mintrequest.price);
         assertEq(address(saleRecipient).balance, etherBalanceOfSeller + _mintrequest.price - _platformFees);
@@ -239,7 +224,7 @@ contract TokenERC721Test is BaseTest {
         vm.warp(1000);
 
         vm.expectEmit(true, true, true, true);
-        emit TokensMintedWithSignature(deployerSigner, recipient, 0, _mintrequest);
+        emit TokensMintedWithSignature(deployerSigner, recipient, _mintrequest);
 
         // mint with signature
         vm.prank(recipient);
@@ -251,259 +236,35 @@ contract TokenERC721Test is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_state_mintTo() public {
-        string memory _tokenURI = "tokenURI";
+        uint256 _amount = 100;
 
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
         uint256 currentTotalSupply = tokenContract.totalSupply();
         uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient);
 
         vm.prank(deployerSigner);
-        tokenContract.mintTo(recipient, _tokenURI);
+        tokenContract.mintTo(recipient, _amount);
 
-        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
-        assertEq(tokenContract.tokenURI(nextTokenId), _tokenURI);
-        assertEq(tokenContract.totalSupply(), currentTotalSupply + 1);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + 1);
-        assertEq(tokenContract.ownerOf(nextTokenId), recipient);
+        assertEq(tokenContract.totalSupply(), currentTotalSupply + _amount);
+        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _amount);
     }
 
     function test_revert_mintTo_NotAuthorized() public {
-        string memory _tokenURI = "tokenURI";
-        bytes32 role = keccak256("MINTER_ROLE");
+        uint256 _amount = 100;
 
-        vm.expectRevert(
-            abi.encodePacked(
-                "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
-                " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert("not minter.");
         vm.prank(address(0x1));
-        tokenContract.mintTo(recipient, _tokenURI);
+        tokenContract.mintTo(recipient, _amount);
     }
 
     function test_event_mintTo() public {
-        string memory _tokenURI = "tokenURI";
+        uint256 _amount = 100;
 
         vm.expectEmit(true, true, true, true);
-        emit TokensMinted(recipient, 0, _tokenURI);
+        emit TokensMinted(recipient, _amount);
 
         // mint
         vm.prank(deployerSigner);
-        tokenContract.mintTo(recipient, _tokenURI);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: `burn`
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_burn_TokenOwner() public {
-        string memory _tokenURI = "tokenURI";
-
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
-        uint256 currentTotalSupply = tokenContract.totalSupply();
-        uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient);
-
-        vm.prank(deployerSigner);
-        tokenContract.mintTo(recipient, _tokenURI);
-
-        vm.prank(recipient);
-        tokenContract.burn(nextTokenId);
-
-        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
-        assertEq(tokenContract.tokenURI(nextTokenId), _tokenURI);
-        assertEq(tokenContract.totalSupply(), currentTotalSupply);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient);
-
-        vm.expectRevert("ERC721: owner query for nonexistent token");
-        assertEq(tokenContract.ownerOf(nextTokenId), address(0));
-    }
-
-    function test_state_burn_TokenOperator() public {
-        string memory _tokenURI = "tokenURI";
-
-        address operator = address(0x789);
-
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
-        uint256 currentTotalSupply = tokenContract.totalSupply();
-        uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient);
-
-        vm.prank(deployerSigner);
-        tokenContract.mintTo(recipient, _tokenURI);
-
-        vm.prank(recipient);
-        tokenContract.setApprovalForAll(operator, true);
-
-        vm.prank(operator);
-        tokenContract.burn(nextTokenId);
-
-        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
-        assertEq(tokenContract.tokenURI(nextTokenId), _tokenURI);
-        assertEq(tokenContract.totalSupply(), currentTotalSupply);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient);
-
-        vm.expectRevert("ERC721: owner query for nonexistent token");
-        assertEq(tokenContract.ownerOf(nextTokenId), address(0));
-    }
-
-    function test_revert_burn_NotOwnerNorApproved() public {
-        string memory _tokenURI = "tokenURI";
-
-        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
-
-        vm.prank(deployerSigner);
-        tokenContract.mintTo(recipient, _tokenURI);
-
-        vm.prank(address(0x789));
-        vm.expectRevert("ERC721Burnable: caller is not owner nor approved");
-        tokenContract.burn(nextTokenId);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: owner
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_setOwner() public {
-        address newOwner = address(0x123);
-        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
-
-        vm.prank(deployerSigner);
-        tokenContract.grantRole(role, newOwner);
-
-        vm.prank(deployerSigner);
-        tokenContract.setOwner(newOwner);
-
-        assertEq(tokenContract.owner(), newOwner);
-    }
-
-    function test_revert_setOwner_NotModuleAdmin() public {
-        vm.expectRevert("new owner not module admin.");
-        vm.prank(deployerSigner);
-        tokenContract.setOwner(address(0x1234));
-    }
-
-    function test_event_setOwner() public {
-        address newOwner = address(0x123);
-        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
-
-        vm.startPrank(deployerSigner);
-        tokenContract.grantRole(role, newOwner);
-
-        vm.expectEmit(true, true, true, true);
-        emit OwnerUpdated(deployerSigner, newOwner);
-
-        tokenContract.setOwner(newOwner);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: royalty
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_setDefaultRoyaltyInfo() public {
-        address _royaltyRecipient = address(0x123);
-        uint256 _royaltyBps = 1000;
-
-        vm.prank(deployerSigner);
-        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-
-        (address newRoyaltyRecipient, uint256 newRoyaltyBps) = tokenContract.getDefaultRoyaltyInfo();
-        assertEq(newRoyaltyRecipient, _royaltyRecipient);
-        assertEq(newRoyaltyBps, _royaltyBps);
-
-        (address receiver, uint256 royaltyAmount) = tokenContract.royaltyInfo(0, 100);
-        assertEq(receiver, _royaltyRecipient);
-        assertEq(royaltyAmount, (100 * 1000) / 10_000);
-    }
-
-    function test_revert_setDefaultRoyaltyInfo_NotAuthorized() public {
-        address _royaltyRecipient = address(0x123);
-        uint256 _royaltyBps = 1000;
-        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
-
-        vm.expectRevert(
-            abi.encodePacked(
-                "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
-                " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
-            )
-        );
-        vm.prank(address(0x1));
-        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-    }
-
-    function test_revert_setDefaultRoyaltyInfo_ExceedsRoyaltyBps() public {
-        address _royaltyRecipient = address(0x123);
-        uint256 _royaltyBps = 10001;
-
-        vm.expectRevert("exceed royalty bps");
-        vm.prank(deployerSigner);
-        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-    }
-
-    function test_state_setRoyaltyInfoForToken() public {
-        uint256 _tokenId = 1;
-        address _recipient = address(0x123);
-        uint256 _bps = 1000;
-
-        vm.prank(deployerSigner);
-        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
-
-        (address receiver, uint256 royaltyAmount) = tokenContract.royaltyInfo(_tokenId, 100);
-        assertEq(receiver, _recipient);
-        assertEq(royaltyAmount, (100 * 1000) / 10_000);
-    }
-
-    function test_revert_setRoyaltyInfo_NotAuthorized() public {
-        uint256 _tokenId = 1;
-        address _recipient = address(0x123);
-        uint256 _bps = 1000;
-        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
-
-        vm.expectRevert(
-            abi.encodePacked(
-                "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
-                " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
-            )
-        );
-        vm.prank(address(0x1));
-        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
-    }
-
-    function test_revert_setRoyaltyInfoForToken_ExceedsRoyaltyBps() public {
-        uint256 _tokenId = 1;
-        address _recipient = address(0x123);
-        uint256 _bps = 10001;
-
-        vm.expectRevert("exceed royalty bps");
-        vm.prank(deployerSigner);
-        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
-    }
-
-    function test_event_defaultRoyalty() public {
-        address _royaltyRecipient = address(0x123);
-        uint256 _royaltyBps = 1000;
-
-        vm.expectEmit(true, true, true, true);
-        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
-
-        vm.prank(deployerSigner);
-        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-    }
-
-    function test_event_royaltyForToken() public {
-        uint256 _tokenId = 1;
-        address _recipient = address(0x123);
-        uint256 _bps = 1000;
-
-        vm.expectEmit(true, true, true, true);
-        emit RoyaltyForToken(_tokenId, _recipient, _bps);
-
-        vm.prank(deployerSigner);
-        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+        tokenContract.mintTo(recipient, _amount);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -612,7 +373,7 @@ contract TokenERC721Test is BaseTest {
         assertEq(_contractURI, uri);
     }
 
-    function test_revert_setContractURI() public {
+    function test_revert_setContractURI_NotAuthorized() public {
         bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
 
         vm.expectRevert(
@@ -625,5 +386,44 @@ contract TokenERC721Test is BaseTest {
         );
         vm.prank(address(0x1));
         tokenContract.setContractURI("");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: pause/unpause
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_pause() public {
+        vm.prank(deployerSigner);
+        tokenContract.pause();
+
+        assertEq(tokenContract.paused(), true);
+
+        vm.expectRevert("Pausable: paused");
+        vm.prank(deployerSigner);
+        tokenContract.pause();
+    }
+
+    function test_revert_pause_NotAuthorized() public {
+        vm.expectRevert("not pauser.");
+        vm.prank(address(0x1));
+        tokenContract.pause();
+    }
+
+    function test_state_unpause() public {
+        vm.prank(deployerSigner);
+        tokenContract.pause();
+
+        assertEq(tokenContract.paused(), true);
+
+        vm.prank(deployerSigner);
+        tokenContract.unpause();
+
+        assertFalse(tokenContract.paused());
+    }
+
+    function test_revert_unpause_NotAuthorized() public {
+        vm.expectRevert("not pauser.");
+        vm.prank(address(0x1));
+        tokenContract.unpause();
     }
 }
