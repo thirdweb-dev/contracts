@@ -202,8 +202,14 @@ contract TokenERC1155Test is BaseTest {
 
         // check erc20 balances after minting
         uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) * platformFeeBps) / MAX_BPS;
-        assertEq(erc20.balanceOf(recipient), erc20BalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity));
-        assertEq(erc20.balanceOf(address(saleRecipient)), erc20BalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - _platformFees);
+        assertEq(
+            erc20.balanceOf(recipient),
+            erc20BalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity)
+        );
+        assertEq(
+            erc20.balanceOf(address(saleRecipient)),
+            erc20BalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - _platformFees
+        );
     }
 
     function test_state_mintWithSignature_NonZeroPrice_NativeToken() public {
@@ -223,7 +229,10 @@ contract TokenERC1155Test is BaseTest {
 
         // mint with signature
         vm.prank(recipient);
-        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(_mintrequest, _signature);
+        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
+            _mintrequest,
+            _signature
+        );
 
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
@@ -232,8 +241,14 @@ contract TokenERC1155Test is BaseTest {
 
         // check balances after minting
         uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) * platformFeeBps) / MAX_BPS;
-        assertEq(address(recipient).balance, etherBalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity));
-        assertEq(address(saleRecipient).balance, etherBalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - _platformFees);
+        assertEq(
+            address(recipient).balance,
+            etherBalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity)
+        );
+        assertEq(
+            address(saleRecipient).balance,
+            etherBalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - _platformFees
+        );
     }
 
     function test_revert_mintWithSignature_MustSendTotalPrice() public {
