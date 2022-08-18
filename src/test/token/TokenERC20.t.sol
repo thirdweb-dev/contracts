@@ -13,7 +13,11 @@ contract TokenERC20Test is BaseTest {
     using StringsUpgradeable for uint256;
 
     event TokensMinted(address indexed mintedTo, uint256 quantityMinted);
-    event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, TokenERC20.MintRequest mintRequest);
+    event TokensMintedWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        TokenERC20.MintRequest mintRequest
+    );
 
     event PrimarySaleRecipientUpdated(address indexed recipient);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
