@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 import "./TWRegistry.sol";
 import "./interfaces/IThirdwebContract.sol";
+import "./extension/interface/IContractFactory.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -10,7 +11,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
-contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
+contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContractFactory {
     /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
@@ -64,7 +65,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable {
         address _implementation,
         bytes memory _data,
         bytes32 _salt
-    ) public returns (address deployedProxy) {
+    ) public override returns (address deployedProxy) {
         require(approval[_implementation], "implementation not approved");
 
         bytes32 salthash = keccak256(abi.encodePacked(_msgSender(), _salt));
