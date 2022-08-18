@@ -233,5 +233,23 @@ event Paused(bool isPaused)
 |---|---|---|
 | isPaused  | bool | undefined |
 
+### PublisherProfileUpdated
+
+```solidity
+event PublisherProfileUpdated(address indexed publisher, string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| publisher `indexed` | address | undefined |
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
+
 
 
