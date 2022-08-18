@@ -426,5 +426,4 @@ contract TokenERC20Test is BaseTest {
         vm.prank(address(0x1));
         tokenContract.unpause();
     }
-
 }
