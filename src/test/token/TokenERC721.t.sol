@@ -58,7 +58,9 @@ contract TokenERC721Test is BaseTest {
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(tokenContract)));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(tokenContract))
+        );
 
         // construct default mintrequest
         _mintrequest.to = recipient;
@@ -217,7 +219,6 @@ contract TokenERC721Test is BaseTest {
     }
 
     function test_revert_mintWithSignature_RequestExpired() public {
-
         _signature = signMintRequest(_mintrequest, privateKey);
 
         // warp time more out of range
@@ -336,7 +337,6 @@ contract TokenERC721Test is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_state_setOwner() public {
-
         address newOwner = address(0x123);
         bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
 
