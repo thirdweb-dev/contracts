@@ -10,22 +10,22 @@ interface IERC165 {
 
 abstract contract TokenBundle is ITokenBundle {
     /// @dev Mapping from bundle UID => bundle info.
-    mapping(uint256 => BundleInfo) private bundle;
+    mapping(uint256 => BundleInfo) public bundle;
 
     /// @dev Returns the total number of assets in a particular bundle.
-    function getTokenCountOfBundle(uint256 _bundleId) public view returns (uint256) {
-        return bundle[_bundleId].count;
-    }
+    // function getTokenCountOfBundle(uint256 _bundleId) public view returns (uint256) {
+    //     return bundle[_bundleId].count;
+    // }
 
     /// @dev Returns an asset contained in a particular bundle, at a particular index.
-    function getTokenOfBundle(uint256 _bundleId, uint256 index) public view returns (Token memory) {
-        return bundle[_bundleId].tokens[index];
-    }
+    // function getTokenOfBundle(uint256 _bundleId, uint256 index) public view returns (Token memory) {
+    //     return bundle[_bundleId].tokens[index];
+    // }
 
     /// @dev Returns the uri of a particular bundle.
-    function getUriOfBundle(uint256 _bundleId) public view returns (string memory) {
-        return bundle[_bundleId].uri;
-    }
+    // function getUriOfBundle(uint256 _bundleId) public view returns (string memory) {
+    //     return bundle[_bundleId].uri;
+    // }
 
     /// @dev Lets the calling contract create a bundle, by passing in a list of tokens and a unique id.
     function _createBundle(Token[] calldata _tokensToBind, uint256 _bundleId) internal {

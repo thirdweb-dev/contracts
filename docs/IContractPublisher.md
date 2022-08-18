@@ -84,7 +84,7 @@ Returns all versions of a published contract.
 function getPublishedUriFromCompilerUri(string compilerMetadataUri) external view returns (string[] publishedMetadataUris)
 ```
 
-Retrieve the published metadata URI from a compiler metadata URI
+Retrieve the published metadata URI from a compiler metadata URI.
 
 
 
@@ -106,7 +106,7 @@ Retrieve the published metadata URI from a compiler metadata URI
 function getPublisherProfileUri(address publisher) external view returns (string uri)
 ```
 
-get the publisher profile uri
+Get the publisher profile uri for a given publisher.
 
 
 
@@ -128,7 +128,7 @@ get the publisher profile uri
 function publishContract(address publisher, string contractId, string publishMetadataUri, string compilerMetadataUri, bytes32 bytecodeHash, address implementation) external nonpayable
 ```
 
-Let&#39;s an account publish a contract. The account must be approved by the publisher, or be the publisher.
+Let&#39;s an account publish a contract.
 
 
 
@@ -166,7 +166,7 @@ Lets an account set its publisher profile uri
 function unpublishContract(address publisher, string contractId) external nonpayable
 ```
 
-Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
+Lets a publisher unpublish a contract and all its versions.
 
 
 

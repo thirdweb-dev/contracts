@@ -13,7 +13,7 @@ The thirdweb `Pack` contract is a lootbox mechanism. An account can bundle up ar
 ### createPack
 
 ```solidity
-function createPack(ITokenBundle.Token[] contents, uint256[] numOfRewardUnits, string packUri, uint128 openStartTimestamp, uint128 amountDistributedPerOpen, address recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
+function createPack(ITokenBundle.Token[] contents, uint256[] numOfRewardUnits, string packUri, uint128 openStartTimestamp, uint128 amountDistributedPerOpen, uint256 expirationTimestamp, address recipient) external payable returns (uint256 packId, uint256 packTotalSupply)
 ```
 
 Creates a pack with the stated contents.
@@ -29,6 +29,7 @@ Creates a pack with the stated contents.
 | packUri | string | The (metadata) URI assigned to the packs created.
 | openStartTimestamp | uint128 | The timestamp after which packs can be opened.
 | amountDistributedPerOpen | uint128 | The number of reward units distributed per open.
+| expirationTimestamp | uint256 | undefined
 | recipient | address | The recipient of the packs created.
 
 #### Returns
@@ -102,6 +103,25 @@ Emitted when a pack is opened.
 | opener `indexed` | address | undefined |
 | numOfPacksOpened  | uint256 | undefined |
 | rewardUnitsDistributed  | ITokenBundle.Token[] | undefined |
+
+### PackUpdated
+
+```solidity
+event PackUpdated(uint256 indexed packId, address indexed packCreator, address recipient, uint256 totalPacksCreated)
+```
+
+Emitted when more packs are minted for a packId.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| packId `indexed` | uint256 | undefined |
+| packCreator `indexed` | address | undefined |
+| recipient  | address | undefined |
+| totalPacksCreated  | uint256 | undefined |
 
 
 

@@ -127,7 +127,8 @@ contract Multiwrap is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return getUriOfBundle(_tokenId);
+        // return getUriOfBundle(_tokenId);
+        return bundle[_tokenId].uri;
     }
 
     /// @dev See ERC 165
@@ -188,11 +189,13 @@ contract Multiwrap is
 
     /// @dev Returns the underlying contents of a wrapped NFT.
     function getWrappedContents(uint256 _tokenId) external view returns (Token[] memory contents) {
-        uint256 total = getTokenCountOfBundle(_tokenId);
+        // uint256 total = getTokenCountOfBundle(_tokenId);
+        uint256 total = bundle[_tokenId].count;
         contents = new Token[](total);
 
         for (uint256 i = 0; i < total; i += 1) {
-            contents[i] = getTokenOfBundle(_tokenId, i);
+            // contents[i] = getTokenOfBundle(_tokenId, i);
+            contents[i] = bundle[_tokenId].tokens[i];
         }
     }
 

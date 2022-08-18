@@ -123,7 +123,7 @@ Retrieve the published metadata URI from a compiler metadata URI
 function getPublisherProfileUri(address publisher) external view returns (string uri)
 ```
 
-get the publisher profile uri
+Get the publisher profile uri for a given publisher.
 
 
 
@@ -252,9 +252,9 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 function isPaused() external view returns (bool)
 ```
 
+Whether the contract publisher is paused.
 
 
-*Whether the registry is paused.*
 
 
 #### Returns
@@ -313,7 +313,7 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 function publishContract(address _publisher, string _contractId, string _publishMetadataUri, string _compilerMetadataUri, bytes32 _bytecodeHash, address _implementation) external nonpayable
 ```
 
-Let&#39;s an account publish a contract. The account must be approved by the publisher, or be the publisher.
+Let&#39;s an account publish a contract.
 
 
 
@@ -423,7 +423,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 function unpublishContract(address _publisher, string _contractId) external nonpayable
 ```
 
-Lets an account unpublish a contract and all its versions. The account must be approved by the publisher, or be the publisher.
+Lets a publisher unpublish a contract and all its versions.
 
 
 

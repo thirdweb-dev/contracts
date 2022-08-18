@@ -15,9 +15,6 @@ import { TokenBundle, ITokenBundle } from "./TokenBundle.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
-    /// @dev The address interpreted as native token of the chain.
-    address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /// @dev The address of the native token wrapper contract.
     address internal immutable nativeTokenWrapper;
 
@@ -39,11 +36,13 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
 
     /// @dev Release stored / escrowed ERC1155, ERC721, ERC20 tokens.
     function _releaseTokens(address _recipient, uint256 _idForContent) internal {
-        uint256 count = getTokenCountOfBundle(_idForContent);
+        // uint256 count = getTokenCountOfBundle(_idForContent);
+        uint256 count = bundle[_idForContent].count;
         Token[] memory tokensToRelease = new Token[](count);
 
         for (uint256 i = 0; i < count; i += 1) {
-            tokensToRelease[i] = getTokenOfBundle(_idForContent, i);
+            // tokensToRelease[i] = getTokenOfBundle(_idForContent, i);
+            tokensToRelease[i] = bundle[_idForContent].tokens[i];
         }
 
         _deleteBundle(_idForContent);
