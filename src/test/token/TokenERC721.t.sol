@@ -163,8 +163,9 @@ contract TokenERC721Test is BaseTest {
         assertEq(tokenContract.ownerOf(nextTokenId), recipient);
 
         // check erc20 balances after minting
+        uint256 _platformFees = (_mintrequest.price * platformFeeBps) / MAX_BPS;
         assertEq(erc20.balanceOf(recipient), erc20BalanceOfRecipient - _mintrequest.price);
-        assertEq(erc20.balanceOf(address(saleRecipient)), erc20BalanceOfSeller + _mintrequest.price);
+        assertEq(erc20.balanceOf(address(saleRecipient)), erc20BalanceOfSeller + _mintrequest.price - _platformFees);
     }
 
     function test_state_mintWithSignature_NonZeroPrice_NativeToken() public {
@@ -195,8 +196,9 @@ contract TokenERC721Test is BaseTest {
         assertEq(tokenContract.ownerOf(nextTokenId), recipient);
 
         // check erc20 balances after minting
+        uint256 _platformFees = (_mintrequest.price * platformFeeBps) / MAX_BPS;
         assertEq(address(recipient).balance, etherBalanceOfRecipient - _mintrequest.price);
-        assertEq(address(saleRecipient).balance, etherBalanceOfSeller + _mintrequest.price);
+        assertEq(address(saleRecipient).balance, etherBalanceOfSeller + _mintrequest.price - _platformFees);
     }
 
     function test_revert_mintWithSignature_MustSendTotalPrice() public {
