@@ -20,6 +20,10 @@ contract TokenERC721Test is BaseTest {
         TokenERC721.MintRequest mintRequest
     );
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
+    event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
+    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+    event PrimarySaleRecipientUpdated(address indexed recipient);
+    event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 
     TokenERC721 public tokenContract;
     bytes32 internal typehashMintRequest;
@@ -229,6 +233,17 @@ contract TokenERC721Test is BaseTest {
         tokenContract.mintWithSignature(_mintrequest, _signature);
     }
 
+    function test_event_mintWithSignature() public {
+        vm.warp(1000);
+
+        vm.expectEmit(true, true, true, true);
+        emit TokensMintedWithSignature(deployerSigner, recipient, 0, _mintrequest);
+
+        // mint with signature
+        vm.prank(recipient);
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `mintTo`
     //////////////////////////////////////////////////////////////*/
@@ -263,6 +278,17 @@ contract TokenERC721Test is BaseTest {
             )
         );
         vm.prank(address(0x1));
+        tokenContract.mintTo(recipient, _tokenURI);
+    }
+
+    function test_event_mintTo() public {
+        string memory _tokenURI = "tokenURI";
+
+        vm.expectEmit(true, true, true, true);
+        emit TokensMinted(recipient, 0, _tokenURI);
+
+        // mint
+        vm.prank(deployerSigner);
         tokenContract.mintTo(recipient, _tokenURI);
     }
 
@@ -366,5 +392,236 @@ contract TokenERC721Test is BaseTest {
         emit OwnerUpdated(deployerSigner, newOwner);
 
         tokenContract.setOwner(newOwner);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: royalty
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setDefaultRoyaltyInfo() public {
+        address _royaltyRecipient = address(0x123);
+        uint256 _royaltyBps = 1000;
+
+        vm.prank(deployerSigner);
+        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+
+        (address newRoyaltyRecipient, uint256 newRoyaltyBps) = tokenContract.getDefaultRoyaltyInfo();
+        assertEq(newRoyaltyRecipient, _royaltyRecipient);
+        assertEq(newRoyaltyBps, _royaltyBps);
+
+        (address receiver, uint256 royaltyAmount) = tokenContract.royaltyInfo(0, 100);
+        assertEq(receiver, _royaltyRecipient);
+        assertEq(royaltyAmount, (100 * 1000) / 10_000);
+    }
+
+    function test_revert_setDefaultRoyaltyInfo_NotAuthorized() public {
+        address _royaltyRecipient = address(0x123);
+        uint256 _royaltyBps = 1000;
+        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
+
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                TWStrings.toHexString(uint160(address(0x1)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+        vm.prank(address(0x1));
+        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+    }
+
+    function test_revert_setDefaultRoyaltyInfo_ExceedsRoyaltyBps() public {
+        address _royaltyRecipient = address(0x123);
+        uint256 _royaltyBps = 10001;
+
+        vm.expectRevert("exceed royalty bps");
+        vm.prank(deployerSigner);
+        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+    }
+
+    function test_state_setRoyaltyInfoForToken() public {
+        uint256 _tokenId = 1;
+        address _recipient = address(0x123);
+        uint256 _bps = 1000;
+
+        vm.prank(deployerSigner);
+        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+
+        (address receiver, uint256 royaltyAmount) = tokenContract.royaltyInfo(_tokenId, 100);
+        assertEq(receiver, _recipient);
+        assertEq(royaltyAmount, (100 * 1000) / 10_000);
+    }
+
+    function test_revert_setRoyaltyInfo_NotAuthorized() public {
+        uint256 _tokenId = 1;
+        address _recipient = address(0x123);
+        uint256 _bps = 1000;
+        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
+
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                TWStrings.toHexString(uint160(address(0x1)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+        vm.prank(address(0x1));
+        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+    }
+
+    function test_revert_setRoyaltyInfoForToken_ExceedsRoyaltyBps() public {
+        uint256 _tokenId = 1;
+        address _recipient = address(0x123);
+        uint256 _bps = 10001;
+
+        vm.expectRevert("exceed royalty bps");
+        vm.prank(deployerSigner);
+        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+    }
+
+    function test_event_defaultRoyalty() public {
+        address _royaltyRecipient = address(0x123);
+        uint256 _royaltyBps = 1000;
+
+        vm.expectEmit(true, true, true, true);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
+
+        vm.prank(deployerSigner);
+        tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+    }
+
+    function test_event_royaltyForToken() public {
+        uint256 _tokenId = 1;
+        address _recipient = address(0x123);
+        uint256 _bps = 1000;
+
+        vm.expectEmit(true, true, true, true);
+        emit RoyaltyForToken(_tokenId, _recipient, _bps);
+
+        vm.prank(deployerSigner);
+        tokenContract.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: primary sale
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setPrimarySaleRecipient() public {
+        address _primarySaleRecipient = address(0x123);
+
+        vm.prank(deployerSigner);
+        tokenContract.setPrimarySaleRecipient(_primarySaleRecipient);
+
+        address recipient = tokenContract.primarySaleRecipient();
+        assertEq(recipient, _primarySaleRecipient);
+    }
+
+    function test_revert_setPrimarySaleRecipient_NotAuthorized() public {
+        address _primarySaleRecipient = address(0x123);
+        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
+
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                TWStrings.toHexString(uint160(address(0x1)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+        vm.prank(address(0x1));
+        tokenContract.setPrimarySaleRecipient(_primarySaleRecipient);
+    }
+
+    function test_event_setPrimarySaleRecipient() public {
+        address _primarySaleRecipient = address(0x123);
+
+        vm.expectEmit(true, true, true, true);
+        emit PrimarySaleRecipientUpdated(_primarySaleRecipient);
+
+        vm.prank(deployerSigner);
+        tokenContract.setPrimarySaleRecipient(_primarySaleRecipient);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: platform fee
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setPlatformFeeInfo() public {
+        address _platformFeeRecipient = address(0x123);
+        uint256 _platformFeeBps = 1000;
+
+        vm.prank(deployerSigner);
+        tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+
+        (address recipient, uint16 bps) = tokenContract.getPlatformFeeInfo();
+        assertEq(_platformFeeRecipient, recipient);
+        assertEq(_platformFeeBps, bps);
+    }
+
+    function test_revert_setPlatformFeeInfo_ExceedsMaxBps() public {
+        address _platformFeeRecipient = address(0x123);
+        uint256 _platformFeeBps = 10001;
+
+        vm.expectRevert("bps <= 10000.");
+        vm.prank(deployerSigner);
+        tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    function test_revert_setPlatformFeeInfo_NotAuthorized() public {
+        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
+
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                TWStrings.toHexString(uint160(address(0x1)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+        vm.prank(address(0x1));
+        tokenContract.setPlatformFeeInfo(address(1), 1000);
+    }
+
+    function test_event_platformFeeInfo() public {
+        address _platformFeeRecipient = address(0x123);
+        uint256 _platformFeeBps = 1000;
+
+        vm.expectEmit(true, true, true, true);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+
+        vm.prank(deployerSigner);
+        tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: contract metadata
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setContractURI() public {
+        string memory uri = "uri_string";
+
+        vm.prank(deployerSigner);
+        tokenContract.setContractURI(uri);
+
+        string memory _contractURI = tokenContract.contractURI();
+
+        assertEq(_contractURI, uri);
+    }
+
+    function test_revert_setContractURI() public {
+        bytes32 role = tokenContract.DEFAULT_ADMIN_ROLE();
+
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                TWStrings.toHexString(uint160(address(0x1)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+        vm.prank(address(0x1));
+        tokenContract.setContractURI("");
     }
 }
