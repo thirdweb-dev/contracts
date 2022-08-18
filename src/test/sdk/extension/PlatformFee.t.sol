@@ -53,7 +53,7 @@ contract ExtensionPlatformFee is DSTest, Test {
         ext.setPlatformFeeInfo(address(1), 1000);
     }
 
-    function test_event_defaultRoyalty() public {
+    function test_event_platformFeeInfo() public {
         ext.setCondition(true);
 
         address _platformFeeRecipient = address(0x123);
