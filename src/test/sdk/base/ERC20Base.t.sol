@@ -21,6 +21,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
     address public recipient;
 
     function setUp() public override {
+        super.setUp();
         vm.prank(deployer);
         base = new ERC20Base(NAME, SYMBOL, CONTRACT_URI);
 
@@ -256,7 +257,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
         ));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivateKey, typedDataHash); // sign with wrong key
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
 
         // call permit to approve _value to _spender
         vm.warp(_deadline + 1);
