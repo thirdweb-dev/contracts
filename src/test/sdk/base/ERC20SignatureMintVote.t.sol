@@ -169,4 +169,15 @@ contract BaseERC20SignatureMintVoteTest is BaseUtilTest {
         vm.expectRevert("Minting zero tokens.");
         base.mintWithSignature(_mintrequest, _signature);
     }
+
+    function test_revert_mintWithSignature_QuantityTooLow() public {
+        vm.warp(1000);
+
+        _mintrequest.quantity = 100;
+        _mintrequest.pricePerToken = 1;
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        vm.expectRevert("quantity too low");
+        base.mintWithSignature(_mintrequest, _signature);
+    }
 }

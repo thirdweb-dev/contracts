@@ -28,8 +28,8 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         base = new ERC20SignatureMint(NAME, SYMBOL, CONTRACT_URI, saleRecipient);
 
         recipient = address(0x123);
-        erc20.mint(recipient, 1_000 ether);
-        vm.deal(recipient, 1_000 ether);
+        erc20.mint(recipient, 1_000_000 ether);
+        vm.deal(recipient, 1_000_000 ether);
 
         typehashMintRequest = keccak256(
             "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -126,7 +126,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
     function test_state_mintWithSignature_NonZeroPrice_NativeToken() public {
         vm.warp(1000);
 
-        _mintrequest.pricePerToken = 1;
+        _mintrequest.pricePerToken = 1 ether;
         _mintrequest.currency = address(NATIVE_TOKEN);
         _signature = signMintRequest(_mintrequest, privateKey);
 
@@ -167,6 +167,17 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
 
         vm.expectRevert("Minting zero tokens.");
+        base.mintWithSignature(_mintrequest, _signature);
+    }
+
+    function test_revert_mintWithSignature_QuantityTooLow() public {
+        vm.warp(1000);
+
+        _mintrequest.quantity = 100;
+        _mintrequest.pricePerToken = 1;
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        vm.expectRevert("quantity too low");
         base.mintWithSignature(_mintrequest, _signature);
     }
 }
