@@ -92,15 +92,16 @@ abstract contract ERC20Permit is ERC20, IERC20Permit {
     }
 
     function _buildDomainSeparator() private view returns (bytes32) {
-        return keccak256(abi.encode(
+        return
             keccak256(
-                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-            ), 
-            keccak256(bytes(name())), 
-            keccak256("1"), 
-            block.chainid, 
-            address(this)
-        ));
+                abi.encode(
+                    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                    keccak256(bytes(name())),
+                    keccak256("1"),
+                    block.chainid,
+                    address(this)
+                )
+            );
     }
 
     /**

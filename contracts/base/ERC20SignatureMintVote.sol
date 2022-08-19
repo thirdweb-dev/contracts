@@ -89,9 +89,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being minted with signature.
-    function collectPriceOnClaim(
-        MintRequest calldata _req
-    ) internal virtual {
+    function collectPriceOnClaim(MintRequest calldata _req) internal virtual {
         if (_req.pricePerToken == 0) {
             return;
         }

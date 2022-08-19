@@ -27,14 +27,14 @@ import "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20DropVote is 
-    ContractMetadata, 
-    Multicall, 
-    Ownable, 
+contract ERC20DropVote is
+    ContractMetadata,
+    Multicall,
+    Ownable,
     ERC20Votes,
     PrimarySale,
-    SignatureMintERC20, 
-    DropSinglePhase 
+    SignatureMintERC20,
+    DropSinglePhase
 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -110,9 +110,7 @@ contract ERC20DropVote is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Collects and distributes the primary sale value of tokens being minted with signature.
-    function collectPriceOnClaim(
-        MintRequest calldata _req
-    ) internal virtual {
+    function collectPriceOnClaim(MintRequest calldata _req) internal virtual {
         if (_req.pricePerToken == 0) {
             return;
         }

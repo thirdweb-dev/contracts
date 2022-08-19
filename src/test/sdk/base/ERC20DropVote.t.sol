@@ -41,11 +41,13 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
         vm.deal(recipient, 1_000_000 ether);
 
         typehashEip712 = keccak256(
-                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-            );
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
 
         // permit related inputs
-        permitTypeHash = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+        permitTypeHash = keccak256(
+            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+        );
         permitNameHash = keccak256(bytes(NAME));
         permitVersionHash = keccak256("1");
 
@@ -87,7 +89,9 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base)));
+        bytes32 domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base))
+        );
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
@@ -263,15 +267,10 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         uint256 _nonce = base.nonces(_owner);
 
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            permitTypeHash,
-            _owner,
-            _spender,
-            _value,
-            _nonce,
-            _deadline
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
@@ -297,15 +296,10 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         uint256 _nonce = base.nonces(_owner);
 
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            permitTypeHash,
-            _owner,
-            _spender,
-            _value,
-            _nonce,
-            _deadline
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivateKey, typedDataHash); // sign with wrong key
@@ -316,7 +310,6 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
     }
 
     function test_revert_permit_UsedNonce() public {
-
         // generate permit signature
         address _owner = recipient;
         address _spender = address(0x789);
@@ -325,15 +318,10 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         uint256 _nonce = base.nonces(_owner);
 
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            permitTypeHash,
-            _owner,
-            _spender,
-            _value,
-            _nonce,
-            _deadline
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
@@ -349,7 +337,6 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
     }
 
     function test_revert_permit_ExpiredDeadline() public {
-
         // generate permit signature
         address _owner = recipient;
         address _spender = address(0x789);
@@ -358,15 +345,10 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         uint256 _nonce = base.nonces(_owner);
 
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            permitTypeHash,
-            _owner,
-            _spender,
-            _value,
-            _nonce,
-            _deadline
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
@@ -388,13 +370,10 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
         uint256 _expiry = 1000;
 
         // vote extends permit, so name-hash and version-hash are same for both
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            delegationTypeHash,
-            _delegatee,
-            _nonce,
-            _expiry
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(abi.encode(delegationTypeHash, _delegatee, _nonce, _expiry));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
@@ -412,13 +391,17 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
         uint256 _expiry = 1000;
 
         // vote extends permit, so name-hash and version-hash are same for both
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            delegationTypeHash,
-            _delegatee,
-            _nonce + 1, // invalid nonce
-            _expiry
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(
+            abi.encode(
+                delegationTypeHash,
+                _delegatee,
+                _nonce + 1, // invalid nonce
+                _expiry
+            )
+        );
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
@@ -435,13 +418,10 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
         uint256 _expiry = 1000;
 
         // vote extends permit, so name-hash and version-hash are same for both
-        domainSeparator = keccak256(abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base)));
-        bytes32 structHash = keccak256(abi.encode(
-            delegationTypeHash,
-            _delegatee,
-            _nonce,
-            _expiry
-        ));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
+        );
+        bytes32 structHash = keccak256(abi.encode(delegationTypeHash, _delegatee, _nonce, _expiry));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
