@@ -49,6 +49,7 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit {
      */
     function mint(address _to, uint256 _amount) public virtual {
         require(_canMint(), "Not authorized to mint.");
+        require(_amount != 0, "Minting zero tokens.");
 
         _mint(_to, _amount);
     }
