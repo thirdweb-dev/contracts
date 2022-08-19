@@ -66,7 +66,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req);
 
         // Mint tokens.
         _mint(receiver, _req.quantity);
@@ -88,22 +88,21 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
         return msg.sender == owner();
     }
 
-    /// @dev Collects and distributes the primary sale value of tokens being claimed.
+    /// @dev Collects and distributes the primary sale value of tokens being minted with signature.
     function collectPriceOnClaim(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
+        MintRequest calldata _req
     ) internal virtual {
-        if (_pricePerToken == 0) {
+        if (_req.pricePerToken == 0) {
             return;
         }
 
-        uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
+        uint256 totalPrice = (_req.quantity * _req.pricePerToken) / 1 ether;
+        require(totalPrice > 0, "quantity too low");
 
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "Must send total price.");
+        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == totalPrice, "must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
+        CurrencyTransferLib.transferCurrency(_req.currency, msg.sender, _req.primarySaleRecipient, totalPrice);
     }
 }
