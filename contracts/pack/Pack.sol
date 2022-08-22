@@ -21,7 +21,7 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/Royalty.sol";
 import "../extension/Ownable.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../extension/Permissions.sol";
 import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
 contract Pack is
@@ -52,16 +52,6 @@ contract Pack is
     // Token symbol
     string public symbol;
 
-    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    // bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    bytes32 private transferRole;
-    /// @dev Only MINTER_ROLE holders can create packs.
-    // bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 private minterRole;
-    /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
-    // bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
-    bytes32 private assetRole;
-
     /// @dev The token Id of the next set of packs to be minted.
     uint256 public nextTokenIdToMint;
 
@@ -82,7 +72,10 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address[] memory _trustedForwarders) TokenStore(_nativeTokenWrapper) initializer {
+    constructor(address _nativeTokenWrapper, address[] memory _trustedForwarders)
+        TokenStore(_nativeTokenWrapper)
+        initializer
+    {
         forwarders = _trustedForwarders;
     }
 
@@ -95,9 +88,6 @@ contract Pack is
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
-        transferRole = keccak256("TRANSFER_ROLE");
-        minterRole = keccak256("MINTER_ROLE");
-        assetRole = keccak256("ASSET_ROLE");
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(forwarders);
@@ -111,20 +101,14 @@ contract Pack is
         _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(transferRole, _defaultAdmin);
-        _setupRole(minterRole, _defaultAdmin);
-        _setupRole(transferRole, address(0));
-
-        // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
-        _setupRole(assetRole, address(0));
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
 
     receive() external payable {
         // require(msg.sender == nativeTokenWrapper, "Caller is not native token wrapper.");
-        if(msg.sender != nativeTokenWrapper) {
-            revert("Not native token wrapper");
+        if (msg.sender != nativeTokenWrapper) {
+            revert("!WRAP");
         }
     }
 
@@ -151,15 +135,6 @@ contract Pack is
         return uint8(VERSION);
     }
 
-    /// @dev Pauses / unpauses contract.
-    // function pause(bool _toPause) internal onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     if (_toPause) {
-    //         _pause();
-    //     } else {
-    //         _unpause();
-    //     }
-    // }
-
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 1155 / 2981 logic
     //////////////////////////////////////////////////////////////*/
@@ -178,9 +153,10 @@ contract Pack is
         override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) 
-                || type(IERC2981Upgradeable).interfaceId == interfaceId
-                || type(IERC721Receiver).interfaceId == interfaceId;
+        return
+            super.supportsInterface(interfaceId) ||
+            type(IERC2981Upgradeable).interfaceId == interfaceId ||
+            type(IERC721Receiver).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -194,46 +170,43 @@ contract Pack is
         string memory _packUri,
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
-        uint256 _expirationTimestamp,
         address _recipient
     )
         external
         payable
-        onlyRoleWithSwitch(minterRole)
+        onlyRoleWithSwitch(DEFAULT_ADMIN_ROLE)
         nonReentrant
-        
         returns (uint256 packId, uint256 packTotalSupply)
     {
         // require(_contents.length > 0, "nothing to pack");
-        if(_contents.length == 0) {
-            revert("zero contents");
+        if (_contents.length == 0) {
+            revert("!C");
         }
         // require(_contents.length == _numOfRewardUnits.length, "invalid reward units");
-        if(_contents.length != _numOfRewardUnits.length) {
-            revert("invalid reward units");
-        }
-
-        if (!hasRole(assetRole, address(0))) {
-            for (uint256 i = 0; i < _contents.length; i += 1) {
-                _checkRole(assetRole, _contents[i].assetContract);
-            }
+        if (_contents.length != _numOfRewardUnits.length) {
+            revert("!R");
         }
 
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
-        packTotalSupply = escrowPackContents(_contents, _numOfRewardUnits, _packUri, packId, _amountDistributedPerOpen, false);
+        packTotalSupply = escrowPackContents(
+            _contents,
+            _numOfRewardUnits,
+            _packUri,
+            packId,
+            _amountDistributedPerOpen,
+            false
+        );
 
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
-        packInfo[packId].expirationTimestamp = _expirationTimestamp == 0 ? type(uint256).max : _expirationTimestamp;
-        packInfo[packId].creator = _msgSender();
 
         canUpdatePack[packId] = true;
 
         _mint(_recipient, packId, packTotalSupply, "");
 
-        emit PackCreated(packId, _msgSender(), _recipient, packTotalSupply);
+        emit PackCreated(packId, _recipient, packTotalSupply);
     }
 
     function addPackContents(
@@ -244,33 +217,22 @@ contract Pack is
     )
         external
         payable
-        onlyRoleWithSwitch(minterRole)
+        onlyRoleWithSwitch(DEFAULT_ADMIN_ROLE)
         nonReentrant
-        
         returns (uint256 packTotalSupply, uint256 newSupplyAdded)
     {
         // require(canUpdatePack[_packId], "not allowed");
-        if(!canUpdatePack[_packId]) {
-            revert("cant update");
-        }
-        // require(_msgSender() == packInfo[_packId].creator, "not creator");
-        if(_msgSender() != packInfo[_packId].creator) {
-            revert("Not authorized");
+        if (!canUpdatePack[_packId]) {
+            revert("!U");
         }
 
         // require(_contents.length > 0, "nothing to pack");
-        if(_contents.length == 0) {
-            revert("empty contents");
+        if (_contents.length == 0) {
+            revert("!C");
         }
         // require(_contents.length == _numOfRewardUnits.length, "invalid reward units");
-        if(_contents.length != _numOfRewardUnits.length) {
-            revert("invalid reward units");
-        }
-
-        if (!hasRole(assetRole, address(0))) {
-            for (uint256 i = 0; i < _contents.length; i += 1) {
-                _checkRole(assetRole, _contents[i].assetContract);
-            }
+        if (_contents.length != _numOfRewardUnits.length) {
+            revert("!RU");
         }
 
         uint256 amountPerOpen = packInfo[_packId].amountDistributedPerOpen;
@@ -280,35 +242,26 @@ contract Pack is
 
         _mint(_recipient, _packId, newSupplyAdded, "");
 
-        emit PackUpdated(_packId, _msgSender(), _recipient, newSupplyAdded);
+        emit PackUpdated(_packId, _recipient, newSupplyAdded);
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen)
-        external
-        nonReentrant
-        
-        returns (Token[] memory)
-    {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant returns (Token[] memory) {
         address opener = _msgSender();
 
         // require(isTrustedForwarder(msg.sender) || opener == tx.origin, "opener must be eoa");
-        if(!isTrustedForwarder(msg.sender) && opener != tx.origin) {
-            revert("not eoa");
+        if (!isTrustedForwarder(msg.sender) && opener != tx.origin) {
+            revert("!EOA");
         }
         // require(balanceOf(opener, _packId) >= _amountToOpen, "opening more than owned");
-        if(balanceOf(opener, _packId) < _amountToOpen) {
-            revert("opening more than owned");
+        if (balanceOf(opener, _packId) < _amountToOpen) {
+            revert("!O");
         }
 
         PackInfo memory pack = packInfo[_packId];
         // require(pack.openStartTimestamp <= block.timestamp, "cannot open yet");
-        if(pack.openStartTimestamp > block.timestamp) {
-            revert("cant open yet");
-        }
-        // require(pack.expirationTimestamp > block.timestamp, "pack has expired");
-        if(pack.expirationTimestamp <= block.timestamp) {
-            revert("expired");
+        if (pack.openStartTimestamp > block.timestamp) {
+            revert("!C");
         }
 
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
@@ -322,19 +275,8 @@ contract Pack is
         return rewardUnits;
     }
 
-    function withdrawUnclaimedAssets(uint256 _packId) 
-        external
-        nonReentrant
-    {
+    function withdrawUnclaimedAssets(uint256 _packId) external nonReentrant {
         PackInfo memory pack = packInfo[_packId];
-        // require(block.timestamp >= pack.expirationTimestamp, "pack not expired yet");
-        if(block.timestamp < pack.expirationTimestamp) {
-            revert("pack not expired yet");
-        }
-        // require(_msgSender() == pack.creator, "not creator");
-        if(_msgSender() != pack.creator) {
-            revert("Not authorized");
-        }
 
         _releaseTokens(_msgSender(), _packId);
     }
@@ -352,19 +294,19 @@ contract Pack is
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
             // require(_contents[i].totalAmount != 0, "amount can't be zero");
-            if(_contents[i].totalAmount == 0) {
-                revert("zero amount");
+            if (_contents[i].totalAmount == 0) {
+                revert("!Z");
             }
             // require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "invalid reward units");
-            if(_contents[i].totalAmount % _numOfRewardUnits[i] != 0) {
-                revert("invalid reward units");
+            if (_contents[i].totalAmount % _numOfRewardUnits[i] != 0) {
+                revert("4");
             }
             // require(
             //     _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
             //     "invalid erc721 rewards"
             // );
-            if(_contents[i].tokenType == TokenType.ERC721 && _contents[i].totalAmount != 1) {
-                revert("invalid erc721 rewards");
+            if (_contents[i].tokenType == TokenType.ERC721 && _contents[i].totalAmount != 1) {
+                revert("3");
             }
 
             sumOfRewardUnits += _numOfRewardUnits[i];
@@ -373,20 +315,19 @@ contract Pack is
         }
 
         // require(sumOfRewardUnits % amountPerOpen == 0, "invalid amount to distribute per open");
-        if(sumOfRewardUnits % amountPerOpen != 0) {
-            revert("invalid amount per open");
+        if (sumOfRewardUnits % amountPerOpen != 0) {
+            revert("2");
         }
         supplyToMint = sumOfRewardUnits / amountPerOpen;
 
-        if(isUpdate) {
-            for(uint256 i = 0; i < _contents.length; i += 1) {
+        if (isUpdate) {
+            for (uint256 i = 0; i < _contents.length; i += 1) {
                 _addTokenInBundle(_contents[i], packId);
             }
             _transferTokenBatch(_msgSender(), address(this), _contents);
         } else {
             _storeTokens(_msgSender(), _contents, _packUri, packId);
         }
-
     }
 
     /// @dev Returns the reward units to distribute.
@@ -404,7 +345,7 @@ contract Pack is
 
         uint256 random = generateRandomValue();
 
-        (Token[] memory _token,) = getPackContents(_packId);
+        (Token[] memory _token, ) = getPackContents(_packId);
         bool[] memory _isUpdated = new bool[](totalRewardKinds);
         for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
@@ -417,7 +358,7 @@ contract Pack is
                 if (target < step + totalRewardUnitsOfKind) {
                     _token[j].totalAmount -= pack.perUnitAmounts[j];
                     _isUpdated[j] = true;
-        
+
                     rewardUnits[i].assetContract = _token[j].assetContract;
                     rewardUnits[i].tokenType = _token[j].tokenType;
                     rewardUnits[i].tokenId = _token[j].tokenId;
@@ -432,8 +373,8 @@ contract Pack is
             }
         }
 
-        for(uint256 i = 0; i < totalRewardKinds; i += 1) {
-            if(_isUpdated[i]) {
+        for (uint256 i = 0; i < totalRewardKinds; i += 1) {
+            if (_isUpdated[i]) {
                 _updateTokenInBundle(_token[i], _packId, i);
             }
         }
@@ -464,14 +405,9 @@ contract Pack is
     }
 
     /// @dev Returns opening and expiration timestamps of a pack.
-    function getPackTimestamps(uint256 _packId)
-        external
-        view
-        returns (uint128 openStartTimestamp, uint256 expirationTimestamp)
-    {
+    function getPackTimestamps(uint256 _packId) external view returns (uint128 openStartTimestamp) {
         PackInfo memory pack = packInfo[_packId];
         openStartTimestamp = pack.openStartTimestamp;
-        expirationTimestamp = pack.expirationTimestamp;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -514,11 +450,6 @@ contract Pack is
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(transferRole, from) || hasRole(transferRole, to), "!TRANSFER_ROLE");
-        }
-
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
                 totalSupply[ids[i]] += amounts[i];
@@ -526,7 +457,7 @@ contract Pack is
         } else {
             for (uint256 i = 0; i < ids.length; ++i) {
                 // pack can no longer be updated after first transfer to non-zero address
-                if(canUpdatePack[ids[i]]) {
+                if (canUpdatePack[ids[i]]) {
                     canUpdatePack[ids[i]] = false;
                 }
             }

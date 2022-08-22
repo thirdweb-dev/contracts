@@ -21,25 +21,13 @@ interface IPack is ITokenBundle {
         uint256[] perUnitAmounts;
         uint128 openStartTimestamp;
         uint128 amountDistributedPerOpen;
-        uint256 expirationTimestamp;
-        address creator;
     }
 
     /// @notice Emitted when a set of packs is created.
-    event PackCreated(
-        uint256 indexed packId,
-        address indexed packCreator,
-        address recipient,
-        uint256 totalPacksCreated
-    );
+    event PackCreated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
 
     /// @notice Emitted when more packs are minted for a packId.
-    event PackUpdated(
-        uint256 indexed packId,
-        address indexed packCreator,
-        address recipient,
-        uint256 totalPacksCreated
-    );
+    event PackUpdated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
 
     /// @notice Emitted when a pack is opened.
     event PackOpened(
@@ -68,7 +56,6 @@ interface IPack is ITokenBundle {
         string calldata packUri,
         uint128 openStartTimestamp,
         uint128 amountDistributedPerOpen,
-        uint256 expirationTimestamp,
         address recipient
     ) external payable returns (uint256 packId, uint256 packTotalSupply);
 
