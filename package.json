@@ -14,7 +14,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "4.5.0",
     "@openzeppelin/contracts-upgradeable": "4.5.1",
-    "@primitivefi/hardhat-dodoc": "^0.1.3",
+    "@primitivefi/hardhat-dodoc": "^0.2.0",
     "@typechain/ethers-v5": "^10.0.0",
     "@typechain/hardhat": "^4.0.0",
     "@types/fs-extra": "^9.0.13",
