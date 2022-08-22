@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC20Vote      EXTENSION: SignatureMintERC20, DropSinglePhase  The `ERC20Drop` contract uses the `ERC20Vote` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
+BASE:      ERC20Votes      EXTENSION: SignatureMintERC20, DropSinglePhase  The `ERC20Drop` contract uses the `ERC20Vote` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
 
 
 
@@ -18,37 +18,37 @@ function DOMAIN_SEPARATOR() external view returns (bytes32)
 
 
 
-
+*See {IERC20Permit-DOMAIN_SEPARATOR}.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### allowance
 
 ```solidity
-function allowance(address, address) external view returns (uint256)
+function allowance(address owner, address spender) external view returns (uint256)
 ```
 
 
 
-
+*See {IERC20-allowance}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | address | undefined
+| owner | address | undefined |
+| spender | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### approve
 
@@ -58,42 +58,42 @@ function approve(address spender, uint256 amount) external nonpayable returns (b
 
 
 
-
+*See {IERC20-approve}. NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on `transferFrom`. This is semantically equivalent to an infinite approval. Requirements: - `spender` cannot be the zero address.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| spender | address | undefined
-| amount | uint256 | undefined
+| spender | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### balanceOf
 
 ```solidity
-function balanceOf(address) external view returns (uint256)
+function balanceOf(address account) external view returns (uint256)
 ```
 
 
 
-
+*See {IERC20-balanceOf}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### burn
 
@@ -109,12 +109,12 @@ Lets an owner a given amount of their tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| _amount | uint256 | The number of tokens to burn.
+| _amount | uint256 | The number of tokens to burn. |
 
 ### checkpoints
 
 ```solidity
-function checkpoints(address account, uint32 pos) external view returns (struct ERC20VotesAlt.Checkpoint)
+function checkpoints(address account, uint32 pos) external view returns (struct ERC20Votes.Checkpoint)
 ```
 
 
@@ -125,14 +125,14 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| pos | uint32 | undefined
+| account | address | undefined |
+| pos | uint32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | ERC20VotesAlt.Checkpoint | undefined
+| _0 | ERC20Votes.Checkpoint | undefined |
 
 ### claim
 
@@ -142,18 +142,18 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 
 
 
-*Lets an account claim tokens.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _receiver | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
-| _data | bytes | undefined
+| _receiver | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined |
+| _data | bytes | undefined |
 
 ### claimCondition
 
@@ -170,14 +170,14 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| startTimestamp | uint256 | undefined
-| maxClaimableSupply | uint256 | undefined
-| supplyClaimed | uint256 | undefined
-| quantityLimitPerTransaction | uint256 | undefined
-| waitTimeInSecondsBetweenClaims | uint256 | undefined
-| merkleRoot | bytes32 | undefined
-| pricePerToken | uint256 | undefined
-| currency | address | undefined
+| startTimestamp | uint256 | undefined |
+| maxClaimableSupply | uint256 | undefined |
+| supplyClaimed | uint256 | undefined |
+| quantityLimitPerTransaction | uint256 | undefined |
+| waitTimeInSecondsBetweenClaims | uint256 | undefined |
+| merkleRoot | bytes32 | undefined |
+| pricePerToken | uint256 | undefined |
+| currency | address | undefined |
 
 ### contractURI
 
@@ -185,7 +185,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 function contractURI() external view returns (string)
 ```
 
-
+Returns the contract metadata URI.
 
 
 
@@ -194,7 +194,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### decimals
 
@@ -204,14 +204,37 @@ function decimals() external view returns (uint8)
 
 
 
-
+*Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the value {ERC20} uses, unless this function is overridden; NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
+
+### decreaseAllowance
+
+```solidity
+function decreaseAllowance(address spender, uint256 subtractedValue) external nonpayable returns (bool)
+```
+
+
+
+*Atomically decreases the allowance granted to `spender` by the caller. This is an alternative to {approve} that can be used as a mitigation for problems described in {IERC20-approve}. Emits an {Approval} event indicating the updated allowance. Requirements: - `spender` cannot be the zero address. - `spender` must have allowance for the caller of at least `subtractedValue`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| spender | address | undefined |
+| subtractedValue | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### delegate
 
@@ -227,7 +250,7 @@ function delegate(address delegatee) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| delegatee | address | undefined
+| delegatee | address | undefined |
 
 ### delegateBySig
 
@@ -243,12 +266,12 @@ function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v
 
 | Name | Type | Description |
 |---|---|---|
-| delegatee | address | undefined
-| nonce | uint256 | undefined
-| expiry | uint256 | undefined
-| v | uint8 | undefined
-| r | bytes32 | undefined
-| s | bytes32 | undefined
+| delegatee | address | undefined |
+| nonce | uint256 | undefined |
+| expiry | uint256 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 ### delegates
 
@@ -264,13 +287,13 @@ function delegates(address account) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getClaimTimestamp
 
@@ -286,14 +309,14 @@ function getClaimTimestamp(address _claimer) external view returns (uint256 last
 
 | Name | Type | Description |
 |---|---|---|
-| _claimer | address | undefined
+| _claimer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| lastClaimedAt | uint256 | undefined
-| nextValidClaimTimestamp | uint256 | undefined
+| lastClaimedAt | uint256 | undefined |
+| nextValidClaimTimestamp | uint256 | undefined |
 
 ### getPastTotalSupply
 
@@ -309,13 +332,13 @@ function getPastTotalSupply(uint256 blockNumber) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| blockNumber | uint256 | undefined
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getPastVotes
 
@@ -331,14 +354,14 @@ function getPastVotes(address account, uint256 blockNumber) external view return
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| blockNumber | uint256 | undefined
+| account | address | undefined |
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getVotes
 
@@ -354,30 +377,36 @@ function getVotes(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
-### mint
+### increaseAllowance
 
 ```solidity
-function mint(address, uint256) external nonpayable
+function increaseAllowance(address spender, uint256 addedValue) external nonpayable returns (bool)
 ```
 
 
 
-
+*Atomically increases the allowance granted to `spender` by the caller. This is an alternative to {approve} that can be used as a mitigation for problems described in {IERC20-approve}. Emits an {Approval} event indicating the updated allowance. Requirements: - `spender` cannot be the zero address.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
-| _1 | uint256 | undefined
+| spender | address | undefined |
+| addedValue | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### mintWithSignature
 
@@ -385,7 +414,7 @@ function mint(address, uint256) external nonpayable
 function mintWithSignature(ISignatureMintERC20.MintRequest _req, bytes _signature) external payable returns (address signer)
 ```
 
-Mints tokens according to the provided mint request.
+
 
 
 
@@ -393,14 +422,14 @@ Mints tokens according to the provided mint request.
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMintERC20.MintRequest | The payload / mint request.
-| _signature | bytes | The signature produced by an account signing the mint request.
+| _req | ISignatureMintERC20.MintRequest | undefined |
+| _signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined
+| signer | address | undefined |
 
 ### multicall
 
@@ -408,7 +437,7 @@ Mints tokens according to the provided mint request.
 function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ```
 
-
+Receives and executes a batch of function calls on this contract.
 
 *Receives and executes a batch of function calls on this contract.*
 
@@ -416,13 +445,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### name
 
@@ -432,36 +461,36 @@ function name() external view returns (string)
 
 
 
-
+*Returns the name of the token.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### nonces
 
 ```solidity
-function nonces(address) external view returns (uint256)
+function nonces(address owner) external view returns (uint256)
 ```
 
 
 
-
+*See {IERC20Permit-nonces}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| owner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### numCheckpoints
 
@@ -477,13 +506,13 @@ function numCheckpoints(address account) external view returns (uint32)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint32 | undefined |
 
 ### owner
 
@@ -491,16 +520,16 @@ function numCheckpoints(address account) external view returns (uint32)
 function owner() external view returns (address)
 ```
 
+Returns the owner of the contract.
 
 
-*Returns the owner of the contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### permit
 
@@ -510,19 +539,19 @@ function permit(address owner, address spender, uint256 value, uint256 deadline,
 
 
 
-
+*See {IERC20Permit-permit}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
-| spender | address | undefined
-| value | uint256 | undefined
-| deadline | uint256 | undefined
-| v | uint8 | undefined
-| r | bytes32 | undefined
-| s | bytes32 | undefined
+| owner | address | undefined |
+| spender | address | undefined |
+| value | uint256 | undefined |
+| deadline | uint256 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 ### primarySaleRecipient
 
@@ -532,14 +561,14 @@ function primarySaleRecipient() external view returns (address)
 
 
 
-*The adress that receives all primary sales value.*
+*Returns primary sale recipient address.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### setClaimConditions
 
@@ -549,14 +578,14 @@ function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _res
 
 
 
-*Lets a contract admin set claim conditions.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _condition | IClaimCondition.ClaimCondition | undefined
-| _resetClaimEligibility | bool | undefined
+| _condition | IClaimCondition.ClaimCondition | undefined |
+| _resetClaimEligibility | bool | undefined |
 
 ### setContractURI
 
@@ -564,15 +593,15 @@ function setClaimConditions(IClaimCondition.ClaimCondition _condition, bool _res
 function setContractURI(string _uri) external nonpayable
 ```
 
+Lets a contract admin set the URI for contract-level metadata.
 
-
-*Lets a contract admin set the URI for contract-level metadata.*
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 ### setOwner
 
@@ -580,15 +609,15 @@ function setContractURI(string _uri) external nonpayable
 function setOwner(address _newOwner) external nonpayable
 ```
 
+Lets an authorized wallet set a new owner for the contract.
 
 
-*Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | undefined
+| _newOwner | address | The address to set as the new owner of the contract. |
 
 ### setPrimarySaleRecipient
 
@@ -596,15 +625,15 @@ function setOwner(address _newOwner) external nonpayable
 function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 ```
 
+Updates primary sale recipient.
 
-
-*Lets a contract admin set the recipient for all primary sales.*
+*Caller should be authorized to set primary sales info.                  See {_canSetPrimarySaleRecipient}.                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _saleRecipient | address | undefined
+| _saleRecipient | address | Address to be set as new recipient of primary sales. |
 
 ### symbol
 
@@ -614,14 +643,14 @@ function symbol() external view returns (string)
 
 
 
-
+*Returns the symbol of the token, usually a shorter version of the name.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### totalSupply
 
@@ -631,14 +660,14 @@ function totalSupply() external view returns (uint256)
 
 
 
-
+*See {IERC20-totalSupply}.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### transfer
 
@@ -648,20 +677,20 @@ function transfer(address to, uint256 amount) external nonpayable returns (bool)
 
 
 
-
+*See {IERC20-transfer}. Requirements: - `to` cannot be the zero address. - the caller must have a balance of at least `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| amount | uint256 | undefined
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### transferFrom
 
@@ -671,21 +700,21 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 
 
 
-
+*See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. NOTE: Does not update the allowance if the current allowance is the maximum `uint256`. Requirements: - `from` and `to` cannot be the zero address. - `from` must have a balance of at least `amount`. - the caller must have allowance for ``from``&#39;s tokens of at least `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| amount | uint256 | undefined
+| from | address | undefined |
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### verify
 
@@ -695,21 +724,21 @@ function verify(ISignatureMintERC20.MintRequest _req, bytes _signature) external
 
 
 
-*Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _req | ISignatureMintERC20.MintRequest | undefined
-| _signature | bytes | undefined
+| _req | ISignatureMintERC20.MintRequest | undefined |
+| _signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined
-| signer | address | undefined
+| success | bool | undefined |
+| signer | address | undefined |
 
 ### verifyClaim
 
@@ -725,11 +754,11 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 
 | Name | Type | Description |
 |---|---|---|
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _currency | address | undefined
-| _pricePerToken | uint256 | undefined
-| verifyMaxQuantityPerTransaction | bool | undefined
+| _claimer | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| verifyMaxQuantityPerTransaction | bool | undefined |
 
 ### verifyClaimMerkleProof
 
@@ -739,22 +768,22 @@ function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSingle
 
 
 
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _claimer | address | undefined
-| _quantity | uint256 | undefined
-| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined
+| _claimer | address | undefined |
+| _quantity | uint256 | undefined |
+| _allowlistProof | IDropSinglePhase.AllowlistProof | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| validMerkleProof | bool | undefined
-| merkleProofIndex | uint256 | undefined
+| validMerkleProof | bool | undefined |
+| merkleProofIndex | uint256 | undefined |
 
 
 
@@ -763,7 +792,7 @@ function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSingle
 ### Approval
 
 ```solidity
-event Approval(address indexed owner, address indexed spender, uint256 amount)
+event Approval(address indexed owner, address indexed spender, uint256 value)
 ```
 
 
@@ -776,7 +805,7 @@ event Approval(address indexed owner, address indexed spender, uint256 amount)
 |---|---|---|
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| value  | uint256 | undefined |
 
 ### ClaimConditionUpdated
 
@@ -921,7 +950,7 @@ event TokensMintedWithSignature(address indexed signer, address indexed mintedTo
 ### Transfer
 
 ```solidity
-event Transfer(address indexed from, address indexed to, uint256 amount)
+event Transfer(address indexed from, address indexed to, uint256 value)
 ```
 
 
@@ -934,7 +963,7 @@ event Transfer(address indexed from, address indexed to, uint256 amount)
 |---|---|---|
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| value  | uint256 | undefined |
 
 
 

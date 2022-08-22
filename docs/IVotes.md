@@ -24,7 +24,7 @@ function delegate(address delegatee) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| delegatee | address | undefined
+| delegatee | address | undefined |
 
 ### delegateBySig
 
@@ -40,12 +40,12 @@ function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v
 
 | Name | Type | Description |
 |---|---|---|
-| delegatee | address | undefined
-| nonce | uint256 | undefined
-| expiry | uint256 | undefined
-| v | uint8 | undefined
-| r | bytes32 | undefined
-| s | bytes32 | undefined
+| delegatee | address | undefined |
+| nonce | uint256 | undefined |
+| expiry | uint256 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 ### delegates
 
@@ -61,13 +61,13 @@ function delegates(address account) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getPastTotalSupply
 
@@ -83,13 +83,13 @@ function getPastTotalSupply(uint256 blockNumber) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| blockNumber | uint256 | undefined
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getPastVotes
 
@@ -105,14 +105,14 @@ function getPastVotes(address account, uint256 blockNumber) external view return
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| blockNumber | uint256 | undefined
+| account | address | undefined |
+| blockNumber | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### getVotes
 
@@ -128,13 +128,13 @@ function getVotes(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 
 
