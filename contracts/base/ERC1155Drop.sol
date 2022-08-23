@@ -9,7 +9,6 @@ import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/PrimarySale.sol";
-import "../extension/SignatureMintERC1155.sol";
 import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
@@ -19,19 +18,25 @@ import "../lib/TWStrings.sol";
 
 /**
  *      BASE:      ERC1155Base
- *      EXTENSION: SignatureMintERC1155, DropSinglePhase1155
+ *      EXTENSION: DropSinglePhase1155
  *
- *  The `ERC1155Drop` contract uses the `ERC1155Base` contract, along with the `SignatureMintERC1155` and `DropSinglePhase1155` extension.
+ *  The `ERC1155Base` smart contract implements the ERC1155 NFT standard.
+ *  It includes the following additions to standard ERC1155 logic:
  *
- *  The 'signature minting' mechanism in the `SignatureMintERC1155` extension is a way for a contract admin to authorize
- *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
- *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use
+ *        off-chain information to distribute roaylties.
+ *
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability to perform multiple actions atomically
+ *
+ *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  *
  *  The `drop` mechanism in the `DropSinglePhase1155` extension is a distribution mechanism for lazy minted tokens. It lets
  *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.
  *
- *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or
- *  via the drop mechanism.
+ *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via the drop mechanism.
  */
 
 contract ERC1155Drop is
@@ -42,7 +47,6 @@ contract ERC1155Drop is
     Multicall,
     BatchMintMetadata,
     PrimarySale,
-    SignatureMintERC1155,
     LazyMint,
     DelayedReveal,
     DropSinglePhase1155
@@ -94,54 +98,6 @@ contract ERC1155Drop is
         } else {
             return string(abi.encodePacked(batchUri, _tokenId.toString()));
         }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        Signature minting logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @notice           Mints tokens according to the provided mint request.
-     *
-     *  @param _req       The payload / mint request.
-     *  @param _signature The signature produced by an account signing the mint request.
-     */
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        virtual
-        override
-        returns (address signer)
-    {
-        require(_req.quantity > 0, "Minting zero tokens.");
-
-        uint256 tokenIdToMint = _req.tokenId;
-        require(tokenIdToMint < nextTokenIdToMint(), "Claiming invalid tokenId.");
-
-        // Verify and process payload.
-        signer = _processRequest(_req, _signature);
-
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
-
-        // Collect price
-        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
-
-        // Set royalties, if applicable.
-        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
-            _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
-        }
-
-        // Mint tokens.
-        _mint(receiver, tokenIdToMint, _req.quantity, "");
-
-        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -321,10 +277,5 @@ contract ERC1155Drop is
     /// @dev Checks whether NFTs can be revealed in the given execution context.
     function _canReveal() internal view virtual returns (bool) {
         return msg.sender == owner();
-    }
-
-    /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _canSignMintRequest(address _signer) internal view virtual override returns (bool) {
-        return _signer == owner();
     }
 }

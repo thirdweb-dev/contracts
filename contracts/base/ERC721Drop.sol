@@ -1,29 +1,43 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721SignatureMint.sol";
+import { ERC721A } from "../eip/ERC721A.sol";
 
+import "../extension/ContractMetadata.sol";
+import "../extension/Multicall.sol";
+import "../extension/Ownable.sol";
+import "../extension/Royalty.sol";
+import "../extension/BatchMintMetadata.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/PermissionsEnumerable.sol";
 import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
 import "../lib/TWStrings.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC721A
- *      EXTENSION: SignatureMintERC721, DropSinglePhase
+ *      EXTENSION: DropSinglePhase
  *
- *  The `ERC721Drop` contract uses the `ERC721Base` contract, along with the `SignatureMintERC721` and `DropSinglePhase` extension.
+ *  The `ERC721Drop` contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.
+ *  It includes the following additions to standard ERC721 logic:
  *
- *  The 'signature minting' mechanism in the `SignatureMintERC721` extension is a way for a contract admin to authorize
- *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
- *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use
+ *        off-chain information to distribute roaylties.
+ *
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability to perform multiple actions atomically
+ *
+ *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  *
  *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for lazy minted tokens. It lets
  *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.
  *
- *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or
- *  via the drop mechanism.
+ *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via the drop mechanism.
  */
 
 contract ERC721Drop is
@@ -34,7 +48,6 @@ contract ERC721Drop is
     Royalty,
     BatchMintMetadata,
     PrimarySale,
-    SignatureMintERC721,
     LazyMint,
     DelayedReveal,
     DropSinglePhase
@@ -89,54 +102,6 @@ contract ERC721Drop is
         } else {
             return string(abi.encodePacked(batchUri, _tokenId.toString()));
         }
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                Overriden signature minting logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @notice           Mints tokens according to the provided mint request.
-     *
-     *  @param _req       The payload / mint request.
-     *  @param _signature The signature produced by an account signing the mint request.
-     */
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        public
-        payable
-        virtual
-        override
-        returns (address signer)
-    {
-        require(_req.quantity > 0, "Minting zero tokens.");
-
-        uint256 tokenIdToMint = _currentIndex;
-        require(tokenIdToMint + _req.quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
-
-        // Verify and process payload.
-        signer = _processRequest(_req, _signature);
-
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
-
-        // Collect price
-        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
-
-        // Set royalties, if applicable.
-        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
-            _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
-        }
-
-        // Mint tokens.
-        _safeMint(receiver, _req.quantity);
-
-        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -264,11 +229,6 @@ contract ERC721Drop is
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
-    }
-
-    /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _canSignMintRequest(address _signer) internal view virtual override returns (bool) {
-        return _signer == owner();
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
