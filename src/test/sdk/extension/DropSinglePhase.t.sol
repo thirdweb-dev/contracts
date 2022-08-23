@@ -18,6 +18,7 @@ contract MyDropSinglePhase is DropSinglePhase {
     }
 
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken

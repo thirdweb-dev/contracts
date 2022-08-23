@@ -1,31 +1,67 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC1155SignatureMint.sol";
+import { ERC1155 } from "../eip/ERC1155.sol";
 
+import "../extension/ContractMetadata.sol";
+import "../extension/Multicall.sol";
+import "../extension/Ownable.sol";
+import "../extension/Royalty.sol";
+import "../extension/BatchMintMetadata.sol";
+import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
+import "../lib/CurrencyTransferLib.sol";
+import "../lib/TWStrings.sol";
+
 /**
  *      BASE:      ERC1155Base
- *      EXTENSION: SignatureMintERC1155, DropSinglePhase1155
+ *      EXTENSION: DropSinglePhase1155
  *
- *  The `ERC1155Drop` contract uses the `ERC1155Base` contract, along with the `SignatureMintERC1155` and `DropSinglePhase1155` extension.
+ *  The `ERC1155Base` smart contract implements the ERC1155 NFT standard.
+ *  It includes the following additions to standard ERC1155 logic:
  *
- *  The 'signature minting' mechanism in the `SignatureMintERC1155` extension is a way for a contract admin to authorize
- *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
- *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use
+ *        off-chain information to distribute roaylties.
+ *
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability to perform multiple actions atomically
+ *
+ *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  *
  *  The `drop` mechanism in the `DropSinglePhase1155` extension is a distribution mechanism for lazy minted tokens. It lets
  *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.
  *
- *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or
- *  via the drop mechanism.
+ *  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via the drop mechanism.
  */
 
-contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSinglePhase1155 {
+contract ERC1155Drop is
+    ERC1155,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    Multicall,
+    BatchMintMetadata,
+    PrimarySale,
+    LazyMint,
+    DelayedReveal,
+    DropSinglePhase1155
+{
     using TWStrings for uint256;
+
+    /*//////////////////////////////////////////////////////////////
+                        Mappings
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice Returns the total supply of NFTs of a given tokenId
+     *  @dev Mapping from tokenId => total circulating supply of NFTs of that tokenId.
+     */
+    mapping(uint256 => uint256) public totalSupply;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -37,7 +73,11 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC1155SignatureMint(_name, _symbol, _royaltyRecipient, _royaltyBps, _primarySaleRecipient) {}
+    ) ERC1155(_name, _symbol) {
+        _setupOwner(msg.sender);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setupPrimarySaleRecipient(_primarySaleRecipient);
+    }
 
     /*///////////////////////////////////////////////////////////////
                     Overriden metadata logic
@@ -58,49 +98,6 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         } else {
             return string(abi.encodePacked(batchUri, _tokenId.toString()));
         }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        Signature minting logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @notice           Mints tokens according to the provided mint request.
-     *
-     *  @param _req       The payload / mint request.
-     *  @param _signature The signature produced by an account signing the mint request.
-     */
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        virtual
-        override
-        returns (address signer)
-    {
-        require(_req.quantity > 0, "Minting zero tokens.");
-
-        uint256 tokenIdToMint = _req.tokenId;
-        require(tokenIdToMint < nextTokenIdToMint(), "Claiming invalid tokenId.");
-
-        // Verify and process payload.
-        signer = _processRequest(_req, _signature);
-
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
-
-        // Collect price
-        collectPriceOnClaim(primarySaleRecipient(), _req.quantity, _req.currency, _req.pricePerToken);
-
-        // Mint tokens.
-        _mint(receiver, tokenIdToMint, _req.quantity, "");
-
-        emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -154,8 +151,21 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
-    function nextTokenIdToMint() public view virtual override returns (uint256) {
+    function nextTokenIdToMint() public view virtual returns (uint256) {
         return nextTokenIdToLazyMint;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            ERC165 Logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns whether this contract supports the given interface.
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
+            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
+            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -184,7 +194,7 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal virtual override(DropSinglePhase1155, ERC1155SignatureMint) {
+    ) internal virtual override {
         if (_pricePerToken == 0) {
             return;
         }
@@ -208,6 +218,30 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         uint256 _quantityBeingClaimed
     ) internal virtual override {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
+    }
+
+    /// @dev Runs before every token transfer / mint / burn.
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] -= amounts[i];
+            }
+        }
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.

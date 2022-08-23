@@ -200,7 +200,12 @@ contract SignatureDrop is
         address receiver = _req.to == address(0) ? _msgSender() : _req.to;
 
         // Collect price
-        collectPriceOnClaim(_req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+
+        // Set royalties, if applicable.
+        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
+            _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
+        }
 
         // Mint tokens.
         _safeMint(receiver, _req.quantity);
@@ -228,6 +233,7 @@ contract SignatureDrop is
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
@@ -237,6 +243,8 @@ contract SignatureDrop is
         }
 
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
+
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
@@ -248,12 +256,7 @@ contract SignatureDrop is
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            primarySaleRecipient(),
-            totalPrice - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.

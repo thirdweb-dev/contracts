@@ -102,16 +102,7 @@ abstract contract BaseTest is DSTest, Test {
             "TokenERC20",
             abi.encodeCall(
                 TokenERC20.initialize,
-                (
-                    deployer,
-                    NAME,
-                    SYMBOL,
-                    CONTRACT_URI,
-                    forwarders(),
-                    saleRecipient,
-                    platformFeeRecipient,
-                    platformFeeBps
-                )
+                (signer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, platformFeeRecipient, platformFeeBps)
             )
         );
         deployContractProxy(
@@ -119,7 +110,7 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(
                 TokenERC721.initialize,
                 (
-                    deployer,
+                    signer,
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
@@ -137,7 +128,7 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(
                 TokenERC1155.initialize,
                 (
-                    deployer,
+                    signer,
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,

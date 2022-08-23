@@ -4,7 +4,6 @@ pragma solidity ^0.8.11;
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -314,6 +313,8 @@ contract DropERC20 is
 
         // `_pricePerToken` is interpreted as price per 1 ether unit of the ERC20 tokens.
         uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
+        require(totalPrice > 0, "quantity too low");
+
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -366,14 +367,17 @@ contract DropERC20 is
             currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
             "exceed max mint supply."
         );
-        require(maxTotalSupply == 0 || totalSupply() + _quantity <= maxTotalSupply, "exceed max total supply.");
+
+        uint256 _maxTotalSupply = maxTotalSupply;
+        uint256 _maxWalletClaimCount = maxWalletClaimCount;
+        require(_maxTotalSupply == 0 || totalSupply() + _quantity <= _maxTotalSupply, "exceed max total supply.");
         require(
-            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
+            _maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= _maxWalletClaimCount,
             "exceed claim limit for wallet"
         );
 
-        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
+        (, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
+        require(block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -424,13 +428,15 @@ contract DropERC20 is
     {
         lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
 
-        unchecked {
-            nextValidClaimTimestamp =
-                lastClaimTimestamp +
-                claimCondition.phases[_conditionId].waitTimeInSecondsBetweenClaims;
+        if (lastClaimTimestamp != 0) {
+            unchecked {
+                nextValidClaimTimestamp =
+                    lastClaimTimestamp +
+                    claimCondition.phases[_conditionId].waitTimeInSecondsBetweenClaims;
 
-            if (nextValidClaimTimestamp < lastClaimTimestamp) {
-                nextValidClaimTimestamp = type(uint256).max;
+                if (nextValidClaimTimestamp < lastClaimTimestamp) {
+                    nextValidClaimTimestamp = type(uint256).max;
+                }
             }
         }
     }
@@ -488,7 +494,10 @@ contract DropERC20 is
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        string memory prevURI = contractURI;
         contractURI = _uri;
+
+        emit ContractURIUpdated(prevURI, _uri);
     }
 
     /*///////////////////////////////////////////////////////////////

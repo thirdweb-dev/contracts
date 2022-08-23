@@ -138,6 +138,8 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
 
+        vm.deal(recipient, 1);
+
         vm.prank(recipient);
         base.mintWithSignature{ value: 1 }(_mintrequest, _signature);
 
