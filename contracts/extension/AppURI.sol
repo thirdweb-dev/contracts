@@ -31,5 +31,5 @@ abstract contract AppURI is IAppURI {
     }
 
     /// @dev Returns whether appUri can be set in the given execution context.
-    function _canSetAppURI() internal virtual returns (bool);
+    function _canSetAppURI() internal view virtual returns (bool);
 }
