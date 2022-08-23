@@ -31,14 +31,7 @@ import "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20Drop is
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    ERC20Permit,
-    PrimarySale,
-    DropSinglePhase
-{
+contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, PrimarySale, DropSinglePhase {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
