@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC1155Base      EXTENSION: SignatureMintERC1155, DropSinglePhase1155  The `ERC1155Drop` contract uses the `ERC1155Base` contract, along with the `SignatureMintERC1155` and `DropSinglePhase1155` extension.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC1155` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.  The `drop` mechanism in the `DropSinglePhase1155` extension is a distribution mechanism for lazy minted tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via signature minting, or  via the drop mechanism.
+BASE:      ERC1155Base      EXTENSION: DropSinglePhase1155  The `ERC1155Base` smart contract implements the ERC1155 NFT standard.  It includes the following additions to standard ERC1155 logic:      - Contract metadata for royalty support on platforms such as OpenSea that use        off-chain information to distribute roaylties.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically      - EIP 2981 compliance for royalty support on NFT marketplaces.  The `drop` mechanism in the `DropSinglePhase1155` extension is a distribution mechanism for lazy minted tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint lazy minted tokens.  The `ERC721Drop` contract lets you lazy mint tokens, and distribute those lazy minted tokens via the drop mechanism.
 
 
 
@@ -364,29 +364,6 @@ Lets an authorized address lazy mint a given amount of NFTs.
 | Name | Type | Description |
 |---|---|---|
 | batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
-
-### mintWithSignature
-
-```solidity
-function mintWithSignature(ISignatureMintERC1155.MintRequest _req, bytes _signature) external payable returns (address signer)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureMintERC1155.MintRequest | undefined |
-| _signature | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signer | address | undefined |
 
 ### multicall
 
@@ -766,30 +743,6 @@ Returns the metadata URI for an NFT.
 |---|---|---|
 | _0 | string | undefined |
 
-### verify
-
-```solidity
-function verify(ISignatureMintERC1155.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureMintERC1155.MintRequest | undefined |
-| _signature | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| success | bool | undefined |
-| signer | address | undefined |
-
 ### verifyClaim
 
 ```solidity
@@ -1016,25 +969,6 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
 | encryptedBaseURI  | bytes | undefined |
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, uint256 indexed tokenIdMinted, ISignatureMintERC1155.MintRequest mintRequest)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| tokenIdMinted `indexed` | uint256 | undefined |
-| mintRequest  | ISignatureMintERC1155.MintRequest | undefined |
 
 ### TransferBatch
 

@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC20Votes      EXTENSION: SignatureMintERC20, DropSinglePhase  The `ERC20Drop` contract uses the `ERC20Vote` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.  The &#39;signature minting&#39; mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize  an external party&#39;s request to mint tokens on the admin&#39;s contract. At a high level, this means you can authorize  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
+BASE:      ERC20Votes      EXTENSION: DropSinglePhase  The `ERC20Drop` contract uses the `DropSinglePhase` extensions, along with `ERC20Votes`.  It implements the ERC20 standard, along with the following additions to standard ERC20 logic:      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically      - EIP 2612 compliance: See {ERC20-permit} method, which can be used to change an account&#39;s ERC20 allowance by                             presenting a message signed by the account.  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism tokens. It lets  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
 
 
 
@@ -408,29 +408,6 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### mintWithSignature
-
-```solidity
-function mintWithSignature(ISignatureMintERC20.MintRequest _req, bytes _signature) external payable returns (address signer)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureMintERC20.MintRequest | undefined |
-| _signature | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signer | address | undefined |
-
 ### multicall
 
 ```solidity
@@ -716,30 +693,6 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### verify
-
-```solidity
-function verify(ISignatureMintERC20.MintRequest _req, bytes _signature) external view returns (bool success, address signer)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureMintERC20.MintRequest | undefined |
-| _signature | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| success | bool | undefined |
-| signer | address | undefined |
-
 ### verifyClaim
 
 ```solidity
@@ -928,24 +881,6 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 i
 | receiver `indexed` | address | undefined |
 | startTokenId `indexed` | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
-
-### TokensMintedWithSignature
-
-```solidity
-event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, ISignatureMintERC20.MintRequest mintRequest)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| signer `indexed` | address | undefined |
-| mintedTo `indexed` | address | undefined |
-| mintRequest  | ISignatureMintERC20.MintRequest | undefined |
 
 ### Transfer
 
