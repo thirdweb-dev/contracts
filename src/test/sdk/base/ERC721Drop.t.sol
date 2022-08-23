@@ -11,15 +11,6 @@ contract BaseERC721ERC721DropTest is BaseUtilTest {
     ERC721Drop internal base;
     using TWStrings for uint256;
 
-    bytes32 internal typehashMintRequest;
-    bytes32 internal nameHash;
-    bytes32 internal versionHash;
-    bytes32 internal typehashEip712;
-    bytes32 internal domainSeparator;
-
-    ERC721Drop.MintRequest _mintrequest;
-    bytes _signature;
-
     address recipient;
 
     function setUp() public override {
@@ -29,57 +20,6 @@ contract BaseERC721ERC721DropTest is BaseUtilTest {
 
         vm.prank(signer);
         base = new ERC721Drop(NAME, SYMBOL, royaltyRecipient, royaltyBps, saleRecipient);
-
-        typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
-        nameHash = keccak256(bytes("SignatureMintERC721"));
-        versionHash = keccak256(bytes("1"));
-        typehashEip712 = keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
-        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base)));
-
-        _mintrequest.to = recipient;
-        _mintrequest.royaltyRecipient = royaltyRecipient;
-        _mintrequest.royaltyBps = royaltyBps;
-        _mintrequest.primarySaleRecipient = saleRecipient;
-        _mintrequest.uri = "ipfs://";
-        _mintrequest.quantity = 1;
-        _mintrequest.pricePerToken = 0;
-        _mintrequest.currency = address(0);
-        _mintrequest.validityStartTimestamp = 1000;
-        _mintrequest.validityEndTimestamp = 2000;
-        _mintrequest.uid = bytes32(0);
-
-        _signature = signMintRequest(_mintrequest, privateKey);
-    }
-
-    function signMintRequest(ERC721Drop.MintRequest memory _request, uint256 _privateKey)
-        internal
-        returns (bytes memory)
-    {
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            _request.to,
-            _request.royaltyRecipient,
-            _request.royaltyBps,
-            _request.primarySaleRecipient,
-            keccak256(bytes(_request.uri)),
-            _request.quantity,
-            _request.pricePerToken,
-            _request.currency,
-            _request.validityStartTimestamp,
-            _request.validityEndTimestamp,
-            _request.uid
-        );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
-        bytes memory sig = abi.encodePacked(r, s, v);
-
-        return sig;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -279,45 +219,5 @@ contract BaseERC721ERC721DropTest is BaseUtilTest {
         vm.expectRevert("Not enough minted tokens");
         vm.prank(claimer, claimer);
         base.claim(receiver, _quantity + 1000, address(0), 0, alp, "");
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: `mintWithSignature`
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_mintWithSignature_ZeroPrice() public {
-        vm.warp(1000);
-        string memory _baseURI = "baseURI/";
-
-        vm.prank(signer);
-        base.lazyMint(100, _baseURI, "");
-
-        uint256 currentTotalSupply = base.totalSupply();
-        uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
-
-        base.mintWithSignature(_mintrequest, _signature);
-
-        assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
-
-        for (uint256 i = 0; i < _mintrequest.quantity; i += 1) {
-            string memory _tokenURI = base.tokenURI(i);
-            assertEq(_tokenURI, string(abi.encodePacked(_baseURI, i.toString())));
-            assertEq(base.ownerOf(i), recipient);
-        }
-    }
-
-    function test_revert_mintWithSignature_NotEnoughTokens() public {
-        vm.warp(1000);
-        string memory _baseURI = "baseURI/";
-
-        vm.prank(signer);
-        base.lazyMint(100, _baseURI, "");
-
-        _mintrequest.quantity = 101;
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        vm.expectRevert("Not enough lazy minted tokens.");
-        base.mintWithSignature(_mintrequest, _signature);
     }
 }

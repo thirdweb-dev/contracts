@@ -20,14 +20,6 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
     bytes32 internal permitNameHash;
     bytes32 internal permitVersionHash;
 
-    // sigmint
-    bytes32 internal typehashMintRequest;
-    bytes32 internal nameHash;
-    bytes32 internal versionHash;
-
-    ERC20DropVote.MintRequest _mintrequest;
-    bytes _signature;
-
     uint256 public recipientPrivateKey = 5678;
     address public recipient;
 
@@ -53,51 +45,6 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         // vote-delegation related inputs
         delegationTypeHash = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
-
-        // signature mint inputs
-        typehashMintRequest = keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
-        nameHash = keccak256(bytes("SignatureMintERC20"));
-        versionHash = keccak256(bytes("1"));
-
-        _mintrequest.to = recipient;
-        _mintrequest.primarySaleRecipient = saleRecipient;
-        _mintrequest.quantity = 100 ether;
-        _mintrequest.pricePerToken = 0;
-        _mintrequest.currency = address(0);
-        _mintrequest.validityStartTimestamp = 1000;
-        _mintrequest.validityEndTimestamp = 2000;
-        _mintrequest.uid = bytes32(0);
-
-        _signature = signMintRequest(_mintrequest, privateKey);
-    }
-
-    function signMintRequest(ERC20DropVote.MintRequest memory _request, uint256 _privateKey)
-        internal
-        returns (bytes memory)
-    {
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            _request.to,
-            _request.primarySaleRecipient,
-            _request.quantity,
-            _request.pricePerToken,
-            _request.currency,
-            _request.validityStartTimestamp,
-            _request.validityEndTimestamp,
-            _request.uid
-        );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base))
-        );
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
-        bytes memory sig = abi.encodePacked(r, s, v);
-
-        return sig;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -430,109 +377,5 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
         vm.warp(_expiry + 1);
         vm.expectRevert("ERC20Votes: signature expired");
         base.delegateBySig(_delegatee, _nonce, _expiry, v, r, s);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: `mintWithSignature`
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_mintWithSignature_ZeroPrice() public {
-        vm.warp(1000);
-
-        uint256 currentTotalSupply = base.totalSupply();
-        uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
-
-        address recoveredSigner = base.mintWithSignature(_mintrequest, _signature);
-
-        assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
-        assertEq(signer, recoveredSigner);
-    }
-
-    function test_state_mintWithSignature_NonZeroPrice_ERC20() public {
-        vm.warp(1000);
-
-        _mintrequest.pricePerToken = 1;
-        _mintrequest.currency = address(erc20);
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        vm.prank(recipient);
-        erc20.approve(address(base), _mintrequest.quantity * _mintrequest.pricePerToken);
-
-        uint256 currentTotalSupply = base.totalSupply();
-        uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
-        uint256 erc20BalanceOfRecipient = erc20.balanceOf(recipient);
-        uint256 erc20BalanceOfSeller = erc20.balanceOf(saleRecipient);
-
-        uint256 totalPrice = (_mintrequest.quantity * _mintrequest.pricePerToken) / 1 ether;
-
-        vm.prank(recipient);
-        base.mintWithSignature(_mintrequest, _signature);
-
-        // check token balances
-        assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
-
-        // check erc20 currency balances
-        assertEq(erc20.balanceOf(recipient), erc20BalanceOfRecipient - totalPrice);
-        assertEq(erc20.balanceOf(saleRecipient), erc20BalanceOfSeller + totalPrice);
-    }
-
-    function test_state_mintWithSignature_NonZeroPrice_NativeToken() public {
-        vm.warp(1000);
-
-        _mintrequest.pricePerToken = 1 ether;
-        _mintrequest.currency = address(NATIVE_TOKEN);
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        uint256 currentTotalSupply = base.totalSupply();
-        uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
-        uint256 etherBalanceOfRecipient = recipient.balance;
-        uint256 etherBalanceOfSeller = saleRecipient.balance;
-
-        uint256 totalPrice = (_mintrequest.quantity * _mintrequest.pricePerToken) / 1 ether;
-
-        vm.prank(recipient);
-        base.mintWithSignature{ value: totalPrice }(_mintrequest, _signature);
-
-        assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
-
-        // check native-token balances
-        assertEq(recipient.balance, etherBalanceOfRecipient - totalPrice);
-        assertEq(saleRecipient.balance, etherBalanceOfSeller + totalPrice);
-    }
-
-    function test_revert_mintWithSignature_MustSendTotalPrice() public {
-        vm.warp(1000);
-
-        _mintrequest.pricePerToken = 1;
-        _mintrequest.currency = address(NATIVE_TOKEN);
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        vm.prank(recipient);
-        vm.expectRevert("Must send total price.");
-        base.mintWithSignature{ value: 0 }(_mintrequest, _signature);
-    }
-
-    function test_revert_mintWithSignature_MintingZeroTokens() public {
-        vm.warp(1000);
-
-        _mintrequest.quantity = 0;
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        vm.expectRevert("Minting zero tokens.");
-        base.mintWithSignature(_mintrequest, _signature);
-    }
-
-    function test_revert_mintWithSignature_QuantityTooLow() public {
-        vm.warp(1000);
-
-        _mintrequest.quantity = 100;
-        _mintrequest.pricePerToken = 1;
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        vm.expectRevert("quantity too low");
-        base.mintWithSignature(_mintrequest, _signature);
     }
 }
