@@ -7,35 +7,31 @@ import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 import "../extension/PrimarySale.sol";
-import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
 import "../extension/DropSinglePhase.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC20
- *      EXTENSION: SignatureMintERC20, DropSinglePhase
+ *      EXTENSION: DropSinglePhase
  *
- *  The `ERC20Drop` contract uses the `ERC20Base` contract, along with the `SignatureMintERC20` and `DropSinglePhase` extensions.
+ *  The `ERC20Drop` smart contract implements the ERC20 standard.
+ *  It includes the following additions to standard ERC20 logic:
  *
- *  The 'signature minting' mechanism in the `SignatureMintERC20` extension is a way for a contract admin to authorize
- *  an external party's request to mint tokens on the admin's contract. At a high level, this means you can authorize
- *  some external party to mint tokens on your contract, and specify what exactly will be minted by that external party.
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability to perform multiple actions atomically
+ *
+ *      - EIP 2612 compliance: See {ERC20-permit} method, which can be used to change an account's ERC20 allowance by
+ *                             presenting a message signed by the account.
  *
  *  The `drop` mechanism in the `DropSinglePhase` extension is a distribution mechanism for tokens. It lets
  *  you set restrictions such as a price to charge, an allowlist etc. when an address atttempts to mint tokens.
  *
  */
 
-contract ERC20Drop is
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    ERC20Permit,
-    PrimarySale,
-    SignatureMintERC20,
-    DropSinglePhase
-{
+contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, PrimarySale, DropSinglePhase {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -49,45 +45,6 @@ contract ERC20Drop is
         _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        Signature minting logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @notice           Mints tokens according to the provided mint request.
-     *
-     *  @param _req       The payload / mint request.
-     *  @param _signature The signature produced by an account signing the mint request.
-     */
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        virtual
-        returns (address signer)
-    {
-        require(_req.quantity > 0, "Minting zero tokens.");
-
-        // Verify and process payload.
-        signer = _processRequest(_req, _signature);
-
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
-
-        // Collect price
-        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
-
-        // Mint tokens.
-        _mint(receiver, _req.quantity);
-
-        emit TokensMintedWithSignature(signer, receiver, _req);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -160,11 +117,6 @@ contract ERC20Drop is
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
-    }
-
-    /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _canSignMintRequest(address _signer) internal view virtual override returns (bool) {
-        return _signer == owner();
     }
 
     /// @dev Returns whether primary sale recipient can be set in the given execution context.
