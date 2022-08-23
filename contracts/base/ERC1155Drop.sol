@@ -131,7 +131,12 @@ contract ERC1155Drop is
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPriceOnClaim(primarySaleRecipient(), _req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+
+        // Set royalties, if applicable.
+        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
+            _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
+        }
 
         // Mint tokens.
         _mint(receiver, tokenIdToMint, _req.quantity, "");

@@ -79,10 +79,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        address saleRecipient = _req.primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _req.primarySaleRecipient;
-        collectPriceOnClaim(saleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
         if (_req.royaltyRecipient != address(0)) {
@@ -131,6 +128,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, _primarySaleRecipient, totalPrice);
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 }

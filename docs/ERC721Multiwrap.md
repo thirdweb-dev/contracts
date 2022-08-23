@@ -100,41 +100,6 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### batchMintTo
-
-```solidity
-function batchMintTo(address, uint256, string, bytes) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | uint256 | undefined |
-| _2 | string | undefined |
-| _3 | bytes | undefined |
-
-### burn
-
-```solidity
-function burn(uint256 _tokenId) external nonpayable
-```
-
-Lets an owner or approved operator burn the NFT of the given tokenId.
-
-*ERC721A&#39;s `_burn(uint256,bool)` internally checks for token approvals.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId | uint256 | The tokenId of the NFT to burn. |
-
 ### contractURI
 
 ```solidity
@@ -173,45 +138,6 @@ function getApproved(uint256 tokenId) external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### getBaseURICount
-
-```solidity
-function getBaseURICount() external view returns (uint256)
-```
-
-Returns the count of batches of NFTs.
-
-*Each batch of tokens has an in ID and an associated `baseURI`.                  See {batchIds}.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### getBatchIdAtIndex
-
-```solidity
-function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
-```
-
-Returns the ID for the batch of tokens the given tokenId belongs to.
-
-*See {getBaseURICount}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _index | uint256 | ID of a token. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### getDefaultRoyaltyInfo
 
@@ -496,23 +422,6 @@ Returns whether a given address is the owner, or approved to transfer an NFT.
 | Name | Type | Description |
 |---|---|---|
 | isApprovedOrOwnerOf | bool | undefined |
-
-### mintTo
-
-```solidity
-function mintTo(address, string) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | string | undefined |
 
 ### multicall
 

@@ -434,7 +434,7 @@ contract BaseERC20DropTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
 
         vm.prank(recipient);
-        vm.expectRevert("must send total price.");
+        vm.expectRevert("Must send total price.");
         base.mintWithSignature{ value: 0 }(_mintrequest, _signature);
     }
 

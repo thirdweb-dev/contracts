@@ -82,7 +82,7 @@ contract ERC20DropVote is
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPriceOnClaim(_req);
+        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Mint tokens.
         _mint(receiver, _req.quantity);
@@ -109,24 +109,9 @@ contract ERC20DropVote is
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Collects and distributes the primary sale value of tokens being minted with signature.
-    function collectPriceOnClaim(MintRequest calldata _req) internal virtual {
-        if (_req.pricePerToken == 0) {
-            return;
-        }
-
-        uint256 totalPrice = (_req.quantity * _req.pricePerToken) / 1 ether;
-        require(totalPrice > 0, "quantity too low");
-
-        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
-        }
-
-        CurrencyTransferLib.transferCurrency(_req.currency, msg.sender, _req.primarySaleRecipient, totalPrice);
-    }
-
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
@@ -142,7 +127,8 @@ contract ERC20DropVote is
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, primarySaleRecipient(), totalPrice);
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
     /// @dev Transfers the tokens being claimed.
