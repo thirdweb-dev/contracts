@@ -16,6 +16,7 @@ import "../extension/DelayedReveal.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/TWStrings.sol";
+
 /**
  *      BASE:      ERC1155Base
  *      EXTENSION: SignatureMintERC1155, DropSinglePhase1155
@@ -33,7 +34,19 @@ import "../lib/TWStrings.sol";
  *  via the drop mechanism.
  */
 
-contract ERC1155Drop is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata, PrimarySale, SignatureMintERC1155, LazyMint, DelayedReveal, DropSinglePhase1155 {
+contract ERC1155Drop is
+    ERC1155,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    Multicall,
+    BatchMintMetadata,
+    PrimarySale,
+    SignatureMintERC1155,
+    LazyMint,
+    DelayedReveal,
+    DropSinglePhase1155
+{
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////

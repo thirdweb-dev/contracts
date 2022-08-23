@@ -103,7 +103,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
             interfaceId == 0x5b5e139f || // ERC165 Interface ID for ERC721Metadata
-            interfaceId == type(IERC2981).interfaceId || // ERC165 ID for ERC2981 
+            interfaceId == type(IERC2981).interfaceId || // ERC165 ID for ERC2981
             interfaceId == type(IERC1155Receiver).interfaceId;
     }
 

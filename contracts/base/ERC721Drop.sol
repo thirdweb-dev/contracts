@@ -26,18 +26,19 @@ import "../lib/TWStrings.sol";
  *  via the drop mechanism.
  */
 
-contract ERC721Drop is 
-    ERC721A, 
-    ContractMetadata, 
-    Multicall, 
-    Ownable, 
-    Royalty, 
-    BatchMintMetadata, 
-    PrimarySale, 
-    SignatureMintERC721, 
-    LazyMint, 
-    DelayedReveal, 
-    DropSinglePhase {
+contract ERC721Drop is
+    ERC721A,
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Royalty,
+    BatchMintMetadata,
+    PrimarySale,
+    SignatureMintERC721,
+    LazyMint,
+    DelayedReveal,
+    DropSinglePhase
+{
     using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
