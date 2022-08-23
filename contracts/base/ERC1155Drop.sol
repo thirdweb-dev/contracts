@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC1155SignatureMint.sol";
+import { ERC1155 } from "../eip/ERC1155.sol";
 
+import "../extension/ContractMetadata.sol";
+import "../extension/Multicall.sol";
+import "../extension/Ownable.sol";
+import "../extension/Royalty.sol";
+import "../extension/BatchMintMetadata.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/SignatureMintERC1155.sol";
 import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
+
+import "../lib/CurrencyTransferLib.sol";
+import "../lib/TWStrings.sol";
 
 /**
  *      BASE:      ERC1155Base
@@ -24,8 +34,30 @@ import "../extension/DelayedReveal.sol";
  *  via the drop mechanism.
  */
 
-contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSinglePhase1155 {
+contract ERC1155Drop is
+    ERC1155,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    Multicall,
+    BatchMintMetadata,
+    PrimarySale,
+    SignatureMintERC1155,
+    LazyMint,
+    DelayedReveal,
+    DropSinglePhase1155
+{
     using TWStrings for uint256;
+
+    /*//////////////////////////////////////////////////////////////
+                        Mappings
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice Returns the total supply of NFTs of a given tokenId
+     *  @dev Mapping from tokenId => total circulating supply of NFTs of that tokenId.
+     */
+    mapping(uint256 => uint256) public totalSupply;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -37,7 +69,11 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC1155SignatureMint(_name, _symbol, _royaltyRecipient, _royaltyBps, _primarySaleRecipient) {}
+    ) ERC1155(_name, _symbol) {
+        _setupOwner(msg.sender);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setupPrimarySaleRecipient(_primarySaleRecipient);
+    }
 
     /*///////////////////////////////////////////////////////////////
                     Overriden metadata logic
@@ -95,7 +131,12 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        collectPriceOnClaim(primarySaleRecipient(), _req.quantity, _req.currency, _req.pricePerToken);
+        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+
+        // Set royalties, if applicable.
+        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
+            _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
+        }
 
         // Mint tokens.
         _mint(receiver, tokenIdToMint, _req.quantity, "");
@@ -154,8 +195,21 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
-    function nextTokenIdToMint() public view virtual override returns (uint256) {
+    function nextTokenIdToMint() public view virtual returns (uint256) {
         return nextTokenIdToLazyMint;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            ERC165 Logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns whether this contract supports the given interface.
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
+            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
+            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -184,7 +238,7 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal virtual override(DropSinglePhase1155, ERC1155SignatureMint) {
+    ) internal virtual override {
         if (_pricePerToken == 0) {
             return;
         }
@@ -208,6 +262,30 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
         uint256 _quantityBeingClaimed
     ) internal virtual override {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
+    }
+
+    /// @dev Runs before every token transfer / mint / burn.
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] -= amounts[i];
+            }
+        }
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
@@ -243,5 +321,10 @@ contract ERC1155Drop is ERC1155SignatureMint, LazyMint, DelayedReveal, DropSingl
     /// @dev Checks whether NFTs can be revealed in the given execution context.
     function _canReveal() internal view virtual returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @dev Returns whether a given address is authorized to sign mint requests.
+    function _canSignMintRequest(address _signer) internal view virtual override returns (bool) {
+        return _signer == owner();
     }
 }

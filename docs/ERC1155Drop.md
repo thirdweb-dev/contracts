@@ -56,61 +56,6 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
-### batchMintTo
-
-```solidity
-function batchMintTo(address _to, uint256[] _tokenIds, uint256[] _amounts, string _baseURI) external nonpayable
-```
-
-Lets an authorized address mint multiple NEW NFTs at once to a recipient.
-
-*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.                   If `_tokenIds[i] == type(uint256).max` a new NFT at tokenId `nextTokenIdToMint` is minted. If the given                   `tokenIds[i] &lt; nextTokenIdToMint`, then additional supply of an existing NFT is minted.                   The metadata for each new NFT is stored at `baseURI/{tokenID of NFT}`*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _to | address | The recipient of the NFT to mint. |
-| _tokenIds | uint256[] | The tokenIds of the NFTs to mint. |
-| _amounts | uint256[] | The amounts of each NFT to mint. |
-| _baseURI | string | The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId` |
-
-### burn
-
-```solidity
-function burn(address _owner, uint256 _tokenId, uint256 _amount) external nonpayable
-```
-
-Lets an owner or approved operator burn NFTs of the given tokenId.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _owner | address | The owner of the NFT to burn. |
-| _tokenId | uint256 | The tokenId of the NFT to burn. |
-| _amount | uint256 | The amount of the NFT to burn. |
-
-### burnBatch
-
-```solidity
-function burnBatch(address _owner, uint256[] _tokenIds, uint256[] _amounts) external nonpayable
-```
-
-Lets an owner or approved operator burn NFTs of the given tokenIds.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _owner | address | The owner of the NFTs to burn. |
-| _tokenIds | uint256[] | The tokenIds of the NFTs to burn. |
-| _amounts | uint256[] | The amounts of the NFTs to burn. |
-
 ### claim
 
 ```solidity
@@ -419,25 +364,6 @@ Lets an authorized address lazy mint a given amount of NFTs.
 | Name | Type | Description |
 |---|---|---|
 | batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
-
-### mintTo
-
-```solidity
-function mintTo(address _to, uint256 _tokenId, string _tokenURI, uint256 _amount) external nonpayable
-```
-
-Lets an authorized address mint NFTs to a recipient.
-
-*- The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.                   - If `_tokenId == type(uint256).max` a new NFT at tokenId `nextTokenIdToMint` is minted. If the given                     `tokenId &lt; nextTokenIdToMint`, then additional supply of an existing NFT is being minted.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _to | address | The recipient of the NFTs to mint. |
-| _tokenId | uint256 | The tokenId of the NFT to mint. |
-| _tokenURI | string | The full metadata URI for the NFTs minted (if a new NFT is being minted). |
-| _amount | uint256 | The amount of the same NFT to mint. |
 
 ### mintWithSignature
 
@@ -804,7 +730,7 @@ function totalSupply(uint256) external view returns (uint256)
 
 Returns the total supply of NFTs of a given tokenId
 
-
+*Mapping from tokenId =&gt; total circulating supply of NFTs of that tokenId.*
 
 #### Parameters
 
