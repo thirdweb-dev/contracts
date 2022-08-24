@@ -65,5 +65,8 @@
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat",
     "export-abi": "hardhat export-abi"
+  },
+  "dependencies": {
+    "@thirdweb-dev/sdk": "^2.3.39"
   }
 }
