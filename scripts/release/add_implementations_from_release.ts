@@ -3,11 +3,11 @@ import { SUPPORTED_CHAIN_ID, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { readFileSync } from "fs";
 import { chainIdToName } from "./constants";
 
-////// PARAMETERS //////
+////// To run this script: `npx ts-node release/add_implementations_from_release.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER CREATING A RELEASE FOR IT /////
 //// THE RELEASE SHOULD HAVE THE IMPLEMENTATIONS ALREADY DEPLOYED AND RECORDED (via dashboard) ////
 const releasedContractName = "DropERC721";
-const privateKey: string = process.env.DEPLOYER_KEY as string;
+const privateKey: string = process.env.DEPLOYER_KEY as string; // should be the correct deployer key
 
 const polygonSDK = ThirdwebSDK.fromPrivateKey(privateKey, "polygon");
 
