@@ -53,15 +53,12 @@ contract Pack is
     string public symbol;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    // bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     bytes32 private transferRole;
 
     /// @dev Only MINTER_ROLE holders can create packs.
-    // bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 private minterRole;
 
     /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
-    // bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
     bytes32 private assetRole;
 
     /// @dev The token Id of the next set of packs to be minted.
@@ -109,7 +106,6 @@ contract Pack is
         address[] memory forwarders = new address[](1);
         forwarders[0] = forwarder;
         __ERC2771Context_init(forwarders);
-        // __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
 
         name = _name;
@@ -132,9 +128,6 @@ contract Pack is
 
     receive() external payable {
         require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
-        // if (msg.sender != nativeTokenWrapper) {
-        //     revert("!WRAP");
-        // }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -167,7 +160,6 @@ contract Pack is
     /// @dev Returns the URI for a given tokenId.
     function uri(uint256 _tokenId) public view override returns (string memory) {
         return getUriOfBundle(_tokenId);
-        // return bundle[_tokenId].uri;
     }
 
     /// @dev See ERC 165
@@ -204,14 +196,7 @@ contract Pack is
         returns (uint256 packId, uint256 packTotalSupply)
     {
         require(_contents.length > 0, "!Contents");
-        // if (_contents.length == 0) {
-        //     revert("!C");
-        // }
-
         require(_contents.length == _numOfRewardUnits.length, "!Rewards");
-        // if (_contents.length != _numOfRewardUnits.length) {
-        //     revert("!R");
-        // }
 
         if (!hasRole(assetRole, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
@@ -254,18 +239,8 @@ contract Pack is
         returns (uint256 packTotalSupply, uint256 newSupplyAdded)
     {
         require(canUpdatePack[_packId], "!Allowed");
-        // if (!canUpdatePack[_packId]) {
-        //     revert("!U");
-        // }
-
         require(_contents.length > 0, "!Contents");
-        // if (_contents.length == 0) {
-        //     revert("!C");
-        // }
         require(_contents.length == _numOfRewardUnits.length, "!Rewards");
-        // if (_contents.length != _numOfRewardUnits.length) {
-        //     revert("!RU");
-        // }
 
         if (!hasRole(assetRole, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
@@ -288,19 +263,10 @@ contract Pack is
         address opener = _msgSender();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
-        // if (!isTrustedForwarder(msg.sender) && opener != tx.origin) {
-        //     revert("!EOA");
-        // }
         require(balanceOf(opener, _packId) >= _amountToOpen, "!Balance");
-        // if (balanceOf(opener, _packId) < _amountToOpen) {
-        //     revert("!O");
-        // }
 
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp <= block.timestamp, "cant open");
-        // if (pack.openStartTimestamp > block.timestamp) {
-        //     revert("!C");
-        // }
 
         Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
@@ -326,20 +292,11 @@ contract Pack is
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
-            // if (_contents[i].totalAmount == 0) {
-            //     revert("!Z");
-            // }
             require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!Rewards");
-            // if (_contents[i].totalAmount % _numOfRewardUnits[i] != 0) {
-            //     revert("4");
-            // }
             require(
                 _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
                 "!Rewards"
             );
-            // if (_contents[i].tokenType == TokenType.ERC721 && _contents[i].totalAmount != 1) {
-            //     revert("3");
-            // }
 
             sumOfRewardUnits += _numOfRewardUnits[i];
 
@@ -347,9 +304,6 @@ contract Pack is
         }
 
         require(sumOfRewardUnits % amountPerOpen == 0, "!Amounts");
-        // if (sumOfRewardUnits % amountPerOpen != 0) {
-        //     revert("2");
-        // }
         supplyToMint = sumOfRewardUnits / amountPerOpen;
 
         if (isUpdate) {
@@ -373,7 +327,6 @@ contract Pack is
         rewardUnits = new Token[](numOfRewardUnitsToDistribute);
         uint256 totalRewardUnits = totalSupply[_packId] * _rewardUnitsPerOpen;
         uint256 totalRewardKinds = getTokenCountOfBundle(_packId);
-        // uint256 totalRewardKinds = bundle[_packId].count;
 
         uint256 random = generateRandomValue();
 
@@ -424,14 +377,11 @@ contract Pack is
     {
         PackInfo memory pack = packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
-        // uint256 total = bundle[_packId].count;
         contents = new Token[](total);
         perUnitAmounts = new uint256[](total);
 
         for (uint256 i = 0; i < total; i += 1) {
             contents[i] = getTokenOfBundle(_packId, i);
-            // contents[i] = bundle[_packId].tokens[i];
-            // perUnitAmounts[i] = pack.perUnitAmounts[i];
         }
         perUnitAmounts = pack.perUnitAmounts;
     }

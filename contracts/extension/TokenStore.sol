@@ -36,13 +36,11 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
 
     /// @dev Release stored / escrowed ERC1155, ERC721, ERC20 tokens.
     function _releaseTokens(address _recipient, uint256 _idForContent) internal {
-        // uint256 count = getTokenCountOfBundle(_idForContent);
-        uint256 count = bundle[_idForContent].count;
+        uint256 count = getTokenCountOfBundle(_idForContent);
         Token[] memory tokensToRelease = new Token[](count);
 
         for (uint256 i = 0; i < count; i += 1) {
-            // tokensToRelease[i] = getTokenOfBundle(_idForContent, i);
-            tokensToRelease[i] = bundle[_idForContent].tokens[i];
+            tokensToRelease[i] = getTokenOfBundle(_idForContent, i);
         }
 
         _deleteBundle(_idForContent);
