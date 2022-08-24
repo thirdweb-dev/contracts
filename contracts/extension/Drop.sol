@@ -316,5 +316,5 @@ abstract contract Drop is IDrop {
         returns (uint256 startTokenId);
 
     /// @dev Determine what wallet can update claim conditions
-    function _canSetClaimConditions() internal virtual returns (bool);
+    function _canSetClaimConditions() internal view virtual returns (bool);
 }

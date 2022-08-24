@@ -252,5 +252,5 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         virtual
         returns (uint256 startTokenId);
 
-    function _canSetClaimConditions() internal virtual returns (bool);
+    function _canSetClaimConditions() internal view virtual returns (bool);
 }

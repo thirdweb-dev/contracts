@@ -272,5 +272,5 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         uint256 _quantityBeingClaimed
     ) internal virtual;
 
-    function _canSetClaimConditions() internal virtual returns (bool);
+    function _canSetClaimConditions() internal view virtual returns (bool);
 }

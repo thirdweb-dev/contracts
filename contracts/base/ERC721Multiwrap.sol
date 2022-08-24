@@ -203,7 +203,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
     }
 
     /// @dev Returns whether transfers can be restricted in a given execution context.
-    function _canRestrictTransfers() internal virtual override returns (bool) {
+    function _canRestrictTransfers() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 

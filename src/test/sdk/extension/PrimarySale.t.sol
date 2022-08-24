@@ -13,7 +13,7 @@ contract MyPrimarySale is PrimarySale {
         condition = _condition;
     }
 
-    function _canSetPrimarySaleRecipient() internal override returns (bool) {
+    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
         return condition;
     }
 }

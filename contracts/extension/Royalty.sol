@@ -130,5 +130,5 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Returns whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal virtual returns (bool);
+    function _canSetRoyaltyInfo() internal view virtual returns (bool);
 }

@@ -13,7 +13,7 @@ contract MyPlatformFee is PlatformFee {
         condition = _condition;
     }
 
-    function _canSetPlatformFeeInfo() internal override returns (bool) {
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
         return condition;
     }
 }

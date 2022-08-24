@@ -39,5 +39,5 @@ abstract contract ContractMetadata is IContractMetadata {
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal virtual returns (bool);
+    function _canSetContractURI() internal view virtual returns (bool);
 }
