@@ -44,7 +44,7 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
 
-    address[] private forwarders;
+    address private immutable forwarder;
 
     // Token name
     string public name;
@@ -84,11 +84,11 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address[] memory _trustedForwarders)
+    constructor(address _nativeTokenWrapper, address _trustedForwarder)
         TokenStore(_nativeTokenWrapper)
         initializer
     {
-        forwarders = _trustedForwarders;
+        forwarder = _trustedForwarder;
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -105,6 +105,9 @@ contract Pack is
         assetRole = keccak256("ASSET_ROLE");
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
+
+        address[] memory forwarders = new address[](1);
+        forwarders[0] = forwarder;
         __ERC2771Context_init(forwarders);
         // __ERC1155Pausable_init();
         __ERC1155_init(_contractURI);
@@ -205,7 +208,7 @@ contract Pack is
         //     revert("!C");
         // }
 
-        require(_contents.length == _numOfRewardUnits.length, "invalid rewards");
+        require(_contents.length == _numOfRewardUnits.length, "!Rewards");
         // if (_contents.length != _numOfRewardUnits.length) {
         //     revert("!R");
         // }
@@ -250,7 +253,7 @@ contract Pack is
         nonReentrant
         returns (uint256 packTotalSupply, uint256 newSupplyAdded)
     {
-        require(canUpdatePack[_packId], "not allowed");
+        require(canUpdatePack[_packId], "!Allowed");
         // if (!canUpdatePack[_packId]) {
         //     revert("!U");
         // }
@@ -259,7 +262,7 @@ contract Pack is
         // if (_contents.length == 0) {
         //     revert("!C");
         // }
-        require(_contents.length == _numOfRewardUnits.length, "invalid rewards");
+        require(_contents.length == _numOfRewardUnits.length, "!Rewards");
         // if (_contents.length != _numOfRewardUnits.length) {
         //     revert("!RU");
         // }
@@ -326,13 +329,13 @@ contract Pack is
             // if (_contents[i].totalAmount == 0) {
             //     revert("!Z");
             // }
-            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "invalid rewards");
+            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!Rewards");
             // if (_contents[i].totalAmount % _numOfRewardUnits[i] != 0) {
             //     revert("4");
             // }
             require(
                 _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
-                "invalid rewards"
+                "!Rewards"
             );
             // if (_contents[i].tokenType == TokenType.ERC721 && _contents[i].totalAmount != 1) {
             //     revert("3");
@@ -343,7 +346,7 @@ contract Pack is
             packInfo[packId].perUnitAmounts.push(_contents[i].totalAmount / _numOfRewardUnits[i]);
         }
 
-        require(sumOfRewardUnits % amountPerOpen == 0, "invalid amounts");
+        require(sumOfRewardUnits % amountPerOpen == 0, "!Amounts");
         // if (sumOfRewardUnits % amountPerOpen != 0) {
         //     revert("2");
         // }
