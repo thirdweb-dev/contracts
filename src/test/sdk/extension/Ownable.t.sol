@@ -13,7 +13,7 @@ contract MyOwnable is Ownable {
         condition = _condition;
     }
 
-    function _canSetOwner() internal override returns (bool) {
+    function _canSetOwner() internal view override returns (bool) {
         return condition;
     }
 }

@@ -51,5 +51,5 @@ abstract contract PlatformFee is IPlatformFee {
     }
 
     /// @dev Returns whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal virtual returns (bool);
+    function _canSetPlatformFeeInfo() internal view virtual returns (bool);
 }

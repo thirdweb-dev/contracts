@@ -13,7 +13,7 @@ contract MyRoyalty is Royalty {
         condition = _condition;
     }
 
-    function _canSetRoyaltyInfo() internal override returns (bool) {
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
         return condition;
     }
 

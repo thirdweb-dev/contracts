@@ -13,7 +13,7 @@ contract MyDropSinglePhase is DropSinglePhase {
         condition = _condition;
     }
 
-    function _canSetClaimConditions() internal override returns (bool) {
+    function _canSetClaimConditions() internal view override returns (bool) {
         return condition;
     }
 

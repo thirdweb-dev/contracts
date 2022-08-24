@@ -49,5 +49,5 @@ abstract contract Ownable is IOwnable {
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal virtual returns (bool);
+    function _canSetOwner() internal view virtual returns (bool);
 }

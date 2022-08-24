@@ -41,5 +41,5 @@ abstract contract PrimarySale is IPrimarySale {
     }
 
     /// @dev Returns whether primary sale recipient can be set in the given execution context.
-    function _canSetPrimarySaleRecipient() internal virtual returns (bool);
+    function _canSetPrimarySaleRecipient() internal view virtual returns (bool);
 }

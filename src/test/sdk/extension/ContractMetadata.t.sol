@@ -13,7 +13,7 @@ contract MyContractMetadata is ContractMetadata {
         condition = _condition;
     }
 
-    function _canSetContractURI() internal override returns (bool) {
+    function _canSetContractURI() internal view override returns (bool) {
         return condition;
     }
 }
