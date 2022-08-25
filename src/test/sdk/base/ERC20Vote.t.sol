@@ -24,7 +24,7 @@ contract BaseERC20VoteTest is BaseUtilTest {
     function setUp() public override {
         super.setUp();
         vm.prank(deployer);
-        base = new ERC20Vote(NAME, SYMBOL, CONTRACT_URI);
+        base = new ERC20Vote(NAME, SYMBOL);
 
         recipient = vm.addr(recipientPrivateKey);
 
