@@ -34,8 +34,8 @@ contract SignatureDropBenchmarkTest is BaseTest {
         deployerSigner = signer;
         sigdrop = SignatureDrop(getContract("SignatureDrop"));
 
-        erc20.mint(deployerSigner, 1_000_000);
-        vm.deal(deployerSigner, 1_000);
+        erc20.mint(deployerSigner, 1_000 ether);
+        vm.deal(deployerSigner, 1_000 ether);
 
         typehashMintRequest = keccak256(
             "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -147,8 +147,8 @@ contract SignatureDropTest is BaseTest {
         deployerSigner = signer;
         sigdrop = SignatureDrop(getContract("SignatureDrop"));
 
-        erc20.mint(deployerSigner, 1_000_000);
-        vm.deal(deployerSigner, 1_000);
+        erc20.mint(deployerSigner, 1_000 ether);
+        vm.deal(deployerSigner, 1_000 ether);
 
         typehashMintRequest = keccak256(
             "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -807,6 +807,79 @@ contract SignatureDropTest is BaseTest {
             vm.stopPrank();
 
             assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+        }
+    }
+
+    /*
+     *  note: Testing state changes; minting with signature, for a given price and currency.
+     */
+    function test_state_mintWithSignature_UpdateRoyaltyAndSaleInfo() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+        uint256 id = 0;
+        SignatureDrop.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0);
+        mintrequest.royaltyRecipient = address(0x567);
+        mintrequest.royaltyBps = 100;
+        mintrequest.primarySaleRecipient = address(0x567);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1 ether;
+        mintrequest.currency = address(erc20);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        // Test with ERC20 currency
+        {
+            erc20.mint(address(0x345), 1 ether);
+            uint256 totalSupplyBefore = sigdrop.totalSupply();
+
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
+            vm.startPrank(address(0x345));
+            vm.warp(1000);
+            erc20.approve(address(sigdrop), 1 ether);
+            vm.expectEmit(true, true, true, true);
+            emit TokensMintedWithSignature(deployerSigner, address(0x345), 0, mintrequest);
+            sigdrop.mintWithSignature(mintrequest, signature);
+            vm.stopPrank();
+
+            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+
+            (address _royaltyRecipient, uint16 _royaltyBps) = sigdrop.getRoyaltyInfoForToken(0);
+            assertEq(_royaltyRecipient, address(0x567));
+            assertEq(_royaltyBps, 100);
+
+            uint256 totalPrice = 1 * 1 ether;
+            uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+            assertEq(erc20.balanceOf(address(0x567)), totalPrice - platformFees);
+        }
+
+        // Test with native token currency
+        {
+            vm.deal(address(0x345), 1 ether);
+            uint256 totalSupplyBefore = sigdrop.totalSupply();
+
+            mintrequest.currency = address(NATIVE_TOKEN);
+            id = 1;
+            mintrequest.uid = bytes32(id);
+
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
+            vm.startPrank(address(0x345));
+            vm.warp(1000);
+            sigdrop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
+            vm.stopPrank();
+
+            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
+
+            (address _royaltyRecipient, uint16 _royaltyBps) = sigdrop.getRoyaltyInfoForToken(0);
+            assertEq(_royaltyRecipient, address(0x567));
+            assertEq(_royaltyBps, 100);
+
+            uint256 totalPrice = 1 * 1 ether;
+            uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+            assertEq(address(0x567).balance, totalPrice - platformFees);
         }
     }
 
