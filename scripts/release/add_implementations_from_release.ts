@@ -6,7 +6,7 @@ import { chainIdToName } from "./constants";
 ////// To run this script: `npx ts-node scripts/release/add_implementations_from_release.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER CREATING A RELEASE FOR IT /////
 //// THE RELEASE SHOULD HAVE THE IMPLEMENTATIONS ALREADY DEPLOYED AND RECORDED (via dashboard) ////
-const releasedContractName = "DropERC721";
+const releasedContractName = "SignatureDrop";
 const privateKey: string = process.env.DEPLOYER_KEY as string; // should be the correct deployer key
 
 const polygonSDK = ThirdwebSDK.fromPrivateKey(privateKey, "polygon");
@@ -41,7 +41,7 @@ async function main() {
       if (implementation && factoryAddr) {
         const factory = chainSDK.getContractFromAbi(
           factoryAddr,
-          JSON.parse(readFileSync("abis/TWFactory.json", "utf-8")),
+          JSON.parse(readFileSync("artifacts_forge/TWFactory.sol/TWFactory.json", "utf-8")).abi,
         );
         const approved = await factory.call("approval", implementation);
         if (!approved) {
