@@ -39,10 +39,8 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     constructor(
         string memory _name,
         string memory _symbol,
-        string memory _contractURI,
         address _primarySaleRecipient
     ) ERC20Permit(_name, _symbol) {
-        _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }

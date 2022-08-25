@@ -39,10 +39,8 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
     constructor(
         string memory _name,
         string memory _symbol,
-        string memory _contractURI,
         address _primarySaleRecipient
     ) ERC20Permit(_name, _symbol) {
-        _setupContractURI(_contractURI);
         _setupOwner(msg.sender);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
