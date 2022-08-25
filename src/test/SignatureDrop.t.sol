@@ -854,7 +854,6 @@ contract SignatureDropTest is BaseTest {
             uint256 totalPrice = 1 * 1 ether;
             uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
             assertEq(erc20.balanceOf(address(0x567)), totalPrice - platformFees);
-            
         }
 
         // Test with native token currency
