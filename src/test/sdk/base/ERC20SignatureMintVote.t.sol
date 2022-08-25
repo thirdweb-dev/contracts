@@ -25,7 +25,7 @@ contract BaseERC20SignatureMintVoteTest is BaseUtilTest {
     function setUp() public override {
         super.setUp();
         vm.prank(signer);
-        base = new ERC20SignatureMintVote(NAME, SYMBOL, CONTRACT_URI, saleRecipient);
+        base = new ERC20SignatureMintVote(NAME, SYMBOL, saleRecipient);
 
         recipient = address(0x123);
         erc20.mint(recipient, 1_000 ether);

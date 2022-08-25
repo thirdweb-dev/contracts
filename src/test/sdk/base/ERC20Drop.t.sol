@@ -25,7 +25,7 @@ contract BaseERC20DropTest is BaseUtilTest {
     function setUp() public override {
         super.setUp();
         vm.prank(signer);
-        base = new ERC20Drop(NAME, SYMBOL, CONTRACT_URI, saleRecipient);
+        base = new ERC20Drop(NAME, SYMBOL, saleRecipient);
 
         recipient = vm.addr(recipientPrivateKey);
         erc20.mint(recipient, 1_000_000 ether);
