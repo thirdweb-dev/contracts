@@ -30,8 +30,8 @@ export const chainIdToName: Record<number, string> = {
   [ChainId.FantomTestnet]: "fantom-testnet",
   [ChainId.Avalanche]: "avalanche",
   [ChainId.AvalancheFujiTestnet]: "avalanche-testnet",
-  // [ChainId.BinanceSmartChainMainnet]: "binance",
-  // [ChainId.BinanceSmartChainTestnet]: "binance-testnet",
+  [ChainId.BinanceSmartChainMainnet]: "binance",
+  [ChainId.BinanceSmartChainTestnet]: "binance-testnet",
 };
 
 export const defaultFactories: Record<number, string> = {
