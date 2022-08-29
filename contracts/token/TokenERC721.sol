@@ -364,12 +364,7 @@ contract TokenERC721 is
             : _req.primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(
-            _req.currency,
-            _msgSender(),
-            saleRecipient,
-            totalPrice - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     ///     =====   Low-level overrides  =====

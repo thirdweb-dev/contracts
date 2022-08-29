@@ -76,7 +76,7 @@ abstract contract BaseTest is DSTest, Test {
         contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
-        
+
         TWFactory(factory).addImplementation(address(new TokenERC20()));
         TWFactory(factory).addImplementation(address(new TokenERC721()));
         TWFactory(factory).addImplementation(address(new TokenERC1155()));

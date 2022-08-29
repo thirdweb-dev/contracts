@@ -217,12 +217,7 @@ contract TokenERC20 is
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            _primarySaleRecipient,
-            _price - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _primarySaleRecipient, _price - platformFees);
     }
 
     /// @dev Mints `amount` of tokens to `to`
