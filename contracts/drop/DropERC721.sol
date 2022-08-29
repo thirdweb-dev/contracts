@@ -16,7 +16,6 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import { IDropERC721 } from "../interfaces/drop/IDropERC721.sol";
-import { ITWFee } from "../interfaces/ITWFee.sol";
 import "../interfaces/IThirdwebContract.sol";
 
 //  ==========  Features    ==========

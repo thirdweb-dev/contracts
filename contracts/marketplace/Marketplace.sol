@@ -20,7 +20,6 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
-import { ITWFee } from "../interfaces/ITWFee.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
@@ -51,9 +50,6 @@ contract Marketplace is
 
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
-
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
 
     /// @dev Total number of listings ever created in the marketplace.
     uint256 public totalListings;
@@ -113,8 +109,7 @@ contract Marketplace is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
+    constructor(address _nativeTokenWrapper) initializer {
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
@@ -707,9 +702,6 @@ contract Marketplace is
     ) internal {
         uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.MARKET_SALE);
-        uint256 twFeeCut = (_totalPayoutAmount * twFeeBps) / MAX_BPS;
-
         uint256 royaltyCut;
         address royaltyRecipient;
 
@@ -719,7 +711,7 @@ contract Marketplace is
             uint256 royaltyFeeAmount
         ) {
             if (royaltyFeeRecipient != address(0) && royaltyFeeAmount > 0) {
-                require(royaltyFeeAmount + platformFeeCut + twFeeCut <= _totalPayoutAmount, "fees exceed the price");
+                require(royaltyFeeAmount + platformFeeCut <= _totalPayoutAmount, "fees exceed the price");
                 royaltyRecipient = royaltyFeeRecipient;
                 royaltyCut = royaltyFeeAmount;
             }
@@ -745,15 +737,8 @@ contract Marketplace is
         CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
-            twFeeRecipient,
-            twFeeCut,
-            _nativeTokenWrapper
-        );
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
             _payee,
-            _totalPayoutAmount - (platformFeeCut + royaltyCut + twFeeCut),
+            _totalPayoutAmount - (platformFeeCut + royaltyCut),
             _nativeTokenWrapper
         );
     }
