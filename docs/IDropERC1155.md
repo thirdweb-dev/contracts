@@ -24,14 +24,14 @@ function balanceOf(address account, uint256 id) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| id | uint256 | undefined
+| account | address | undefined |
+| id | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### balanceOfBatch
 
@@ -47,14 +47,14 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 
 | Name | Type | Description |
 |---|---|---|
-| accounts | address[] | undefined
-| ids | uint256[] | undefined
+| accounts | address[] | undefined |
+| ids | uint256[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256[] | undefined
+| _0 | uint256[] | undefined |
 
 ### claim
 
@@ -70,13 +70,13 @@ Lets an account claim a given quantity of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | The receiver of the NFTs to claim.
-| tokenId | uint256 | The unique ID of the token to claim.
-| quantity | uint256 | The quantity of NFTs to claim.
-| currency | address | The currency in which to pay for the claim.
-| pricePerToken | uint256 | The price per token to pay for the claim.
-| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply.
-| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim.
+| receiver | address | The receiver of the NFTs to claim. |
+| tokenId | uint256 | The unique ID of the token to claim. |
+| quantity | uint256 | The quantity of NFTs to claim. |
+| currency | address | The currency in which to pay for the claim. |
+| pricePerToken | uint256 | The price per token to pay for the claim. |
+| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
+| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim. |
 
 ### isApprovedForAll
 
@@ -92,14 +92,14 @@ function isApprovedForAll(address account, address operator) external view retur
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
-| operator | address | undefined
+| account | address | undefined |
+| operator | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### lazyMint
 
@@ -115,8 +115,8 @@ Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.          The URIs
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | The amount of NFTs to lazy mint.
-| baseURIForTokens | string | The URI for the NFTs to lazy mint.
+| amount | uint256 | The amount of NFTs to lazy mint. |
+| baseURIForTokens | string | The URI for the NFTs to lazy mint. |
 
 ### safeBatchTransferFrom
 
@@ -132,11 +132,11 @@ function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| ids | uint256[] | undefined
-| amounts | uint256[] | undefined
-| data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| ids | uint256[] | undefined |
+| amounts | uint256[] | undefined |
+| data | bytes | undefined |
 
 ### safeTransferFrom
 
@@ -152,11 +152,11 @@ function safeTransferFrom(address from, address to, uint256 id, uint256 amount, 
 
 | Name | Type | Description |
 |---|---|---|
-| from | address | undefined
-| to | address | undefined
-| id | uint256 | undefined
-| amount | uint256 | undefined
-| data | bytes | undefined
+| from | address | undefined |
+| to | address | undefined |
+| id | uint256 | undefined |
+| amount | uint256 | undefined |
+| data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -172,8 +172,8 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
-| approved | bool | undefined
+| operator | address | undefined |
+| approved | bool | undefined |
 
 ### setClaimConditions
 
@@ -181,7 +181,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 function setClaimConditions(uint256 tokenId, IDropClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
 ```
 
-Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
+
 
 
 
@@ -189,9 +189,9 @@ Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | The token ID for which to set mint conditions.
-| phases | IDropClaimCondition.ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`.
-| resetClaimEligibility | bool | Whether to reset `limitLastClaimTimestamp` and                               `limitMerkleProofClaim` values when setting new                               claim conditions.
+| tokenId | uint256 | undefined |
+| phases | IDropClaimCondition.ClaimCondition[] | undefined |
+| resetClaimEligibility | bool | undefined |
 
 ### supportsInterface
 
@@ -207,13 +207,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 
 

@@ -25,7 +25,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractType
 
@@ -42,7 +42,7 @@ function contractType() external pure returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### contractURI
 
@@ -59,7 +59,7 @@ function contractURI() external view returns (string)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined
+| _0 | string | undefined |
 
 ### contractVersion
 
@@ -76,7 +76,23 @@ function contractVersion() external pure returns (uint8)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | undefined
+| _0 | uint8 | undefined |
+
+### distribute
+
+```solidity
+function distribute(contract IERC20Upgradeable token) external nonpayable
+```
+
+
+
+*Release owed amount of the `token` to all of the payees.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | contract IERC20Upgradeable | undefined |
 
 ### distribute
 
@@ -86,7 +102,7 @@ function distribute() external nonpayable
 
 
 
-*Release owed amount of the `token` to all of the payees.*
+*Release the owed amount of token to all of the payees.*
 
 
 ### getRoleAdmin
@@ -103,13 +119,13 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | undefined |
 
 ### getRoleMember
 
@@ -125,14 +141,14 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| index | uint256 | undefined
+| role | bytes32 | undefined |
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### getRoleMemberCount
 
@@ -148,13 +164,13 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
+| role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### grantRole
 
@@ -170,8 +186,8 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### hasRole
 
@@ -187,14 +203,14 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### initialize
 
@@ -210,11 +226,11 @@ function initialize(address _defaultAdmin, string _contractURI, address[] _trust
 
 | Name | Type | Description |
 |---|---|---|
-| _defaultAdmin | address | undefined
-| _contractURI | string | undefined
-| _trustedForwarders | address[] | undefined
-| _payees | address[] | undefined
-| _shares | uint256[] | undefined
+| _defaultAdmin | address | undefined |
+| _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
+| _payees | address[] | undefined |
+| _shares | uint256[] | undefined |
 
 ### isTrustedForwarder
 
@@ -230,13 +246,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| forwarder | address | undefined
+| forwarder | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -252,13 +268,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | undefined |
 
 ### payee
 
@@ -274,13 +290,13 @@ function payee(uint256 index) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined
+| index | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined
+| _0 | address | undefined |
 
 ### payeeCount
 
@@ -297,7 +313,23 @@ function payeeCount() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
+
+### release
+
+```solidity
+function release(address payable account) external nonpayable
+```
+
+
+
+*Triggers a transfer to `account` of the amount of Ether they are owed, according to their percentage of the total shares and their previous withdrawals.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address payable | undefined |
 
 ### release
 
@@ -313,13 +345,13 @@ function release(contract IERC20Upgradeable token, address account) external non
 
 | Name | Type | Description |
 |---|---|---|
-| token | contract IERC20Upgradeable | undefined
-| account | address | undefined
+| token | contract IERC20Upgradeable | undefined |
+| account | address | undefined |
 
 ### released
 
 ```solidity
-function released(address account) external view returns (uint256)
+function released(contract IERC20Upgradeable token, address account) external view returns (uint256)
 ```
 
 
@@ -330,13 +362,36 @@ function released(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| token | contract IERC20Upgradeable | undefined |
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
+
+### released
+
+```solidity
+function released(address account) external view returns (uint256)
+```
+
+
+
+*Getter for the amount of Ether already released to a payee.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### renounceRole
 
@@ -352,8 +407,8 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### revokeRole
 
@@ -369,8 +424,8 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined
-| account | address | undefined
+| role | bytes32 | undefined |
+| account | address | undefined |
 
 ### setContractURI
 
@@ -386,7 +441,7 @@ function setContractURI(string _uri) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined
+| _uri | string | undefined |
 
 ### shares
 
@@ -402,13 +457,13 @@ function shares(address account) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined
+| account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### supportsInterface
 
@@ -424,13 +479,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined
+| interfaceId | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### thirdwebFee
 
@@ -447,7 +502,29 @@ function thirdwebFee() external view returns (contract ITWFee)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract ITWFee | undefined
+| _0 | contract ITWFee | undefined |
+
+### totalReleased
+
+```solidity
+function totalReleased(contract IERC20Upgradeable token) external view returns (uint256)
+```
+
+
+
+*Getter for the total amount of `token` already released. `token` should be the address of an IERC20 contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | contract IERC20Upgradeable | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### totalReleased
 
@@ -457,14 +534,14 @@ function totalReleased() external view returns (uint256)
 
 
 
-*Getter for the total amount of `token` already released. `token` should be the address of an IERC20 contract.*
+*Getter for the total amount of Ether already released.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 ### totalShares
 
@@ -481,7 +558,7 @@ function totalShares() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | undefined |
 
 
 

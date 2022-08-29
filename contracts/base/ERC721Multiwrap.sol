@@ -21,7 +21,7 @@ import "../extension/SoulboundERC721A.sol";
  *
  */
 
-contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base {
+contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -72,7 +72,17 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _nativeTokenWrapper
-    ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) TokenStore(_nativeTokenWrapper) {
+    ) ERC721A(_name, _symbol) TokenStore(_nativeTokenWrapper) {
+        _setupOwner(msg.sender);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
+        _setupRole(TRANSFER_ROLE, msg.sender);
+
+        _setupRole(ASSET_ROLE, address(0));
+        _setupRole(UNWRAP_ROLE, address(0));
+
         restrictTransfers(false);
     }
 
@@ -85,13 +95,25 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         public
         view
         virtual
-        override(ERC1155Receiver, ERC721Base)
+        override(ERC1155Receiver, ERC721A, IERC165)
         returns (bool)
     {
         return
             super.supportsInterface(interfaceId) ||
-            ERC721Base.supportsInterface(interfaceId) ||
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
+            interfaceId == 0x5b5e139f || // ERC165 Interface ID for ERC721Metadata
+            interfaceId == type(IERC2981).interfaceId || // ERC165 ID for ERC2981
             interfaceId == type(IERC1155Receiver).interfaceId;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        Overriden ERC721 logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the URI for a given tokenId.
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        return getUriOfBundle(_tokenId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -143,6 +165,28 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
         emit TokensUnwrapped(msg.sender, _recipient, _tokenId);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                        Public getters
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice The tokenId assigned to the next new NFT to be minted.
+    function nextTokenIdToMint() public view virtual returns (uint256) {
+        return _currentIndex;
+    }
+
+    /// @notice Returns whether a given address is the owner, or approved to transfer an NFT.
+    function isApprovedOrOwner(address _operator, uint256 _tokenId)
+        public
+        view
+        virtual
+        returns (bool isApprovedOrOwnerOf)
+    {
+        address owner = ownerOf(_tokenId);
+        isApprovedOrOwnerOf = (_operator == owner ||
+            isApprovedForAll(owner, _operator) ||
+            getApproved(_tokenId) == _operator);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -159,7 +203,22 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721Base 
     }
 
     /// @dev Returns whether transfers can be restricted in a given execution context.
-    function _canRestrictTransfers() internal virtual override returns (bool) {
+    function _canRestrictTransfers() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

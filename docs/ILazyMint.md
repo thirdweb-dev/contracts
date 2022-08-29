@@ -24,15 +24,15 @@ Lazy mints a given amount of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | The number of NFTs to lazy mint.
-| baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                          of those NFTs is `${baseURIForTokens}/${tokenId}`.
-| extraData | bytes | Additional bytes data to be used at the discretion of the consumer of the contract.
+| amount | uint256 | The number of NFTs to lazy mint. |
+| baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                          of those NFTs is `${baseURIForTokens}/${tokenId}`. |
+| extraData | bytes | Additional bytes data to be used at the discretion of the consumer of the contract. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| batchId | uint256 |         A unique integer identifier for the batch of NFTs lazy minted together.
+| batchId | uint256 |         A unique integer identifier for the batch of NFTs lazy minted together. |
 
 
 

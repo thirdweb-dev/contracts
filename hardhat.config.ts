@@ -99,7 +99,7 @@ const config: HardhatUserConfig = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        runs: 600,
+        runs: 490,
       },
     },
   },
@@ -135,7 +135,9 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS ? true : false,
   },
   dodoc: {
-    runOnCompile: false,
+    runOnCompile: true,
+    exclude: ["**/node_modules/**"],
+    keepFileStructure: false,
   },
 };
 

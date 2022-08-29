@@ -16,7 +16,7 @@
 function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ```
 
-
+Receives and executes a batch of function calls on this contract.
 
 *Receives and executes a batch of function calls on this contract.*
 
@@ -24,13 +24,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 
 

@@ -35,14 +35,14 @@ function transfer(address to, uint256 value) external nonpayable returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined
-| value | uint256 | undefined
+| to | address | undefined |
+| value | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | undefined |
 
 ### withdraw
 
@@ -58,7 +58,7 @@ function withdraw(uint256 amount) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| amount | uint256 | undefined
+| amount | uint256 | undefined |
 
 
 

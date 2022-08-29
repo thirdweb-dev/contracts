@@ -35,7 +35,7 @@ abstract contract SoulboundERC721A is PermissionsEnumerable {
     }
 
     /// @dev Returns whether transfers can be restricted in a given execution context.
-    function _canRestrictTransfers() internal virtual returns (bool);
+    function _canRestrictTransfers() internal view virtual returns (bool);
 
     /// @dev See {ERC721A-_beforeTokenTransfers}.
     function _beforeTokenTransfers(
