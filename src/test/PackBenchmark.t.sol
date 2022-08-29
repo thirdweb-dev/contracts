@@ -302,7 +302,7 @@ contract OpenPackLargeInputsTest is BaseTest {
         // pass x: 1962, y: 282, z: 219 (gas: 8937393460523355524), total supply: 3239, total reward units: 913398
 
         // x: 570, y: 497, z: 435 (gas: 8937393460523355524), total supply: 548, total reward units: 272356
-        //                          reverts at rewardUnits = new Token[](numOfRewardUnitsToDistribute); 
+        //                          reverts at rewardUnits = new Token[](numOfRewardUnitsToDistribute);
         // x: 412, y: 7, z: 11830 (gas: 8937393460523355524), total supply: 29834, total reward units: 208838
         //                          reverts while transferring reward units to receipient
         // x: 1322, y: 211, z: 1994 (gas: 8937393460523355524), total supply: 3104, total reward units: 6544944
@@ -341,7 +341,7 @@ contract OpenPackLargeInputsTest is BaseTest {
             y,
             recipient
         );
-        
+
         vm.assume(z <= totalSupply);
     }
 
@@ -353,7 +353,6 @@ contract OpenPackLargeInputsTest is BaseTest {
      *  note: Testing state changes; pack owner calls `openPack` to redeem underlying rewards.
      */
     function test_fuzz_failing_state_openPack() public {
-
         console.log(gasleft());
         console2.log("total supply: ", totalSupply);
         console2.log("total reward units: ", totalRewardUnits);

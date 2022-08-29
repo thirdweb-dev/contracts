@@ -12,11 +12,7 @@ import "./utils/BaseTest.sol";
 
 contract PackTest is BaseTest {
     /// @notice Emitted when a set of packs is created.
-    event PackCreated(
-        uint256 indexed packId,
-        address recipient,
-        uint256 totalPacksCreated
-    );
+    event PackCreated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
 
     /// @notice Emitted when a pack is opened.
     event PackOpened(
@@ -645,7 +641,12 @@ contract PackTest is BaseTest {
         erc1155.mint(address(tokenOwner), 2, 200);
 
         vm.prank(address(tokenOwner));
-        (uint256 newTotalSupply, uint256 additionalSupply) = pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
+        (uint256 newTotalSupply, uint256 additionalSupply) = pack.addPackContents(
+            packId,
+            additionalContents,
+            additionalContentsRewardUnits,
+            recipient
+        );
 
         // ERC20 balance after adding more tokens
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
@@ -712,7 +713,7 @@ contract PackTest is BaseTest {
         vm.expectRevert("!Allowed");
         pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
     }
-    
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `openPack`
     //////////////////////////////////////////////////////////////*/

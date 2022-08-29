@@ -48,7 +48,7 @@ contract MinimalForwarderEOAOnly is EIP712 {
         require(verify(req, signature), "MinimalForwarder: signature does not match request");
         _nonces[req.from] = req.nonce + 1;
 
-        (bool success, bytes memory returndata) = req.to.call{gas: req.gas, value: req.value}(
+        (bool success, bytes memory returndata) = req.to.call{ gas: req.gas, value: req.value }(
             abi.encodePacked(req.data, req.from)
         );
 

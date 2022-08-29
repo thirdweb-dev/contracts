@@ -81,10 +81,7 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address _trustedForwarder)
-        TokenStore(_nativeTokenWrapper)
-        initializer
-    {
+    constructor(address _nativeTokenWrapper, address _trustedForwarder) TokenStore(_nativeTokenWrapper) initializer {
         forwarder = _trustedForwarder;
     }
 
@@ -188,13 +185,7 @@ contract Pack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    )
-        external
-        payable
-        onlyRoleWithSwitch(minterRole)
-        nonReentrant
-        returns (uint256 packId, uint256 packTotalSupply)
-    {
+    ) external payable onlyRoleWithSwitch(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0, "!Contents");
         require(_contents.length == _numOfRewardUnits.length, "!Rewards");
 
@@ -293,10 +284,7 @@ contract Pack is
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
             require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!Rewards");
-            require(
-                _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
-                "!Rewards"
-            );
+            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "!Rewards");
 
             sumOfRewardUnits += _numOfRewardUnits[i];
 
