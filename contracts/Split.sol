@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-// Thirdweb top-level
-import "./interfaces/ITWFee.sol";
-
 // Base
 import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
@@ -32,15 +29,10 @@ contract Split is
     /// @dev Max bps in the thirdweb system
     uint128 private constant MAX_BPS = 10_000;
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
-
     /// @dev Contract level metadata.
     string public contractURI;
 
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
+    constructor() initializer {}
 
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
@@ -102,15 +94,7 @@ contract Split is
         _released[account] += payment;
         _totalReleased += payment;
 
-        // fees
-        uint256 fee = 0;
-        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
-        if (feeRecipient != address(0) && feeBps > 0) {
-            fee = (payment * feeBps) / MAX_BPS;
-            AddressUpgradeable.sendValue(payable(feeRecipient), fee);
-        }
-
-        AddressUpgradeable.sendValue(account, payment - fee);
+        AddressUpgradeable.sendValue(account, payment);
         emit PaymentReleased(account, payment);
 
         return payment;
@@ -130,15 +114,7 @@ contract Split is
         _erc20Released[token][account] += payment;
         _erc20TotalReleased[token] += payment;
 
-        // fees
-        uint256 fee = 0;
-        (address feeRecipient, uint256 feeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.SPLIT);
-        if (feeRecipient != address(0) && feeBps > 0) {
-            fee = (payment * feeBps) / MAX_BPS;
-            SafeERC20Upgradeable.safeTransfer(token, feeRecipient, fee);
-        }
-
-        SafeERC20Upgradeable.safeTransfer(token, account, payment - fee);
+        SafeERC20Upgradeable.safeTransfer(token, account, payment);
         emit ERC20PaymentReleased(token, account, payment);
 
         return payment;

@@ -26,7 +26,6 @@ import "../extension/interface/IRoyalty.sol";
 import "../extension/interface/IOwnable.sol";
 
 import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
-import { ITWFee } from "../interfaces/ITWFee.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
