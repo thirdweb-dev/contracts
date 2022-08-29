@@ -32,6 +32,8 @@ contract Split is
     /// @dev Contract level metadata.
     string public contractURI;
 
+    constructor() initializer {}
+
     /// @dev Performs the job of the constructor.
     /// @dev shares_ are scaled by 10,000 to prevent precision loss when including fees
     function initialize(
