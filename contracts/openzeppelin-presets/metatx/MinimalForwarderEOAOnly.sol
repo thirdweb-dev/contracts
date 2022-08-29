@@ -9,7 +9,7 @@ import "../utils/cryptography/EIP712.sol";
 /**
  * @dev Simple minimal forwarder to be used together with an ERC2771 compatible contract. See {ERC2771Context}.
  */
-contract MinimalForwarder is EIP712 {
+contract MinimalForwarderEOAOnly is EIP712 {
     using ECDSA for bytes32;
 
     struct ForwardRequest {
@@ -26,7 +26,7 @@ contract MinimalForwarder is EIP712 {
 
     mapping(address => uint256) private _nonces;
 
-    constructor() EIP712("MinimalForwarder", "0.0.1") {}
+    constructor() EIP712("MinimalForwarderEOAOnly", "0.0.1") {}
 
     function getNonce(address from) public view returns (uint256) {
         return _nonces[from];

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./openzeppelin-presets/metatx/MinimalForwarder.sol";
+import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
 
 /*
  * @dev Minimal forwarder for GSNv2
