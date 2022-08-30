@@ -39,7 +39,7 @@ contract BaseERC721LazyMintTest is BaseUtilTest {
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
 
         vm.startPrank(recipient);
-        
+
         base.claim(recipient, quantity, "");
 
         assertEq(base.totalSupply(), currentTotalSupply + quantity);

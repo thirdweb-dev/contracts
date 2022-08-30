@@ -15,7 +15,7 @@ import "../lib/TWStrings.sol";
 /**
  *      BASE:      ERC1155Base
  *      EXTENSION: LazyMint
- *  
+ *
  *  The `ERC1155LazyMint` smart contract implements the ERC1155 NFT standard.
  *  It includes the following additions to standard ERC1155 logic:
  *
@@ -44,15 +44,7 @@ import "../lib/TWStrings.sol";
  *
  */
 
-contract ERC1155LazyMint is 
-    ERC1155, 
-    ContractMetadata, 
-    Ownable, 
-    Royalty, 
-    Multicall, 
-    BatchMintMetadata, 
-    LazyMint 
-{
+contract ERC1155LazyMint is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata, LazyMint {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -132,7 +124,7 @@ contract ERC1155LazyMint is
         address _claimer,
         uint256 _tokenId,
         uint256 _quantity
-    ) public virtual view {}
+    ) public view virtual {}
 
     /**
      *  @notice         Lets an owner or approved operator burn NFTs of the given tokenId.

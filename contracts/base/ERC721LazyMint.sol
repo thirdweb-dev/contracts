@@ -38,15 +38,7 @@ import "../lib/TWStrings.sol";
  *  without paying the gas cost for actually minting the NFTs.
  */
 
-contract ERC721LazyMint is 
-    ERC721A, 
-    ContractMetadata, 
-    Multicall, 
-    Ownable, 
-    Royalty, 
-    BatchMintMetadata, 
-    LazyMint 
-{
+contract ERC721LazyMint is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata, LazyMint {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -126,10 +118,7 @@ contract ERC721LazyMint is
      *  @param _claimer   Caller of the claim function.
      *  @param _quantity  The number of NFTs being claimed.
      */
-    function verifyClaim(
-        address _claimer,
-        uint256 _quantity
-    ) public virtual view {}
+    function verifyClaim(address _claimer, uint256 _quantity) public view virtual {}
 
     /**
      *  @notice         Lets an owner or approved operator burn the NFT of the given tokenId.
