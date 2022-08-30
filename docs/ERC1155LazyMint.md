@@ -4,7 +4,7 @@
 
 
 
-BASE:      ERC1155Base      EXTENSION: LazyMint  The `ERC1155LazyMint` contract uses the `ERC1155Base` contract, along with the `LazyMint` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.
+BASE:      ERC1155Base      EXTENSION: LazyMint  The `ERC1155LazyMint` smart contract implements the ERC1155 NFT standard.  It includes the following additions to standard ERC1155 logic:      - Lazy minting      - Ability to mint NFTs via the provided `mintTo` and `batchMintTo` functions.      - Contract metadata for royalty support on platforms such as OpenSea that use        off-chain information to distribute roaylties.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically      - EIP 2981 compliance for royalty support on NFT marketplaces.  The `ERC1155LazyMint` contract uses the `LazyMint` extension.  &#39;Lazy minting&#39; means defining the metadata of NFTs without minting it to an address. Regular &#39;minting&#39;  of  NFTs means actually assigning an owner to an NFT.  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,  without paying the gas cost for actually minting the NFTs.
 
 
 
@@ -56,25 +56,6 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
-### batchMintTo
-
-```solidity
-function batchMintTo(address _to, uint256[] _tokenIds, uint256[] _amounts, string) external nonpayable
-```
-
-Lets an authorized address mint multiple lazy minted NFTs at once to a recipient.
-
-*The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _to | address | The recipient of the NFT to mint. |
-| _tokenIds | uint256[] | The tokenIds of the NFTs to mint. |
-| _amounts | uint256[] | The amounts of each NFT to mint. |
-| _3 | string | undefined |
-
 ### burn
 
 ```solidity
@@ -110,6 +91,24 @@ Lets an owner or approved operator burn NFTs of the given tokenIds.
 | _owner | address | The owner of the NFTs to burn. |
 | _tokenIds | uint256[] | The tokenIds of the NFTs to burn. |
 | _amounts | uint256[] | The amounts of the NFTs to burn. |
+
+### claim
+
+```solidity
+function claim(address _receiver, uint256 _tokenId, uint256 _quantity) external payable
+```
+
+Lets an address claim multiple lazy minted NFTs at once to a recipient.                   Contract creators should override this function to create custom logic for claiming,                   for e.g. price collection, allowlist, max quantity, etc.
+
+*The logic in the `verifyClaim` function determines whether the caller is authorized to mint NFTs.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _receiver | address | The recipient of the tokens to mint. |
+| _tokenId | uint256 | The tokenId of the lazy minted NFT to mint. |
+| _quantity | uint256 | The number of tokens to mint. |
 
 ### contractURI
 
@@ -254,25 +253,6 @@ Lets an authorized address lazy mint a given amount of NFTs.
 | Name | Type | Description |
 |---|---|---|
 | batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
-
-### mintTo
-
-```solidity
-function mintTo(address _to, uint256 _tokenId, string, uint256 _amount) external nonpayable
-```
-
-Lets an authorized address mint lazy minted NFTs to a recipient.
-
-*- The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _to | address | The recipient of the NFTs to mint. |
-| _tokenId | uint256 | The tokenId of the lazy minted NFT to mint. |
-| _2 | string | undefined |
-| _amount | uint256 | The amount of the same NFT to mint. |
 
 ### multicall
 
@@ -542,7 +522,7 @@ function totalSupply(uint256) external view returns (uint256)
 
 Returns the total supply of NFTs of a given tokenId
 
-
+*Mapping from tokenId =&gt; total circulating supply of NFTs of that tokenId.*
 
 #### Parameters
 
@@ -577,6 +557,24 @@ Returns the metadata URI for the given tokenId.
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
+
+### verifyClaim
+
+```solidity
+function verifyClaim(address _claimer, uint256 _tokenId, uint256 _quantity) external view
+```
+
+Override this function to add logic for claim verification, based on conditions                   such as allowlist, price, max quantity etc.
+
+*Checks a request to claim NFTs against a custom condition.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | Caller of the claim function. |
+| _tokenId | uint256 | The tokenId of the lazy minted NFT to mint. |
+| _quantity | uint256 | The number of NFTs being claimed. |
 
 
 
