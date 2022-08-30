@@ -5,10 +5,10 @@ import "./ERC1155LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
 /**
- *      BASE:      ERC1155Base
- *      EXTENSION: LazyMint, DelayedReveal
+ *      BASE:      ERC1155LazyMint
+ *      EXTENSION: DelayedReveal
  *
- *  The `ERC1155DelayedReveal` contract uses the `ERC1155Base` contract, along with the `LazyMint` and `DelayedReveal` extension.
+ *  The `ERC1155DelayedReveal` contract uses the `DelayedReveal` extension.
  *
  *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
  *  of  NFTs means actually assigning an owner to an NFT.
