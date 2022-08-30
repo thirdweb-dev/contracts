@@ -28,24 +28,24 @@ contract BaseERC721LazyMintTest is BaseUtilTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `mintTo`
+                        Unit tests: `claim`
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_mintTo() public {
+    function test_state_claim() public {
         address recipient = address(0x123);
+        uint256 quantity = 5;
 
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
 
-        vm.startPrank(deployer);
-        for (uint256 i = 0; i < _amount; i += 1) {
-            base.mintTo(recipient, "");
-        }
+        vm.startPrank(recipient);
 
-        assertEq(base.totalSupply(), currentTotalSupply + _amount);
-        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _amount);
+        base.claim(recipient, quantity);
 
-        for (uint256 i = 0; i < _amount; i += 1) {
+        assertEq(base.totalSupply(), currentTotalSupply + quantity);
+        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + quantity);
+
+        for (uint256 i = 0; i < quantity; i += 1) {
             string memory _tokenURI = base.tokenURI(i);
             assertEq(_tokenURI, string(abi.encodePacked(_baseURIForTokens, i.toString())));
             assertEq(base.ownerOf(i), recipient);
@@ -54,72 +54,13 @@ contract BaseERC721LazyMintTest is BaseUtilTest {
         vm.stopPrank();
     }
 
-    function test_revert_mintTo_NotAuthorized() public {
+    function test_revert_claim_NotEnoughTokens() public {
         address recipient = address(0x123);
 
-        vm.startPrank(address(0x345));
-        vm.expectRevert("Not authorized to mint.");
-        base.mintTo(recipient, "");
-
-        vm.stopPrank();
-    }
-
-    function test_revert_mintTo_NotEnoughTokens() public {
-        address recipient = address(0x123);
-
-        vm.startPrank(deployer);
-        for (uint256 i = 0; i < _amount; i += 1) {
-            base.mintTo(recipient, "");
-        }
+        vm.startPrank(recipient);
 
         vm.expectRevert("Not enough lazy minted tokens.");
-        base.mintTo(recipient, "");
-
-        vm.stopPrank();
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: `batchMintTo`
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_batchMintTo() public {
-        address recipient = address(0x123);
-
-        uint256 currentTotalSupply = base.totalSupply();
-        uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
-
-        vm.startPrank(deployer);
-        base.batchMintTo(recipient, _amount, "", "");
-
-        assertEq(base.totalSupply(), currentTotalSupply + _amount);
-        assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _amount);
-
-        for (uint256 i = 0; i < _amount; i += 1) {
-            string memory _tokenURI = base.tokenURI(i);
-            assertEq(_tokenURI, string(abi.encodePacked(_baseURIForTokens, i.toString())));
-            assertEq(base.ownerOf(i), recipient);
-        }
-
-        vm.stopPrank();
-    }
-
-    function test_revert_batchMintTo_NotAuthorized() public {
-        address recipient = address(0x123);
-
-        vm.startPrank(address(0x345));
-        vm.expectRevert("Not authorized to mint.");
-        base.batchMintTo(recipient, _amount, "", "");
-
-        vm.stopPrank();
-    }
-
-    function test_revert_batchMintTo_NotEnoughTokens() public {
-        address recipient = address(0x123);
-
-        vm.startPrank(deployer);
-
-        vm.expectRevert("Not enough lazy minted tokens.");
-        base.batchMintTo(recipient, _amount + 1, "", "");
+        base.claim(recipient, _amount + 1);
 
         vm.stopPrank();
     }

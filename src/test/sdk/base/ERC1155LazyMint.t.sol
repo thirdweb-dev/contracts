@@ -36,124 +36,24 @@ contract ERC1155LazyMintTest is DSTest, Test {
         assertEq(base.nextTokenIdToMint(), lazymintAmount);
     }
 
-    function test_state_mintTo() public {
+    function test_state_claim() public {
         uint256 tokenId = 0;
         uint256 amount = 100;
 
-        vm.prank(admin);
-        base.mintTo(nftHolder, tokenId, "", amount);
+        vm.prank(nftHolder);
+        base.claim(nftHolder, tokenId, amount);
 
         assertEq(base.balanceOf(nftHolder, tokenId), amount);
         assertEq(base.totalSupply(tokenId), amount);
         assertEq(base.uri(tokenId), string(abi.encodePacked(baseURI, tokenId.toString())));
     }
 
-    function test_revert_mintTo_unauthorizedCaller() public {
-        uint256 tokenId = 0;
-        uint256 amount = 100;
-
-        vm.prank(nftHolder);
-        vm.expectRevert("Not authorized to mint.");
-        base.mintTo(nftHolder, tokenId, "", amount);
-    }
-
     function test_revert_mintTo_invalidId() public {
         uint256 tokenId = base.nextTokenIdToMint();
         uint256 amount = 100;
 
-        vm.prank(admin);
-        vm.expectRevert("invalid id");
-        base.mintTo(nftHolder, tokenId, "", amount);
-    }
-
-    function test_state_batchMintTo() public {
-        uint256 numToMint = 3;
-        uint256[] memory tokenIds = new uint256[](numToMint);
-        uint256[] memory amounts = new uint256[](numToMint);
-
-        uint256 nextId = base.nextTokenIdToMint();
-
-        for (uint256 i = 0; i < numToMint; i += 1) {
-            tokenIds[i] = nextId - (1 + i);
-            amounts[i] = 100;
-        }
-
-        vm.prank(admin);
-        base.batchMintTo(nftHolder, tokenIds, amounts, "");
-
-        for (uint256 i = 0; i < numToMint; i += 1) {
-            uint256 id = tokenIds[i];
-
-            assertEq(base.balanceOf(nftHolder, id), amounts[i]);
-            assertEq(base.totalSupply(id), amounts[i]);
-            assertEq(base.uri(id), string(abi.encodePacked(baseURI, id.toString())));
-        }
-    }
-
-    function test_revert_batchMintTo_unauthorizedCaller() public {
-        uint256 numToMint = 3;
-        uint256[] memory tokenIds = new uint256[](numToMint);
-        uint256[] memory amounts = new uint256[](numToMint);
-
-        uint256 nextId = base.nextTokenIdToMint();
-
-        for (uint256 i = 0; i < numToMint; i += 1) {
-            tokenIds[i] = nextId - (1 + i);
-            amounts[i] = 100;
-        }
-
         vm.prank(nftHolder);
-        vm.expectRevert("Not authorized to mint.");
-        base.batchMintTo(nftHolder, tokenIds, amounts, "");
-    }
-
-    function test_revert_batchMintTo_mintingZeroTokens() public {
-        uint256 numToMint = 3;
-        uint256[] memory tokenIds = new uint256[](numToMint);
-        uint256[] memory amounts = new uint256[](0);
-
-        uint256 nextId = base.nextTokenIdToMint();
-
-        for (uint256 i = 0; i < numToMint; i += 1) {
-            tokenIds[i] = nextId - (1 + i);
-        }
-
-        vm.prank(admin);
-        vm.expectRevert("Minting zero tokens.");
-        base.batchMintTo(nftHolder, tokenIds, amounts, "");
-    }
-
-    function test_revert_batchMintTo_lengthMismatch() public {
-        uint256 numToMint = 3;
-        uint256[] memory tokenIds = new uint256[](numToMint + 1);
-        uint256[] memory amounts = new uint256[](numToMint);
-
-        uint256 nextId = base.nextTokenIdToMint();
-
-        for (uint256 i = 0; i < numToMint; i += 1) {
-            tokenIds[i] = nextId - (1 + i);
-            amounts[i] = 100;
-        }
-
-        vm.prank(admin);
-        vm.expectRevert("Length mismatch");
-        base.batchMintTo(nftHolder, tokenIds, amounts, "");
-    }
-
-    function test_revert_batchMintTo_invalidId() public {
-        uint256 numToMint = 3;
-        uint256[] memory tokenIds = new uint256[](numToMint);
-        uint256[] memory amounts = new uint256[](numToMint);
-
-        uint256 nextId = base.nextTokenIdToMint();
-
-        for (uint256 i = 0; i < numToMint; i += 1) {
-            tokenIds[i] = nextId;
-            amounts[i] = 100;
-        }
-
-        vm.prank(admin);
         vm.expectRevert("invalid id");
-        base.batchMintTo(nftHolder, tokenIds, amounts, "");
+        base.claim(nftHolder, tokenId, amount);
     }
 }

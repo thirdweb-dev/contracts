@@ -137,6 +137,11 @@ contract ERC721Drop is
         return nextTokenIdToLazyMint;
     }
 
+    /// @notice The tokenId assigned to the next new NFT to be claimed.
+    function nextTokenIdToClaim() public view virtual returns (uint256) {
+        return _currentIndex;
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Delayed reveal logic
     //////////////////////////////////////////////////////////////*/
