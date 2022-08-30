@@ -97,10 +97,7 @@ contract ERC721LazyMint is ERC721A, ContractMetadata, Multicall, Ownable, Royalt
      *  @param _receiver  The recipient of the NFT to mint.
      *  @param _quantity  The number of NFTs to mint.
      */
-    function claim(
-        address _receiver,
-        uint256 _quantity
-    ) public payable virtual {
+    function claim(address _receiver, uint256 _quantity) public payable virtual {
         verifyClaim(msg.sender, _quantity); // add your claim verification logic by overriding this function
 
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
