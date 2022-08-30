@@ -95,19 +95,17 @@ contract ERC1155LazyMint is ERC1155, ContractMetadata, Ownable, Royalty, Multica
      *  @param _receiver  The recipient of the tokens to mint.
      *  @param _tokenId   The tokenId of the lazy minted NFT to mint.
      *  @param _quantity  The number of tokens to mint.
-     *  @param _data      Additional data to pass along during the minting of the tokens.
      */
     function claim(
         address _receiver,
         uint256 _tokenId,
-        uint256 _quantity,
-        bytes memory _data
+        uint256 _quantity
     ) public payable virtual {
         verifyClaim(msg.sender, _tokenId, _quantity); // add your claim verification logic by overriding this function
 
         require(_tokenId < nextTokenIdToMint(), "invalid id");
 
-        _mint(_receiver, _tokenId, _quantity, _data);
+        _mint(_receiver, _tokenId, _quantity, "");
     }
 
     /**

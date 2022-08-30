@@ -41,7 +41,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
         uint256 amount = 100;
 
         vm.prank(nftHolder);
-        base.claim(nftHolder, tokenId, amount, "");
+        base.claim(nftHolder, tokenId, amount);
 
         assertEq(base.balanceOf(nftHolder, tokenId), amount);
         assertEq(base.totalSupply(tokenId), amount);
@@ -54,6 +54,6 @@ contract ERC1155LazyMintTest is DSTest, Test {
 
         vm.prank(nftHolder);
         vm.expectRevert("invalid id");
-        base.claim(nftHolder, tokenId, amount, "");
+        base.claim(nftHolder, tokenId, amount);
     }
 }

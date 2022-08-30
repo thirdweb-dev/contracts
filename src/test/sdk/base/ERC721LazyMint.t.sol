@@ -40,7 +40,7 @@ contract BaseERC721LazyMintTest is BaseUtilTest {
 
         vm.startPrank(recipient);
 
-        base.claim(recipient, quantity, "");
+        base.claim(recipient, quantity);
 
         assertEq(base.totalSupply(), currentTotalSupply + quantity);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + quantity);
@@ -60,7 +60,7 @@ contract BaseERC721LazyMintTest is BaseUtilTest {
         vm.startPrank(recipient);
 
         vm.expectRevert("Not enough lazy minted tokens.");
-        base.claim(recipient, _amount + 1, "");
+        base.claim(recipient, _amount + 1);
 
         vm.stopPrank();
     }
