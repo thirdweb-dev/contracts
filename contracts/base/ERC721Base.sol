@@ -97,7 +97,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      */
     function mintTo(address _to, string memory _tokenURI) public virtual {
         require(_canMint(), "Not authorized to mint.");
-        fullURI[nextTokenIdToMint()] = _tokenURI;
+        _setTokenURI(nextTokenIdToMint(), _tokenURI);
         _safeMint(_to, 1, "");
     }
 
@@ -156,6 +156,10 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
+
+    function _setTokenURI(uint256 _tokenId, string memory _tokenURI) internal virtual {
+        fullURI[_tokenId] = _tokenURI;
+    }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
