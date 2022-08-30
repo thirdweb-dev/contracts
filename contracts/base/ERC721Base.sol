@@ -158,6 +158,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
     //////////////////////////////////////////////////////////////*/
 
     function _setTokenURI(uint256 _tokenId, string memory _tokenURI) internal virtual {
+        require(bytes(fullURI[_tokenId]).length == 0, "URI already set");
         fullURI[_tokenId] = _tokenURI;
     }
 
