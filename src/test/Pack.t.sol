@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Pack } from "contracts/pack/Pack.sol";
+import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/pack/Pack.sol";
 import { IPack } from "contracts/interfaces/IPack.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
@@ -181,6 +181,13 @@ contract PackTest is BaseTest {
         console2.logBytes4(type(IERC20).interfaceId);
         console2.logBytes4(type(IERC721).interfaceId);
         console2.logBytes4(type(IERC1155).interfaceId);
+    }
+
+    function test_supportsInterface() public {
+        assertEq(pack.supportsInterface(type(IERC2981Upgradeable).interfaceId), true);
+        assertEq(pack.supportsInterface(type(IERC721Receiver).interfaceId), true);
+        assertEq(pack.supportsInterface(type(IERC1155Receiver).interfaceId), true);
+        assertEq(pack.supportsInterface(type(IERC1155Upgradeable).interfaceId), true);
     }
 
     /**
@@ -712,6 +719,23 @@ contract PackTest is BaseTest {
         vm.prank(address(tokenOwner));
         vm.expectRevert("!Allowed");
         pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
+    }
+
+    /**
+     *  note: Testing revert condition; adding tokens with a different recipient.
+     */
+    function test_revert_addPackContents_NotRecipient() public {
+        uint256 packId = pack.nextTokenIdToMint();
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+
+        address randomRecipient = address(0x12345);
+
+        vm.expectRevert("!Recipient");
+        vm.prank(address(tokenOwner));
+        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, randomRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////
