@@ -63,13 +63,14 @@ And so, what can be packed in packs are *n* number of configurations like ‘500
 ```solidity
 enum TokenType { ERC20, ERC721, ERC1155 }
 
-struct PackContent {
+struct Token {
     address assetContract;
     TokenType tokenType;
     uint256 tokenId;
-    uint256 totalAmountPacked;
-    uint256 amountDistributedPerOpen;
+    uint256 totalAmount;
 }
+
+uint256 perUnitAmount;
 ```
 
 | Value | Description |
@@ -77,8 +78,8 @@ struct PackContent {
 | assetContract | The contract address of the token. |
 | tokenType | The type of the token -- ERC20 / ERC721 / ERC1155 |
 | tokenId | The tokenId of the the token. (Not applicable for ERC20 tokens. The contract will ignore this value for ERC20 tokens.) |
-| totalAmountPacked | The total amount of this token packed in the pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
-| amountDistributedPerOpen | The amount of this token to distribute as a unit, on opening a pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
+| totalAmount | The total amount of this token packed in the pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
+| perUnitAmount | The amount of this token to distribute as a unit, on opening a pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
 
 **Note:** A pack can contain different configurations for the same token. For example, the same set of packs can contain ‘500 units of 20 USDC’ and ‘10 units of 1000 USDC’ as two independent types of underlying rewards.
 
@@ -87,26 +88,31 @@ struct PackContent {
 You can create packs with any ERC20, ERC721 or ERC1155 tokens that you own. To create packs, you must specify the following:
 
 ```solidity
+/// @dev Creates a pack with the stated contents.
 function createPack(
-    PackContent[] calldata contents,
+    Token[] calldata contents,
+    uint256[] calldata numOfRewardUnits,
     string calldata packUri,
     uint128 openStartTimestamp,
-    uint128 amountDistributedPerOpen
-) external;
+    uint128 amountDistributedPerOpen,
+    address recipient
+) external
 ```
 
 | Parameter | Description |
 | --- | --- |
-| contents | The reward units packed in the packs. |
+| contents | Tokens/assets packed in the set of pack. |
+| numOfRewardUnits | Number of reward units for each asset, where each reward unit contains per unit amount of corresponding asset. |
 | packUri | The (metadata) URI assigned to the packs created. |
 | openStartTimestamp | The timestamp after which packs can be opened. |
 | amountDistributedPerOpen | The number of reward units distributed per open. |
+| recipient | The recipient of the packs created. |
 
 ### Packs are ERC1155 tokens i.e. NFTs
 
 Packs themselves are ERC1155 tokens. And so, a set of packs created with your tokens is itself identified by a unique tokenId, has an associated metadata URI and a variable supply.
 
-In the example given in the previous section — ‘How packs work (without web3 terminology)’, there is a set of 100 packs created, where that entire set of packs is identified by a unique tokenId.
+In the example given in the previous section — ‘Non technical overview’, there is a set of 100 packs created, where that entire set of packs is identified by a unique tokenId.
 
 Since packs are ERC1155 tokens, you can publish multiple sets of packs using the same `Pack` contract.
 
@@ -133,23 +139,24 @@ function openPack(uint256 packId, uint256 amountToOpen) external;
 
 ### How reward units are selected to distribute on opening packs
 
-We build on the example in the previous section — ‘How packs work (without web3 terminology)’.
+We build on the example in the previous section — ‘Non-technical overview’.
 
-Each single **square**, **circle** or **star** is considered as a ‘reward unit’. For example, the 5 **stars** in the packs may be “5 units of 1000 USDC”, which is represented in the `Pack` contract as a single `PackContent` as follows:
+Each single **square**, **circle** or **star** is considered as a ‘reward unit’. For example, the 5 **stars** in the packs may be “5 units of 1000 USDC”, which is represented in the `Pack` contract by the following information
 
 ```solidity
-struct PackContent {
+struct Token {
     address assetContract; // USDC address
     TokenType tokenType; // TokenType.ERC20
     uint256 tokenId; // Not applicable
-    uint256 totalAmountPacked; // 5000
-    uint256 amountDistributedPerOpen; // 1000
+    uint256 totalAmount; // 5000
 }
+
+uint256 perUnitAmount; // 1000
 ```
 
 The percentage chance of receiving a particular kind of reward (e.g. a **star**) on opening a pack is calculated as:`(number_of_stars_packed) / (total number of packs)`. Here, `number_of_stars_packed` refers to the total number of reward units of the **star** kind inside the set of packs e.g. a total of 5 units of 1000 USDC.
 
-Going back to the example in the previous section — ‘How packs work (without web3 terminology)’. — the supply of the reward units in the relevant set of packs - 80 **circles**, 15 **squares**, and 5 **stars -**  can be represented on a number line, from zero to the total supply of packs - in this case, 100.
+Going back to the example in the previous section — ‘Non-technical overview’. — the supply of the reward units in the relevant set of packs - 80 **circles**, 15 **squares**, and 5 **stars -**  can be represented on a number line, from zero to the total supply of packs - in this case, 100.
 
 ![pack-diag-2.png](/assets/pack-diag-2.png)
 
@@ -181,9 +188,7 @@ The `Pack` contract requires a design where a pack owner *cannot possibly* predi
 To ensure the above, we make a simple check in the `openPack` function:
 
 ```solidity
-require(msg.sender == tx.origin, "opener cannot be smart contract");
-
-require(_msgSender() == tx.origin, "opener cannot be smart contract");
+require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "opener cannot be smart contract");
 ```
 
 `tx.origin` returns the address of the external account that initiated the transaction, of which the `openPack` function call is a part of.
@@ -191,7 +196,7 @@ require(_msgSender() == tx.origin, "opener cannot be smart contract");
 The above check essentially means that only an external account i.e. an end user wallet, and no smart contract, can open packs. This lets us generate a pseudo random number using block variables, for the purpose of `openPack`:
 
 ```solidity
-uint256 random = uint(keccak256(abi.encodePacked(msg.sender, blockhash(block.number), block.difficulty)));
+uint256 random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
 ```
 
 Since only end user wallets can open packs, a pack owner *cannot possibly* predict the random number that will be used in the process of their pack opening. That is because a pack opener cannot query the result of the random number calculation during a given block, and call `openPack` within that same block.

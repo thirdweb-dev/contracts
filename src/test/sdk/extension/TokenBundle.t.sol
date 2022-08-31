@@ -107,14 +107,14 @@ contract ExtensionTokenBundle is DSTest, Test {
     function test_revert_createBundle_emptyBundle() public {
         ITokenBundle.Token[] memory emptyBundle;
 
-        vm.expectRevert("TokenBundle: no tokens to bind.");
+        vm.expectRevert("no tokens to bind");
         ext.createBundle(emptyBundle, 0);
     }
 
     function test_revert_createBundle_existingBundleId() public {
         ext.createBundle(bundleContent, 0);
 
-        vm.expectRevert("TokenBundle: existent at bundleId");
+        vm.expectRevert("existent at bundleId");
         ext.createBundle(bundleContent, 0);
     }
 
@@ -128,7 +128,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             })
         );
 
-        vm.expectRevert("Asset doesn't match TokenType");
+        vm.expectRevert("!TokenType");
         ext.createBundle(bundleContent, 0);
 
         bundleContent.pop();
@@ -141,7 +141,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             })
         );
 
-        vm.expectRevert("Asset doesn't match TokenType");
+        vm.expectRevert("!TokenType");
         ext.createBundle(bundleContent, 0);
 
         bundleContent.pop();
@@ -154,7 +154,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             })
         );
 
-        vm.expectRevert("Asset doesn't match TokenType");
+        vm.expectRevert("!TokenType");
         ext.createBundle(bundleContent, 0);
 
         bundleContent.pop();
@@ -167,7 +167,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             })
         );
 
-        vm.expectRevert("Asset doesn't match TokenType");
+        vm.expectRevert("!TokenType");
         ext.createBundle(bundleContent, 0);
 
         bundleContent.pop();
@@ -180,7 +180,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             })
         );
 
-        vm.expectRevert("Asset doesn't match TokenType");
+        vm.expectRevert("!TokenType");
         ext.createBundle(bundleContent, 0);
 
         bundleContent.pop();
@@ -193,7 +193,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             })
         );
 
-        vm.expectRevert("Asset doesn't match TokenType");
+        vm.expectRevert("!TokenType");
         ext.createBundle(bundleContent, 0);
     }
 
@@ -246,7 +246,7 @@ contract ExtensionTokenBundle is DSTest, Test {
         ext.createBundle(bundleContent, 0);
 
         ITokenBundle.Token[] memory emptyBundle;
-        vm.expectRevert("TokenBundle: no tokens to bind.");
+        vm.expectRevert("no tokens to bind");
         ext.updateBundle(emptyBundle, 0);
     }
 
@@ -320,7 +320,7 @@ contract ExtensionTokenBundle is DSTest, Test {
             totalAmount: 200
         });
 
-        vm.expectRevert("TokenBundle: index DNE.");
+        vm.expectRevert("index DNE");
         ext.updateTokenInBundle(newToken, 0, 3);
     }
 }
