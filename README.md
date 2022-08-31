@@ -81,6 +81,8 @@ Release pages for pre-built contracts:
 - [VoteERC20](https://thirdweb.com/deployer.thirdweb.eth/VoteERC20)
 - [Split](https://thirdweb.com/deployer.thirdweb.eth/Split)
 
+[Learn more about pre-built contracts](https://portal.thirdweb.com/pre-built-contracts)
+
 ## Extensions
 
 Extensions are building blocks that help enrich smart contracts with features.
