@@ -19,22 +19,6 @@
 npm i @thirdweb-dev/contracts
 ```
 
-## Deployed addresses
-
-### Production
-
-- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
-
-- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
-
-### Dev - (Mumbai only)
-
-- `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
-
-- `ByocRegistry`: [0x61Bb02795b4fF5248169A54D9f149C4557B0B7de](https://mumbai.polygonscan.com/address/0x61Bb02795b4fF5248169A54D9f149C4557B0B7de#code)
-
-- `ByocFactory`: [0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6](https://mumbai.polygonscan.com/address/0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6#code)
-
 ## Running Tests
 
 1. `yarn`: install contracts dependencies
@@ -80,6 +64,36 @@ To run any scripts in the `/scripts` directory, run:
 ```
 npx hardhat run scripts/{path to the script}
 ```
+
+## Pre-built Contracts
+
+Pre-built contracts are written by the thirdweb team, and cover the most common use cases for smart contracts.
+
+Release pages for pre-built contracts:
+
+- [DropERC20](https://thirdweb.com/deployer.thirdweb.eth/DropERC20)
+- [DropERC721](https://thirdweb.com/deployer.thirdweb.eth/DropERC721)
+- [DropERC1155](https://thirdweb.com/deployer.thirdweb.eth/DropERC1155)
+- [SignatureDrop](https://thirdweb.com/deployer.thirdweb.eth/SignatureDrop)
+- [Marketplace](https://thirdweb.com/deployer.thirdweb.eth/Marketplace)
+- [Multiwrap](https://thirdweb.com/deployer.thirdweb.eth/Multiwrap)
+- [TokenERC20](https://thirdweb.com/deployer.thirdweb.eth/TokenERC20)
+- [TokenERC721](https://thirdweb.com/deployer.thirdweb.eth/TokenERC721)
+- [TokenERC1155](https://thirdweb.com/deployer.thirdweb.eth/TokenERC1155)
+- [VoteERC20](https://thirdweb.com/deployer.thirdweb.eth/VoteERC20)
+- [Split](https://thirdweb.com/deployer.thirdweb.eth/Split)
+
+[Learn more about pre-built contracts](https://portal.thirdweb.com/pre-built-contracts)
+
+## Extensions
+
+Extensions are building blocks that help enrich smart contracts with features.
+
+Some blocks come packaged together as Base Contracts, which come with a full set of features out of the box that you can modify and extend. These contracts are available at `contracts/base/`.
+
+Other (smaller) blocks are Features, which provide a way for you to pick and choose which individual pieces you want to put into your contract; with full customization of how those features work. These are available at `contracts/extension/`.
+
+[Learn more about extensions](https://portal.thirdweb.com/extensions)
 
 ## Deployments
 

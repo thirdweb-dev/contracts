@@ -7,7 +7,7 @@ import "@ds-test/test.sol";
 import "./BaseUtilTest.sol";
 import { ERC721Drop } from "contracts/base/ERC721Drop.sol";
 
-contract BaseERC721ERC721DropTest is BaseUtilTest {
+contract BaseERC721DropTest is BaseUtilTest {
     ERC721Drop internal base;
     using TWStrings for uint256;
 

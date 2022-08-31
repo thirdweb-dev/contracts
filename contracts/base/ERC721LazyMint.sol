@@ -1,25 +1,46 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721Base.sol";
+import { ERC721A } from "../eip/ERC721A.sol";
 
+import "../extension/ContractMetadata.sol";
+import "../extension/Multicall.sol";
+import "../extension/Ownable.sol";
+import "../extension/Royalty.sol";
+import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
 
+import "../lib/TWStrings.sol";
+
 /**
- *      BASE:      ERC721Base
+ *      BASE:      ERC721A
  *      EXTENSION: LazyMint
  *
- *  The `ERC721LazyMint` contract uses the `ERC721Base` contract, along with the `LazyMint` extension.
+ *  The `ERC721LazyMint` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.
+ *  It includes the following additions to standard ERC721 logic:
+ *
+ *      - Lazy minting
+ *
+ *      - Contract metadata for royalty support on platforms such as OpenSea that use
+ *        off-chain information to distribute roaylties.
+ *
+ *      - Ownership of the contract, with the ability to restrict certain functions to
+ *        only be called by the contract's owner.
+ *
+ *      - Multicall capability to perform multiple actions atomically
+ *
+ *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  *
  *  'Lazy minting' means defining the metadata of NFTs without minting it to an address. Regular 'minting'
  *  of  NFTs means actually assigning an owner to an NFT.
  *
  *  As a contract admin, this lets you prepare the metadata for NFTs that will be minted by an external party,
  *  without paying the gas cost for actually minting the NFTs.
- *
  */
 
-contract ERC721LazyMint is ERC721Base, LazyMint {
+contract ERC721LazyMint is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata, LazyMint {
+    using TWStrings for uint256;
+
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -29,48 +50,89 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {}
+    ) ERC721A(_name, _symbol) {
+        _setupOwner(msg.sender);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+    }
 
     /*//////////////////////////////////////////////////////////////
-                            Minting logic
+                            ERC165 Logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
+            interfaceId == 0x5b5e139f || // ERC165 Interface ID for ERC721Metadata
+            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        Overriden ERC721 logic
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice          Lets an authorized address mint a lazy minted NFT to a recipient.
-     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *  @notice         Returns the metadata URI for an NFT.
+     *  @dev            See `BatchMintMetadata` for handling of metadata in this contract.
      *
-     *  @param _to       The recipient of the NFT to mint.
+     *  @param _tokenId The tokenId of an NFT.
      */
-    function mintTo(address _to, string memory) public virtual override {
-        require(_canMint(), "Not authorized to mint.");
-        require(_currentIndex + 1 <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+        string memory batchUri = getBaseURI(_tokenId);
+        return string(abi.encodePacked(batchUri, _tokenId.toString()));
+    }
 
-        _safeMint(_to, 1, "");
+    /*//////////////////////////////////////////////////////////////
+                            Claiming logic
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice          Lets an address claim multiple lazy minted NFTs at once to a recipient.
+     *                   Contract creators should override this function to create custom logic for claiming,
+     *                   for e.g. price collection, allowlist, max quantity, etc.
+     *
+     *  @dev             The logic in the `verifyClaim` function determines whether the caller is authorized to mint NFTs.
+     *
+     *  @param _receiver  The recipient of the NFT to mint.
+     *  @param _quantity  The number of NFTs to mint.
+     */
+    function claim(address _receiver, uint256 _quantity) public payable virtual {
+        verifyClaim(msg.sender, _quantity); // add your claim verification logic by overriding this function
+
+        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+        _safeMint(_receiver, _quantity, "");
     }
 
     /**
-     *  @notice          Lets an authorized address mint multiple lazy minted NFTs at once to a recipient.
-     *  @dev             The logic in the `_canMint` function determines whether the caller is authorized to mint NFTs.
+     *  @notice          Override this function to add logic for claim verification, based on conditions
+     *                   such as allowlist, price, max quantity etc.
      *
-     *  @param _to       The recipient of the NFT to mint.
-     *  @param _quantity The number of NFTs to mint.
-     *  @param _data     Additional data to pass along during the minting of the NFT.
+     *  @dev             Checks a request to claim NFTs against a custom condition.
+     *
+     *  @param _claimer   Caller of the claim function.
+     *  @param _quantity  The number of NFTs being claimed.
      */
-    function batchMintTo(
-        address _to,
-        uint256 _quantity,
-        string memory,
-        bytes memory _data
-    ) public virtual override {
-        require(_canMint(), "Not authorized to mint.");
-        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+    function verifyClaim(address _claimer, uint256 _quantity) public view virtual {}
 
-        _safeMint(_to, _quantity, _data);
+    /**
+     *  @notice         Lets an owner or approved operator burn the NFT of the given tokenId.
+     *  @dev            ERC721A's `_burn(uint256,bool)` internally checks for token approvals.
+     *
+     *  @param _tokenId The tokenId of the NFT to burn.
+     */
+    function burn(uint256 _tokenId) external virtual {
+        _burn(_tokenId, true);
     }
 
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
-    function nextTokenIdToMint() public view virtual override returns (uint256) {
+    function nextTokenIdToMint() public view virtual returns (uint256) {
         return nextTokenIdToLazyMint;
+    }
+
+    /// @notice The tokenId assigned to the next new NFT to be claimed.
+    function nextTokenIdToClaim() public view virtual returns (uint256) {
+        return _currentIndex;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -79,6 +141,21 @@ contract ERC721LazyMint is ERC721Base, LazyMint {
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

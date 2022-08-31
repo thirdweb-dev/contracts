@@ -22,7 +22,6 @@ import "../extension/interface/IPlatformFee.sol";
 import "../extension/interface/IPrimarySale.sol";
 
 import { IDropERC20 } from "../interfaces/drop/IDropERC20.sol";
-import { ITWFee } from "../interfaces/ITWFee.sol";
 
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 

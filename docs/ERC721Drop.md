@@ -428,6 +428,23 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### nextTokenIdToClaim
+
+```solidity
+function nextTokenIdToClaim() external view returns (uint256)
+```
+
+The tokenId assigned to the next new NFT to be claimed.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### nextTokenIdToMint
 
 ```solidity

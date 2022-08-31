@@ -31,9 +31,6 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-// Thirdweb top-level
-import "../interfaces/ITWFee.sol";
-
 contract TokenERC1155 is
     Initializable,
     IThirdwebContract,
@@ -77,9 +74,6 @@ contract TokenERC1155 is
     /// @dev The address interpreted as native token of the chain.
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    /// @dev The thirdweb contract with fee related information.
-    ITWFee public immutable thirdwebFee;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -118,9 +112,7 @@ contract TokenERC1155 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
-    constructor(address _thirdwebFee) initializer {
-        thirdwebFee = ITWFee(_thirdwebFee);
-    }
+    constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -400,8 +392,6 @@ contract TokenERC1155 is
 
         uint256 totalPrice = _req.pricePerToken * _req.quantity;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-        (address twFeeRecipient, uint256 twFeeBps) = thirdwebFee.getFeeInfo(address(this), FeeType.PRIMARY_SALE);
-        uint256 twFee = (totalPrice * twFeeBps) / MAX_BPS;
 
         if (_req.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
@@ -412,13 +402,7 @@ contract TokenERC1155 is
             : _req.primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), twFeeRecipient, twFee);
-        CurrencyTransferLib.transferCurrency(
-            _req.currency,
-            _msgSender(),
-            saleRecipient,
-            totalPrice - platformFees - twFee
-        );
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     ///     =====   Low-level overrides  =====

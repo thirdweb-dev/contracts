@@ -54,7 +54,7 @@ contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
         override
         returns (address signer)
     {
-        require(_req.quantity > 0, "Minting zero tokens.");
+        require(_req.quantity == 1, "quantiy must be 1");
 
         uint256 tokenIdToMint = nextTokenIdToMint();
 
@@ -79,7 +79,7 @@ contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
         }
 
         // Mint tokens.
-        _batchMintMetadata(nextTokenIdToMint(), _req.quantity, _req.uri);
+        _setTokenURI(tokenIdToMint, _req.uri);
         _safeMint(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);

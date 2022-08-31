@@ -97,7 +97,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         base.mintWithSignature(_mintrequest, _signature);
 
         assertEq(base.nextTokenIdToMint(), nextTokenId + _mintrequest.quantity);
-        assertEq(base.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri, nextTokenId.toString())));
+        assertEq(base.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri)));
         assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
         assertEq(base.ownerOf(nextTokenId), recipient);
@@ -121,7 +121,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         base.mintWithSignature(_mintrequest, _signature);
 
         assertEq(base.nextTokenIdToMint(), nextTokenId + _mintrequest.quantity);
-        assertEq(base.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri, nextTokenId.toString())));
+        assertEq(base.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri)));
         assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
         assertEq(base.ownerOf(nextTokenId), recipient);
@@ -144,7 +144,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         base.mintWithSignature{ value: 1 }(_mintrequest, _signature);
 
         assertEq(base.nextTokenIdToMint(), nextTokenId + _mintrequest.quantity);
-        assertEq(base.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri, nextTokenId.toString())));
+        assertEq(base.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri)));
         assertEq(base.totalSupply(), currentTotalSupply + _mintrequest.quantity);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
         assertEq(base.ownerOf(nextTokenId), recipient);
@@ -162,13 +162,13 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         base.mintWithSignature{ value: 0 }(_mintrequest, _signature);
     }
 
-    function test_revert_mintWithSignature_MintingZeroTokens() public {
+    function test_revert_mintWithSignature_QuantityNotOne() public {
         vm.warp(1000);
 
         _mintrequest.quantity = 0;
         _signature = signMintRequest(_mintrequest, privateKey);
 
-        vm.expectRevert("Minting zero tokens.");
+        vm.expectRevert("quantiy must be 1");
         base.mintWithSignature(_mintrequest, _signature);
     }
 }
