@@ -65,6 +65,32 @@ To run any scripts in the `/scripts` directory, run:
 npx hardhat run scripts/{path to the script}
 ```
 
+## Pre-built Contracts
+
+Release pages for pre-built contracts:
+
+- [DropERC20](https://thirdweb.com/deployer.thirdweb.eth/DropERC20)
+- [DropERC721](https://thirdweb.com/deployer.thirdweb.eth/DropERC721)
+- [DropERC1155](https://thirdweb.com/deployer.thirdweb.eth/DropERC1155)
+- [SignatureDrop](https://thirdweb.com/deployer.thirdweb.eth/SignatureDrop)
+- [Marketplace](https://thirdweb.com/deployer.thirdweb.eth/Marketplace)
+- [Multiwrap](https://thirdweb.com/deployer.thirdweb.eth/Multiwrap)
+- [TokenERC20](https://thirdweb.com/deployer.thirdweb.eth/TokenERC20)
+- [TokenERC721](https://thirdweb.com/deployer.thirdweb.eth/TokenERC721)
+- [TokenERC1155](https://thirdweb.com/deployer.thirdweb.eth/TokenERC1155)
+- [VoteERC20](https://thirdweb.com/deployer.thirdweb.eth/VoteERC20)
+- [Split](https://thirdweb.com/deployer.thirdweb.eth/Split)
+
+## Extensions
+
+Extensions are building blocks that help enrich smart contracts with features.
+
+Some blocks come packaged together as Base Contracts, which come with a full set of features out of the box that you can modify and extend. These contracts are available at `contracts/base/`.
+
+Other (smaller) blocks are Features, which provide a way for you to pick and choose which individual pieces you want to put into your contract; with full customization of how those features work. These are available at `contracts/extension/`.
+
+[Find out more](https://portal.thirdweb.com/extensions)
+
 ## Deployments
 
 The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deployed on the following chains:
