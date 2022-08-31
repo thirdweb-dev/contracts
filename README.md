@@ -67,6 +67,8 @@ npx hardhat run scripts/{path to the script}
 
 ## Pre-built Contracts
 
+Pre-built contracts are written by the thirdweb team, and cover the most common use cases for smart contracts.
+
 Release pages for pre-built contracts:
 
 - [DropERC20](https://thirdweb.com/deployer.thirdweb.eth/DropERC20)
