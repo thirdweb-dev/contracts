@@ -89,7 +89,7 @@ Some blocks come packaged together as Base Contracts, which come with a full set
 
 Other (smaller) blocks are Features, which provide a way for you to pick and choose which individual pieces you want to put into your contract; with full customization of how those features work. These are available at `contracts/extension/`.
 
-[Find out more](https://portal.thirdweb.com/extensions)
+[Learn more about extensions](https://portal.thirdweb.com/extensions)
 
 ## Deployments
 
