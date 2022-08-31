@@ -19,22 +19,6 @@
 npm i @thirdweb-dev/contracts
 ```
 
-## Deployed addresses
-
-### Production
-
-- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
-
-- `TWFactory`: [0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65](https://blockscan.com/address/0x11c34F062Cb10a20B9F463E12Ff9dA62D76FDf65)
-
-### Dev - (Mumbai only)
-
-- `TWRegistry`: [0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C](https://blockscan.com/address/0x3F17972CB27506eb4a6a3D59659e0B57a43fd16C#code)
-
-- `ByocRegistry`: [0x61Bb02795b4fF5248169A54D9f149C4557B0B7de](https://mumbai.polygonscan.com/address/0x61Bb02795b4fF5248169A54D9f149C4557B0B7de#code)
-
-- `ByocFactory`: [0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6](https://mumbai.polygonscan.com/address/0x3c3D901Acb5f7746dCf06B26fCe881d21970d2B6#code)
-
 ## Running Tests
 
 1. `yarn`: install contracts dependencies
