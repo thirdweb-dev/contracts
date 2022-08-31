@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -94,9 +95,9 @@ contract Pack is
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
-        transferRole = keccak256("TRANSFER_ROLE");
-        minterRole = keccak256("MINTER_ROLE");
-        assetRole = keccak256("ASSET_ROLE");
+        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
+        bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _assetRole = keccak256("ASSET_ROLE");
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
 
@@ -113,14 +114,18 @@ contract Pack is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
 
-        _setupRole(transferRole, _defaultAdmin);
-        _setupRole(minterRole, _defaultAdmin);
-        _setupRole(transferRole, address(0));
+        _setupRole(_transferRole, _defaultAdmin);
+        _setupRole(_minterRole, _defaultAdmin);
+        _setupRole(_transferRole, address(0));
 
         // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
-        _setupRole(assetRole, address(0));
+        _setupRole(_assetRole, address(0));
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+
+        transferRole = _transferRole;
+        minterRole = _minterRole;
+        assetRole = _assetRole;
     }
 
     receive() external payable {
@@ -170,7 +175,8 @@ contract Pack is
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId ||
-            type(IERC721Receiver).interfaceId == interfaceId;
+            type(IERC721Receiver).interfaceId == interfaceId || 
+            type(IERC1155Receiver).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -232,6 +238,7 @@ contract Pack is
         require(canUpdatePack[_packId], "!Allowed");
         require(_contents.length > 0, "!Contents");
         require(_contents.length == _numOfRewardUnits.length, "!Rewards");
+        require(balanceOf(_recipient, _packId) != 0, "!Recipient");
 
         if (!hasRole(assetRole, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
