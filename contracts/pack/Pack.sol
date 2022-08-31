@@ -175,7 +175,7 @@ contract Pack is
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId ||
-            type(IERC721Receiver).interfaceId == interfaceId || 
+            type(IERC721Receiver).interfaceId == interfaceId ||
             type(IERC1155Receiver).interfaceId == interfaceId;
     }
 
