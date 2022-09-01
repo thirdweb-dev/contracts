@@ -42,7 +42,7 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit {
      *  @param _to       The recipient of the tokens to mint.
      *  @param _amount   Quantity of tokens to mint.
      */
-    function mint(address _to, uint256 _amount) public virtual {
+    function mintTo(address _to, uint256 _amount) public virtual {
         require(_canMint(), "Not authorized to mint.");
         require(_amount != 0, "Minting zero tokens.");
 
