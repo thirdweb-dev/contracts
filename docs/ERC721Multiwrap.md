@@ -83,29 +83,6 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### bundle
-
-```solidity
-function bundle(uint256) external view returns (uint256 count, string uri)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 | undefined |
-| uri | string | undefined |
-
 ### contractURI
 
 ```solidity

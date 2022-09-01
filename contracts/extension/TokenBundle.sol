@@ -17,7 +17,7 @@ interface IERC165 {
 
 abstract contract TokenBundle is ITokenBundle {
     /// @dev Mapping from bundle UID => bundle info.
-    mapping(uint256 => BundleInfo) public bundle;
+    mapping(uint256 => BundleInfo) private bundle;
 
     /// @dev Returns the total number of assets in a particular bundle.
     function getTokenCountOfBundle(uint256 _bundleId) public view returns (uint256) {

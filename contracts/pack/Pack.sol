@@ -22,7 +22,7 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/Royalty.sol";
 import "../extension/Ownable.sol";
-import "../extension/Permissions.sol";
+import "../extension/PermissionsEnumerable.sol";
 import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
 contract Pack is
@@ -30,7 +30,7 @@ contract Pack is
     ContractMetadata,
     Ownable,
     Royalty,
-    Permissions,
+    PermissionsEnumerable,
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
