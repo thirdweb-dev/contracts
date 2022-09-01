@@ -54,3 +54,5 @@ corpus/
 
 # IDES
 .idea
+
+*.DS_Store
