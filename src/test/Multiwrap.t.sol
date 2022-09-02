@@ -508,7 +508,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("TokenBundle: no tokens to bind.");
+        vm.expectRevert("no tokens to bind");
         multiwrap.wrap(emptyContent, uriForWrappedToken, recipient);
     }
 

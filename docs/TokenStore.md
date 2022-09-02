@@ -10,22 +10,28 @@
 
 ## Methods
 
-### NATIVE_TOKEN
+### bundle
 
 ```solidity
-function NATIVE_TOKEN() external view returns (address)
+function bundle(uint256) external view returns (uint256 count, string uri)
 ```
 
 
 
-*The address interpreted as native token of the chain.*
 
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| count | uint256 | undefined |
+| uri | string | undefined |
 
 ### getTokenCountOfBundle
 
