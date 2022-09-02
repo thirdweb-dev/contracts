@@ -50,7 +50,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
 
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         assertEq(base.totalSupply(), currentTotalSupply + amount);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + amount);
@@ -61,7 +61,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         vm.expectRevert("Not authorized to mint.");
         vm.prank(address(0x1));
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
     }
 
     function test_revert_mint_MintingZeroTokens() public {
@@ -69,7 +69,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         vm.expectRevert("Minting zero tokens.");
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
     }
 
     function test_revert_mint_MintToZeroAddress() public {
@@ -77,7 +77,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         vm.expectRevert("ERC20: mint to the zero address");
         vm.prank(deployer);
-        base.mint(address(0), amount);
+        base.mintTo(address(0), amount);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
 
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         assertEq(base.totalSupply(), currentTotalSupply + amount);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + amount);
@@ -110,7 +110,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
         uint256 amount = 5 ether;
 
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         vm.expectRevert("not enough balance");
         vm.prank(recipient);
@@ -126,7 +126,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         // mint amount to recipient
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         // generate permit signature
         address _owner = recipient;
@@ -160,7 +160,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         // mint amount to recipient
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         // generate permit signature
         address _owner = recipient;
@@ -188,7 +188,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         // mint amount to recipient
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         // generate permit signature
         address _owner = recipient;
@@ -222,7 +222,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
         // mint amount to recipient
         vm.prank(deployer);
-        base.mint(recipient, amount);
+        base.mintTo(recipient, amount);
 
         // generate permit signature
         address _owner = recipient;
