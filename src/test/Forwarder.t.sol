@@ -30,7 +30,7 @@ contract ForwarderTest is BaseTest {
         typehashForwardRequest = keccak256(
             "ForwardRequest(address from,address to,uint256 value,uint256 gas,uint256 nonce,bytes data)"
         );
-        nameHash = keccak256(bytes("MinimalForwarder"));
+        nameHash = keccak256(bytes("GSNv2 Forwarder"));
         versionHash = keccak256(bytes("0.0.1"));
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"

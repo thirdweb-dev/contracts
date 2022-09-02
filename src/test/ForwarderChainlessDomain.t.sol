@@ -33,7 +33,7 @@ contract ForwarderChainlessDomainTest is BaseTest {
         typehashForwardRequest = keccak256(
             "ForwardRequest(address from,address to,uint256 value,uint256 gas,uint256 nonce,bytes data,uint256 chainid)"
         );
-        nameHash = keccak256(bytes("MinimalForwarder"));
+        nameHash = keccak256(bytes("GSNv2 Forwarder"));
         versionHash = keccak256(bytes("0.0.1"));
         typehashEip712 = keccak256("EIP712Domain(string name,string version,address verifyingContract)");
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, forwarderChainlessDomain));
