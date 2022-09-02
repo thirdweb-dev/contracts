@@ -99,6 +99,23 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
+### biconomyForwarder
+
+```solidity
+function biconomyForwarder() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### bundle
 
 ```solidity
@@ -504,6 +521,23 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### minimalForwarder
+
+```solidity
+function minimalForwarder() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### multicall
 

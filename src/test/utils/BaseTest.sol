@@ -10,6 +10,8 @@ import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
 import { Forwarder } from "contracts/Forwarder.sol";
+import { ForwarderEOAOnly } from "contracts/ForwarderEOAOnly.sol";
+import { ForwarderBiconomyEOAOnly } from "contracts/ForwarderBiconomyEOAOnly.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
@@ -41,6 +43,8 @@ abstract contract BaseTest is DSTest, Test {
     WETH9 public weth;
 
     address public forwarder;
+    address public forwarderEOAOnly;
+    address public biconomyForwarderEOAOnly;
     address public registry;
     address public factory;
     address public fee;
@@ -71,6 +75,8 @@ abstract contract BaseTest is DSTest, Test {
         erc1155 = new MockERC1155();
         weth = new WETH9();
         forwarder = address(new Forwarder());
+        forwarderEOAOnly = address(new ForwarderEOAOnly());
+        biconomyForwarderEOAOnly = address(new ForwarderBiconomyEOAOnly(factoryAdmin));
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
         contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
@@ -92,7 +98,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Split()));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
-        TWFactory(factory).addImplementation(address(new Pack(address(weth), forwarder)));
+        TWFactory(factory).addImplementation(address(new Pack(address(weth), forwarderEOAOnly, biconomyForwarderEOAOnly)));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
