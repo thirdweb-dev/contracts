@@ -433,7 +433,7 @@ contract Pack is
         } else {
             for (uint256 i = 0; i < ids.length; ++i) {
                 // pack can no longer be updated after first transfer to non-zero address
-                if (canUpdatePack[ids[i]]) {
+                if (canUpdatePack[ids[i]] && amounts[i] != 0) {
                     canUpdatePack[ids[i]] = false;
                 }
             }
