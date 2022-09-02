@@ -24,12 +24,10 @@ interface IPack is ITokenBundle {
     }
 
     /// @notice Emitted when a set of packs is created.
-    event PackCreated(
-        uint256 indexed packId,
-        address indexed packCreator,
-        address recipient,
-        uint256 totalPacksCreated
-    );
+    event PackCreated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
+
+    /// @notice Emitted when more packs are minted for a packId.
+    event PackUpdated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
 
     /// @notice Emitted when a pack is opened.
     event PackOpened(

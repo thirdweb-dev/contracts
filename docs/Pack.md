@@ -27,22 +27,31 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### NATIVE_TOKEN
+### addPackContents
 
 ```solidity
-function NATIVE_TOKEN() external view returns (address)
+function addPackContents(uint256 _packId, ITokenBundle.Token[] _contents, uint256[] _numOfRewardUnits, address _recipient) external payable returns (uint256 packTotalSupply, uint256 newSupplyAdded)
 ```
 
 
 
 
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _packId | uint256 | undefined |
+| _contents | ITokenBundle.Token[] | undefined |
+| _numOfRewardUnits | uint256[] | undefined |
+| _recipient | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| packTotalSupply | uint256 | undefined |
+| newSupplyAdded | uint256 | undefined |
 
 ### balanceOf
 
@@ -89,6 +98,51 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256[] | undefined |
+
+### bundle
+
+```solidity
+function bundle(uint256) external view returns (uint256 count, string uri)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| count | uint256 | undefined |
+| uri | string | undefined |
+
+### canUpdatePack
+
+```solidity
+function canUpdatePack(uint256) external view returns (bool)
+```
+
+
+
+*Checks if pack-creator allowed to add more tokens to a packId; set to false after first transfer*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### contractType
 
@@ -231,51 +285,6 @@ Returns the admin role that controls the specified role.
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined |
-
-### getRoleMember
-
-```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
-```
-
-Returns the role-member from a list of members for a role,                  at a given index.
-
-*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| index | uint256 | Index in list of current members for the role. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| member | address |  Address of account that has `role` |
-
-### getRoleMemberCount
-
-```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
-```
-
-Returns total number of accounts that have a role.
-
-*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 |   Total number of accounts that have `role` |
 
 ### getRoyaltyInfoForToken
 
@@ -433,7 +442,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
 ```
 
 
@@ -448,7 +457,6 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _name | string | undefined |
 | _symbol | string | undefined |
 | _contractURI | string | undefined |
-| _trustedForwarders | address[] | undefined |
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint256 | undefined |
 
@@ -669,23 +677,6 @@ Returns the owner of the contract.
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### paused
-
-```solidity
-function paused() external view returns (bool)
-```
-
-
-
-*Returns true if the contract is paused, and false otherwise.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
 
 ### renounceRole
 
@@ -1028,7 +1019,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ### PackCreated
 
 ```solidity
-event PackCreated(uint256 indexed packId, address indexed packCreator, address recipient, uint256 totalPacksCreated)
+event PackCreated(uint256 indexed packId, address recipient, uint256 totalPacksCreated)
 ```
 
 Emitted when a set of packs is created.
@@ -1040,7 +1031,6 @@ Emitted when a set of packs is created.
 | Name | Type | Description |
 |---|---|---|
 | packId `indexed` | uint256 | undefined |
-| packCreator `indexed` | address | undefined |
 | recipient  | address | undefined |
 | totalPacksCreated  | uint256 | undefined |
 
@@ -1063,13 +1053,13 @@ Emitted when a pack is opened.
 | numOfPacksOpened  | uint256 | undefined |
 | rewardUnitsDistributed  | ITokenBundle.Token[] | undefined |
 
-### Paused
+### PackUpdated
 
 ```solidity
-event Paused(address account)
+event PackUpdated(uint256 indexed packId, address recipient, uint256 totalPacksCreated)
 ```
 
-
+Emitted when more packs are minted for a packId.
 
 
 
@@ -1077,7 +1067,9 @@ event Paused(address account)
 
 | Name | Type | Description |
 |---|---|---|
-| account  | address | undefined |
+| packId `indexed` | uint256 | undefined |
+| recipient  | address | undefined |
+| totalPacksCreated  | uint256 | undefined |
 
 ### RoleAdminChanged
 
@@ -1207,22 +1199,6 @@ event URI(string value, uint256 indexed id)
 |---|---|---|
 | value  | string | undefined |
 | id `indexed` | uint256 | undefined |
-
-### Unpaused
-
-```solidity
-event Unpaused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
 
 
 

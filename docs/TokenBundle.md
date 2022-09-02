@@ -10,6 +10,29 @@
 
 ## Methods
 
+### bundle
+
+```solidity
+function bundle(uint256) external view returns (uint256 count, string uri)
+```
+
+
+
+*Mapping from bundle UID =&gt; bundle info.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| count | uint256 | undefined |
+| uri | string | undefined |
+
 ### getTokenCountOfBundle
 
 ```solidity
