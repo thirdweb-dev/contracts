@@ -45,7 +45,8 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 1;
 
-    address private immutable forwarder;
+    address public immutable minimalForwarder;
+    address public immutable biconomyForwarder;
 
     // Token name
     string public name;
@@ -82,8 +83,9 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address _trustedForwarder) TokenStore(_nativeTokenWrapper) initializer {
-        forwarder = _trustedForwarder;
+    constructor(address _nativeTokenWrapper, address _minimalForwarder, address _biconomyForwarder) TokenStore(_nativeTokenWrapper) initializer {
+        minimalForwarder = _minimalForwarder;
+        biconomyForwarder = _biconomyForwarder;
     }
 
     /// @dev Initiliazes the contract, like a constructor.
@@ -101,8 +103,9 @@ contract Pack is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
 
-        address[] memory forwarders = new address[](1);
-        forwarders[0] = forwarder;
+        address[] memory forwarders = new address[](2);
+        forwarders[0] = minimalForwarder;
+        forwarders[1] = biconomyForwarder;
         __ERC2771Context_init(forwarders);
         __ERC1155_init(_contractURI);
 
