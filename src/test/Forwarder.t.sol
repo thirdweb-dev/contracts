@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/Forwarder.sol";
-import "contracts/ForwarderConsumer.sol";
+import "contracts/forwarder/Forwarder.sol";
+import "contracts/forwarder/ForwarderConsumer.sol";
 
 import "./utils/BaseTest.sol";
 
