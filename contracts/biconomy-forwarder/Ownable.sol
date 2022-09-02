@@ -10,10 +10,7 @@ pragma solidity ^0.8.0;
 abstract contract Ownable {
     address private _owner;
 
-    event OwnershipTransferred(
-        address indexed previousOwner,
-        address indexed newOwner
-    );
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
@@ -28,10 +25,7 @@ abstract contract Ownable {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(
-            isOwner(),
-            "Only contract owner is allowed to perform this operation"
-        );
+        require(isOwner(), "Only contract owner is allowed to perform this operation");
         _;
     }
 

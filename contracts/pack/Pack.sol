@@ -83,7 +83,11 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address _minimalForwarder, address _biconomyForwarder) TokenStore(_nativeTokenWrapper) initializer {
+    constructor(
+        address _nativeTokenWrapper,
+        address _minimalForwarder,
+        address _biconomyForwarder
+    ) TokenStore(_nativeTokenWrapper) initializer {
         minimalForwarder = _minimalForwarder;
         biconomyForwarder = _biconomyForwarder;
     }
