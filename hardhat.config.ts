@@ -29,6 +29,8 @@ const chainIds = {
   optimism_testnet: 69,
   arbitrum: 42161,
   arbitrum_testnet: 421611,
+  binance: 56,
+  binance_testnet: 97
 };
 
 // Ensure that we have all the environment variables we need.
@@ -72,6 +74,12 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
       break;
     case "fantom_testnet":
       nodeUrl = "https://rpc.testnet.fantom.network";
+      break;
+    case "binance":
+      nodeUrl = "https://bsc-dataseed1.binance.org/";
+      break;
+    case "binance_testnet":
+      nodeUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
       break;
   }
 
@@ -127,6 +135,8 @@ const config: HardhatUserConfig = {
       optimisticKovan: process.env.OPTIMISM_SCAN_API_KEY || process.env.SCAN_API_KEY,
       arbitrumOne: process.env.ARBITRUM_SCAN_API_KEY || process.env.SCAN_API_KEY,
       arbitrumTestnet: process.env.ARBITRUM_SCAN_API_KEY || process.env.SCAN_API_KEY,
+      bsc: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
+      bscTestnet: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
     },
   },
   gasReporter: {
@@ -156,6 +166,8 @@ if (testPrivateKey) {
     arbitrum_testnet: createTestnetConfig("arbitrum_testnet"),
     optimism: createTestnetConfig("optimism"),
     optimism_testnet: createTestnetConfig("optimism_testnet"),
+    binance: createTestnetConfig("binance"),
+    binance_testnet: createTestnetConfig("binance_testnet"),
   };
 }
 
