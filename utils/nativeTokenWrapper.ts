@@ -12,4 +12,6 @@ export const nativeTokenWrapper: Record<number, string> = {
   69: "0xbC6F6b680bc61e30dB47721c6D1c5cde19C1300d", // optimism testnet
   42161: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1", // arbitrum
   421611: "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9", // arbitrum testnet
+  56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c", // binance mainnet
+  97: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd", // binance testnet
 };
