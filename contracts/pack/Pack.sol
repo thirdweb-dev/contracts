@@ -43,7 +43,7 @@ contract Pack is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     address private immutable forwarder;
 
