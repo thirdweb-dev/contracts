@@ -300,11 +300,15 @@ contract DropERC1155 is
         );
 
         if (validMerkleProof) {
-            if(_proofMaxQuantityForWallet > 0 && _quantity + claimCondition[_tokenId].supplyClaimedByWallet[activeConditionId][_msgSender()] == _proofMaxQuantityForWallet) {
+            if (
+                _proofMaxQuantityForWallet > 0 &&
+                _quantity + claimCondition[_tokenId].supplyClaimedByWallet[activeConditionId][_msgSender()] ==
+                _proofMaxQuantityForWallet
+            ) {
                 /**
-                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                *  can be used only once.
-                */
+                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                 *  can be used only once.
+                 */
                 claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
             }
         }
@@ -440,7 +444,8 @@ contract DropERC1155 is
         bool verifyMaxQuantityPerWallet
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
-        uint256 supplyClaimedByWallet = _quantity + claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
+        uint256 supplyClaimedByWallet = _quantity +
+            claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
 
         require(
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
@@ -484,7 +489,8 @@ contract DropERC1155 is
         uint256 _proofMaxQuantityForWallet
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
-        uint256 supplyClaimedByWallet = _quantity + claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
+        uint256 supplyClaimedByWallet = _quantity +
+            claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
 
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
@@ -560,11 +566,11 @@ contract DropERC1155 is
     }
 
     /// @dev Returns the supply claimed by claimer for a given conditionId.
-    function getSupplyClaimedByWallet(uint256 _tokenId, uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 supplyClaimedByWallet)
-    {
+    function getSupplyClaimedByWallet(
+        uint256 _tokenId,
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 supplyClaimedByWallet) {
         supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
     }
 

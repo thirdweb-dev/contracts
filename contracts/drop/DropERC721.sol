@@ -370,11 +370,15 @@ contract DropERC721 is
         );
 
         if (validMerkleProof) {
-            if(_proofMaxQuantityForWallet > 0 && _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_msgSender()] == _proofMaxQuantityForWallet) {
+            if (
+                _proofMaxQuantityForWallet > 0 &&
+                _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_msgSender()] ==
+                _proofMaxQuantityForWallet
+            ) {
                 /**
-                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                *  can be used only once.
-                */
+                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                 *  can be used only once.
+                 */
                 claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
             }
         }
@@ -554,7 +558,7 @@ contract DropERC721 is
                 keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
             );
             require(validMerkleProof, "not in whitelist.");
-            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");            
+            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
             require(
                 _proofMaxQuantityForWallet == 0 || supplyClaimedByWallet <= _proofMaxQuantityForWallet,
                 "invalid quantity proof."

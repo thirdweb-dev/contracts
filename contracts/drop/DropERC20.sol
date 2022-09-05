@@ -217,11 +217,15 @@ contract DropERC20 is
         );
 
         if (validMerkleProof) {
-            if(_proofMaxQuantityForWallet > 0 && _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_msgSender()] == _proofMaxQuantityForWallet) {
+            if (
+                _proofMaxQuantityForWallet > 0 &&
+                _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_msgSender()] ==
+                _proofMaxQuantityForWallet
+            ) {
                 /**
-                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                *  can be used only once.
-                */
+                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                 *  can be used only once.
+                 */
                 claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
             }
         }

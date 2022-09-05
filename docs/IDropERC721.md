@@ -52,7 +52,7 @@ function balanceOf(address owner) external view returns (uint256 balance)
 ### claim
 
 ```solidity
-function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, bytes32[] proofs, uint256 proofMaxQuantityPerTransaction) external payable
+function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, bytes32[] proofs, uint256 proofMaxQuantityForWallet) external payable
 ```
 
 Lets an account claim a given quantity of NFTs.
@@ -68,7 +68,7 @@ Lets an account claim a given quantity of NFTs.
 | currency | address | The currency in which to pay for the claim. |
 | pricePerToken | uint256 | The price per token to pay for the claim. |
 | proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
-| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim. |
+| proofMaxQuantityForWallet | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim. |
 
 ### getApproved
 

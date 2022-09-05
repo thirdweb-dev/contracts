@@ -171,7 +171,7 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, bytes32[] _proofs, uint256 _proofMaxQuantityPerTransaction) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external payable
 ```
 
 
@@ -187,7 +187,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
 | _proofs | bytes32[] | undefined |
-| _proofMaxQuantityPerTransaction | uint256 | undefined |
+| _proofMaxQuantityForWallet | uint256 | undefined |
 
 ### claimCondition
 
@@ -549,6 +549,29 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer) external view returns (uint256 supplyClaimedByWallet)
+```
+
+
+
+*Returns the supply claimed by claimer for a given conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedByWallet | uint256 | undefined |
 
 ### getVotes
 
@@ -1091,7 +1114,7 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerWallet) external view
 ```
 
 
@@ -1107,12 +1130,12 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| verifyMaxQuantityPerTransaction | bool | undefined |
+| verifyMaxQuantityPerWallet | bool | undefined |
 
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, bytes32[] _proofs, uint256 _proofMaxQuantityPerTransaction) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
@@ -1127,7 +1150,7 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 | _claimer | address | undefined |
 | _quantity | uint256 | undefined |
 | _proofs | bytes32[] | undefined |
-| _proofMaxQuantityPerTransaction | uint256 | undefined |
+| _proofMaxQuantityForWallet | uint256 | undefined |
 
 #### Returns
 
