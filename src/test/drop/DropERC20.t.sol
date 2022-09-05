@@ -14,6 +14,58 @@ contract DropERC20Test is BaseTest {
         drop = DropERC20(getContract("DropERC20"));
     }
 
+    function test_claimCondition_quantityLimitPerWallet() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerWallet = 100;
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        vm.prank(getActor(5), getActor(5));
+        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
+
+        vm.prank(getActor(5), getActor(5));
+        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 20);
+
+        vm.expectRevert("invalid quantity claimed.");
+        vm.prank(getActor(5), getActor(5));
+        drop.claim(receiver, 90, address(0), 0, proofs, 0);
+    }
+
+    function test_claimCondition_resetEligibility_quantityLimitPerWallet() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerWallet = 100;
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        vm.prank(getActor(5), getActor(5));
+        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, true);
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 0);
+
+        vm.prank(getActor(5), getActor(5));
+        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
+    }
+
     /*///////////////////////////////////////////////////////////////
                                 Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -26,7 +78,7 @@ contract DropERC20Test is BaseTest {
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         // vm.prank(deployer);
@@ -55,7 +107,7 @@ contract DropERC20Test is BaseTest {
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
@@ -81,7 +133,7 @@ contract DropERC20Test is BaseTest {
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(deployer);
