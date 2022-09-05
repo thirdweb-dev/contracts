@@ -99,29 +99,6 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
-### bundle
-
-```solidity
-function bundle(uint256) external view returns (uint256 count, string uri)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 | undefined |
-| uri | string | undefined |
-
 ### canUpdatePack
 
 ```solidity
@@ -285,6 +262,51 @@ Returns the admin role that controls the specified role.
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined |
+
+### getRoleMember
+
+```solidity
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
+```
+
+Returns the role-member from a list of members for a role,                  at a given index.
+
+*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| index | uint256 | Index in list of current members for the role. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| member | address |  Address of account that has `role` |
+
+### getRoleMemberCount
+
+```solidity
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
+```
+
+Returns total number of accounts that have a role.
+
+*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| count | uint256 |   Total number of accounts that have `role` |
 
 ### getRoyaltyInfoForToken
 

@@ -22,7 +22,7 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/Royalty.sol";
 import "../extension/Ownable.sol";
-import "../extension/Permissions.sol";
+import "../extension/PermissionsEnumerable.sol";
 import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
 contract Pack is
@@ -30,7 +30,7 @@ contract Pack is
     ContractMetadata,
     Ownable,
     Royalty,
-    Permissions,
+    PermissionsEnumerable,
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
@@ -43,7 +43,7 @@ contract Pack is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     address private immutable forwarder;
 
@@ -433,7 +433,7 @@ contract Pack is
         } else {
             for (uint256 i = 0; i < ids.length; ++i) {
                 // pack can no longer be updated after first transfer to non-zero address
-                if (canUpdatePack[ids[i]]) {
+                if (canUpdatePack[ids[i]] && amounts[i] != 0) {
                     canUpdatePack[ids[i]] = false;
                 }
             }

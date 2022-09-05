@@ -174,6 +174,33 @@ contract PackTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
+                        Unit tests: Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_revert_addPackContents_RandomAccountGrief() public {
+        uint256 packId = pack.nextTokenIdToMint();
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+
+        // random address tries to transfer zero amount
+        address randomAccount = address(0x123);
+        vm.prank(randomAccount);
+        pack.safeTransferFrom(randomAccount, address(567), packId, 0, ""); // zero transfer
+
+        // canUpdatePack should remain true, since no packs were transferred
+        assertTrue(pack.canUpdatePack(packId));
+
+        erc20.mint(address(tokenOwner), 1000 ether);
+        erc1155.mint(address(tokenOwner), 2, 200);
+
+        vm.prank(address(tokenOwner));
+        // Should not revert
+        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
 
