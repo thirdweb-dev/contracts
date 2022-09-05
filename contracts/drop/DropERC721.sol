@@ -330,7 +330,7 @@ contract DropERC721 is
         address _currency,
         uint256 _pricePerToken,
         bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction
+        uint256 _proofMaxQuantityForWallet
     ) external payable nonReentrant {
         require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
 
@@ -342,7 +342,7 @@ contract DropERC721 is
         /**
          *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
          *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction over the check of the general claim condition's quantityLimitPerWallet
          *  restriction.
          */
 
@@ -352,13 +352,13 @@ contract DropERC721 is
             _msgSender(),
             _quantity,
             _proofs,
-            _proofMaxQuantityPerTransaction
+            _proofMaxQuantityForWallet
         );
 
         // Verify claim validity. If not valid, revert.
-        // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityPerTransaction value with hashed leaf in the allowlist
+        // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityPerWallet value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
-        bool toVerifyMaxQuantityPerTransaction = _proofMaxQuantityPerTransaction == 0 ||
+        bool toVerifyMaxQuantityPerWallet = _proofMaxQuantityForWallet == 0 ||
             claimCondition.phases[activeConditionId].merkleRoot == bytes32(0);
         verifyClaim(
             activeConditionId,
@@ -366,15 +366,17 @@ contract DropERC721 is
             _quantity,
             _currency,
             _pricePerToken,
-            toVerifyMaxQuantityPerTransaction
+            toVerifyMaxQuantityPerWallet
         );
 
-        if (validMerkleProof && _proofMaxQuantityPerTransaction > 0) {
-            /**
-             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-             *  can be used only once.
-             */
-            claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
+        if (validMerkleProof) {
+            if(_proofMaxQuantityForWallet > 0 && _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_msgSender()] == _proofMaxQuantityForWallet) {
+                /**
+                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                *  can be used only once.
+                */
+                claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
+            }
         }
 
         // If there's a price, collect price.
@@ -484,6 +486,7 @@ contract DropERC721 is
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         claimCondition.limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
         walletClaimCount[_msgSender()] += _quantityBeingClaimed;
+        claimCondition.supplyClaimedByWallet[_conditionId][_msgSender()] += _quantityBeingClaimed;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
@@ -502,9 +505,10 @@ contract DropERC721 is
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bool verifyMaxQuantityPerTransaction
+        bool verifyMaxQuantityPerWallet
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
+        uint256 supplyClaimedByWallet = _quantity + claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
 
         require(
             _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
@@ -514,7 +518,7 @@ contract DropERC721 is
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
-                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
+                (!verifyMaxQuantityPerWallet || supplyClaimedByWallet <= currentClaimPhase.quantityLimitPerWallet),
             "invalid quantity."
         );
         require(
@@ -538,20 +542,21 @@ contract DropERC721 is
         address _claimer,
         uint256 _quantity,
         bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityPerTransaction
+        uint256 _proofMaxQuantityForWallet
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
+        uint256 supplyClaimedByWallet = _quantity + claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
 
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
                 _proofs,
                 currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
+                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
             );
             require(validMerkleProof, "not in whitelist.");
-            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
+            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");            
             require(
-                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
+                _proofMaxQuantityForWallet == 0 || supplyClaimedByWallet <= _proofMaxQuantityForWallet,
                 "invalid quantity proof."
             );
         }
@@ -609,6 +614,15 @@ contract DropERC721 is
                 nextValidClaimTimestamp = type(uint256).max;
             }
         }
+    }
+
+    /// @dev Returns the supply claimed by claimer for a given conditionId.
+    function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer)
+        public
+        view
+        returns (uint256 supplyClaimedByWallet)
+    {
+        supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
     }
 
     /// @dev Returns the claim condition at the given uid.

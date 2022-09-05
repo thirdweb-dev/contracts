@@ -26,8 +26,7 @@ interface IDropClaimCondition {
      *  @param supplyClaimed                  At any given point, the number of tokens that have been claimed
      *                                        under the claim condition.
      *
-     *  @param quantityLimitPerTransaction    The maximum number of tokens that can be claimed in a single
-     *                                        transaction.
+     *  @param quantityLimitPerWallet         The maximum number of tokens that can be claimed by a wallet.
      *
      *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait after claiming
      *                                        tokens, to be able to claim tokens again.
@@ -43,7 +42,7 @@ interface IDropClaimCondition {
         uint256 startTimestamp;
         uint256 maxClaimableSupply;
         uint256 supplyClaimed;
-        uint256 quantityLimitPerTransaction;
+        uint256 quantityLimitPerWallet;
         uint256 waitTimeInSecondsBetweenClaims;
         bytes32 merkleRoot;
         uint256 pricePerToken;
@@ -69,6 +68,8 @@ interface IDropClaimCondition {
      *
      *  @param limitMerkleProofClaim    Map from a claim condition uid to whether an address in an allowlist
      *                                  has already claimed tokens i.e. used their place in the allowlist.
+     *
+     *  @param supplyClaimedByWallet    Map from a claim condition uid and account to supply claimed by account.
      */
     struct ClaimConditionList {
         uint256 currentStartId;
@@ -76,5 +77,6 @@ interface IDropClaimCondition {
         mapping(uint256 => ClaimCondition) phases;
         mapping(uint256 => mapping(address => uint256)) limitLastClaimTimestamp;
         mapping(uint256 => BitMapsUpgradeable.BitMap) limitMerkleProofClaim;
+        mapping(uint256 => mapping(address => uint256)) supplyClaimedByWallet;
     }
 }

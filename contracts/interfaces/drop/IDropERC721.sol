@@ -76,7 +76,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
      *  @param pricePerToken                  The price per token to pay for the claim.
      *  @param proofs                         The proof of the claimer's inclusion in the merkle root allowlist
      *                                        of the claim conditions that apply.
-     *  @param proofMaxQuantityPerTransaction (Optional) The maximum number of NFTs an address included in an
+     *  @param proofMaxQuantityForWallet      (Optional) The maximum number of NFTs an address included in an
      *                                        allowlist can claim.
      */
     function claim(
@@ -85,7 +85,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
         address currency,
         uint256 pricePerToken,
         bytes32[] calldata proofs,
-        uint256 proofMaxQuantityPerTransaction
+        uint256 proofMaxQuantityForWallet
     ) external payable;
 
     /**
