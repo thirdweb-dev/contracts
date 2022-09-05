@@ -191,10 +191,10 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### mint
+### mintTo
 
 ```solidity
-function mint(address _to, uint256 _amount) external nonpayable
+function mintTo(address _to, uint256 _amount) external nonpayable
 ```
 
 Lets an authorized address mint tokens to a recipient.
