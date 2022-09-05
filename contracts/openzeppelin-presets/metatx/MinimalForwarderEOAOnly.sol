@@ -26,7 +26,7 @@ contract MinimalForwarderEOAOnly is EIP712 {
 
     mapping(address => uint256) private _nonces;
 
-    constructor() EIP712("MinimalForwarderEOAOnly", "0.0.1") {}
+    constructor() EIP712("GSNv2 Forwarder", "0.0.1") {}
 
     function getNonce(address from) public view returns (uint256) {
         return _nonces[from];
