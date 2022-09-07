@@ -25,7 +25,6 @@ contract AirdropERC1155 is
     MulticallUpgradeable,
     IAirdropERC1155
 {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -92,16 +91,17 @@ contract AirdropERC1155 is
         expirationTimestamp = _expirationTimestamp;
 
         require(
-            _maxWalletClaimCount.length == _tokenIds.length 
-            && _merkleRoot.length == _tokenIds.length
-            && _availableAmounts.length == _tokenIds.length, "length mismatch.");
+            _maxWalletClaimCount.length == _tokenIds.length &&
+                _merkleRoot.length == _tokenIds.length &&
+                _availableAmounts.length == _tokenIds.length,
+            "length mismatch."
+        );
 
-        for(uint256 i = 0; i < _tokenIds.length; i++) {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
             merkleRoot[_tokenIds[i]] = _merkleRoot[i];
             maxWalletClaimCount[_tokenIds[i]] = _maxWalletClaimCount[i];
             availableAmounts[_tokenIds[i]] = _availableAmounts[i];
         }
-
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -138,24 +138,13 @@ contract AirdropERC1155 is
          */
 
         // Verify inclusion in allowlist.
-        verifyClaimMerkleProof(
-            _msgSender(),
-            _quantity,
-            _tokenId,
-            _proofs,
-            _proofMaxQuantityForWallet
-        );
+        verifyClaimMerkleProof(_msgSender(), _quantity, _tokenId, _proofs, _proofMaxQuantityForWallet);
 
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityForWallet value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
         bool toVerifyMaxQuantityPerWallet = _proofMaxQuantityForWallet == 0 || merkleRoot[_tokenId] == bytes32(0);
-        verifyClaim(
-            _msgSender(),
-            _quantity,
-            _tokenId,
-            toVerifyMaxQuantityPerWallet
-        );
+        verifyClaim(_msgSender(), _quantity, _tokenId, toVerifyMaxQuantityPerWallet);
 
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, _quantity, _tokenId);
@@ -187,7 +176,9 @@ contract AirdropERC1155 is
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
-                (!verifyMaxQuantityPerWallet || maxWalletClaimCount[_tokenId] == 0 || _quantity + supplyClaimedByWallet[_tokenId][_claimer] <= maxWalletClaimCount[_tokenId]),
+                (!verifyMaxQuantityPerWallet ||
+                    maxWalletClaimCount[_tokenId] == 0 ||
+                    _quantity + supplyClaimedByWallet[_tokenId][_claimer] <= maxWalletClaimCount[_tokenId]),
             "invalid quantity."
         );
         require(_quantity <= availableAmounts[_tokenId], "exceeds available tokens.");
@@ -225,23 +216,11 @@ contract AirdropERC1155 is
         return _msgSender() == owner();
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

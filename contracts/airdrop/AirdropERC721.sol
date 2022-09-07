@@ -25,7 +25,6 @@ contract AirdropERC721 is
     MulticallUpgradeable,
     IAirdropERC721
 {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -131,22 +130,13 @@ contract AirdropERC721 is
          */
 
         // Verify inclusion in allowlist.
-        verifyClaimMerkleProof(
-            _msgSender(),
-            _quantity,
-            _proofs,
-            _proofMaxQuantityForWallet
-        );
+        verifyClaimMerkleProof(_msgSender(), _quantity, _proofs, _proofMaxQuantityForWallet);
 
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityForWallet value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
         bool toVerifyMaxQuantityPerWallet = _proofMaxQuantityForWallet == 0 || merkleRoot == bytes32(0);
-        verifyClaim(
-            _msgSender(),
-            _quantity,
-            toVerifyMaxQuantityPerWallet
-        );
+        verifyClaim(_msgSender(), _quantity, toVerifyMaxQuantityPerWallet);
 
         // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, _quantity);
@@ -155,10 +145,7 @@ contract AirdropERC721 is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal {
+    function transferClaimedTokens(address _to, uint256 _quantityBeingClaimed) internal {
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         supplyClaimedByWallet[_msgSender()] += _quantityBeingClaimed;
@@ -185,7 +172,9 @@ contract AirdropERC721 is
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
-                (!verifyMaxQuantityPerWallet || maxWalletClaimCount == 0 || _quantity + supplyClaimedByWallet[_claimer] <= maxWalletClaimCount),
+                (!verifyMaxQuantityPerWallet ||
+                    maxWalletClaimCount == 0 ||
+                    _quantity + supplyClaimedByWallet[_claimer] <= maxWalletClaimCount),
             "invalid quantity."
         );
         require(_quantity <= availableAmount, "exceeds available tokens.");
@@ -222,23 +211,11 @@ contract AirdropERC721 is
         return _msgSender() == owner();
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }
