@@ -9,7 +9,7 @@ import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
-import { Forwarder } from "contracts/Forwarder.sol";
+import "contracts/forwarder/Forwarder.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
