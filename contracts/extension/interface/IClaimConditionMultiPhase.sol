@@ -33,6 +33,8 @@ interface IClaimConditionMultiPhase is IClaimCondition {
      *
      *  @param usedAllowlistSpot        Map from a claim condition uid to whether an address in an allowlist
      *                                  has already claimed tokens i.e. used their place in the allowlist.
+     *
+     *  @param supplyClaimedByWallet    Map from a claim condition uid and account to supply claimed by account.
      */
     struct ClaimConditionList {
         uint256 currentStartId;
@@ -40,5 +42,6 @@ interface IClaimConditionMultiPhase is IClaimCondition {
         mapping(uint256 => ClaimCondition) conditions;
         mapping(uint256 => mapping(address => uint256)) lastClaimTimestamp;
         mapping(uint256 => TWBitMaps.BitMap) usedAllowlistSpot;
+        mapping(uint256 => mapping(address => uint256)) supplyClaimedByWallet;
     }
 }

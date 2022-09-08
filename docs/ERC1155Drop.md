@@ -81,7 +81,7 @@ function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _
 ### claimCondition
 
 ```solidity
-function claimCondition(uint256) external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
+function claimCondition(uint256) external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWallet, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
 ```
 
 
@@ -101,7 +101,7 @@ function claimCondition(uint256) external view returns (uint256 startTimestamp, 
 | startTimestamp | uint256 | undefined |
 | maxClaimableSupply | uint256 | undefined |
 | supplyClaimed | uint256 | undefined |
-| quantityLimitPerTransaction | uint256 | undefined |
+| quantityLimitPerWallet | uint256 | undefined |
 | waitTimeInSecondsBetweenClaims | uint256 | undefined |
 | merkleRoot | bytes32 | undefined |
 | pricePerToken | uint256 | undefined |
@@ -295,6 +295,29 @@ View royalty info for a given token.
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(uint256 _tokenId, address _claimer) external view returns (uint256)
+```
+
+
+
+*Returns the supply claimed by claimer for active conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### isApprovedForAll
 
@@ -746,7 +769,7 @@ Returns the metadata URI for an NFT.
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerWallet) external view
 ```
 
 
@@ -762,7 +785,7 @@ function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, addr
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| verifyMaxQuantityPerTransaction | bool | undefined |
+| verifyMaxQuantityPerWallet | bool | undefined |
 
 ### verifyClaimMerkleProof
 

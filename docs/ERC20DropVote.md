@@ -158,7 +158,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
+function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWallet, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
 ```
 
 
@@ -173,7 +173,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 | startTimestamp | uint256 | undefined |
 | maxClaimableSupply | uint256 | undefined |
 | supplyClaimed | uint256 | undefined |
-| quantityLimitPerTransaction | uint256 | undefined |
+| quantityLimitPerWallet | uint256 | undefined |
 | waitTimeInSecondsBetweenClaims | uint256 | undefined |
 | merkleRoot | bytes32 | undefined |
 | pricePerToken | uint256 | undefined |
@@ -696,7 +696,7 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 ### verifyClaim
 
 ```solidity
-function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerWallet) external view
 ```
 
 
@@ -711,7 +711,7 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| verifyMaxQuantityPerTransaction | bool | undefined |
+| verifyMaxQuantityPerWallet | bool | undefined |
 
 ### verifyClaimMerkleProof
 

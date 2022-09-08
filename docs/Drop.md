@@ -112,6 +112,29 @@ function getClaimTimestamp(uint256 _conditionId, address _claimer) external view
 | lastClaimTimestamp | uint256 | undefined |
 | nextValidClaimTimestamp | uint256 | undefined |
 
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer) external view returns (uint256 supplyClaimedByWallet)
+```
+
+
+
+*Returns the supply claimed by claimer for a given conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedByWallet | uint256 | undefined |
+
 ### setClaimConditions
 
 ```solidity

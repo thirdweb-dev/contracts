@@ -36,7 +36,7 @@ abstract contract Drop is IDrop {
         /**
          *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
          *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
+         *  restriction over the check of the general claim condition's quantityLimitPerWallet
          *  restriction.
          */
 
@@ -51,7 +51,7 @@ abstract contract Drop is IDrop {
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being equal/less than the limit
-        bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 ||
+        bool toVerifyMaxQuantityPerWallet = _allowlistProof.maxQuantityInAllowlist == 0 ||
             currentClaimPhase.merkleRoot == bytes32(0);
 
         verifyClaim(
@@ -60,20 +60,27 @@ abstract contract Drop is IDrop {
             _quantity,
             _currency,
             _pricePerToken,
-            toVerifyMaxQuantityPerTransaction
+            toVerifyMaxQuantityPerWallet
         );
 
-        if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
-            /**
-             *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-             *  can be used only once.
-             */
-            claimCondition.usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
+        if (validMerkleProof) {
+            if (
+                _allowlistProof.maxQuantityInAllowlist > 0 &&
+                _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_dropMsgSender()] ==
+                _allowlistProof.maxQuantityInAllowlist
+            ) {
+                /**
+                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                *  can be used only once.
+                */
+                claimCondition.usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
+            }
         }
 
         // Update contract state.
         claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
         claimCondition.lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
+        claimCondition.supplyClaimedByWallet[activeConditionId][_dropMsgSender()] += _quantity;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_quantity, _currency, _pricePerToken);
@@ -167,6 +174,7 @@ abstract contract Drop is IDrop {
         bool verifyMaxQuantityPerTransaction
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.conditions[_conditionId];
+        uint256 supplyClaimedByWallet = _quantity + claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
 
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
             revert Drop__InvalidCurrencyOrPrice(
@@ -180,7 +188,7 @@ abstract contract Drop is IDrop {
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         if (
             _quantity == 0 ||
-            (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
+            (verifyMaxQuantityPerTransaction && supplyClaimedByWallet > currentClaimPhase.quantityLimitPerWallet)
         ) {
             revert Drop__InvalidQuantity();
         }
@@ -213,6 +221,7 @@ abstract contract Drop is IDrop {
         AllowlistProof calldata _allowlistProof
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory currentClaimPhase = claimCondition.conditions[_conditionId];
+        uint256 supplyClaimedByWallet = _quantity + claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
 
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
@@ -228,7 +237,7 @@ abstract contract Drop is IDrop {
                 revert Drop__ProofClaimed();
             }
 
-            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
+            if (_allowlistProof.maxQuantityInAllowlist != 0 && supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist) {
                 revert Drop__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
             }
         }
@@ -267,6 +276,15 @@ abstract contract Drop is IDrop {
                 nextValidClaimTimestamp = type(uint256).max;
             }
         }
+    }
+
+    /// @dev Returns the supply claimed by claimer for a given conditionId.
+    function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer)
+        public
+        view
+        returns (uint256 supplyClaimedByWallet)
+    {
+        supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
     }
 
     /*////////////////////////////////////////////////////////////////////

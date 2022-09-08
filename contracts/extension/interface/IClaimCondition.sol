@@ -26,8 +26,7 @@ interface IClaimCondition {
      *  @param supplyClaimed                  At any given point, the number of tokens that have been claimed
      *                                        under the claim condition.
      *
-     *  @param quantityLimitPerTransaction    The maximum number of tokens that can be claimed in a single
-     *                                        transaction.
+     *  @param quantityLimitPerWallet         The maximum number of tokens that can be claimed by a wallet.
      *
      *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait after claiming
      *                                        tokens, to be able to claim tokens again.
@@ -43,7 +42,7 @@ interface IClaimCondition {
         uint256 startTimestamp;
         uint256 maxClaimableSupply;
         uint256 supplyClaimed;
-        uint256 quantityLimitPerTransaction;
+        uint256 quantityLimitPerWallet;
         uint256 waitTimeInSecondsBetweenClaims;
         bytes32 merkleRoot;
         uint256 pricePerToken;
