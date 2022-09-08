@@ -123,12 +123,6 @@ contract DropERC1155 is
     /// @dev Mapping from token ID => royalty recipient and bps for tokens of the token ID.
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
-    /// @dev Mapping from token ID => claimer wallet address => total number of NFTs of the token ID a wallet has claimed.
-    mapping(uint256 => mapping(address => uint256)) public walletClaimCount;
-
-    /// @dev Mapping from token ID => the max number of NFTs of the token ID a wallet can claim.
-    mapping(uint256 => uint256) public maxWalletClaimCount;
-
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -427,7 +421,6 @@ contract DropERC1155 is
         // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
         // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
         claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
-        walletClaimCount[_tokenId][_msgSender()] += _quantityBeingClaimed;
         claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_msgSender()] += _quantityBeingClaimed;
 
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
@@ -464,11 +457,6 @@ contract DropERC1155 is
         require(
             maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
             "exceed max total supply"
-        );
-        require(
-            maxWalletClaimCount[_tokenId] == 0 ||
-                walletClaimCount[_tokenId][_claimer] + _quantity <= maxWalletClaimCount[_tokenId],
-            "exceed claim limit for wallet"
         );
 
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(
@@ -586,22 +574,6 @@ contract DropERC1155 is
     /*///////////////////////////////////////////////////////////////
                         Setter functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets a contract admin set a claim count for a wallet.
-    function setWalletClaimCount(
-        uint256 _tokenId,
-        address _claimer,
-        uint256 _count
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        walletClaimCount[_tokenId][_claimer] = _count;
-        emit WalletClaimCountUpdated(_tokenId, _claimer, _count);
-    }
-
-    /// @dev Lets a contract admin set a maximum number of NFTs of a tokenId that can be claimed by any wallet.
-    function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        maxWalletClaimCount[_tokenId] = _count;
-        emit MaxWalletClaimCountUpdated(_tokenId, _count);
-    }
 
     /// @dev Lets a module admin set a max total supply for token.
     function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {

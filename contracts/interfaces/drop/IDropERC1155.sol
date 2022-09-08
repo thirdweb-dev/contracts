@@ -40,12 +40,6 @@ interface IDropERC1155 is IERC1155Upgradeable, IDropClaimCondition {
     /// @dev Emitted when the global max supply of a token is updated.
     event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
 
-    /// @dev Emitted when the wallet claim count for a given tokenId and address is updated.
-    event WalletClaimCountUpdated(uint256 tokenId, address indexed wallet, uint256 count);
-
-    /// @dev Emitted when the max wallet claim count for a given tokenId is updated.
-    event MaxWalletClaimCountUpdated(uint256 tokenId, uint256 count);
-
     /// @dev Emitted when the sale recipient for a particular tokenId is updated.
     event SaleRecipientForTokenUpdated(uint256 indexed tokenId, address saleRecipient);
 

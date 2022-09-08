@@ -43,12 +43,6 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
-    /// @dev Emitted when the wallet claim count for an address is updated.
-    event WalletClaimCountUpdated(address indexed wallet, uint256 count);
-
-    /// @dev Emitted when the global max wallet claim count is updated.
-    event MaxWalletClaimCountUpdated(uint256 count);
-
     /**
      *  @notice Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
      *          The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.

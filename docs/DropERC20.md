@@ -720,23 +720,6 @@ function maxTotalSupply() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### maxWalletClaimCount
-
-```solidity
-function maxWalletClaimCount() external view returns (uint256)
-```
-
-
-
-*The max number of tokens a wallet can claim.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### multicall
 
 ```solidity
@@ -942,22 +925,6 @@ function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
 |---|---|---|
 | _maxTotalSupply | uint256 | undefined |
 
-### setMaxWalletClaimCount
-
-```solidity
-function setMaxWalletClaimCount(uint256 _count) external nonpayable
-```
-
-
-
-*Lets a contract admin set a maximum number of tokens that can be claimed by any wallet.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _count | uint256 | undefined |
-
 ### setPlatformFeeInfo
 
 ```solidity
@@ -990,23 +957,6 @@ function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _saleRecipient | address | undefined |
-
-### setWalletClaimCount
-
-```solidity
-function setWalletClaimCount(address _claimer, uint256 _count) external nonpayable
-```
-
-
-
-*Lets a contract admin set a claim count for a wallet.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined |
-| _count | uint256 | undefined |
 
 ### supportsInterface
 
@@ -1159,28 +1109,6 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 | validMerkleProof | bool | undefined |
 | merkleProofIndex | uint256 | undefined |
 
-### walletClaimCount
-
-```solidity
-function walletClaimCount(address) external view returns (uint256)
-```
-
-
-
-*Mapping from address =&gt; number of tokens a wallet has claimed.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 
 
 ## Events
@@ -1287,22 +1215,6 @@ event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
 | Name | Type | Description |
 |---|---|---|
 | maxTotalSupply  | uint256 | undefined |
-
-### MaxWalletClaimCountUpdated
-
-```solidity
-event MaxWalletClaimCountUpdated(uint256 count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| count  | uint256 | undefined |
 
 ### PlatformFeeInfoUpdated
 
@@ -1427,23 +1339,6 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### WalletClaimCountUpdated
-
-```solidity
-event WalletClaimCountUpdated(address indexed wallet, uint256 count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| wallet `indexed` | address | undefined |
-| count  | uint256 | undefined |
 
 
 

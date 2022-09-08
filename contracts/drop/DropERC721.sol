@@ -75,9 +75,6 @@ contract DropERC721 is
     /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
-    /// @dev The max number of NFTs a wallet can claim.
-    uint256 public maxWalletClaimCount;
-
     /// @dev Global max total supply of NFTs.
     uint256 public maxTotalSupply;
 
@@ -117,9 +114,6 @@ contract DropERC721 is
      *       the same baseURI' to encrypted base URI for the respective batch of tokens.
      **/
     mapping(uint256 => bytes) public encryptedData;
-
-    /// @dev Mapping from address => total number of NFTs a wallet has claimed.
-    mapping(address => uint256) public walletClaimCount;
 
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
@@ -489,7 +483,6 @@ contract DropERC721 is
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         claimCondition.limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
-        walletClaimCount[_msgSender()] += _quantityBeingClaimed;
         claimCondition.supplyClaimedByWallet[_conditionId][_msgSender()] += _quantityBeingClaimed;
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
@@ -531,10 +524,6 @@ contract DropERC721 is
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
         require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
-        require(
-            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
-            "exceed claim limit"
-        );
 
         (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
         require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
@@ -642,18 +631,6 @@ contract DropERC721 is
     /*///////////////////////////////////////////////////////////////
                         Setter functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets a contract admin set a claim count for a wallet.
-    function setWalletClaimCount(address _claimer, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        walletClaimCount[_claimer] = _count;
-        emit WalletClaimCountUpdated(_claimer, _count);
-    }
-
-    /// @dev Lets a contract admin set a maximum number of NFTs that can be claimed by any wallet.
-    function setMaxWalletClaimCount(uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        maxWalletClaimCount = _count;
-        emit MaxWalletClaimCountUpdated(_count);
-    }
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {

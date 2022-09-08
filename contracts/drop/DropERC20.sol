@@ -69,21 +69,11 @@ contract DropERC20 is
     /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
-    /// @dev The max number of tokens a wallet can claim.
-    uint256 public maxWalletClaimCount;
-
     /// @dev Global max total supply of tokens.
     uint256 public maxTotalSupply;
 
     /// @dev The set of all claim conditions, at any given moment.
     ClaimConditionList public claimCondition;
-
-    /*///////////////////////////////////////////////////////////////
-                                Mappings
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Mapping from address => number of tokens a wallet has claimed.
-    mapping(address => uint256) public walletClaimCount;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -342,7 +332,6 @@ contract DropERC20 is
         // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
         // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
         claimCondition.limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
-        walletClaimCount[_msgSender()] += _quantityBeingClaimed;
         claimCondition.supplyClaimedByWallet[_conditionId][_msgSender()] += _quantityBeingClaimed;
 
         _mint(_to, _quantityBeingClaimed);
@@ -376,12 +365,7 @@ contract DropERC20 is
         );
 
         uint256 _maxTotalSupply = maxTotalSupply;
-        uint256 _maxWalletClaimCount = maxWalletClaimCount;
         require(_maxTotalSupply == 0 || totalSupply() + _quantity <= _maxTotalSupply, "exceed max total supply.");
-        require(
-            _maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= _maxWalletClaimCount,
-            "exceed claim limit for wallet"
-        );
 
         (, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
         require(block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
@@ -471,18 +455,6 @@ contract DropERC20 is
     /*///////////////////////////////////////////////////////////////
                         Setter functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets a contract admin set a claim count for a wallet.
-    function setWalletClaimCount(address _claimer, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        walletClaimCount[_claimer] = _count;
-        emit WalletClaimCountUpdated(_claimer, _count);
-    }
-
-    /// @dev Lets a contract admin set a maximum number of tokens that can be claimed by any wallet.
-    function setMaxWalletClaimCount(uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        maxWalletClaimCount = _count;
-        emit MaxWalletClaimCountUpdated(_count);
-    }
 
     /// @dev Lets a contract admin set the global maximum supply of tokens.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {

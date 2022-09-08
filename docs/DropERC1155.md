@@ -574,28 +574,6 @@ function maxTotalSupply(uint256) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### maxWalletClaimCount
-
-```solidity
-function maxWalletClaimCount(uint256) external view returns (uint256)
-```
-
-
-
-*Mapping from token ID =&gt; the max number of NFTs of the token ID a wallet can claim.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### multicall
 
 ```solidity
@@ -891,23 +869,6 @@ function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external n
 | _tokenId | uint256 | undefined |
 | _maxTotalSupply | uint256 | undefined |
 
-### setMaxWalletClaimCount
-
-```solidity
-function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count) external nonpayable
-```
-
-
-
-*Lets a contract admin set a maximum number of NFTs of a tokenId that can be claimed by any wallet.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId | uint256 | undefined |
-| _count | uint256 | undefined |
-
 ### setOwner
 
 ```solidity
@@ -991,24 +952,6 @@ function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) exte
 |---|---|---|
 | _tokenId | uint256 | undefined |
 | _saleRecipient | address | undefined |
-
-### setWalletClaimCount
-
-```solidity
-function setWalletClaimCount(uint256 _tokenId, address _claimer, uint256 _count) external nonpayable
-```
-
-
-
-*Lets a contract admin set a claim count for a wallet.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId | uint256 | undefined |
-| _claimer | address | undefined |
-| _count | uint256 | undefined |
 
 ### supportsInterface
 
@@ -1143,29 +1086,6 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 | validMerkleProof | bool | undefined |
 | merkleProofIndex | uint256 | undefined |
 
-### walletClaimCount
-
-```solidity
-function walletClaimCount(uint256, address) external view returns (uint256)
-```
-
-
-
-*Mapping from token ID =&gt; claimer wallet address =&gt; total number of NFTs of the token ID a wallet has claimed.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-| _1 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 
 
 ## Events
@@ -1238,23 +1158,6 @@ event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply)
 |---|---|---|
 | tokenId  | uint256 | undefined |
 | maxTotalSupply  | uint256 | undefined |
-
-### MaxWalletClaimCountUpdated
-
-```solidity
-event MaxWalletClaimCountUpdated(uint256 tokenId, uint256 count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId  | uint256 | undefined |
-| count  | uint256 | undefined |
 
 ### OwnerUpdated
 
@@ -1489,24 +1392,6 @@ event URI(string value, uint256 indexed id)
 |---|---|---|
 | value  | string | undefined |
 | id `indexed` | uint256 | undefined |
-
-### WalletClaimCountUpdated
-
-```solidity
-event WalletClaimCountUpdated(uint256 tokenId, address indexed wallet, uint256 count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId  | uint256 | undefined |
-| wallet `indexed` | address | undefined |
-| count  | uint256 | undefined |
 
 
 

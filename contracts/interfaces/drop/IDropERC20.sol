@@ -28,12 +28,6 @@ interface IDropERC20 is IERC20Upgradeable, IDropClaimCondition {
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
-    /// @dev Emitted when the wallet claim count for an address is updated.
-    event WalletClaimCountUpdated(address indexed wallet, uint256 count);
-
-    /// @dev Emitted when the global max wallet claim count is updated.
-    event MaxWalletClaimCountUpdated(uint256 count);
-
     /// @dev Emitted when the contract URI is updated.
     event ContractURIUpdated(string prevURI, string newURI);
 

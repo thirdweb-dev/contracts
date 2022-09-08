@@ -251,22 +251,6 @@ event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
 |---|---|---|
 | maxTotalSupply  | uint256 | undefined |
 
-### MaxWalletClaimCountUpdated
-
-```solidity
-event MaxWalletClaimCountUpdated(uint256 count)
-```
-
-
-
-*Emitted when the global max wallet claim count is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| count  | uint256 | undefined |
-
 ### TokensClaimed
 
 ```solidity
@@ -303,23 +287,6 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### WalletClaimCountUpdated
-
-```solidity
-event WalletClaimCountUpdated(address indexed wallet, uint256 count)
-```
-
-
-
-*Emitted when the wallet claim count for an address is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| wallet `indexed` | address | undefined |
-| count  | uint256 | undefined |
 
 
 
