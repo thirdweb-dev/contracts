@@ -326,7 +326,6 @@ contract DropERC721 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) external payable nonReentrant {
-
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 
         // Get the claim conditions.

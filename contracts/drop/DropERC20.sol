@@ -171,7 +171,6 @@ contract DropERC20 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) external payable nonReentrant {
-
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
 
