@@ -727,6 +727,25 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
+### TokensClaimed
+
+```solidity
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimer `indexed` | address | undefined |
+| receiver `indexed` | address | undefined |
+| startTokenId `indexed` | uint256 | undefined |
+| quantityClaimed  | uint256 | undefined |
+
 ### TokensLazyMinted
 
 ```solidity
