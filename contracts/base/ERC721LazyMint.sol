@@ -9,6 +9,7 @@ import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
+import "../extension/interface/IClaimableERC721.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -38,7 +39,16 @@ import "../lib/TWStrings.sol";
  *  without paying the gas cost for actually minting the NFTs.
  */
 
-contract ERC721LazyMint is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata, LazyMint {
+contract ERC721LazyMint is
+    ERC721A,
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Royalty,
+    BatchMintMetadata,
+    LazyMint,
+    IClaimableERC721
+{
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -99,9 +109,10 @@ contract ERC721LazyMint is ERC721A, ContractMetadata, Multicall, Ownable, Royalt
      */
     function claim(address _receiver, uint256 _quantity) public payable virtual {
         verifyClaim(msg.sender, _quantity); // add your claim verification logic by overriding this function
-
+        uint256 startTokenId = _currentIndex;
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
         _safeMint(_receiver, _quantity, "");
+        emit TokensClaimed(msg.sender, _receiver, startTokenId, _quantity);
     }
 
     /**
