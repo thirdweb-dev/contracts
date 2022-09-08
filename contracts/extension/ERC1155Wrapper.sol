@@ -20,16 +20,16 @@ import "../lib/TWStrings.sol";
 
 /**
  *  @title   ERC1155Wrapper
- *  @notice  `ERC1155Wrapper` contract extension allows exchange of existing ERC1155 tokens with 
+ *  @notice  `ERC1155Wrapper` contract extension allows exchange of existing ERC1155 tokens with
  *           new tokens with same metadata.
  */
 
-abstract contract ERC1155Wrapper is 
-    ContractMetadata, 
-    Multicall, 
-    Ownable, 
-    Royalty, 
-    BatchMintMetadata, 
+abstract contract ERC1155Wrapper is
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Royalty,
+    BatchMintMetadata,
     PermissionsEnumerable,
     IERC1155Wrapper
 {

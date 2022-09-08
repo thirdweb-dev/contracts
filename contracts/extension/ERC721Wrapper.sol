@@ -20,16 +20,16 @@ import "../lib/TWStrings.sol";
 
 /**
  *  @title   ERC721Wrapper
- *  @notice  `ERC721Wrapper` contract extension allows exchange of existing ERC721 tokens with a 
+ *  @notice  `ERC721Wrapper` contract extension allows exchange of existing ERC721 tokens with a
  *           new token with same metadata.
  */
 
-abstract contract ERC721Wrapper is 
-    ContractMetadata, 
-    Multicall, 
-    Ownable, 
-    Royalty, 
-    BatchMintMetadata, 
+abstract contract ERC721Wrapper is
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Royalty,
+    BatchMintMetadata,
     PermissionsEnumerable,
     IERC721Wrapper
 {
