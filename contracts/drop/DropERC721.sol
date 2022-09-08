@@ -326,7 +326,6 @@ contract DropERC721 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) external payable nonReentrant {
-        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
 
         uint256 tokenIdToClaim = nextTokenIdToClaim;
 

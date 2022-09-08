@@ -937,7 +937,7 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
-        vm.expectRevert("Not enough tokens");
+        vm.expectRevert("!Tokens");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -966,7 +966,7 @@ contract SignatureDropTest is BaseTest {
             bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
-            vm.expectRevert("Must send total price");
+            vm.expectRevert("!Price");
             sigdrop.mintWithSignature{ value: 2 }(mintrequest, signature);
             vm.stopPrank();
         }
@@ -1125,7 +1125,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert("Not enough tokens");
+        vm.expectRevert("!Tokens");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -1155,7 +1155,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("exceeds max supply");
+        vm.expectRevert("!MaxSupply");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -1185,15 +1185,17 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
+        bytes memory errorQty = "!Qty";
+
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("Invalid quantity");
+        vm.expectRevert(errorQty);
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], true);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("Invalid quantity");
+        vm.expectRevert(errorQty);
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -1238,8 +1240,10 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(sigdrop.getSupplyClaimedByWallet(receiver), x - 5);
 
+        bytes memory errorQty = "!Qty";
+
         vm.prank(receiver, receiver);
-        vm.expectRevert("Invalid qty proof");
+        vm.expectRevert(errorQty);
         sigdrop.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
@@ -1251,7 +1255,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, 5, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
-        vm.expectRevert("not in allowlist");
+        vm.expectRevert("!Allowlist");
         sigdrop.claim(receiver, x, address(0), 0, alp, "");
     }
 
@@ -1296,7 +1300,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
-        vm.expectRevert("not in allowlist");
+        vm.expectRevert("!Allowlist");
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
@@ -1349,7 +1353,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("Minting 0 tokens");
+        vm.expectRevert("0 amt");
         sigdrop.lazyMint(0, "", abi.encode(newEncryptedURI, provenanceHash));
 
         vm.stopPrank();

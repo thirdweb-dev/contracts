@@ -259,34 +259,6 @@ contract DropERC721Test is BaseTest {
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
     }
 
-    function test_multiple_claim_exploit() public {
-        MasterExploitContract masterExploit = new MasterExploitContract(address(drop));
-
-        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerWallet = 1;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
-
-        vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
-
-        vm.prank(deployer);
-        drop.setClaimConditions(conditions, false);
-
-        bytes32[] memory proofs = new bytes32[](0);
-
-        vm.startPrank(getActor(5));
-        vm.expectRevert(bytes("BOT"));
-        masterExploit.performExploit(
-            address(masterExploit),
-            conditions[0].quantityLimitPerWallet,
-            conditions[0].currency,
-            conditions[0].pricePerToken,
-            proofs,
-            0
-        );
-    }
-
     /*///////////////////////////////////////////////////////////////
                                 Miscellaneous
     //////////////////////////////////////////////////////////////*/

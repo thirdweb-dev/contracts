@@ -153,7 +153,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         uint256 _supplyClaimedByWallet = _quantity + supplyClaimedByWallet[conditionId][_claimer];
 
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
-            revert("Invalid price or currency");
+            revert("!PriceOrCurrency");
         }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
@@ -161,11 +161,11 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             _quantity == 0 ||
             (verifyMaxQuantityPerWallet && _supplyClaimedByWallet > currentClaimPhase.quantityLimitPerWallet)
         ) {
-            revert("Invalid quantity");
+            revert("!Qty");
         }
 
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert("exceeds max supply");
+            revert("!MaxSupply");
         }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_claimer);
@@ -193,7 +193,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             if (!validMerkleProof) {
-                revert("not in allowlist");
+                revert("!Allowlist");
             }
 
             if (usedAllowlistSpot[conditionId].get(merkleProofIndex)) {
@@ -204,7 +204,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 _allowlistProof.maxQuantityInAllowlist != 0 &&
                 _supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist
             ) {
-                revert("Invalid qty proof");
+                revert("!Qty");
             }
         }
     }

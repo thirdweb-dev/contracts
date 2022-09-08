@@ -256,7 +256,6 @@ contract DropERC1155 is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) external payable nonReentrant {
-        require(isTrustedForwarder(msg.sender) || _msgSender() == tx.origin, "BOT");
 
         // Get the active claim condition index.
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);

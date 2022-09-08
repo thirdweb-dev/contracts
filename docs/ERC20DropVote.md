@@ -363,6 +363,28 @@ function getPastVotes(address account, uint256 blockNumber) external view return
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(address _claimer) external view returns (uint256)
+```
+
+
+
+*Returns the supply claimed by claimer for active conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### getVotes
 
 ```solidity

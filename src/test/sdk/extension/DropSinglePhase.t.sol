@@ -106,7 +106,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         vm.prank(claimer1, claimer1);
         ext.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("exceeds max supply");
+        vm.expectRevert("!MaxSupply");
         vm.prank(claimer2, claimer2);
         ext.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -134,14 +134,16 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         ext.setClaimConditions(conditions[0], false);
 
+        bytes memory errorQty = "!Qty";
+
         vm.prank(claimer, claimer);
-        vm.expectRevert("Invalid quantity");
+        vm.expectRevert(errorQty);
         ext.claim(receiver, 101, address(0), 0, alp, "");
 
         ext.setClaimConditions(conditions[0], true);
 
         vm.prank(claimer, claimer);
-        vm.expectRevert("Invalid quantity");
+        vm.expectRevert(errorQty);
         ext.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -184,8 +186,10 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         ext.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(ext.getSupplyClaimedByWallet(receiver), x - 5);
 
+        bytes memory errorQty = "!Qty";
+
         vm.prank(receiver, receiver);
-        vm.expectRevert("Invalid qty proof");
+        vm.expectRevert(errorQty);
         ext.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
@@ -197,7 +201,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         ext.claim(receiver, 5, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
-        vm.expectRevert("not in allowlist");
+        vm.expectRevert("!Allowlist");
         ext.claim(receiver, x, address(0), 0, alp, "");
     }
 
@@ -239,7 +243,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         ext.claim(claimer, 1, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
-        vm.expectRevert("not in allowlist");
+        vm.expectRevert("!Allowlist");
         ext.claim(address(4), 1, address(0), 0, alp, "");
     }
 
