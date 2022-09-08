@@ -45,7 +45,7 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 2;
 
-    address private immutable forwarder;
+    address public immutable forwarder;
 
     // Token name
     string public name;
@@ -92,6 +92,7 @@ contract Pack is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
+        address[] memory _trustedForwarders,
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
@@ -101,8 +102,17 @@ contract Pack is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
 
-        address[] memory forwarders = new address[](1);
-        forwarders[0] = forwarder;
+        /** note: The immutable state-variable `forwarder` is an EOA-only forwarder,
+        *         which guards against automated attacks.
+        *
+        *         Use other forwarders only if there's a strong reason to bypass this check.
+        */
+        address[] memory forwarders = new address[](_trustedForwarders.length + 1);
+        uint256 i = 0;
+        for(; i < forwarders.length - 1; i++) {
+            forwarders[i] = _trustedForwarders[i];
+        }
+        forwarders[i] = forwarder;
         __ERC2771Context_init(forwarders);
         __ERC1155_init(_contractURI);
 

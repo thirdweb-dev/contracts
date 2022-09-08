@@ -200,6 +200,11 @@ contract PackTest is BaseTest {
         pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
     }
 
+    function test_checkForwarders() public {
+        assertTrue(pack.isTrustedForwarder(eoaForwarder));
+        assertTrue(pack.isTrustedForwarder(forwarder));
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
