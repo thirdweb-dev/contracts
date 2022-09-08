@@ -50,7 +50,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0;
@@ -67,7 +67,7 @@ contract ERC1155DropTest is DSTest, Test {
             ,
             uint256 maxClaimable,
             ,
-            uint256 quantityLimitPerTransaction,
+            uint256 quantityLimitPerWallet,
             uint256 waitTimeInSecondsBetweenClaims,
             ,
             ,
@@ -75,7 +75,7 @@ contract ERC1155DropTest is DSTest, Test {
         ) = base.claimCondition(targetTokenId);
 
         assertEq(maxClaimable, 100);
-        assertEq(quantityLimitPerTransaction, 5);
+        assertEq(quantityLimitPerWallet, 5);
         assertEq(waitTimeInSecondsBetweenClaims, 100);
         assertEq(currency, 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     }
@@ -84,7 +84,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0;
@@ -116,7 +116,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0;
@@ -135,7 +135,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 100;
+        condition.quantityLimitPerWallet = 100;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0;
@@ -148,7 +148,7 @@ contract ERC1155DropTest is DSTest, Test {
         base.claim(
             nftHolder,
             targetTokenId,
-            condition.quantityLimitPerTransaction,
+            condition.quantityLimitPerWallet,
             condition.currency,
             condition.pricePerToken,
             allowlistProof,
@@ -166,7 +166,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0;
@@ -205,7 +205,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -256,7 +256,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = root;
         condition.pricePerToken = 0;
@@ -312,7 +312,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = root;
         condition.pricePerToken = 0;
@@ -362,7 +362,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = root;
         condition.pricePerToken = 0;
@@ -432,7 +432,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = root;
         condition.pricePerToken = 0;
@@ -467,7 +467,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -500,7 +500,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -533,7 +533,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -566,7 +566,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -579,7 +579,7 @@ contract ERC1155DropTest is DSTest, Test {
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, true);
 
-        uint256 quantityToClaim = condition.quantityLimitPerTransaction + 1;
+        uint256 quantityToClaim = condition.quantityLimitPerWallet + 1;
         uint256 totalPrice = quantityToClaim * condition.pricePerToken;
 
         vm.prank(nftHolder, nftHolder);
@@ -599,7 +599,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 101;
+        condition.quantityLimitPerWallet = 101;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -612,7 +612,7 @@ contract ERC1155DropTest is DSTest, Test {
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, true);
 
-        uint256 quantityToClaim = condition.quantityLimitPerTransaction;
+        uint256 quantityToClaim = condition.quantityLimitPerWallet;
         uint256 totalPrice = quantityToClaim * condition.pricePerToken;
 
         vm.prank(nftHolder, nftHolder);
@@ -632,7 +632,7 @@ contract ERC1155DropTest is DSTest, Test {
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
         condition.supplyClaimed = 0;
-        condition.quantityLimitPerTransaction = 5;
+        condition.quantityLimitPerWallet = 5;
         condition.waitTimeInSecondsBetweenClaims = 100;
         condition.merkleRoot = bytes32(0);
         condition.pricePerToken = 0.01 ether;
@@ -645,14 +645,14 @@ contract ERC1155DropTest is DSTest, Test {
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, true);
 
-        uint256 quantityToClaim = condition.quantityLimitPerTransaction;
+        uint256 quantityToClaim = condition.quantityLimitPerWallet;
         uint256 totalPrice = quantityToClaim * condition.pricePerToken;
 
         vm.prank(nftHolder, nftHolder);
-        base.claim{ value: totalPrice }(
+        base.claim{ value: totalPrice - condition.pricePerToken }(
             nftHolder,
             targetTokenId,
-            quantityToClaim,
+            quantityToClaim - 1,
             condition.currency,
             condition.pricePerToken,
             allowlistProof,
@@ -661,10 +661,10 @@ contract ERC1155DropTest is DSTest, Test {
 
         vm.prank(nftHolder, nftHolder);
         vm.expectRevert("cant claim yet");
-        base.claim{ value: totalPrice }(
+        base.claim{ value: condition.pricePerToken }(
             nftHolder,
             targetTokenId,
-            quantityToClaim,
+            1,
             condition.currency,
             condition.pricePerToken,
             allowlistProof,

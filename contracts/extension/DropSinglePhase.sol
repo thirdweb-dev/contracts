@@ -27,7 +27,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
      *       at which the account claimed tokens under that claim condition.
      */
     mapping(bytes32 => mapping(address => uint256)) private lastClaimTimestamp;
-    
+
     /**
      *  @dev Map from a claim condition uid and account to supply claimed by account.
      */
@@ -79,12 +79,15 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         verifyClaim(_dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerWallet);
 
         if (validMerkleProof) {
-            if(_allowlistProof.maxQuantityInAllowlist > 0 
-                && _quantity + supplyClaimedByWallet[activeConditionId][_dropMsgSender()] == _allowlistProof.maxQuantityInAllowlist) {
+            if (
+                _allowlistProof.maxQuantityInAllowlist > 0 &&
+                _quantity + supplyClaimedByWallet[activeConditionId][_dropMsgSender()] ==
+                _allowlistProof.maxQuantityInAllowlist
+            ) {
                 /**
-                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                *  can be used only once.
-                */
+                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                 *  can be used only once.
+                 */
                 usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
             }
         }
@@ -197,7 +200,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
                 revert("proof claimed");
             }
 
-            if (_allowlistProof.maxQuantityInAllowlist != 0 && _supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist) {
+            if (
+                _allowlistProof.maxQuantityInAllowlist != 0 &&
+                _supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist
+            ) {
                 revert("Invalid qty proof");
             }
         }
@@ -221,11 +227,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     }
 
     /// @dev Returns the supply claimed by claimer for active conditionId.
-    function getSupplyClaimedByWallet(address _claimer)
-        public
-        view
-        returns (uint256)
-    {
+    function getSupplyClaimedByWallet(address _claimer) public view returns (uint256) {
         return supplyClaimedByWallet[conditionId][_claimer];
     }
 

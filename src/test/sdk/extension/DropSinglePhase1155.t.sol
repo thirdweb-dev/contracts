@@ -71,7 +71,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(_tokenId, conditions[0], false);
@@ -102,7 +102,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(_tokenId, conditions[0], false);
@@ -134,7 +134,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(_tokenId, conditions[0], false);
@@ -179,7 +179,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
         conditions[0].merkleRoot = root;
 
@@ -210,7 +210,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(_tokenId, conditions[0], false);
@@ -239,7 +239,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.expectEmit(true, true, true, true);
@@ -265,7 +265,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
 
         MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(_tokenId, conditions[0], false);
@@ -276,5 +276,33 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         emit TokensClaimed(claimer, receiver, _tokenId, 1);
 
         ext.claim(receiver, _tokenId, 1, address(0), 0, alp, "");
+    }
+
+    function test_claimCondition_resetEligibility_quantityLimitPerWallet() public {
+        ext.setCondition(true);
+        vm.warp(1);
+
+        address receiver = address(0x123);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        MyDropSinglePhase1155.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerWallet = 100;
+
+        ext.setClaimConditions(0, conditions[0], false);
+
+        vm.prank(receiver, receiver);
+        ext.claim(receiver, 0, 10, address(0), 0, alp, "");
+        assertEq(ext.getSupplyClaimedByWallet(0, receiver), 10);
+
+        ext.setClaimConditions(0, conditions[0], true);
+        assertEq(ext.getSupplyClaimedByWallet(0, receiver), 0);
+
+        vm.prank(receiver, receiver);
+        ext.claim(receiver, 0, 10, address(0), 0, alp, "");
+        assertEq(ext.getSupplyClaimedByWallet(0, receiver), 10);
     }
 }

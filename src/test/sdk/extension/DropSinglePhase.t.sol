@@ -5,6 +5,7 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 
 import { DropSinglePhase } from "contracts/extension/DropSinglePhase.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MyDropSinglePhase is DropSinglePhase {
     bool condition;
@@ -32,6 +33,7 @@ contract MyDropSinglePhase is DropSinglePhase {
 }
 
 contract ExtensionDropSinglePhase is DSTest, Test {
+    using Strings for uint256;
     MyDropSinglePhase internal ext;
 
     event TokensClaimed(
@@ -66,7 +68,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(conditions[0], false);
@@ -96,7 +98,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(conditions[0], false);
@@ -127,7 +129,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(conditions[0], false);
@@ -141,6 +143,62 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         vm.prank(claimer, claimer);
         vm.expectRevert("Invalid quantity");
         ext.claim(receiver, 101, address(0), 0, alp, "");
+    }
+
+    function test_fuzz_claim_merkleProof(uint256 x) public {
+        ext.setCondition(true);
+        vm.assume(x > 10 && x < 500);
+        string[] memory inputs = new string[](3);
+
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = Strings.toString(x);
+
+        bytes memory result = vm.ffi(inputs);
+        // revert();
+        bytes32 root = abi.decode(result, (bytes32));
+
+        inputs[1] = "src/test/scripts/getProof.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        MyDropSinglePhase.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.maxQuantityInAllowlist = x;
+
+        vm.warp(1);
+
+        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+
+        // bytes32[] memory proofs = new bytes32[](0);
+
+        MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = x;
+        conditions[0].quantityLimitPerWallet = 1;
+        conditions[0].merkleRoot = root;
+
+        ext.setClaimConditions(conditions[0], false);
+
+        // vm.prank(getActor(5), getActor(5));
+        vm.prank(receiver, receiver);
+        ext.claim(receiver, x - 5, address(0), 0, alp, "");
+        assertEq(ext.getSupplyClaimedByWallet(receiver), x - 5);
+
+        vm.prank(receiver, receiver);
+        vm.expectRevert("Invalid qty proof");
+        ext.claim(receiver, 6, address(0), 0, alp, "");
+
+        vm.prank(receiver, receiver);
+        ext.claim(receiver, 5, address(0), 0, alp, "");
+        assertEq(ext.getSupplyClaimedByWallet(receiver), x);
+
+        vm.prank(receiver, receiver);
+        vm.expectRevert("proof claimed");
+        ext.claim(receiver, 5, address(0), 0, alp, "");
+
+        vm.prank(address(4), address(4));
+        vm.expectRevert("not in allowlist");
+        ext.claim(receiver, x, address(0), 0, alp, "");
     }
 
     /**
@@ -171,7 +229,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
         conditions[0].merkleRoot = root;
 
@@ -201,7 +259,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(conditions[0], false);
@@ -229,7 +287,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.expectEmit(true, true, true, true);
@@ -254,7 +312,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         ext.setClaimConditions(conditions[0], false);

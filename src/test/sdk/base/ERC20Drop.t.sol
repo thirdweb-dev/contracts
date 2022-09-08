@@ -63,7 +63,7 @@ contract BaseERC20DropTest is BaseUtilTest {
 
         ERC20Drop.ClaimCondition[] memory conditions = new ERC20Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(signer);
@@ -92,7 +92,7 @@ contract BaseERC20DropTest is BaseUtilTest {
 
         ERC20Drop.ClaimCondition[] memory conditions = new ERC20Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100 ether;
-        conditions[0].quantityLimitPerTransaction = 100 ether;
+        conditions[0].quantityLimitPerWallet = 100 ether;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         // set price and currency
@@ -132,7 +132,7 @@ contract BaseERC20DropTest is BaseUtilTest {
 
         ERC20Drop.ClaimCondition[] memory conditions = new ERC20Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100 ether;
-        conditions[0].quantityLimitPerTransaction = 100 ether;
+        conditions[0].quantityLimitPerWallet = 100 ether;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         // set price and currency
@@ -172,7 +172,7 @@ contract BaseERC20DropTest is BaseUtilTest {
 
         ERC20Drop.ClaimCondition[] memory conditions = new ERC20Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100 ether;
-        conditions[0].quantityLimitPerTransaction = 100 ether;
+        conditions[0].quantityLimitPerWallet = 100 ether;
         conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(signer);

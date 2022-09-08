@@ -75,14 +75,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         bool toVerifyMaxQuantityPerWallet = _allowlistProof.maxQuantityInAllowlist == 0 ||
             condition.merkleRoot == bytes32(0);
 
-        verifyClaim(
-            _tokenId,
-            _dropMsgSender(),
-            _quantity,
-            _currency,
-            _pricePerToken,
-            toVerifyMaxQuantityPerWallet
-        );
+        verifyClaim(_tokenId, _dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerWallet);
 
         if (validMerkleProof) {
             if (
@@ -91,9 +84,9 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
                 _allowlistProof.maxQuantityInAllowlist
             ) {
                 /**
-                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                *  can be used only once.
-                */
+                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                 *  can be used only once.
+                 */
                 usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
             }
         }
@@ -217,7 +210,10 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
                 revert("proof claimed");
             }
 
-            if (_allowlistProof.maxQuantityInAllowlist != 0 && _supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist) {
+            if (
+                _allowlistProof.maxQuantityInAllowlist != 0 &&
+                _supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist
+            ) {
                 revert("Invalid qty proof");
             }
         }
@@ -241,11 +237,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     }
 
     /// @dev Returns the supply claimed by claimer for active conditionId.
-    function getSupplyClaimedByWallet(uint256 _tokenId, address _claimer)
-        public
-        view
-        returns (uint256)
-    {
+    function getSupplyClaimedByWallet(uint256 _tokenId, address _claimer) public view returns (uint256) {
         return supplyClaimedByWallet[conditionId[_tokenId]][_claimer];
     }
 

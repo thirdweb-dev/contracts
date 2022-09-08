@@ -70,9 +70,9 @@ abstract contract Drop is IDrop {
                 _allowlistProof.maxQuantityInAllowlist
             ) {
                 /**
-                *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                *  can be used only once.
-                */
+                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
+                 *  can be used only once.
+                 */
                 claimCondition.usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
             }
         }
@@ -237,7 +237,10 @@ abstract contract Drop is IDrop {
                 revert Drop__ProofClaimed();
             }
 
-            if (_allowlistProof.maxQuantityInAllowlist != 0 && supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist) {
+            if (
+                _allowlistProof.maxQuantityInAllowlist != 0 &&
+                supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist
+            ) {
                 revert Drop__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
             }
         }
