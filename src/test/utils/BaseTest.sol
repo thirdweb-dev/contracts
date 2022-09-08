@@ -229,7 +229,10 @@ abstract contract BaseTest is DSTest, Test {
         );
         deployContractProxy(
             "Pack",
-            abi.encodeCall(Pack.initialize, (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps))
+            abi.encodeCall(
+                Pack.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
+            )
         );
     }
 

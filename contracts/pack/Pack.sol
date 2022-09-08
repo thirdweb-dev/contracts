@@ -103,13 +103,13 @@ contract Pack is
         __ReentrancyGuard_init();
 
         /** note: The immutable state-variable `forwarder` is an EOA-only forwarder,
-        *         which guards against automated attacks.
-        *
-        *         Use other forwarders only if there's a strong reason to bypass this check.
-        */
+         *         which guards against automated attacks.
+         *
+         *         Use other forwarders only if there's a strong reason to bypass this check.
+         */
         address[] memory forwarders = new address[](_trustedForwarders.length + 1);
         uint256 i = 0;
-        for(; i < forwarders.length - 1; i++) {
+        for (; i < forwarders.length - 1; i++) {
             forwarders[i] = _trustedForwarders[i];
         }
         forwarders[i] = forwarder;
