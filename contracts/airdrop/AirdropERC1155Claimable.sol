@@ -32,9 +32,6 @@ contract AirdropERC1155Claimable is
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155Claimable");
     uint256 private constant VERSION = 1;
 
-    /// @dev Owner of the airdrop contract.
-    address private _owner;
-
     /// @dev address of token being airdropped.
     address public airdropTokenAddress;
 

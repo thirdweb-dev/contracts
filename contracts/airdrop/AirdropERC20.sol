@@ -74,7 +74,7 @@ contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mul
         IERC20 token = IERC20(_tokenAddress);
 
         for (uint256 i = 0; i < len; i++) {
-            token.transferFrom(_tokenOwner, _recipients[i], _amounts[i]);
+            require(token.transferFrom(_tokenOwner, _recipients[i], _amounts[i]), "transfer failed");
         }
     }
 

@@ -32,9 +32,6 @@ contract AirdropERC20Claimable is
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC20Claimable");
     uint256 private constant VERSION = 1;
 
-    /// @dev Owner of the airdrop contract.
-    address private _owner;
-
     /// @dev address of token being airdropped.
     address public airdropTokenAddress;
 
@@ -152,7 +149,7 @@ contract AirdropERC20Claimable is
         supplyClaimedByWallet[_msgSender()] += _quantityBeingClaimed;
         availableAmount -= _quantityBeingClaimed;
 
-        IERC20(airdropTokenAddress).transferFrom(tokenOwner, _to, _quantityBeingClaimed);
+        require(IERC20(airdropTokenAddress).transferFrom(tokenOwner, _to, _quantityBeingClaimed), "transfer failed");
     }
 
     /// @dev Checks a request to claim tokens against the active claim condition's criteria.

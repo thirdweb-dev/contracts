@@ -26,6 +26,9 @@ import { VoteERC20 } from "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
+import "contracts/airdrop/AirdropERC721.sol";
+import "contracts/airdrop/AirdropERC20.sol";
+import "contracts/airdrop/AirdropERC1155.sol";
 import "contracts/mock/Mock.sol";
 import "contracts/mock/MockContractPublisher.sol";
 
@@ -93,6 +96,12 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
         TWFactory(factory).addImplementation(address(new Pack(address(weth), forwarder)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC721"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC721()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC20"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC20()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC1155()));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
@@ -228,6 +237,9 @@ abstract contract BaseTest is DSTest, Test {
             "Pack",
             abi.encodeCall(Pack.initialize, (deployer, NAME, SYMBOL, CONTRACT_URI, royaltyRecipient, royaltyBps))
         );
+        deployContractProxy("AirdropERC721", abi.encodeCall(AirdropERC721.initialize, (deployer)));
+        deployContractProxy("AirdropERC20", abi.encodeCall(AirdropERC20.initialize, (deployer)));
+        deployContractProxy("AirdropERC1155", abi.encodeCall(AirdropERC1155.initialize, (deployer)));
     }
 
     function deployContractProxy(string memory _contractType, bytes memory _initializer)
