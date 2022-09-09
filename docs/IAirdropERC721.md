@@ -8,28 +8,6 @@ Thirdweb&#39;s &#39;Airdrop&#39; contracts provide a lightweight and easy to use
 
 
 
-## Methods
-
-### claim
-
-```solidity
-function claim(address receiver, uint256 quantity, bytes32[] proofs, uint256 proofMaxQuantityForWallet) external nonpayable
-```
-
-Lets an account claim a given quantity of NFTs.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| receiver | address | The receiver of the NFTs to claim. |
-| quantity | uint256 | The quantity of NFTs to claim. |
-| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
-| proofMaxQuantityForWallet | uint256 | The maximum number of NFTs an address included in an                                        allowlist can claim. |
-
-
 
 ## Events
 
