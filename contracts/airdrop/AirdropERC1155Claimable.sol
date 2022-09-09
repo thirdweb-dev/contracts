@@ -55,7 +55,7 @@ contract AirdropERC1155Claimable is
     mapping(uint256 => uint256) public maxWalletClaimCount;
 
     /// @dev number tokens available to claim for a tokenId.
-    mapping(uint256 => uint256) public availableAmounts;
+    mapping(uint256 => uint256) public availableAmount;
 
     /// @dev mapping of tokenId to merkle root of the allowlist of addresses eligible to claim.
     mapping(uint256 => bytes32) public merkleRoot;
@@ -97,7 +97,7 @@ contract AirdropERC1155Claimable is
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             merkleRoot[_tokenIds[i]] = _merkleRoot[i];
             maxWalletClaimCount[_tokenIds[i]] = _maxWalletClaimCount[i];
-            availableAmounts[_tokenIds[i]] = _availableAmounts[i];
+            availableAmount[_tokenIds[i]] = _availableAmounts[i];
         }
     }
 
@@ -168,7 +168,7 @@ contract AirdropERC1155Claimable is
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         supplyClaimedByWallet[_tokenId][_msgSender()] += _quantityBeingClaimed;
-        availableAmounts[_tokenId] -= _quantityBeingClaimed;
+        availableAmount[_tokenId] -= _quantityBeingClaimed;
 
         IERC1155(airdropTokenAddress).safeTransferFrom(tokenOwner, _to, _tokenId, _quantityBeingClaimed, "");
     }
@@ -188,7 +188,7 @@ contract AirdropERC1155Claimable is
                     _quantity + supplyClaimedByWallet[_tokenId][_claimer] <= maxWalletClaimCount[_tokenId]),
             "invalid quantity."
         );
-        require(_quantity <= availableAmounts[_tokenId], "exceeds available tokens.");
+        require(_quantity <= availableAmount[_tokenId], "exceeds available tokens.");
         require(expirationTimestamp == 0 || block.timestamp < expirationTimestamp, "airdrop expired.");
     }
 
@@ -200,7 +200,7 @@ contract AirdropERC1155Claimable is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        if (merkleRoot[_tokenId] != bytes32(0)) {
+        if (merkleRoot[_tokenId] != bytes32(0) && _proofMaxQuantityForWallet != 0) {
             uint256 _supplyClaimed = supplyClaimedByWallet[_tokenId][_claimer];
 
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(

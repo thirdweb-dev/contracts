@@ -194,7 +194,7 @@ contract AirdropERC721Claimable is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        if (merkleRoot != bytes32(0)) {
+        if (merkleRoot != bytes32(0) && _proofMaxQuantityForWallet != 0) {
             uint256 _supplyClaimed = supplyClaimedByWallet[_claimer];
 
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
