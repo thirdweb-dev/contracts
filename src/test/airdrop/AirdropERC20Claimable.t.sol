@@ -48,7 +48,6 @@ contract CheckTest is BaseTest {
     //     assertEq(drop.availableAmount(), _availableAmount - quantity);
     // }
 
-    
     // function test_revert_claim_notInAllowlist() public {
     //     string[] memory inputs = new string[](3);
     //     inputs[0] = "node";

@@ -51,7 +51,6 @@ contract AirdropERC721ClaimableTest is BaseTest {
         assertEq(drop.availableAmount(), _availableAmount - quantity);
     }
 
-    
     function test_revert_claim_notInAllowlist() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
@@ -151,7 +150,6 @@ contract AirdropERC721ClaimableTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_state_claim_nonAllowlistedClaimer() public {
-
         address receiver = address(0x123);
         uint256 quantity = 1;
         bytes32[] memory proofs;
@@ -169,7 +167,6 @@ contract AirdropERC721ClaimableTest is BaseTest {
     }
 
     function test_revert_claim_nonAllowlistedClaimer_invalidQuantity() public {
-
         address receiver = address(0x123);
         uint256 quantity = 2;
         bytes32[] memory proofs;
@@ -180,12 +177,11 @@ contract AirdropERC721ClaimableTest is BaseTest {
     }
 
     function test_revert_claim_nonAllowlistedClaimer_exceedsAvailable() public {
-
         uint256 _availableAmount = drop.availableAmount();
         bytes32[] memory proofs;
 
         uint256 i = 0;
-        for(; i < _availableAmount; i++) {
+        for (; i < _availableAmount; i++) {
             address receiver = getActor(uint160(i));
             vm.prank(receiver);
             drop.claim(receiver, 1, proofs, 0);

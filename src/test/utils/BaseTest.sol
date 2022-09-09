@@ -268,15 +268,52 @@ abstract contract BaseTest is DSTest, Test {
         deployContractProxy("AirdropERC1155", abi.encodeCall(AirdropERC1155.initialize, (deployer)));
         deployContractProxy(
             "AirdropERC721Claimable",
-            abi.encodeCall(AirdropERC721Claimable.initialize, (deployer, forwarders(), address(airdropTokenOwner), address(erc721), _airdropTokenIdsERC721, 1000, 1, _airdropMerkleRootERC721))
+            abi.encodeCall(
+                AirdropERC721Claimable.initialize,
+                (
+                    deployer,
+                    forwarders(),
+                    address(airdropTokenOwner),
+                    address(erc721),
+                    _airdropTokenIdsERC721,
+                    1000,
+                    1,
+                    _airdropMerkleRootERC721
+                )
+            )
         );
         deployContractProxy(
             "AirdropERC1155Claimable",
-            abi.encodeCall(AirdropERC1155Claimable.initialize, (deployer, forwarders(), address(airdropTokenOwner), address(erc1155), _airdropTokenIdsERC1155, _airdropAmountsERC1155, 1000, _airdropWalletClaimCountERC1155, _airdropMerkleRootERC1155))
+            abi.encodeCall(
+                AirdropERC1155Claimable.initialize,
+                (
+                    deployer,
+                    forwarders(),
+                    address(airdropTokenOwner),
+                    address(erc1155),
+                    _airdropTokenIdsERC1155,
+                    _airdropAmountsERC1155,
+                    1000,
+                    _airdropWalletClaimCountERC1155,
+                    _airdropMerkleRootERC1155
+                )
+            )
         );
         deployContractProxy(
             "AirdropERC20Claimable",
-            abi.encodeCall(AirdropERC20Claimable.initialize, (deployer, forwarders(), address(airdropTokenOwner), address(erc20), 10_000 ether, 1000, 1, _airdropMerkleRootERC20))
+            abi.encodeCall(
+                AirdropERC20Claimable.initialize,
+                (
+                    deployer,
+                    forwarders(),
+                    address(airdropTokenOwner),
+                    address(erc20),
+                    10_000 ether,
+                    1000,
+                    1,
+                    _airdropMerkleRootERC20
+                )
+            )
         );
     }
 
@@ -373,7 +410,6 @@ abstract contract BaseTest is DSTest, Test {
     }
 
     function setupAirdropClaimable() public {
-
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
