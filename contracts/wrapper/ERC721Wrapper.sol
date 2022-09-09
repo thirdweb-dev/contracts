@@ -120,11 +120,7 @@ contract ERC721Wrapper is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Wrap an ERC721 token.
-    function wrap(
-        address _recipient,
-        uint256 _tokenId
-    ) external nonReentrant {
-
+    function wrap(address _recipient, uint256 _tokenId) external nonReentrant {
         IERC721Upgradeable(tokenAddress).safeTransferFrom(_msgSender(), address(this), _tokenId);
 
         _setURI(_tokenId);

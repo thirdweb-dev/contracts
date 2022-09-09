@@ -113,7 +113,6 @@ contract ERC1155Wrapper is
         uint256 _tokenId,
         uint256 _amount
     ) external nonReentrant {
-
         IERC1155Upgradeable(tokenAddress).safeTransferFrom(_msgSender(), address(this), _tokenId, _amount, "");
 
         _mint(_recipient, _tokenId, _amount, "");
@@ -122,8 +121,11 @@ contract ERC1155Wrapper is
     }
 
     /// @dev Unwrap a token to retrieve the underlying ERC1155 tokens.
-    function unwrap(address _recipient, uint256 _tokenId, uint256 _amount) external nonReentrant {
-
+    function unwrap(
+        address _recipient,
+        uint256 _tokenId,
+        uint256 _amount
+    ) external nonReentrant {
         _burn(_msgSender(), _tokenId, _amount);
 
         IERC1155Upgradeable(tokenAddress).safeTransferFrom(address(this), _recipient, _tokenId, _amount, "");

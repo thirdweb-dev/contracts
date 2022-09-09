@@ -38,5 +38,9 @@ interface IERC1155Wrapper {
      *  @param tokenId   ID of the wrapped tokens to unwrap.
      *  @param amount    amount of tokens being wrapped.
      */
-    function unwrap(address recipient, uint256 tokenId, uint256 amount) external;
+    function unwrap(
+        address recipient,
+        uint256 tokenId,
+        uint256 amount
+    ) external;
 }
