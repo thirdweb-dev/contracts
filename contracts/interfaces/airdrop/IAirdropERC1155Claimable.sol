@@ -7,7 +7,7 @@ pragma solidity ^0.8.11;
  *
  *  `AirdropERC1155Claimable` contract is an airdrop contract for ERC1155 tokens. It follows a
  *  pull mechanism for transfer of tokens, where allowlisted recipients can claim tokens from
- *  the contract. 
+ *  the contract.
  */
 
 interface IAirdropERC1155Claimable {

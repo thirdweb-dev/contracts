@@ -39,9 +39,7 @@ contract AirdropERC1155 is
     constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
-    function initialize(
-        address _defaultAdmin
-    ) external initializer {
+    function initialize(address _defaultAdmin) external initializer {
         _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
@@ -66,7 +64,7 @@ contract AirdropERC1155 is
 
     /**
      *  @notice          Lets contract-owner send ERC1155 tokens to a list of addresses.
-     *  @dev             The token-owner should approve target tokens to Airdrop contract, 
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC1155 tokens to air-drop.
@@ -87,7 +85,7 @@ contract AirdropERC1155 is
 
         IERC1155 token = IERC1155(_tokenAddress);
 
-        for(uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; i++) {
             token.safeTransferFrom(_tokenOwner, _recipients[i], _tokenIds[i], _amounts[i], "");
         }
     }

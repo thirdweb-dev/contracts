@@ -6,14 +6,13 @@ pragma solidity ^0.8.11;
  *  to drop tokens.
  *
  *  `AirdropERC20` contract is an airdrop contract for ERC20 tokens. It follows a
- *  push mechanism for transfer of tokens to intended recipients. 
+ *  push mechanism for transfer of tokens to intended recipients.
  */
 
 interface IAirdropERC20 {
-
     /**
      *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
-     *  @dev             The token-owner should approve target tokens to Airdrop contract, 
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC20 tokens to air-drop.

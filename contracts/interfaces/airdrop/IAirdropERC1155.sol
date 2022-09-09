@@ -6,14 +6,13 @@ pragma solidity ^0.8.11;
  *  to drop tokens.
  *
  *  `AirdropERC1155` contract is an airdrop contract for ERC1155 tokens. It follows a
- *  push mechanism for transfer of tokens to intended recipients. 
+ *  push mechanism for transfer of tokens to intended recipients.
  */
 
 interface IAirdropERC1155 {
-    
     /**
      *  @notice          Lets contract-owner send ERC1155 tokens to a list of addresses.
-     *  @dev             The token-owner should approve target tokens to Airdrop contract, 
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC1155 tokens to air-drop.

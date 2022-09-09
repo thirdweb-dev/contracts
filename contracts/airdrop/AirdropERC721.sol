@@ -14,13 +14,7 @@ import "../interfaces/airdrop/IAirdropERC721.sol";
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
 
-contract AirdropERC721 is
-    Initializable,
-    Ownable,
-    ReentrancyGuardUpgradeable,
-    MulticallUpgradeable,
-    IAirdropERC721
-{
+contract AirdropERC721 is Initializable, Ownable, ReentrancyGuardUpgradeable, MulticallUpgradeable, IAirdropERC721 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -35,9 +29,7 @@ contract AirdropERC721 is
     constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
-    function initialize(
-        address _defaultAdmin
-    ) external initializer {
+    function initialize(address _defaultAdmin) external initializer {
         _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
@@ -62,7 +54,7 @@ contract AirdropERC721 is
 
     /**
      *  @notice          Lets contract-owner send ERC721 tokens to a list of addresses.
-     *  @dev             The token-owner should approve target tokens to Airdrop contract, 
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC721 tokens to air-drop.
@@ -81,7 +73,7 @@ contract AirdropERC721 is
 
         IERC721 token = IERC721(_tokenAddress);
 
-        for(uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; i++) {
             token.safeTransferFrom(_tokenOwner, _recipients[i], _tokenIds[i]);
         }
     }

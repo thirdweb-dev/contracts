@@ -7,7 +7,7 @@ pragma solidity ^0.8.11;
  *
  *  `AirdropERC20Claimable` contract is an airdrop contract for ERC20 tokens. It follows a
  *  pull mechanism for transfer of tokens, where allowlisted recipients can claim tokens from
- *  the contract. 
+ *  the contract.
  */
 
 interface IAirdropERC20Claimable {

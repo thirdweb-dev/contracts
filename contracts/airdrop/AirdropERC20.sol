@@ -14,13 +14,7 @@ import "../interfaces/airdrop/IAirdropERC20.sol";
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
 
-contract AirdropERC20 is
-    Initializable,
-    Ownable,
-    ReentrancyGuardUpgradeable,
-    MulticallUpgradeable,
-    IAirdropERC20
-{
+contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, MulticallUpgradeable, IAirdropERC20 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -35,9 +29,7 @@ contract AirdropERC20 is
     constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
-    function initialize(
-        address _defaultAdmin
-    ) external initializer {
+    function initialize(address _defaultAdmin) external initializer {
         _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
@@ -62,7 +54,7 @@ contract AirdropERC20 is
 
     /**
      *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
-     *  @dev             The token-owner should approve target tokens to Airdrop contract, 
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC20 tokens to air-drop.
@@ -81,7 +73,7 @@ contract AirdropERC20 is
 
         IERC20 token = IERC20(_tokenAddress);
 
-        for(uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; i++) {
             token.transferFrom(_tokenOwner, _recipients[i], _amounts[i]);
         }
     }
