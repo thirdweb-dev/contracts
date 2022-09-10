@@ -26,6 +26,8 @@ import { VoteERC20 } from "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
+import { ERC721Wrapper } from "contracts/wrapper/ERC721Wrapper.sol";
+import { ERC1155Wrapper } from "contracts/wrapper/ERC1155Wrapper.sol";
 import "contracts/mock/Mock.sol";
 import "contracts/mock/MockContractPublisher.sol";
 
@@ -93,6 +95,10 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
         TWFactory(factory).addImplementation(address(new Pack(address(weth), forwarder)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("ERC721Wrapper"), 1)));
+        TWFactory(factory).addImplementation(address(new ERC721Wrapper()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("ERC1155Wrapper"), 1)));
+        TWFactory(factory).addImplementation(address(new ERC1155Wrapper()));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
@@ -227,6 +233,20 @@ abstract contract BaseTest is DSTest, Test {
         deployContractProxy(
             "Pack",
             abi.encodeCall(Pack.initialize, (deployer, NAME, SYMBOL, CONTRACT_URI, royaltyRecipient, royaltyBps))
+        );
+        deployContractProxy(
+            "ERC721Wrapper",
+            abi.encodeCall(
+                ERC721Wrapper.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), address(erc721), royaltyRecipient, royaltyBps)
+            )
+        );
+        deployContractProxy(
+            "ERC1155Wrapper",
+            abi.encodeCall(
+                ERC1155Wrapper.initialize,
+                (deployer, CONTRACT_URI, erc1155.uri(0), forwarders(), address(erc1155), royaltyRecipient, royaltyBps)
+            )
         );
     }
 

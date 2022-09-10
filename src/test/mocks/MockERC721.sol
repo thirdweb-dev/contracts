@@ -18,6 +18,10 @@ contract MockERC721 is ERC721Burnable {
         }
     }
 
+    function _baseURI() internal view virtual override returns (string memory) {
+        return "ipfs://";
+    }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return super.supportsInterface(interfaceId);
     }
