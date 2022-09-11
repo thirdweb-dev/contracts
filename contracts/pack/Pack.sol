@@ -45,7 +45,7 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 2;
 
-    address public immutable forwarder;
+    address private immutable forwarder;
 
     // Token name
     string public name;
@@ -102,14 +102,14 @@ contract Pack is
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
 
-        /** note: The immutable state-variable `forwarder` is an EOA-only forwarder,
+        /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
          *         which guards against automated attacks.
          *
          *         Use other forwarders only if there's a strong reason to bypass this check.
          */
         address[] memory forwarders = new address[](_trustedForwarders.length + 1);
-        uint256 i = 0;
-        for (; i < forwarders.length - 1; i++) {
+        uint256 i;
+        for (; i < _trustedForwarders.length; i++) {
             forwarders[i] = _trustedForwarders[i];
         }
         forwarders[i] = forwarder;
@@ -121,7 +121,6 @@ contract Pack is
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
 
         _setupRole(_transferRole, _defaultAdmin);
@@ -202,8 +201,7 @@ contract Pack is
         uint128 _amountDistributedPerOpen,
         address _recipient
     ) external payable onlyRoleWithSwitch(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
-        require(_contents.length > 0, "!Contents");
-        require(_contents.length == _numOfRewardUnits.length, "!Rewards");
+        require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
         if (!hasRole(assetRole, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
@@ -246,9 +244,8 @@ contract Pack is
         returns (uint256 packTotalSupply, uint256 newSupplyAdded)
     {
         require(canUpdatePack[_packId], "!Allowed");
-        require(_contents.length > 0, "!Contents");
-        require(_contents.length == _numOfRewardUnits.length, "!Rewards");
-        require(balanceOf(_recipient, _packId) != 0, "!Recipient");
+        require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
+        require(balanceOf(_recipient, _packId) != 0, "!Bal");
 
         if (!hasRole(assetRole, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
@@ -271,7 +268,7 @@ contract Pack is
         address opener = _msgSender();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
-        require(balanceOf(opener, _packId) >= _amountToOpen, "!Balance");
+        require(balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
 
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp <= block.timestamp, "cant open");
@@ -300,15 +297,15 @@ contract Pack is
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
-            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!Rewards");
-            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "!Rewards");
+            require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!R");
+            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "!R");
 
             sumOfRewardUnits += _numOfRewardUnits[i];
 
             packInfo[packId].perUnitAmounts.push(_contents[i].totalAmount / _numOfRewardUnits[i]);
         }
 
-        require(sumOfRewardUnits % amountPerOpen == 0, "!Amounts");
+        require(sumOfRewardUnits % amountPerOpen == 0, "!Amt");
         supplyToMint = sumOfRewardUnits / amountPerOpen;
 
         if (isUpdate) {
