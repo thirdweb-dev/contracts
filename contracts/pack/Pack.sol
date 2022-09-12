@@ -231,6 +231,7 @@ contract Pack is
         emit PackCreated(packId, _recipient, packTotalSupply);
     }
 
+    /// @dev Add contents to an existing packId.
     function addPackContents(
         uint256 _packId,
         Token[] calldata _contents,
