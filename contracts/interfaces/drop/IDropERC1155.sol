@@ -22,6 +22,11 @@ import "./IDropClaimCondition.sol";
  */
 
 interface IDropERC1155 is IERC1155Upgradeable, IDropClaimCondition {
+    struct AllowlistProof {
+        bytes32[] proof;
+        uint256 maxQuantityInAllowlist;
+    }
+
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
@@ -55,15 +60,14 @@ interface IDropERC1155 is IERC1155Upgradeable, IDropClaimCondition {
     /**
      *  @notice Lets an account claim a given quantity of NFTs.
      *
-     *  @param receiver                       The receiver of the NFTs to claim.
-     *  @param tokenId                       The unique ID of the token to claim.
-     *  @param quantity                       The quantity of NFTs to claim.
+     *  @param receiver                       The receiver of the NFT to claim.
+     *  @param tokenId                        The tokenId of the NFT to claim.
+     *  @param quantity                       The quantity of the NFT to claim.
      *  @param currency                       The currency in which to pay for the claim.
      *  @param pricePerToken                  The price per token to pay for the claim.
-     *  @param proofs                         The proof of the claimer's inclusion in the merkle root allowlist
+     *  @param allowlistProof                 The proof of the claimer's inclusion in the merkle root allowlist
      *                                        of the claim conditions that apply.
-     *  @param proofMaxQuantityForWallet      (Optional) The maximum number of NFTs an address included in an
-     *                                        allowlist can claim.
+     *  @param data                           Arbitrary bytes data that can be leveraged in the implementation of this interface.
      */
     function claim(
         address receiver,
@@ -71,8 +75,8 @@ interface IDropERC1155 is IERC1155Upgradeable, IDropClaimCondition {
         uint256 quantity,
         address currency,
         uint256 pricePerToken,
-        bytes32[] calldata proofs,
-        uint256 proofMaxQuantityForWallet
+        AllowlistProof calldata allowlistProof,
+        bytes memory data
     ) external payable;
 
     /**

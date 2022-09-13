@@ -26,10 +26,10 @@ contract SubExploitContract is ERC721Holder, ERC1155Holder {
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityForWallet
+        DropERC721.AllowlistProof calldata _allowlistProof,
+        bytes memory _data
     ) external {
-        drop.claim(_receiver, _quantity, _currency, _pricePerToken, _proofs, _proofMaxQuantityForWallet);
+        drop.claim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         selfdestruct(master);
     }
@@ -48,12 +48,12 @@ contract MasterExploitContract is ERC721Holder, ERC1155Holder {
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityForWallet
+        DropERC721.AllowlistProof calldata _allowlistProof,
+        bytes memory _data
     ) external {
         for (uint256 i = 0; i < 100; i++) {
             SubExploitContract sub = new SubExploitContract(address(drop));
-            sub.claimDrop(_receiver, _quantity, _currency, _pricePerToken, _proofs, _proofMaxQuantityForWallet);
+            sub.claimDrop(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
         }
     }
 }
@@ -158,6 +158,9 @@ contract DropERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -169,11 +172,11 @@ contract DropERC721Test is BaseTest {
         drop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 1, address(0), 0, proofs, 0);
+        drop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.expectRevert("cannot claim.");
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 1, address(0), 0, proofs, 0);
+        drop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
     function test_claimCondition_resetEligibility_waitTimeInSecondsBetweenClaims() public {
@@ -182,6 +185,9 @@ contract DropERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -194,13 +200,13 @@ contract DropERC721Test is BaseTest {
         drop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 1, address(0), 0, proofs, 0);
+        drop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, true);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 1, address(0), 0, proofs, 0);
+        drop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
     function test_claimCondition_quantityLimitPerWallet() public {
@@ -209,6 +215,9 @@ contract DropERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -219,16 +228,16 @@ contract DropERC721Test is BaseTest {
         drop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        drop.claim(receiver, 10, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        drop.claim(receiver, 10, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 20);
 
         vm.expectRevert("invalid quantity.");
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 90, address(0), 0, proofs, 0);
+        drop.claim(receiver, 90, address(0), 0, alp, "");
     }
 
     function test_claimCondition_resetEligibility_quantityLimitPerWallet() public {
@@ -237,6 +246,9 @@ contract DropERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -247,7 +259,7 @@ contract DropERC721Test is BaseTest {
         drop.setClaimConditions(conditions, false);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        drop.claim(receiver, 10, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
 
         vm.prank(deployer);
@@ -255,7 +267,7 @@ contract DropERC721Test is BaseTest {
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 0);
 
         vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 10, address(0), 0, proofs, 0);
+        drop.claim(receiver, 10, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), address(getActor(5))), 10);
     }
 
@@ -270,6 +282,10 @@ contract DropERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.maxQuantityInAllowlist = x;
+
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
@@ -283,14 +299,14 @@ contract DropERC721Test is BaseTest {
 
         vm.prank(getActor(5), getActor(5));
         vm.expectRevert("invalid quantity.");
-        drop.claim(receiver, 200, address(0), 0, proofs, x);
+        drop.claim(receiver, 200, address(0), 0, alp, "");
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, true);
 
         vm.prank(getActor(5), getActor(5));
         vm.expectRevert("invalid quantity.");
-        drop.claim(receiver, 200, address(0), 0, proofs, x);
+        drop.claim(receiver, 200, address(0), 0, alp, "");
     }
 
     function test_claimCondition_merkleProof(uint256 x) public {
@@ -308,6 +324,10 @@ contract DropERC721Test is BaseTest {
         inputs[1] = "src/test/scripts/getProof.ts";
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.maxQuantityInAllowlist = x;
 
         vm.warp(1);
 
@@ -327,24 +347,24 @@ contract DropERC721Test is BaseTest {
 
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
-        drop.claim(receiver, x - 5, address(0), 0, proofs, x);
+        drop.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), x - 5);
 
         vm.prank(receiver, receiver);
         vm.expectRevert("invalid quantity proof.");
-        drop.claim(receiver, 6, address(0), 0, proofs, x);
+        drop.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
-        drop.claim(receiver, 5, address(0), 0, proofs, x);
+        drop.claim(receiver, 5, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), x);
 
         vm.prank(receiver, receiver);
         vm.expectRevert("proof claimed.");
-        drop.claim(receiver, 5, address(0), 0, proofs, x);
+        drop.claim(receiver, 5, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
         vm.expectRevert("not in whitelist.");
-        drop.claim(receiver, x, address(0), 0, proofs, x);
+        drop.claim(receiver, x, address(0), 0, alp, "");
     }
 
     function testFail_claimCondition_merkleProof(uint256 x, uint256 y) public {
@@ -364,6 +384,10 @@ contract DropERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.maxQuantityInAllowlist = y;
+
         vm.warp(1);
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
@@ -383,10 +407,10 @@ contract DropERC721Test is BaseTest {
 
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
-        drop.claim(receiver, x, address(0), 0, proofs, y);
+        drop.claim(receiver, x, address(0), 0, alp, "");
 
         vm.prank(address(4), address(4));
         vm.expectRevert("not in whitelist.");
-        drop.claim(receiver, x, address(0), 0, proofs, y);
+        drop.claim(receiver, x, address(0), 0, alp, "");
     }
 }

@@ -168,8 +168,8 @@ contract DropERC20 is
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityForWallet
+        AllowlistProof calldata _allowlistProof,
+        bytes memory _data
     ) external payable nonReentrant {
         // Get the claim conditions.
         uint256 activeConditionId = getActiveClaimConditionId();
@@ -186,14 +186,13 @@ contract DropERC20 is
             activeConditionId,
             _msgSender(),
             _quantity,
-            _proofs,
-            _proofMaxQuantityForWallet
+            _allowlistProof
         );
 
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityForWallet value with hashed leaf in the allowlist
         // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
-        bool toVerifyMaxQuantityPerWallet = _proofMaxQuantityForWallet == 0 ||
+        bool toVerifyMaxQuantityPerWallet = _allowlistProof.maxQuantityInAllowlist == 0 ||
             claimCondition.phases[activeConditionId].merkleRoot == bytes32(0);
         verifyClaim(
             activeConditionId,
@@ -206,9 +205,9 @@ contract DropERC20 is
 
         if (validMerkleProof) {
             if (
-                _proofMaxQuantityForWallet > 0 &&
+                _allowlistProof.maxQuantityInAllowlist > 0 &&
                 _quantity + claimCondition.supplyClaimedByWallet[activeConditionId][_msgSender()] ==
-                _proofMaxQuantityForWallet
+                _allowlistProof.maxQuantityInAllowlist
             ) {
                 /**
                  *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
@@ -374,22 +373,22 @@ contract DropERC20 is
         uint256 _conditionId,
         address _claimer,
         uint256 _quantity,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityForWallet
+        AllowlistProof calldata _allowlistProof
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
         uint256 supplyClaimedByWallet = _quantity + claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
 
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
-                _proofs,
+                _allowlistProof.proof,
                 currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
+                keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             require(validMerkleProof, "not in whitelist.");
             require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
             require(
-                _proofMaxQuantityForWallet == 0 || supplyClaimedByWallet <= _proofMaxQuantityForWallet,
+                _allowlistProof.maxQuantityInAllowlist == 0 ||
+                    supplyClaimedByWallet <= _allowlistProof.maxQuantityInAllowlist,
                 "invalid quantity proof."
             );
         }

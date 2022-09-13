@@ -22,6 +22,11 @@ import "./IDropClaimCondition.sol";
  */
 
 interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
+    struct AllowlistProof {
+        bytes32[] proof;
+        uint256 maxQuantityInAllowlist;
+    }
+
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
@@ -68,18 +73,17 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
      *  @param quantity                       The quantity of NFTs to claim.
      *  @param currency                       The currency in which to pay for the claim.
      *  @param pricePerToken                  The price per token to pay for the claim.
-     *  @param proofs                         The proof of the claimer's inclusion in the merkle root allowlist
+     *  @param allowlistProof                 The proof of the claimer's inclusion in the merkle root allowlist
      *                                        of the claim conditions that apply.
-     *  @param proofMaxQuantityForWallet      (Optional) The maximum number of NFTs an address included in an
-     *                                        allowlist can claim.
+     *  @param data                           Arbitrary bytes data that can be leveraged in the implementation of this interface.
      */
     function claim(
         address receiver,
         uint256 quantity,
         address currency,
         uint256 pricePerToken,
-        bytes32[] calldata proofs,
-        uint256 proofMaxQuantityForWallet
+        AllowlistProof calldata allowlistProof,
+        bytes memory data
     ) external payable;
 
     /**
