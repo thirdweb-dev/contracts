@@ -797,6 +797,25 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 | index `indexed` | uint256 | undefined |
 | revealedURI  | string | undefined |
 
+### TokensClaimed
+
+```solidity
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed tokenId, uint256 quantityClaimed)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimer `indexed` | address | undefined |
+| receiver `indexed` | address | undefined |
+| tokenId `indexed` | uint256 | undefined |
+| quantityClaimed  | uint256 | undefined |
+
 ### TokensLazyMinted
 
 ```solidity

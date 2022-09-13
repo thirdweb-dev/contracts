@@ -107,14 +107,14 @@ contract ExtensionTokenBundle is DSTest, Test {
     function test_revert_createBundle_emptyBundle() public {
         ITokenBundle.Token[] memory emptyBundle;
 
-        vm.expectRevert("no tokens to bind");
+        vm.expectRevert("!Tokens");
         ext.createBundle(emptyBundle, 0);
     }
 
     function test_revert_createBundle_existingBundleId() public {
         ext.createBundle(bundleContent, 0);
 
-        vm.expectRevert("existent at bundleId");
+        vm.expectRevert("id exists");
         ext.createBundle(bundleContent, 0);
     }
 
@@ -246,7 +246,7 @@ contract ExtensionTokenBundle is DSTest, Test {
         ext.createBundle(bundleContent, 0);
 
         ITokenBundle.Token[] memory emptyBundle;
-        vm.expectRevert("no tokens to bind");
+        vm.expectRevert("!Tokens");
         ext.updateBundle(emptyBundle, 0);
     }
 

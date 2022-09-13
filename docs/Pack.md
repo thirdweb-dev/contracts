@@ -464,7 +464,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
 ```
 
 
@@ -479,6 +479,7 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _name | string | undefined |
 | _symbol | string | undefined |
 | _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint256 | undefined |
 
