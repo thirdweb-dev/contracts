@@ -9,6 +9,7 @@ import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
+import "../extension/interface/IClaimableERC1155.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -44,7 +45,16 @@ import "../lib/TWStrings.sol";
  *
  */
 
-contract ERC1155LazyMint is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata, LazyMint {
+contract ERC1155LazyMint is
+    ERC1155,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    Multicall,
+    BatchMintMetadata,
+    LazyMint,
+    IClaimableERC1155
+{
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -106,6 +116,7 @@ contract ERC1155LazyMint is ERC1155, ContractMetadata, Ownable, Royalty, Multica
         require(_tokenId < nextTokenIdToMint(), "invalid id");
 
         _mint(_receiver, _tokenId, _quantity, "");
+        emit TokensClaimed(msg.sender, _receiver, _tokenId, _quantity);
     }
 
     /**
