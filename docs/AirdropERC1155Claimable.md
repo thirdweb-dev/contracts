@@ -27,10 +27,10 @@ function airdropTokenAddress() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### availableAmounts
+### availableAmount
 
 ```solidity
-function availableAmounts(uint256) external view returns (uint256)
+function availableAmount(uint256) external view returns (uint256)
 ```
 
 
@@ -55,19 +55,19 @@ function availableAmounts(uint256) external view returns (uint256)
 function claim(address _receiver, uint256 _quantity, uint256 _tokenId, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external nonpayable
 ```
 
+Lets an account claim a given quantity of ERC1155 tokens.
 
 
-*Lets an account claim NFTs.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _receiver | address | undefined |
-| _quantity | uint256 | undefined |
-| _tokenId | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityForWallet | uint256 | undefined |
+| _receiver | address | The receiver of the tokens to claim. |
+| _quantity | uint256 | The quantity of tokens to claim. |
+| _tokenId | uint256 | Token Id to claim. |
+| _proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
+| _proofMaxQuantityForWallet | uint256 | The maximum number of tokens an address included in an                                        allowlist can claim. |
 
 ### contractType
 
@@ -330,7 +330,7 @@ function tokenOwner() external view returns (address)
 ### verifyClaim
 
 ```solidity
-function verifyClaim(address _claimer, uint256 _quantity, uint256 _tokenId, bool verifyMaxQuantityPerWallet) external view
+function verifyClaim(address _claimer, uint256 _quantity, uint256 _tokenId, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external view
 ```
 
 
@@ -344,34 +344,8 @@ function verifyClaim(address _claimer, uint256 _quantity, uint256 _tokenId, bool
 | _claimer | address | undefined |
 | _quantity | uint256 | undefined |
 | _tokenId | uint256 | undefined |
-| verifyMaxQuantityPerWallet | bool | undefined |
-
-### verifyClaimMerkleProof
-
-```solidity
-function verifyClaimMerkleProof(address _claimer, uint256 _quantity, uint256 _tokenId, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
-```
-
-
-
-*Checks whether a claimer meets the allowlist criteria.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined |
-| _quantity | uint256 | undefined |
-| _tokenId | uint256 | undefined |
 | _proofs | bytes32[] | undefined |
 | _proofMaxQuantityForWallet | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| validMerkleProof | bool | undefined |
-| merkleProofIndex | uint256 | undefined |
 
 
 
@@ -397,7 +371,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 quantityClaimed)
+event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed tokenId, uint256 quantityClaimed)
 ```
 
 
@@ -410,6 +384,7 @@ event TokensClaimed(address indexed claimer, address indexed receiver, uint256 q
 |---|---|---|
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
+| tokenId `indexed` | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 

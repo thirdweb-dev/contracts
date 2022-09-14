@@ -16,19 +16,19 @@
 function airdrop(address _tokenAddress, address _tokenOwner, address[] _recipients, uint256[] _amounts, uint256[] _tokenIds) external nonpayable
 ```
 
+Lets contract-owner send ERC1155 tokens to a list of addresses.
 
-
-
+*The token-owner should approve target tokens to Airdrop contract,                   which acts as operator for the tokens.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenAddress | address | undefined |
-| _tokenOwner | address | undefined |
-| _recipients | address[] | undefined |
-| _amounts | uint256[] | undefined |
-| _tokenIds | uint256[] | undefined |
+| _tokenAddress | address | Contract address of ERC1155 tokens to air-drop. |
+| _tokenOwner | address | Address from which to transfer tokens. |
+| _recipients | address[] | List of recipient addresses for the air-drop. |
+| _amounts | uint256[] | Quantity of tokens to air-drop, per recipient. |
+| _tokenIds | uint256[] | List of ERC1155 token-Ids to drop. |
 
 ### contractType
 
@@ -177,24 +177,6 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 |---|---|---|
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
-
-### TokensClaimed
-
-```solidity
-event TokensClaimed(address indexed claimer, address indexed receiver, uint256 quantityClaimed)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| claimer `indexed` | address | undefined |
-| receiver `indexed` | address | undefined |
-| quantityClaimed  | uint256 | undefined |
 
 
 

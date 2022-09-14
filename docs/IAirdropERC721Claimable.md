@@ -4,7 +4,7 @@
 
 
 
-Thirdweb&#39;s &#39;Airdrop&#39; contracts provide a lightweight and easy to use mechanism  to drop tokens.  `AirdropERC721` contract is an airdrop contract for ERC721 tokens.
+Thirdweb&#39;s `Airdrop` contracts provide a lightweight and easy to use mechanism  to drop tokens.  `AirdropERC721Claimable` contract is an airdrop contract for ERC721 tokens. It follows a  pull mechanism for transfer of tokens, where allowlisted recipients can claim tokens from  the contract.
 
 
 
