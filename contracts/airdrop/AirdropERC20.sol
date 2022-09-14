@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
@@ -10,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/airdrop/IAirdropERC20.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
@@ -67,14 +67,12 @@ contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mul
         address _tokenOwner,
         address[] memory _recipients,
         uint256[] memory _amounts
-    ) external nonReentrant onlyOwner {
+    ) external payable nonReentrant onlyOwner {
         uint256 len = _amounts.length;
         require(len == _recipients.length, "length mismatch");
 
-        IERC20 token = IERC20(_tokenAddress);
-
         for (uint256 i = 0; i < len; i++) {
-            require(token.transferFrom(_tokenOwner, _recipients[i], _amounts[i]), "transfer failed");
+            CurrencyTransferLib.transferCurrency(_tokenAddress, _tokenOwner, _recipients[i], _amounts[i]);
         }
     }
 

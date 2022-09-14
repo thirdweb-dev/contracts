@@ -25,5 +25,5 @@ interface IAirdropERC20 {
         address _tokenOwner,
         address[] memory _recipients,
         uint256[] memory _amounts
-    ) external;
+    ) external payable;
 }
