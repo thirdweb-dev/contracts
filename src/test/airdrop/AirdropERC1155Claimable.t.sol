@@ -53,7 +53,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         assertEq(drop.availableAmount(id), _availableAmount - quantity);
     }
 
-    function test_revert_claim_notInAllowlist() public {
+    function test_revert_claim_notInAllowlist_invalidQty() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/getProof.ts";
@@ -69,11 +69,11 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         uint256 id = 0;
 
         vm.prank(receiver);
-        vm.expectRevert("not in whitelist.");
+        vm.expectRevert("invalid quantity.");
         drop.claim(receiver, quantity, id, proofs, 5);
     }
 
-    function test_state_claim_allowlistedClaimer_proofClaimed() public {
+    function test_revert_claim_allowlistedClaimer_proofClaimed() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/getProof.ts";
@@ -97,7 +97,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         drop.claim(receiver, quantity, id, proofs, 5);
 
         vm.prank(receiver);
-        vm.expectRevert("proof claimed.");
+        vm.expectRevert("invalid quantity.");
         drop.claim(receiver, quantity, id, proofs, 5);
     }
 
@@ -121,7 +121,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         drop.claim(receiver, quantity, id, proofs, 5);
     }
 
-    function test_state_claim_allowlistedClaimer_airdropExpired() public {
+    function test_revert_claim_allowlistedClaimer_airdropExpired() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/getProof.ts";
