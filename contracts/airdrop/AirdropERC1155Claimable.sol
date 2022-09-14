@@ -138,7 +138,7 @@ contract AirdropERC1155Claimable is
         uint256 _proofMaxQuantityForWallet
     ) external nonReentrant {
         address claimer = _msgSender();
-        
+
         verifyClaim(claimer, _quantity, _tokenId, _proofs, _proofMaxQuantityForWallet);
 
         transferClaimedTokens(_receiver, _quantity, _tokenId);
@@ -167,15 +167,12 @@ contract AirdropERC1155Claimable is
         uint256 _tokenId,
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
-    ) 
-        public 
-        view
-    {
+    ) public view {
         bool isOverride;
 
         bytes32 mroot = merkleRoot[_tokenId];
-        if(mroot != bytes32(0)) {
-            (isOverride,) = MerkleProof.verify(
+        if (mroot != bytes32(0)) {
+            (isOverride, ) = MerkleProof.verify(
                 _proofs,
                 mroot,
                 keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
