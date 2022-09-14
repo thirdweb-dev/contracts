@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 
 interface IAirdropERC1155Claimable {
     /// @dev Emitted when tokens are claimed.
-    event TokensClaimed(address indexed claimer, address indexed receiver, uint256 quantityClaimed);
+    event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed tokenId, uint256 quantityClaimed);
 
     /**
      *  @notice Lets an account claim a given quantity of ERC1155 tokens.

@@ -143,7 +143,7 @@ contract AirdropERC1155Claimable is
 
         transferClaimedTokens(_receiver, _quantity, _tokenId);
 
-        emit TokensClaimed(_msgSender(), _receiver, _quantity);
+        emit TokensClaimed(_msgSender(), _receiver, _tokenId, _quantity);
     }
 
     /// @dev Transfers the tokens being claimed.
