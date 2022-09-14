@@ -128,26 +128,44 @@ contract AirdropERC721Claimable is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) external nonReentrant {
-        /**
-         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
-         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
-         *  restriction.
-         */
+        address claimer = _msgSender();
+        
+        verifyClaim(claimer, _quantity, _proofs, _proofMaxQuantityForWallet);
 
-        // Verify inclusion in allowlist.
-        verifyClaimMerkleProof(_msgSender(), _quantity, _proofs, _proofMaxQuantityForWallet);
-
-        // Verify claim validity. If not valid, revert.
-        // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityForWallet value with hashed leaf in the allowlist
-        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
-        bool toVerifyMaxQuantityPerWallet = _proofMaxQuantityForWallet == 0 || merkleRoot == bytes32(0);
-        verifyClaim(_msgSender(), _quantity, toVerifyMaxQuantityPerWallet);
-
-        // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, _quantity);
 
         emit TokensClaimed(_msgSender(), _receiver, _quantity);
+    }
+
+    /// @dev Checks a request to claim tokens against the active claim condition's criteria.
+    function verifyClaim(
+        address _claimer,
+        uint256 _quantity,
+        bytes32[] calldata _proofs,
+        uint256 _proofMaxQuantityForWallet
+    ) 
+        public 
+        view
+    {
+        bool isOverride;
+        if(merkleRoot != bytes32(0)) {
+            (isOverride,) = MerkleProof.verify(
+                _proofs,
+                merkleRoot,
+                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
+            );
+        }
+
+        uint256 supplyClaimedAlready = supplyClaimedByWallet[_claimer];
+
+        require(_quantity > 0, "Claiming zero tokens");
+        require(_quantity <= availableAmount, "exceeds available tokens.");
+
+        uint256 expTimestamp = expirationTimestamp;
+        require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
+
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount;
+        require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -167,45 +185,6 @@ contract AirdropERC721Claimable is
             index += 1;
         }
         nextIndex = index;
-    }
-
-    /// @dev Checks a request to claim tokens against the active claim condition's criteria.
-    function verifyClaim(
-        address _claimer,
-        uint256 _quantity,
-        bool verifyMaxQuantityPerWallet
-    ) public view {
-        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        require(
-            _quantity > 0 &&
-                (!verifyMaxQuantityPerWallet ||
-                    maxWalletClaimCount == 0 ||
-                    _quantity + supplyClaimedByWallet[_claimer] <= maxWalletClaimCount),
-            "invalid quantity."
-        );
-        require(_quantity <= availableAmount, "exceeds available tokens.");
-        require(expirationTimestamp == 0 || block.timestamp < expirationTimestamp, "airdrop expired.");
-    }
-
-    /// @dev Checks whether a claimer meets the allowlist criteria.
-    function verifyClaimMerkleProof(
-        address _claimer,
-        uint256 _quantity,
-        bytes32[] calldata _proofs,
-        uint256 _proofMaxQuantityForWallet
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        if (merkleRoot != bytes32(0) && _proofMaxQuantityForWallet != 0) {
-            uint256 _supplyClaimed = supplyClaimedByWallet[_claimer];
-
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
-                _proofs,
-                merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
-            );
-            require(validMerkleProof, "not in whitelist.");
-            require(_supplyClaimed < _proofMaxQuantityForWallet, "proof claimed.");
-            require(_quantity + _supplyClaimed <= _proofMaxQuantityForWallet, "invalid quantity.");
-        }
     }
 
     /*///////////////////////////////////////////////////////////////

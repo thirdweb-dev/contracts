@@ -137,23 +137,10 @@ contract AirdropERC1155Claimable is
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
     ) external nonReentrant {
-        /**
-         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
-         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerTransaction
-         *  restriction.
-         */
+        address claimer = _msgSender();
+        
+        verifyClaim(claimer, _quantity, _tokenId, _proofs, _proofMaxQuantityForWallet);
 
-        // Verify inclusion in allowlist.
-        verifyClaimMerkleProof(_msgSender(), _quantity, _tokenId, _proofs, _proofMaxQuantityForWallet);
-
-        // Verify claim validity. If not valid, revert.
-        // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityForWallet value with hashed leaf in the allowlist
-        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
-        bool toVerifyMaxQuantityPerWallet = _proofMaxQuantityForWallet == 0 || merkleRoot[_tokenId] == bytes32(0);
-        verifyClaim(_msgSender(), _quantity, _tokenId, toVerifyMaxQuantityPerWallet);
-
-        // Mint the relevant tokens to claimer.
         transferClaimedTokens(_receiver, _quantity, _tokenId);
 
         emit TokensClaimed(_msgSender(), _receiver, _quantity);
@@ -178,40 +165,33 @@ contract AirdropERC1155Claimable is
         address _claimer,
         uint256 _quantity,
         uint256 _tokenId,
-        bool verifyMaxQuantityPerWallet
-    ) public view {
-        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        require(
-            _quantity > 0 &&
-                (!verifyMaxQuantityPerWallet ||
-                    maxWalletClaimCount[_tokenId] == 0 ||
-                    _quantity + supplyClaimedByWallet[_tokenId][_claimer] <= maxWalletClaimCount[_tokenId]),
-            "invalid quantity."
-        );
-        require(_quantity <= availableAmount[_tokenId], "exceeds available tokens.");
-        require(expirationTimestamp == 0 || block.timestamp < expirationTimestamp, "airdrop expired.");
-    }
-
-    /// @dev Checks whether a claimer meets the allowlist criteria.
-    function verifyClaimMerkleProof(
-        address _claimer,
-        uint256 _quantity,
-        uint256 _tokenId,
         bytes32[] calldata _proofs,
         uint256 _proofMaxQuantityForWallet
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        if (merkleRoot[_tokenId] != bytes32(0) && _proofMaxQuantityForWallet != 0) {
-            uint256 _supplyClaimed = supplyClaimedByWallet[_tokenId][_claimer];
+    ) 
+        public 
+        view
+    {
+        bool isOverride;
 
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
+        bytes32 mroot = merkleRoot[_tokenId];
+        if(mroot != bytes32(0)) {
+            (isOverride,) = MerkleProof.verify(
                 _proofs,
-                merkleRoot[_tokenId],
+                mroot,
                 keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
             );
-            require(validMerkleProof, "not in whitelist.");
-            require(_supplyClaimed < _proofMaxQuantityForWallet, "proof claimed.");
-            require(_quantity + _supplyClaimed <= _proofMaxQuantityForWallet, "invalid quantity.");
         }
+
+        uint256 supplyClaimedAlready = supplyClaimedByWallet[_tokenId][_claimer];
+
+        require(_quantity > 0, "Claiming zero tokens");
+        require(_quantity <= availableAmount[_tokenId], "exceeds available tokens.");
+
+        uint256 expTimestamp = expirationTimestamp;
+        require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
+
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount[_tokenId];
+        require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 
     /*///////////////////////////////////////////////////////////////
