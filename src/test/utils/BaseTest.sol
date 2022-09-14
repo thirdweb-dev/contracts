@@ -10,6 +10,7 @@ import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
 import "contracts/forwarder/Forwarder.sol";
+import { ForwarderEOAOnly } from "contracts/forwarder/ForwarderEOAOnly.sol";
 import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
@@ -47,6 +48,7 @@ abstract contract BaseTest is DSTest, Test {
     WETH9 public weth;
 
     address public forwarder;
+    address public eoaForwarder;
     address public registry;
     address public factory;
     address public fee;
@@ -91,6 +93,7 @@ abstract contract BaseTest is DSTest, Test {
         erc1155 = new MockERC1155();
         weth = new WETH9();
         forwarder = address(new Forwarder());
+        eoaForwarder = address(new ForwarderEOAOnly());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
         contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
@@ -112,7 +115,6 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Split()));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
-        TWFactory(factory).addImplementation(address(new Pack(address(weth), forwarder)));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC721"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC721()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC20"), 1)));
@@ -125,6 +127,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new AirdropERC20Claimable()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155Claimable"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC1155Claimable()));
+        TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
 
@@ -261,7 +264,10 @@ abstract contract BaseTest is DSTest, Test {
         );
         deployContractProxy(
             "Pack",
-            abi.encodeCall(Pack.initialize, (deployer, NAME, SYMBOL, CONTRACT_URI, royaltyRecipient, royaltyBps))
+            abi.encodeCall(
+                Pack.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
+            )
         );
         deployContractProxy("AirdropERC721", abi.encodeCall(AirdropERC721.initialize, (deployer)));
         deployContractProxy("AirdropERC20", abi.encodeCall(AirdropERC20.initialize, (deployer)));

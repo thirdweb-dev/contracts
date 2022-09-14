@@ -200,6 +200,11 @@ contract PackTest is BaseTest {
         pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
     }
 
+    function test_checkForwarders() public {
+        assertTrue(pack.isTrustedForwarder(eoaForwarder));
+        assertTrue(pack.isTrustedForwarder(forwarder));
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
@@ -581,8 +586,9 @@ contract PackTest is BaseTest {
 
         address recipient = address(0x123);
 
+        bytes memory err = "!Len";
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert("!Contents");
+        vm.expectRevert(err);
         pack.createPack(emptyContent, rewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -594,8 +600,9 @@ contract PackTest is BaseTest {
 
         address recipient = address(0x123);
 
+        bytes memory err = "!Len";
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert("!Rewards");
+        vm.expectRevert(err);
         pack.createPack(packContents, rewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -760,7 +767,8 @@ contract PackTest is BaseTest {
 
         address randomRecipient = address(0x12345);
 
-        vm.expectRevert("!Recipient");
+        bytes memory err = "!Bal";
+        vm.expectRevert(err);
         vm.prank(address(tokenOwner));
         pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, randomRecipient);
     }
@@ -914,8 +922,9 @@ contract PackTest is BaseTest {
         vm.prank(address(tokenOwner));
         (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
 
+        bytes memory err = "!Bal";
         vm.startPrank(recipient, recipient);
-        vm.expectRevert("!Balance");
+        vm.expectRevert(err);
         pack.openPack(packId, totalSupply + 1);
     }
 
@@ -942,8 +951,9 @@ contract PackTest is BaseTest {
         vm.prank(address(tokenOwner));
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
 
+        bytes memory err = "!Bal";
         vm.startPrank(recipient, recipient);
-        vm.expectRevert("!Balance");
+        vm.expectRevert(err);
         pack.openPack(2, 1);
     }
 

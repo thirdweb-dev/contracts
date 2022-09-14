@@ -124,6 +124,27 @@ When creating packs, you can specify the numer of reward units to distribute to 
 
 This guarantees that each pack can be opened to retrieve the intended *n* reward units from inside the set of packs.
 
+## Updating packs
+
+You can add more contents to a created pack, up till the first transfer of packs. No addition can be made post that. 
+
+```solidity
+/// @dev Add contents to an existing packId.
+function addPackContents(
+    uint256 packId,
+    Token[] calldata contents,
+    uint256[] calldata numOfRewardUnits,
+    address recipient
+) external
+```
+
+| Parameter | Description |
+| --- | --- |
+| PackId | The identifier of the pack to add contents to. |
+| contents | Tokens/assets packed in the set of pack. |
+| numOfRewardUnits | Number of reward units for each asset, where each reward unit contains per unit amount of corresponding asset. |
+| recipient | The recipient of the new supply added. Should be the same address used during creation of packs. |
+
 ## Opening packs
 
 Packs can be opened by owners of packs. A pack owner can open multiple packs at once. ‘Opening a pack’ essentially means burning the pack and receiving the intended *n* number of reward units from inside the set of packs, in exchange.
