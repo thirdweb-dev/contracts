@@ -71,9 +71,13 @@ contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mul
         uint256 len = _amounts.length;
         require(len == _recipients.length, "length mismatch");
 
+        uint256 totalAmount;
         for (uint256 i = 0; i < len; i++) {
+            totalAmount += _amounts[i];
             CurrencyTransferLib.transferCurrency(_tokenAddress, _tokenOwner, _recipients[i], _amounts[i]);
         }
+
+        require(totalAmount == msg.value, "Incorrect native token amount");
     }
 
     /*///////////////////////////////////////////////////////////////

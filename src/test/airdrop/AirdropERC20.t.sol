@@ -45,6 +45,30 @@ contract AirdropERC20Test is BaseTest {
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
     }
 
+    function test_state_airdrop_nativeToken() public {
+        vm.deal(deployer, 10_000 ether);
+
+        uint256 balBefore = deployer.balance;
+
+        vm.prank(deployer);
+        drop.airdrop{ value: 10_000 ether }(NATIVE_TOKEN, deployer, _recipients, _amounts);
+
+        for (uint256 i = 0; i < 1000; i++) {
+            assertEq(_recipients[i].balance, _amounts[i]);
+        }
+        assertEq(deployer.balance, balBefore - 10_000 ether);
+    }
+
+    function test_revert_airdrop_incorrectNativeTokenAmt() public {
+        vm.deal(deployer, 11_000 ether);
+
+        uint256 incorrectAmt = 10_000 ether + 1;
+
+        vm.prank(deployer);
+        vm.expectRevert("Incorrect native token amount");
+        drop.airdrop{ value: incorrectAmt }(NATIVE_TOKEN, deployer, _recipients, _amounts);
+    }
+
     function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
         vm.expectRevert("Not authorized");
