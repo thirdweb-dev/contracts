@@ -66,11 +66,11 @@ contract AirdropERC721ClaimableTest is BaseTest {
         uint256 quantity = 2;
 
         vm.prank(receiver);
-        vm.expectRevert("not in whitelist.");
+        vm.expectRevert("invalid quantity.");
         drop.claim(receiver, quantity, proofs, 4);
     }
 
-    function test_state_claim_allowlistedClaimer_proofClaimed() public {
+    function test_revert_claim_allowlistedClaimer_proofClaimed() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/getProof.ts";
@@ -103,7 +103,7 @@ contract AirdropERC721ClaimableTest is BaseTest {
         drop.claim(receiver, quantity, proofs, 5);
 
         vm.prank(receiver);
-        vm.expectRevert("proof claimed.");
+        vm.expectRevert("invalid quantity.");
         drop.claim(receiver, quantity, proofs, 5);
     }
 
