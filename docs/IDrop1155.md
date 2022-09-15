@@ -1,4 +1,4 @@
-# IDrop
+# IDrop1155
 
 
 
@@ -13,7 +13,7 @@
 ### claim
 
 ```solidity
-function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, IDrop.AllowlistProof allowlistProof, bytes data) external payable
+function claim(address receiver, uint256 tokenId, uint256 quantity, address currency, uint256 pricePerToken, IDrop1155.AllowlistProof allowlistProof, bytes data) external payable
 ```
 
 
@@ -25,16 +25,17 @@ function claim(address receiver, uint256 quantity, address currency, uint256 pri
 | Name | Type | Description |
 |---|---|---|
 | receiver | address | undefined |
+| tokenId | uint256 | undefined |
 | quantity | uint256 | undefined |
 | currency | address | undefined |
 | pricePerToken | uint256 | undefined |
-| allowlistProof | IDrop.AllowlistProof | undefined |
+| allowlistProof | IDrop1155.AllowlistProof | undefined |
 | data | bytes | undefined |
 
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
+function setClaimConditions(uint256 tokenId, IClaimCondition.ClaimCondition[] phases, bool resetClaimEligibility) external nonpayable
 ```
 
 
@@ -45,6 +46,7 @@ function setClaimConditions(IClaimCondition.ClaimCondition[] phases, bool resetC
 
 | Name | Type | Description |
 |---|---|---|
+| tokenId | uint256 | undefined |
 | phases | IClaimCondition.ClaimCondition[] | undefined |
 | resetClaimEligibility | bool | undefined |
 
@@ -55,7 +57,7 @@ function setClaimConditions(IClaimCondition.ClaimCondition[] phases, bool resetC
 ### ClaimConditionsUpdated
 
 ```solidity
-event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
+event ClaimConditionsUpdated(uint256 indexed tokenId, IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
 ```
 
 
@@ -66,18 +68,19 @@ event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, b
 
 | Name | Type | Description |
 |---|---|---|
+| tokenId `indexed` | uint256 | undefined |
 | claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
 | resetEligibility  | bool | undefined |
 
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
+event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 tokenId, uint256 quantityClaimed)
 ```
 
 
 
-*Emitted when tokens are claimed via `claim`.*
+*Emitted when tokens are claimed.*
 
 #### Parameters
 
@@ -86,7 +89,7 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 | claimConditionIndex `indexed` | uint256 | undefined |
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
-| startTokenId  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 

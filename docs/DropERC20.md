@@ -171,12 +171,12 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropERC20.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
 
-*Lets an account claim tokens.*
+
 
 #### Parameters
 
@@ -186,8 +186,8 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityForWallet | uint256 | undefined |
+| _allowlistProof | IDropERC20.AllowlistProof | undefined |
+| _data | bytes | undefined |
 
 ### claimCondition
 
@@ -1085,12 +1085,12 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, IDropERC20.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
 
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
+
 
 #### Parameters
 
@@ -1099,8 +1099,7 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 | _conditionId | uint256 | undefined |
 | _claimer | address | undefined |
 | _quantity | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityForWallet | uint256 | undefined |
+| _allowlistProof | IDropERC20.AllowlistProof | undefined |
 
 #### Returns
 

@@ -59,10 +59,10 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 ### claim
 
 ```solidity
-function claim(address receiver, uint256 tokenId, uint256 quantity, address currency, uint256 pricePerToken, bytes32[] proofs, uint256 proofMaxQuantityForWallet) external payable
+function claim(address receiver, uint256 tokenId, uint256 quantity, address currency, uint256 pricePerToken, IDropERC1155.AllowlistProof allowlistProof, bytes data) external payable
 ```
 
-Lets an account claim a given quantity of NFTs.
+
 
 
 
@@ -70,13 +70,13 @@ Lets an account claim a given quantity of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | The receiver of the NFTs to claim. |
-| tokenId | uint256 | The unique ID of the token to claim. |
-| quantity | uint256 | The quantity of NFTs to claim. |
-| currency | address | The currency in which to pay for the claim. |
-| pricePerToken | uint256 | The price per token to pay for the claim. |
-| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
-| proofMaxQuantityForWallet | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim. |
+| receiver | address | undefined |
+| tokenId | uint256 | undefined |
+| quantity | uint256 | undefined |
+| currency | address | undefined |
+| pricePerToken | uint256 | undefined |
+| allowlistProof | IDropERC1155.AllowlistProof | undefined |
+| data | bytes | undefined |
 
 ### isApprovedForAll
 

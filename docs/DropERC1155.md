@@ -112,12 +112,12 @@ function burnBatch(address account, uint256[] ids, uint256[] values) external no
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external payable
+function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropERC1155.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
 
-*Lets an account claim a given quantity of NFTs, of a single tokenId.*
+
 
 #### Parameters
 
@@ -128,8 +128,8 @@ function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityForWallet | uint256 | undefined |
+| _allowlistProof | IDropERC1155.AllowlistProof | undefined |
+| _data | bytes | undefined |
 
 ### claimCondition
 
@@ -1061,12 +1061,12 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, u
 ### verifyClaimMerkleProof
 
 ```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, bytes32[] _proofs, uint256 _proofMaxQuantityForWallet) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
+function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, IDropERC1155.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
 ```
 
 
 
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
+
 
 #### Parameters
 
@@ -1076,8 +1076,7 @@ function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 
 | _claimer | address | undefined |
 | _tokenId | uint256 | undefined |
 | _quantity | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityForWallet | uint256 | undefined |
+| _allowlistProof | IDropERC1155.AllowlistProof | undefined |
 
 #### Returns
 

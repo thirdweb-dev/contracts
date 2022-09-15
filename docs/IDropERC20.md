@@ -81,10 +81,10 @@ function balanceOf(address account) external view returns (uint256)
 ### claim
 
 ```solidity
-function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, bytes32[] proofs, uint256 proofMaxQuantityForWallet) external payable
+function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, IDropERC20.AllowlistProof allowlistProof, bytes data) external payable
 ```
 
-Lets an account claim a given quantity of tokens.
+
 
 
 
@@ -92,12 +92,12 @@ Lets an account claim a given quantity of tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | The receiver of the tokens to claim. |
-| quantity | uint256 | The quantity of tokens to claim. |
-| currency | address | The currency in which to pay for the claim. |
-| pricePerToken | uint256 | The price per token (i.e. price per 1 ether unit of the token)                                         to pay for the claim. |
-| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
-| proofMaxQuantityForWallet | uint256 | (Optional) The maximum number of tokens an address included in an                                        allowlist can claim. |
+| receiver | address | undefined |
+| quantity | uint256 | undefined |
+| currency | address | undefined |
+| pricePerToken | uint256 | undefined |
+| allowlistProof | IDropERC20.AllowlistProof | undefined |
+| data | bytes | undefined |
 
 ### setClaimConditions
 

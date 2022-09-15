@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./IClaimCondition.sol";
+import "./IClaimConditionMultiPhase.sol";
 
-interface IDropSinglePhase1155 is IClaimCondition {
+interface IDrop1155 is IClaimConditionMultiPhase {
     struct AllowlistProof {
         bytes32[] proof;
         uint256 maxQuantityInAllowlist;
     }
 
-    /// @dev Emitted when tokens are claimed via `claim`.
+    /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
+        uint256 indexed claimConditionIndex,
         address indexed claimer,
         address indexed receiver,
-        uint256 indexed tokenId,
+        uint256 tokenId,
         uint256 quantityClaimed
     );
 
     /// @dev Emitted when the contract's claim conditions are updated.
-    event ClaimConditionUpdated(uint256 indexed tokenId, ClaimCondition condition, bool resetEligibility);
+    event ClaimConditionsUpdated(uint256 indexed tokenId, ClaimCondition[] claimConditions, bool resetEligibility);
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.
      *
-     *  @param receiver                       The receiver of the NFT to claim.
+     *  @param receiver                       The receiver of the NFTs to claim.
      *  @param tokenId                        The tokenId of the NFT to claim.
-     *  @param quantity                       The quantity of the NFT to claim.
+     *  @param quantity                       The quantity of NFTs to claim.
      *  @param currency                       The currency in which to pay for the claim.
      *  @param pricePerToken                  The price per token to pay for the claim.
      *  @param allowlistProof                 The proof of the claimer's inclusion in the merkle root allowlist
@@ -45,16 +46,12 @@ interface IDropSinglePhase1155 is IClaimCondition {
     /**
      *  @notice Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
      *
-     *  @param phase                    Claim condition to set.
+     *  @param tokenId                  The token ID for which to set mint conditions.
+     *  @param phases                   Claim conditions in ascending order by `startTimestamp`.
      *
      *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
      *                                  claim conditions.
      *
-     *  @param tokenId                  The tokenId for which to set the relevant claim condition.
      */
-    function setClaimConditions(
-        uint256 tokenId,
-        ClaimCondition calldata phase,
-        bool resetClaimEligibility
-    ) external;
+    function setClaimConditions(uint256 tokenId, ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }
