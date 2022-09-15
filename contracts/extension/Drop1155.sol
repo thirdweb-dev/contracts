@@ -106,8 +106,8 @@ abstract contract Drop1155 is IDrop1155 {
             revert("Not authorized");
         }
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
-        uint256 existingStartIndex = claimCondition[_tokenId].currentStartId;
-        uint256 existingPhaseCount = claimCondition[_tokenId].count;
+        uint256 existingStartIndex = conditionList.currentStartId;
+        uint256 existingPhaseCount = conditionList.count;
 
         /**
          *  `lastClaimTimestamp`, `usedAllowListSpot`, and `supplyClaimedByWallet` are mappings that use a
