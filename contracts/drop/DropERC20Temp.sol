@@ -57,7 +57,7 @@ contract DropERC20Temp is
     //////////////////////////////////////////////////////////////*/
 
     constructor() initializer {}
-    
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -170,11 +170,7 @@ contract DropERC20Temp is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256)
-    {
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }

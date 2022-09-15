@@ -83,7 +83,7 @@ contract DropERC721Temp is
     //////////////////////////////////////////////////////////////*/
 
     constructor() initializer {}
-    
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -258,10 +258,11 @@ contract DropERC721Temp is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        override
-    {
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal override {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 

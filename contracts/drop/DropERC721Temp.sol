@@ -66,7 +66,7 @@ contract DropERC721Temp is
     //////////////////////////////////////////////////////////////*/
 
     constructor() initializer {}
-    
+
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,

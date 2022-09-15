@@ -97,11 +97,11 @@ abstract contract Drop1155 is IDrop1155 {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(uint256 _tokenId, ClaimCondition[] calldata _conditions, bool _resetClaimEligibility)
-        external
-        virtual
-        override
-    {
+    function setClaimConditions(
+        uint256 _tokenId,
+        ClaimCondition[] calldata _conditions,
+        bool _resetClaimEligibility
+    ) external virtual override {
         if (!_canSetClaimConditions()) {
             revert("Not authorized");
         }
@@ -178,7 +178,8 @@ abstract contract Drop1155 is IDrop1155 {
         bool verifyMaxQuantityPerWallet
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].conditions[_conditionId];
-        uint256 supplyClaimedByWallet = _quantity + claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
+        uint256 supplyClaimedByWallet = _quantity +
+            claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
 
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
             revert("!PriceOrCurrency");
@@ -213,7 +214,8 @@ abstract contract Drop1155 is IDrop1155 {
         AllowlistProof calldata _allowlistProof
     ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].conditions[_conditionId];
-        uint256 supplyClaimedByWallet = _quantity + claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
+        uint256 supplyClaimedByWallet = _quantity +
+            claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
 
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
@@ -251,16 +253,20 @@ abstract contract Drop1155 is IDrop1155 {
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
+        external
+        view
+        returns (ClaimCondition memory condition)
+    {
         condition = claimCondition[_tokenId].conditions[_conditionId];
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(uint256 _tokenId, uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-    {
+    function getClaimTimestamp(
+        uint256 _tokenId,
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
         lastClaimTimestamp = claimCondition[_tokenId].lastClaimTimestamp[_conditionId][_claimer];
 
         unchecked {
@@ -275,11 +281,11 @@ abstract contract Drop1155 is IDrop1155 {
     }
 
     /// @dev Returns the supply claimed by claimer for a given conditionId.
-    function getSupplyClaimedByWallet(uint256 _tokenId, uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 supplyClaimedByWallet)
-    {
+    function getSupplyClaimedByWallet(
+        uint256 _tokenId,
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 supplyClaimedByWallet) {
         supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
     }
 
@@ -327,9 +333,11 @@ abstract contract Drop1155 is IDrop1155 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
-        internal
-        virtual;
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal virtual;
 
     /// @dev Determine what wallet can update claim conditions
     function _canSetClaimConditions() internal view virtual returns (bool);
