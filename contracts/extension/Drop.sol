@@ -85,7 +85,7 @@ abstract contract Drop is IDrop {
         // If there's a price, collect price.
         collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
-        // Mint the relevant NFTs to claimer.
+        // Mint the relevant tokens to claimer.
         uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity); //-------refactor
 
         emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, startTokenId, _quantity);
