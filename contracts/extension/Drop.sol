@@ -83,10 +83,10 @@ abstract contract Drop is IDrop {
         claimCondition.supplyClaimedByWallet[activeConditionId][_dropMsgSender()] += _quantity;
 
         // If there's a price, collect price.
-        collectPriceOnClaim(_quantity, _currency, _pricePerToken);
+        collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
+        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity); //-------refactor
 
         emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, startTokenId, _quantity);
 
@@ -100,19 +100,19 @@ abstract contract Drop is IDrop {
         override
     {
         if (!_canSetClaimConditions()) {
-            revert Drop__NotAuthorized();
+            revert("Not authorized");
         }
 
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
         /**
-         *  `lastClaimTimestamp` and `usedAllowListSpot` are mappings that use a
+         *  `lastClaimTimestamp`, `usedAllowListSpot`, and `supplyClaimedByWallet` are mappings that use a
          *  claim condition's UID as a key.
          *
          *  If `_resetClaimEligibility == true`, we assign completely new UIDs to the claim
          *  conditions in `_conditions`, effectively resetting the restrictions on claims expressed
-         *  by `lastClaimTimestamp` and `usedAllowListSpot`.
+         *  by `lastClaimTimestamp`, `usedAllowListSpot`, and `supplyClaimedByWallet`.
          */
         uint256 newStartIndex = existingStartIndex;
         if (_resetClaimEligibility) {
@@ -128,11 +128,11 @@ abstract contract Drop is IDrop {
 
             uint256 supplyClaimedAlready = claimCondition.conditions[newStartIndex + i].supplyClaimed;
             if (supplyClaimedAlready > _conditions[i].maxClaimableSupply) {
-                revert Drop__MaxSupplyClaimedAlready(supplyClaimedAlready);
+                revert("max supply claimed");
             }
 
             claimCondition.conditions[newStartIndex + i] = _conditions[i];
-            claimCondition.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
+            claimCondition.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready; //------what are we doing here?
 
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }
@@ -171,32 +171,24 @@ abstract contract Drop is IDrop {
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bool verifyMaxQuantityPerTransaction
+        bool verifyMaxQuantityPerWallet
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition.conditions[_conditionId];
         uint256 supplyClaimedByWallet = _quantity + claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
 
         if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
-            revert Drop__InvalidCurrencyOrPrice(
-                _currency,
-                currentClaimPhase.currency,
-                _pricePerToken,
-                currentClaimPhase.pricePerToken
-            );
+            revert("!PriceOrCurrency");
         }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         if (
             _quantity == 0 ||
-            (verifyMaxQuantityPerTransaction && supplyClaimedByWallet > currentClaimPhase.quantityLimitPerWallet)
+            (verifyMaxQuantityPerWallet && supplyClaimedByWallet > currentClaimPhase.quantityLimitPerWallet)
         ) {
-            revert Drop__InvalidQuantity();
+            revert("!Qty");
         }
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert Drop__ExceedMaxClaimableSupply(
-                currentClaimPhase.supplyClaimed,
-                currentClaimPhase.maxClaimableSupply
-            );
+            revert("!MaxSupply");
         }
 
         (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
@@ -204,12 +196,7 @@ abstract contract Drop is IDrop {
             currentClaimPhase.startTimestamp > block.timestamp ||
             (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
         ) {
-            revert Drop__CannotClaimYet(
-                block.timestamp,
-                currentClaimPhase.startTimestamp,
-                lastClaimedAt,
-                nextValidClaimTimestamp
-            );
+            revert("cant claim yet");
         }
     }
 
@@ -230,18 +217,18 @@ abstract contract Drop is IDrop {
                 keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
             );
             if (!validMerkleProof) {
-                revert Drop__NotInWhitelist();
+                revert("!Allowlist");
             }
 
             if (claimCondition.usedAllowlistSpot[_conditionId].get(merkleProofIndex)) {
-                revert Drop__ProofClaimed();
+                revert("proof claimed");
             }
 
             if (
                 _allowlistProof.maxQuantityInAllowlist != 0 &&
                 supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist
             ) {
-                revert Drop__InvalidQuantityProof(_allowlistProof.maxQuantityInAllowlist);
+                revert("!Qty");
             }
         }
     }
@@ -325,6 +312,7 @@ abstract contract Drop is IDrop {
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
