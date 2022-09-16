@@ -48,7 +48,7 @@ abstract contract Drop1155 is IDrop1155 {
         claimCondition[_tokenId].supplyClaimedByWallet[activeConditionId][_dropMsgSender()] += _quantity;
 
         // If there's a price, collect price.
-        collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
+        collectPriceOnClaim(_tokenId, address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
         transferTokensOnClaim(_receiver, _tokenId, _quantity); //-------refactor
@@ -255,6 +255,7 @@ abstract contract Drop1155 is IDrop1155 {
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        uint256 _tokenId,
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,

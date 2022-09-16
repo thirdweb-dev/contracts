@@ -71,12 +71,18 @@ contract DropERC1155 is
     /// @dev Mapping from token ID => maximum possible total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public maxTotalSupply;
 
+    /// @dev Mapping from token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public saleRecipient;
+
     /*///////////////////////////////////////////////////////////////
                                Events
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Emitted when the global max supply of a token is updated.
     event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
+
+    /// @dev Emitted when the sale recipient for a particular tokenId is updated.
+    event SaleRecipientForTokenUpdated(uint256 indexed tokenId, address saleRecipient);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -206,6 +212,12 @@ contract DropERC1155 is
         emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
+    /// @dev Lets a contract admin set the recipient for all primary sales.
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -231,6 +243,7 @@ contract DropERC1155 is
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
+        uint256 _tokenId,
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -242,7 +255,9 @@ contract DropERC1155 is
 
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address _saleRecipient = _primarySaleRecipient == address(0)
+            ? (saleRecipient[_tokenId] == address(0) ? primarySaleRecipient() : saleRecipient[_tokenId])
+            : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
@@ -254,7 +269,7 @@ contract DropERC1155 is
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _saleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
