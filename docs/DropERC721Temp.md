@@ -317,30 +317,6 @@ function getClaimConditionById(uint256 _conditionId) external view returns (stru
 |---|---|---|
 | condition | IClaimCondition.ClaimCondition | undefined |
 
-### getClaimTimestamp
-
-```solidity
-function getClaimTimestamp(uint256 _conditionId, address _claimer) external view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-```
-
-
-
-*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined |
-| _claimer | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| lastClaimTimestamp | uint256 | undefined |
-| nextValidClaimTimestamp | uint256 | undefined |
-
 ### getDefaultRoyaltyInfo
 
 ```solidity
@@ -1222,12 +1198,12 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerWallet) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof) external view
 ```
 
 
 
-*Checks a request to claim NFTs against the active claim condition&#39;s criteria.*
+
 
 #### Parameters
 
@@ -1238,33 +1214,7 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| verifyMaxQuantityPerWallet | bool | undefined |
-
-### verifyClaimMerkleProof
-
-```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, IDrop.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined |
-| _claimer | address | undefined |
-| _quantity | uint256 | undefined |
 | _allowlistProof | IDrop.AllowlistProof | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| validMerkleProof | bool | undefined |
-| merkleProofIndex | uint256 | undefined |
 
 
 

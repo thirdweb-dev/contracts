@@ -6,7 +6,9 @@ import "./IClaimCondition.sol";
 interface IDropSinglePhase is IClaimCondition {
     struct AllowlistProof {
         bytes32[] proof;
-        uint256 maxQuantityInAllowlist;
+        uint256 quantityLimitPerWallet;
+        uint256 pricePerToken;
+        address currency;
     }
 
     /// @dev Emitted when tokens are claimed via `claim`.

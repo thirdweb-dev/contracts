@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../../lib/TWBitMaps.sol";
 import "./IClaimCondition.sol";
 
 /**
@@ -28,9 +27,6 @@ interface IClaimConditionMultiPhase is IClaimCondition {
      *  @param conditions                   The claim conditions at a given uid. Claim conditions
      *                                  are ordered in an ascending order by their `startTimestamp`.
      *
-     *  @param lastClaimTimestamp       Map from an account and uid for a claim condition, to the last timestamp
-     *                                  at which the account claimed tokens under that claim condition.
-     *
      *  @param usedAllowlistSpot        Map from a claim condition uid to whether an address in an allowlist
      *                                  has already claimed tokens i.e. used their place in the allowlist.
      *
@@ -40,8 +36,6 @@ interface IClaimConditionMultiPhase is IClaimCondition {
         uint256 currentStartId;
         uint256 count;
         mapping(uint256 => ClaimCondition) conditions;
-        mapping(uint256 => mapping(address => uint256)) lastClaimTimestamp;
-        mapping(uint256 => TWBitMaps.BitMap) usedAllowlistSpot;
         mapping(uint256 => mapping(address => uint256)) supplyClaimedByWallet;
     }
 }

@@ -19,21 +19,9 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     mapping(uint256 => bytes32) private conditionId;
 
     /**
-     *  @dev Map from an account and uid for a claim condition, to the last timestamp
-     *       at which the account claimed tokens under that claim condition.
-     */
-    mapping(bytes32 => mapping(address => uint256)) private lastClaimTimestamp;
-
-    /**
      *  @dev Map from a claim condition uid and account to supply claimed by account.
      */
     mapping(bytes32 => mapping(address => uint256)) private supplyClaimedByWallet;
-
-    /**
-     *  @dev Map from a claim condition uid to whether an address in an allowlist
-     *       has already claimed tokens i.e. used their place in the allowlist.
-     */
-    mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -54,46 +42,10 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         ClaimCondition memory condition = claimCondition[_tokenId];
         bytes32 activeConditionId = conditionId[_tokenId];
 
-        /**
-         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
-         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerWallet
-         *  restriction.
-         */
-
-        // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            _tokenId,
-            _dropMsgSender(),
-            _quantity,
-            _allowlistProof
-        );
-
-        // Verify claim validity. If not valid, revert.
-        // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
-        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being equal/less than the limit
-        bool toVerifyMaxQuantityPerWallet = _allowlistProof.maxQuantityInAllowlist == 0 ||
-            condition.merkleRoot == bytes32(0);
-
-        verifyClaim(_tokenId, _dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerWallet);
-
-        if (validMerkleProof) {
-            if (
-                _allowlistProof.maxQuantityInAllowlist > 0 &&
-                _quantity + supplyClaimedByWallet[activeConditionId][_dropMsgSender()] ==
-                _allowlistProof.maxQuantityInAllowlist
-            ) {
-                /**
-                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                 *  can be used only once.
-                 */
-                usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
-            }
-        }
+        verifyClaim(_tokenId, _dropMsgSender(), _quantity, _currency, _pricePerToken, _allowlistProof);
 
         // Update contract state.
         condition.supplyClaimed += _quantity;
-        lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
         supplyClaimedByWallet[activeConditionId][_dropMsgSender()] += _quantity;
         claimCondition[_tokenId] = condition;
 
@@ -137,7 +89,6 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
             maxClaimableSupply: _condition.maxClaimableSupply,
             supplyClaimed: supplyClaimedAlready,
             quantityLimitPerWallet: _condition.quantityLimitPerWallet,
-            waitTimeInSecondsBetweenClaims: _condition.waitTimeInSecondsBetweenClaims,
             merkleRoot: _condition.merkleRoot,
             pricePerToken: _condition.pricePerToken,
             currency: _condition.currency
@@ -156,83 +107,45 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         uint256 _quantity,
         address _currency,
         uint256 _pricePerToken,
-        bool verifyMaxQuantityPerWallet
+        AllowlistProof calldata _allowlistProof
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId];
-        uint256 _supplyClaimedByWallet = _quantity + supplyClaimedByWallet[conditionId[_tokenId]][_claimer];
+        bool isOverride;
+        uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
+        uint256 claimPrice = currentClaimPhase.pricePerToken;
+        address claimCurrency = currentClaimPhase.currency;
 
-        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
-            revert("Invalid price or currency");
+        if (currentClaimPhase.merkleRoot != bytes32(0)) {
+            (isOverride, ) = MerkleProof.verify(
+                _allowlistProof.proof,
+                currentClaimPhase.merkleRoot,
+                keccak256(abi.encodePacked(_claimer, _allowlistProof.quantityLimitPerWallet, _allowlistProof.pricePerToken, _allowlistProof.currency))
+            );
         }
 
-        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        if (
-            _quantity == 0 ||
-            (verifyMaxQuantityPerWallet && _supplyClaimedByWallet > currentClaimPhase.quantityLimitPerWallet)
-        ) {
-            revert("Invalid quantity");
+        if(isOverride) {
+            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max ? _allowlistProof.quantityLimitPerWallet : claimLimit;
+            claimPrice = _allowlistProof.pricePerToken != type(uint256).max ? _allowlistProof.pricePerToken : claimPrice;
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0) ? _allowlistProof.currency : claimCurrency;
+        }
+
+        uint256 _supplyClaimedByWallet = supplyClaimedByWallet[conditionId[_tokenId]][_claimer];
+
+        if (_currency != claimCurrency || _pricePerToken != claimPrice) {
+            revert("!PriceOrCurrency");
+        }
+
+        if (_quantity == 0 || (_quantity + _supplyClaimedByWallet > claimLimit)) {
+            revert("!Qty");
         }
 
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert("exceeds max supply");
+            revert("!MaxSupply");
         }
 
-        (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_tokenId, _claimer);
         if (
-            currentClaimPhase.startTimestamp > block.timestamp ||
-            (lastClaimedAt != 0 && block.timestamp < nextValidClaimTimestamp)
-        ) {
+            currentClaimPhase.startTimestamp > block.timestamp) {
             revert("cant claim yet");
-        }
-    }
-
-    /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
-    function verifyClaimMerkleProof(
-        uint256 _tokenId,
-        address _claimer,
-        uint256 _quantity,
-        AllowlistProof calldata _allowlistProof
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        ClaimCondition memory currentClaimPhase = claimCondition[_tokenId];
-        uint256 _supplyClaimedByWallet = _quantity + supplyClaimedByWallet[conditionId[_tokenId]][_claimer];
-
-        if (currentClaimPhase.merkleRoot != bytes32(0)) {
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
-                _allowlistProof.proof,
-                currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
-            );
-            if (!validMerkleProof) {
-                revert("not in allowlist");
-            }
-
-            if (usedAllowlistSpot[conditionId[_tokenId]].get(merkleProofIndex)) {
-                revert("proof claimed");
-            }
-
-            if (
-                _allowlistProof.maxQuantityInAllowlist != 0 &&
-                _supplyClaimedByWallet > _allowlistProof.maxQuantityInAllowlist
-            ) {
-                revert("Invalid qty proof");
-            }
-        }
-    }
-
-    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(uint256 _tokenId, address _claimer)
-        public
-        view
-        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
-    {
-        lastClaimedAt = lastClaimTimestamp[conditionId[_tokenId]][_claimer];
-
-        unchecked {
-            nextValidClaimTimestamp = lastClaimedAt + claimCondition[_tokenId].waitTimeInSecondsBetweenClaims;
-
-            if (nextValidClaimTimestamp < lastClaimedAt) {
-                nextValidClaimTimestamp = type(uint256).max;
-            }
         }
     }
 

@@ -28,9 +28,6 @@ interface IClaimCondition {
      *
      *  @param quantityLimitPerWallet         The maximum number of tokens that can be claimed by a wallet.
      *
-     *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait after claiming
-     *                                        tokens, to be able to claim tokens again.
-     *
      *  @param merkleRoot                     The allowlist of addresses that can claim tokens under the claim
      *                                        condition.
      *
@@ -43,7 +40,6 @@ interface IClaimCondition {
         uint256 maxClaimableSupply;
         uint256 supplyClaimed;
         uint256 quantityLimitPerWallet;
-        uint256 waitTimeInSecondsBetweenClaims;
         bytes32 merkleRoot;
         uint256 pricePerToken;
         address currency;

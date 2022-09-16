@@ -4,58 +4,48 @@ pragma solidity ^0.8.11;
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IThirdwebContract.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/interface/IPlatformFee.sol";
-import "../extension/interface/IPrimarySale.sol";
-import "../extension/interface/IRoyalty.sol";
-import "../extension/interface/IOwnable.sol";
-
-import { IDropERC1155 } from "../interfaces/drop/IDropERC1155.sol";
-
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-
-import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeType.sol";
-import "../lib/MerkleProof.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/PlatformFee.sol";
+import "../extension/Royalty.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/Ownable.sol";
+import "../extension/DelayedReveal.sol";
+import "../extension/LazyMint.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "../extension/Drop1155.sol";
 
 contract DropERC1155 is
     Initializable,
-    IThirdwebContract,
-    IOwnable,
-    IRoyalty,
-    IPrimarySale,
-    IPlatformFee,
-    ReentrancyGuardUpgradeable,
+    ContractMetadata,
+    PlatformFee,
+    Royalty,
+    PrimarySale,
+    Ownable,
+    DelayedReveal,
+    LazyMint,
+    PermissionsEnumerable,
+    Drop1155,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    AccessControlEnumerableUpgradeable,
-    ERC1155Upgradeable,
-    IDropERC1155
+    ERC1155Upgradeable
 {
-    using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
     using StringsUpgradeable for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
-
-    bytes32 private constant MODULE_TYPE = bytes32("DropERC1155");
-    uint256 private constant VERSION = 2;
 
     // Token name
     string public name;
@@ -64,49 +54,16 @@ contract DropERC1155 is
     string public symbol;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-    /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 private transferRole;
+    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
+    bytes32 private minterRole;
 
-    /// @dev Max bps in the thirdweb system
+    /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
-
-    /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address private _owner;
-
-    // @dev The next token ID of the NFT to "lazy mint".
-    uint256 public nextTokenIdToMint;
-
-    /// @dev The address that receives all primary sales value.
-    address public primarySaleRecipient;
-
-    /// @dev The address that receives all platform fees from all sales.
-    address private platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint16 private platformFeeBps;
-
-    /// @dev The recipient of who gets the royalty.
-    address private royaltyRecipient;
-
-    /// @dev The (default) address that receives all royalty value.
-    uint16 private royaltyBps;
-
-    /// @dev Contract level metadata.
-    string public contractURI;
-
-    /// @dev Largest tokenId of each batch of tokens with the same baseURI
-    uint256[] private baseURIIndices;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
     //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @dev Mapping from 'Largest tokenId of a batch of tokens with the same baseURI'
-     *       to base URI for the respective batch of tokens.
-     **/
-    mapping(uint256 => string) private baseURI;
 
     /// @dev Mapping from token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
@@ -114,14 +71,12 @@ contract DropERC1155 is
     /// @dev Mapping from token ID => maximum possible total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public maxTotalSupply;
 
-    /// @dev Mapping from token ID => the set of all claim conditions, at any given moment, for tokens of the token ID.
-    mapping(uint256 => ClaimConditionList) public claimCondition;
+    /*///////////////////////////////////////////////////////////////
+                               Events
+    //////////////////////////////////////////////////////////////*/
 
-    /// @dev Mapping from token ID => the address of the recipient of primary sales.
-    mapping(uint256 => address) public saleRecipient;
-
-    /// @dev Mapping from token ID => royalty recipient and bps for tokens of the token ID.
-    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
+    /// @dev Emitted when the global max supply of a token is updated.
+    event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -142,62 +97,46 @@ contract DropERC1155 is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
+        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
+        bytes32 _minterRole = keccak256("MINTER_ROLE");
+
         // Initialize inherited contracts, most base-like -> most derived.
-        __ReentrancyGuard_init();
-        __ERC2771Context_init_unchained(_trustedForwarders);
+        __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init_unchained("");
 
         // Initialize this contract's state.
-        name = _name;
-        symbol = _symbol;
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
-        platformFeeRecipient = _platformFeeRecipient;
-        primarySaleRecipient = _saleRecipient;
-        contractURI = _contractURI;
-        platformFeeBps = uint16(_platformFeeBps);
-        _owner = _defaultAdmin;
+        _setupContractURI(_contractURI);
+        _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(MINTER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
-    }
+        _setupRole(_minterRole, _defaultAdmin);
+        _setupRole(_transferRole, _defaultAdmin);
+        _setupRole(_transferRole, address(0));
 
-    /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
+        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setupPrimarySaleRecipient(_saleRecipient);
 
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view returns (address) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _owner) ? _owner : address(0);
+        transferRole = _transferRole;
+        minterRole = _minterRole;
+        name = _name;
+        symbol = _symbol;
     }
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 1155 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the URI for a given tokenId.
-    function uri(uint256 _tokenId) public view override returns (string memory _tokenURI) {
-        for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
-            if (_tokenId < baseURIIndices[i]) {
-                return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
-            }
-        }
+    /// @dev Returns the uri for a given tokenId.
+    function uri(uint256 _tokenId) public view override returns (string memory) {
+        (uint256 batchId, ) = getBatchId(_tokenId);
+        string memory batchUri = getBaseURI(_tokenId);
 
-        return "";
+        if (isEncryptedBatch(batchId)) {
+            return string(abi.encodePacked(batchUri, "0"));
+        } else {
+            return string(abi.encodePacked(batchUri, _tokenId.toString()));
+        }
     }
 
     /// @dev See ERC 165
@@ -205,367 +144,56 @@ contract DropERC1155 is
         public
         view
         virtual
-        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable, IERC165)
+        override(ERC1155Upgradeable, IERC165)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
-    /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
-        receiver = recipient;
-        royaltyAmount = (salePrice * bps) / MAX_BPS;
+    function contractType() external pure returns (bytes32) {
+        return bytes32("DropERC1155");
+    }
+
+    function contractVersion() external pure returns (uint8) {
+        return uint8(3);
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Minting logic
+                    Lazy minting + delayed-reveal logic
     //////////////////////////////////////////////////////////////*/
 
     /**
      *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
      *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyRole(MINTER_ROLE) {
-        uint256 startId = nextTokenIdToMint;
-        uint256 baseURIIndex = startId + _amount;
-
-        nextTokenIdToMint = baseURIIndex;
-        baseURI[baseURIIndex] = _baseURIForTokens;
-        baseURIIndices.push(baseURIIndex);
-
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                            Claim logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets an account claim a given quantity of NFTs, of a single tokenId.
-    function claim(
-        address _receiver,
-        uint256 _tokenId,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        AllowlistProof calldata _allowlistProof,
-        bytes memory _data
-    ) external payable nonReentrant {
-        // Get the active claim condition index.
-        uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
-
-        /**
-         *  We make allowlist checks (i.e. verifyClaimMerkleProof) before verifying the claim's general
-         *  validity (i.e. verifyClaim) because we give precedence to the check of allow list quantity
-         *  restriction over the check of the general claim condition's quantityLimitPerWallet
-         *  restriction.
-         */
-
-        // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            activeConditionId,
-            _msgSender(),
-            _tokenId,
-            _quantity,
-            _allowlistProof
-        );
-
-        // Verify claim validity. If not valid, revert.
-        // when there's allowlist present --> verifyClaimMerkleProof will verify the _proofMaxQuantityForWallet value with hashed leaf in the allowlist
-        // when there's no allowlist, this check is true --> verifyClaim will check for _quantity being less/equal than the limit
-        bool toVerifyMaxQuantityPerWallet = _allowlistProof.maxQuantityInAllowlist == 0 ||
-            claimCondition[_tokenId].phases[activeConditionId].merkleRoot == bytes32(0);
-        verifyClaim(
-            activeConditionId,
-            _msgSender(),
-            _tokenId,
-            _quantity,
-            _currency,
-            _pricePerToken,
-            toVerifyMaxQuantityPerWallet
-        );
-
-        if (validMerkleProof) {
-            if (
-                _allowlistProof.maxQuantityInAllowlist > 0 &&
-                _quantity + claimCondition[_tokenId].supplyClaimedByWallet[activeConditionId][_msgSender()] ==
-                _allowlistProof.maxQuantityInAllowlist
-            ) {
-                /**
-                 *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
-                 *  can be used only once.
-                 */
-                claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _data
+    ) public override onlyRole(minterRole) returns (uint256 batchId) {
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
         }
 
-        // If there's a price, collect price.
-        collectClaimPrice(_quantity, _currency, _pricePerToken, _tokenId);
-
-        // Mint the relevant tokens to claimer.
-        transferClaimedTokens(_receiver, activeConditionId, _tokenId, _quantity);
-
-        emit TokensClaimed(activeConditionId, _tokenId, _msgSender(), _receiver, _quantity);
+        return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
-    /// @dev Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions, for a tokenId.
-    function setClaimConditions(
-        uint256 _tokenId,
-        ClaimCondition[] calldata _phases,
-        bool _resetClaimEligibility
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        ClaimConditionList storage condition = claimCondition[_tokenId];
-        uint256 existingStartIndex = condition.currentStartId;
-        uint256 existingPhaseCount = condition.count;
-
-        /**
-         *  `limitLastClaimTimestamp` and `limitMerkleProofClaim` are mappings that use a
-         *  claim condition's UID as a key.
-         *
-         *  If `_resetClaimEligibility == true`, we assign completely new UIDs to the claim
-         *  conditions in `_phases`, effectively resetting the restrictions on claims expressed
-         *  by `limitLastClaimTimestamp` and `limitMerkleProofClaim`.
-         */
-        uint256 newStartIndex = existingStartIndex;
-        if (_resetClaimEligibility) {
-            newStartIndex = existingStartIndex + existingPhaseCount;
-        }
-
-        condition.count = _phases.length;
-        condition.currentStartId = newStartIndex;
-
-        uint256 lastConditionStartTimestamp;
-        for (uint256 i = 0; i < _phases.length; i++) {
-            require(
-                i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
-                "startTimestamp must be in ascending order."
-            );
-
-            uint256 supplyClaimedAlready = condition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
-
-            condition.phases[newStartIndex + i] = _phases[i];
-            condition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
-
-            lastConditionStartTimestamp = _phases[i].startTimestamp;
-        }
-
-        /**
-         *  Gas refunds (as much as possible)
-         *
-         *  If `_resetClaimEligibility == true`, we assign completely new UIDs to the claim
-         *  conditions in `_phases`. So, we delete claim conditions with UID < `newStartIndex`.
-         *
-         *  If `_resetClaimEligibility == false`, and there are more existing claim conditions
-         *  than in `_phases`, we delete the existing claim conditions that don't get replaced
-         *  by the conditions in `_phases`.
-         */
-        if (_resetClaimEligibility) {
-            for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
-                delete condition.phases[i];
-                delete condition.limitMerkleProofClaim[i];
-            }
-        } else {
-            if (existingPhaseCount > _phases.length) {
-                for (uint256 i = _phases.length; i < existingPhaseCount; i++) {
-                    delete condition.phases[newStartIndex + i];
-                    delete condition.limitMerkleProofClaim[newStartIndex + i];
-                }
-            }
-        }
-
-        emit ClaimConditionsUpdated(_tokenId, _phases);
-    }
-
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectClaimPrice(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken,
-        uint256 _tokenId
-    ) internal {
-        if (_pricePerToken == 0) {
-            return;
-        }
-
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "must send total price.");
-        }
-
-        address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient, totalPrice - platformFees);
-    }
-
-    /// @dev Transfers the NFTs being claimed.
-    function transferClaimedTokens(
-        address _to,
-        uint256 _conditionId,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal {
-        // Update the supply minted under mint condition.
-        claimCondition[_tokenId].phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
-
-        // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
-        // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
-        claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
-        claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_msgSender()] += _quantityBeingClaimed;
-
-        _mint(_to, _tokenId, _quantityBeingClaimed, "");
-    }
-
-    /// @dev Checks a request to claim NFTs against the active claim condition's criteria.
-    function verifyClaim(
-        uint256 _conditionId,
-        address _claimer,
-        uint256 _tokenId,
-        uint256 _quantity,
-        address _currency,
-        uint256 _pricePerToken,
-        bool verifyMaxQuantityPerWallet
-    ) public view {
-        ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
-        uint256 supplyClaimedByWallet = _quantity +
-            claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
-
-        require(
-            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
-            "invalid currency or price specified."
-        );
-        // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
-        require(
-            _quantity > 0 &&
-                (!verifyMaxQuantityPerWallet || supplyClaimedByWallet <= currentClaimPhase.quantityLimitPerWallet),
-            "invalid quantity claimed."
-        );
-        require(
-            currentClaimPhase.supplyClaimed + _quantity <= currentClaimPhase.maxClaimableSupply,
-            "exceed max mint supply."
-        );
-        require(
-            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
-            "exceed max total supply"
-        );
-
-        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(
-            _tokenId,
-            _conditionId,
-            _claimer
-        );
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
-    }
-
-    /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
-    function verifyClaimMerkleProof(
-        uint256 _conditionId,
-        address _claimer,
-        uint256 _tokenId,
-        uint256 _quantity,
-        AllowlistProof calldata _allowlistProof
-    ) public view returns (bool validMerkleProof, uint256 merkleProofIndex) {
-        ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
-        uint256 supplyClaimedByWallet = _quantity +
-            claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
-
-        if (currentClaimPhase.merkleRoot != bytes32(0)) {
-            (validMerkleProof, merkleProofIndex) = MerkleProof.verify(
-                _allowlistProof.proof,
-                currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _allowlistProof.maxQuantityInAllowlist))
-            );
-            require(validMerkleProof, "not in whitelist.");
-            require(
-                !claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].get(merkleProofIndex),
-                "proof claimed."
-            );
-            require(
-                _allowlistProof.maxQuantityInAllowlist == 0 ||
-                    supplyClaimedByWallet <= _allowlistProof.maxQuantityInAllowlist,
-                "invalid quantity proof."
-            );
-        }
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Getter functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev At any given moment, returns the uid for the active claim condition, for a given tokenId.
-    function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
-        ClaimConditionList storage conditionList = claimCondition[_tokenId];
-        for (uint256 i = conditionList.currentStartId + conditionList.count; i > conditionList.currentStartId; i--) {
-            if (block.timestamp >= conditionList.phases[i - 1].startTimestamp) {
-                return i - 1;
-            }
-        }
-
-        revert("no active mint condition.");
-    }
-
-    /// @dev Returns the platform fee recipient and bps.
-    function getPlatformFeeInfo() external view returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
-    }
-
-    /// @dev Returns the default royalty recipient and bps.
-    function getDefaultRoyaltyInfo() external view returns (address, uint16) {
-        return (royaltyRecipient, uint16(royaltyBps));
-    }
-
-    /// @dev Returns the royalty recipient and bps for a particular token Id.
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view returns (address, uint16) {
-        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
-
-        return
-            royaltyForToken.recipient == address(0)
-                ? (royaltyRecipient, uint16(royaltyBps))
-                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
-    }
-
-    /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(
-        uint256 _tokenId,
-        uint256 _conditionId,
-        address _claimer
-    ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
-        lastClaimTimestamp = claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_claimer];
-
-        unchecked {
-            nextValidClaimTimestamp =
-                lastClaimTimestamp +
-                claimCondition[_tokenId].phases[_conditionId].waitTimeInSecondsBetweenClaims;
-
-            if (nextValidClaimTimestamp < lastClaimTimestamp) {
-                nextValidClaimTimestamp = type(uint256).max;
-            }
-        }
-    }
-
-    /// @dev Returns the supply claimed by claimer for a given conditionId.
-    function getSupplyClaimedByWallet(
-        uint256 _tokenId,
-        uint256 _conditionId,
-        address _claimer
-    ) public view returns (uint256 supplyClaimedByWallet) {
-        supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
-    }
-
-    /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
+    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
+    function reveal(uint256 _index, bytes calldata _key)
         external
-        view
-        returns (ClaimCondition memory condition)
+        onlyRole(minterRole)
+        returns (string memory revealedURI)
     {
-        condition = claimCondition[_tokenId].phases[_conditionId];
+        uint256 batchId = getBatchIdAtIndex(_index);
+        revealedURI = getRevealURI(batchId, _key);
+
+        _setEncryptedData(batchId, "");
+        _setBaseURI(batchId, revealedURI);
+
+        emit TokenURIRevealed(_index, revealedURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -578,72 +206,109 @@ contract DropERC1155 is
         emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
-    /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setPrimarySaleRecipient(address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        primarySaleRecipient = _saleRecipient;
-        emit PrimarySaleRecipientUpdated(_saleRecipient);
-    }
+    /*///////////////////////////////////////////////////////////////
+                        Internal functions
+    //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        saleRecipient[_tokenId] = _saleRecipient;
-        emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
-    }
-
-    /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
-
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
-
-        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
-    }
-
-    /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
-    function setRoyaltyInfoForToken(
+    /// @dev Runs before every `claim` function call.
+    function _beforeClaim(
         uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bps <= MAX_BPS, "exceed royalty bps");
-
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
-
-        emit RoyaltyForToken(_tokenId, _recipient, _bps);
+        address,
+        uint256 _quantity,
+        address,
+        uint256,
+        AllowlistProof calldata,
+        bytes memory
+    ) internal view override {
+        // if (_tokenId >= nextTokenIdToLazyMint) {
+        //     revert("Not enough minted tokens");
+        // }
+        require(
+            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
+            "exceed max total supply"
+        );
     }
 
-    /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
+    function collectPriceOnClaim(
+        address _primarySaleRecipient,
+        uint256 _quantityToClaim,
+        address _currency,
+        uint256 _pricePerToken
+    ) internal override {
+        if (_pricePerToken == 0) {
+            return;
+        }
 
-        platformFeeBps = uint16(_platformFeeBps);
-        platformFeeRecipient = _platformFeeRecipient;
+        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
-        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            if (msg.value != totalPrice) {
+                revert("!Price");
+            }
+        }
+
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
-    /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
-        emit OwnerUpdated(_owner, _newOwner);
-        _owner = _newOwner;
+    /// @dev Transfers the NFTs being claimed.
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) internal override {
+        _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
-    /// @dev Lets a contract admin set the URI for contract-level metadata.
-    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        contractURI = _uri;
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether primary sale recipient can be set in the given execution context.
+    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether royalty info can be set in the given execution context.
+    function _canSetRoyaltyInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetClaimConditions() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether lazy minting can be done in the given execution context.
+    function _canLazyMint() internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev The tokenId of the next NFT that will be minted / lazy minted.
+    function nextTokenIdToMint() external view returns (uint256) {
+        return nextTokenIdToLazyMint;
+    }
 
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
     function burn(
@@ -687,8 +352,8 @@ contract DropERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
+        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+            require(hasRole(transferRole, from) || hasRole(transferRole, to), "restricted to TRANSFER_ROLE holders.");
         }
 
         if (from == address(0)) {
@@ -702,6 +367,10 @@ contract DropERC1155 is
                 totalSupply[ids[i]] -= amounts[i];
             }
         }
+    }
+
+    function _dropMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
     }
 
     function _msgSender()
