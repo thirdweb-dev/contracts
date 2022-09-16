@@ -45,7 +45,6 @@ contract BaseERC721DropTest is BaseUtilTest {
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");
@@ -85,7 +84,6 @@ contract BaseERC721DropTest is BaseUtilTest {
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         // set price and currency
         conditions[0].pricePerToken = 1;
@@ -134,7 +132,6 @@ contract BaseERC721DropTest is BaseUtilTest {
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         // set price and currency
         conditions[0].pricePerToken = 1;
@@ -178,7 +175,6 @@ contract BaseERC721DropTest is BaseUtilTest {
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");
@@ -208,7 +204,6 @@ contract BaseERC721DropTest is BaseUtilTest {
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");

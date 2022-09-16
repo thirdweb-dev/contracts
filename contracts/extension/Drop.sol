@@ -32,14 +32,7 @@ abstract contract Drop is IDrop {
 
         uint256 activeConditionId = getActiveClaimConditionId();
 
-        verifyClaim(
-            activeConditionId,
-            _dropMsgSender(),
-            _quantity,
-            _currency,
-            _pricePerToken,
-            _allowlistProof
-        );
+        verifyClaim(activeConditionId, _dropMsgSender(), _quantity, _currency, _pricePerToken, _allowlistProof);
 
         // Update contract state.
         claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
@@ -143,18 +136,31 @@ abstract contract Drop is IDrop {
             (isOverride, ) = MerkleProof.verify(
                 _allowlistProof.proof,
                 currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _allowlistProof.quantityLimitPerWallet, _allowlistProof.pricePerToken, _allowlistProof.currency))
+                keccak256(
+                    abi.encodePacked(
+                        _claimer,
+                        _allowlistProof.quantityLimitPerWallet,
+                        _allowlistProof.pricePerToken,
+                        _allowlistProof.currency
+                    )
+                )
             );
         }
 
-        if(isOverride) {
-            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max ? _allowlistProof.quantityLimitPerWallet : claimLimit;
-            claimPrice = _allowlistProof.pricePerToken != type(uint256).max ? _allowlistProof.pricePerToken : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0) ? _allowlistProof.currency : claimCurrency;
+        if (isOverride) {
+            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max
+                ? _allowlistProof.quantityLimitPerWallet
+                : claimLimit;
+            claimPrice = _allowlistProof.pricePerToken != type(uint256).max
+                ? _allowlistProof.pricePerToken
+                : claimPrice;
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+                ? _allowlistProof.currency
+                : claimCurrency;
         }
 
         uint256 supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
-        
+
         if (_currency != claimCurrency || _pricePerToken != claimPrice) {
             revert("!PriceOrCurrency");
         }
@@ -166,8 +172,7 @@ abstract contract Drop is IDrop {
             revert("!MaxSupply");
         }
 
-        if (
-            currentClaimPhase.startTimestamp > block.timestamp) {
+        if (currentClaimPhase.startTimestamp > block.timestamp) {
             revert("cant claim yet");
         }
     }

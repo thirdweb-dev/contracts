@@ -111,17 +111,30 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             (isOverride, ) = MerkleProof.verify(
                 _allowlistProof.proof,
                 currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _allowlistProof.quantityLimitPerWallet, _allowlistProof.pricePerToken, _allowlistProof.currency))
+                keccak256(
+                    abi.encodePacked(
+                        _claimer,
+                        _allowlistProof.quantityLimitPerWallet,
+                        _allowlistProof.pricePerToken,
+                        _allowlistProof.currency
+                    )
+                )
             );
         }
 
-        if(isOverride) {
-            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max ? _allowlistProof.quantityLimitPerWallet : claimLimit;
-            claimPrice = _allowlistProof.pricePerToken != type(uint256).max ? _allowlistProof.pricePerToken : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0) ? _allowlistProof.currency : claimCurrency;
+        if (isOverride) {
+            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max
+                ? _allowlistProof.quantityLimitPerWallet
+                : claimLimit;
+            claimPrice = _allowlistProof.pricePerToken != type(uint256).max
+                ? _allowlistProof.pricePerToken
+                : claimPrice;
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+                ? _allowlistProof.currency
+                : claimCurrency;
         }
 
-        uint256 _supplyClaimedByWallet =  supplyClaimedByWallet[conditionId][_claimer];
+        uint256 _supplyClaimedByWallet = supplyClaimedByWallet[conditionId][_claimer];
 
         if (_currency != claimCurrency || _pricePerToken != claimPrice) {
             revert("!PriceOrCurrency");
@@ -135,8 +148,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             revert("!MaxSupply");
         }
 
-        if (
-            currentClaimPhase.startTimestamp > block.timestamp) {
+        if (currentClaimPhase.startTimestamp > block.timestamp) {
             revert("cant claim yet");
         }
     }

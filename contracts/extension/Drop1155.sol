@@ -146,14 +146,27 @@ abstract contract Drop1155 is IDrop1155 {
             (isOverride, ) = MerkleProof.verify(
                 _allowlistProof.proof,
                 currentClaimPhase.merkleRoot,
-                keccak256(abi.encodePacked(_claimer, _allowlistProof.quantityLimitPerWallet, _allowlistProof.pricePerToken, _allowlistProof.currency))
+                keccak256(
+                    abi.encodePacked(
+                        _claimer,
+                        _allowlistProof.quantityLimitPerWallet,
+                        _allowlistProof.pricePerToken,
+                        _allowlistProof.currency
+                    )
+                )
             );
         }
 
-        if(isOverride) {
-            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max ? _allowlistProof.quantityLimitPerWallet : claimLimit;
-            claimPrice = _allowlistProof.pricePerToken != type(uint256).max ? _allowlistProof.pricePerToken : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0) ? _allowlistProof.currency : claimCurrency;
+        if (isOverride) {
+            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max
+                ? _allowlistProof.quantityLimitPerWallet
+                : claimLimit;
+            claimPrice = _allowlistProof.pricePerToken != type(uint256).max
+                ? _allowlistProof.pricePerToken
+                : claimPrice;
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+                ? _allowlistProof.currency
+                : claimCurrency;
         }
 
         uint256 supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
@@ -170,8 +183,7 @@ abstract contract Drop1155 is IDrop1155 {
             revert("!MaxSupply");
         }
 
-        if (
-            currentClaimPhase.startTimestamp > block.timestamp) {
+        if (currentClaimPhase.startTimestamp > block.timestamp) {
             revert("cant claim yet");
         }
     }
