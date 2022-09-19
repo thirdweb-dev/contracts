@@ -12,6 +12,7 @@ import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC721.sol";
 
 import "../lib/TWStrings.sol";
+import "../openzeppelin-presets/security/ReentrancyGuard.sol";
 
 /**
  *      BASE:      ERC721A
@@ -47,7 +48,8 @@ contract ERC721LazyMint is
     Royalty,
     BatchMintMetadata,
     LazyMint,
-    IClaimableERC721
+    IClaimableERC721,
+    ReentrancyGuard
 {
     using TWStrings for uint256;
 
@@ -107,7 +109,7 @@ contract ERC721LazyMint is
      *  @param _receiver  The recipient of the NFT to mint.
      *  @param _quantity  The number of NFTs to mint.
      */
-    function claim(address _receiver, uint256 _quantity) public payable virtual {
+    function claim(address _receiver, uint256 _quantity) public payable virtual nonReentrant {
         verifyClaim(msg.sender, _quantity); // add your claim verification logic by overriding this function
         uint256 startTokenId = _currentIndex;
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
