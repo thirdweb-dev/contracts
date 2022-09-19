@@ -53,34 +53,36 @@ contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mul
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
+     *  @notice          Lets contract-owner send ERC721 tokens to a list of addresses.
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
-     *  @param _tokenAddress    Contract address of ERC20 tokens to air-drop.
+     *  @param _tokenAddress    Contract address of ERC721 tokens to air-drop.
      *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _amounts         Quantity of tokens to air-drop, per recipient.
+     *  @param _contents        List containing recipients, tokenIds to airdrop.
      */
     function airdrop(
         address _tokenAddress,
         address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _amounts
+        AirdropContent[] calldata _contents
     ) external payable nonReentrant onlyOwner {
-        uint256 len = _amounts.length;
-        require(len == _recipients.length, "length mismatch");
+        uint256 len = _contents.length;
 
         if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
             uint256 totalAmount;
             for (uint256 i = 0; i < len; i++) {
-                totalAmount += _amounts[i];
+                totalAmount += _contents[i].amount;
             }
             require(totalAmount == msg.value, "Incorrect native token amount");
         }
 
         for (uint256 i = 0; i < len; i++) {
-            CurrencyTransferLib.transferCurrency(_tokenAddress, _tokenOwner, _recipients[i], _amounts[i]);
+            CurrencyTransferLib.transferCurrency(
+                _tokenAddress,
+                _tokenOwner,
+                _contents[i].recipient,
+                _contents[i].amount
+            );
         }
     }
 

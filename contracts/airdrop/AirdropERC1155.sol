@@ -69,24 +69,19 @@ contract AirdropERC1155 is
      *
      *  @param _tokenAddress    Contract address of ERC1155 tokens to air-drop.
      *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _amounts         Quantity of tokens to air-drop, per recipient.
-     *  @param _tokenIds        List of ERC1155 token-Ids to drop.
+     *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
     function airdrop(
         address _tokenAddress,
         address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _amounts,
-        uint256[] memory _tokenIds
+        AirdropContent[] calldata _contents
     ) external nonReentrant onlyOwner {
-        uint256 len = _tokenIds.length;
-        require(len == _recipients.length && len == _amounts.length, "length mismatch");
+        uint256 len = _contents.length;
 
         IERC1155 token = IERC1155(_tokenAddress);
 
         for (uint256 i = 0; i < len; i++) {
-            token.safeTransferFrom(_tokenOwner, _recipients[i], _tokenIds[i], _amounts[i], "");
+            token.safeTransferFrom(_tokenOwner, _contents[i].recipient, _contents[i].tokenId, _contents[i].amount, "");
         }
     }
 

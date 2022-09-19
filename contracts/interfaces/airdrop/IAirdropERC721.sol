@@ -11,19 +11,28 @@ pragma solidity ^0.8.11;
 
 interface IAirdropERC721 {
     /**
+     *  @notice Details of amount and recipient for airdropped token.
+     *
+     *  @param recipient The recipient of the tokens.
+     *  @param tokenId ID of the ERC721 token being airdropped.
+     */
+    struct AirdropContent {
+        address recipient;
+        uint256 tokenId;
+    }
+
+    /**
      *  @notice          Lets contract-owner send ERC721 tokens to a list of addresses.
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC721 tokens to air-drop.
      *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _tokenIds        ERC721 token-Ids of tokens to drop.
+     *  @param _contents        List containing recipients, tokenIds to airdrop.
      */
     function airdrop(
         address _tokenAddress,
         address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _tokenIds
+        AirdropContent[] calldata _contents
     ) external;
 }

@@ -11,21 +11,30 @@ pragma solidity ^0.8.11;
 
 interface IAirdropERC1155 {
     /**
+     *  @notice Details of amount and recipient for airdropped token.
+     *
+     *  @param recipient The recipient of the tokens.
+     *  @param tokenId ID of the ERC1155 token being airdropped.
+     *  @param amount The quantity of tokens to airdrop.
+     */
+    struct AirdropContent {
+        address recipient;
+        uint256 tokenId;
+        uint256 amount;
+    }
+
+    /**
      *  @notice          Lets contract-owner send ERC1155 tokens to a list of addresses.
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    Contract address of ERC1155 tokens to air-drop.
      *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _amounts         Quantity of tokens to air-drop, per recipient.
-     *  @param _tokenIds        List of ERC1155 token-Ids to drop.
+     *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
     function airdrop(
         address _tokenAddress,
         address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _amounts,
-        uint256[] memory _tokenIds
+        AirdropContent[] calldata _contents
     ) external;
 }

@@ -59,22 +59,19 @@ contract AirdropERC721 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mu
      *
      *  @param _tokenAddress    Contract address of ERC721 tokens to air-drop.
      *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _tokenIds        ERC721 token-Ids of tokens to drop.
+     *  @param _contents        List containing recipients, tokenIds to airdrop.
      */
     function airdrop(
         address _tokenAddress,
         address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _tokenIds
+        AirdropContent[] calldata _contents
     ) external nonReentrant onlyOwner {
-        uint256 len = _tokenIds.length;
-        require(len == _recipients.length, "length mismatch");
+        uint256 len = _contents.length;
 
         IERC721 token = IERC721(_tokenAddress);
 
         for (uint256 i = 0; i < len; i++) {
-            token.safeTransferFrom(_tokenOwner, _recipients[i], _tokenIds[i]);
+            token.safeTransferFrom(_tokenOwner, _contents[i].recipient, _contents[i].tokenId);
         }
     }
 
