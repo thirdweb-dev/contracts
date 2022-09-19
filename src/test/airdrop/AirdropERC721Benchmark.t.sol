@@ -12,17 +12,13 @@ contract AirdropERC721BenchmarkTest is BaseTest {
 
     Wallet internal tokenOwner;
 
-    uint256[] internal _tokenIds;
-    address[] internal _recipients;
+    IAirdropERC721.AirdropContent[] internal _contents;
 
-    uint256[] internal _amounts_one;
-    address[] internal _recipients_one;
+    IAirdropERC721.AirdropContent[] internal _contents_one;
 
-    uint256[] internal _amounts_two;
-    address[] internal _recipients_two;
+    IAirdropERC721.AirdropContent[] internal _contents_two;
 
-    uint256[] internal _amounts_five;
-    address[] internal _recipients_five;
+    IAirdropERC721.AirdropContent[] internal _contents_five;
 
     function setUp() public override {
         super.setUp();
@@ -36,22 +32,18 @@ contract AirdropERC721BenchmarkTest is BaseTest {
 
         for (uint256 i = 0; i < 1000; i++) {
             if (i < 1) {
-                _amounts_one.push(i);
-                _recipients_one.push(getActor(uint160(i)));
+                _contents_one.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
             }
 
             if (i < 2) {
-                _amounts_two.push(i);
-                _recipients_two.push(getActor(uint160(i)));
+                _contents_two.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
             }
 
             if (i < 5) {
-                _amounts_five.push(i);
-                _recipients_five.push(getActor(uint160(i)));
+                _contents_five.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
             }
 
-            _tokenIds.push(i);
-            _recipients.push(getActor(uint160(i)));
+            _contents.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
         }
 
         vm.startPrank(deployer);
@@ -62,14 +54,14 @@ contract AirdropERC721BenchmarkTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_benchmark_airdrop_one_ERC721() public {
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients_one, _amounts_one);
+        drop.airdrop(address(erc721), address(tokenOwner), _contents_one);
     }
 
     function test_benchmark_airdrop_two_ERC721() public {
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients_two, _amounts_two);
+        drop.airdrop(address(erc721), address(tokenOwner), _contents_two);
     }
 
     function test_benchmark_airdrop_five_ERC721() public {
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients_five, _amounts_five);
+        drop.airdrop(address(erc721), address(tokenOwner), _contents_five);
     }
 }

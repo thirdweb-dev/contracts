@@ -12,17 +12,13 @@ contract AirdropERC20BenchmarkTest is BaseTest {
 
     Wallet internal tokenOwner;
 
-    uint256[] internal _amounts;
-    address[] internal _recipients;
+    IAirdropERC20.AirdropContent[] internal _contents;
 
-    uint256[] internal _amounts_one;
-    address[] internal _recipients_one;
+    IAirdropERC20.AirdropContent[] internal _contents_one;
 
-    uint256[] internal _amounts_two;
-    address[] internal _recipients_two;
+    IAirdropERC20.AirdropContent[] internal _contents_two;
 
-    uint256[] internal _amounts_five;
-    address[] internal _recipients_five;
+    IAirdropERC20.AirdropContent[] internal _contents_five;
 
     function setUp() public override {
         super.setUp();
@@ -36,22 +32,18 @@ contract AirdropERC20BenchmarkTest is BaseTest {
 
         for (uint256 i = 0; i < 1000; i++) {
             if (i < 1) {
-                _amounts_one.push(1 ether);
-                _recipients_one.push(getActor(uint160(i)));
+                _contents_one.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 1 ether }));
             }
 
             if (i < 2) {
-                _amounts_two.push(1 ether);
-                _recipients_two.push(getActor(uint160(i)));
+                _contents_two.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 1 ether }));
             }
 
             if (i < 5) {
-                _amounts_five.push(1 ether);
-                _recipients_five.push(getActor(uint160(i)));
+                _contents_five.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 1 ether }));
             }
 
-            _amounts.push(1 ether);
-            _recipients.push(getActor(uint160(i)));
+            _contents.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 1 ether }));
         }
 
         vm.deal(deployer, 10_000 ether);
@@ -63,26 +55,26 @@ contract AirdropERC20BenchmarkTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_benchmark_airdrop_one_ERC20() public {
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients_one, _amounts_one);
+        drop.airdrop(address(erc20), address(tokenOwner), _contents_one);
     }
 
     function test_benchmark_airdrop_one_nativeToken() public {
-        drop.airdrop{ value: 1 ether }(NATIVE_TOKEN, deployer, _recipients_one, _amounts_one);
+        drop.airdrop{ value: 1 ether }(NATIVE_TOKEN, deployer, _contents_one);
     }
 
     function test_benchmark_airdrop_two_ERC20() public {
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients_two, _amounts_two);
+        drop.airdrop(address(erc20), address(tokenOwner), _contents_two);
     }
 
     function test_benchmark_airdrop_two_nativeToken() public {
-        drop.airdrop{ value: 2 ether }(NATIVE_TOKEN, deployer, _recipients_two, _amounts_two);
+        drop.airdrop{ value: 2 ether }(NATIVE_TOKEN, deployer, _contents_two);
     }
 
     function test_benchmark_airdrop_five_ERC20() public {
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients_five, _amounts_five);
+        drop.airdrop(address(erc20), address(tokenOwner), _contents_five);
     }
 
     function test_benchmark_airdrop_five_nativeToken() public {
-        drop.airdrop{ value: 5 ether }(NATIVE_TOKEN, deployer, _recipients_five, _amounts_five);
+        drop.airdrop{ value: 5 ether }(NATIVE_TOKEN, deployer, _contents_five);
     }
 }

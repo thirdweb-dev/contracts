@@ -12,8 +12,7 @@ contract AirdropERC721Test is BaseTest {
 
     Wallet internal tokenOwner;
 
-    uint256[] internal _tokenIds;
-    address[] internal _recipients;
+    IAirdropERC721.AirdropContent[] internal _contents;
 
     function setUp() public override {
         super.setUp();
@@ -26,8 +25,7 @@ contract AirdropERC721Test is BaseTest {
         tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), true);
 
         for (uint256 i = 0; i < 1000; i++) {
-            _tokenIds.push(i);
-            _recipients.push(getActor(uint160(i)));
+            _contents.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
         }
     }
 
@@ -37,17 +35,17 @@ contract AirdropERC721Test is BaseTest {
 
     function test_state_airdrop() public {
         vm.prank(deployer);
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients, _tokenIds);
+        drop.airdrop(address(erc721), address(tokenOwner), _contents);
 
         for (uint256 i = 0; i < 1000; i++) {
-            assertEq(erc721.ownerOf(i), _recipients[i]);
+            assertEq(erc721.ownerOf(i), _contents[i].recipient);
         }
     }
 
     function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
         vm.expectRevert("Not authorized");
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients, _tokenIds);
+        drop.airdrop(address(erc721), address(tokenOwner), _contents);
     }
 
     function test_revert_airdrop_notApproved() public {
@@ -55,14 +53,6 @@ contract AirdropERC721Test is BaseTest {
 
         vm.prank(deployer);
         vm.expectRevert("ERC721: transfer caller is not owner nor approved");
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients, _tokenIds);
-    }
-
-    function test_revert_airdrop_lengthMismatch() public {
-        _tokenIds.push(1000);
-
-        vm.prank(deployer);
-        vm.expectRevert("length mismatch");
-        drop.airdrop(address(erc721), address(tokenOwner), _recipients, _tokenIds);
+        drop.airdrop(address(erc721), address(tokenOwner), _contents);
     }
 }
