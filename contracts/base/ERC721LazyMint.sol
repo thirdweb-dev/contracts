@@ -158,7 +158,11 @@ contract ERC721LazyMint is
      *
      *  @dev             Override this function to add logic for state updation.
      */
-    function transferTokensOnClaim(address _receiver, uint256 _quantity) internal virtual returns (uint256 startTokenId) {
+    function transferTokensOnClaim(address _receiver, uint256 _quantity)
+        internal
+        virtual
+        returns (uint256 startTokenId)
+    {
         startTokenId = _currentIndex;
         _safeMint(_receiver, _quantity);
     }

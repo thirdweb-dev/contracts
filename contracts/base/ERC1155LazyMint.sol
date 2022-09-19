@@ -212,7 +212,11 @@ contract ERC1155LazyMint is
      *
      *  @dev             Override this function to add logic for state updation.
      */
-    function transferTokensOnClaim(address _receiver, uint256 _tokenId, uint256 _quantity) internal virtual {
+    function transferTokensOnClaim(
+        address _receiver,
+        uint256 _tokenId,
+        uint256 _quantity
+    ) internal virtual {
         _mint(_receiver, _tokenId, _quantity, "");
     }
 
