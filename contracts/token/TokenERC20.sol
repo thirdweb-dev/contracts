@@ -64,7 +64,7 @@ contract TokenERC20 is
     uint128 internal constant MAX_BPS = 10_000;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 internal platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev The adress that receives all primary sales value.
     address internal platformFeeRecipient;

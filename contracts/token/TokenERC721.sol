@@ -86,7 +86,7 @@ contract TokenERC721 is
     uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
