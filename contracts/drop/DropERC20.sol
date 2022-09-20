@@ -91,17 +91,6 @@ contract DropERC20 is
                         ERC 165 / 20 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
-    // /// @dev See ERC 165
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override
-    //     returns (bool)
-    // {
-    //     return super.supportsInterface(interfaceId);
-    // }
-
     function contractType() external pure returns (bytes32) {
         return bytes32("DropERC20");
     }
