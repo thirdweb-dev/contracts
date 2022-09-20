@@ -315,6 +315,51 @@ function payeeCount() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### releasable
+
+```solidity
+function releasable(address account) external view returns (uint256)
+```
+
+
+
+*Getter for the amount of payee&#39;s releasable Ether.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### releasable
+
+```solidity
+function releasable(contract IERC20Upgradeable token, address account) external view returns (uint256)
+```
+
+
+
+*Getter for the amount of payee&#39;s releasable `token` tokens. `token` should be the address of an IERC20 contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | contract IERC20Upgradeable | undefined |
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### release
 
 ```solidity
