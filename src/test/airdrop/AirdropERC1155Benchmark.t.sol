@@ -14,12 +14,6 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
 
     IAirdropERC1155.AirdropContent[] internal _contents;
 
-    IAirdropERC1155.AirdropContent[] internal _contents_one;
-
-    IAirdropERC1155.AirdropContent[] internal _contents_two;
-
-    IAirdropERC1155.AirdropContent[] internal _contents_five;
-
     function setUp() public override {
         super.setUp();
 
@@ -36,41 +30,31 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), true);
 
         for (uint256 i = 0; i < 1000; i++) {
-            if (i < 1) {
-                _contents_one.push(
-                    IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
-                );
-            }
-
-            if (i < 2) {
-                _contents_two.push(
-                    IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
-                );
-            }
-
-            if (i < 5) {
-                _contents_five.push(
-                    IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
-                );
-            }
-
             _contents.push(
-                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
+                IAirdropERC1155.AirdropContent({
+                    tokenAddress: address(erc1155),
+                    tokenOwner: address(tokenOwner),
+                    recipient: getActor(uint160(i)),
+                    tokenId: i % 5,
+                    amount: 5
+                })
             );
         }
 
         vm.startPrank(deployer);
+
+        drop.addAirdropRecipients(_contents);
     }
 
     function test_benchmark_airdrop_one() public {
-        drop.airdrop(address(erc1155), address(tokenOwner), _contents_one);
+        drop.airdrop(1);
     }
 
     function test_benchmark_airdrop_two() public {
-        drop.airdrop(address(erc1155), address(tokenOwner), _contents_two);
+        drop.airdrop(2);
     }
 
     function test_benchmark_airdrop_five() public {
-        drop.airdrop(address(erc1155), address(tokenOwner), _contents_five);
+        drop.airdrop(5);
     }
 }

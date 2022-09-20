@@ -31,7 +31,13 @@ contract AirdropERC1155Test is BaseTest {
 
         for (uint256 i = 0; i < 1000; i++) {
             _contents.push(
-                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
+                IAirdropERC1155.AirdropContent({
+                    tokenAddress: address(erc1155),
+                    tokenOwner: address(tokenOwner),
+                    recipient: getActor(uint160(i)),
+                    tokenId: i % 5,
+                    amount: 5
+                })
             );
         }
     }
@@ -41,8 +47,10 @@ contract AirdropERC1155Test is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_state_airdrop() public {
-        vm.prank(deployer);
-        drop.airdrop(address(erc1155), address(tokenOwner), _contents);
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients(_contents);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
 
         for (uint256 i = 0; i < 1000; i++) {
             assertEq(erc1155.balanceOf(_contents[i].recipient, i % 5), 5);
@@ -56,15 +64,24 @@ contract AirdropERC1155Test is BaseTest {
 
     function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
-        vm.expectRevert("Not authorized");
-        drop.airdrop(address(erc1155), address(tokenOwner), _contents);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(address(25)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(0x00), 32)
+            )
+        );
+        drop.addAirdropRecipients(_contents);
     }
 
     function test_revert_airdrop_notApproved() public {
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), false);
 
-        vm.prank(deployer);
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients(_contents);
         vm.expectRevert("ERC1155: caller is not owner nor approved");
-        drop.airdrop(address(erc1155), address(tokenOwner), _contents);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
     }
 }

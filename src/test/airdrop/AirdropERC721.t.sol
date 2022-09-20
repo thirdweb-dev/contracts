@@ -25,7 +25,14 @@ contract AirdropERC721Test is BaseTest {
         tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), true);
 
         for (uint256 i = 0; i < 1000; i++) {
-            _contents.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
+            _contents.push(
+                IAirdropERC721.AirdropContent({
+                    tokenAddress: address(erc721),
+                    tokenOwner: address(tokenOwner),
+                    recipient: getActor(uint160(i)),
+                    tokenId: i
+                })
+            );
         }
     }
 
@@ -34,8 +41,10 @@ contract AirdropERC721Test is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_state_airdrop() public {
-        vm.prank(deployer);
-        drop.airdrop(address(erc721), address(tokenOwner), _contents);
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients(_contents);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
 
         for (uint256 i = 0; i < 1000; i++) {
             assertEq(erc721.ownerOf(i), _contents[i].recipient);
@@ -44,15 +53,24 @@ contract AirdropERC721Test is BaseTest {
 
     function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
-        vm.expectRevert("Not authorized");
-        drop.airdrop(address(erc721), address(tokenOwner), _contents);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(address(25)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(0x00), 32)
+            )
+        );
+        drop.addAirdropRecipients(_contents);
     }
 
     function test_revert_airdrop_notApproved() public {
         tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), false);
 
-        vm.prank(deployer);
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients(_contents);
         vm.expectRevert("ERC721: transfer caller is not owner nor approved");
-        drop.airdrop(address(erc721), address(tokenOwner), _contents);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
     }
 }
