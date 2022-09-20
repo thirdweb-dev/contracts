@@ -5,7 +5,6 @@ import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
