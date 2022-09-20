@@ -126,7 +126,6 @@ contract Split is
     function distribute() public virtual {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
-            // note: `_release` should not fail because payee always has shares, protected by `_appPay`
             _release(payable(payee(i)));
         }
     }
@@ -137,7 +136,6 @@ contract Split is
     function distribute(IERC20Upgradeable token) public virtual {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
-            // note: `_release` should not fail because payee always has shares, protected by `_appPay`
             _release(token, payee(i));
         }
     }
