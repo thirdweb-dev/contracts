@@ -270,7 +270,7 @@ contract TokenERC1155Test is BaseTest {
         _mintrequest.currency = address(erc20);
         _signature = signMintRequest(_mintrequest, privateKey);
 
-        // shouldn't send native-token when it is not the currency 
+        // shouldn't send native-token when it is not the currency
         vm.prank(recipient);
         vm.expectRevert("msg value not zero");
         tokenContract.mintWithSignature{ value: 1 }(_mintrequest, _signature);
