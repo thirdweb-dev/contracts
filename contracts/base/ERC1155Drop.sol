@@ -79,6 +79,19 @@ contract ERC1155Drop is
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            ERC165 Logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns whether this contract supports the given interface.
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
+            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
+            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Overriden metadata logic
     //////////////////////////////////////////////////////////////*/
@@ -153,19 +166,6 @@ contract ERC1155Drop is
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     function nextTokenIdToMint() public view virtual returns (uint256) {
         return nextTokenIdToLazyMint;
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            ERC165 Logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns whether this contract supports the given interface.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
-        return
-            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
-            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
-            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
-            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
     }
 
     /*///////////////////////////////////////////////////////////////
