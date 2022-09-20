@@ -216,6 +216,8 @@ contract TokenERC20 is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == _price, "must send total price.");
+        } else {
+            require(msg.value == 0, "msg value not zero");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);

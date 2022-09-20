@@ -263,6 +263,19 @@ contract TokenERC1155Test is BaseTest {
         tokenContract.mintWithSignature{ value: 0 }(_mintrequest, _signature);
     }
 
+    function test_revert_mintWithSignature_MsgValueNotZero() public {
+        vm.warp(1000);
+
+        _mintrequest.pricePerToken = 1;
+        _mintrequest.currency = address(erc20);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        // shouldn't send native-token when it is not the currency 
+        vm.prank(recipient);
+        vm.expectRevert("msg value not zero");
+        tokenContract.mintWithSignature{ value: 1 }(_mintrequest, _signature);
+    }
+
     function test_revert_mintWithSignature_InvalidSignature() public {
         vm.warp(1000);
 

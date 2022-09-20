@@ -397,6 +397,8 @@ contract TokenERC1155 is
 
         if (_req.currency == NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
+        } else {
+            require(msg.value == 0, "msg value not zero");
         }
 
         address saleRecipient = _req.primarySaleRecipient == address(0)
