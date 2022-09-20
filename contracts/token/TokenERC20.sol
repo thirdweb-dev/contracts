@@ -166,7 +166,7 @@ contract TokenERC20 is
     /// @dev Mints tokens according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
+        address receiver = _req.to;
         address saleRecipient = _req.primarySaleRecipient == address(0)
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
@@ -237,6 +237,7 @@ contract TokenERC20 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
 
         minted[_req.uid] = true;
 

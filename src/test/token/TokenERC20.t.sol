@@ -220,6 +220,17 @@ contract TokenERC20Test is BaseTest {
         tokenContract.mintWithSignature(_mintrequest, _signature);
     }
 
+    function test_revert_mintWithSignature_RecipientUndefined() public {
+        vm.warp(1000);
+
+        _mintrequest.to = address(0);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        vm.prank(recipient);
+        vm.expectRevert("recipient undefined");
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
     function test_event_mintWithSignature() public {
         vm.warp(1000);
 

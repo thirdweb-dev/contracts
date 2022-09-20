@@ -217,7 +217,7 @@ contract TokenERC1155 is
     /// @dev Mints an NFT according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
+        address receiver = _req.to;
 
         uint256 tokenIdToMint;
         if (_req.tokenId == type(uint256).max) {
@@ -378,6 +378,7 @@ contract TokenERC1155 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
 
         minted[_req.uid] = true;
 

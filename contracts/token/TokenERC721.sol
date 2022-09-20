@@ -197,7 +197,7 @@ contract TokenERC721 is
         returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
+        address receiver = _req.to;
 
         tokenIdMinted = _mintTo(receiver, _req.uri);
 
@@ -342,6 +342,7 @@ contract TokenERC721 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
 
         minted[_req.uid] = true;
 
