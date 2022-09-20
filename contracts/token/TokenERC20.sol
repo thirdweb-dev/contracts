@@ -169,11 +169,8 @@ contract TokenERC20 is
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
-        address saleRecipient = _req.primarySaleRecipient == address(0)
-            ? primarySaleRecipient
-            : _req.primarySaleRecipient;
 
-        collectPrice(saleRecipient, _req.currency, _req.price);
+        collectPrice(_req);
 
         _mintTo(receiver, _req.quantity);
 
@@ -205,25 +202,25 @@ contract TokenERC20 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _price
-    ) internal {
-        if (_price == 0) {
+    function collectPrice(MintRequest calldata _req) internal {
+        if (_req.price == 0) {
             return;
         }
 
-        uint256 platformFees = (_price * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (_req.price * platformFeeBps) / MAX_BPS;
 
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == _price, "must send total price.");
+        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == _req.price, "must send total price.");
         } else {
             require(msg.value == 0, "msg value not zero");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _primarySaleRecipient, _price - platformFees);
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? primarySaleRecipient
+            : _req.primarySaleRecipient;
+
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, _req.price - platformFees);
     }
 
     /// @dev Mints `amount` of tokens to `to`
