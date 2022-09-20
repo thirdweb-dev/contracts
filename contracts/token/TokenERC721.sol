@@ -67,9 +67,6 @@ contract TokenERC721 is
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -361,7 +358,7 @@ contract TokenERC721 is
         uint256 totalPrice = _req.price;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
-        if (_req.currency == NATIVE_TOKEN) {
+        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
         } else {
             require(msg.value == 0, "msg value not zero");
