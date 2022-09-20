@@ -3,10 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDropSinglePhase1155.sol";
 import "../lib/MerkleProof.sol";
-import "../lib/TWBitMaps.sol";
 
 abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
-    using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
