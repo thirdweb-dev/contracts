@@ -156,6 +156,10 @@ contract DropERC1155 is
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Contract identifiers
+    //////////////////////////////////////////////////////////////*/
+
     function contractType() external pure returns (bytes32) {
         return bytes32("DropERC1155");
     }
@@ -232,9 +236,6 @@ contract DropERC1155 is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
-        // if (_tokenId >= nextTokenIdToLazyMint) {
-        //     revert("Not enough minted tokens");
-        // }
         require(
             maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
             "exceed max total supply"
