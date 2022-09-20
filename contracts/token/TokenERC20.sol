@@ -88,6 +88,7 @@ contract TokenERC20 is
         address _platformFeeRecipient,
         uint256 _platformFeeBps
     ) external initializer {
+        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
