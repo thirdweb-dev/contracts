@@ -379,6 +379,7 @@ contract TokenERC1155 is
             "request expired"
         );
         require(_req.to != address(0), "recipient undefined");
+        require(_req.quantity > 0, "zero quantity");
 
         minted[_req.uid] = true;
 

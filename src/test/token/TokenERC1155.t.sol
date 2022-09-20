@@ -296,6 +296,17 @@ contract TokenERC1155Test is BaseTest {
         tokenContract.mintWithSignature(_mintrequest, _signature);
     }
 
+    function test_revert_mintWithSignature_ZeroQuantity() public {
+        vm.warp(1000);
+
+        _mintrequest.quantity = 0;
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        vm.prank(recipient);
+        vm.expectRevert("zero quantity");
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
     function test_event_mintWithSignature() public {
         vm.warp(1000);
 
