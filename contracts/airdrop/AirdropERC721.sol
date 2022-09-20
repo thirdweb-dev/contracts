@@ -64,6 +64,10 @@ contract AirdropERC721 is
         return uint8(VERSION);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                            Airdrop logic
+    //////////////////////////////////////////////////////////////*/
+
     ///@notice Lets contract-owner set up an airdrop of ERC721 NFTs to a list of addresses.
     function addAirdropRecipients(AirdropContent[] calldata _contents) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
