@@ -88,7 +88,7 @@ contract DropERC20 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 20 / 2981 logic
+                        Contract identifiers
     //////////////////////////////////////////////////////////////*/
 
     function contractType() external pure returns (bytes32) {
