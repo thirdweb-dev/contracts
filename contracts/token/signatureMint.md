@@ -66,7 +66,7 @@ struct MintRequest {
 | tokenId | The tokenId of the token to mint. (Only applicable for ERC1155 tokens)|
 | uri | The metadata URI of the token to mint. (Not applicable for ERC20 tokens)|
 | quantity | The quantity of tokens to mint.|
-| pricePerToken | The price to pay per quantity of tokens minted.|
+| pricePerToken | The price to pay per quantity of tokens minted. (For TokenERC20, this parameter is `price`, indicating the total price of all tokens)|
 | currency | The currency in which to pay the price per token minted.|
 | validityStartTimestamp | The unix timestamp after which the payload is valid.|
 | validityEndTimestamp | The unix timestamp at which the payload expires.|
