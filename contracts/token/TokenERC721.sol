@@ -305,7 +305,7 @@ contract TokenERC721 is
 
         uri[tokenIdToMint] = _uri;
 
-        _mint(_to, tokenIdToMint);
+        _safeMint(_to, tokenIdToMint);
 
         emit TokensMinted(_to, tokenIdToMint, _uri);
     }
