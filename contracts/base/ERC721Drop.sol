@@ -9,7 +9,6 @@ import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/PrimarySale.sol";
-import "../extension/PermissionsEnumerable.sol";
 import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
