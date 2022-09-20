@@ -96,7 +96,7 @@ contract DropERC20 is
     }
 
     function contractVersion() external pure returns (uint8) {
-        return uint8(3);
+        return uint8(4);
     }
 
     /*///////////////////////////////////////////////////////////////
