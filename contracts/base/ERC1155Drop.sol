@@ -182,7 +182,6 @@ contract ERC1155Drop is
         AllowlistProof calldata,
         bytes memory
     ) internal view virtual override {
-        require(msg.sender == tx.origin, "BOT");
         if (_tokenId >= nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
         }
