@@ -10,7 +10,6 @@ import "../extension/interface/IPrimarySale.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Security
@@ -38,7 +37,6 @@ contract TokenERC20 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC20BurnableUpgradeable,
-    ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     ITokenERC20,
     AccessControlEnumerableUpgradeable
@@ -54,7 +52,6 @@ contract TokenERC20 is
         );
 
     bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
@@ -103,7 +100,6 @@ contract TokenERC20 is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
-        _setupRole(PAUSER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
     }
 
@@ -130,7 +126,7 @@ contract TokenERC20 is
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
+    ) internal override {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -266,34 +262,6 @@ contract TokenERC20 is
                 _req.validityEndTimestamp,
                 _req.uid
             );
-    }
-
-    /**
-     * @dev Pauses all token transfers.
-     *
-     * See {ERC20Pausable} and {Pausable-_pause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
-        _pause();
-    }
-
-    /**
-     * @dev Unpauses all token transfers.
-     *
-     * See {ERC20Pausable} and {Pausable-_unpause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
-        _unpause();
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.

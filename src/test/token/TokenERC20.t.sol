@@ -422,43 +422,4 @@ contract TokenERC20Test is BaseTest {
         vm.prank(address(0x1));
         tokenContract.setContractURI("");
     }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: pause/unpause
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_pause() public {
-        vm.prank(deployerSigner);
-        tokenContract.pause();
-
-        assertEq(tokenContract.paused(), true);
-
-        vm.expectRevert("Pausable: paused");
-        vm.prank(deployerSigner);
-        tokenContract.pause();
-    }
-
-    function test_revert_pause_NotAuthorized() public {
-        vm.expectRevert("not pauser.");
-        vm.prank(address(0x1));
-        tokenContract.pause();
-    }
-
-    function test_state_unpause() public {
-        vm.prank(deployerSigner);
-        tokenContract.pause();
-
-        assertEq(tokenContract.paused(), true);
-
-        vm.prank(deployerSigner);
-        tokenContract.unpause();
-
-        assertFalse(tokenContract.paused());
-    }
-
-    function test_revert_unpause_NotAuthorized() public {
-        vm.expectRevert("not pauser.");
-        vm.prank(address(0x1));
-        tokenContract.unpause();
-    }
 }
