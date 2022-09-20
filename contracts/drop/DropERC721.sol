@@ -130,6 +130,10 @@ contract DropERC721 is
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Contract identifiers
+    //////////////////////////////////////////////////////////////*/
+
     function contractType() external pure returns (bytes32) {
         return bytes32("DropERC721");
     }
@@ -175,6 +179,10 @@ contract DropERC721 is
 
         emit TokenURIRevealed(_index, revealedURI);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                        Setter functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
