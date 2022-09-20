@@ -307,6 +307,13 @@ contract TokenERC721Test is BaseTest {
         tokenContract.mintTo(recipient, _tokenURI);
     }
 
+    function test_revert_mintTo_emptyURI() public {
+        // mint
+        vm.prank(deployerSigner);
+        vm.expectRevert("empty uri.");
+        tokenContract.mintTo(recipient, "");
+    }
+
     function test_event_mintTo() public {
         string memory _tokenURI = "tokenURI";
 

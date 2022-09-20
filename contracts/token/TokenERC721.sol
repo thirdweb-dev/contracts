@@ -305,6 +305,7 @@ contract TokenERC721 is
         tokenIdToMint = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
+        require(bytes(_uri).length > 0, "empty uri.");
         uri[tokenIdToMint] = _uri;
 
         _safeMint(_to, tokenIdToMint);
