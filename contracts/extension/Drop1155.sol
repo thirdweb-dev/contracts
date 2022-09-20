@@ -3,10 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDrop1155.sol";
 import "../lib/MerkleProof.sol";
-import "../lib/TWBitMaps.sol";
 
 abstract contract Drop1155 is IDrop1155 {
-    using TWBitMaps for TWBitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
