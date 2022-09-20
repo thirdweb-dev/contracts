@@ -326,20 +326,6 @@ contract DropERC1155 is
         return nextTokenIdToLazyMint;
     }
 
-    /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) public virtual {
-        require(
-            account == _msgSender() || isApprovedForAll(account, _msgSender()),
-            "ERC1155: caller is not owner nor approved."
-        );
-
-        _burn(account, id, value);
-    }
-
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
     function burnBatch(
         address account,

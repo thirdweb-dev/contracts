@@ -73,24 +73,6 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
-### burn
-
-```solidity
-function burn(address account, uint256 id, uint256 value) external nonpayable
-```
-
-
-
-*Lets a token owner burn the tokens they own (i.e. destroy for good)*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-| id | uint256 | undefined |
-| value | uint256 | undefined |
-
 ### burnBatch
 
 ```solidity
