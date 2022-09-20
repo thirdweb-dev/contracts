@@ -141,6 +141,8 @@ contract TokenERC1155 is
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _primarySaleRecipient;
         contractURI = _contractURI;
+
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = _platformFeeBps;
 
         _owner = _defaultAdmin;
@@ -281,7 +283,7 @@ contract TokenERC1155 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;

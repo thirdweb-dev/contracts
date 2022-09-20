@@ -95,6 +95,8 @@ contract TokenERC20 is
         contractURI = _contractURI;
         primarySaleRecipient = _primarySaleRecipient;
         platformFeeRecipient = _platformFeeRecipient;
+
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = uint128(_platformFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -189,7 +191,7 @@ contract TokenERC20 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;

@@ -590,7 +590,7 @@ contract TokenERC721Test is BaseTest {
         address _platformFeeRecipient = address(0x123);
         uint256 _platformFeeBps = 10001;
 
-        vm.expectRevert("bps <= 10000.");
+        vm.expectRevert("exceeds MAX_BPS");
         vm.prank(deployerSigner);
         tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }

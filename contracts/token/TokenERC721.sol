@@ -130,6 +130,8 @@ contract TokenERC721 is
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
+
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = _platformFeeBps;
 
         _owner = _defaultAdmin;
@@ -252,7 +254,7 @@ contract TokenERC721 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
