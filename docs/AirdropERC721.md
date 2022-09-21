@@ -10,24 +10,54 @@
 
 ## Methods
 
-### airdrop
+### DEFAULT_ADMIN_ROLE
 
 ```solidity
-function airdrop(address _tokenAddress, address _tokenOwner, address[] _recipients, uint256[] _tokenIds) external nonpayable
+function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 ```
 
-Lets contract-owner send ERC721 tokens to a list of addresses.
 
-*The token-owner should approve target tokens to Airdrop contract,                   which acts as operator for the tokens.*
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
+### addAirdropRecipients
+
+```solidity
+function addAirdropRecipients(IAirdropERC721.AirdropContent[] _contents) external nonpayable
+```
+
+
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenAddress | address | Contract address of ERC721 tokens to air-drop. |
-| _tokenOwner | address | Address from which to transfer tokens. |
-| _recipients | address[] | List of recipient addresses for the air-drop. |
-| _tokenIds | uint256[] | ERC721 token-Ids of tokens to drop. |
+| _contents | IAirdropERC721.AirdropContent[] | undefined |
+
+### airdrop
+
+```solidity
+function airdrop(uint256 paymentsToProcess) external nonpayable
+```
+
+Lets contract-owner send ERC721 NFTs to a list of addresses.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| paymentsToProcess | uint256 | undefined |
 
 ### contractType
 
@@ -62,6 +92,204 @@ function contractVersion() external pure returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined |
+
+### getAllAirdropPayments
+
+```solidity
+function getAllAirdropPayments() external view returns (struct IAirdropERC721.AirdropContent[] contents)
+```
+
+Returns all airdrop payments set up -- pending, processed or failed.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contents | IAirdropERC721.AirdropContent[] | undefined |
+
+### getAllAirdropPaymentsFailed
+
+```solidity
+function getAllAirdropPaymentsFailed() external view returns (struct IAirdropERC721.AirdropContent[] contents)
+```
+
+Returns all pending airdrop failed.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contents | IAirdropERC721.AirdropContent[] | undefined |
+
+### getAllAirdropPaymentsPending
+
+```solidity
+function getAllAirdropPaymentsPending() external view returns (struct IAirdropERC721.AirdropContent[] contents)
+```
+
+Returns all pending airdrop payments.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contents | IAirdropERC721.AirdropContent[] | undefined |
+
+### getAllAirdropPaymentsProcessed
+
+```solidity
+function getAllAirdropPaymentsProcessed() external view returns (struct IAirdropERC721.AirdropContent[] contents)
+```
+
+Returns all pending airdrop processed.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contents | IAirdropERC721.AirdropContent[] | undefined |
+
+### getRoleAdmin
+
+```solidity
+function getRoleAdmin(bytes32 role) external view returns (bytes32)
+```
+
+Returns the admin role that controls the specified role.
+
+*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
+### getRoleMember
+
+```solidity
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
+```
+
+Returns the role-member from a list of members for a role,                  at a given index.
+
+*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| index | uint256 | Index in list of current members for the role. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| member | address |  Address of account that has `role` |
+
+### getRoleMemberCount
+
+```solidity
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
+```
+
+Returns total number of accounts that have a role.
+
+*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| count | uint256 |   Total number of accounts that have `role` |
+
+### grantRole
+
+```solidity
+function grantRole(bytes32 role, address account) external nonpayable
+```
+
+Grants a role to an account, if not previously granted.
+
+*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account to which the role is being granted. |
+
+### hasRole
+
+```solidity
+function hasRole(bytes32 role, address account) external view returns (bool)
+```
+
+Checks whether an account has a particular role.
+
+*Returns `true` if `account` has been granted `role`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### hasRoleWithSwitch
+
+```solidity
+function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+```
+
+Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
+
+*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### initialize
 
@@ -118,6 +346,74 @@ Returns the owner of the contract.
 |---|---|---|
 | _0 | address | undefined |
 
+### payeeCount
+
+```solidity
+function payeeCount() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### processedCount
+
+```solidity
+function processedCount() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### renounceRole
+
+```solidity
+function renounceRole(bytes32 role, address account) external nonpayable
+```
+
+Revokes role from the account.
+
+*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
+
+### revokeRole
+
+```solidity
+function revokeRole(bytes32 role, address account) external nonpayable
+```
+
+Revokes role from an account.
+
+*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
+
 ### setOwner
 
 ```solidity
@@ -138,6 +434,23 @@ Lets an authorized wallet set a new owner for the contract.
 
 ## Events
 
+### AirdropPayment
+
+```solidity
+event AirdropPayment(address indexed recipient, IAirdropERC721.AirdropContent content)
+```
+
+Emitted when an airdrop payment is made to a recipient.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| recipient `indexed` | address | undefined |
+| content  | IAirdropERC721.AirdropContent | undefined |
+
 ### OwnerUpdated
 
 ```solidity
@@ -154,6 +467,76 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 |---|---|---|
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
+
+### RecipientsAdded
+
+```solidity
+event RecipientsAdded(IAirdropERC721.AirdropContent[] _contents)
+```
+
+Emitted when airdrop recipients are uploaded to the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _contents  | IAirdropERC721.AirdropContent[] | undefined |
+
+### RoleAdminChanged
+
+```solidity
+event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role `indexed` | bytes32 | undefined |
+| previousAdminRole `indexed` | bytes32 | undefined |
+| newAdminRole `indexed` | bytes32 | undefined |
+
+### RoleGranted
+
+```solidity
+event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role `indexed` | bytes32 | undefined |
+| account `indexed` | address | undefined |
+| sender `indexed` | address | undefined |
+
+### RoleRevoked
+
+```solidity
+event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role `indexed` | bytes32 | undefined |
+| account `indexed` | address | undefined |
+| sender `indexed` | address | undefined |
 
 
 

@@ -92,7 +92,7 @@ contract AirdropERC20 is
     }
 
     /// @notice Lets contract-owner send ERC20 or native tokens to a list of addresses.
-    function airdrop(uint256 paymentsToProcess) external {
+    function airdrop(uint256 paymentsToProcess) external nonReentrant {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
 

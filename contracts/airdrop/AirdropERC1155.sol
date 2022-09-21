@@ -84,7 +84,7 @@ contract AirdropERC1155 is
     }
 
     /// @notice Lets contract-owner send ERC721 NFTs to a list of addresses.
-    function airdrop(uint256 paymentsToProcess) external {
+    function airdrop(uint256 paymentsToProcess) external nonReentrant {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
 
