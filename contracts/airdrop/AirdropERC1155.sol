@@ -147,7 +147,7 @@ contract AirdropERC1155 is
     /// @notice Returns all pending airdrop payments.
     function getAllAirdropPaymentsPending() external view returns (AirdropContent[] memory contents) {
         uint256 endCount = payeeCount;
-        uint256 startCount = payeeCount;
+        uint256 startCount = processedCount;
         contents = new AirdropContent[](endCount - startCount);
 
         uint256 idx;
