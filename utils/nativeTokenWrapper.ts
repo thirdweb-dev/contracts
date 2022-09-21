@@ -9,9 +9,11 @@ export const nativeTokenWrapper: Record<number, string> = {
   250: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
   4002: "0xf1277d1Ed8AD466beddF92ef448A132661956621",
   10: "0x4200000000000000000000000000000000000006", // optimism
-  69: "0xbC6F6b680bc61e30dB47721c6D1c5cde19C1300d", // optimism testnet
+  69: "0xbC6F6b680bc61e30dB47721c6D1c5cde19C1300d", // optimism kovan
+  420: "0x4200000000000000000000000000000000000006", // optimism goerli
   42161: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1", // arbitrum
-  421611: "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9", // arbitrum testnet
+  421611: "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9", // arbitrum rinkeby
+  421613: "0xe39Ab88f8A4777030A534146A9Ca3B52bd5D43A3", // arbitrum goerli
   56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c", // binance mainnet
   97: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd", // binance testnet
 };
