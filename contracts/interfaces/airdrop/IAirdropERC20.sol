@@ -10,20 +10,49 @@ pragma solidity ^0.8.11;
  */
 
 interface IAirdropERC20 {
+    /// @notice Emitted when airdrop recipients are uploaded to the contract.
+    event RecipientsAdded(AirdropContent[] _contents);
+    /// @notice Emitted when an airdrop payment is made to a recipient.
+    event AirdropPayment(address indexed recipient, AirdropContent content);
+
     /**
-     *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
+     *  @notice Details of amount and recipient for airdropped token.
+     *
+     *  @param recipient The recipient of the tokens.
+     *  @param amount The quantity of tokens to airdrop.
+     */
+    struct AirdropContent {
+        address tokenAddress;
+        address tokenOwner;
+        address recipient;
+        uint256 amount;
+    }
+
+    /// @notice Returns all airdrop payments set up -- pending, processed or failed.
+    function getAllAirdropPayments() external view returns (AirdropContent[] memory contents);
+
+    /// @notice Returns all pending airdrop payments.
+    function getAllAirdropPaymentsPending() external view returns (AirdropContent[] memory contents);
+
+    /// @notice Returns all pending airdrop processed.
+    function getAllAirdropPaymentsProcessed() external view returns (AirdropContent[] memory contents);
+
+    /// @notice Returns all pending airdrop failed.
+    function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents);
+
+    /**
+     *  @notice          Lets contract-owner set up an airdrop of ERC20 or native tokens to a list of addresses.
+     *
+     *  @param _contents  List containing recipients, amounts to airdrop.
+     */
+    function addAirdropRecipients(AirdropContent[] calldata _contents) external payable;
+
+    /**
+     *  @notice          Lets contract-owner send ERC20 or native tokens to a list of addresses.
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
-     *  @param _tokenAddress    Contract address of ERC20 tokens to air-drop.
-     *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _amounts         Quantity of tokens to air-drop, per recipient.
+     *  @param paymentsToProcess    The number of airdrop payments to process.
      */
-    function airdrop(
-        address _tokenAddress,
-        address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _amounts
-    ) external payable;
+    function airdrop(uint256 paymentsToProcess) external;
 }

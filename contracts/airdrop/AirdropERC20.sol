@@ -13,14 +13,29 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
+import "../extension/PermissionsEnumerable.sol";
 
-contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, MulticallUpgradeable, IAirdropERC20 {
+contract AirdropERC20 is
+    Initializable,
+    Ownable,
+    PermissionsEnumerable,
+    ReentrancyGuardUpgradeable,
+    MulticallUpgradeable,
+    IAirdropERC20
+{
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC20");
     uint256 private constant VERSION = 1;
+
+    uint256 public payeeCount;
+    uint256 public processedCount;
+
+    uint256[] private indicesOfFailed;
+
+    mapping(uint256 => AirdropContent) private airdropContent;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -30,6 +45,7 @@ contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mul
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(address _defaultAdmin) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
@@ -52,35 +68,96 @@ contract AirdropERC20 is Initializable, Ownable, ReentrancyGuardUpgradeable, Mul
                             Airdrop logic
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
-     *  @dev             The token-owner should approve target tokens to Airdrop contract,
-     *                   which acts as operator for the tokens.
-     *
-     *  @param _tokenAddress    Contract address of ERC20 tokens to air-drop.
-     *  @param _tokenOwner      Address from which to transfer tokens.
-     *  @param _recipients      List of recipient addresses for the air-drop.
-     *  @param _amounts         Quantity of tokens to air-drop, per recipient.
-     */
-    function airdrop(
-        address _tokenAddress,
-        address _tokenOwner,
-        address[] memory _recipients,
-        uint256[] memory _amounts
-    ) external payable nonReentrant onlyOwner {
-        uint256 len = _amounts.length;
-        require(len == _recipients.length, "length mismatch");
+    ///@notice Lets contract-owner set up an airdrop of ERC20 or native tokens to a list of addresses.
+    function addAirdropRecipients(AirdropContent[] calldata _contents) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 len = _contents.length;
+        require(len > 0, "No payees provided.");
 
-        if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-            uint256 totalAmount;
-            for (uint256 i = 0; i < len; i++) {
-                totalAmount += _amounts[i];
+        uint256 currentCount = payeeCount;
+        payeeCount += len;
+
+        uint256 nativeTokenAmount;
+
+        for (uint256 i = currentCount; i < len; i += 1) {
+            airdropContent[i] = _contents[i];
+
+            if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+                nativeTokenAmount += _contents[i].amount;
             }
-            require(totalAmount == msg.value, "Incorrect native token amount");
         }
 
-        for (uint256 i = 0; i < len; i++) {
-            CurrencyTransferLib.transferCurrency(_tokenAddress, _tokenOwner, _recipients[i], _amounts[i]);
+        require(nativeTokenAmount == msg.value, "Incorrect native token amount");
+
+        emit RecipientsAdded(_contents);
+    }
+
+    /// @notice Lets contract-owner send ERC20 or native tokens to a list of addresses.
+    function airdrop(uint256 paymentsToProcess) external nonReentrant {
+        uint256 totalPayees = payeeCount;
+        uint256 countOfProcessed = processedCount;
+
+        require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
+
+        processedCount += paymentsToProcess;
+
+        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
+            AirdropContent memory content = airdropContent[i];
+
+            CurrencyTransferLib.transferCurrency(
+                content.tokenAddress,
+                content.tokenOwner,
+                content.recipient,
+                content.amount
+            );
+
+            emit AirdropPayment(content.recipient, content);
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Airdrop view logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns all airdrop payments set up -- pending, processed or failed.
+    function getAllAirdropPayments() external view returns (AirdropContent[] memory contents) {
+        uint256 count = payeeCount;
+        contents = new AirdropContent[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            contents[i] = airdropContent[i];
+        }
+    }
+
+    /// @notice Returns all pending airdrop payments.
+    function getAllAirdropPaymentsPending() external view returns (AirdropContent[] memory contents) {
+        uint256 endCount = payeeCount;
+        uint256 startCount = payeeCount;
+        contents = new AirdropContent[](endCount - startCount);
+
+        uint256 idx;
+        for (uint256 i = startCount; i < endCount; i += 1) {
+            contents[idx] = airdropContent[i];
+            idx += 1;
+        }
+    }
+
+    /// @notice Returns all pending airdrop processed.
+    function getAllAirdropPaymentsProcessed() external view returns (AirdropContent[] memory contents) {
+        uint256 count = processedCount;
+        contents = new AirdropContent[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            contents[i] = airdropContent[i];
+        }
+    }
+
+    /// @notice Returns all pending airdrop failed.
+    function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents) {
+        uint256 count = indicesOfFailed.length;
+        contents = new AirdropContent[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            contents[i] = airdropContent[indicesOfFailed[i]];
         }
     }
 
