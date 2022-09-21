@@ -695,34 +695,6 @@ function numCheckpoints(address account) external view returns (uint32)
 |---|---|---|
 | _0 | uint32 | undefined |
 
-### pause
-
-```solidity
-function pause() external nonpayable
-```
-
-
-
-*Pauses all token transfers. See {ERC20Pausable} and {Pausable-_pause}. Requirements: - the caller must have the `PAUSER_ROLE`.*
-
-
-### paused
-
-```solidity
-function paused() external view returns (bool)
-```
-
-
-
-*Returns true if the contract is paused, and false otherwise.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 ### permit
 
 ```solidity
@@ -948,17 +920,6 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### unpause
-
-```solidity
-function unpause() external nonpayable
-```
-
-
-
-*Unpauses all token transfers. See {ERC20Pausable} and {Pausable-_unpause}. Requirements: - the caller must have the `PAUSER_ROLE`.*
-
-
 ### verify
 
 ```solidity
@@ -1040,22 +1001,6 @@ event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, ui
 | delegate `indexed` | address | undefined |
 | previousBalance  | uint256 | undefined |
 | newBalance  | uint256 | undefined |
-
-### Paused
-
-```solidity
-event Paused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
 
 ### PlatformFeeInfoUpdated
 
@@ -1196,22 +1141,6 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### Unpaused
-
-```solidity
-event Unpaused(address account)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account  | address | undefined |
 
 
 

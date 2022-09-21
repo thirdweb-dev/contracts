@@ -505,23 +505,6 @@ function owner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### platformFeeBps
-
-```solidity
-function platformFeeBps() external view returns (uint128)
-```
-
-
-
-*The % of primary sales collected by the contract as fees.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint128 | undefined |
-
 ### platformFeeRecipient
 
 ```solidity
