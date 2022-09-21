@@ -198,6 +198,19 @@ contract TokenERC20Test is BaseTest {
         tokenContract.mintWithSignature{ value: 0 }(_mintrequest, _signature);
     }
 
+    function test_revert_mintWithSignature_MsgValueNotZero() public {
+        vm.warp(1000);
+
+        _mintrequest.price = 1;
+        _mintrequest.currency = address(erc20);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        // shouldn't send native-token when it is not the currency
+        vm.prank(recipient);
+        vm.expectRevert("msg value not zero");
+        tokenContract.mintWithSignature{ value: 1 }(_mintrequest, _signature);
+    }
+
     function test_revert_mintWithSignature_InvalidSignature() public {
         vm.warp(1000);
 
@@ -217,6 +230,28 @@ contract TokenERC20Test is BaseTest {
 
         vm.prank(recipient);
         vm.expectRevert("request expired");
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
+    function test_revert_mintWithSignature_RecipientUndefined() public {
+        vm.warp(1000);
+
+        _mintrequest.to = address(0);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        vm.prank(recipient);
+        vm.expectRevert("recipient undefined");
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
+    function test_revert_mintWithSignature_ZeroQuantity() public {
+        vm.warp(1000);
+
+        _mintrequest.quantity = 0;
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        vm.prank(recipient);
+        vm.expectRevert("zero quantity");
         tokenContract.mintWithSignature(_mintrequest, _signature);
     }
 
@@ -327,7 +362,7 @@ contract TokenERC20Test is BaseTest {
         address _platformFeeRecipient = address(0x123);
         uint256 _platformFeeBps = 10001;
 
-        vm.expectRevert("bps <= 10000.");
+        vm.expectRevert("exceeds MAX_BPS");
         vm.prank(deployerSigner);
         tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
@@ -386,44 +421,5 @@ contract TokenERC20Test is BaseTest {
         );
         vm.prank(address(0x1));
         tokenContract.setContractURI("");
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Unit tests: pause/unpause
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_pause() public {
-        vm.prank(deployerSigner);
-        tokenContract.pause();
-
-        assertEq(tokenContract.paused(), true);
-
-        vm.expectRevert("Pausable: paused");
-        vm.prank(deployerSigner);
-        tokenContract.pause();
-    }
-
-    function test_revert_pause_NotAuthorized() public {
-        vm.expectRevert("not pauser.");
-        vm.prank(address(0x1));
-        tokenContract.pause();
-    }
-
-    function test_state_unpause() public {
-        vm.prank(deployerSigner);
-        tokenContract.pause();
-
-        assertEq(tokenContract.paused(), true);
-
-        vm.prank(deployerSigner);
-        tokenContract.unpause();
-
-        assertFalse(tokenContract.paused());
-    }
-
-    function test_revert_unpause_NotAuthorized() public {
-        vm.expectRevert("not pauser.");
-        vm.prank(address(0x1));
-        tokenContract.unpause();
     }
 }

@@ -10,7 +10,6 @@ import "../extension/interface/IPrimarySale.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 // Security
@@ -38,7 +37,6 @@ contract TokenERC20 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC20BurnableUpgradeable,
-    ERC20PausableUpgradeable,
     ERC20VotesUpgradeable,
     ITokenERC20,
     AccessControlEnumerableUpgradeable
@@ -54,7 +52,6 @@ contract TokenERC20 is
         );
 
     bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 internal constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     /// @dev Returns the URI for the storefront-level metadata of the contract.
@@ -64,7 +61,7 @@ contract TokenERC20 is
     uint128 internal constant MAX_BPS = 10_000;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 internal platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev The adress that receives all primary sales value.
     address internal platformFeeRecipient;
@@ -88,6 +85,7 @@ contract TokenERC20 is
         address _platformFeeRecipient,
         uint256 _platformFeeBps
     ) external initializer {
+        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
@@ -95,12 +93,13 @@ contract TokenERC20 is
         contractURI = _contractURI;
         primarySaleRecipient = _primarySaleRecipient;
         platformFeeRecipient = _platformFeeRecipient;
+
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = uint128(_platformFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
-        _setupRole(PAUSER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
     }
 
@@ -127,7 +126,7 @@ contract TokenERC20 is
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) {
+    ) internal override {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -166,12 +165,9 @@ contract TokenERC20 is
     /// @dev Mints tokens according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
-        address saleRecipient = _req.primarySaleRecipient == address(0)
-            ? primarySaleRecipient
-            : _req.primarySaleRecipient;
+        address receiver = _req.to;
 
-        collectPrice(saleRecipient, _req.currency, _req.price);
+        collectPrice(_req);
 
         _mintTo(receiver, _req.quantity);
 
@@ -189,7 +185,7 @@ contract TokenERC20 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
@@ -203,23 +199,25 @@ contract TokenERC20 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _price
-    ) internal {
-        if (_price == 0) {
+    function collectPrice(MintRequest calldata _req) internal {
+        if (_req.price == 0) {
             return;
         }
 
-        uint256 platformFees = (_price * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (_req.price * platformFeeBps) / MAX_BPS;
 
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == _price, "must send total price.");
+        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == _req.price, "must send total price.");
+        } else {
+            require(msg.value == 0, "msg value not zero");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _primarySaleRecipient, _price - platformFees);
+        address saleRecipient = _req.primarySaleRecipient == address(0)
+            ? primarySaleRecipient
+            : _req.primarySaleRecipient;
+
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, _req.price - platformFees);
     }
 
     /// @dev Mints `amount` of tokens to `to`
@@ -237,6 +235,8 @@ contract TokenERC20 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
+        require(_req.quantity > 0, "zero quantity");
 
         minted[_req.uid] = true;
 
@@ -262,34 +262,6 @@ contract TokenERC20 is
                 _req.validityEndTimestamp,
                 _req.uid
             );
-    }
-
-    /**
-     * @dev Pauses all token transfers.
-     *
-     * See {ERC20Pausable} and {Pausable-_pause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
-        _pause();
-    }
-
-    /**
-     * @dev Unpauses all token transfers.
-     *
-     * See {ERC20Pausable} and {Pausable-_unpause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-    function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "not pauser.");
-        _unpause();
     }
 
     /// @dev Sets contract URI for the storefront-level metadata of the contract.
