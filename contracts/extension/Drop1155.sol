@@ -48,7 +48,7 @@ abstract contract Drop1155 is IDrop1155 {
         collectPriceOnClaim(_tokenId, address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        transferTokensOnClaim(_receiver, _tokenId, _quantity); //-------refactor
+        transferTokensOnClaim(_receiver, _tokenId, _quantity);
 
         emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, _tokenId, _quantity);
 
@@ -93,7 +93,7 @@ abstract contract Drop1155 is IDrop1155 {
             }
 
             conditionList.conditions[newStartIndex + i] = _conditions[i];
-            conditionList.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready; //------what are we doing here?
+            conditionList.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }

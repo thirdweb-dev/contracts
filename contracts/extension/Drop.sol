@@ -39,7 +39,7 @@ abstract contract Drop is IDrop {
         collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant tokens to claimer.
-        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity); //-------refactor
+        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
 
         emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, startTokenId, _quantity);
 
@@ -84,7 +84,7 @@ abstract contract Drop is IDrop {
             }
 
             claimCondition.conditions[newStartIndex + i] = _conditions[i];
-            claimCondition.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready; //------what are we doing here?
+            claimCondition.conditions[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _conditions[i].startTimestamp;
         }

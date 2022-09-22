@@ -52,7 +52,7 @@ struct ClaimCondition {
 | startTimestamp | uint256 | The unix timestamp after which the claim condition applies. The same claim condition applies until the startTimestamp of the next claim condition. |
 | maxClaimableSupply | uint256 | The maximum total number of tokens that can be claimed under the claim condition. |
 | supplyClaimed | uint256 | At any given point, the number of tokens that have been claimed under the claim condition. |
-| quantityLimitPerWallet | uint256 | The maximum number of tokens that can be claimed by a wallet under a given ClaimCondition. |
+| quantityLimitPerWallet | uint256 | The maximum number of tokens that can be claimed by a wallet under a given claim condition. |
 | merkleRoot | bytes32 | The allowlist of addresses that can claim tokens under the claim condition.
 
 (Optional) The allowlist may specify quantity limits, price and currency for addresses in the list, overriding these values under that claim condition. 
@@ -88,7 +88,7 @@ struct ClaimConditionList {
 
 ### Allowlist as an override list
 
-As mentioned above, an allowlist can specify different conditions for addresses in the list. This way, it serves as an override over general/open claim condition values for non-allowlisted addresses.
+As mentioned above, an allowlist can specify different conditions for addresses in the list. This way, it serves as an override over general/open restrictions for non-allowlisted addresses.
 In this allowlist or override-list, an admin can set any/all of these three:
 
 - quantity limit
