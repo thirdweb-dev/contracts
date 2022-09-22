@@ -40,8 +40,7 @@ struct ClaimCondition {
     uint256 startTimestamp;
     uint256 maxClaimableSupply;
     uint256 supplyClaimed;
-    uint256 quantityLimitPerTransaction;
-    uint256 waitTimeInSecondsBetweenClaims;
+    uint256 quantityLimitPerWallet;
     bytes32 merkleRoot;
     uint256 pricePerToken;
     address currency;
@@ -53,19 +52,17 @@ struct ClaimCondition {
 | startTimestamp | uint256 | The unix timestamp after which the claim condition applies. The same claim condition applies until the startTimestamp of the next claim condition. |
 | maxClaimableSupply | uint256 | The maximum total number of tokens that can be claimed under the claim condition. |
 | supplyClaimed | uint256 | At any given point, the number of tokens that have been claimed under the claim condition. |
-| quantityLimitPerTransaction | uint256 | The maximum number of tokens that can be claimed in a single transaction. |
-| waitTimeInSecondsBetweenClaims | uint256 | The least number of seconds an account must wait after claiming tokens, to be able to claim tokens again. |
+| quantityLimitPerWallet | uint256 | The maximum number of tokens that can be claimed by a wallet under a given ClaimCondition. |
 | merkleRoot | bytes32 | The allowlist of addresses that can claim tokens under the claim condition.
 
-(Optional) The allowlist may specify the exact amount of tokens that an address in the allowlist is eligible to claim.
+(Optional) The allowlist may specify quantity limits, price and currency for addresses in the list, overriding these values under that claim condition. 
 
 The parameters that make up a claim condition can be composed in different ways to create specific restrictions around a mint. For example, a single claim condition where:
 
-- `quantityLimitPerTransaction = 5`
-- `waitTimeInSecondsBetweenClaims = type(uint256).max`
+- `quantityLimitPerWallet = 5`
 - `merkleRoot = bytes32(0)`
 
-creates restrictions around a mint, where (1) any wallet can participate in the mint, (2) a wallet can mint at most 5 tokens and (3) a wallet can claim tokens only once.
+creates restrictions around a mint, where (1) a wallet can mint at most 5 tokens and (2) all wallets are subject to general claim condition limits, without any overrides.
 
 A `Drop` contract lets a contract admin establish a series of claim conditions, at once. Since each claim condition specifies a `startTime`, a contract admin can establish a series of claim conditions, ordered by their start time, to specify different set of restrictions around minting, during different periods of time.
 
@@ -77,19 +74,28 @@ A `Drop` contract natively keeps track of claim conditions set by a contract adm
 struct ClaimConditionList {
     uint256 currentStartId;
     uint256 count;
-    mapping(uint256 => ClaimCondition) phases;
-    mapping(uint256 => mapping(address => uint256)) limitLastClaimTimestamp;
-    mapping(uint256 => BitMapsUpgradeable.BitMap) limitMerkleProofClaim;
+    mapping(uint256 => ClaimCondition) conditions;
+    mapping(uint256 => mapping(address => uint256)) supplyClaimedByWallet;
 }
 ```
 
 | Parameter | Description |
 | --- | --- |
 | currentStartId | The uid for the first claim condition amongst the current set of claim conditions. The uid for each next claim condition is one more than the previous claim condition's uid. |
-| count | The total number of phases / claim conditions in the list of claim conditions. |
-| phases | The claim conditions at a given uid. Claim conditions are ordered in an ascending order by their startTimestamp. |
-| limitLastClaimTimestamp | Map from an account and uid for a claim condition, to the last timestamp at which the account claimed tokens under that claim condition. |
-| limitMerkleProofClaim | Map from a claim condition uid to whether an address in an allowlist has already claimed tokens i.e. used their place in the allowlist. |
+| count | The total number of claim conditions in the list of claim conditions. |
+| conditions | The claim conditions at a given uid. Claim conditions are ordered in an ascending order by their startTimestamp. |
+| supplyClaimedByWallet | Map from a claim condition uid and account to the supply claimed by that account. |
+
+### Allowlist as an override list
+
+As mentioned above, an allowlist can specify different conditions for addresses in the list. This way, it serves as an override over general/open claim condition values for non-allowlisted addresses.
+In this allowlist or override-list, an admin can set any/all of these three:
+
+- quantity limit
+- price
+- currency
+
+If a value is not set for any of these, then the value specified in general claim condition will be used. However, currency override will be considered only when a price override is set too, and not without it.
 
 ### Setting claim conditions
 
@@ -97,23 +103,22 @@ In all `Drop` contracts, a contract admin specifies the following when setting c
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| phases | ClaimCondition[] | Claim conditions in ascending order by startTimestamp. |
-| resetClaimEligibility | bool | Whether to reset limitLastClaimTimestamp and limitMerkleProofClaim values when setting new claim conditions. |
+| conditions | ClaimCondition[] | Claim conditions in ascending order by `startTimestamp`. |
+| resetClaimEligibility | bool | Whether to reset `supplyClaimedByWallet` values when setting new claim conditions. |
 
-When setting claim conditions, any existing set of claim conditions stored in `ClaimConditionsList` are overwritten with the new claim conditions specified in `phases`.
+When setting claim conditions, any existing set of claim conditions stored in `ClaimConditionsList` are overwritten with the new claim conditions specified in `conditions`.
 
-The claim conditions specified in `phases` are expected to be in ordered in ascending order, by their ‘start time’. As a result, only one claim condition is active during at any given time.
+The claim conditions specified in `conditions` are expected to be in ordered in ascending order, by their ‘start time’. As a result, only one claim condition is active during at any given time.
 
-Each of the claim conditions specified in `phases` is assigned a unique integer ID. The UID of the first condition in `phases` is stored as the `ClaimConditionList.currentStartId` and each next claim condition’s UID is one more than the previous condition’s UID.
+Each of the claim conditions specified in `conditions` is assigned a unique integer ID. The UID of the first condition in `conditions` is stored as the `ClaimConditionList.currentStartId` and each next claim condition’s UID is one more than the previous condition’s UID.
 
 ![claim-conditions-diagram-1.png](/assets/claim-conditions-diagram-1.png)
 
-The `resetClaimEligibility` boolean flag determines what UIDs are assigned to the claim conditions specified in `phases`. Since `ClaimConditionList.limitLastClaimTimestamp` and `ClaimConditionList.limitMerkleProofClaim` are both indexed by the UID of claim conditions, this gives a contract admin more granular control over the restrictions that claim conditions can express. We now illustrate this with an example:
+The `resetClaimEligibility` boolean flag determines what UIDs are assigned to the claim conditions specified in `conditions`. Since `ClaimConditionList.supplyClaimedByWallet` is indexed by the UID of claim conditions, this gives a contract admin more granular control over the restrictions that claim conditions can express. We now illustrate this with an example:
 
 Let’s say an existing claim condition **C1** specifies the following restrictions:
 
-- `quantityLimitPerTransaction = 1`
-- `waitTimeInSecondsBetweenClaims = type(uint256).max`
+- `quantityLimitPerWallet = 1`
 - `merkleRoot = bytes32(0)`
 - `pricePerToken = 0.1 ether`
 - `currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (i.e. native token of the chain e.g ether for Ethereum mainnet)
@@ -122,20 +127,18 @@ At a high level, **C1** expresses the following restrictions on minting — any 
 
 Let’s say the contract admin wants to increase the price per token from 0.1 ether to 0.2 ether, while ensuring that wallets that have already claimed tokens are not able to claim tokens again. Essentially, the contract admin now wants to instantiate a claim condition **C2** with the following restrictions:
 
-- `quantityLimitPerTransaction = 1`
-- `waitTimeInSecondsBetweenClaims = type(uint256).max`
+- `quantityLimitPerWallet = 1`
 - `merkleRoot = bytes32(0)`
 - `pricePerToken = 0.2 ether`
 - `currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (i.e. native token of the chain e.g ether for Ethereum mainnet)
 
-To go from **C1** to **C2** while ensuring that wallets that have already claimed tokens are not able to claim tokens again, the contract admin will set claim conditions while specifying `resetClaimEligibility == false`. As a result, the **C2** will be assigned the same UID as **C1**. Since `ClaimConditionList.limitLastClaimTimestamp` is indexed by the UID of claim conditions, the information of the timestamp at which a wallet claimed tokens during **C1** will not be lost. And so, wallets that claimed tokens during **C1** will now be ineligible to claim tokens during **C2** since the following check will always fail:
+To go from **C1** to **C2** while ensuring that wallets that have already claimed tokens are not able to claim tokens again, the contract admin will set claim conditions while specifying `resetClaimEligibility == false`. As a result, the **C2** will be assigned the same UID as **C1**. Since `ClaimConditionList.supplyClaimedByWallet` is indexed by the UID of claim conditions, the information of the quantity of tokens claimed by the wallet during **C1** will not be lost. And so, wallets that claimed tokens during **C1** will now be ineligible to claim tokens during **C2** because of the following check:
 
 ```solidity
 // pseudo-code
-nextValidClaimTimestamp = 
-		limitLastClaimTimestamp[UID_of_C2][claimer_address] + C2.waitTimeInSecondsBetweenClaims
+supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[conditionId][claimer];
 
-require(block.timestamp >= nextValidClaimTimestamp);
+require(quantityToClaim + supplyClaimedByWallet <= quantityLimitPerWallet);
 ```
 
 ### EIPs supported / implemented
@@ -151,7 +154,7 @@ There are a few key differences between the three implementations —
 
 The distribution mechanism of thirdweb’s `Drop` contracts is vulnerable to [sybil attacks](https://en.wikipedia.org/wiki/Sybil_attack). That is, despite the various ways in which restrictions can be applied to the minting of tokens, some restrictions that claim conditions can express target wallets and not persons.
 
-For example, the restriction `waitTimeInSecondsBetweenClaims` expresses the least amount of time a *wallet* must wait, before claiming tokens again during the respective claim condition. A sophisticated actor may generate multiple wallets to claim tokens in a way that undermine such restrictions, when viewing such restrictions as restrictions on unique persons, and not wallets.
+For example, the restriction `quantityLimitPerWallet` expresses the max quantity a *wallet* can claim during the respective claim condition. A sophisticated actor may generate multiple wallets to claim tokens in a way that undermine such restrictions, when viewing such restrictions as restrictions on unique persons, and not wallets.
 
 ## Authors
 - [nkrishang](https://github.com/nkrishang)
