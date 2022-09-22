@@ -71,9 +71,6 @@ contract TokenERC1155 is
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -93,7 +90,7 @@ contract TokenERC1155 is
     uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -141,6 +138,8 @@ contract TokenERC1155 is
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _primarySaleRecipient;
         contractURI = _contractURI;
+
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = _platformFeeBps;
 
         _owner = _defaultAdmin;
@@ -217,7 +216,7 @@ contract TokenERC1155 is
     /// @dev Mints an NFT according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
+        address receiver = _req.to;
 
         uint256 tokenIdToMint;
         if (_req.tokenId == type(uint256).max) {
@@ -281,7 +280,7 @@ contract TokenERC1155 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
@@ -378,6 +377,8 @@ contract TokenERC1155 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
+        require(_req.quantity > 0, "zero quantity");
 
         minted[_req.uid] = true;
 
@@ -385,7 +386,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req) internal {
+    function collectPrice(MintRequest calldata _req) internal {
         if (_req.pricePerToken == 0) {
             return;
         }
@@ -393,8 +394,10 @@ contract TokenERC1155 is
         uint256 totalPrice = _req.pricePerToken * _req.quantity;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
-        if (_req.currency == NATIVE_TOKEN) {
+        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
+        } else {
+            require(msg.value == 0, "msg value not zero");
         }
 
         address saleRecipient = _req.primarySaleRecipient == address(0)

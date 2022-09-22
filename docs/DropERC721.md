@@ -916,7 +916,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
 ```
 
 
@@ -930,7 +930,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 | from | address | undefined |
 | to | address | undefined |
 | tokenId | uint256 | undefined |
-| _data | bytes | undefined |
+| data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -1306,6 +1306,22 @@ event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 |---|---|---|
 | newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### MaxTotalSupplyUpdated
 

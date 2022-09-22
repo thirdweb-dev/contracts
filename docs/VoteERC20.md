@@ -44,6 +44,23 @@ function COUNTING_MODE() external pure returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### EXTENDED_BALLOT_TYPEHASH
+
+```solidity
+function EXTENDED_BALLOT_TYPEHASH() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### castVote
 
 ```solidity
@@ -110,6 +127,59 @@ function castVoteWithReason(uint256 proposalId, uint8 support, string reason) ex
 | proposalId | uint256 | undefined |
 | support | uint8 | undefined |
 | reason | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### castVoteWithReasonAndParams
+
+```solidity
+function castVoteWithReasonAndParams(uint256 proposalId, uint8 support, string reason, bytes params) external nonpayable returns (uint256)
+```
+
+
+
+*See {IGovernor-castVoteWithReasonAndParams}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
+| reason | string | undefined |
+| params | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### castVoteWithReasonAndParamsBySig
+
+```solidity
+function castVoteWithReasonAndParamsBySig(uint256 proposalId, uint8 support, string reason, bytes params, uint8 v, bytes32 r, bytes32 s) external nonpayable returns (uint256)
+```
+
+
+
+*See {IGovernor-castVoteWithReasonAndParamsBySig}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
+| reason | string | undefined |
+| params | bytes | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 #### Returns
 
@@ -216,9 +286,9 @@ function getAllProposals() external view returns (struct VoteERC20.Proposal[] al
 function getVotes(address account, uint256 blockNumber) external view returns (uint256)
 ```
 
-Read the voting weight from the token&#39;s built in snapshot mechanism (see {IGovernor-getVotes}).
 
 
+*See {IGovernor-getVotes}.*
 
 #### Parameters
 
@@ -226,6 +296,30 @@ Read the voting weight from the token&#39;s built in snapshot mechanism (see {IG
 |---|---|---|
 | account | address | undefined |
 | blockNumber | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getVotesWithParams
+
+```solidity
+function getVotesWithParams(address account, uint256 blockNumber, bytes params) external view returns (uint256)
+```
+
+
+
+*See {IGovernor-getVotesWithParams}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| blockNumber | uint256 | undefined |
+| params | bytes | undefined |
 
 #### Returns
 
@@ -264,7 +358,7 @@ function hashProposal(address[] targets, uint256[] values, bytes[] calldatas, by
 
 
 
-*See {IGovernor-hashProposal}. The proposal id is produced by hashing the RLC encoded `targets` array, the `values` array, the `calldatas` array and the descriptionHash (bytes32 which itself is the keccak256 hash of the description string). This proposal id can be produced from the proposal data which is part of the {ProposalCreated} event. It can even be computed in advance, before the proposal is submitted. Note that the chainId and the governor address are not part of the proposal id computation. Consequently, the same proposal (with same operation and same description) will have the same id if submitted on multiple governors accross multiple networks. This also means that in order to execute the same operation twice (on the same governor) the proposer will have to change the description in order to avoid proposal id conflicts.*
+*See {IGovernor-hashProposal}. The proposal id is produced by hashing the ABI encoded `targets` array, the `values` array, the `calldatas` array and the descriptionHash (bytes32 which itself is the keccak256 hash of the description string). This proposal id can be produced from the proposal data which is part of the {ProposalCreated} event. It can even be computed in advance, before the proposal is submitted. Note that the chainId and the governor address are not part of the proposal id computation. Consequently, the same proposal (with same operation and same description) will have the same id if submitted on multiple governors across multiple networks. This also means that in order to execute the same operation twice (on the same governor) the proposer will have to change the description in order to avoid proposal id conflicts.*
 
 #### Parameters
 
@@ -351,7 +445,7 @@ function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) e
 
 
 
-
+*See {IERC1155Receiver-onERC1155BatchReceived}.*
 
 #### Parameters
 
@@ -377,7 +471,7 @@ function onERC1155Received(address, address, uint256, uint256, bytes) external n
 
 
 
-
+*See {IERC1155Receiver-onERC1155Received}.*
 
 #### Parameters
 
@@ -403,7 +497,7 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 
 
 
-*See {IERC721Receiver-onERC721Received}. Always returns `IERC721Receiver.onERC721Received.selector`.*
+*See {IERC721Receiver-onERC721Received}.*
 
 #### Parameters
 
@@ -615,6 +709,28 @@ function quorumDenominator() external view returns (uint256)
 ### quorumNumerator
 
 ```solidity
+function quorumNumerator(uint256 blockNumber) external view returns (uint256)
+```
+
+
+
+*Returns the quorum numerator at a specific block number. See {quorumDenominator}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| blockNumber | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### quorumNumerator
+
+```solidity
 function quorumNumerator() external view returns (uint256)
 ```
 
@@ -741,7 +857,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-
+*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -842,6 +958,22 @@ function votingPeriod() external view returns (uint256)
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### ProposalCanceled
 
@@ -953,6 +1085,27 @@ event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256
 | weight  | uint256 | undefined |
 | reason  | string | undefined |
 
+### VoteCastWithParams
+
+```solidity
+event VoteCastWithParams(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason, bytes params)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| voter `indexed` | address | undefined |
+| proposalId  | uint256 | undefined |
+| support  | uint8 | undefined |
+| weight  | uint256 | undefined |
+| reason  | string | undefined |
+| params  | bytes | undefined |
+
 ### VotingDelaySet
 
 ```solidity
@@ -986,6 +1139,20 @@ event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod)
 |---|---|---|
 | oldVotingPeriod  | uint256 | undefined |
 | newVotingPeriod  | uint256 | undefined |
+
+
+
+## Errors
+
+### Empty
+
+```solidity
+error Empty()
+```
+
+
+
+*An operation (e.g. {front}) couldn&#39;t be completed due to the queue being empty.*
 
 
 

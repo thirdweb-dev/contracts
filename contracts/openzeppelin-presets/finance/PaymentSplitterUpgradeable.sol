@@ -14,6 +14,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  *          - `_totalReleased`, `_released`, `_erc20TotalReleased`, `_erc20Released`, `_pendingPayment`
  *
  *      - Add `payeeCount`: returns the length of `_payees`
+ *      - Add `releasable` functions as per recent updates in OZ PaymentSplitterUpgradeable (v4.7.0)
  */
 
 /**
@@ -145,14 +146,30 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     }
 
     /**
+     * @dev Getter for the amount of payee's releasable Ether.
+     */
+    function releasable(address account) public view returns (uint256) {
+        uint256 totalReceived = address(this).balance + totalReleased();
+        return _pendingPayment(account, totalReceived, released(account));
+    }
+
+    /**
+     * @dev Getter for the amount of payee's releasable `token` tokens. `token` should be the address of an
+     * IERC20 contract.
+     */
+    function releasable(IERC20Upgradeable token, address account) public view returns (uint256) {
+        uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
+        return _pendingPayment(account, totalReceived, released(token, account));
+    }
+
+    /**
      * @dev Triggers a transfer to `account` of the amount of Ether they are owed, according to their percentage of the
      * total shares and their previous withdrawals.
      */
     function release(address payable account) public virtual {
         require(_shares[account] > 0, "PaymentSplitter: account has no shares");
 
-        uint256 totalReceived = address(this).balance + totalReleased();
-        uint256 payment = _pendingPayment(account, totalReceived, released(account));
+        uint256 payment = releasable(account);
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 
@@ -171,8 +188,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
     function release(IERC20Upgradeable token, address account) public virtual {
         require(_shares[account] > 0, "PaymentSplitter: account has no shares");
 
-        uint256 totalReceived = token.balanceOf(address(this)) + totalReleased(token);
-        uint256 payment = _pendingPayment(account, totalReceived, released(token, account));
+        uint256 payment = releasable(token, account);
 
         require(payment != 0, "PaymentSplitter: account is not due payment");
 

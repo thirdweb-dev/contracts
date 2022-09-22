@@ -351,6 +351,22 @@ function verifyClaim(address _claimer, uint256 _quantity, uint256 _tokenId, byte
 
 ## Events
 
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
 ### OwnerUpdated
 
 ```solidity

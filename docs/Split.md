@@ -180,7 +180,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleGranted} event.*
 
 #### Parameters
 
@@ -315,6 +315,51 @@ function payeeCount() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### releasable
+
+```solidity
+function releasable(address account) external view returns (uint256)
+```
+
+
+
+*Getter for the amount of payee&#39;s releasable Ether.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### releasable
+
+```solidity
+function releasable(contract IERC20Upgradeable token, address account) external view returns (uint256)
+```
+
+
+
+*Getter for the amount of payee&#39;s releasable `token` tokens. `token` should be the address of an IERC20 contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | contract IERC20Upgradeable | undefined |
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### release
 
 ```solidity
@@ -401,7 +446,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`. May emit a {RoleRevoked} event.*
 
 #### Parameters
 
@@ -418,7 +463,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleRevoked} event.*
 
 #### Parameters
 
@@ -564,6 +609,22 @@ event ERC20PaymentReleased(contract IERC20Upgradeable indexed token, address to,
 | token `indexed` | contract IERC20Upgradeable | undefined |
 | to  | address | undefined |
 | amount  | uint256 | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### PayeeAdded
 

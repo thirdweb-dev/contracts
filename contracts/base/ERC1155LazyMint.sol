@@ -12,6 +12,7 @@ import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC1155.sol";
 
 import "../lib/TWStrings.sol";
+import "../openzeppelin-presets/security/ReentrancyGuard.sol";
 
 /**
  *      BASE:      ERC1155Base
@@ -53,7 +54,8 @@ contract ERC1155LazyMint is
     Multicall,
     BatchMintMetadata,
     LazyMint,
-    IClaimableERC1155
+    IClaimableERC1155,
+    ReentrancyGuard
 {
     using TWStrings for uint256;
 
@@ -110,12 +112,11 @@ contract ERC1155LazyMint is
         address _receiver,
         uint256 _tokenId,
         uint256 _quantity
-    ) public payable virtual {
-        verifyClaim(msg.sender, _tokenId, _quantity); // add your claim verification logic by overriding this function
-
+    ) public payable virtual nonReentrant {
         require(_tokenId < nextTokenIdToMint(), "invalid id");
+        verifyClaim(msg.sender, _tokenId, _quantity); // Add your claim verification logic by overriding this function.
 
-        _mint(_receiver, _tokenId, _quantity, "");
+        transferTokensOnClaim(_receiver, _tokenId, _quantity); // Mints tokens. Apply any state updates by overriding this function.
         emit TokensClaimed(msg.sender, _receiver, _tokenId, _quantity);
     }
 
@@ -204,6 +205,20 @@ contract ERC1155LazyMint is
     /*//////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice          Mints tokens to receiver on claim.
+     *                   Can also use this function to apply any state changes before minting.
+     *
+     *  @dev             Override this function to add logic for state updation.
+     */
+    function transferTokensOnClaim(
+        address _receiver,
+        uint256 _tokenId,
+        uint256 _quantity
+    ) internal virtual {
+        _mint(_receiver, _tokenId, _quantity, "");
+    }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {

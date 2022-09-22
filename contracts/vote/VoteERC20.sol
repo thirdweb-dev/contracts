@@ -15,20 +15,10 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQ
 // Meta transactions
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
-// Utils
-import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
-
-// Helper interfaces
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
-
 contract VoteERC20 is
     Initializable,
     IThirdwebContract,
     ERC2771ContextUpgradeable,
-    ERC721HolderUpgradeable,
-    ERC1155HolderUpgradeable,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
@@ -140,16 +130,8 @@ contract VoteERC20 is
         return GovernorSettingsUpgradeable.proposalThreshold();
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155ReceiverUpgradeable, GovernorUpgradeable)
-        returns (bool)
-    {
-        return
-            interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
-            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _msgSender()

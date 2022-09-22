@@ -12,6 +12,7 @@ import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC721.sol";
 
 import "../lib/TWStrings.sol";
+import "../openzeppelin-presets/security/ReentrancyGuard.sol";
 
 /**
  *      BASE:      ERC721A
@@ -47,7 +48,8 @@ contract ERC721LazyMint is
     Royalty,
     BatchMintMetadata,
     LazyMint,
-    IClaimableERC721
+    IClaimableERC721,
+    ReentrancyGuard
 {
     using TWStrings for uint256;
 
@@ -107,11 +109,11 @@ contract ERC721LazyMint is
      *  @param _receiver  The recipient of the NFT to mint.
      *  @param _quantity  The number of NFTs to mint.
      */
-    function claim(address _receiver, uint256 _quantity) public payable virtual {
-        verifyClaim(msg.sender, _quantity); // add your claim verification logic by overriding this function
-        uint256 startTokenId = _currentIndex;
+    function claim(address _receiver, uint256 _quantity) public payable virtual nonReentrant {
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
-        _safeMint(_receiver, _quantity, "");
+        verifyClaim(msg.sender, _quantity); // Add your claim verification logic by overriding this function.
+
+        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity); // Mints tokens. Apply any state updates by overriding this function.
         emit TokensClaimed(msg.sender, _receiver, startTokenId, _quantity);
     }
 
@@ -149,6 +151,21 @@ contract ERC721LazyMint is
     /*//////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice          Mints tokens to receiver on claim.
+     *                   Can also use this function to apply any state changes before minting.
+     *
+     *  @dev             Override this function to add logic for state updation.
+     */
+    function transferTokensOnClaim(address _receiver, uint256 _quantity)
+        internal
+        virtual
+        returns (uint256 startTokenId)
+    {
+        startTokenId = _currentIndex;
+        _safeMint(_receiver, _quantity);
+    }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {

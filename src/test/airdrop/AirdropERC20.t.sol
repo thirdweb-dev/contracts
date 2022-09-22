@@ -12,8 +12,7 @@ contract AirdropERC20Test is BaseTest {
 
     Wallet internal tokenOwner;
 
-    uint256[] internal _amounts;
-    address[] internal _recipients;
+    IAirdropERC20.AirdropContent[] internal _contents;
 
     function setUp() public override {
         super.setUp();
@@ -26,8 +25,14 @@ contract AirdropERC20Test is BaseTest {
         tokenOwner.setAllowanceERC20(address(erc20), address(drop), type(uint256).max);
 
         for (uint256 i = 0; i < 1000; i++) {
-            _amounts.push(10 ether);
-            _recipients.push(getActor(uint160(i)));
+            _contents.push(
+                IAirdropERC20.AirdropContent({
+                    tokenAddress: address(erc20),
+                    tokenOwner: address(tokenOwner),
+                    recipient: getActor(uint160(i)),
+                    amount: 10 ether
+                })
+            );
         }
     }
 
@@ -36,11 +41,13 @@ contract AirdropERC20Test is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_state_airdrop() public {
-        vm.prank(deployer);
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients, _amounts);
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients(_contents);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
 
         for (uint256 i = 0; i < 1000; i++) {
-            assertEq(erc20.balanceOf(_recipients[i]), _amounts[i]);
+            assertEq(erc20.balanceOf(_contents[i].recipient), _contents[i].amount);
         }
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
     }
@@ -50,11 +57,17 @@ contract AirdropERC20Test is BaseTest {
 
         uint256 balBefore = deployer.balance;
 
-        vm.prank(deployer);
-        drop.airdrop{ value: 10_000 ether }(NATIVE_TOKEN, deployer, _recipients, _amounts);
+        for (uint256 i = 0; i < 1000; i++) {
+            _contents[i].tokenAddress = NATIVE_TOKEN;
+        }
+
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients{ value: 10_000 ether }(_contents);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
 
         for (uint256 i = 0; i < 1000; i++) {
-            assertEq(_recipients[i].balance, _amounts[i]);
+            assertEq(_contents[i].recipient.balance, _contents[i].amount);
         }
         assertEq(deployer.balance, balBefore - 10_000 ether);
     }
@@ -64,30 +77,35 @@ contract AirdropERC20Test is BaseTest {
 
         uint256 incorrectAmt = 10_000 ether + 1;
 
+        for (uint256 i = 0; i < 1000; i++) {
+            _contents[i].tokenAddress = NATIVE_TOKEN;
+        }
+
         vm.prank(deployer);
         vm.expectRevert("Incorrect native token amount");
-        drop.airdrop{ value: incorrectAmt }(NATIVE_TOKEN, deployer, _recipients, _amounts);
+        drop.addAirdropRecipients{ value: incorrectAmt }(_contents);
     }
 
-    function test_revert_airdrop_notOwner() public {
+    function test_revert_airdrop_notAdmin() public {
         vm.prank(address(25));
-        vm.expectRevert("Not authorized");
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients, _amounts);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(address(25)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(0x00), 32)
+            )
+        );
+        drop.addAirdropRecipients(_contents);
     }
 
     function test_revert_airdrop_notApproved() public {
         tokenOwner.setAllowanceERC20(address(erc20), address(drop), 0);
 
-        vm.prank(deployer);
+        vm.startPrank(deployer);
+        drop.addAirdropRecipients(_contents);
         vm.expectRevert("ERC20: insufficient allowance");
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients, _amounts);
-    }
-
-    function test_revert_airdrop_lengthMismatch() public {
-        _amounts.push(10);
-
-        vm.prank(deployer);
-        vm.expectRevert("length mismatch");
-        drop.airdrop(address(erc20), address(tokenOwner), _recipients, _amounts);
+        drop.airdrop(_contents.length);
+        vm.stopPrank();
     }
 }
