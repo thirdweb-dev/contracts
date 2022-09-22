@@ -446,7 +446,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("ERC721: transfer caller is not owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner nor approved");
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -485,7 +485,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("ERC721: transfer caller is not owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner nor approved");
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -498,7 +498,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("ERC1155: caller is not owner nor approved");
+        vm.expectRevert("ERC1155: caller is not token owner nor approved");
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -559,7 +559,7 @@ contract MultiwrapTest is BaseTest {
         vm.prank(recipient);
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
 
-        vm.expectRevert("ERC721: owner query for nonexistent token");
+        vm.expectRevert("ERC721: invalid token ID");
         multiwrap.ownerOf(expectedIdForWrappedToken);
 
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
@@ -622,7 +622,7 @@ contract MultiwrapTest is BaseTest {
         vm.prank(approvedCaller);
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
 
-        vm.expectRevert("ERC721: owner query for nonexistent token");
+        vm.expectRevert("ERC721: invalid token ID");
         multiwrap.ownerOf(expectedIdForWrappedToken);
 
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
@@ -854,7 +854,7 @@ contract MultiwrapTest is BaseTest {
         vm.prank(recipient);
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
 
-        vm.expectRevert("ERC721: owner query for nonexistent token");
+        vm.expectRevert("ERC721: invalid token ID");
         multiwrap.ownerOf(expectedIdForWrappedToken);
 
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
