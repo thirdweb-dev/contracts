@@ -80,7 +80,7 @@ contract AirdropERC1155Test is BaseTest {
 
         vm.startPrank(deployer);
         drop.addAirdropRecipients(_contents);
-        vm.expectRevert("ERC1155: caller is not owner nor approved");
+        vm.expectRevert("ERC1155: caller is not token owner nor approved");
         drop.airdrop(_contents.length);
         vm.stopPrank();
     }

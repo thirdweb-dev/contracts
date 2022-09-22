@@ -69,7 +69,7 @@ contract AirdropERC721Test is BaseTest {
 
         vm.startPrank(deployer);
         drop.addAirdropRecipients(_contents);
-        vm.expectRevert("ERC721: transfer caller is not owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner nor approved");
         drop.airdrop(_contents.length);
         vm.stopPrank();
     }

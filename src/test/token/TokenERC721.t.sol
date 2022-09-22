@@ -347,7 +347,7 @@ contract TokenERC721Test is BaseTest {
         assertEq(tokenContract.totalSupply(), currentTotalSupply);
         assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient);
 
-        vm.expectRevert("ERC721: owner query for nonexistent token");
+        vm.expectRevert("ERC721: invalid token ID");
         assertEq(tokenContract.ownerOf(nextTokenId), address(0));
     }
 
@@ -374,7 +374,7 @@ contract TokenERC721Test is BaseTest {
         assertEq(tokenContract.totalSupply(), currentTotalSupply);
         assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient);
 
-        vm.expectRevert("ERC721: owner query for nonexistent token");
+        vm.expectRevert("ERC721: invalid token ID");
         assertEq(tokenContract.ownerOf(nextTokenId), address(0));
     }
 
