@@ -272,6 +272,22 @@ event ERC20PaymentReleased(contract IERC20Upgradeable indexed token, address to,
 | to  | address | undefined |
 | amount  | uint256 | undefined |
 
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
 ### PayeeAdded
 
 ```solidity

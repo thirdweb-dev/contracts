@@ -451,6 +451,22 @@ Emitted when an airdrop payment is made to a recipient.
 | recipient `indexed` | address | undefined |
 | content  | IAirdropERC721.AirdropContent | undefined |
 
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
 ### OwnerUpdated
 
 ```solidity

@@ -18,7 +18,7 @@ function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (
 
 
 
-*Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of exchange. The royalty amount is denominated and should be payed in that same unit of exchange.*
+*Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of exchange. The royalty amount is denominated and should be paid in that same unit of exchange.*
 
 #### Parameters
 

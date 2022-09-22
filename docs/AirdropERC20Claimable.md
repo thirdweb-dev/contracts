@@ -310,6 +310,22 @@ function verifyClaim(address _claimer, uint256 _quantity, bytes32[] _proofs, uin
 
 ## Events
 
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
 ### OwnerUpdated
 
 ```solidity

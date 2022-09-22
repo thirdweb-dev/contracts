@@ -478,7 +478,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 
 
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleGranted} event.*
 
 #### Parameters
 
@@ -742,7 +742,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`.*
+*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`. May emit a {RoleRevoked} event.*
 
 #### Parameters
 
@@ -759,7 +759,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 
 
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role.*
+*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleRevoked} event.*
 
 #### Parameters
 
@@ -1001,6 +1001,22 @@ event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, ui
 | delegate `indexed` | address | undefined |
 | previousBalance  | uint256 | undefined |
 | newBalance  | uint256 | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### PlatformFeeInfoUpdated
 
