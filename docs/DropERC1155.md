@@ -497,12 +497,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 
 Grants a role to an account, if not previously granted.
 
-<<<<<<< HEAD
 *Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
-=======
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleGranted} event.*
->>>>>>> main
 
 #### Parameters
 
@@ -793,12 +788,7 @@ function renounceRole(bytes32 role, address account) external nonpayable
 
 Revokes role from the account.
 
-<<<<<<< HEAD
 *Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
-=======
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`. May emit a {RoleRevoked} event.*
->>>>>>> main
 
 #### Parameters
 
@@ -838,12 +828,7 @@ function revokeRole(bytes32 role, address account) external nonpayable
 
 Revokes role from an account.
 
-<<<<<<< HEAD
 *Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
-=======
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleRevoked} event.*
->>>>>>> main
 
 #### Parameters
 
