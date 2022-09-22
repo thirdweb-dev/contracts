@@ -99,8 +99,6 @@ contract Pack is
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
         bytes32 _assetRole = keccak256("ASSET_ROLE");
-        // Initialize inherited contracts, most base-like -> most derived.
-        __ReentrancyGuard_init();
 
         /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
          *         which guards against automated attacks.
@@ -265,7 +263,7 @@ contract Pack is
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant returns (Token[] memory) {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external returns (Token[] memory) {
         address opener = _msgSender();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
