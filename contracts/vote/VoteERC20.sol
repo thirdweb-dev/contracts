@@ -130,15 +130,8 @@ contract VoteERC20 is
         return GovernorSettingsUpgradeable.proposalThreshold();
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override
-        returns (bool)
-    {
-        return
-            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _msgSender()
