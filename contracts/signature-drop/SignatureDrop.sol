@@ -306,7 +306,7 @@ contract SignatureDrop is
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(minterRole, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
