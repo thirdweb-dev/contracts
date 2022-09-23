@@ -466,7 +466,7 @@ contract SignatureDropTest is BaseTest {
 
         vm.prank(deployerSigner);
         sigdrop.grantRole(_minterRole, address(0x345));
-        
+
         vm.prank(address(0x345));
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
