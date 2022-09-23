@@ -18,7 +18,7 @@ function COUNTING_MODE() external pure returns (string)
 
 module:voting
 
-*A description of the possible `support` values for {castVote} and the way these votes are counted, meant to be consumed by UIs to show correct vote options and interpret the results. The string is a URL-encoded sequence of key-value pairs that each describe one aspect, for example `support=bravo&amp;quorum=for,abstain`. There are 2 standard keys: `support` and `quorum`. - `support=bravo` refers to the vote options 0 = Against, 1 = For, 2 = Abstain, as in `GovernorBravo`. - `quorum=bravo` means that only For votes are counted towards quorum. - `quorum=for,abstain` means that both For and Abstain votes are counted towards quorum. NOTE: The string can be decoded by the standard https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams[`URLSearchParams`] JavaScript class.*
+*A description of the possible `support` values for {castVote} and the way these votes are counted, meant to be consumed by UIs to show correct vote options and interpret the results. The string is a URL-encoded sequence of key-value pairs that each describe one aspect, for example `support=bravo&amp;quorum=for,abstain`. There are 2 standard keys: `support` and `quorum`. - `support=bravo` refers to the vote options 0 = Against, 1 = For, 2 = Abstain, as in `GovernorBravo`. - `quorum=bravo` means that only For votes are counted towards quorum. - `quorum=for,abstain` means that both For and Abstain votes are counted towards quorum. If a counting module makes use of encoded `params`, it should  include this under a `params` key with a unique name that describes the behavior. For example: - `params=fractional` might refer to a scheme where votes are divided fractionally between for/against/abstain. - `params=erc721` might refer to a scheme where specific NFTs are delegated to vote. NOTE: The string can be decoded by the standard https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams[`URLSearchParams`] JavaScript class.*
 
 
 #### Returns
@@ -58,7 +58,7 @@ function castVoteBySig(uint256 proposalId, uint8 support, uint8 v, bytes32 r, by
 
 
 
-*Cast a vote using the user cryptographic signature. Emits a {VoteCast} event.*
+*Cast a vote using the user&#39;s cryptographic signature. Emits a {VoteCast} event.*
 
 #### Parameters
 
@@ -93,6 +93,59 @@ function castVoteWithReason(uint256 proposalId, uint8 support, string reason) ex
 | proposalId | uint256 | undefined |
 | support | uint8 | undefined |
 | reason | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| balance | uint256 | undefined |
+
+### castVoteWithReasonAndParams
+
+```solidity
+function castVoteWithReasonAndParams(uint256 proposalId, uint8 support, string reason, bytes params) external nonpayable returns (uint256 balance)
+```
+
+
+
+*Cast a vote with a reason and additional encoded parameters Emits a {VoteCast} or {VoteCastWithParams} event depending on the length of params.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
+| reason | string | undefined |
+| params | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| balance | uint256 | undefined |
+
+### castVoteWithReasonAndParamsBySig
+
+```solidity
+function castVoteWithReasonAndParamsBySig(uint256 proposalId, uint8 support, string reason, bytes params, uint8 v, bytes32 r, bytes32 s) external nonpayable returns (uint256 balance)
+```
+
+
+
+*Cast a vote with a reason and additional encoded parameters using the user&#39;s cryptographic signature. Emits a {VoteCast} or {VoteCastWithParams} event depending on the length of params.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| proposalId | uint256 | undefined |
+| support | uint8 | undefined |
+| reason | string | undefined |
+| params | bytes | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
 
 #### Returns
 
@@ -141,6 +194,30 @@ module:reputation
 |---|---|---|
 | account | address | undefined |
 | blockNumber | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getVotesWithParams
+
+```solidity
+function getVotesWithParams(address account, uint256 blockNumber, bytes params) external view returns (uint256)
+```
+
+module:reputation
+
+*Voting power of an `account` at a specific `blockNumber` given additional encoded parameters.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| blockNumber | uint256 | undefined |
+| params | bytes | undefined |
 
 #### Returns
 
@@ -290,7 +367,7 @@ function quorum(uint256 blockNumber) external view returns (uint256)
 
 module:user-config
 
-*Minimum number of cast voted required for a proposal to be successful. Note: The `blockNumber` parameter corresponds to the snaphot used for counting vote. This allows to scale the quroum depending on values such as the totalSupply of a token at this block (see {ERC20Votes}).*
+*Minimum number of cast voted required for a proposal to be successful. Note: The `blockNumber` parameter corresponds to the snapshot used for counting vote. This allows to scale the quorum depending on values such as the totalSupply of a token at this block (see {ERC20Votes}).*
 
 #### Parameters
 
@@ -373,7 +450,7 @@ function votingDelay() external view returns (uint256)
 
 module:user-config
 
-*Delay, in number of block, between the proposal is created and the vote starts. This can be increassed to leave time for users to buy voting power, of delegate it, before the voting of a proposal starts.*
+*Delay, in number of block, between the proposal is created and the vote starts. This can be increassed to leave time for users to buy voting power, or delegate it, before the voting of a proposal starts.*
 
 
 #### Returns
@@ -402,6 +479,22 @@ module:user-config
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### ProposalCanceled
 
@@ -467,7 +560,7 @@ event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256
 
 
 
-*Emitted when a vote is cast. Note: `support` values should be seen as buckets. There interpretation depends on the voting module used.*
+*Emitted when a vote is cast without params. Note: `support` values should be seen as buckets. Their interpretation depends on the voting module used.*
 
 #### Parameters
 
@@ -478,6 +571,27 @@ event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256
 | support  | uint8 | undefined |
 | weight  | uint256 | undefined |
 | reason  | string | undefined |
+
+### VoteCastWithParams
+
+```solidity
+event VoteCastWithParams(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason, bytes params)
+```
+
+
+
+*Emitted when a vote is cast with params. Note: `support` values should be seen as buckets. Their interpretation depends on the voting module used. `params` are additional encoded parameters. Their intepepretation also depends on the voting module used.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| voter `indexed` | address | undefined |
+| proposalId  | uint256 | undefined |
+| support  | uint8 | undefined |
+| weight  | uint256 | undefined |
+| reason  | string | undefined |
+| params  | bytes | undefined |
 
 
 

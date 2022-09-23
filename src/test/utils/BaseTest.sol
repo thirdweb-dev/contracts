@@ -27,6 +27,12 @@ import { VoteERC20 } from "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
+import "contracts/airdrop/AirdropERC721.sol";
+import "contracts/airdrop/AirdropERC721Claimable.sol";
+import "contracts/airdrop/AirdropERC20.sol";
+import "contracts/airdrop/AirdropERC20Claimable.sol";
+import "contracts/airdrop/AirdropERC1155.sol";
+import "contracts/airdrop/AirdropERC1155Claimable.sol";
 import "contracts/mock/Mock.sol";
 import "contracts/mock/MockContractPublisher.sol";
 
@@ -59,6 +65,20 @@ abstract contract BaseTest is DSTest, Test {
 
     uint256 public privateKey = 1234;
     address public signer;
+
+    // airdrop-claimable inputs
+    uint256[] internal _airdropTokenIdsERC721;
+    bytes32 internal _airdropMerkleRootERC721;
+
+    uint256[] internal _airdropTokenIdsERC1155;
+    uint256[] internal _airdropWalletClaimCountERC1155;
+    uint256[] internal _airdropAmountsERC1155;
+    bytes32[] internal _airdropMerkleRootERC1155;
+
+    bytes32 internal _airdropMerkleRootERC20;
+
+    Wallet internal airdropTokenOwner;
+    // airdrop-claimable inputs -- over
 
     mapping(bytes32 => address) public contracts;
 
@@ -95,9 +115,24 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Split()));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC721"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC721()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC20"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC20()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC1155()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC721Claimable"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC721Claimable()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC20Claimable"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC20Claimable()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155Claimable"), 1)));
+        TWFactory(factory).addImplementation(address(new AirdropERC1155Claimable()));
         TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         vm.stopPrank();
+
+        // setup airdrop logic
+        setupAirdropClaimable();
 
         /// deploy proxy for tests
         deployContractProxy(
@@ -234,6 +269,58 @@ abstract contract BaseTest is DSTest, Test {
                 (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
             )
         );
+        deployContractProxy("AirdropERC721", abi.encodeCall(AirdropERC721.initialize, (deployer)));
+        deployContractProxy("AirdropERC20", abi.encodeCall(AirdropERC20.initialize, (deployer)));
+        deployContractProxy("AirdropERC1155", abi.encodeCall(AirdropERC1155.initialize, (deployer)));
+        deployContractProxy(
+            "AirdropERC721Claimable",
+            abi.encodeCall(
+                AirdropERC721Claimable.initialize,
+                (
+                    deployer,
+                    forwarders(),
+                    address(airdropTokenOwner),
+                    address(erc721),
+                    _airdropTokenIdsERC721,
+                    1000,
+                    1,
+                    _airdropMerkleRootERC721
+                )
+            )
+        );
+        deployContractProxy(
+            "AirdropERC1155Claimable",
+            abi.encodeCall(
+                AirdropERC1155Claimable.initialize,
+                (
+                    deployer,
+                    forwarders(),
+                    address(airdropTokenOwner),
+                    address(erc1155),
+                    _airdropTokenIdsERC1155,
+                    _airdropAmountsERC1155,
+                    1000,
+                    _airdropWalletClaimCountERC1155,
+                    _airdropMerkleRootERC1155
+                )
+            )
+        );
+        deployContractProxy(
+            "AirdropERC20Claimable",
+            abi.encodeCall(
+                AirdropERC20Claimable.initialize,
+                (
+                    deployer,
+                    forwarders(),
+                    address(airdropTokenOwner),
+                    address(erc20),
+                    10_000 ether,
+                    1000,
+                    1,
+                    _airdropMerkleRootERC20
+                )
+            )
+        );
     }
 
     function deployContractProxy(string memory _contractType, bytes memory _initializer)
@@ -326,5 +413,33 @@ abstract contract BaseTest is DSTest, Test {
         address[] memory _forwarders = new address[](1);
         _forwarders[0] = forwarder;
         return _forwarders;
+    }
+
+    function setupAirdropClaimable() public {
+        string[] memory inputs = new string[](3);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = Strings.toString(5);
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        airdropTokenOwner = getWallet();
+
+        // ERC721
+        for (uint256 i = 0; i < 1000; i++) {
+            _airdropTokenIdsERC721.push(i);
+        }
+        _airdropMerkleRootERC721 = root;
+
+        // ERC1155
+        for (uint256 i = 0; i < 5; i++) {
+            _airdropTokenIdsERC1155.push(i);
+            _airdropAmountsERC1155.push(100);
+            _airdropWalletClaimCountERC1155.push(1);
+            _airdropMerkleRootERC1155.push(root);
+        }
+
+        // ERC20
+        _airdropMerkleRootERC20 = root;
     }
 }

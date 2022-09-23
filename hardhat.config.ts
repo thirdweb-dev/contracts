@@ -26,9 +26,11 @@ const chainIds = {
   polygon: 137,
   mumbai: 80001,
   optimism: 10,
-  optimism_testnet: 69,
+  optimism_kovan: 69,
+  optimism_goerli: 420,
   arbitrum: 42161,
-  arbitrum_testnet: 421611,
+  arbitrum_rinkeby: 421611,
+  arbitrum_goerli: 421613,
   binance: 56,
   binance_testnet: 97
 };
@@ -54,14 +56,20 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
     case "optimism":
       nodeUrl = `https://opt-mainnet.g.alchemy.com/v2/${alchemyKey}`;
       break;
-    case "optimism_testnet":
+    case "optimism_kovan":
       nodeUrl = `https://opt-kovan.g.alchemy.com/v2/${alchemyKey}`;
+      break;
+    case "optimism_goerli":
+      nodeUrl = `https://opt-goerli.g.alchemy.com/v2/${alchemyKey}`;
       break;
     case "arbitrum":
       nodeUrl = `https://arb-mainnet.g.alchemy.com/v2/${alchemyKey}`;
       break;
-    case "arbitrum_testnet":
+    case "arbitrum_rinkeby":
       nodeUrl = `https://arb-rinkeby.g.alchemy.com/v2/${alchemyKey}`;
+      break;
+    case "arbitrum_goerli":
+      nodeUrl = `https://arb-goerli.g.alchemy.com/v2/${alchemyKey}`;
       break;
     case "avax":
       nodeUrl = "https://api.avax.network/ext/bc/C/rpc";
@@ -163,9 +171,11 @@ if (testPrivateKey) {
     avax: createTestnetConfig("avax"),
     avax_testnet: createTestnetConfig("avax_testnet"),
     arbitrum: createTestnetConfig("arbitrum"),
-    arbitrum_testnet: createTestnetConfig("arbitrum_testnet"),
+    arbitrum_rinkeby: createTestnetConfig("arbitrum_rinkeby"),
+    arbitrum_goerli: createTestnetConfig("arbitrum_goerli"),
     optimism: createTestnetConfig("optimism"),
-    optimism_testnet: createTestnetConfig("optimism_testnet"),
+    optimism_kovan: createTestnetConfig("optimism_kovan"),
+    optimism_goerli: createTestnetConfig("optimism_goerli"),
     binance: createTestnetConfig("binance"),
     binance_testnet: createTestnetConfig("binance_testnet"),
   };

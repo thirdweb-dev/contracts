@@ -67,9 +67,6 @@ contract TokenERC721 is
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
 
-    /// @dev The address interpreted as native token of the chain.
-    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /// @dev Owner of the contract (purpose: OpenSea compatibility, etc.)
     address private _owner;
 
@@ -89,7 +86,7 @@ contract TokenERC721 is
     uint128 private royaltyBps;
 
     /// @dev The % of primary sales collected by the contract as fees.
-    uint128 public platformFeeBps;
+    uint128 private platformFeeBps;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -130,6 +127,8 @@ contract TokenERC721 is
         platformFeeRecipient = _platformFeeRecipient;
         primarySaleRecipient = _saleRecipient;
         contractURI = _contractURI;
+
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = _platformFeeBps;
 
         _owner = _defaultAdmin;
@@ -197,7 +196,7 @@ contract TokenERC721 is
         returns (uint256 tokenIdMinted)
     {
         address signer = verifyRequest(_req, _signature);
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
+        address receiver = _req.to;
 
         tokenIdMinted = _mintTo(receiver, _req.uri);
 
@@ -252,7 +251,7 @@ contract TokenERC721 is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
+        require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
         platformFeeRecipient = _platformFeeRecipient;
@@ -303,9 +302,10 @@ contract TokenERC721 is
         tokenIdToMint = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
+        require(bytes(_uri).length > 0, "empty uri.");
         uri[tokenIdToMint] = _uri;
 
-        _mint(_to, tokenIdToMint);
+        _safeMint(_to, tokenIdToMint);
 
         emit TokensMinted(_to, tokenIdToMint, _uri);
     }
@@ -342,6 +342,7 @@ contract TokenERC721 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
 
         minted[_req.uid] = true;
 
@@ -349,7 +350,7 @@ contract TokenERC721 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPrice(MintRequest memory _req) internal {
+    function collectPrice(MintRequest calldata _req) internal {
         if (_req.price == 0) {
             return;
         }
@@ -357,8 +358,10 @@ contract TokenERC721 is
         uint256 totalPrice = _req.price;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
-        if (_req.currency == NATIVE_TOKEN) {
+        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
+        } else {
+            require(msg.value == 0, "msg value not zero");
         }
 
         address saleRecipient = _req.primarySaleRecipient == address(0)
