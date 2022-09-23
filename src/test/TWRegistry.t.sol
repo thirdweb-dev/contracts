@@ -117,6 +117,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         vm.prank(actor);
         _registry.remove(actor, mockModuleAddress, chainid);
     }
+
     function test_remove_revert_incorrectChainId() public {
         setUp_remove();
         actor = getActor(1);
