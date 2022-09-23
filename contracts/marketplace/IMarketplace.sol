@@ -16,6 +16,7 @@ interface IDirectListings {
         uint256 pricePerToken;
         uint128 startTimestamp;
         uint128 endTimestamp;
+        bool reserved;
     }
 
     struct Listing {
@@ -28,8 +29,15 @@ interface IDirectListings {
         uint256 pricePerToken;
         uint128 startTimestamp;
         uint128 endTimestamp;
+        bool reserved;
         TokenType tokenType;
     }
+
+    event NewListing(address indexed listingCreator, uint256 indexed listingId, Listing listing);
+    event UpdatedListing(address indexed listingCreator, uint256 indexed listingId, Listing listing);
+    event CancelledListing(address indexed listingCreator, uint256 indexed listingId);
+    event ApprovalForListing(uint256 indexed listingId, address indexed buyer, bool approved);
+    event CurrencyPriceForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken, bool approved);
 
     function createListing(ListingParameters memory _params) external returns (uint256 listingId);
 
@@ -37,13 +45,11 @@ interface IDirectListings {
     
     function cancelListing(uint256 _listingId) external;
 
-    function reserveLisitng(uint256 _listingId, bool _toReserve) external;
-
     function approveBuyerForLisitng(uint256 _listingId, address _buyer, bool _toApprove) external;
     
-    function approveCurrencyForLisitng(uint256 _listingId, address _currency, uint256 _pricePerTokenInCurrency) external;
+    function approveCurrencyForLisitng(uint256 _listingId, address _currency, uint256 _pricePerTokenInCurrency, bool _toApprove) external;
 
-    function buyFromListing(uint256 _listingId, uint256 _quantity, address _currency, uint256 _totalPrice) external payable;
+    function buyFromListing(uint256 _listingId, address _buyFor, uint256 _quantity, address _currency, uint256 _totalPrice) external payable;
 
     function getAllListings() external view returns (Listing[] memory listings);
 
