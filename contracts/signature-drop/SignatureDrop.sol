@@ -142,7 +142,7 @@ contract SignatureDrop is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override onlyRole(minterRole) returns (uint256 batchId) {
+    ) public override returns (uint256 batchId) {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {

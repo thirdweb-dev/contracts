@@ -470,15 +470,8 @@ contract SignatureDropTest is BaseTest {
         vm.prank(address(0x345));
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            Strings.toHexString(uint160(address(0x567)), 20),
-            " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
-
         vm.prank(address(0x567));
-        vm.expectRevert(errorMessage);
+        vm.expectRevert("Not authorized");
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
