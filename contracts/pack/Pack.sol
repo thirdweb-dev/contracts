@@ -317,7 +317,6 @@ contract Pack is
         }
     }
 
-    /// @dev Returns the reward units to distribute.
     function getRewardUnits(
         uint256 _packId,
         uint256 _numOfPacksToOpen,
@@ -331,14 +330,18 @@ contract Pack is
 
         uint256 random = generateRandomValue();
 
-        (Token[] memory _token, ) = getPackContents(_packId);
+        Token[] memory _token = new Token[](totalRewardKinds);
         bool[] memory _isUpdated = new bool[](totalRewardKinds);
         for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
-            uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
-            uint256 target = randomVal % totalRewardUnits;
+            
+            uint256 target = uint256(keccak256(abi.encode(random, i))) % totalRewardUnits;
             uint256 step;
 
             for (uint256 j = 0; j < totalRewardKinds; j += 1) {
+
+                if(_token[j].assetContract == address(0)) {
+                    _token[j] = getTokenOfBundle(_packId, j);
+                }
                 uint256 totalRewardUnitsOfKind = _token[j].totalAmount / pack.perUnitAmounts[j];
 
                 if (target < step + totalRewardUnitsOfKind) {
