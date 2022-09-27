@@ -43,6 +43,7 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
             revert("Req expired");
         }
+        require(_req.to != address(0), "recipient undefined");
 
         minted[_req.uid] = true;
     }

@@ -41,6 +41,7 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
             _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
 
         minted[_req.uid] = true;
     }
