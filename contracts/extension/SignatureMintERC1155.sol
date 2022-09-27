@@ -42,6 +42,7 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
             "Request expired"
         );
         require(_req.to != address(0), "recipient undefined");
+        require(_req.quantity > 0, "0 qty");
 
         minted[_req.uid] = true;
     }
