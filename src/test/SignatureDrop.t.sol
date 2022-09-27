@@ -462,14 +462,16 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing revert condition; an address without MINTER_ROLE calls lazyMint function.
      */
     function test_revert_lazyMint_MINTER_ROLE() public {
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            Strings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
+        bytes32 _minterRole = keccak256("MINTER_ROLE");
 
-        vm.expectRevert(errorMessage);
+        vm.prank(deployerSigner);
+        sigdrop.grantRole(_minterRole, address(0x345));
+
+        vm.prank(address(0x345));
+        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        vm.prank(address(0x567));
+        vm.expectRevert("Not authorized");
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
