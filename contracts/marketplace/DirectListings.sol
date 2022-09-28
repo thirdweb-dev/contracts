@@ -15,7 +15,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../extension/PermissionsEnumerable.sol";
 
 contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -56,7 +55,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
         onlyListerRole
         onlyAssetRole(_params.assetContract)
         returns (uint256 listingId)
-    {   
+    {
         listingId = _getNextListingId();
         address listingCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -83,7 +82,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
     }
 
     /// @notice Update an existing listing of your ERC721 or ERC1155 NFTs.
-    function updateListing(uint256 _listingId, ListingParameters memory _params) 
+    function updateListing(uint256 _listingId, ListingParameters memory _params)
         external
         onlyAssetRole(_params.assetContract)
     {
@@ -128,7 +127,11 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
     }
 
     /// @notice Approve or disapprove a buyer for a reserved listing.
-    function approveBuyerForLisitng(uint256 _listingId, address _buyer, bool _toApprove) external {
+    function approveBuyerForLisitng(
+        uint256 _listingId,
+        address _buyer,
+        bool _toApprove
+    ) external {
         address listingCreator = _msgSender();
 
         Listing memory listing = listings[_listingId];
@@ -140,14 +143,19 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
     }
 
     /// @notice Approve a currency and its associated price per token, for a listing.
-    function approveCurrencyForLisitng(uint256 _listingId, address _currency, uint256 _pricePerTokenInCurrency, bool _toApprove) external {
+    function approveCurrencyForLisitng(
+        uint256 _listingId,
+        address _currency,
+        uint256 _pricePerTokenInCurrency,
+        bool _toApprove
+    ) external {
         address listingCreator = _msgSender();
 
         Listing memory listing = listings[_listingId];
         require(listing.listingCreator == listingCreator, "Not listing creator.");
-        
+
         require(_currency != listing.currency, "Re-approving main listing currency.");
-        
+
         isCurrencyApprovedForListing[_listingId][_currency] = _toApprove;
         currencyPriceForListing[_listingId][_currency] = _pricePerTokenInCurrency;
 
@@ -155,25 +163,33 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
     }
 
     /// @notice Buy from a listing of ERC721 or ERC1155 NFTs.
-    function buyFromListing(uint256 _listingId, address _buyFor, uint256 _quantity, address _currency, uint256 _totalPrice) external payable {
-        
+    function buyFromListing(
+        uint256 _listingId,
+        address _buyFor,
+        uint256 _quantity,
+        address _currency,
+        uint256 _totalPrice
+    ) external payable {
         Listing memory listing = listings[_listingId];
         require(listing.assetContract != address(0), "Listing DNE");
 
         require(_quantity > 0 && _quantity <= listing.quantity, "Buying invalid quantity");
 
-        _validateOwnershipAndApproval(listing.listingCreator, listing.assetContract, listing.tokenId, _quantity, listing.tokenType);
-            
+        _validateOwnershipAndApproval(
+            listing.listingCreator,
+            listing.assetContract,
+            listing.tokenId,
+            _quantity,
+            listing.tokenType
+        );
+
         address targetCurrency;
         uint256 targetTotalPrice;
 
-        if(isCurrencyApprovedForListing[_listingId][_currency]) {
-            
+        if (isCurrencyApprovedForListing[_listingId][_currency]) {
             targetCurrency = _currency;
             targetTotalPrice = _quantity * currencyPriceForListing[_listingId][_currency];
-
         } else {
-
             targetCurrency = listing.currency;
             targetTotalPrice = _quantity * listing.pricePerToken;
         }
@@ -186,8 +202,6 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
         listings[_listingId] -= _quantity;
 
         _executeSale();
-
-        
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -196,27 +210,26 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
 
     /// @notice Returns all non-cancelled listings.
     function getAllListings() external view returns (Listing[] memory allListings) {
-        
         uint256 total = totalListings;
         uint256 nonEmptyListings;
 
-        for(uint256 i = 0; i < total; i += 1) {
-            if(listings[i].listingCreator != address(0)) {
+        for (uint256 i = 0; i < total; i += 1) {
+            if (listings[i].listingCreator != address(0)) {
                 nonEmptyListings += 1;
             }
         }
 
         uint256[] memory ids = new uint256[](nonEmptyListings);
         uint256 idxForIds;
-        for(uint256 i = 0; i < nonEmptyListings; i += 1) {
-            if(listings[i].listingCreator != address(0)) {
+        for (uint256 i = 0; i < nonEmptyListings; i += 1) {
+            if (listings[i].listingCreator != address(0)) {
                 ids[idxForIds] = i;
                 idxForIds += 1;
             }
         }
 
         allListings = new Listing[](nonEmptyListings);
-        for(uint256 i = 0; i < ids.length; i += 1) {
+        for (uint256 i = 0; i < ids.length; i += 1) {
             allListings[i] = listings[ids[i]];
         }
     }
@@ -249,11 +262,16 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
 
     /// @dev Checks whether the listing creator owns and has approved marketplace to transfer listed tokens.
     function _validateNewListing(ListingParameters memory _params, TokenType _tokenType) internal view {
-        
         require(_params.quantity > 0, "Listing zero quantity.");
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Listing invalid quantity.");
-        
-        _validateOwnershipAndApproval(_msgSender(), _params.assetContract, _params.tokenId, _params.quantity, _tokenType);   
+
+        _validateOwnershipAndApproval(
+            _msgSender(),
+            _params.assetContract,
+            _params.tokenId,
+            _params.quantity,
+            _tokenType
+        );
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Marketplace to transfer NFTs.
@@ -293,5 +311,4 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable {
             "!BAL20"
         );
     }
-
 }

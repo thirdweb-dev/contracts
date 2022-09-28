@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 interface IDirectListings {
-
     enum TokenType {
         ERC721,
         ERC1155
@@ -37,19 +36,39 @@ interface IDirectListings {
     event UpdatedListing(address indexed listingCreator, uint256 indexed listingId, Listing listing);
     event CancelledListing(address indexed listingCreator, uint256 indexed listingId);
     event ApprovalForListing(uint256 indexed listingId, address indexed buyer, bool approved);
-    event CurrencyPriceForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken, bool approved);
+    event CurrencyPriceForListing(
+        uint256 indexed listingId,
+        address indexed currency,
+        uint256 pricePerToken,
+        bool approved
+    );
 
     function createListing(ListingParameters memory _params) external returns (uint256 listingId);
 
     function updateListing(uint256 _listingId, ListingParameters memory _params) external;
-    
+
     function cancelListing(uint256 _listingId) external;
 
-    function approveBuyerForLisitng(uint256 _listingId, address _buyer, bool _toApprove) external;
-    
-    function approveCurrencyForLisitng(uint256 _listingId, address _currency, uint256 _pricePerTokenInCurrency, bool _toApprove) external;
+    function approveBuyerForLisitng(
+        uint256 _listingId,
+        address _buyer,
+        bool _toApprove
+    ) external;
 
-    function buyFromListing(uint256 _listingId, address _buyFor, uint256 _quantity, address _currency, uint256 _totalPrice) external payable;
+    function approveCurrencyForLisitng(
+        uint256 _listingId,
+        address _currency,
+        uint256 _pricePerTokenInCurrency,
+        bool _toApprove
+    ) external;
+
+    function buyFromListing(
+        uint256 _listingId,
+        address _buyFor,
+        uint256 _quantity,
+        address _currency,
+        uint256 _totalPrice
+    ) external payable;
 
     function getAllListings() external view returns (Listing[] memory listings);
 
@@ -57,7 +76,6 @@ interface IDirectListings {
 }
 
 interface IEnglishAuctions {
-
     enum TokenType {
         ERC721,
         ERC1155
@@ -92,6 +110,27 @@ interface IEnglishAuctions {
         TokenType tokenType;
     }
 
+    struct Bid {
+        uint256 auctionId;
+        address bidder;
+        uint256 bidAmount;
+    }
+
+    /// @dev Emitted when a new auction is created.
+    event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, Auction auction);
+
+    /// @dev Emitted when a new bid is made in an auction.
+    event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmount);
+
+    /// @dev Emitted when an auction is closed.
+    event AuctionClosed(
+        uint256 indexed auctionId,
+        address indexed closer,
+        bool indexed cancelled,
+        address auctionCreator,
+        address winningBidder
+    );
+
     function createAuction(AuctionParameters memory _params) external returns (uint256 auctionId);
 
     function cancelAuction(uint256 _auctionId) external;
@@ -105,16 +144,22 @@ interface IEnglishAuctions {
     function isNewWinningBid(uint256 _auctionId, uint256 _bidAmount) external view returns (bool);
 
     function getAuction(uint256 _auctionId) external view returns (Auction memory auction);
-    
-    function getAllAuctions(uint256 _auctionId) external view returns (Auction[] memory auctions);
 
-    function getWinningBid(uint256 _auctionId) external view returns (address bidder, address currency, uint256 bidAmount);
-    
+    function getAllAuctions() external view returns (Auction[] memory auctions);
+
+    function getWinningBid(uint256 _auctionId)
+        external
+        view
+        returns (
+            address bidder,
+            address currency,
+            uint256 bidAmount
+        );
+
     function isAuctionExpired(uint256 _auctionId) external view returns (bool);
 }
 
 interface IOffers {
-
     enum TokenType {
         ERC721,
         ERC1155
