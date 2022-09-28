@@ -63,7 +63,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
         uint256 id = 0;
 
-        _mintrequest.to = address(0);
+        _mintrequest.to = address(0x345);
         _mintrequest.royaltyRecipient = address(2);
         _mintrequest.royaltyBps = 0;
         _mintrequest.primarySaleRecipient = address(deployer);
@@ -766,7 +766,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -787,7 +787,7 @@ contract SignatureDropTest is BaseTest {
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
             vm.expectEmit(true, true, true, false);
-            emit TokensMintedWithSignature(deployerSigner, deployerSigner, 0, mintrequest);
+            emit TokensMintedWithSignature(deployerSigner, address(0x567), 0, mintrequest);
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
@@ -821,7 +821,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(0x567);
         mintrequest.royaltyBps = 100;
         mintrequest.primarySaleRecipient = address(0x567);
@@ -843,7 +843,7 @@ contract SignatureDropTest is BaseTest {
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1 ether);
             vm.expectEmit(true, true, true, true);
-            emit TokensMintedWithSignature(deployerSigner, address(0x345), 0, mintrequest);
+            emit TokensMintedWithSignature(deployerSigner, address(0x567), 0, mintrequest);
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
@@ -894,7 +894,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -952,7 +952,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -983,7 +983,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -1005,11 +1005,11 @@ contract SignatureDropTest is BaseTest {
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
-            uint256 balance = sigdrop.balanceOf(address(deployerSigner));
+            uint256 balance = sigdrop.balanceOf(address(0x567));
             assertEq(balance, 1);
 
             address owner = sigdrop.ownerOf(0);
-            assertEq(deployerSigner, owner);
+            assertEq(address(0x567), owner);
 
             assertEq(
                 currencyBalBefore - mintrequest.pricePerToken * mintrequest.quantity,
@@ -1055,7 +1055,7 @@ contract SignatureDropTest is BaseTest {
             uint256 id = 0;
             SignatureDrop.MintRequest memory mintrequest;
 
-            mintrequest.to = address(0);
+            mintrequest.to = address(0x567);
             mintrequest.royaltyRecipient = address(2);
             mintrequest.royaltyBps = 0;
             mintrequest.primarySaleRecipient = address(deployer);

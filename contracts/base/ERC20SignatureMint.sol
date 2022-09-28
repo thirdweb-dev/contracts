@@ -55,14 +55,7 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
 
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
+        address receiver = _req.to;
 
         // Collect price
         collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
