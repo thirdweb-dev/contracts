@@ -275,7 +275,7 @@ contract DropERC1155 is
          */
 
         // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
+        (bool validMerkleProof, ) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
             _tokenId,
@@ -304,7 +304,7 @@ contract DropERC1155 is
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
+            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(uint256(uint160(_msgSender())));
         }
 
         // If there's a price, collect price.
@@ -490,7 +490,7 @@ contract DropERC1155 is
             );
             require(validMerkleProof, "not in whitelist.");
             require(
-                !claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].get(merkleProofIndex),
+                !claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].get(uint256(uint160(_claimer))),
                 "proof claimed."
             );
             require(

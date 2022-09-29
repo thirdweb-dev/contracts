@@ -57,12 +57,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
          */
 
         // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            _tokenId,
-            _dropMsgSender(),
-            _quantity,
-            _allowlistProof
-        );
+        (bool validMerkleProof, ) = verifyClaimMerkleProof(_tokenId, _dropMsgSender(), _quantity, _allowlistProof);
 
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
@@ -84,7 +79,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
+            usedAllowlistSpot[activeConditionId].set(uint256(uint160(_dropMsgSender())));
         }
 
         // Update contract state.
@@ -199,7 +194,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
                 revert("not in allowlist");
             }
 
-            if (usedAllowlistSpot[conditionId[_tokenId]].get(merkleProofIndex)) {
+            if (usedAllowlistSpot[conditionId[_tokenId]].get(uint256(uint160(_claimer)))) {
                 revert("proof claimed");
             }
 
