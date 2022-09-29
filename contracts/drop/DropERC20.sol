@@ -463,13 +463,13 @@ contract DropERC20 is
         emit WalletClaimCountUpdated(_claimer, _count);
     }
 
-    /// @dev Lets a contract admin set a maximum number of tokens that can be claimed by any wallet.
+    /// @dev Set a maximum number of tokens that can be claimed by any wallet. Must be parsed to 18 decimals when setting, by adding 18 zeros after the desired value.
     function setMaxWalletClaimCount(uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxWalletClaimCount = _count;
         emit MaxWalletClaimCountUpdated(_count);
     }
 
-    /// @dev Lets a contract admin set the global maximum supply of tokens.
+    /// @dev Set global maximum supply. Must be parsed to 18 decimals when setting, by adding 18 zeros after the desired value.
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxTotalSupply = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_maxTotalSupply);
