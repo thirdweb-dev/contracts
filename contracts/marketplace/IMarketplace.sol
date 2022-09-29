@@ -192,6 +192,15 @@ interface IOffers {
 
     event CancelledOffer(address indexed offeror, uint256 indexed offerId);
 
+    event NewSale(
+        uint256 indexed offerId,
+        address indexed assetContract,
+        address indexed offeror,
+        address seller,
+        uint256 quantityBought,
+        uint256 totalPricePaid
+    );
+
     function makeOffer(OfferParams memory _params) external returns (uint256 offerId);
 
     function cancelOffer(uint256 _offerId) external;

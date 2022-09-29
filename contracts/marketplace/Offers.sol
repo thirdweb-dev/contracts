@@ -134,11 +134,47 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
 
         _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
         _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
+
+        delete offers[_offerId];
+
+        emit NewSale(
+            _targetOffer.offerId,
+            _targetOffer.assetContract,
+            _targetOffer.offeror,
+            _msgSender(),
+            _targetOffer.quantity,
+            _targetOffer.totalPrice
+        );
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            View functions
+    //////////////////////////////////////////////////////////////*/
 
     function getOffer(uint256 _offerId) external view returns (Offer memory offer) {}
 
-    function getAllOffers(uint256 _offerId) external view returns (Offer[] memory offers) {}
+    function getOffers(address _asset, uint256 _tokenId) external view returns (Offer[] memory _offers) {
+        bytes32 _assetHash = keccak256(abi.encodePacked(_asset, _tokenId));
+        uint256[] memory _offerIndex = offersForToken[_assetHash];
+        uint256 _offerCount = _offers.length;
+        require(_offerCount > 0, "no offers");
+
+        uint256 _validOfferCount;
+        for (uint256 i = 0; i < _offerCount; i += 1) {
+            if (offers[_offerIndex[i]].assetContract != address(0)) {
+                _validOfferCount += 1;
+            }
+        }
+
+        _offers = new Offer[](_validOfferCount);
+        for (uint256 i = 0; i < _validOfferCount; i += 1) {
+            if (offers[_offerIndex[i]].assetContract != address(0)) {
+                _offers[i] = offers[_offerIndex[i]];
+            }
+        }
+    }
+
+    function getAllOffers() external view returns (Offer[] memory offers) {}
 
     /*///////////////////////////////////////////////////////////////
                             Internal functions
