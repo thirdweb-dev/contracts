@@ -917,6 +917,35 @@ contract SignatureDropTest is BaseTest {
     }
 
     /**
+     *  note: Testing revert condition; minting zero tokens.
+     */
+    function test_revert_mintWithSignature_zeroQuantity() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+        uint256 id = 0;
+
+        SignatureDrop.MintRequest memory mintrequest;
+        mintrequest.to = address(0x567);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 0;
+        mintrequest.pricePerToken = 0;
+        mintrequest.currency = address(3);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        bytes memory signature = signMintRequest(mintrequest, privateKey);
+        vm.warp(1000);
+
+        vm.prank(deployerSigner);
+        vm.expectRevert("0 qty");
+        sigdrop.mintWithSignature(mintrequest, signature);
+    }
+
+    /**
      *  note: Testing revert condition; not enough minted tokens.
      */
     function test_revert_mintWithSignature_notEnoughMintedTokens() public {
