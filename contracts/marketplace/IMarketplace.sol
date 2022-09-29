@@ -162,7 +162,8 @@ interface IEnglishAuctions {
 interface IOffers {
     enum TokenType {
         ERC721,
-        ERC1155
+        ERC1155,
+        ERC20
     }
 
     struct OfferParams {
@@ -185,6 +186,11 @@ interface IOffers {
         uint256 totalPrice;
         uint256 expirationTimestamp;
     }
+
+    /// @dev Emitted when a new offer is created.
+    event NewOffer(address indexed offeror, uint256 indexed offerId, Offer offer);
+
+    event CancelledOffer(address indexed offeror, uint256 indexed offerId);
 
     function makeOffer(OfferParams memory _params) external returns (uint256 offerId);
 
