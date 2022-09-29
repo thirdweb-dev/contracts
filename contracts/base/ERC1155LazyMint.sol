@@ -99,10 +99,15 @@ contract ERC1155LazyMint is
 
     /**
      *  @notice          Lets an address claim multiple lazy minted NFTs at once to a recipient.
-     *                   Contract creators should override this function to create custom logic for claiming,
+     *                   This function prevents any reentrant calls, and is not allowed to be overridden.
+     *
+     *                   Contract creators should override `verifyClaim` and `transferTokensOnClaim`
+     *                   functions to create custom logic for verification and claiming,
      *                   for e.g. price collection, allowlist, max quantity, etc.
      *
-     *  @dev             The logic in the `verifyClaim` function determines whether the caller is authorized to mint NFTs.
+     *  @dev             The logic in `verifyClaim` determines whether the caller is authorized to mint NFTs.
+     *                   The logic in `transferTokensOnClaim` does actual minting of tokens,
+     *                   can also be used to apply other state changes.
      *
      *  @param _receiver  The recipient of the tokens to mint.
      *  @param _tokenId   The tokenId of the lazy minted NFT to mint.
@@ -112,7 +117,7 @@ contract ERC1155LazyMint is
         address _receiver,
         uint256 _tokenId,
         uint256 _quantity
-    ) public payable virtual nonReentrant {
+    ) public payable nonReentrant {
         require(_tokenId < nextTokenIdToMint(), "invalid id");
         verifyClaim(msg.sender, _tokenId, _quantity); // Add your claim verification logic by overriding this function.
 
@@ -208,9 +213,11 @@ contract ERC1155LazyMint is
 
     /**
      *  @notice          Mints tokens to receiver on claim.
-     *                   Can also use this function to apply any state changes before minting.
+     *                   Any state changes related to `claim` must be applied
+     *                   here by overriding this function.
      *
      *  @dev             Override this function to add logic for state updation.
+     *                   When overriding, apply any state changes before `_mint`.
      */
     function transferTokensOnClaim(
         address _receiver,
