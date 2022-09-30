@@ -33,7 +33,7 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
     uint64 private platformFeeBps;
 
     /// @dev Total number of offers ever created.
-    uint256 private totalOffers;
+    uint256 public totalOffers;
 
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
@@ -132,10 +132,10 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
             _targetOffer.tokenType
         );
 
+        delete offers[_offerId];
+
         _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
         _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
-
-        delete offers[_offerId];
 
         emit NewSale(
             _targetOffer.offerId,
@@ -151,30 +151,48 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    function getOffer(uint256 _offerId) external view returns (Offer memory offer) {}
+    /// @dev Returns existing offer with the given uid.
+    function getOffer(uint256 _offerId) external view onlyExistingOffer(_offerId) returns (Offer memory _offer) {
+        _offer = offers[_offerId];
+    }
 
-    function getOffers(address _asset, uint256 _tokenId) external view returns (Offer[] memory _offers) {
-        bytes32 _assetHash = keccak256(abi.encodePacked(_asset, _tokenId));
-        uint256[] memory _offerIndex = offersForToken[_assetHash];
-        uint256 _offerCount = _offers.length;
-        require(_offerCount > 0, "no offers");
+    /// @dev Returns all existing offers within the specified range.
+    function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _offers) {
+        require(_startId < _endId && _endId <= totalOffers, "invalid range");
 
-        uint256 _validOfferCount;
-        for (uint256 i = 0; i < _offerCount; i += 1) {
-            if (offers[_offerIndex[i]].assetContract != address(0)) {
-                _validOfferCount += 1;
+        uint256 _offerCount;
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (offers[i].assetContract != address(0)) {
+                _offerCount += 1;
             }
         }
 
-        _offers = new Offer[](_validOfferCount);
-        for (uint256 i = 0; i < _validOfferCount; i += 1) {
-            if (offers[_offerIndex[i]].assetContract != address(0)) {
-                _offers[i] = offers[_offerIndex[i]];
+        _offers = new Offer[](_offerCount);
+        for (uint256 i = 0; i < _offerCount; i += 1) {
+            if (offers[i].assetContract != address(0)) {
+                _offers[i] = offers[i];
             }
         }
     }
 
-    function getAllOffers() external view returns (Offer[] memory offers) {}
+    /// @dev Returns offers within the specified range, where offeror has sufficient balance.
+    function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _offers) {
+        require(_startId < _endId && _endId <= totalOffers, "invalid range");
+
+        uint256 _offerCount;
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (_validateExistingOffer(offers[i])) {
+                _offerCount += 1;
+            }
+        }
+
+        _offers = new Offer[](_offerCount);
+        for (uint256 i = 0; i < _offerCount; i += 1) {
+            if (_validateExistingOffer(offers[i])) {
+                _offers[i] = offers[i];
+            }
+        }
+    }
 
     /*///////////////////////////////////////////////////////////////
                             Internal functions
@@ -205,6 +223,14 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         require(_params.expirationTimestamp > block.timestamp, "invalid expiration.");
 
         _validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice);
+    }
+
+    /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
+    function _validateExistingOffer(Offer memory _targetOffer) internal view returns (bool isValid) {
+        isValid =
+            _targetOffer.expirationTimestamp > block.timestamp &&
+            IERC20(_targetOffer.currency).balanceOf(_targetOffer.offeror) >= _targetOffer.totalPrice &&
+            IERC20(_targetOffer.currency).allowance(_targetOffer.offeror, address(this)) >= _targetOffer.totalPrice;
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Marketplace to transfer NFTs.
