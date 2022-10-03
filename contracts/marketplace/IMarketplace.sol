@@ -77,7 +77,9 @@ interface IDirectListings {
         address _currency
     ) external payable;
 
-    function getAllListings() external view returns (Listing[] memory listings);
+    function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory listings);
+
+    function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory listings);
 
     function getListing(uint256 _listingId) external view returns (Listing memory listing);
 }
@@ -216,5 +218,7 @@ interface IOffers {
 
     function getOffer(uint256 _offerId) external view returns (Offer memory offer);
 
-    function getAllOffers(uint256 _offerId) external view returns (Offer[] memory offers);
+    function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory offers);
+
+    function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory offers);
 }
