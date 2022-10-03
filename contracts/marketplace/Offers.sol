@@ -122,7 +122,10 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
 
         require(_targetOffer.expirationTimestamp > block.timestamp, "EXPIRED");
 
-        _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice);
+        require(
+            _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice),
+            "!BAL20"
+        );
 
         _validateOwnershipAndApproval(
             _msgSender(),

@@ -214,12 +214,15 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
             "not within sale window."
         );
 
-        _validateOwnershipAndApproval(
-            listing.listingCreator,
-            listing.assetContract,
-            listing.tokenId,
-            _quantity,
-            listing.tokenType
+        require(
+            _validateOwnershipAndApproval(
+                listing.listingCreator,
+                listing.assetContract,
+                listing.tokenId,
+                _quantity,
+                listing.tokenType
+            ),
+            "!BALNFT"
         );
 
         address targetCurrency;
