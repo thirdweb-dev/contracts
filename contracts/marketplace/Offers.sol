@@ -222,15 +222,14 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "invalid quantity.");
         require(_params.expirationTimestamp > block.timestamp, "invalid expiration.");
 
-        _validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice);
+        require(_validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice), "!BAL20");
     }
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
     function _validateExistingOffer(Offer memory _targetOffer) internal view returns (bool isValid) {
         isValid =
             _targetOffer.expirationTimestamp > block.timestamp &&
-            IERC20(_targetOffer.currency).balanceOf(_targetOffer.offeror) >= _targetOffer.totalPrice &&
-            IERC20(_targetOffer.currency).allowance(_targetOffer.offeror, address(this)) >= _targetOffer.totalPrice;
+            _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice);
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Marketplace to transfer NFTs.
@@ -263,12 +262,10 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         address _tokenOwner,
         address _currency,
         uint256 _amount
-    ) internal view {
-        require(
+    ) internal view returns (bool isValid) {
+        isValid =
             IERC20(_currency).balanceOf(_tokenOwner) >= _amount &&
-                IERC20(_currency).allowance(_tokenOwner, address(this)) >= _amount,
-            "!BAL20"
-        );
+            IERC20(_currency).allowance(_tokenOwner, address(this)) >= _amount;
     }
 
     /// @dev Cancels an auction.

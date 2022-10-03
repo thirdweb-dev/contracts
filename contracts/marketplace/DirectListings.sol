@@ -333,33 +333,30 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         require(_params.quantity > 0, "Listing zero quantity.");
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Listing invalid quantity.");
 
-        _validateOwnershipAndApproval(
-            _msgSender(),
-            _params.assetContract,
-            _params.tokenId,
-            _params.quantity,
-            _tokenType
+        require(
+            _validateOwnershipAndApproval(
+                _msgSender(),
+                _params.assetContract,
+                _params.tokenId,
+                _params.quantity,
+                _tokenType
+            ),
+            "!BALNFT"
         );
     }
 
     /// @dev Checks whether the listing exists, is active, and if the lister has sufficient balance.
     function _validateExistingListing(Listing memory _targetListing) internal view returns (bool isValid) {
-        address market = address(this);
-        if (_targetListing.tokenType == TokenType.ERC1155) {
-            isValid =
-                IERC1155(_targetListing.assetContract).balanceOf(
-                    _targetListing.listingCreator,
-                    _targetListing.tokenId
-                ) >=
-                _targetListing.quantity &&
-                IERC1155(_targetListing.assetContract).isApprovedForAll(_targetListing.listingCreator, market);
-        } else if (_targetListing.tokenType == TokenType.ERC721) {
-            isValid =
-                IERC721(_targetListing.assetContract).ownerOf(_targetListing.tokenId) ==
-                _targetListing.listingCreator &&
-                (IERC721(_targetListing.assetContract).getApproved(_targetListing.tokenId) == market ||
-                    IERC721(_targetListing.assetContract).isApprovedForAll(_targetListing.listingCreator, market));
-        }
+        isValid =
+            _targetListing.startTimestamp <= block.timestamp &&
+            _targetListing.endTimestamp > block.timestamp &&
+            _validateOwnershipAndApproval(
+                _targetListing.listingCreator,
+                _targetListing.assetContract,
+                _targetListing.tokenId,
+                _targetListing.quantity,
+                _targetListing.tokenType
+            );
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Marketplace to transfer NFTs.
@@ -369,9 +366,8 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         uint256 _tokenId,
         uint256 _quantity,
         TokenType _tokenType
-    ) internal view {
+    ) internal view returns (bool isValid) {
         address market = address(this);
-        bool isValid;
 
         if (_tokenType == TokenType.ERC1155) {
             isValid =
@@ -383,8 +379,6 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
                 (IERC721(_assetContract).getApproved(_tokenId) == market ||
                     IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
-
-        require(isValid, "!BALNFT");
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Markeplace to transfer the appropriate amount of currency
