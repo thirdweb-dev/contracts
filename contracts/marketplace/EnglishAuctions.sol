@@ -276,6 +276,10 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "invalid quantity.");
         require(_params.timeBufferInSeconds > 0, "zero time-buffer.");
         require(_params.bidBufferBps > 0, "zero bid-buffer.");
+        require(
+            _params.startTimestamp >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
+            "invalid timestamps."
+        );
 
         _validateOwnershipAndApproval(
             _msgSender(),

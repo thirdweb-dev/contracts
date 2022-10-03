@@ -42,6 +42,14 @@ interface IDirectListings {
         uint256 pricePerToken,
         bool approved
     );
+    event NewSale(
+        uint256 indexed listingId,
+        address indexed assetContract,
+        address indexed listingCreator,
+        address buyer,
+        uint256 quantityBought,
+        uint256 totalPricePaid
+    );
 
     function createListing(ListingParameters memory _params) external returns (uint256 listingId);
 
@@ -66,8 +74,7 @@ interface IDirectListings {
         uint256 _listingId,
         address _buyFor,
         uint256 _quantity,
-        address _currency,
-        uint256 _totalPrice
+        address _currency
     ) external payable;
 
     function getAllListings() external view returns (Listing[] memory listings);
