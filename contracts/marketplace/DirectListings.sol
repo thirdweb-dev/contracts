@@ -97,7 +97,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         require(
-            _params.startTimestamp >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
+            _params.startTimestamp >= block.timestamp - 1 hours && _params.startTimestamp < _params.endTimestamp,
             "invalid timestamps."
         );
 
@@ -132,10 +132,16 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         Listing memory listing = listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
 
-        require(
-            _params.startTimestamp >= listing.startTimestamp && _params.startTimestamp < _params.endTimestamp,
-            "invalid timestamps."
-        );
+        uint128 startTime;
+        if (_params.startTimestamp == 0) {
+            startTime = listing.startTimestamp;
+        } else {
+            require(_params.startTimestamp >= block.timestamp - 1 hours, "invalid start timestamp.");
+            startTime = _params.startTimestamp;
+        }
+
+        uint128 endTime = _params.endTimestamp == 0 ? listing.endTimestamp : _params.endTimestamp;
+        require(startTime < endTime, "invalid timestamps.");
 
         _validateNewListing(_params, tokenType);
 
@@ -147,8 +153,8 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
             quantity: _params.quantity,
             currency: _params.currency,
             pricePerToken: _params.pricePerToken,
-            startTimestamp: _params.startTimestamp,
-            endTimestamp: _params.endTimestamp,
+            startTimestamp: startTime,
+            endTimestamp: endTime,
             reserved: _params.reserved,
             tokenType: tokenType
         });
@@ -183,7 +189,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         address _currency,
         uint256 _pricePerTokenInCurrency,
         bool _toApprove
-    ) external {
+    ) external onlyListingCreator(_listingId) {
         address listingCreator = _msgSender();
 
         Listing memory listing = listings[_listingId];
