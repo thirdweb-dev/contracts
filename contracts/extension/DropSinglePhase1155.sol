@@ -88,10 +88,10 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         claimCondition[_tokenId] = condition;
 
         // If there's a price, collect price.
-        collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
+        _collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        transferTokensOnClaim(_receiver, _tokenId, _quantity);
+        _transferTokensOnClaim(_receiver, _tokenId, _quantity);
 
         emit TokensClaimed(_dropMsgSender(), _receiver, _tokenId, _quantity);
 
@@ -253,7 +253,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     ) internal virtual {}
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -261,7 +261,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
+    function _transferTokensOnClaim(
         address _to,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed

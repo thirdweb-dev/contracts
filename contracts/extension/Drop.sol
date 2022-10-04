@@ -76,10 +76,10 @@ abstract contract Drop is IDrop {
         claimCondition.lastClaimTimestamp[activeConditionId][_dropMsgSender()] = block.timestamp;
 
         // If there's a price, collect price.
-        collectPriceOnClaim(_quantity, _currency, _pricePerToken);
+        _collectPriceOnClaim(_quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
+        uint256 startTokenId = _transferTokensOnClaim(_receiver, _quantity);
 
         emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, startTokenId, _quantity);
 
@@ -303,14 +303,14 @@ abstract contract Drop is IDrop {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         virtual
         returns (uint256 startTokenId);

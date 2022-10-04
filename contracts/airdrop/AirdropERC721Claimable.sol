@@ -132,7 +132,7 @@ contract AirdropERC721Claimable is
 
         verifyClaim(claimer, _quantity, _proofs, _proofMaxQuantityForWallet);
 
-        transferClaimedTokens(_receiver, _quantity);
+        _transferClaimedTokens(_receiver, _quantity);
 
         emit TokensClaimed(_msgSender(), _receiver, _quantity);
     }
@@ -166,7 +166,7 @@ contract AirdropERC721Claimable is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(address _to, uint256 _quantityBeingClaimed) internal {
+    function _transferClaimedTokens(address _to, uint256 _quantityBeingClaimed) internal {
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         supplyClaimedByWallet[_msgSender()] += _quantityBeingClaimed;

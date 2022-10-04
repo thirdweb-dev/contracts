@@ -90,8 +90,8 @@ contract ERC1155Drop is
      *  @param _tokenId The tokenId of an NFT.
      */
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
-        (uint256 batchId, ) = getBatchId(_tokenId);
-        string memory batchUri = getBaseURI(_tokenId);
+        (uint256 batchId, ) = _getBatchId(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
@@ -189,7 +189,7 @@ contract ERC1155Drop is
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -212,7 +212,7 @@ contract ERC1155Drop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
+    function _transferTokensOnClaim(
         address _to,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed

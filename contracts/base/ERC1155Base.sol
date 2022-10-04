@@ -73,7 +73,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
             return uriForToken;
         }
 
-        string memory batchUri = getBaseURI(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 
