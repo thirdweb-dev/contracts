@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import { IEnglishAuctions } from "./IMarketplace.sol";
+import "./EnglishAuctionsStorage.sol";
 
 // ====== External imports ======
 import "@openzeppelin/contracts/utils/Context.sol";
@@ -14,12 +14,12 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../extension/PermissionsEnumerable.sol";
-import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                        Constants / Immutables
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Only lister role holders can create auctions, when auctions are restricted by lister address.
@@ -30,27 +30,8 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
 
-    /// @dev The address that receives all platform fees from all sales.
-    address private platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint64 private platformFeeBps;
-
-    /// @dev Total number of auctions ever created.
-    uint256 public totalAuctions;
-
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
-
-    /*///////////////////////////////////////////////////////////////
-                                Mappings
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Mapping from uid of auction => auction info.
-    mapping(uint256 => Auction) private auctions;
-
-    /// @dev Mapping from uid of an auction => current winning bid in an auction.
-    mapping(uint256 => Bid) public winningBid;
 
     /*///////////////////////////////////////////////////////////////
                               Modifiers
@@ -68,13 +49,16 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
     /// @dev Checks whether caller is a auction creator.
     modifier onlyAuctionCreator(uint256 _auctionId) {
-        require(auctions[_auctionId].auctionCreator == _msgSender(), "!Creator");
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+
+        require(data.auctions[_auctionId].auctionCreator == _msgSender(), "!Creator");
         _;
     }
 
     /// @dev Checks whether an auction exists.
     modifier onlyExistingAuction(uint256 _auctionId) {
-        require(auctions[_auctionId].assetContract != address(0), "DNE");
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        require(data.auctions[_auctionId].assetContract != address(0), "DNE");
         _;
     }
 
@@ -119,7 +103,8 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
             tokenType: tokenType
         });
 
-        auctions[auctionId] = auction;
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        data.auctions[auctionId] = auction;
 
         require(auction.buyoutBidAmount >= auction.minimumBidAmount, "RESERVE");
         _transferAuctionTokens(auctionCreator, address(this), auction);
@@ -133,7 +118,8 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         nonReentrant
         onlyExistingAuction(_auctionId)
     {
-        Auction memory _targetAuction = auctions[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Auction memory _targetAuction = data.auctions[_auctionId];
 
         require(
             _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp < block.timestamp,
@@ -151,8 +137,9 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         onlyExistingAuction(_auctionId)
         onlyAuctionCreator(_auctionId)
     {
-        Auction memory _targetAuction = auctions[_auctionId];
-        Bid memory _winningBid = winningBid[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Auction memory _targetAuction = data.auctions[_auctionId];
+        Bid memory _winningBid = data.winningBid[_auctionId];
 
         require(_targetAuction.endTimestamp < block.timestamp, "auction still active.");
         require(_winningBid.bidder != address(0), "no bids were made.");
@@ -161,8 +148,9 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
     }
 
     function collectAuctionTokens(uint256 _auctionId) external nonReentrant onlyExistingAuction(_auctionId) {
-        Auction memory _targetAuction = auctions[_auctionId];
-        Bid memory _winningBid = winningBid[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Auction memory _targetAuction = data.auctions[_auctionId];
+        Bid memory _winningBid = data.winningBid[_auctionId];
 
         require(_targetAuction.endTimestamp < block.timestamp, "auction still active.");
         require(_msgSender() == _winningBid.bidder, "not bidder");
@@ -172,8 +160,9 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
     /// @dev Cancels an auction.
     function cancelAuction(uint256 _auctionId) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) {
-        Auction memory _targetAuction = auctions[_auctionId];
-        delete auctions[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Auction memory _targetAuction = data.auctions[_auctionId];
+        delete data.auctions[_auctionId];
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
 
@@ -190,8 +179,9 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         onlyExistingAuction(_auctionId)
         returns (bool)
     {
-        Auction memory _targetAuction = auctions[_auctionId];
-        Bid memory _currentWinningBid = winningBid[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Auction memory _targetAuction = data.auctions[_auctionId];
+        Bid memory _currentWinningBid = data.winningBid[_auctionId];
 
         return
             _isNewWinningBid(
@@ -208,16 +198,18 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         onlyExistingAuction(_auctionId)
         returns (Auction memory _auction)
     {
-        _auction = auctions[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        _auction = data.auctions[_auctionId];
     }
 
     function getAllAuctions() external view returns (Auction[] memory _activeAuctions) {
-        uint256 _totalAuctions = totalAuctions;
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        uint256 _totalAuctions = data.totalAuctions;
         uint256 _activeAuctionCount;
         Auction[] memory _auctions = new Auction[](_totalAuctions);
 
         for (uint256 i = 0; i < _totalAuctions; i += 1) {
-            _auctions[i] = auctions[i];
+            _auctions[i] = data.auctions[i];
             if (_auctions[i].startTimestamp <= block.timestamp && _auctions[i].endTimestamp > block.timestamp) {
                 _activeAuctionCount += 1;
             }
@@ -242,8 +234,9 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
             uint256 _bidAmount
         )
     {
-        Auction memory _targetAuction = auctions[_auctionId];
-        Bid memory _currentWinningBid = winningBid[_auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Auction memory _targetAuction = data.auctions[_auctionId];
+        Bid memory _currentWinningBid = data.winningBid[_auctionId];
 
         _bidder = _currentWinningBid.bidder;
         _currency = _targetAuction.currency;
@@ -251,7 +244,8 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
     }
 
     function isAuctionExpired(uint256 _auctionId) external view onlyExistingAuction(_auctionId) returns (bool) {
-        return auctions[_auctionId].endTimestamp > block.timestamp;
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        return data.auctions[_auctionId].endTimestamp > block.timestamp;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -260,8 +254,9 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
     /// @dev Returns the next auction Id.
     function _getNextAuctionId() internal returns (uint256 id) {
-        id = totalAuctions;
-        totalAuctions += 1;
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        id = data.totalAuctions;
+        data.totalAuctions += 1;
     }
 
     /// @dev Returns the interface supported by a contract.
@@ -322,7 +317,8 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
     /// @dev Processes an incoming bid in an auction.
     function _handleBid(Auction memory _targetAuction, Bid memory _incomingBid) internal {
-        Bid memory currentWinningBid = winningBid[_targetAuction.auctionId];
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        Bid memory currentWinningBid = data.winningBid[_targetAuction.auctionId];
         uint256 currentBidAmount = currentWinningBid.bidAmount;
         uint256 incomingBidAmount = _incomingBid.bidAmount;
         address _nativeTokenWrapper = nativeTokenWrapper;
@@ -346,11 +342,11 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
             );
 
             // Update the winning bid and auction's end time before external contract calls.
-            winningBid[_targetAuction.auctionId] = _incomingBid;
+            data.winningBid[_targetAuction.auctionId] = _incomingBid;
 
             if (_targetAuction.endTimestamp - block.timestamp <= _targetAuction.timeBufferInSeconds) {
                 _targetAuction.endTimestamp += _targetAuction.timeBufferInSeconds;
-                auctions[_targetAuction.auctionId] = _targetAuction;
+                data.auctions[_targetAuction.auctionId] = _targetAuction;
             }
         }
 
@@ -395,10 +391,11 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
     /// @dev Closes an auction for the winning bidder; distributes auction items to the winning bidder.
     function _closeAuctionForBidder(Auction memory _targetAuction, Bid memory _winningBid) internal {
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         _targetAuction.endTimestamp = uint64(block.timestamp);
 
-        winningBid[_targetAuction.auctionId] = _winningBid;
-        auctions[_targetAuction.auctionId] = _targetAuction;
+        data.winningBid[_targetAuction.auctionId] = _winningBid;
+        data.auctions[_targetAuction.auctionId] = _targetAuction;
 
         _transferAuctionTokens(address(this), _winningBid.bidder, _targetAuction);
 
@@ -413,13 +410,14 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
     /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
     function _closeAuctionForAuctionCreator(Auction memory _targetAuction, Bid memory _winningBid) internal {
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         uint256 payoutAmount = _winningBid.bidAmount;
 
         _targetAuction.quantity = 0;
         _targetAuction.endTimestamp = uint64(block.timestamp);
-        auctions[_targetAuction.auctionId] = _targetAuction;
+        data.auctions[_targetAuction.auctionId] = _targetAuction;
 
-        winningBid[_targetAuction.auctionId] = _winningBid;
+        data.winningBid[_targetAuction.auctionId] = _winningBid;
 
         _payout(address(this), _targetAuction.auctionCreator, _targetAuction.currency, payoutAmount, _targetAuction);
 
@@ -453,7 +451,8 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         uint256 _totalPayoutAmount,
         Auction memory _targetAuction
     ) internal {
-        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        uint256 platformFeeCut = (_totalPayoutAmount * data.platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;
         address royaltyRecipient;
@@ -476,7 +475,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
-            platformFeeRecipient,
+            data.platformFeeRecipient,
             platformFeeCut,
             _nativeTokenWrapper
         );
