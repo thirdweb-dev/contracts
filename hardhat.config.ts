@@ -32,7 +32,9 @@ const chainIds = {
   arbitrum_rinkeby: 421611,
   arbitrum_goerli: 421613,
   binance: 56,
-  binance_testnet: 97
+  binance_testnet: 97,
+  ethw: 10001,
+  ethw_iceberg_testnet: 10002
 };
 
 // Ensure that we have all the environment variables we need.
@@ -88,6 +90,12 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
       break;
     case "binance_testnet":
       nodeUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+      break;
+    case "ethw":
+      nodeUrl = "https://mainnet.ethereumpow.org";
+      break;
+    case "ethw_iceberg_testnet":
+      nodeUrl = "https://iceberg.ethereumpow.org"
       break;
   }
 
@@ -178,6 +186,8 @@ if (testPrivateKey) {
     optimism_goerli: createTestnetConfig("optimism_goerli"),
     binance: createTestnetConfig("binance"),
     binance_testnet: createTestnetConfig("binance_testnet"),
+    ethw: createTestnetConfig("ethw"),
+    ethw_iceberg_test: createTestnetConfig("ethw_iceberg_testnet"
   };
 }
 
