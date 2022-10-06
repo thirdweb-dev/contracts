@@ -85,7 +85,7 @@ abstract contract DropWithTiers is IDropWithTiers {
         collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity);
+        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity, tier);
 
         emit TokensClaimed(_dropMsgSender(), _receiver, tier, startTokenId, _quantity);
 
@@ -236,10 +236,11 @@ abstract contract DropWithTiers is IDropWithTiers {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed,
+        string memory _tier
+    ) internal virtual returns (uint256 startTokenId);
 
     function _canSetClaimConditions() internal view virtual returns (bool);
 }

@@ -9,8 +9,15 @@ interface ISignatureAction {
         bytes data;
     }
 
+    event RequestExecuted(address indexed user, address indexed signer, GenericRequest _req);
+
     function verify(GenericRequest calldata req, bytes calldata signature)
         external
         view
         returns (bool success, address signer);
+
+    function claimWithSignature(GenericRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        returns (address signer);
 }
