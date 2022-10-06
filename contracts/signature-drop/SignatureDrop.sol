@@ -178,10 +178,6 @@ contract SignatureDrop is
         payable
         returns (address signer)
     {
-        if (_req.quantity == 0) {
-            revert("0 qty");
-        }
-
         uint256 tokenIdToMint = _currentIndex;
         if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
             revert("Not enough tokens");

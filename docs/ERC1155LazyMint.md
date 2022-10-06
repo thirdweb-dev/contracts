@@ -98,9 +98,9 @@ Lets an owner or approved operator burn NFTs of the given tokenIds.
 function claim(address _receiver, uint256 _tokenId, uint256 _quantity) external payable
 ```
 
-Lets an address claim multiple lazy minted NFTs at once to a recipient.                   Contract creators should override this function to create custom logic for claiming,                   for e.g. price collection, allowlist, max quantity, etc.
+Lets an address claim multiple lazy minted NFTs at once to a recipient.                   This function prevents any reentrant calls, and is not allowed to be overridden.                   Contract creators should override `verifyClaim` and `transferTokensOnClaim`                   functions to create custom logic for verification and claiming,                   for e.g. price collection, allowlist, max quantity, etc.
 
-*The logic in the `verifyClaim` function determines whether the caller is authorized to mint NFTs.*
+*The logic in `verifyClaim` determines whether the caller is authorized to mint NFTs.                   The logic in `transferTokensOnClaim` does actual minting of tokens,                   can also be used to apply other state changes.*
 
 #### Parameters
 
