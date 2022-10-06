@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./interface/IPermissionsEnumerable.sol";
 import "./Permissions.sol";
 
@@ -10,6 +11,8 @@ import "./Permissions.sol";
  *           Also provides interfaces to view all members with a given role, and total count of members.
  */
 contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
+
     /**
      *  @notice A data structure to store data of members for a given role.
      *
@@ -25,6 +28,12 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
 
     /// @dev map from keccak256 hash of a role to its members' data. See {RoleMembers}.
     mapping(bytes32 => RoleMembers) private roleMembers;
+
+    /// @dev Enumerable bytes32 set of all roles created
+    EnumerableSet.Bytes32Set internal roles;
+
+    /// @dev Mapping from hash of a role to its string version
+    mapping(bytes32 => string) private roleNames;
 
     /**
      *  @notice         Returns the role-member from a list of members for a role,
@@ -76,6 +85,16 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
         }
     }
 
+    /// @dev Returns a bytes32 array of all roles ever created
+    function getAllRoles() external view returns (bytes32[] memory) {
+        return roles.values();
+    }
+
+    /// @dev Return string verson of a bytes32 'role'
+    function viewRoleName(bytes32 role) external view returns (string memory) {
+        return roleNames[role];
+    }
+
     /// @dev Revokes `role` from `account`, and removes `account` from {roleMembers}
     ///      See {_removeMember}
     function _revokeRole(bytes32 role, address account) internal override {
@@ -83,11 +102,37 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
         _removeMember(role, account);
     }
 
-    /// @dev Grants `role` to `account`, and adds `account` to {roleMembers}
+    /// @dev Return keccak256 hash of '_input'
+    function _hashOfRole(string memory _input) internal virtual returns (bytes32) {
+        return keccak256(abi.encodePacked(_input));
+    }
+
+
+    /**
+     *  @dev            Hashes 'roleName' to get the {role} and then grants {role} to 'account',
+     *                  adds 'account' to {roleMembers}, adds 'role' to {roles} and adds 'roleName'
+     *                  to {roleName}
+     *
+     *                  See {_addMember}
+     *
+     *  @param roleName     string of role to setup
+     *  @param account      Address of account to be granted the 'roleName'
+     */
+    function _setupRole(string memory roleName, address account) internal {
+        bytes32 role = _hashOfRole(roleName);
+        super._setupRole(role, account);
+        _addMember(role, account);
+        roles.add(role);
+        roleNames[role] = roleName;
+    }
+
+
+    /// @dev Grants `role` to `account`, adds `account` to {roleMembers} and adds `role` to {roles}
     ///      See {_addMember}
     function _setupRole(bytes32 role, address account) internal override {
         super._setupRole(role, account);
         _addMember(role, account);
+        roles.add(role);
     }
 
     /// @dev adds `account` to {roleMembers}, for `role`
