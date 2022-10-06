@@ -33,7 +33,6 @@ import "./SignatureActionUpgradeable.sol";
 contract TieredDrop is
     Initializable,
     ContractMetadata,
-    PlatformFee,
     Royalty,
     PrimarySale,
     Ownable,
@@ -60,6 +59,19 @@ contract TieredDrop is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    struct TokenRange {
+        uint256 startIdInclusive;
+        uint256 endIdNonInclusive;
+    }
+
+    uint256[] private endIdsAtMint;
+    mapping(uint256 => TokenRange) private proxyTokenRange;
+
+    string[] private tiers;
+    mapping(string => uint256) private nextTokenIdToMintFromTier;
+    mapping(string => TokenRange[]) private tokensInTier;
+    mapping(string => uint256) private totalRemainingInTier;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -73,9 +85,7 @@ contract TieredDrop is
         address[] memory _trustedForwarders,
         address _saleRecipient,
         address _royaltyRecipient,
-        uint128 _royaltyBps,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
+        uint16 _royaltyBps
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
@@ -93,7 +103,6 @@ contract TieredDrop is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
@@ -138,18 +147,7 @@ contract TieredDrop is
 
     /*///////////////////////////////////////////////////////////////
                     Lazy minting + delayed-reveal logic
-    //////////////////////////////////////////////////////////////*/
-
-    struct TokenRange {
-        uint256 startIdInclusive;
-        uint256 endIdNonInclusive;
-    }
-
-    string[] private tiers;
-
-    mapping(string => uint256) private nextTokenIdToMintFromTier;
-    mapping(string => TokenRange[]) private tokensInTier;
-    mapping(string => uint256) private totalRemainingInTier;
+    //////////////////////////////////////////////////////////////*
 
     /**
      *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
@@ -285,12 +283,9 @@ contract TieredDrop is
             return;
         }
 
-        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
@@ -298,12 +293,8 @@ contract TieredDrop is
             }
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
     }
-
-    uint256[] private endIdsAtMint;
-    mapping(uint256 => TokenRange) private proxyTokenRange;
 
     /// @dev Transfers the NFTs being claimed.
     function transferTokensOnClaim(
@@ -326,11 +317,6 @@ contract TieredDrop is
     /// @dev Returns whether a given address is authorized to sign mint requests.
     function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
         return hasRole(minterRole, _signer);
-    }
-
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
