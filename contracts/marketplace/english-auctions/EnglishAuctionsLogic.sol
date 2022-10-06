@@ -9,15 +9,19 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../extension/PermissionsEnumerable.sol";
+import "../extensions/ReentrancyGuard.sol";
+import "../extensions/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, ReentrancyGuard {
+interface IContext {
+    function _msgSender() external view returns (address);
+}
+
+contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -38,12 +42,15 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(
+            Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, IContext(address(this))._msgSender()),
+            "!LISTER_ROLE"
+        );
         _;
     }
 
     modifier onlyAssetRole(address _asset) {
-        require(hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
@@ -51,7 +58,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
     modifier onlyAuctionCreator(uint256 _auctionId) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
 
-        require(data.auctions[_auctionId].auctionCreator == _msgSender(), "!Creator");
+        require(data.auctions[_auctionId].auctionCreator == IContext(address(this))._msgSender(), "!Creator");
         _;
     }
 
@@ -82,7 +89,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         returns (uint256 auctionId)
     {
         auctionId = _getNextAuctionId();
-        address auctionCreator = _msgSender();
+        address auctionCreator = IContext(address(this))._msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         _validateNewAuction(_params, tokenType);
@@ -126,7 +133,11 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
             "inactive auction."
         );
 
-        Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
+        Bid memory newBid = Bid({
+            auctionId: _auctionId,
+            bidder: IContext(address(this))._msgSender(),
+            bidAmount: _bidAmount
+        });
 
         _handleBid(_targetAuction, newBid);
     }
@@ -153,7 +164,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         Bid memory _winningBid = data.winningBid[_auctionId];
 
         require(_targetAuction.endTimestamp < block.timestamp, "auction still active.");
-        require(_msgSender() == _winningBid.bidder, "not bidder");
+        require(IContext(address(this))._msgSender() == _winningBid.bidder, "not bidder");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
     }
@@ -166,7 +177,13 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
 
-        emit AuctionClosed(_targetAuction.auctionId, _msgSender(), true, _targetAuction.auctionCreator, address(0));
+        emit AuctionClosed(
+            _targetAuction.auctionId,
+            IContext(address(this))._msgSender(),
+            true,
+            _targetAuction.auctionCreator,
+            address(0)
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -282,7 +299,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         );
 
         _validateOwnershipAndApproval(
-            _msgSender(),
+            IContext(address(this))._msgSender(),
             _params.assetContract,
             _params.tokenId,
             _params.quantity,
@@ -401,7 +418,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
         emit AuctionClosed(
             _targetAuction.auctionId,
-            _msgSender(),
+            IContext(address(this))._msgSender(),
             false,
             _targetAuction.auctionCreator,
             _winningBid.bidder
@@ -423,7 +440,7 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
 
         emit AuctionClosed(
             _targetAuction.auctionId,
-            _msgSender(),
+            IContext(address(this))._msgSender(),
             false,
             _targetAuction.auctionCreator,
             _winningBid.bidder

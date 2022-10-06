@@ -9,14 +9,19 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
-import "../../extension/PermissionsEnumerable.sol";
+
+import "../extensions/ReentrancyGuard.sol";
+import "../extensions/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
+interface IContext {
+    function _msgSender() external view returns (address);
+}
+
+contract Offers is IOffers, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -34,14 +39,14 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyAssetRole(address _asset) {
-        require(hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
     /// @dev Checks whether caller is a offer creator.
     modifier onlyOfferor(uint256 _offerId) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(data.offers[_offerId].offeror == _msgSender(), "!Offeror");
+        require(data.offers[_offerId].offeror == IContext(address(this))._msgSender(), "!Offeror");
         _;
     }
 
@@ -70,7 +75,7 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         returns (uint256 _offerId)
     {
         _offerId = _getNextOfferId();
-        address _offeror = _msgSender();
+        address _offeror = IContext(address(this))._msgSender();
         TokenType _tokenType = _getTokenType(_params.assetContract);
 
         _validateNewOffer(_params, _tokenType);
@@ -98,7 +103,7 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         delete data.offers[_offerId];
 
-        emit CancelledOffer(_msgSender(), _offerId);
+        emit CancelledOffer(IContext(address(this))._msgSender(), _offerId);
     }
 
     function acceptOffer(uint256 _offerId) external nonReentrant onlyExistingOffer(_offerId) {
@@ -113,7 +118,7 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         );
 
         _validateOwnershipAndApproval(
-            _msgSender(),
+            IContext(address(this))._msgSender(),
             _targetOffer.assetContract,
             _targetOffer.tokenId,
             _targetOffer.quantity,
@@ -122,14 +127,25 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
 
         delete data.offers[_offerId];
 
-        _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
-        _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
+        _payout(
+            _targetOffer.offeror,
+            IContext(address(this))._msgSender(),
+            _targetOffer.currency,
+            _targetOffer.totalPrice,
+            _targetOffer
+        );
+        _transferOfferTokens(
+            IContext(address(this))._msgSender(),
+            _targetOffer.offeror,
+            _targetOffer.quantity,
+            _targetOffer
+        );
 
         emit NewSale(
             _targetOffer.offerId,
             _targetOffer.assetContract,
             _targetOffer.offeror,
-            _msgSender(),
+            IContext(address(this))._msgSender(),
             _targetOffer.quantity,
             _targetOffer.totalPrice
         );
@@ -220,7 +236,10 @@ contract Offers is IOffers, Context, PermissionsEnumerable, ReentrancyGuard {
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "invalid quantity.");
         require(_params.expirationTimestamp > block.timestamp, "invalid expiration.");
 
-        require(_validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice), "!BAL20");
+        require(
+            _validateERC20BalAndAllowance(IContext(address(this))._msgSender(), _params.currency, _params.totalPrice),
+            "!BAL20"
+        );
     }
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
