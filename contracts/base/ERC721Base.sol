@@ -80,7 +80,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
             return fullUriForToken;
         }
 
-        string memory batchUri = getBaseURI(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 

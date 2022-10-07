@@ -65,7 +65,7 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -87,7 +87,7 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         virtual
         override

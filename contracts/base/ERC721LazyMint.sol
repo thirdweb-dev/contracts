@@ -91,7 +91,7 @@ contract ERC721LazyMint is
      *  @param _tokenId The tokenId of an NFT.
      */
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
-        string memory batchUri = getBaseURI(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 
@@ -118,7 +118,7 @@ contract ERC721LazyMint is
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
         verifyClaim(msg.sender, _quantity); // Add your claim verification logic by overriding this function.
 
-        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity); // Mints tokens. Apply any state updates by overriding this function.
+        uint256 startTokenId = _transferTokensOnClaim(_receiver, _quantity); // Mints tokens. Apply any state updates by overriding this function.
         emit TokensClaimed(msg.sender, _receiver, startTokenId, _quantity);
     }
 
@@ -165,7 +165,7 @@ contract ERC721LazyMint is
      *  @dev             Override this function to add logic for state updation.
      *                   When overriding, apply any state changes before `_safeMint`.
      */
-    function transferTokensOnClaim(address _receiver, uint256 _quantity)
+    function _transferTokensOnClaim(address _receiver, uint256 _quantity)
         internal
         virtual
         returns (uint256 startTokenId)
