@@ -22,11 +22,12 @@ import "../extension/Royalty.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/Ownable.sol";
 import "../extension/DelayedReveal.sol";
+import "../extension/LazyMint.sol";
 import "../extension/PermissionsEnumerable.sol";
 
 //  ========== New Features    ==========
 
-import "./LazyMintWithTier.sol";
+import "./DropWithTiers.sol";
 import "./SignatureActionUpgradeable.sol";
 
 contract TieredDrop is
@@ -36,8 +37,9 @@ contract TieredDrop is
     PrimarySale,
     Ownable,
     DelayedReveal,
-    LazyMintWithTier,
+    LazyMint,
     PermissionsEnumerable,
+    DropWithTiers,
     SignatureActionUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -57,10 +59,17 @@ contract TieredDrop is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    struct TokenRange {
+        uint256 startIdInclusive;
+        uint256 endIdNonInclusive;
+    }
+
     uint256[] private endIdsAtMint;
     mapping(uint256 => TokenRange) private proxyTokenRange;
 
-    mapping(string => uint256) private nextTokenIdToMapFromTier;
+    string[] private tiers;
+    mapping(string => uint256) private nextTokenIdToMintFromTier;
+    mapping(string => TokenRange[]) private tokensInTier;
     mapping(string => uint256) private totalRemainingInTier;
 
     /*///////////////////////////////////////////////////////////////
@@ -147,24 +156,32 @@ contract TieredDrop is
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
-        string calldata _tier,
         bytes calldata _data
     ) public override onlyRole(minterRole) returns (uint256 batchId) {
-        if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
-            if (encryptedURI.length != 0 && provenanceHash != "") {
-                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
-            }
+        require(_data.length > 0, "Unexpected empty data.");
+
+        // Decode bytes data into: [1] Tier, and [2] delayed reveal info.
+        (bytes memory encryptedURI, bytes32 provenanceHash, string memory tier) = abi.decode(
+            _data,
+            (bytes, bytes32, string)
+        );
+
+        // Handle delayed reveal info.
+        if (encryptedURI.length != 0 && provenanceHash != "") {
+            _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
         }
 
-        totalRemainingInTier[_tier] += _amount;
-
+        // Handle tier info.
         uint256 startId = nextTokenIdToLazyMint;
-        if (isTierEmpty(_tier)) {
-            nextTokenIdToMapFromTier[_tier] = startId;
+        batchId = super.lazyMint(_amount, _baseURIForTokens, _data);
+
+        if (!(tokensInTier[tier].length > 0)) {
+            tiers.push(tier);
+            nextTokenIdToMintFromTier[tier] = startId;
         }
 
-        return super.lazyMint(_amount, _baseURIForTokens, _tier, _data);
+        tokensInTier[tier].push(TokenRange(startId, batchId));
+        totalRemainingInTier[tier] += _amount;
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
@@ -193,7 +210,6 @@ contract TieredDrop is
         returns (address signer)
     {
         (
-            string[] memory tiersInPriority,
             address to,
             address royaltyRecipient,
             uint256 royaltyBps,
@@ -201,7 +217,7 @@ contract TieredDrop is
             uint256 quantity,
             uint256 pricePerToken,
             address currency
-        ) = abi.decode(_req.data, (string[], address, address, uint256, address, uint256, uint256, address));
+        ) = abi.decode(_req.data, (address, address, uint256, address, uint256, uint256, address));
 
         if (quantity == 0) {
             revert("0 qty");
@@ -233,7 +249,7 @@ contract TieredDrop is
         }
 
         // Mint tokens.
-        transferTokensOnClaim(receiver, quantity, tiersInPriority);
+        _safeMint(receiver, quantity);
 
         emit RequestExecuted(_msgSender(), signer, _req);
     }
@@ -241,13 +257,28 @@ contract TieredDrop is
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Runs before every `claim` function call.
+    function _beforeClaim(
+        address,
+        uint256 _quantity,
+        address,
+        uint256,
+        AllowlistProof calldata,
+        bytes memory _data
+    ) internal override {
+        string memory tier = abi.decode(_data, (string));
+        require(totalRemainingInTier[tier] >= _quantity, "Insufficient tokens in tier.");
+        totalRemainingInTier[tier] -= _quantity;
+    }
+
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
-    ) internal {
+    ) internal override {
         if (_pricePerToken == 0) {
             return;
         }
@@ -268,60 +299,19 @@ contract TieredDrop is
     /// @dev Transfers the NFTs being claimed.
     function transferTokensOnClaim(
         address _to,
-        uint256 _totalQuantityBeingClaimed,
-        string[] memory _tiers
-    ) internal {
-        uint256 startTokenIdToMint = _currentIndex;
+        uint256 _quantityBeingClaimed,
+        string memory _tier
+    ) internal override returns (uint256 startTokenId) {
+        uint256 proxyStartId = nextTokenIdToMintFromTier[_tier];
+        uint256 proxyEndId = proxyStartId + _quantityBeingClaimed;
 
-        uint256 startIdToMap = startTokenIdToMint;
-        uint256 remaningToDistribute = _totalQuantityBeingClaimed;
-
-        for (uint256 i = 0; i < _tiers.length; i += 1) {
-            string memory tier = _tiers[i];
-
-            (uint256 qtyFulfilled, uint256 qtyUnfulfilled) = _getQuantityFulfilledByTier(tier, remaningToDistribute);
-
-            _mapTokensToTier(tier, startIdToMap, qtyFulfilled);
-
-            totalRemainingInTier[tier] -= qtyFulfilled;
-
-            if (qtyUnfulfilled > 0) {
-                startIdToMap += qtyFulfilled;
-                remaningToDistribute = qtyUnfulfilled;
-            } else {
-                break;
-            }
-        }
-
-        _safeMint(_to, _totalQuantityBeingClaimed);
-    }
-
-    function _mapTokensToTier(
-        string memory _tier,
-        uint256 _startIdToMap,
-        uint256 _quantity
-    ) private {
-        uint256 proxyStartId = nextTokenIdToMapFromTier[_tier];
-        uint256 proxyEndId = proxyStartId + _quantity;
-
-        uint256 endTokenId = _startIdToMap + _quantity;
+        startTokenId = _currentIndex;
+        uint256 endTokenId = startTokenId + _quantityBeingClaimed;
 
         endIdsAtMint.push(endTokenId);
         proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
-    }
 
-    function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
-        private
-        view
-        returns (uint256, uint256)
-    {
-        uint256 total = totalRemainingInTier[_tier];
-
-        if (total > _quantity) {
-            return (total - _quantity, 0);
-        } else {
-            return (total, _quantity - total);
-        }
+        _safeMint(_to, _quantityBeingClaimed);
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
@@ -346,6 +336,11 @@ contract TieredDrop is
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetClaimConditions() internal view override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
@@ -393,6 +388,10 @@ contract TieredDrop is
                 revert("!Transfer-Role");
             }
         }
+    }
+
+    function _dropMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
     }
 
     function _msgSender()
