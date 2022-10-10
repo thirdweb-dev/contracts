@@ -187,7 +187,7 @@ if (testPrivateKey) {
     binance: createTestnetConfig("binance"),
     binance_testnet: createTestnetConfig("binance_testnet"),
     ethw: createTestnetConfig("ethw"),
-    ethw_iceberg_test: createTestnetConfig("ethw_iceberg_testnet"
+    ethw_iceberg_test: createTestnetConfig("ethw_iceberg_testnet")
   };
 }
 
