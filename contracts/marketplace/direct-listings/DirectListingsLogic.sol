@@ -9,15 +9,19 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../extension/PermissionsEnumerable.sol";
+import "../extensions/ReentrancyGuard.sol";
+import "../extensions/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-contract DirectListings is IDirectListings, Context, PermissionsEnumerable, ReentrancyGuard {
+interface IContext {
+    function _msgSender() external view returns (address);
+}
+
+contract DirectListings is IDirectListings, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -38,19 +42,22 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(
+            PermissionsEnumerable(address(this)).hasRoleWithSwitch(LISTER_ROLE, IContext(address(this))._msgSender()),
+            "!LISTER_ROLE"
+        );
         _;
     }
 
     modifier onlyAssetRole(address _asset) {
-        require(hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(PermissionsEnumerable(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-        require(data.listings[_listingId].listingCreator == _msgSender(), "!Creator");
+        require(data.listings[_listingId].listingCreator == IContext(address(this))._msgSender(), "!Creator");
         _;
     }
 
@@ -81,7 +88,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         returns (uint256 listingId)
     {
         listingId = _getNextListingId();
-        address listingCreator = _msgSender();
+        address listingCreator = IContext(address(this))._msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         require(
@@ -120,7 +127,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
     {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        address listingCreator = _msgSender();
+        address listingCreator = IContext(address(this))._msgSender();
         Listing memory listing = data.listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
 
@@ -152,11 +159,10 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
 
     /// @notice Cancel an existing listing of your ERC721 or ERC1155 NFTs.
     function cancelListing(uint256 _listingId) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
-
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         delete data.listings[_listingId];
-        emit CancelledListing(_msgSender(), _listingId);
+        emit CancelledListing(IContext(address(this))._msgSender(), _listingId);
     }
 
     /// @notice Approve or disapprove a buyer for a reserved listing.
@@ -181,10 +187,9 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         uint256 _pricePerTokenInCurrency,
         bool _toApprove
     ) external {
-
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        address listingCreator = _msgSender();
+        address listingCreator = IContext(address(this))._msgSender();
 
         Listing memory listing = data.listings[_listingId];
         require(listing.listingCreator == listingCreator, "Not listing creator.");
@@ -204,11 +209,10 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         uint256 _quantity,
         address _currency
     ) external payable nonReentrant onlyExistingListing(_listingId) {
-        
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         Listing memory listing = data.listings[_listingId];
-        address buyer = _msgSender();
+        address buyer = IContext(address(this))._msgSender();
 
         require(!listing.reserved || data.isBuyerApprovedForListing[_listingId][buyer], "buyer not approved");
         require(_quantity > 0 && _quantity <= listing.quantity, "Buying invalid quantity");
@@ -270,7 +274,6 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
 
     /// @notice Returns all non-cancelled listings.
     function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory allListings) {
-
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         uint256 total = data.totalListings;
@@ -294,7 +297,6 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
 
     /// @dev Returns listings within the specified range, where lister has sufficient balance.
     function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _listings) {
-
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         require(_startId < _endId && _endId <= data.totalListings, "invalid range");
@@ -327,7 +329,6 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
 
     /// @dev Returns the next listing Id.
     function _getNextListingId() internal returns (uint256 id) {
-
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         id = data.totalListings;
@@ -352,7 +353,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
 
         require(
             _validateOwnershipAndApproval(
-                _msgSender(),
+                IContext(address(this))._msgSender(),
                 _params.assetContract,
                 _params.tokenId,
                 _params.quantity,
@@ -433,7 +434,6 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         uint256 platformFeeCut = (_totalPayoutAmount * data.platformFeeBps) / MAX_BPS;
