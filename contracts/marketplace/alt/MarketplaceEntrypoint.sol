@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 // ====== External imports ======
-import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -17,13 +16,18 @@ import "../extensions/PermissionsEnumerable.sol";
 import "../extensions/PlatformFee.sol";
 import "../extensions/ContractMetadata.sol";
 import "../extensions/ReentrancyGuard.sol";
+import "../extensions/ERC2771Context.sol";
 import "../../extension/Multicall.sol";
 
-contract MarketplaceLogic is
+/**
+ *      In Library storage code pattern, each extension needs to be independent. NO DUPLICATED STORAGE, VARS OR FUNCTIONS.
+ */
+
+contract MarketplaceEntrypoint is
     ContractMetadata,
     PlatformFee,
     ReentrancyGuard,
-    Context,
+    ERC2771Context,
     IERC721Receiver,
     IERC1155Receiver
 {
