@@ -89,7 +89,7 @@ contract ERC1155LazyMint is
 
     /// @notice Returns the metadata URI for the given tokenId.
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
-        string memory batchUri = getBaseURI(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 
@@ -121,7 +121,7 @@ contract ERC1155LazyMint is
         require(_tokenId < nextTokenIdToMint(), "invalid id");
         verifyClaim(msg.sender, _tokenId, _quantity); // Add your claim verification logic by overriding this function.
 
-        transferTokensOnClaim(_receiver, _tokenId, _quantity); // Mints tokens. Apply any state updates by overriding this function.
+        _transferTokensOnClaim(_receiver, _tokenId, _quantity); // Mints tokens. Apply any state updates by overriding this function.
         emit TokensClaimed(msg.sender, _receiver, _tokenId, _quantity);
     }
 
@@ -219,7 +219,7 @@ contract ERC1155LazyMint is
      *  @dev             Override this function to add logic for state updation.
      *                   When overriding, apply any state changes before `_mint`.
      */
-    function transferTokensOnClaim(
+    function _transferTokensOnClaim(
         address _receiver,
         uint256 _tokenId,
         uint256 _quantity

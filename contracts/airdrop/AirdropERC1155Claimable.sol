@@ -141,13 +141,13 @@ contract AirdropERC1155Claimable is
 
         verifyClaim(claimer, _quantity, _tokenId, _proofs, _proofMaxQuantityForWallet);
 
-        transferClaimedTokens(_receiver, _quantity, _tokenId);
+        _transferClaimedTokens(_receiver, _quantity, _tokenId);
 
         emit TokensClaimed(_msgSender(), _receiver, _tokenId, _quantity);
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(
+    function _transferClaimedTokens(
         address _to,
         uint256 _quantityBeingClaimed,
         uint256 _tokenId
