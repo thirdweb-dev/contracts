@@ -9,11 +9,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./InitStorage.sol";
 import "./IMap.sol";
 
-import "../extensions/ContractMetadata.sol";
-import "../extensions/PlatformFee.sol";
-import "../extensions/PermissionsEnumerable.sol";
-import "../extensions/ReentrancyGuard.sol";
-import "../extensions/ERC2771Context.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/PlatformFee.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "../extension/ReentrancyGuard.sol";
+import "../extension/ERC2771Context.sol";
 import "../../extension/Multicall.sol";
 
 /**
