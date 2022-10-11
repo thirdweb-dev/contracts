@@ -13,15 +13,13 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
+import "../extension/ERC2771ContextConsumer.sol";
+
 import "../extension/ReentrancyGuard.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-interface IContext {
-    function _msgSender() external view returns (address);
-}
-
-contract DirectListings is IDirectListings, ReentrancyGuard {
+contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -42,10 +40,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(
-            PermissionsEnumerable(address(this)).hasRoleWithSwitch(LISTER_ROLE, IContext(address(this))._msgSender()),
-            "!LISTER_ROLE"
-        );
+        require(PermissionsEnumerable(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
@@ -57,7 +52,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-        require(data.listings[_listingId].listingCreator == IContext(address(this))._msgSender(), "!Creator");
+        require(data.listings[_listingId].listingCreator == _msgSender(), "!Creator");
         _;
     }
 
@@ -88,7 +83,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
         returns (uint256 listingId)
     {
         listingId = _getNextListingId();
-        address listingCreator = IContext(address(this))._msgSender();
+        address listingCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         require(
@@ -127,7 +122,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
     {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        address listingCreator = IContext(address(this))._msgSender();
+        address listingCreator = _msgSender();
         Listing memory listing = data.listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
 
@@ -162,7 +157,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         delete data.listings[_listingId];
-        emit CancelledListing(IContext(address(this))._msgSender(), _listingId);
+        emit CancelledListing(_msgSender(), _listingId);
     }
 
     /// @notice Approve or disapprove a buyer for a reserved listing.
@@ -189,7 +184,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
     ) external {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        address listingCreator = IContext(address(this))._msgSender();
+        address listingCreator = _msgSender();
 
         Listing memory listing = data.listings[_listingId];
         require(listing.listingCreator == listingCreator, "Not listing creator.");
@@ -212,7 +207,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         Listing memory listing = data.listings[_listingId];
-        address buyer = IContext(address(this))._msgSender();
+        address buyer = _msgSender();
 
         require(!listing.reserved || data.isBuyerApprovedForListing[_listingId][buyer], "buyer not approved");
         require(_quantity > 0 && _quantity <= listing.quantity, "Buying invalid quantity");
@@ -353,7 +348,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard {
 
         require(
             _validateOwnershipAndApproval(
-                IContext(address(this))._msgSender(),
+                _msgSender(),
                 _params.assetContract,
                 _params.tokenId,
                 _params.quantity,

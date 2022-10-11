@@ -13,15 +13,13 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
+import "../extension/ERC2771ContextConsumer.sol";
+
 import "../extension/ReentrancyGuard.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-interface IContext {
-    function _msgSender() external view returns (address);
-}
-
-contract Offers is IOffers, ReentrancyGuard {
+contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -46,7 +44,7 @@ contract Offers is IOffers, ReentrancyGuard {
     /// @dev Checks whether caller is a offer creator.
     modifier onlyOfferor(uint256 _offerId) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(data.offers[_offerId].offeror == IContext(address(this))._msgSender(), "!Offeror");
+        require(data.offers[_offerId].offeror == _msgSender(), "!Offeror");
         _;
     }
 
@@ -75,7 +73,7 @@ contract Offers is IOffers, ReentrancyGuard {
         returns (uint256 _offerId)
     {
         _offerId = _getNextOfferId();
-        address _offeror = IContext(address(this))._msgSender();
+        address _offeror = _msgSender();
         TokenType _tokenType = _getTokenType(_params.assetContract);
 
         _validateNewOffer(_params, _tokenType);
@@ -103,7 +101,7 @@ contract Offers is IOffers, ReentrancyGuard {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         delete data.offers[_offerId];
 
-        emit CancelledOffer(IContext(address(this))._msgSender(), _offerId);
+        emit CancelledOffer(_msgSender(), _offerId);
     }
 
     function acceptOffer(uint256 _offerId) external nonReentrant onlyExistingOffer(_offerId) {
@@ -118,7 +116,7 @@ contract Offers is IOffers, ReentrancyGuard {
         );
 
         _validateOwnershipAndApproval(
-            IContext(address(this))._msgSender(),
+            _msgSender(),
             _targetOffer.assetContract,
             _targetOffer.tokenId,
             _targetOffer.quantity,
@@ -127,25 +125,14 @@ contract Offers is IOffers, ReentrancyGuard {
 
         delete data.offers[_offerId];
 
-        _payout(
-            _targetOffer.offeror,
-            IContext(address(this))._msgSender(),
-            _targetOffer.currency,
-            _targetOffer.totalPrice,
-            _targetOffer
-        );
-        _transferOfferTokens(
-            IContext(address(this))._msgSender(),
-            _targetOffer.offeror,
-            _targetOffer.quantity,
-            _targetOffer
-        );
+        _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
+        _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
 
         emit NewSale(
             _targetOffer.offerId,
             _targetOffer.assetContract,
             _targetOffer.offeror,
-            IContext(address(this))._msgSender(),
+            _msgSender(),
             _targetOffer.quantity,
             _targetOffer.totalPrice
         );
@@ -236,10 +223,7 @@ contract Offers is IOffers, ReentrancyGuard {
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "invalid quantity.");
         require(_params.expirationTimestamp > block.timestamp, "invalid expiration.");
 
-        require(
-            _validateERC20BalAndAllowance(IContext(address(this))._msgSender(), _params.currency, _params.totalPrice),
-            "!BAL20"
-        );
+        require(_validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice), "!BAL20");
     }
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.

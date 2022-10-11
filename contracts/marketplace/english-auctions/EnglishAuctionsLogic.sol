@@ -13,15 +13,13 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
+import "../extension/ERC2771ContextConsumer.sol";
+
 import "../extension/ReentrancyGuard.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-interface IContext {
-    function _msgSender() external view returns (address);
-}
-
-contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
+contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -42,10 +40,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(
-            Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, IContext(address(this))._msgSender()),
-            "!LISTER_ROLE"
-        );
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
@@ -58,7 +53,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
     modifier onlyAuctionCreator(uint256 _auctionId) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
 
-        require(data.auctions[_auctionId].auctionCreator == IContext(address(this))._msgSender(), "!Creator");
+        require(data.auctions[_auctionId].auctionCreator == _msgSender(), "!Creator");
         _;
     }
 
@@ -89,7 +84,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
         returns (uint256 auctionId)
     {
         auctionId = _getNextAuctionId();
-        address auctionCreator = IContext(address(this))._msgSender();
+        address auctionCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         _validateNewAuction(_params, tokenType);
@@ -133,11 +128,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
             "inactive auction."
         );
 
-        Bid memory newBid = Bid({
-            auctionId: _auctionId,
-            bidder: IContext(address(this))._msgSender(),
-            bidAmount: _bidAmount
-        });
+        Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
 
         _handleBid(_targetAuction, newBid);
     }
@@ -164,7 +155,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
         Bid memory _winningBid = data.winningBid[_auctionId];
 
         require(_targetAuction.endTimestamp < block.timestamp, "auction still active.");
-        require(IContext(address(this))._msgSender() == _winningBid.bidder, "not bidder");
+        require(_msgSender() == _winningBid.bidder, "not bidder");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
     }
@@ -177,13 +168,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
 
-        emit AuctionClosed(
-            _targetAuction.auctionId,
-            IContext(address(this))._msgSender(),
-            true,
-            _targetAuction.auctionCreator,
-            address(0)
-        );
+        emit AuctionClosed(_targetAuction.auctionId, _msgSender(), true, _targetAuction.auctionCreator, address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -299,7 +284,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
         );
 
         _validateOwnershipAndApproval(
-            IContext(address(this))._msgSender(),
+            _msgSender(),
             _params.assetContract,
             _params.tokenId,
             _params.quantity,
@@ -418,7 +403,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
 
         emit AuctionClosed(
             _targetAuction.auctionId,
-            IContext(address(this))._msgSender(),
+            _msgSender(),
             false,
             _targetAuction.auctionCreator,
             _winningBid.bidder
@@ -440,7 +425,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard {
 
         emit AuctionClosed(
             _targetAuction.auctionId,
-            IContext(address(this))._msgSender(),
+            _msgSender(),
             false,
             _targetAuction.auctionCreator,
             _winningBid.bidder
