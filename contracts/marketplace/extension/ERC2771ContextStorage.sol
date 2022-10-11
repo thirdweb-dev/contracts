@@ -7,7 +7,7 @@ library ERC2771ContextStorage {
     bytes32 public constant ERC2771_CONTEXT_STORAGE_POSITION = keccak256("contract.metadata.storage");
 
     struct Data {
-        mapping(address => bool) private _trustedForwarder;
+        mapping(address => bool) _trustedForwarder;
     }
 
     function erc2771ContextStorage() internal pure returns (Data storage erc2771ContextData) {

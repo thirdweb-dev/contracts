@@ -13,8 +13,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../extensions/ReentrancyGuard.sol";
-import "../extensions/PermissionsEnumerable.sol";
+import "../extension/ReentrancyGuard.sol";
+import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 interface IContext {

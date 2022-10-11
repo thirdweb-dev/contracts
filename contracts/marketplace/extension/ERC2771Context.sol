@@ -26,22 +26,22 @@ abstract contract ERC2771Context {
         return data._trustedForwarder[forwarder];
     }
 
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender() internal view virtual returns (address sender) {
         if (isTrustedForwarder(msg.sender)) {
             // The assembly code is more direct than the Solidity version using `abi.decode`.
             assembly {
                 sender := shr(96, calldataload(sub(calldatasize(), 20)))
             }
         } else {
-            return super._msgSender();
+            return msg.sender;
         }
     }
 
-    function _msgData() internal view virtual override returns (bytes calldata) {
+    function _msgData() internal view virtual returns (bytes calldata) {
         if (isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
         } else {
-            return super._msgData();
+            return msg.data;
         }
     }
 

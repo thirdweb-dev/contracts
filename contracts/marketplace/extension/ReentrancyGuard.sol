@@ -41,6 +41,15 @@ abstract contract ReentrancyGuard {
         data._status = _NOT_ENTERED;
     }
 
+    function __ReentrancyGuard_init() internal {
+        __ReentrancyGuard_init_unchained();
+    }
+
+    function __ReentrancyGuard_init_unchained() internal {
+        ReentrancyGuardStorage.Data storage data = ReentrancyGuardStorage.reentrancyGuardStorage();
+        data._status = _NOT_ENTERED;
+    }
+
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
      * Calling a `nonReentrant` function from another `nonReentrant`
