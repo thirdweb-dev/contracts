@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
-
-import "../../extension/interface/IPlatformFee.sol";
+pragma solidity ^0.8.0;
 
 library PlatformFeeStorage {
     bytes32 public constant PLATFORM_FEE_STORAGE_POSITION = keccak256("platform.fee.storage");

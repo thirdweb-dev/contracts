@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./PlatformFeeStorage.sol";
+import "../../extension/interface/IPlatformFee.sol";
 
 /**
  *  @title   Platform Fee

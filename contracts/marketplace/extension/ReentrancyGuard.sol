@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.1 (security/ReentrancyGuard.sol)
-
 pragma solidity ^0.8.0;
 
 import "./ReentrancyGuardStorage.sol";
@@ -35,11 +34,6 @@ abstract contract ReentrancyGuard {
     // increase the likelihood of the full refund coming into effect.
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
-
-    constructor() {
-        ReentrancyGuardStorage.Data storage data = ReentrancyGuardStorage.reentrancyGuardStorage();
-        data._status = _NOT_ENTERED;
-    }
 
     function __ReentrancyGuard_init() internal {
         __ReentrancyGuard_init_unchained();

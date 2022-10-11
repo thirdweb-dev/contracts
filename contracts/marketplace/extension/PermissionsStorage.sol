@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
-
-import "../../extension/interface/IPermissions.sol";
+pragma solidity ^0.8.0;
 
 library PermissionsStorage {
     bytes32 public constant PERMISSIONS_STORAGE_POSITION = keccak256("permissions.storage");

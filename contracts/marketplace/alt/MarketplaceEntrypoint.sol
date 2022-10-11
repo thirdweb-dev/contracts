@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 // ====== External imports ======
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
@@ -179,5 +179,24 @@ contract MarketplaceEntrypoint is
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    function _msgSender() internal view override(ERC2771Context, Permissions) returns (address sender) {
+        if (isTrustedForwarder(msg.sender)) {
+            // The assembly code is more direct than the Solidity version using `abi.decode`.
+            assembly {
+                sender := shr(96, calldataload(sub(calldatasize(), 20)))
+            }
+        } else {
+            return msg.sender;
+        }
+    }
+
+    function _msgData() internal view override(ERC2771Context, Permissions) returns (bytes calldata) {
+        if (isTrustedForwarder(msg.sender)) {
+            return msg.data[:msg.data.length - 20];
+        } else {
+            return msg.data;
+        }
     }
 }

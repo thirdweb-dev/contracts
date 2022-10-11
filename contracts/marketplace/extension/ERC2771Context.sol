@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.0 (metatx/ERC2771Context.sol)
-
-pragma solidity ^0.8.11;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.0;
 
 import "./ERC2771ContextStorage.sol";
 
@@ -44,6 +42,4 @@ abstract contract ERC2771Context {
             return msg.data;
         }
     }
-
-    uint256[49] private __gap;
 }

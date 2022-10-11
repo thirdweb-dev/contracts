@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./ContractMetadataStorage.sol";
+import "../../extension/interface/IContractMetadata.sol";
 
 /**
  *  @title   Contract Metadata
