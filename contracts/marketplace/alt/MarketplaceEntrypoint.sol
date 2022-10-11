@@ -2,32 +2,42 @@
 pragma solidity ^0.8.11;
 
 // ====== External imports ======
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 //  ==========  Internal imports    ==========
-import "../extensions/PermissionsEnumerable.sol";
-import "../extensions/PlatformFee.sol";
+import "./InitStorage.sol";
+
 import "../extensions/ContractMetadata.sol";
+import "../extensions/PlatformFee.sol";
+import "../extensions/PermissionsEnumerable.sol";
 import "../extensions/ReentrancyGuard.sol";
 import "../extensions/ERC2771Context.sol";
 import "../../extension/Multicall.sol";
 
 /**
- *      In Library storage code pattern, each extension needs to be independent. NO DUPLICATED STORAGE, VARS OR FUNCTIONS.
+ *
+ *      "Inherited by entrypoint" extensions.
+ *      - ContractMetadata
+ *      - PlatformFee
+ *      - PermissionsEnumerable
+ *      - ReentrancyGuard
+ *      - ERC2771Context
+ *      - Multicall
+ *
+ *      "NOT inherited by entrypoint" extensions.
+ *      - DirectListings
+ *      - EnglishAuctions
+ *      - Offers
  */
 
 contract MarketplaceEntrypoint is
     ContractMetadata,
     PlatformFee,
+    PermissionsEnumerable,
     ReentrancyGuard,
     ERC2771Context,
+    Multicall,
     IERC721Receiver,
     IERC1155Receiver
 {
@@ -38,13 +48,34 @@ contract MarketplaceEntrypoint is
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
     uint256 private constant VERSION = 2;
 
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
     constructor() {}
+
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
+        address _defaultAdmin,
+        string memory _contractURI,
+        address[] memory _trustedForwarders,
+        address _platformFeeRecipient,
+        uint16 _platformFeeBps
+    ) external {
+        InitStorage.Data storage data = InitStorage.initStorage();
+
+        require(!data.initialized, "Already initialized.");
+        data.initialized = true;
+
+        // Initialize inherited contracts, most base-like -> most derived.
+        __ReentrancyGuard_init();
+        __ERC2771Context_init(_trustedForwarders);
+
+        // Initialize this contract's state.
+        _setupContractURI(_contractURI);
+        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Generic contract logic
@@ -100,13 +131,17 @@ contract MarketplaceEntrypoint is
         return interfaceId == type(IERC1155Receiver).interfaceId || interfaceId == type(IERC721Receiver).interfaceId;
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Overridable Permissions
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Checks whether platform fee info can be set in the given execution context.
     function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 }
