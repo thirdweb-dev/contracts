@@ -368,7 +368,7 @@ contract OpenPackLargeInputsTest is BaseTest {
             uint256 erc20Amount,
             uint256[] memory erc1155Amounts,
             uint256 erc721Amount
-        ) = checkBalances(rewardsReceived, recipient);
+        ) = checkBalances(rewardsReceived);
 
         assertEq(address(recipient).balance, nativeTokenAmount);
         assertEq(erc20.balanceOf(address(recipient)), erc20Amount);
@@ -435,9 +435,9 @@ contract OpenPackLargeInputsTest is BaseTest {
         }
     }
 
-    function checkBalances(ITokenBundle.Token[] memory rewardUnits, address recipient)
+    function checkBalances(ITokenBundle.Token[] memory rewardUnits)
         internal
-        view
+        pure
         returns (
             uint256 nativeTokenAmount,
             uint256 erc20Amount,

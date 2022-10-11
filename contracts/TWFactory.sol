@@ -75,7 +75,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
 
         emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
 
-        registry.add(_msgSender(), deployedProxy);
+        registry.add(_msgSender(), deployedProxy, block.chainid);
 
         if (_data.length > 0) {
             // slither-disable-next-line unused-return

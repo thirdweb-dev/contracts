@@ -57,12 +57,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
          */
 
         // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
-            _tokenId,
-            _dropMsgSender(),
-            _quantity,
-            _allowlistProof
-        );
+        (bool validMerkleProof, ) = verifyClaimMerkleProof(_tokenId, _dropMsgSender(), _quantity, _allowlistProof);
 
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
@@ -84,7 +79,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            usedAllowlistSpot[activeConditionId].set(merkleProofIndex);
+            usedAllowlistSpot[activeConditionId].set(uint256(uint160(_dropMsgSender())));
         }
 
         // Update contract state.
@@ -93,10 +88,10 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         claimCondition[_tokenId] = condition;
 
         // If there's a price, collect price.
-        collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
+        _collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken);
 
         // Mint the relevant NFTs to claimer.
-        transferTokensOnClaim(_receiver, _tokenId, _quantity);
+        _transferTokensOnClaim(_receiver, _tokenId, _quantity);
 
         emit TokensClaimed(_dropMsgSender(), _receiver, _tokenId, _quantity);
 
@@ -199,7 +194,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
                 revert("not in allowlist");
             }
 
-            if (usedAllowlistSpot[conditionId[_tokenId]].get(merkleProofIndex)) {
+            if (usedAllowlistSpot[conditionId[_tokenId]].get(uint256(uint160(_claimer)))) {
                 revert("proof claimed");
             }
 
@@ -258,7 +253,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     ) internal virtual {}
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -266,7 +261,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
+    function _transferTokensOnClaim(
         address _to,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed

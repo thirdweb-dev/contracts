@@ -347,7 +347,7 @@ contract DropERC721 is
          */
 
         // Verify inclusion in allowlist.
-        (bool validMerkleProof, uint256 merkleProofIndex) = verifyClaimMerkleProof(
+        (bool validMerkleProof, ) = verifyClaimMerkleProof(
             activeConditionId,
             _msgSender(),
             _quantity,
@@ -374,7 +374,7 @@ contract DropERC721 is
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            claimCondition.limitMerkleProofClaim[activeConditionId].set(merkleProofIndex);
+            claimCondition.limitMerkleProofClaim[activeConditionId].set(uint256(uint160(_msgSender())));
         }
 
         // If there's a price, collect price.
@@ -549,7 +549,10 @@ contract DropERC721 is
                 keccak256(abi.encodePacked(_claimer, _proofMaxQuantityPerTransaction))
             );
             require(validMerkleProof, "not in whitelist.");
-            require(!claimCondition.limitMerkleProofClaim[_conditionId].get(merkleProofIndex), "proof claimed.");
+            require(
+                !claimCondition.limitMerkleProofClaim[_conditionId].get(uint256(uint160(_claimer))),
+                "proof claimed."
+            );
             require(
                 _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
                 "invalid quantity proof."

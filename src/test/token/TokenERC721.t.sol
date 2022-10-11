@@ -547,8 +547,8 @@ contract TokenERC721Test is BaseTest {
         vm.prank(deployerSigner);
         tokenContract.setPrimarySaleRecipient(_primarySaleRecipient);
 
-        address recipient = tokenContract.primarySaleRecipient();
-        assertEq(recipient, _primarySaleRecipient);
+        address recipient_ = tokenContract.primarySaleRecipient();
+        assertEq(recipient_, _primarySaleRecipient);
     }
 
     function test_revert_setPrimarySaleRecipient_NotAuthorized() public {
@@ -588,8 +588,8 @@ contract TokenERC721Test is BaseTest {
         vm.prank(deployerSigner);
         tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
 
-        (address recipient, uint16 bps) = tokenContract.getPlatformFeeInfo();
-        assertEq(_platformFeeRecipient, recipient);
+        (address recipient_, uint16 bps) = tokenContract.getPlatformFeeInfo();
+        assertEq(_platformFeeRecipient, recipient_);
         assertEq(_platformFeeBps, bps);
     }
 

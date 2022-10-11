@@ -103,7 +103,7 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
         conditions[0].pricePerToken = 1 ether;
         conditions[0].currency = address(erc20);
 
-        uint256 totalPrice = (conditions[0].pricePerToken * _quantity) / 1 ether;
+        // uint256 totalPrice = (conditions[0].pricePerToken * _quantity) / 1 ether;
 
         vm.prank(signer);
         base.setClaimConditions(conditions[0], false);

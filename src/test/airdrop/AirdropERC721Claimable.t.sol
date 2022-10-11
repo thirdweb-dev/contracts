@@ -182,9 +182,9 @@ contract AirdropERC721ClaimableTest is BaseTest {
 
         uint256 i = 0;
         for (; i < _availableAmount; i++) {
-            address receiver = getActor(uint160(i));
-            vm.prank(receiver);
-            drop.claim(receiver, 1, proofs, 0);
+            address receiver_ = getActor(uint160(i));
+            vm.prank(receiver_);
+            drop.claim(receiver_, 1, proofs, 0);
         }
 
         address receiver = getActor(uint160(i));
