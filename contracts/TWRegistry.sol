@@ -39,7 +39,7 @@ contract TWRegistry is ITWRegistry, Multicall, ERC2771Context, AccessControlEnum
 
         chainIds.add(_chainId);
 
-        if (bytes(metadataUri).length == 0) {
+        if (bytes(metadataUri).length > 0) {
             addressToMetadataUri[_chainId][_deployment] = metadataUri;
         }
 

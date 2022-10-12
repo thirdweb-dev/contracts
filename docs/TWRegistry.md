@@ -47,7 +47,7 @@ function OPERATOR_ROLE() external view returns (bytes32)
 ### add
 
 ```solidity
-function add(address _deployer, address _deployment, uint256 _chainId) external nonpayable
+function add(address _deployer, address _deployment, uint256 _chainId, string metadataUri) external nonpayable
 ```
 
 Add a deployment for a deployer.
@@ -61,6 +61,7 @@ Add a deployment for a deployer.
 | _deployer | address | undefined |
 | _deployment | address | undefined |
 | _chainId | uint256 | undefined |
+| metadataUri | string | undefined |
 
 ### count
 
@@ -105,6 +106,29 @@ Get all deployments for a deployer.
 | Name | Type | Description |
 |---|---|---|
 | allDeployments | ITWRegistry.Deployment[] | undefined |
+
+### getMetadataUri
+
+```solidity
+function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string metadataUri)
+```
+
+Returns the metadata IPFS URI for a deployment on a given chain if previously registered via add().
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _chainId | uint256 | undefined |
+| _deployment | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| metadataUri | string | undefined |
 
 ### getRoleAdmin
 
@@ -338,7 +362,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### Added
 
 ```solidity
-event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId)
+event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri)
 ```
 
 
@@ -352,6 +376,7 @@ event Added(address indexed deployer, address indexed deployment, uint256 indexe
 | deployer `indexed` | address | undefined |
 | deployment `indexed` | address | undefined |
 | chainId `indexed` | uint256 | undefined |
+| metadataUri  | string | undefined |
 
 ### Deleted
 
