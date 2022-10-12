@@ -8,7 +8,7 @@ import "contracts/TWRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
 
 interface ITWRegistryData {
-    event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
+    event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
     event Deleted(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
 }
 
@@ -47,7 +47,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     function test_addFromFactory() public {
         vm.startPrank(factory);
         for (uint256 i = 0; i < total; i += 1) {
-            _registry.add(deployer_, deploymentAddresses[i], chainIds[i]);
+            _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
         }
         vm.stopPrank();
 
@@ -62,7 +62,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         }
 
         vm.prank(factory);
-        _registry.add(deployer_, address(0x43), 111);
+        _registry.add(deployer_, address(0x43), 111, "");
 
         modules = _registry.getAll(deployer_);
         assertEq(modules.length, total + 1);
@@ -72,7 +72,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     function test_addFromSelf() public {
         vm.startPrank(deployer_);
         for (uint256 i = 0; i < total; i += 1) {
-            _registry.add(deployer_, deploymentAddresses[i], chainIds[i]);
+            _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
         }
         vm.stopPrank();
 
@@ -87,7 +87,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         }
 
         vm.prank(factory);
-        _registry.add(deployer_, address(0x43), 111);
+        _registry.add(deployer_, address(0x43), 111, "");
 
         modules = _registry.getAll(deployer_);
         assertEq(modules.length, total + 1);
@@ -96,10 +96,13 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
 
     function test_add_emit_Added() public {
         vm.expectEmit(true, true, true, true);
-        emit Added(deployer_, deploymentAddresses[0], chainIds[0]);
+        emit Added(deployer_, deploymentAddresses[0], chainIds[0], "uri");
 
         vm.prank(factory);
-        _registry.add(deployer_, deploymentAddresses[0], chainIds[0]);
+        _registry.add(deployer_, deploymentAddresses[0], chainIds[0], "uri");
+
+        string memory uri = _registry.getMetadataUri(chainIds[0], deploymentAddresses[0]);
+        assertEq(uri, "uri");
     }
 
     // Test `remove`
@@ -107,7 +110,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     function setUp_remove() public {
         vm.startPrank(factory);
         for (uint256 i = 0; i < total; i += 1) {
-            _registry.add(deployer_, deploymentAddresses[i], chainIds[i]);
+            _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
         }
         vm.stopPrank();
     }

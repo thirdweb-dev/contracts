@@ -16,6 +16,8 @@ contract TWRegistry is ITWRegistry, Multicall, ERC2771Context, AccessControlEnum
 
     /// @dev wallet address => [contract addresses]
     mapping(address => mapping(uint256 => EnumerableSet.AddressSet)) private deployments;
+    /// @dev contract address deployed => imported metadata uri
+    mapping(uint256 => mapping(address => string)) private addressToMetadataUri;
 
     EnumerableSet.UintSet private chainIds;
 
@@ -27,7 +29,8 @@ contract TWRegistry is ITWRegistry, Multicall, ERC2771Context, AccessControlEnum
     function add(
         address _deployer,
         address _deployment,
-        uint256 _chainId
+        uint256 _chainId,
+        string memory metadataUri
     ) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
@@ -36,7 +39,11 @@ contract TWRegistry is ITWRegistry, Multicall, ERC2771Context, AccessControlEnum
 
         chainIds.add(_chainId);
 
-        emit Added(_deployer, _deployment, _chainId);
+        if (bytes(metadataUri).length == 0) {
+            addressToMetadataUri[_chainId][_deployment] = metadataUri;
+        }
+
+        emit Added(_deployer, _deployment, _chainId, metadataUri);
     }
 
     // slither-disable-next-line similar-names
@@ -87,6 +94,10 @@ contract TWRegistry is ITWRegistry, Multicall, ERC2771Context, AccessControlEnum
 
             deploymentCount += deployments[_deployer][chainId].length();
         }
+    }
+
+    function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string memory metadataUri) {
+        metadataUri = addressToMetadataUri[_chainId][_deployment];
     }
 
     function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {

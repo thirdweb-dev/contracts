@@ -7,14 +7,15 @@ interface ITWRegistry {
         uint256 chainId;
     }
 
-    event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId);
+    event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri);
     event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId);
 
     /// @notice Add a deployment for a deployer.
     function add(
         address _deployer,
         address _deployment,
-        uint256 _chainId
+        uint256 _chainId,
+        string memory metadataUri
     ) external;
 
     /// @notice Remove a deployment for a deployer.
@@ -29,4 +30,7 @@ interface ITWRegistry {
 
     /// @notice Get the total number of deployments for a deployer.
     function count(address _deployer) external view returns (uint256 deploymentCount);
+
+    /// @notice Returns the metadata IPFS URI for a deployment on a given chain if previously registered via add().
+    function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string memory metadataUri);
 }
