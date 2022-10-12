@@ -77,6 +77,8 @@ interface IDirectListings {
         address _currency
     ) external payable;
 
+    function totalListings() external view returns (uint256);
+
     function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory listings);
 
     function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory listings);
