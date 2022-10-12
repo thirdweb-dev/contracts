@@ -171,7 +171,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
     }
 
     /// @notice Approve or disapprove a buyer for a reserved listing.
-    function approveBuyerForLisitng(
+    function approveBuyerForListing(
         uint256 _listingId,
         address _buyer,
         bool _toApprove
@@ -184,7 +184,7 @@ contract DirectListings is IDirectListings, Context, PermissionsEnumerable, Reen
     }
 
     /// @notice Approve a currency and its associated price per token, for a listing.
-    function approveCurrencyForLisitng(
+    function approveCurrencyForListing(
         uint256 _listingId,
         address _currency,
         uint256 _pricePerTokenInCurrency,

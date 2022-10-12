@@ -57,13 +57,13 @@ interface IDirectListings {
 
     function cancelListing(uint256 _listingId) external;
 
-    function approveBuyerForLisitng(
+    function approveBuyerForListing(
         uint256 _listingId,
         address _buyer,
         bool _toApprove
     ) external;
 
-    function approveCurrencyForLisitng(
+    function approveCurrencyForListing(
         uint256 _listingId,
         address _currency,
         uint256 _pricePerTokenInCurrency,
