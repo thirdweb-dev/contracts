@@ -194,6 +194,11 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
             );
     }
 
+    function totalAuctions() external view returns (uint256) {
+        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        return data.totalAuctions;
+    }
+
     function getAuction(uint256 _auctionId)
         external
         view
