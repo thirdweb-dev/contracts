@@ -29,9 +29,6 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 public constant MAX_BPS = 10_000;
 
-    /// @dev The address of the native token wrapper contract.
-    address private immutable nativeTokenWrapper;
-
     /*///////////////////////////////////////////////////////////////
                               Modifiers
     //////////////////////////////////////////////////////////////*/
@@ -59,9 +56,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
                             Constructor logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper) {
-        nativeTokenWrapper = _nativeTokenWrapper;
-    }
+    constructor() {}
 
     /*///////////////////////////////////////////////////////////////
                             External functions
