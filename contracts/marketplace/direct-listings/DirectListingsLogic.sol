@@ -15,6 +15,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 import "../extension/ERC2771ContextConsumer.sol";
 
+import "../../extension/interface/IPlatformFee.sol";
+
 import "../extension/ReentrancyGuard.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
@@ -267,6 +269,12 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                             View functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Returns the total number of listings ever created in the Marketplace.
+    function totalListings() external view returns (uint256) {
+        DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
+        return data.totalListings;
+    }
+
     /// @notice Returns all non-cancelled listings.
     function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory allListings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
@@ -429,9 +437,8 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-
-        uint256 platformFeeCut = (_totalPayoutAmount * data.platformFeeBps) / MAX_BPS;
+        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;
         address royaltyRecipient;
@@ -454,7 +461,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
-            data.platformFeeRecipient,
+            platformFeeRecipient,
             platformFeeCut,
             _nativeTokenWrapper
         );

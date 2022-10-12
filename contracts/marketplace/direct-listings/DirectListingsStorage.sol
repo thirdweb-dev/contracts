@@ -8,8 +8,6 @@ library DirectListingsStorage {
 
     struct Data {
         uint256 totalListings;
-        address platformFeeRecipient;
-        uint16 platformFeeBps;
         mapping(uint256 => IDirectListings.Listing) listings;
         mapping(uint256 => mapping(address => bool)) isBuyerApprovedForListing;
         mapping(uint256 => mapping(address => bool)) isCurrencyApprovedForListing;
