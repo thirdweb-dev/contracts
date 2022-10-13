@@ -1,4 +1,4 @@
-# TWFactory
+# TWMultichainRegistry
 
 
 
@@ -27,15 +27,15 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### FACTORY_ROLE
+### OPERATOR_ROLE
 
 ```solidity
-function FACTORY_ROLE() external view returns (bytes32)
+function OPERATOR_ROLE() external view returns (bytes32)
 ```
 
 
 
-*Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.*
+
 
 
 #### Returns
@@ -44,220 +44,91 @@ function FACTORY_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### addImplementation
+### add
 
 ```solidity
-function addImplementation(address _implementation) external nonpayable
+function add(address _deployer, address _deployment, uint256 _chainId, string metadataUri) external nonpayable
 ```
 
+Add a deployment for a deployer.
 
 
-*Lets a contract admin set the address of a contract type x version.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _implementation | address | undefined |
+| _deployer | address | undefined |
+| _deployment | address | undefined |
+| _chainId | uint256 | undefined |
+| metadataUri | string | undefined |
 
-### approval
+### count
 
 ```solidity
-function approval(address) external view returns (bool)
+function count(address _deployer) external view returns (uint256 deploymentCount)
 ```
 
+Get the total number of deployments for a deployer.
 
 
-*mapping of implementation address to deployment approval*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| _deployer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined |
+| deploymentCount | uint256 | undefined |
 
-### approveImplementation
+### getAll
 
 ```solidity
-function approveImplementation(address _implementation, bool _toApprove) external nonpayable
+function getAll(address _deployer) external view returns (struct ITWMultichainRegistry.Deployment[] allDeployments)
 ```
 
+Get all deployments for a deployer.
 
 
-*Lets a contract admin approve a specific contract for deployment.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _implementation | address | undefined |
-| _toApprove | bool | undefined |
-
-### currentVersion
-
-```solidity
-function currentVersion(bytes32) external view returns (uint256)
-```
-
-
-
-*mapping of implementation address to implementation added version*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
+| _deployer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| allDeployments | ITWMultichainRegistry.Deployment[] | undefined |
 
-### deployProxy
+### getMetadataUri
 
 ```solidity
-function deployProxy(bytes32 _type, bytes _data) external nonpayable returns (address)
+function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string metadataUri)
 ```
 
+Returns the metadata IPFS URI for a deployment on a given chain if previously registered via add().
 
 
-*Deploys a proxy that points to the latest version of the given contract type.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _type | bytes32 | undefined |
-| _data | bytes | undefined |
+| _chainId | uint256 | undefined |
+| _deployment | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
-
-### deployProxyByImplementation
-
-```solidity
-function deployProxyByImplementation(address _implementation, bytes _data, bytes32 _salt) external nonpayable returns (address deployedProxy)
-```
-
-
-
-*Deploys a proxy that points to the given implementation.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _implementation | address | undefined |
-| _data | bytes | undefined |
-| _salt | bytes32 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| deployedProxy | address | undefined |
-
-### deployProxyDeterministic
-
-```solidity
-function deployProxyDeterministic(bytes32 _type, bytes _data, bytes32 _salt) external nonpayable returns (address)
-```
-
-
-
-*Deploys a proxy at a deterministic address by taking in `salt` as a parameter.       Proxy points to the latest version of the given contract type.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
-| _data | bytes | undefined |
-| _salt | bytes32 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### deployer
-
-```solidity
-function deployer(address) external view returns (address)
-```
-
-
-
-*mapping of proxy address to deployer address*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### getImplementation
-
-```solidity
-function getImplementation(bytes32 _type, uint256 _version) external view returns (address)
-```
-
-
-
-*Returns the implementation given a contract type and version.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
-| _version | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### getLatestImplementation
-
-```solidity
-function getLatestImplementation(bytes32 _type) external view returns (address)
-```
-
-
-
-*Returns the latest implementation given a contract type.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| metadataUri | string | undefined |
 
 ### getRoleAdmin
 
@@ -366,29 +237,6 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined |
 
-### implementation
-
-```solidity
-function implementation(bytes32, uint256) external view returns (address)
-```
-
-
-
-*mapping of contract type to module version to implementation address*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-| _1 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### isTrustedForwarder
 
 ```solidity
@@ -433,22 +281,23 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 |---|---|---|
 | results | bytes[] | undefined |
 
-### registry
+### remove
 
 ```solidity
-function registry() external view returns (contract TWMultichainRegistry)
+function remove(address _deployer, address _deployment, uint256 _chainId) external nonpayable
 ```
 
+Remove a deployment for a deployer.
 
 
 
-
-
-#### Returns
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract TWMultichainRegistry | undefined |
+| _deployer | address | undefined |
+| _deployment | address | undefined |
+| _chainId | uint256 | undefined |
 
 ### renounceRole
 
@@ -510,10 +359,10 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 ## Events
 
-### ImplementationAdded
+### Added
 
 ```solidity
-event ImplementationAdded(address implementation, bytes32 indexed contractType, uint256 version)
+event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri)
 ```
 
 
@@ -524,44 +373,28 @@ event ImplementationAdded(address implementation, bytes32 indexed contractType, 
 
 | Name | Type | Description |
 |---|---|---|
-| implementation  | address | undefined |
-| contractType `indexed` | bytes32 | undefined |
-| version  | uint256 | undefined |
-
-### ImplementationApproved
-
-```solidity
-event ImplementationApproved(address implementation, bool isApproved)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| implementation  | address | undefined |
-| isApproved  | bool | undefined |
-
-### ProxyDeployed
-
-```solidity
-event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer)
-```
-
-
-
-*Emitted when a proxy is deployed.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| implementation `indexed` | address | undefined |
-| proxy  | address | undefined |
 | deployer `indexed` | address | undefined |
+| deployment `indexed` | address | undefined |
+| chainId `indexed` | uint256 | undefined |
+| metadataUri  | string | undefined |
+
+### Deleted
+
+```solidity
+event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| deployer `indexed` | address | undefined |
+| deployment `indexed` | address | undefined |
+| chainId `indexed` | uint256 | undefined |
 
 ### RoleAdminChanged
 

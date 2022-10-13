@@ -1,4 +1,4 @@
-# ITWRegistry
+# ITWMultichainRegistry
 
 
 
@@ -54,7 +54,7 @@ Get the total number of deployments for a deployer.
 ### getAll
 
 ```solidity
-function getAll(address _deployer) external view returns (struct ITWRegistry.Deployment[] allDeployments)
+function getAll(address _deployer) external view returns (struct ITWMultichainRegistry.Deployment[] allDeployments)
 ```
 
 Get all deployments for a deployer.
@@ -71,7 +71,7 @@ Get all deployments for a deployer.
 
 | Name | Type | Description |
 |---|---|---|
-| allDeployments | ITWRegistry.Deployment[] | undefined |
+| allDeployments | ITWMultichainRegistry.Deployment[] | undefined |
 
 ### getMetadataUri
 
