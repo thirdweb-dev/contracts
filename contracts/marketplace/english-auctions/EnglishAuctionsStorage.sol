@@ -7,8 +7,6 @@ library EnglishAuctionsStorage {
     bytes32 public constant ENGLISH_AUCTIONS_STORAGE_POSITION = keccak256("english.auctions.storage");
 
     struct Data {
-        address platformFeeRecipient;
-        uint64 platformFeeBps;
         uint256 totalAuctions;
         mapping(uint256 => IEnglishAuctions.Auction) auctions;
         mapping(uint256 => IEnglishAuctions.Bid) winningBid;

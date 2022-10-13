@@ -7,8 +7,6 @@ library OffersStorage {
     bytes32 public constant OFFERS_STORAGE_POSITION = keccak256("offers.storage");
 
     struct Data {
-        address platformFeeRecipient;
-        uint16 platformFeeBps;
         uint256 totalOffers;
         mapping(uint256 => IOffers.Offer) offers;
     }

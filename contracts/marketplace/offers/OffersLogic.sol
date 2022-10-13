@@ -15,6 +15,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 import "../extension/ERC2771ContextConsumer.sol";
 
+import "../../extension/interface/IPlatformFee.sol";
+
 import "../extension/ReentrancyGuard.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
@@ -286,8 +288,8 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         uint256 _totalPayoutAmount,
         Offer memory _offer
     ) internal {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        uint256 platformFeeCut = (_totalPayoutAmount * data.platformFeeBps) / MAX_BPS;
+        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;
         address royaltyRecipient;
@@ -304,7 +306,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
             }
         } catch {}
 
-        CurrencyTransferLib.safeTransferERC20(_currencyToUse, _payer, data.platformFeeRecipient, platformFeeCut);
+        CurrencyTransferLib.safeTransferERC20(_currencyToUse, _payer, platformFeeRecipient, platformFeeCut);
         CurrencyTransferLib.safeTransferERC20(_currencyToUse, _payer, royaltyRecipient, royaltyCut);
         CurrencyTransferLib.safeTransferERC20(
             _currencyToUse,
