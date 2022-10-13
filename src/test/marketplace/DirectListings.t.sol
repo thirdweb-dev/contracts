@@ -802,9 +802,59 @@ contract MarketplaceDirectListingsTest is BaseTest {
                             Cancel listing
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_cancelListing() public {}
+    function _setup_cancelListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
+        (listingId, ) = _setup_updateListing();
+        listing = DirectListings(marketplace).getListing(listingId);
+    }
 
-    function test_revert_cancelListing_notListingCreator() public {}
+    function test_state_cancelListing() public {
+        (uint256 listingId, IDirectListings.Listing memory existingListingAtId) = _setup_cancelListing();
+
+        // Verify existing listing at `listingId`
+        assertEq(existingListingAtId.assetContract, address(erc721));
+
+        vm.prank(seller);
+        DirectListings(marketplace).cancelListing(listingId);
+
+        IDirectListings.Listing memory listing = DirectListings(marketplace).getListing(listingId);
+
+        // Verify listing at `listingId` is empty
+        assertEq(listing.listingId, 0);
+        assertEq(listing.listingCreator, address(0));
+        assertEq(listing.assetContract, address(0));
+        assertEq(listing.tokenId, 0);
+        assertEq(listing.quantity, 0);
+        assertEq(listing.currency, address(0));
+        assertEq(listing.pricePerToken, 0);
+        assertEq(listing.startTimestamp, 0);
+        assertEq(listing.endTimestamp, 0);
+        assertEq(listing.reserved, false);
+        assertEq(uint256(listing.tokenType), 0);
+    }
+
+    function test_revert_cancelListing_notListingCreator() public {
+        (uint256 listingId, IDirectListings.Listing memory existingListingAtId) = _setup_cancelListing();
+
+        // Verify existing listing at `listingId`
+        assertEq(existingListingAtId.assetContract, address(erc721));
+
+        address notSeller = getActor(1000);
+        vm.prank(notSeller);
+        vm.expectRevert("!Creator");
+        DirectListings(marketplace).cancelListing(listingId);
+    }
+
+    function test_revert_cancelListing_nonExistentListing() public {
+        _setup_cancelListing();
+
+        // Verify no listing exists at `nexListingId`
+        uint256 nextListingId = DirectListings(marketplace).totalListings();
+        assertEq(DirectListings(marketplace).getListing(nextListingId).assetContract, address(0));
+
+        vm.prank(seller);
+        vm.expectRevert(bytes("DNE"));
+        DirectListings(marketplace).cancelListing(nextListingId);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Approve buyer for listing
