@@ -183,14 +183,10 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         address _currency,
         uint256 _pricePerTokenInCurrency,
         bool _toApprove
-    ) external {
+    ) external onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        address listingCreator = _msgSender();
-
         Listing memory listing = data.listings[_listingId];
-        require(listing.listingCreator == listingCreator, "Not listing creator.");
-
         require(_currency != listing.currency, "Re-approving main listing currency.");
 
         data.isCurrencyApprovedForListing[_listingId][_currency] = _toApprove;
