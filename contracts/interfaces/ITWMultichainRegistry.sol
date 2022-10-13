@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-interface ITWRegistry {
+interface ITWMultichainRegistry {
     struct Deployment {
         address deploymentAddress;
         uint256 chainId;

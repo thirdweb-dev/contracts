@@ -3,18 +3,18 @@ pragma solidity ^0.8.11;
 
 // Test imports
 import "./utils/BaseTest.sol";
-import "contracts/interfaces/ITWRegistry.sol";
-import "contracts/TWRegistry.sol";
+import "contracts/interfaces/ITWMultichainRegistry.sol";
+import "contracts/TWMultichainRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
 
-interface ITWRegistryData {
+interface ITWMultichainRegistryData {
     event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
     event Deleted(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
 }
 
-contract TWRegistryTest is ITWRegistryData, BaseTest {
+contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     // Target contract
-    TWRegistry internal _registry;
+    TWMultichainRegistry internal _registry;
 
     // Test params
     uint256[] internal chainIds;
@@ -37,7 +37,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
             deploymentAddresses.push(depl);
         }
 
-        _registry = TWRegistry(registry);
+        _registry = TWMultichainRegistry(registry);
     }
 
     //  =====   Functionality tests   =====
@@ -51,7 +51,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         }
         vm.stopPrank();
 
-        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
 
         assertEq(modules.length, total);
         assertEq(_registry.count(deployer_), total);
@@ -76,7 +76,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         }
         vm.stopPrank();
 
-        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
 
         assertEq(modules.length, total);
         assertEq(_registry.count(deployer_), total);
@@ -121,7 +121,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         vm.prank(factory);
         _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
         assertEq(modules.length, total - 1);
 
         for (uint256 i = 0; i < total - 1; i += 1) {
@@ -135,7 +135,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
         vm.prank(factory);
         _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
         assertEq(modules.length, total - 1);
     }
 
@@ -153,7 +153,7 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     function test_remove_revert_noModulesToRemove() public {
         setUp_remove();
         address actor = getActor(1);
-        ITWRegistry.Deployment[] memory modules = _registry.getAll(actor);
+        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(actor);
         assertEq(modules.length, 0);
 
         vm.expectRevert("failed to remove");
