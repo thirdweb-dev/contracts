@@ -89,7 +89,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.label(address(erc1155), "ERC1155_Token");
     }
 
-    function setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
         erc721.mint(_seller, _numOfTokens);
     }
 
@@ -114,7 +114,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -176,7 +176,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Don't mint to 'token to be listed' to the seller.
         address someWallet = getActor(1000);
-        setupERC721BalanceForSeller(someWallet, 1);
+        _setupERC721BalanceForSeller(someWallet, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -216,7 +216,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -255,7 +255,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -294,7 +294,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -336,7 +336,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -375,7 +375,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -446,7 +446,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -493,7 +493,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         bool reserved = true;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
-        setupERC721BalanceForSeller(seller, 1);
+        _setupERC721BalanceForSeller(seller, 1);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -532,17 +532,271 @@ contract MarketplaceDirectListingsTest is BaseTest {
                             Update listing
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_updateListing() public {}
+    function _setup_updateListing()
+        private
+        returns (uint256 listingId, IDirectListings.ListingParameters memory listingParams)
+    {
+        // Sample listing parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = true;
 
-    function test_revert_updateListing_notListingCreator() public {}
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
 
-    function test_revert_updateListing_notOwnerOfListedToken() public {}
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-    function test_revert_updateListing_notApprovedMarketplaceToTransferToken() public {}
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
 
-    function test_revert_updateListing_listingZeroQuantity() public {}
+        // List tokens.
+        listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
 
-    function test_revert_updateListing_noAssetRoleWhenRestrictionsActive() public {}
+        vm.prank(seller);
+        listingId = DirectListings(marketplace).createListing(listingParams);
+    }
+
+    function test_state_updateListing() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+
+        vm.prank(seller);
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+
+        // Test consequent state of the contract.
+
+        // Seller is still owner of token.
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Total listings not incremented on update.
+        assertEq(DirectListings(marketplace).totalListings(), 1);
+
+        // Fetch listing and verify state.
+        IDirectListings.Listing memory listing = DirectListings(marketplace).getListing(listingId);
+
+        assertEq(listing.listingId, listingId);
+        assertEq(listing.listingCreator, seller);
+        assertEq(listing.assetContract, listingParamsToUpdate.assetContract);
+        assertEq(listing.tokenId, 1);
+        assertEq(listing.quantity, listingParamsToUpdate.quantity);
+        assertEq(listing.currency, listingParamsToUpdate.currency);
+        assertEq(listing.pricePerToken, listingParamsToUpdate.pricePerToken);
+        assertEq(listing.startTimestamp, listingParamsToUpdate.startTimestamp);
+        assertEq(listing.endTimestamp, listingParamsToUpdate.endTimestamp);
+        assertEq(listing.reserved, listingParamsToUpdate.reserved);
+        assertEq(uint256(listing.tokenType), uint256(IDirectListings.TokenType.ERC721));
+    }
+
+    function test_revert_updateListing_notListingCreator() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+
+        address notSeller = getActor(1000); // Someone other than the seller calls update.
+        vm.prank(notSeller);
+        vm.expectRevert("!Creator");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_notOwnerOfListedToken() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens but NOT to seller. A new tokenId will be listed.
+        address notSeller = getActor(1000);
+        _setupERC721BalanceForSeller(notSeller, 1);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(notSeller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 1;
+        assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+
+        vm.prank(seller);
+        vm.expectRevert("!BALNFT");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_notApprovedMarketplaceToTransferToken() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Don't approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, false);
+
+        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+
+        vm.prank(seller);
+        vm.expectRevert("!BALNFT");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_listingZeroQuantity() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+        listingParamsToUpdate.quantity = 0; // Listing zero quantity
+
+        vm.prank(seller);
+        vm.expectRevert("Listing zero quantity.");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_listingInvalidQuantity() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+        listingParamsToUpdate.quantity = 2; // Listing more than `1` of the ERC721 token
+
+        vm.prank(seller);
+        vm.expectRevert("Listing invalid quantity.");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_listingNonERC721OrERC1155Token() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.assetContract = address(erc20); // Listing non ERC721 / ERC1155 token.
+
+        // Grant ERC20 token asset role.
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
+
+        vm.prank(seller);
+        vm.expectRevert("token must be ERC1155 or ERC721.");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_invalidStartTimestamp() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        uint128 currentStartTimestamp = listingParamsToUpdate.startTimestamp;
+        listingParamsToUpdate.startTimestamp = currentStartTimestamp - 1; // Retroactively decreasing startTimestamp.
+
+        vm.prank(seller);
+        vm.expectRevert("invalid timestamps.");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_invalidEndTimestamp() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        uint128 currentStartTimestamp = listingParamsToUpdate.startTimestamp;
+        listingParamsToUpdate.endTimestamp = currentStartTimestamp - 1; // End timestamp less than startTimestamp
+
+        vm.prank(seller);
+        vm.expectRevert("invalid timestamps.");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
+
+    function test_revert_updateListing_noAssetRoleWhenRestrictionsActive() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Revoke ASSET_ROLE from token to list.
+        vm.startPrank(marketplaceDeployer);
+        assertEq(Permissions(marketplace).hasRole(keccak256("ASSET_ROLE"), address(0)), false);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(erc721));
+        assertEq(Permissions(marketplace).hasRole(keccak256("ASSET_ROLE"), address(erc721)), false);
+
+        vm.stopPrank();
+
+        vm.prank(seller);
+        vm.expectRevert("!ASSET_ROLE");
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+    }
 
     /*///////////////////////////////////////////////////////////////
                             Cancel listing
