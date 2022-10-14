@@ -133,7 +133,7 @@ contract TieredDrop is
     }
 
     function contractType() external pure returns (bytes32) {
-        return bytes32("SignatureDrop");
+        return bytes32("TieredDrop");
     }
 
     function contractVersion() external pure returns (uint8) {
