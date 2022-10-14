@@ -860,9 +860,52 @@ contract MarketplaceDirectListingsTest is BaseTest {
                         Approve buyer for listing
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_approveBuyerForListing() public {}
+    function _setup_approveBuyerForListing() private returns (uint256 listingId) {
+        (listingId, ) = _setup_updateListing();
+    }
 
-    function test_revert_approveBuyerForListing_notListingCreator() public {}
+    function test_state_approveBuyerForListing() public {
+        uint256 listingId = _setup_approveBuyerForListing();
+        bool toApprove = true;
+
+        assertEq(DirectListings(marketplace).getListing(listingId).reserved, true);
+
+        // Seller approves buyer for reserved listing.
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+    }
+
+    function test_revert_approveBuyerForListing_notListingCreator() public {
+        uint256 listingId = _setup_approveBuyerForListing();
+        bool toApprove = true;
+
+        assertEq(DirectListings(marketplace).getListing(listingId).reserved, true);
+
+        // Someone other than the seller approves buyer for reserved listing.
+        address notSeller = getActor(1000);
+        vm.prank(notSeller);
+        vm.expectRevert("!Creator");
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+    }
+
+    function test_revert_approveBuyerForListing_listingNotReserved() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+        bool toApprove = true;
+
+        assertEq(DirectListings(marketplace).getListing(listingId).reserved, true);
+
+        listingParamsToUpdate.reserved = false;
+
+        vm.prank(seller);
+        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+
+        assertEq(DirectListings(marketplace).getListing(listingId).reserved, false);
+
+        // Seller approves buyer for reserved listing.
+        vm.prank(seller);
+        vm.expectRevert("not reserved listing");
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Approve currency for listing
