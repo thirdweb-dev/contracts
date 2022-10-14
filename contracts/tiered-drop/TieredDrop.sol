@@ -107,13 +107,17 @@ contract TieredDrop is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        (uint256 batchId, ) = getBatchId(_tokenId);
-        string memory batchUri = getBaseURI(_tokenId);
+        // Retrieve metadata ID for token.
+        uint256 metadataId = _getMetadataId(_tokenId);
+
+        // Use metadata ID to return token metadata.
+        (uint256 batchId, ) = getBatchId(metadataId);
+        string memory batchUri = getBaseURI(metadataId);
 
         if (isEncryptedBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
         } else {
-            return string(abi.encodePacked(batchUri, _tokenId.toString()));
+            return string(abi.encodePacked(batchUri, metadataId.toString()));
         }
     }
 
@@ -324,6 +328,24 @@ contract TieredDrop is
         } else {
             return (total, _quantity - total);
         }
+    }
+
+    function _getMetadataId(uint256 _tokenId) private view returns (uint256) {
+        uint256[] memory endIds = endIdsAtMint;
+        uint256 len = endIds.length;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            if (_tokenId < endIds[i]) {
+                uint256 targetEndId = endIds[i];
+                uint256 diff = targetEndId - _tokenId;
+
+                TokenRange memory range = proxyTokenRange[targetEndId];
+
+                return range.startIdInclusive + diff;
+            }
+        }
+
+        revert("Metadata ID not found for token.");
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
