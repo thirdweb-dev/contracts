@@ -981,19 +981,368 @@ contract MarketplaceDirectListingsTest is BaseTest {
                         Buy from listing
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_buyFromListing() public {}
+    function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
+        (listingId, ) = _setup_updateListing();
+        listing = DirectListings(marketplace).getListing(listingId);
+    }
 
-    function test_revert_buyFromListing_buyerBalanceLessThanPrice() public {}
+    function test_state_buyFromListing() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
 
-    function test_revert_buyFromListing_notApprovedMarketplaceToTransferPrice() public {}
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
 
-    function test_revert_buyFromListing_buyingZeroQuantity() public {}
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
 
-    function test_revert_buyFromListing_buyingMoreQuantityThanListed() public {}
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
 
-    function test_revert_buyFromListing_payingWithUnapprovedCurrency() public {}
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
 
-    function test_revert_buyFromListing_payingIncorrectPrice() public {}
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+
+        // Verify that buyer is owner of listed tokens, post-sale.
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Verify seller is paid total price.
+        assertBalERC20Eq(address(erc20), buyer, 0);
+        assertBalERC20Eq(address(erc20), seller, totalPrice);
+
+        if (quantityToBuy == listing.quantity) {
+            // Verify listing data is deleted if listing tokens are all bought.
+            IDirectListings.Listing memory listingPostSale = DirectListings(marketplace).getListing(listingId);
+            assertEq(listingPostSale.assetContract, address(0));
+        }
+    }
+
+    function test_state_buyFromListing_nativeToken() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = NATIVE_TOKEN;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Approve NATIVE_TOKEN for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken, true);
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Deal requisite total price to buyer.
+        vm.deal(buyer, totalPrice);
+        uint256 buyerBalBefore = buyer.balance;
+        uint256 sellerBalBefore = seller.balance;
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        DirectListings(marketplace).buyFromListing{ value: totalPrice }(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
+
+        // Verify that buyer is owner of listed tokens, post-sale.
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Verify seller is paid total price.
+        assertEq(buyer.balance, buyerBalBefore - totalPrice);
+        assertEq(seller.balance, sellerBalBefore + totalPrice);
+
+        if (quantityToBuy == listing.quantity) {
+            // Verify listing data is deleted if listing tokens are all bought.
+            IDirectListings.Listing memory listingPostSale = DirectListings(marketplace).getListing(listingId);
+            assertEq(listingPostSale.assetContract, address(0));
+        }
+    }
+
+    function test_revert_buyFromListing_nativeToken_incorrectValueSent() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = NATIVE_TOKEN;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Approve NATIVE_TOKEN for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken, true);
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Deal requisite total price to buyer.
+        vm.deal(buyer, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("msg.value != price");
+        DirectListings(marketplace).buyFromListing{ value: totalPrice - 1 }( // sending insufficient value
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
+    }
+
+    function test_revert_buyFromListing_unexpectedTotalPrice() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = NATIVE_TOKEN;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Approve NATIVE_TOKEN for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken, true);
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Deal requisite total price to buyer.
+        vm.deal(buyer, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("Unexpected total price");
+        DirectListings(marketplace).buyFromListing{ value: totalPrice }(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice + 1 // Pass unexpected total price
+        );
+    }
+
+    function test_revert_buyFromListing_invalidCurrency() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+
+        assertEq(listing.currency, address(erc20));
+        assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), false);
+
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("Paying in invalid currency.");
+        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, NATIVE_TOKEN, totalPrice);
+    }
+
+    function test_revert_buyFromListing_buyerBalanceLessThanPrice() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice - 1); // Buyer balance less than total price
+        assertBalERC20Eq(address(erc20), buyer, totalPrice - 1);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("!BAL20");
+        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+    }
+
+    function test_revert_buyFromListing_notApprovedMarketplaceToTransferPrice() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Don't approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.approve(marketplace, 0);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("!BAL20");
+        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+    }
+
+    function test_revert_buyFromListing_buyingZeroQuantity() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = 0; // Buying zero quantity
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Don't approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("Buying invalid quantity");
+        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+    }
+
+    function test_revert_buyFromListing_buyingMoreQuantityThanListed() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity + 1; // Buying more than listed.
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Don't approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        vm.expectRevert("Buying invalid quantity");
+        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+    }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
