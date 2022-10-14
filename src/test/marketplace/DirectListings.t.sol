@@ -1348,11 +1348,41 @@ contract MarketplaceDirectListingsTest is BaseTest {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_totalListings() public {}
+    function _createListing(address _seller) private returns (uint256 listingId) {
+        // Sample listing parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = true;
 
-    function test_state_getAllListings() public {}
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(_seller, 1);
 
-    function test_state_getAllValidListings() public {}
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), _seller, tokenIds);
 
-    function test_state_getListing() public {}
+        // Approve Marketplace to transfer token.
+        vm.prank(_seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // List tokens.
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
+
+        vm.prank(_seller);
+        listingId = DirectListings(marketplace).createListing(listingParams);
+    }
 }
