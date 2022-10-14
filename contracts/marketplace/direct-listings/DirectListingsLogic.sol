@@ -200,7 +200,8 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         uint256 _listingId,
         address _buyFor,
         uint256 _quantity,
-        address _currency
+        address _currency,
+        uint256 _expectedTotalPrice
     ) external payable nonReentrant onlyExistingListing(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
@@ -225,18 +226,20 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
             "!BALNFT"
         );
 
-        address targetCurrency;
+        address targetCurrency = _currency;
         uint256 targetTotalPrice;
 
-        if (data.isCurrencyApprovedForListing[_listingId][_currency]) {
-            targetCurrency = _currency;
-            targetTotalPrice = _quantity * data.currencyPriceForListing[_listingId][_currency];
+        if (data.isCurrencyApprovedForListing[_listingId][targetCurrency]) {
+            targetTotalPrice = _quantity * data.currencyPriceForListing[_listingId][targetCurrency];
         } else {
-            targetCurrency = listing.currency;
+            require(targetCurrency == listing.currency, "Paying in invalid currency.");
             targetTotalPrice = _quantity * listing.pricePerToken;
         }
+
+        require(targetTotalPrice == _expectedTotalPrice, "Unexpected total price");
+
         // Check: buyer owns and has approved sufficient currency for sale.
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+        if (targetCurrency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == targetTotalPrice, "msg.value != price");
         } else {
             _validateERC20BalAndAllowance(buyer, targetCurrency, targetTotalPrice);
@@ -248,7 +251,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
             data.listings[_listingId].quantity -= _quantity;
         }
 
-        _payout(buyer, listing.listingCreator, _currency, targetTotalPrice, listing);
+        _payout(buyer, listing.listingCreator, targetCurrency, targetTotalPrice, listing);
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
 
         emit NewSale(

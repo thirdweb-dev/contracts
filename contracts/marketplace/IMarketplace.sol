@@ -74,7 +74,8 @@ interface IDirectListings {
         uint256 _listingId,
         address _buyFor,
         uint256 _quantity,
-        address _currency
+        address _currency,
+        uint256 _expectedTotalPrice
     ) external payable;
 
     function totalListings() external view returns (uint256);
