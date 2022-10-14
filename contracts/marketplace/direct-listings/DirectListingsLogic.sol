@@ -211,7 +211,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         require(!listing.reserved || data.isBuyerApprovedForListing[_listingId][buyer], "buyer not approved");
         require(_quantity > 0 && _quantity <= listing.quantity, "Buying invalid quantity");
         require(
-            block.timestamp < listing.endTimestamp && block.timestamp > listing.startTimestamp,
+            block.timestamp < listing.endTimestamp && block.timestamp >= listing.startTimestamp,
             "not within sale window."
         );
 
