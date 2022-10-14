@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./TWMultichainRegistry.sol";
+import "./TWRegistry.sol";
 import "./interfaces/IThirdwebContract.sol";
 import "./extension/interface/IContractFactory.sol";
 
@@ -15,7 +15,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
     /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
-    TWMultichainRegistry public immutable registry;
+    TWRegistry public immutable registry;
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
@@ -38,7 +38,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(FACTORY_ROLE, _msgSender());
 
-        registry = TWMultichainRegistry(_registry);
+        registry = TWRegistry(_registry);
     }
 
     /// @dev Deploys a proxy that points to the latest version of the given contract type.
@@ -75,7 +75,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
 
         emit ProxyDeployed(_implementation, deployedProxy, _msgSender());
 
-        registry.add(_msgSender(), deployedProxy, block.chainid, "");
+        registry.add(_msgSender(), deployedProxy);
 
         if (_data.length > 0) {
             // slither-disable-next-line unused-return

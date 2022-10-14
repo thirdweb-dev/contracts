@@ -1,13 +1,5 @@
 # TWFactory
 
-
-
-
-
-
-
-
-
 ## Methods
 
 ### DEFAULT_ADMIN_ROLE
@@ -16,16 +8,11 @@
 function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 ```
 
-
-
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
 
 ### FACTORY_ROLE
 
@@ -33,16 +20,13 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 function FACTORY_ROLE() external view returns (bytes32)
 ```
 
-
-
-*Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.*
-
+_Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to._
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
 
 ### addImplementation
 
@@ -50,15 +34,13 @@ function FACTORY_ROLE() external view returns (bytes32)
 function addImplementation(address _implementation) external nonpayable
 ```
 
-
-
-*Lets a contract admin set the address of a contract type x version.*
+_Lets a contract admin set the address of a contract type x version._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _implementation | address | undefined |
+| Name             | Type    | Description |
+| ---------------- | ------- | ----------- |
+| \_implementation | address | undefined   |
 
 ### approval
 
@@ -66,21 +48,19 @@ function addImplementation(address _implementation) external nonpayable
 function approval(address) external view returns (bool)
 ```
 
-
-
-*mapping of implementation address to deployment approval*
+_mapping of implementation address to deployment approval_
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 #### Returns
 
 | Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ### approveImplementation
 
@@ -88,16 +68,14 @@ function approval(address) external view returns (bool)
 function approveImplementation(address _implementation, bool _toApprove) external nonpayable
 ```
 
-
-
-*Lets a contract admin approve a specific contract for deployment.*
+_Lets a contract admin approve a specific contract for deployment._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _implementation | address | undefined |
-| _toApprove | bool | undefined |
+| Name             | Type    | Description |
+| ---------------- | ------- | ----------- |
+| \_implementation | address | undefined   |
+| \_toApprove      | bool    | undefined   |
 
 ### currentVersion
 
@@ -105,21 +83,19 @@ function approveImplementation(address _implementation, bool _toApprove) externa
 function currentVersion(bytes32) external view returns (uint256)
 ```
 
-
-
-*mapping of implementation address to implementation added version*
+_mapping of implementation address to implementation added version_
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 ### deployProxy
 
@@ -127,22 +103,20 @@ function currentVersion(bytes32) external view returns (uint256)
 function deployProxy(bytes32 _type, bytes _data) external nonpayable returns (address)
 ```
 
-
-
-*Deploys a proxy that points to the latest version of the given contract type.*
+_Deploys a proxy that points to the latest version of the given contract type._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
-| _data | bytes | undefined |
+| Name   | Type    | Description |
+| ------ | ------- | ----------- |
+| \_type | bytes32 | undefined   |
+| \_data | bytes   | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### deployProxyByImplementation
 
@@ -150,23 +124,21 @@ function deployProxy(bytes32 _type, bytes _data) external nonpayable returns (ad
 function deployProxyByImplementation(address _implementation, bytes _data, bytes32 _salt) external nonpayable returns (address deployedProxy)
 ```
 
-
-
-*Deploys a proxy that points to the given implementation.*
+_Deploys a proxy that points to the given implementation._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _implementation | address | undefined |
-| _data | bytes | undefined |
-| _salt | bytes32 | undefined |
+| Name             | Type    | Description |
+| ---------------- | ------- | ----------- |
+| \_implementation | address | undefined   |
+| \_data           | bytes   | undefined   |
+| \_salt           | bytes32 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| deployedProxy | address | undefined |
+| Name          | Type    | Description |
+| ------------- | ------- | ----------- |
+| deployedProxy | address | undefined   |
 
 ### deployProxyDeterministic
 
@@ -174,23 +146,21 @@ function deployProxyByImplementation(address _implementation, bytes _data, bytes
 function deployProxyDeterministic(bytes32 _type, bytes _data, bytes32 _salt) external nonpayable returns (address)
 ```
 
-
-
-*Deploys a proxy at a deterministic address by taking in `salt` as a parameter.       Proxy points to the latest version of the given contract type.*
+_Deploys a proxy at a deterministic address by taking in `salt` as a parameter. Proxy points to the latest version of the given contract type._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
-| _data | bytes | undefined |
-| _salt | bytes32 | undefined |
+| Name   | Type    | Description |
+| ------ | ------- | ----------- |
+| \_type | bytes32 | undefined   |
+| \_data | bytes   | undefined   |
+| \_salt | bytes32 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### deployer
 
@@ -198,21 +168,19 @@ function deployProxyDeterministic(bytes32 _type, bytes _data, bytes32 _salt) ext
 function deployer(address) external view returns (address)
 ```
 
-
-
-*mapping of proxy address to deployer address*
+_mapping of proxy address to deployer address_
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### getImplementation
 
@@ -220,22 +188,20 @@ function deployer(address) external view returns (address)
 function getImplementation(bytes32 _type, uint256 _version) external view returns (address)
 ```
 
-
-
-*Returns the implementation given a contract type and version.*
+_Returns the implementation given a contract type and version._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
-| _version | uint256 | undefined |
+| Name      | Type    | Description |
+| --------- | ------- | ----------- |
+| \_type    | bytes32 | undefined   |
+| \_version | uint256 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### getLatestImplementation
 
@@ -243,21 +209,19 @@ function getImplementation(bytes32 _type, uint256 _version) external view return
 function getLatestImplementation(bytes32 _type) external view returns (address)
 ```
 
-
-
-*Returns the latest implementation given a contract type.*
+_Returns the latest implementation given a contract type._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _type | bytes32 | undefined |
+| Name   | Type    | Description |
+| ------ | ------- | ----------- |
+| \_type | bytes32 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### getRoleAdmin
 
@@ -265,21 +229,19 @@ function getLatestImplementation(bytes32 _type) external view returns (address)
 function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ```
 
-
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
+_Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {\_setRoleAdmin}._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| role | bytes32 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
 
 ### getRoleMember
 
@@ -287,22 +249,20 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 function getRoleMember(bytes32 role, uint256 index) external view returns (address)
 ```
 
-
-
-*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
+_Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
-| index | uint256 | undefined |
+| Name  | Type    | Description |
+| ----- | ------- | ----------- |
+| role  | bytes32 | undefined   |
+| index | uint256 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### getRoleMemberCount
 
@@ -310,21 +270,19 @@ function getRoleMember(bytes32 role, uint256 index) external view returns (addre
 function getRoleMemberCount(bytes32 role) external view returns (uint256)
 ```
 
-
-
-*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
+_Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| role | bytes32 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 ### grantRole
 
@@ -332,16 +290,14 @@ function getRoleMemberCount(bytes32 role) external view returns (uint256)
 function grantRole(bytes32 role, address account) external nonpayable
 ```
 
-
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleGranted} event.*
+_Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have `role`&#39;s admin role. May emit a {RoleGranted} event._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| Name    | Type    | Description |
+| ------- | ------- | ----------- |
+| role    | bytes32 | undefined   |
+| account | address | undefined   |
 
 ### hasRole
 
@@ -349,22 +305,20 @@ function grantRole(bytes32 role, address account) external nonpayable
 function hasRole(bytes32 role, address account) external view returns (bool)
 ```
 
-
-
-*Returns `true` if `account` has been granted `role`.*
+_Returns `true` if `account` has been granted `role`._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| Name    | Type    | Description |
+| ------- | ------- | ----------- |
+| role    | bytes32 | undefined   |
+| account | address | undefined   |
 
 #### Returns
 
 | Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ### implementation
 
@@ -372,22 +326,20 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 function implementation(bytes32, uint256) external view returns (address)
 ```
 
-
-
-*mapping of contract type to module version to implementation address*
+_mapping of contract type to module version to implementation address_
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-| _1 | uint256 | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
+| \_1  | uint256 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### isTrustedForwarder
 
@@ -395,21 +347,17 @@ function implementation(bytes32, uint256) external view returns (address)
 function isTrustedForwarder(address forwarder) external view returns (bool)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| forwarder | address | undefined |
+| Name      | Type    | Description |
+| --------- | ------- | ----------- |
+| forwarder | address | undefined   |
 
 #### Returns
 
 | Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ### multicall
 
@@ -417,21 +365,19 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ```
 
-
-
-*Receives and executes a batch of function calls on this contract.*
+_Receives and executes a batch of function calls on this contract._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| data | bytes[] | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | undefined |
+| Name    | Type    | Description |
+| ------- | ------- | ----------- |
+| results | bytes[] | undefined   |
 
 ### registry
 
@@ -439,16 +385,11 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 function registry() external view returns (contract TWMultichainRegistry)
 ```
 
-
-
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract TWMultichainRegistry | undefined |
+| Name | Type                          | Description |
+| ---- | ----------------------------- | ----------- |
+| \_0  | contract TWMultichainRegistry | undefined   |
 
 ### renounceRole
 
@@ -456,16 +397,14 @@ function registry() external view returns (contract TWMultichainRegistry)
 function renounceRole(bytes32 role, address account) external nonpayable
 ```
 
-
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`. May emit a {RoleRevoked} event.*
+_Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`. May emit a {RoleRevoked} event._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| Name    | Type    | Description |
+| ------- | ------- | ----------- |
+| role    | bytes32 | undefined   |
+| account | address | undefined   |
 
 ### revokeRole
 
@@ -473,16 +412,14 @@ function renounceRole(bytes32 role, address account) external nonpayable
 function revokeRole(bytes32 role, address account) external nonpayable
 ```
 
-
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleRevoked} event.*
+_Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have `role`&#39;s admin role. May emit a {RoleRevoked} event._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| Name    | Type    | Description |
+| ------- | ------- | ----------- |
+| role    | bytes32 | undefined   |
+| account | address | undefined   |
 
 ### supportsInterface
 
@@ -490,23 +427,19 @@ function revokeRole(bytes32 role, address account) external nonpayable
 function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
-
-
-*See {IERC165-supportsInterface}.*
+_See {IERC165-supportsInterface}._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
+| Name        | Type   | Description |
+| ----------- | ------ | ----------- |
+| interfaceId | bytes4 | undefined   |
 
 #### Returns
 
 | Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
-
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ## Events
 
@@ -516,17 +449,13 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 event ImplementationAdded(address implementation, bytes32 indexed contractType, uint256 version)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| implementation  | address | undefined |
-| contractType `indexed` | bytes32 | undefined |
-| version  | uint256 | undefined |
+| Name                   | Type    | Description |
+| ---------------------- | ------- | ----------- |
+| implementation         | address | undefined   |
+| contractType `indexed` | bytes32 | undefined   |
+| version                | uint256 | undefined   |
 
 ### ImplementationApproved
 
@@ -534,16 +463,12 @@ event ImplementationAdded(address implementation, bytes32 indexed contractType, 
 event ImplementationApproved(address implementation, bool isApproved)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| implementation  | address | undefined |
-| isApproved  | bool | undefined |
+| Name           | Type    | Description |
+| -------------- | ------- | ----------- |
+| implementation | address | undefined   |
+| isApproved     | bool    | undefined   |
 
 ### ProxyDeployed
 
@@ -551,17 +476,15 @@ event ImplementationApproved(address implementation, bool isApproved)
 event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer)
 ```
 
-
-
-*Emitted when a proxy is deployed.*
+_Emitted when a proxy is deployed._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| implementation `indexed` | address | undefined |
-| proxy  | address | undefined |
-| deployer `indexed` | address | undefined |
+| Name                     | Type    | Description |
+| ------------------------ | ------- | ----------- |
+| implementation `indexed` | address | undefined   |
+| proxy                    | address | undefined   |
+| deployer `indexed`       | address | undefined   |
 
 ### RoleAdminChanged
 
@@ -569,17 +492,13 @@ event ProxyDeployed(address indexed implementation, address proxy, address index
 event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| previousAdminRole `indexed` | bytes32 | undefined |
-| newAdminRole `indexed` | bytes32 | undefined |
+| Name                        | Type    | Description |
+| --------------------------- | ------- | ----------- |
+| role `indexed`              | bytes32 | undefined   |
+| previousAdminRole `indexed` | bytes32 | undefined   |
+| newAdminRole `indexed`      | bytes32 | undefined   |
 
 ### RoleGranted
 
@@ -587,17 +506,13 @@ event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, 
 event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
+| Name              | Type    | Description |
+| ----------------- | ------- | ----------- |
+| role `indexed`    | bytes32 | undefined   |
+| account `indexed` | address | undefined   |
+| sender `indexed`  | address | undefined   |
 
 ### RoleRevoked
 
@@ -605,17 +520,10 @@ event RoleGranted(bytes32 indexed role, address indexed account, address indexed
 event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-
-
-
+| Name              | Type    | Description |
+| ----------------- | ------- | ----------- |
+| role `indexed`    | bytes32 | undefined   |
+| account `indexed` | address | undefined   |
+| sender `indexed`  | address | undefined   |
