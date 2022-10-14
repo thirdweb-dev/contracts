@@ -44,6 +44,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // [3] Index `DirectListings` functions in `Map`
         map.setExtension(DirectListings.totalListings.selector, directListings);
+        map.setExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
+        map.setExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
+        map.setExtension(DirectListings.currencyPriceForListing.selector, directListings);
         map.setExtension(DirectListings.createListing.selector, directListings);
         map.setExtension(DirectListings.updateListing.selector, directListings);
         map.setExtension(DirectListings.cancelListing.selector, directListings);
@@ -873,6 +876,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
         DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+
+        assertEq(DirectListings(marketplace).isBuyerApprovedForListing(listingId, buyer), true);
     }
 
     function test_revert_approveBuyerForListing_notListingCreator() public {
@@ -911,9 +916,66 @@ contract MarketplaceDirectListingsTest is BaseTest {
                         Approve currency for listing
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_approveCurrencyForListing() public {}
+    function _setup_approveCurrencyForListing() private returns (uint256 listingId) {
+        (listingId, ) = _setup_updateListing();
+    }
 
-    function test_revert_approveCurrencyForListing_notListingCreator() public {}
+    function test_state_approveCurrencyForListing() public {
+        uint256 listingId = _setup_approveCurrencyForListing();
+        address currencyToApprove = NATIVE_TOKEN;
+        uint256 pricePerTokenForCurrency = 2 ether;
+        bool toApprove = true;
+
+        // Seller approves buyer for reserved listing.
+        vm.prank(seller);
+        DirectListings(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency,
+            toApprove
+        );
+
+        assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
+        assertEq(
+            DirectListings(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
+            pricePerTokenForCurrency
+        );
+    }
+
+    function test_revert_approveCurrencyForListing_notListingCreator() public {
+        uint256 listingId = _setup_approveCurrencyForListing();
+        address currencyToApprove = NATIVE_TOKEN;
+        uint256 pricePerTokenForCurrency = 2 ether;
+        bool toApprove = true;
+
+        // Someone other than seller approves buyer for reserved listing.
+        address notSeller = getActor(1000);
+        vm.prank(notSeller);
+        vm.expectRevert("!Creator");
+        DirectListings(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency,
+            toApprove
+        );
+    }
+
+    function test_revert_approveCurrencyForListing_reApprovingMainCurrency() public {
+        uint256 listingId = _setup_approveCurrencyForListing();
+        address currencyToApprove = DirectListings(marketplace).getListing(listingId).currency;
+        uint256 pricePerTokenForCurrency = 2 ether;
+        bool toApprove = true;
+
+        // Seller approves buyer for reserved listing.
+        vm.prank(seller);
+        vm.expectRevert("Re-approving main listing currency.");
+        DirectListings(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency,
+            toApprove
+        );
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Buy from listing
