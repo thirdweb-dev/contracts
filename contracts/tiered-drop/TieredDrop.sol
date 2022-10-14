@@ -308,6 +308,8 @@ contract TieredDrop is
 
         endIdsAtMint.push(endTokenId);
         proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
+
+        nextTokenIdToMapFromTier[_tier] += _quantity;
     }
 
     function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
