@@ -271,6 +271,29 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         return data.totalListings;
     }
 
+    /// @notice Returns whether a buyer is approved for a listing.
+    function isBuyerApprovedForListing(uint256 _listingId, address _buyer) external view returns (bool) {
+        DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
+        return data.isBuyerApprovedForListing[_listingId][_buyer];
+    }
+
+    /// @notice Returns whether a currency is approved for a listing.
+    function isCurrencyApprovedForListing(uint256 _listingId, address _currency) external view returns (bool) {
+        DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
+        return data.isCurrencyApprovedForListing[_listingId][_currency];
+    }
+
+    /// @notice Returns the price per token for a listing, in the given currency.
+    function currencyPriceForListing(uint256 _listingId, address _currency) external view returns (uint256) {
+        DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
+
+        if (!data.isCurrencyApprovedForListing[_listingId][_currency]) {
+            revert("Currency not approved for listing");
+        }
+
+        return data.currencyPriceForListing[_listingId][_currency];
+    }
+
     /// @notice Returns all non-cancelled listings.
     function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory allListings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
