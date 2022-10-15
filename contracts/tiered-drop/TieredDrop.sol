@@ -219,15 +219,6 @@ contract TieredDrop is
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
 
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = to == address(0) ? _msgSender() : to;
-
         // Collect price
         collectPriceOnClaim(primarySaleRecipient, quantity, currency, pricePerToken);
 
@@ -237,7 +228,7 @@ contract TieredDrop is
         }
 
         // Mint tokens.
-        transferTokensOnClaim(receiver, quantity, tiersInPriority);
+        transferTokensOnClaim(to, quantity, tiersInPriority);
 
         emit RequestExecuted(_msgSender(), signer, _req);
     }
