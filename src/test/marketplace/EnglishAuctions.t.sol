@@ -678,11 +678,98 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
                             Cancel Auction
     //////////////////////////////////////////////////////////////*/
 
-    function _setup_cancelAuction() private returns (uint256 auctionId) {}
+    function _setup_cancelAuction() private returns (uint256 auctionId) {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
 
-    function test_state_cancelAuction() public {}
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
 
-    function test_revert_cancelAuction_bidsAlreadyMade() public {}
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_state_cancelAuction() public {
+        uint256 auctionId = _setup_cancelAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.prank(seller);
+        EnglishAuctions(marketplace).cancelAuction(auctionId);
+
+        // Test consequent states.
+
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Total auction count should include deleted auctions too
+        assertEq(EnglishAuctions(marketplace).totalAuctions(), 1);
+
+        // Revert when fetching deleted auction.
+        bytes memory err = "DNE";
+        vm.expectRevert(err);
+        EnglishAuctions(marketplace).getAuction(auctionId);
+    }
+
+    function test_revert_cancelAuction_bidsAlreadyMade() public {
+        uint256 auctionId = _setup_cancelAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+
+        vm.prank(seller);
+        vm.expectRevert("bids already made");
+        EnglishAuctions(marketplace).cancelAuction(auctionId);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Collect Auction Payout
