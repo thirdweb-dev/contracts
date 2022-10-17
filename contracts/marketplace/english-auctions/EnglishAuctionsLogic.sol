@@ -258,7 +258,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
 
     function isAuctionExpired(uint256 _auctionId) external view onlyExistingAuction(_auctionId) returns (bool) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        return data.auctions[_auctionId].endTimestamp > block.timestamp;
+        return data.auctions[_auctionId].endTimestamp >= block.timestamp;
     }
 
     /*///////////////////////////////////////////////////////////////
