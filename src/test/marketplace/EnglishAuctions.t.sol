@@ -10,6 +10,8 @@ import { MarketplaceEntrypoint } from "contracts/marketplace/alt/MarketplaceEntr
 import { EnglishAuctions } from "contracts/marketplace/english-auctions/EnglishAuctionsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
+import { IEnglishAuctions } from "contracts/marketplace/IMarketplace.sol";
+
 contract MarketplaceEnglishAuctionsTest is BaseTest {
     // Target contract
     address public marketplace;
@@ -70,6 +72,26 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
                 )
             )
         );
+
+        // [6] Setup roles for seller and assets
+        vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
+
+        vm.stopPrank();
+
+        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(marketplace, "Marketplace");
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+        vm.label(seller, "Seller");
+        vm.label(buyer, "Buyer");
+        vm.label(address(erc721), "ERC721_Token");
+        vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
     }
 
     function test_state_initial() public {
@@ -81,23 +103,582 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
                             Create Auction
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_createAuction() public {}
+    function test_state_createAuction() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
 
-    function test_revert_createAuction_notOwnerOfAuctionedToken() public {}
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
 
-    function test_revert_createAuction_notApprovedMarketplaceToTransferToken() public {}
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-    function test_revert_createAuction_auctioningZeroQuantity() public {}
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
 
-    function test_revert_createAuction_noBidOrTimeBuffer() public {}
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
-    function test_revert_createAuction_noListerRoleWhenRestrictionsActive() public {}
+        vm.prank(seller);
+        uint256 auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
 
-    function test_revert_createAuction_noAssetRoleWhenRestrictionsActive() public {}
+        // Test consequent state of the contract.
+
+        // Marketplace is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+
+        // Total listings incremented
+        assertEq(EnglishAuctions(marketplace).totalAuctions(), 1);
+
+        // Fetch listing and verify state.
+        IEnglishAuctions.Auction memory auction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        assertEq(auction.auctionId, auctionId);
+        assertEq(auction.auctionCreator, seller);
+        assertEq(auction.assetContract, assetContract);
+        assertEq(auction.tokenId, tokenId);
+        assertEq(auction.quantity, quantity);
+        assertEq(auction.currency, currency);
+        assertEq(auction.minimumBidAmount, minimumBidAmount);
+        assertEq(auction.buyoutBidAmount, buyoutBidAmount);
+        assertEq(auction.timeBufferInSeconds, timeBufferInSeconds);
+        assertEq(auction.bidBufferBps, bidBufferBps);
+        assertEq(auction.startTimestamp, startTimestamp);
+        assertEq(auction.endTimestamp, endTimestamp);
+        assertEq(uint256(auction.tokenType), uint256(IEnglishAuctions.TokenType.ERC721));
+    }
+
+    function test_revert_createAuction_notOwnerOfAuctionedToken() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Don't mint to 'token to be auctioned' to the seller.
+        address someWallet = getActor(1000);
+        _setupERC721BalanceForSeller(someWallet, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), someWallet, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(someWallet);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("!BALNFT");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_notApprovedMarketplaceToTransferToken() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Don't approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, false);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("!BALNFT");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_auctioningZeroQuantity() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 0;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("zero quantity.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_invalidQuantity() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 2; // Listing more than `1` quantity
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("invalid quantity.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_noBidOrTimeBuffer() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 0;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("zero time-buffer.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+
+        timeBufferInSeconds = 10 seconds;
+        bidBufferBps = 0;
+
+        auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("zero bid-buffer.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_invalidBidAmounts() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 10 ether; // set minimumBidAmount greater than buyoutBidAmount
+        uint256 buyoutBidAmount = 1 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("RESERVE");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_invalidStartTimestamp() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = uint64(block.timestamp - 1); // start time is less than block timestamp.
+        uint64 endTimestamp = startTimestamp + 1;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("invalid timestamps.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_invalidEndTimestamp() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = startTimestamp - 1;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        vm.expectRevert("invalid timestamps.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_invalidAssetContract() public {
+        // Sample auction parameters.
+        address assetContract = address(erc20);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = startTimestamp - 1;
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        // Grant ERC20 token asset role.
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
+
+        vm.prank(seller);
+        vm.expectRevert("token must be ERC1155 or ERC721.");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_noListerRoleWhenRestrictionsActive() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        // Revoke LISTER_ROLE from seller.
+        vm.startPrank(marketplaceDeployer);
+        assertEq(Permissions(marketplace).hasRole(keccak256("LISTER_ROLE"), address(0)), false);
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), seller);
+        assertEq(Permissions(marketplace).hasRole(keccak256("LISTER_ROLE"), seller), false);
+
+        vm.stopPrank();
+
+        vm.prank(seller);
+        vm.expectRevert("!LISTER_ROLE");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_createAuction_noAssetRoleWhenRestrictionsActive() public {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        // Revoke ASSET_ROLE from token to list.
+        vm.startPrank(marketplaceDeployer);
+        assertEq(Permissions(marketplace).hasRole(keccak256("ASSET_ROLE"), address(0)), false);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(erc721));
+        assertEq(Permissions(marketplace).hasRole(keccak256("ASSET_ROLE"), address(erc721)), false);
+
+        vm.stopPrank();
+
+        vm.prank(seller);
+        vm.expectRevert("!ASSET_ROLE");
+        EnglishAuctions(marketplace).createAuction(auctionParams);
+    }
 
     /*///////////////////////////////////////////////////////////////
                             Cancel Auction
     //////////////////////////////////////////////////////////////*/
+
+    function _setup_cancelAuction() private returns (uint256 auctionId) {}
 
     function test_state_cancelAuction() public {}
 
