@@ -30,7 +30,7 @@ import "../extension/PermissionsEnumerable.sol";
 import "./DropWithTiers.sol";
 import "./SignatureActionUpgradeable.sol";
 
-contract TieredDrop is
+contract TieredDropWithClaim is
     Initializable,
     ContractMetadata,
     Royalty,
