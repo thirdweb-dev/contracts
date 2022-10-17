@@ -166,6 +166,10 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
     function cancelAuction(uint256 _auctionId) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         Auction memory _targetAuction = data.auctions[_auctionId];
+        Bid memory _winningBid = data.winningBid[_auctionId];
+
+        require(_winningBid.bidder == address(0), "bids already made");
+
         delete data.auctions[_auctionId];
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
