@@ -126,7 +126,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Auction memory _targetAuction = data.auctions[_auctionId];
 
         require(
-            _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp < block.timestamp,
+            _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp <= block.timestamp,
             "inactive auction."
         );
 
@@ -145,7 +145,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Auction memory _targetAuction = data.auctions[_auctionId];
         Bid memory _winningBid = data.winningBid[_auctionId];
 
-        require(_targetAuction.endTimestamp < block.timestamp, "auction still active.");
+        require(_targetAuction.endTimestamp <= block.timestamp, "auction still active.");
         require(_winningBid.bidder != address(0), "no bids were made.");
 
         _closeAuctionForAuctionCreator(_targetAuction, _winningBid);
@@ -156,7 +156,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Auction memory _targetAuction = data.auctions[_auctionId];
         Bid memory _winningBid = data.winningBid[_auctionId];
 
-        require(_targetAuction.endTimestamp < block.timestamp, "auction still active.");
+        require(_targetAuction.endTimestamp <= block.timestamp, "auction still active.");
         require(_msgSender() == _winningBid.bidder, "not bidder");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
