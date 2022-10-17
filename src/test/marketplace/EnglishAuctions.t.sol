@@ -678,7 +678,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
                             Cancel Auction
     //////////////////////////////////////////////////////////////*/
 
-    function _setup_cancelAuction() private returns (uint256 auctionId) {
+    function _setup_newAuction() private returns (uint256 auctionId) {
         // Sample auction parameters.
         address assetContract = address(erc721);
         uint256 tokenId = 0;
@@ -721,7 +721,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function test_state_cancelAuction() public {
-        uint256 auctionId = _setup_cancelAuction();
+        uint256 auctionId = _setup_newAuction();
         IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
@@ -748,7 +748,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function test_revert_cancelAuction_bidsAlreadyMade() public {
-        uint256 auctionId = _setup_cancelAuction();
+        uint256 auctionId = _setup_newAuction();
         IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
@@ -772,6 +772,270 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
+                            Bid In Auction
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_bidInAuction_firstBid() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 1 ether);
+        assertEq(erc20.balanceOf(buyer), 0);
+        assertEq(buyer, bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 1 ether);
+    }
+
+    function test_state_bidInAuction_secondBid() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place first bid
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 1 ether);
+        assertEq(erc20.balanceOf(buyer), 0);
+        assertEq(buyer, bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 1 ether);
+
+        // place second winning bid
+        erc20.mint(address(0x345), 2 ether);
+        vm.startPrank(address(0x345));
+        erc20.approve(marketplace, 2 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 2 ether);
+        vm.stopPrank();
+
+        (bidder, currency, bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 2 ether);
+        assertEq(erc20.balanceOf(buyer), 1 ether);
+        assertEq(erc20.balanceOf(address(0x345)), 0);
+        assertEq(address(0x345), bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 2 ether);
+    }
+
+    function test_state_bidInAuction_buyoutBid() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place first bid
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 1 ether);
+        assertEq(erc20.balanceOf(buyer), 0);
+        assertEq(buyer, bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 1 ether);
+
+        // place buyout bid
+        erc20.mint(address(0x345), 10 ether);
+        vm.startPrank(address(0x345));
+        erc20.approve(marketplace, 10 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 10 ether);
+        vm.stopPrank();
+
+        (bidder, currency, bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), address(0x345), tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 10 ether);
+        assertEq(erc20.balanceOf(buyer), 1 ether);
+        assertEq(erc20.balanceOf(address(0x345)), 0);
+        assertEq(address(0x345), bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 10 ether);
+    }
+
+    function test_revert_bidInAuction_inactiveAuction() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        // place bid before start-time
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        vm.expectRevert("inactive auction.");
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+
+        // place bid after end-time
+        vm.warp(existingAuction.endTimestamp);
+
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        vm.expectRevert("inactive auction.");
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+    }
+
+    function test_revert_bidInAuction_notOwnerOfBidTokens() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+    }
+
+    function test_revert_bidInAuction_notApprovedMarketplaceToTransferToken() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        vm.expectRevert("ERC20: insufficient allowance");
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+    }
+
+    function test_revert_bidInAuction_notNewWinningBid_firstBid() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place first bid less than minimum bid amount
+        erc20.mint(buyer, 0.5 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 0.5 ether);
+        vm.expectRevert("not winning bid.");
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 0.5 ether);
+        vm.stopPrank();
+    }
+
+    function test_revert_bidInAuction_notNewWinningBid_secondBid() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place first bid
+        erc20.mint(buyer, 1 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 1 ether);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 1 ether);
+        assertEq(erc20.balanceOf(buyer), 0);
+        assertEq(buyer, bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 1 ether);
+
+        // place second bid less-than/equal-to previous winning bid
+        erc20.mint(address(0x345), 1 ether);
+        vm.startPrank(address(0x345));
+        erc20.approve(marketplace, 1 ether);
+        vm.expectRevert("not winning bid.");
+        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        vm.stopPrank();
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Collect Auction Payout
     //////////////////////////////////////////////////////////////*/
 
@@ -785,23 +1049,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
                         Collect Auction Tokens
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_collectAuctionTokes() public {}
+    function test_state_collectAuctionTokens() public {}
 
     function test_revert_collectAuctionTokens_auctionNotExpired() public {}
-
-    /*///////////////////////////////////////////////////////////////
-                            Bid In Auction
-    //////////////////////////////////////////////////////////////*/
-
-    function test_state_bidInAuction() public {}
-
-    function test_revert_bidInAuction_auctionExpired() public {}
-
-    function test_revert_bidInAuction_notOwnerOfBidTokens() public {}
-
-    function test_revert_bidInAuction_notApprovedMarketplaceToTransferToken() public {}
-
-    function test_revert_bidInAuction_notNewWinningBid() public {}
 
     /*///////////////////////////////////////////////////////////////
                             View functions
