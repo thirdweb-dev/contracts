@@ -369,9 +369,91 @@ contract MarketplaceOffersTest is BaseTest {
                             Cancel Offer
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_cancelOffer() public {}
+    function test_state_cancelOffer() public {
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
 
-    function test_revert_cancelOffer_callerNotOfferor() public {}
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens.
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        IOffers.Offer memory offer = Offers(marketplace).getOffer(offerId);
+
+        assertEq(offer.offerId, offerId);
+        assertEq(offer.offeror, buyer);
+        assertEq(offer.assetContract, assetContract);
+        assertEq(offer.tokenId, tokenId);
+        assertEq(offer.quantity, quantity);
+        assertEq(offer.currency, currency);
+        assertEq(offer.totalPrice, totalPrice);
+        assertEq(offer.expirationTimestamp, expirationTimestamp);
+        assertEq(uint256(offer.tokenType), uint256(IOffers.TokenType.ERC721));
+
+        vm.prank(buyer);
+        Offers(marketplace).cancelOffer(offerId);
+
+        // Total offers count shouldn't change
+        assertEq(Offers(marketplace).totalOffers(), 1);
+
+        bytes memory err = "DNE";
+        vm.expectRevert(err);
+        offer = Offers(marketplace).getOffer(offerId);
+    }
+
+    function test_revert_cancelOffer_callerNotOfferor() public {
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens.
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        vm.prank(address(0x345));
+        vm.expectRevert("!Offeror");
+        Offers(marketplace).cancelOffer(offerId);
+    }
 
     /*///////////////////////////////////////////////////////////////
                             Accept Offer
