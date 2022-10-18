@@ -1,4 +1,4 @@
-# TieredDrop
+# TieredDropWithClaim
 
 
 
@@ -81,6 +81,27 @@ function burn(uint256 tokenId) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | tokenId | uint256 | undefined |
+
+### claim
+
+```solidity
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropWithTiers.AllowlistProof _allowlistProof, bytes _data) external payable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _receiver | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDropWithTiers.AllowlistProof | undefined |
+| _data | bytes | undefined |
 
 ### claimWithSignature
 
@@ -393,6 +414,29 @@ View royalty info for a given token.
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
 
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(address _claimer, string _tier) external view returns (uint256)
+```
+
+
+
+*Returns the supply claimed by claimer for active conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined |
+| _tier | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### grantRole
 
 ```solidity
@@ -549,7 +593,7 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 ### lazyMint
 
 ```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, string _tier, bytes _data) external nonpayable returns (uint256 batchId)
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable returns (uint256 batchId)
 ```
 
 Lets an authorized address lazy mint a given amount of NFTs.
@@ -562,7 +606,6 @@ Lets an authorized address lazy mint a given amount of NFTs.
 |---|---|---|
 | _amount | uint256 | The number of NFTs to lazy mint. |
 | _baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                           of those NFTs is `${baseURIForTokens}/${tokenId}`. |
-| _tier | string | undefined |
 | _data | bytes | Additional bytes data to be used at the discretion of the consumer of the contract. |
 
 #### Returns
@@ -818,6 +861,23 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined |
 | approved | bool | undefined |
 
+### setClaimConditions
+
+```solidity
+function setClaimConditions(IDropWithTiers.ClaimConditionForTier _conditionForTier, bool _resetClaimEligibility) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionForTier | IDropWithTiers.ClaimConditionForTier | undefined |
+| _resetClaimEligibility | bool | undefined |
+
 ### setContractURI
 
 ```solidity
@@ -1038,6 +1098,27 @@ function verify(ISignatureAction.GenericRequest _req, bytes _signature) external
 | success | bool | undefined |
 | signer | address | undefined |
 
+### verifyClaim
+
+```solidity
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropWithTiers.AllowlistProof _allowlistProof, string tier) external view
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDropWithTiers.AllowlistProof | undefined |
+| tier | string | undefined |
+
 
 
 ## Events
@@ -1077,6 +1158,23 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | owner `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### ClaimConditionUpdated
+
+```solidity
+event ClaimConditionUpdated(IDropWithTiers.ClaimConditionForTier condition, bool resetEligibility)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| condition  | IDropWithTiers.ClaimConditionForTier | undefined |
+| resetEligibility  | bool | undefined |
 
 ### ContractURIUpdated
 
@@ -1267,6 +1365,26 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 |---|---|---|
 | index `indexed` | uint256 | undefined |
 | revealedURI  | string | undefined |
+
+### TokensClaimed
+
+```solidity
+event TokensClaimed(address indexed claimer, address indexed receiver, string indexed tier, uint256 startTokenId, uint256 quantityClaimed)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimer `indexed` | address | undefined |
+| receiver `indexed` | address | undefined |
+| tier `indexed` | string | undefined |
+| startTokenId  | uint256 | undefined |
+| quantityClaimed  | uint256 | undefined |
 
 ### TokensLazyMinted
 
