@@ -23,7 +23,24 @@ contract TieredDropTest is BaseTest {
     bytes32 internal typehashEip712;
     bytes32 internal domainSeparator;
 
-    bytes private emptyEncodedBytes = abi.encode("", "");
+    // Lazy mint variables
+    uint256 internal quantityTier1 = 10;
+    string internal tier1 = "tier1";
+    string internal baseURITier1 = "baseURI1/";
+    string internal placeholderURITier1 = "placeholderURI1/";
+    bytes internal keyTier1 = "tier1_key";
+
+    uint256 internal quantityTier2 = 20;
+    string internal tier2 = "tier2";
+    string internal baseURITier2 = "baseURI2/";
+    string internal placeholderURITier2 = "placeholderURI2/";
+    bytes internal keyTier2 = "tier2_key";
+
+    uint256 internal quantityTier3 = 30;
+    string internal tier3 = "tier3";
+    string internal baseURITier3 = "baseURI3/";
+    string internal placeholderURITier3 = "placeholderURI3/";
+    bytes internal keyTier3 = "tier3_key";
 
     function setUp() public override {
         super.setUp();
@@ -104,18 +121,6 @@ contract TieredDropTest is BaseTest {
 
     function test_flow() public {
         // Lazy mint tokens: 3 different tiers
-        uint256 quantityTier1 = 10;
-        string memory tier1 = "tier1";
-        string memory baseURITier1 = "baseURI1/";
-
-        uint256 quantityTier2 = 20;
-        string memory tier2 = "tier2";
-        string memory baseURITier2 = "baseURI2/";
-
-        uint256 quantityTier3 = 30;
-        string memory tier3 = "tier3";
-        string memory baseURITier3 = "baseURI3/";
-
         vm.startPrank(dropAdmin);
 
         // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
@@ -166,5 +171,99 @@ contract TieredDropTest is BaseTest {
                 tier1Id += 1;
             }
         }
+    }
+
+    function _getProvenanceHash(string memory _revealURI, bytes memory _key) private returns (bytes32) {
+        return keccak256(abi.encodePacked(_revealURI, _key, block.chainid));
+    }
+
+    function test_flow_randomOnReveal() public {
+        // Lazy mint tokens: 3 different tiers: with delayed reveal
+        bytes memory encryptedURITier1 = tieredDrop.encryptDecrypt(bytes(baseURITier1), keyTier1);
+        bytes memory encryptedURITier2 = tieredDrop.encryptDecrypt(bytes(baseURITier2), keyTier2);
+        bytes memory encryptedURITier3 = tieredDrop.encryptDecrypt(bytes(baseURITier3), keyTier3);
+
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(
+            quantityTier1,
+            placeholderURITier1,
+            tier1,
+            abi.encode(encryptedURITier1, _getProvenanceHash(baseURITier1, keyTier1))
+        );
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(
+            quantityTier2,
+            placeholderURITier2,
+            tier2,
+            abi.encode(encryptedURITier2, _getProvenanceHash(baseURITier2, keyTier2))
+        );
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(
+            quantityTier3,
+            placeholderURITier3,
+            tier3,
+            abi.encode(encryptedURITier3, _getProvenanceHash(baseURITier3, keyTier3))
+        );
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 25;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+
+        /**
+         *  Check token URIs for tokens of tiers:
+         *      - Tier 2: token IDs 0 -> 19 mapped one-to-one to metadata IDs 10 -> 29
+         *      - Tier 1: token IDs 20 -> 24 mapped one-to-one to metadata IDs 0 -> 4
+         */
+
+        uint256 tier2Id = 10;
+        uint256 tier1Id = 0;
+
+        for (uint256 i = 0; i < claimQuantity; i += 1) {
+            // console.log(i);
+            if (i < 20) {
+                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(placeholderURITier2, uint256(0).toString())));
+                tier2Id += 1;
+            } else {
+                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(placeholderURITier1, uint256(0).toString())));
+                tier1Id += 1;
+            }
+        }
+
+        // Reveal tokens.
+        vm.startPrank(dropAdmin);
+        tieredDrop.reveal(0, keyTier1);
+        tieredDrop.reveal(1, keyTier2);
+        tieredDrop.reveal(2, keyTier3);
+
+        // for (uint256 i = 0; i < claimQuantity; i += 1) {
+        //     console.log(i);
+        //     if (i < 20) {
+        //         console.log(i, tieredDrop.tokenURI(i));
+        //         tier2Id += 1;
+        //     } else {
+        //         console.log(i, tieredDrop.tokenURI(i));
+        //         tier1Id += 1;
+        //     }
+        // }
     }
 }
