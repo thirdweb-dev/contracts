@@ -34,6 +34,8 @@ interface IClaimCondition {
      *  @param pricePerToken                  The price required to pay per token claimed.
      *
      *  @param currency                       The currency in which the `pricePerToken` must be paid.
+     *
+     *  @param metadata                       Claim condition metadata.
      */
     struct ClaimCondition {
         uint256 startTimestamp;
@@ -43,5 +45,6 @@ interface IClaimCondition {
         bytes32 merkleRoot;
         uint256 pricePerToken;
         address currency;
+        string metadata;
     }
 }
