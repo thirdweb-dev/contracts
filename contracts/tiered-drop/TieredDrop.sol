@@ -63,6 +63,9 @@ contract TieredDrop is
     mapping(string => uint256) private nextTokenIdToMapFromTier;
     mapping(string => uint256) private totalRemainingInTier;
 
+    /// @dev Mapping from batchId => tokenId offset for that batchId.
+    mapping(uint256 => bytes32) private tokenIdOffset;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -111,13 +114,14 @@ contract TieredDrop is
         uint256 metadataId = _getMetadataId(_tokenId);
 
         // Use metadata ID to return token metadata.
-        (uint256 batchId, ) = getBatchId(metadataId);
+        (uint256 batchId, uint256 index) = getBatchId(metadataId);
         string memory batchUri = getBaseURI(metadataId);
 
         if (isEncryptedBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
         } else {
-            return string(abi.encodePacked(batchUri, metadataId.toString()));
+            uint256 fairMetadataId = _getFairMetadataId(metadataId, batchId, index);
+            return string(abi.encodePacked(batchUri, fairMetadataId.toString()));
         }
     }
 
@@ -182,6 +186,8 @@ contract TieredDrop is
 
         _setEncryptedData(batchId, "");
         _setBaseURI(batchId, revealedURI);
+
+        _scrambleOffset(batchId, _key);
 
         emit TokenURIRevealed(_index, revealedURI);
     }
@@ -337,6 +343,33 @@ contract TieredDrop is
         }
 
         revert("Metadata ID not found for token.");
+    }
+
+    /// @dev Returns the fair metadata ID for a given tokenId.
+    function _getFairMetadataId(
+        uint256 _metadataId,
+        uint256 _batchId,
+        uint256 _indexOfBatchId
+    ) private view returns (uint256 fairMetadataId) {
+        bytes32 bytesRandom = tokenIdOffset[_batchId];
+        if (bytesRandom == bytes32(0)) {
+            return _metadataId;
+        }
+
+        uint256 randomness = uint256(bytesRandom);
+        uint256 prevBatchId;
+        if (_indexOfBatchId > 0) {
+            prevBatchId = getBatchIdAtIndex(_indexOfBatchId - 1);
+        }
+
+        uint256 batchSize = _batchId - prevBatchId;
+        uint256 offset = randomness % batchSize;
+        fairMetadataId = prevBatchId + ((_metadataId + offset) % batchSize);
+    }
+
+    /// @dev Scrambles tokenId offset for a given batchId.
+    function _scrambleOffset(uint256 _batchId, bytes calldata _seed) private {
+        tokenIdOffset[_batchId] = keccak256(abi.encodePacked(_seed, block.timestamp, blockhash(block.number - 1)));
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
