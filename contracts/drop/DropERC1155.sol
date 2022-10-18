@@ -135,8 +135,8 @@ contract DropERC1155 is
 
     /// @dev Returns the uri for a given tokenId.
     function uri(uint256 _tokenId) public view override returns (string memory) {
-        (uint256 batchId, ) = getBatchId(_tokenId);
-        string memory batchUri = getBaseURI(_tokenId);
+        (uint256 batchId, ) = _getBatchId(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));

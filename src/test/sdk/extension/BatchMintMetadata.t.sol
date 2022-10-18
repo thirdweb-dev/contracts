@@ -20,7 +20,7 @@ contract MyBatchMintMetadata is BatchMintMetadata {
     }
 
     function viewBaseURI(uint256 _tokenId) external view returns (string memory) {
-        return getBaseURI(_tokenId);
+        return _getBaseURI(_tokenId);
     }
 }
 

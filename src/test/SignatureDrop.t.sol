@@ -62,7 +62,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
         uint256 id = 0;
 
-        _mintrequest.to = address(0);
+        _mintrequest.to = address(0x345);
         _mintrequest.royaltyRecipient = address(2);
         _mintrequest.royaltyBps = 0;
         _mintrequest.primarySaleRecipient = address(deployer);
@@ -461,14 +461,16 @@ contract SignatureDropTest is BaseTest {
      *  note: Testing revert condition; an address without MINTER_ROLE calls lazyMint function.
      */
     function test_revert_lazyMint_MINTER_ROLE() public {
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            Strings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
+        bytes32 _minterRole = keccak256("MINTER_ROLE");
 
-        vm.expectRevert(errorMessage);
+        vm.prank(deployerSigner);
+        sigdrop.grantRole(_minterRole, address(0x345));
+
+        vm.prank(address(0x345));
+        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        vm.prank(address(0x567));
+        vm.expectRevert("Not authorized");
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
@@ -763,7 +765,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -784,7 +786,7 @@ contract SignatureDropTest is BaseTest {
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1);
             vm.expectEmit(true, true, true, false);
-            emit TokensMintedWithSignature(deployerSigner, deployerSigner, 0, mintrequest);
+            emit TokensMintedWithSignature(deployerSigner, address(0x567), 0, mintrequest);
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
@@ -818,7 +820,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(0x567);
         mintrequest.royaltyBps = 100;
         mintrequest.primarySaleRecipient = address(0x567);
@@ -840,7 +842,7 @@ contract SignatureDropTest is BaseTest {
             vm.warp(1000);
             erc20.approve(address(sigdrop), 1 ether);
             vm.expectEmit(true, true, true, true);
-            emit TokensMintedWithSignature(deployerSigner, address(0x345), 0, mintrequest);
+            emit TokensMintedWithSignature(deployerSigner, address(0x567), 0, mintrequest);
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
@@ -891,7 +893,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -910,6 +912,35 @@ contract SignatureDropTest is BaseTest {
 
         signature = signMintRequest(mintrequest, 4321);
         vm.expectRevert("Invalid req");
+        sigdrop.mintWithSignature(mintrequest, signature);
+    }
+
+    /**
+     *  note: Testing revert condition; minting zero tokens.
+     */
+    function test_revert_mintWithSignature_zeroQuantity() public {
+        vm.prank(deployerSigner);
+        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+        uint256 id = 0;
+
+        SignatureDrop.MintRequest memory mintrequest;
+        mintrequest.to = address(0x567);
+        mintrequest.royaltyRecipient = address(2);
+        mintrequest.royaltyBps = 0;
+        mintrequest.primarySaleRecipient = address(deployer);
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 0;
+        mintrequest.pricePerToken = 0;
+        mintrequest.currency = address(3);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        bytes memory signature = signMintRequest(mintrequest, privateKey);
+        vm.warp(1000);
+
+        vm.prank(deployerSigner);
+        vm.expectRevert("0 qty");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -949,7 +980,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -980,7 +1011,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
-        mintrequest.to = address(0);
+        mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
         mintrequest.primarySaleRecipient = address(deployer);
@@ -1002,11 +1033,11 @@ contract SignatureDropTest is BaseTest {
             sigdrop.mintWithSignature(mintrequest, signature);
             vm.stopPrank();
 
-            uint256 balance = sigdrop.balanceOf(address(deployerSigner));
+            uint256 balance = sigdrop.balanceOf(address(0x567));
             assertEq(balance, 1);
 
             address owner = sigdrop.ownerOf(0);
-            assertEq(deployerSigner, owner);
+            assertEq(address(0x567), owner);
 
             assertEq(
                 currencyBalBefore - mintrequest.pricePerToken * mintrequest.quantity,
@@ -1052,7 +1083,7 @@ contract SignatureDropTest is BaseTest {
             uint256 id = 0;
             SignatureDrop.MintRequest memory mintrequest;
 
-            mintrequest.to = address(0);
+            mintrequest.to = address(0x567);
             mintrequest.royaltyRecipient = address(2);
             mintrequest.royaltyBps = 0;
             mintrequest.primarySaleRecipient = address(deployer);

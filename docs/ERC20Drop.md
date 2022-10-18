@@ -135,7 +135,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWallet, bytes32 merkleRoot, uint256 pricePerToken, address currency)
+function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWallet, bytes32 merkleRoot, uint256 pricePerToken, address currency, string metadata)
 ```
 
 
@@ -154,6 +154,7 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 | merkleRoot | bytes32 | undefined |
 | pricePerToken | uint256 | undefined |
 | currency | address | undefined |
+| metadata | string | undefined |
 
 ### contractURI
 

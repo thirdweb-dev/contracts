@@ -104,8 +104,8 @@ contract SignatureDrop is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        (uint256 batchId, ) = getBatchId(_tokenId);
-        string memory batchUri = getBaseURI(_tokenId);
+        (uint256 batchId, ) = _getBatchId(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
@@ -145,7 +145,7 @@ contract SignatureDrop is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override onlyRole(minterRole) returns (uint256 batchId) {
+    ) public override returns (uint256 batchId) {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
@@ -181,10 +181,6 @@ contract SignatureDrop is
         payable
         returns (address signer)
     {
-        if (_req.quantity == 0) {
-            revert("0 qty");
-        }
-
         uint256 tokenIdToMint = _currentIndex;
         if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
             revert("!Tokens");
@@ -193,17 +189,10 @@ contract SignatureDrop is
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
 
-        /**
-         *  Get receiver of tokens.
-         *
-         *  Note: If `_req.to == address(0)`, a `mintWithSignature` transaction sitting in the
-         *        mempool can be frontrun by copying the input data, since the minted tokens
-         *        will be sent to the `_msgSender()` in this case.
-         */
-        address receiver = _req.to == address(0) ? _msgSender() : _req.to;
+        address receiver = _req.to;
 
         // Collect price
-        collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
         if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
@@ -233,7 +222,7 @@ contract SignatureDrop is
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -261,7 +250,7 @@ contract SignatureDrop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         override
         returns (uint256 startTokenId)
@@ -307,7 +296,7 @@ contract SignatureDrop is
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(minterRole, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

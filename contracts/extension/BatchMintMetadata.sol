@@ -37,7 +37,7 @@ contract BatchMintMetadata {
     }
 
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
-    function getBatchId(uint256 _tokenId) internal view returns (uint256 batchId, uint256 index) {
+    function _getBatchId(uint256 _tokenId) internal view returns (uint256 batchId, uint256 index) {
         uint256 numOfTokenBatches = getBaseURICount();
         uint256[] memory indices = batchIds;
 
@@ -54,7 +54,7 @@ contract BatchMintMetadata {
     }
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
-    function getBaseURI(uint256 _tokenId) internal view returns (string memory) {
+    function _getBaseURI(uint256 _tokenId) internal view returns (string memory) {
         uint256 numOfTokenBatches = getBaseURICount();
         uint256[] memory indices = batchIds;
 

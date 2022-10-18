@@ -91,7 +91,7 @@ contract ERC721LazyMint is
      *  @param _tokenId The tokenId of an NFT.
      */
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
-        string memory batchUri = getBaseURI(_tokenId);
+        string memory batchUri = _getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 
@@ -101,19 +101,24 @@ contract ERC721LazyMint is
 
     /**
      *  @notice          Lets an address claim multiple lazy minted NFTs at once to a recipient.
-     *                   Contract creators should override this function to create custom logic for claiming,
+     *                   This function prevents any reentrant calls, and is not allowed to be overridden.
+     *
+     *                   Contract creators should override `verifyClaim` and `transferTokensOnClaim`
+     *                   functions to create custom logic for verification and claiming,
      *                   for e.g. price collection, allowlist, max quantity, etc.
      *
-     *  @dev             The logic in the `verifyClaim` function determines whether the caller is authorized to mint NFTs.
+     *  @dev             The logic in `verifyClaim` determines whether the caller is authorized to mint NFTs.
+     *                   The logic in `transferTokensOnClaim` does actual minting of tokens,
+     *                   can also be used to apply other state changes.
      *
      *  @param _receiver  The recipient of the NFT to mint.
      *  @param _quantity  The number of NFTs to mint.
      */
-    function claim(address _receiver, uint256 _quantity) public payable virtual nonReentrant {
+    function claim(address _receiver, uint256 _quantity) public payable nonReentrant {
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
         verifyClaim(msg.sender, _quantity); // Add your claim verification logic by overriding this function.
 
-        uint256 startTokenId = transferTokensOnClaim(_receiver, _quantity); // Mints tokens. Apply any state updates by overriding this function.
+        uint256 startTokenId = _transferTokensOnClaim(_receiver, _quantity); // Mints tokens. Apply any state updates by overriding this function.
         emit TokensClaimed(msg.sender, _receiver, startTokenId, _quantity);
     }
 
@@ -154,11 +159,13 @@ contract ERC721LazyMint is
 
     /**
      *  @notice          Mints tokens to receiver on claim.
-     *                   Can also use this function to apply any state changes before minting.
+     *                   Any state changes related to `claim` must be applied
+     *                   here by overriding this function.
      *
      *  @dev             Override this function to add logic for state updation.
+     *                   When overriding, apply any state changes before `_safeMint`.
      */
-    function transferTokensOnClaim(address _receiver, uint256 _quantity)
+    function _transferTokensOnClaim(address _receiver, uint256 _quantity)
         internal
         virtual
         returns (uint256 startTokenId)

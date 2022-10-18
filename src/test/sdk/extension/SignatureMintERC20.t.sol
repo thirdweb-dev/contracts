@@ -13,7 +13,7 @@ contract MySigMint20 is SignatureMintERC20 {
         condition = _condition;
     }
 
-    function _canSignMintRequest(address _signer) internal view override returns (bool) {
+    function _canSignMintRequest(address) internal view override returns (bool) {
         return condition;
     }
 
@@ -72,7 +72,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(MySigMint20.MintRequest memory _request, uint256 privateKey)
+    function signMintRequest(MySigMint20.MintRequest memory _request, uint256 _privateKey)
         internal
         returns (bytes memory)
     {
@@ -90,7 +90,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
         bytes32 structHash = keccak256(encodedRequest);
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
 
         return sig;
