@@ -83,7 +83,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             quantityLimitPerWallet: _condition.quantityLimitPerWallet,
             merkleRoot: _condition.merkleRoot,
             pricePerToken: _condition.pricePerToken,
-            currency: _condition.currency
+            currency: _condition.currency,
+            metadata: _condition.metadata
         });
         conditionId = targetConditionId;
 
