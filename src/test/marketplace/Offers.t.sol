@@ -459,15 +459,224 @@ contract MarketplaceOffersTest is BaseTest {
                             Accept Offer
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_acceptOffer() public {}
+    function test_state_acceptOffer() public {
+        // set owner of NFT
+        erc721.mint(seller, 1);
 
-    function test_revert_acceptOffer_notOwnedOfferedTokens() public {}
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
 
-    function test_revert_acceptOffer_notApprovedMarketplaceToTransferOfferedTokens() public {}
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
 
-    function test_revert_acceptOffer_offerorBalanceLessThanPrice() public {}
+        // Approve Marketplace to transfer currency tokens.
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
 
-    function test_revert_acceptOffer_notApprovedMarketplaceToTransferPrice() public {}
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        // accept offer
+        vm.startPrank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+        Offers(marketplace).acceptOffer(offerId);
+        vm.stopPrank();
+
+        // Total offers count shouldn't change
+        assertEq(Offers(marketplace).totalOffers(), 1);
+
+        // offer deleted
+        bytes memory err = "DNE";
+        vm.expectRevert(err);
+        Offers(marketplace).getOffer(offerId);
+
+        // check states after accepting offer
+        assertEq(erc721.ownerOf(tokenId), buyer);
+        assertEq(erc20.balanceOf(seller), totalPrice);
+        assertEq(erc20.balanceOf(buyer), 0);
+    }
+
+    function test_revert_acceptOffer_notOwnedRequiredTokens() public {
+        // set owner of NFT to address other than seller
+        erc721.mint(address(0x345), 1);
+
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens. (but not owned)
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        // accept offer
+        vm.startPrank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+        vm.expectRevert("!BALNFT");
+        Offers(marketplace).acceptOffer(offerId);
+        vm.stopPrank();
+    }
+
+    function test_revert_acceptOffer_notApprovedMarketplaceToTransferOfferedTokens() public {
+        // set owner of NFT
+        erc721.mint(seller, 1);
+
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens. (but not owned)
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        // accept offer, without approving NFT to marketplace
+        vm.startPrank(seller);
+        vm.expectRevert("!BALNFT");
+        Offers(marketplace).acceptOffer(offerId);
+        vm.stopPrank();
+    }
+
+    function test_revert_acceptOffer_offerorBalanceLessThanPrice() public {
+        // set owner of NFT
+        erc721.mint(seller, 1);
+
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens. (but not owned)
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        // reduce erc20 balance of buyer
+        vm.prank(buyer);
+        erc20.burn(totalPrice);
+
+        // accept offer
+        vm.startPrank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+        vm.expectRevert("!BAL20");
+        Offers(marketplace).acceptOffer(offerId);
+        vm.stopPrank();
+    }
+
+    function test_revert_acceptOffer_notApprovedMarketplaceToTransferPrice() public {
+        // set owner of NFT
+        erc721.mint(seller, 1);
+
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens. (but not owned)
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+
+        // remove erc20 approval
+        vm.prank(buyer);
+        erc20.approve(marketplace, 0);
+
+        // accept offer
+        vm.startPrank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+        vm.expectRevert("!BAL20");
+        Offers(marketplace).acceptOffer(offerId);
+        vm.stopPrank();
+    }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
