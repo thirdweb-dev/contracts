@@ -3,11 +3,13 @@ pragma solidity ^0.8.11;
 
 // Test imports
 import "./utils/BaseTest.sol";
+import "contracts/interfaces/ITWRegistry.sol";
 import "contracts/TWRegistry.sol";
+import "./mocks/MockThirdwebContract.sol";
 
 interface ITWRegistryData {
-    event Added(address indexed deployer, address indexed moduleAddress);
-    event Deleted(address indexed deployer, address indexed moduleAddress);
+    event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
+    event Deleted(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
 }
 
 contract TWRegistryTest is ITWRegistryData, BaseTest {
@@ -15,14 +17,26 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     TWRegistry internal _registry;
 
     // Test params
-    address internal mockModuleAddress = address(0x42);
-    address internal actor;
+    uint256[] internal chainIds;
+    address[] internal deploymentAddresses;
+    address internal deployer_;
+
+    uint256 total = 1000;
 
     //  =====   Set up  =====
 
     function setUp() public override {
         super.setUp();
-        actor = getActor(0);
+
+        deployer_ = getActor(100);
+
+        for (uint256 i = 0; i < total; i += 1) {
+            chainIds.push(i);
+            vm.prank(deployer_);
+            address depl = address(new MockThirdwebContract());
+            deploymentAddresses.push(depl);
+        }
+
         _registry = TWRegistry(registry);
     }
 
@@ -31,96 +45,135 @@ contract TWRegistryTest is ITWRegistryData, BaseTest {
     /// @dev Test `add`
 
     function test_addFromFactory() public {
+        vm.startPrank(factory);
+        for (uint256 i = 0; i < total; i += 1) {
+            _registry.add(deployer_, deploymentAddresses[i], chainIds[i]);
+        }
+        vm.stopPrank();
+
+        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+
+        assertEq(modules.length, total);
+        assertEq(_registry.count(deployer_), total);
+
+        for (uint256 i = 0; i < total; i += 1) {
+            assertEq(modules[i].deploymentAddress, deploymentAddresses[i]);
+            assertEq(modules[i].chainId, chainIds[i]);
+        }
+
         vm.prank(factory);
-        _registry.add(actor, mockModuleAddress);
+        _registry.add(deployer_, address(0x43), 111);
 
-        address[] memory modules = _registry.getAll(actor);
-        assertEq(modules.length, 1);
-        assertEq(modules[0], mockModuleAddress);
-        assertEq(_registry.count(actor), 1);
-
-        vm.prank(factory);
-        _registry.add(actor, address(0x43));
-
-        modules = _registry.getAll(actor);
-        assertEq(modules.length, 2);
-        assertEq(_registry.count(actor), 2);
+        modules = _registry.getAll(deployer_);
+        assertEq(modules.length, total + 1);
+        assertEq(_registry.count(deployer_), total + 1);
     }
 
     function test_addFromSelf() public {
-        vm.prank(actor);
-        _registry.add(actor, mockModuleAddress);
+        vm.startPrank(deployer_);
+        for (uint256 i = 0; i < total; i += 1) {
+            _registry.add(deployer_, deploymentAddresses[i], chainIds[i]);
+        }
+        vm.stopPrank();
 
-        address[] memory modules = _registry.getAll(actor);
+        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
 
-        assertEq(modules.length, 1);
-        assertEq(modules[0], mockModuleAddress);
-        assertEq(_registry.count(actor), 1);
+        assertEq(modules.length, total);
+        assertEq(_registry.count(deployer_), total);
+
+        for (uint256 i = 0; i < total; i += 1) {
+            assertEq(modules[i].deploymentAddress, deploymentAddresses[i]);
+            assertEq(modules[i].chainId, chainIds[i]);
+        }
+
+        vm.prank(factory);
+        _registry.add(deployer_, address(0x43), 111);
+
+        modules = _registry.getAll(deployer_);
+        assertEq(modules.length, total + 1);
+        assertEq(_registry.count(deployer_), total + 1);
     }
 
     function test_add_emit_Added() public {
-        vm.expectEmit(true, true, false, true);
-        emit Added(actor, mockModuleAddress);
+        vm.expectEmit(true, true, true, true);
+        emit Added(deployer_, deploymentAddresses[0], chainIds[0]);
 
         vm.prank(factory);
-        _registry.add(actor, mockModuleAddress);
+        _registry.add(deployer_, deploymentAddresses[0], chainIds[0]);
     }
 
     // Test `remove`
 
     function setUp_remove() public {
-        vm.prank(factory);
-        _registry.add(actor, mockModuleAddress);
+        vm.startPrank(factory);
+        for (uint256 i = 0; i < total; i += 1) {
+            _registry.add(deployer_, deploymentAddresses[i], chainIds[i]);
+        }
+        vm.stopPrank();
     }
 
     //  =====   Functionality tests   =====
     function test_removeFromFactory() public {
         setUp_remove();
         vm.prank(factory);
-        _registry.remove(actor, mockModuleAddress);
+        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        address[] memory modules = _registry.getAll(actor);
-        assertEq(modules.length, 0);
+        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        assertEq(modules.length, total - 1);
+
+        for (uint256 i = 0; i < total - 1; i += 1) {
+            assertEq(modules[i].deploymentAddress, deploymentAddresses[i + 1]);
+            assertEq(modules[i].chainId, chainIds[i + 1]);
+        }
     }
 
     function test_removeFromSelf() public {
         setUp_remove();
-        vm.prank(actor);
-        _registry.remove(actor, mockModuleAddress);
+        vm.prank(factory);
+        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        address[] memory modules = _registry.getAll(actor);
-        assertEq(modules.length, 0);
+        ITWRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        assertEq(modules.length, total - 1);
     }
 
     function test_remove_revert_invalidCaller() public {
         setUp_remove();
         address invalidCaller = address(0x123);
-        assertTrue(invalidCaller != factory || invalidCaller != actor);
+        assertTrue(invalidCaller != factory || invalidCaller != deployer_);
 
         vm.expectRevert("not operator or deployer.");
 
         vm.prank(invalidCaller);
-        _registry.remove(actor, mockModuleAddress);
+        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
     }
 
     function test_remove_revert_noModulesToRemove() public {
         setUp_remove();
-        actor = getActor(1);
-        address[] memory modules = _registry.getAll(actor);
+        address actor = getActor(1);
+        ITWRegistry.Deployment[] memory modules = _registry.getAll(actor);
         assertEq(modules.length, 0);
 
         vm.expectRevert("failed to remove");
 
         vm.prank(actor);
-        _registry.remove(actor, mockModuleAddress);
+        _registry.remove(actor, deploymentAddresses[0], chainIds[0]);
+    }
+
+    function test_remove_revert_incorrectChainId() public {
+        setUp_remove();
+
+        vm.expectRevert("failed to remove");
+
+        vm.prank(deployer_);
+        _registry.remove(deployer_, deploymentAddresses[0], 12345);
     }
 
     function test_remove_emit_Deleted() public {
         setUp_remove();
-        vm.expectEmit(true, true, false, true);
-        emit Deleted(actor, mockModuleAddress);
+        vm.expectEmit(true, true, true, true);
+        emit Deleted(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        vm.prank(actor);
-        _registry.remove(actor, mockModuleAddress);
+        vm.prank(deployer_);
+        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
     }
 }

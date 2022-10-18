@@ -127,7 +127,7 @@ contract DropERC20 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -158,7 +158,7 @@ contract DropERC20 is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal override returns (uint256) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) internal override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }

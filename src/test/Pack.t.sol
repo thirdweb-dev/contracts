@@ -209,7 +209,7 @@ contract PackTest is BaseTest {
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
 
-    function test_interface() public {
+    function test_interface() public view {
         console2.logBytes4(type(IERC20).interfaceId);
         console2.logBytes4(type(IERC721).interfaceId);
         console2.logBytes4(type(IERC1155).interfaceId);
@@ -572,9 +572,7 @@ contract PackTest is BaseTest {
 
         vm.startPrank(address(tokenOwner));
         vm.expectRevert("0 amt");
-        (, uint256 totalSupply) = pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
-
-        // assertEq(totalSupply, 10);
+        pack.createPack(invalidContent, rewardUnits, packUri, 0, 1, recipient);
     }
 
     /**
@@ -1019,9 +1017,9 @@ contract PackTest is BaseTest {
         }
     }
 
-    function checkBalances(ITokenBundle.Token[] memory rewardUnits, address recipient)
+    function checkBalances(ITokenBundle.Token[] memory rewardUnits, address)
         internal
-        view
+        pure
         returns (
             uint256 nativeTokenAmount,
             uint256 erc20Amount,

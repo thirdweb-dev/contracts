@@ -41,6 +41,8 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
             _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
+        require(_req.to != address(0), "recipient undefined");
+        require(_req.quantity > 0, "0 qty");
 
         minted[_req.uid] = true;
     }

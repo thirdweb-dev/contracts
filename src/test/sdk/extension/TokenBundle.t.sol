@@ -270,11 +270,11 @@ contract ExtensionTokenBundle is DSTest, Test {
         assertEq(bundleContent.length + 1, tokenCountOfBundle);
 
         for (uint256 i = 0; i < tokenCountOfBundle - 1; i += 1) {
-            ITokenBundle.Token memory tokenOfBundle = ext.getTokenOfBundle(0, i);
-            assertEq(bundleContent[i].assetContract, tokenOfBundle.assetContract);
-            assertEq(uint256(bundleContent[i].tokenType), uint256(tokenOfBundle.tokenType));
-            assertEq(bundleContent[i].tokenId, tokenOfBundle.tokenId);
-            assertEq(bundleContent[i].totalAmount, tokenOfBundle.totalAmount);
+            ITokenBundle.Token memory tokenOfBundle_ = ext.getTokenOfBundle(0, i);
+            assertEq(bundleContent[i].assetContract, tokenOfBundle_.assetContract);
+            assertEq(uint256(bundleContent[i].tokenType), uint256(tokenOfBundle_.tokenType));
+            assertEq(bundleContent[i].tokenId, tokenOfBundle_.tokenId);
+            assertEq(bundleContent[i].totalAmount, tokenOfBundle_.totalAmount);
         }
 
         ITokenBundle.Token memory tokenOfBundle = ext.getTokenOfBundle(0, tokenCountOfBundle - 1);

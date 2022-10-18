@@ -17,14 +17,14 @@ contract MyDropSinglePhase1155 is DropSinglePhase1155 {
         return condition;
     }
 
-    function collectPriceOnClaim(
+    function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
         uint256 _pricePerToken
     ) internal override {}
 
-    function transferTokensOnClaim(
+    function _transferTokensOnClaim(
         address _to,
         uint256 _tokenId,
         uint256 _quantityBeingClaimed

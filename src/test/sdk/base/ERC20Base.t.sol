@@ -218,7 +218,7 @@ contract BaseERC20BaseTest is BaseUtilTest {
 
     function test_revert_permit_ExpiredDeadline() public {
         uint256 amount = 5 ether;
-        uint256 wrongPrivateKey = 2345;
+        // uint256 wrongPrivateKey = 2345;
 
         // mint amount to recipient
         vm.prank(deployer);
