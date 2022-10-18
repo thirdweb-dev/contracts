@@ -393,6 +393,28 @@ View royalty info for a given token.
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
 
+### getTokensInTier
+
+```solidity
+function getTokensInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tier | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| tokens | LazyMintWithTier.TokenRange[] | undefined |
+
 ### grantRole
 
 ```solidity
