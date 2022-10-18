@@ -92,7 +92,7 @@ contract TieredDropTest is BaseTest {
             claimRequest.validityStartTimestamp,
             claimRequest.validityEndTimestamp,
             claimRequest.uid,
-            claimRequest.data
+            keccak256(bytes(claimRequest.data))
         );
 
         bytes32 structHash = keccak256(encodedRequest);
@@ -134,8 +134,8 @@ contract TieredDropTest is BaseTest {
          */
 
         string[] memory tiers = new string[](2);
-        tiers[0] = tier1;
-        tiers[1] = tier2;
+        tiers[0] = tier2;
+        tiers[1] = tier1;
 
         uint256 claimQuantity = 25;
 
@@ -143,8 +143,9 @@ contract TieredDropTest is BaseTest {
 
         assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
 
-        // vm.prank(claimer);
-        // tieredDrop.claimWithSignature(claimRequest, claimSignature);
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
 
         /**
          *  Check token URIs for tokens of tiers:
@@ -152,17 +153,18 @@ contract TieredDropTest is BaseTest {
          *      - Tier 1: token IDs 20 -> 24 mapped one-to-one to metadata IDs 0 -> 4
          */
 
-        // uint256 tier2Id = 10;
-        // uint256 tier1Id = 0;
+        uint256 tier2Id = 10;
+        uint256 tier1Id = 0;
 
-        // for (uint256 i = 0; i < claimQuantity; i += 1) {
-        //     if (i < 20) {
-        //         assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier2, tier2Id.toString())));
-        //         tier2Id += 1;
-        //     } else {
-        //         assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier1, tier1Id.toString())));
-        //         tier1Id += 1;
-        //     }
-        // }
+        for (uint256 i = 0; i < claimQuantity; i += 1) {
+            // console.log(i);
+            if (i < 20) {
+                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier2, tier2Id.toString())));
+                tier2Id += 1;
+            } else {
+                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier1, tier1Id.toString())));
+                tier1Id += 1;
+            }
+        }
     }
 }
