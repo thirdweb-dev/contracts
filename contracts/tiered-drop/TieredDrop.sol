@@ -332,7 +332,7 @@ contract TieredDrop is
 
                 TokenRange memory range = proxyTokenRange[targetEndId];
 
-                return range.startIdInclusive + diff;
+                return range.endIdNonInclusive - diff;
             }
         }
 
