@@ -114,8 +114,8 @@ contract TieredDrop is
         uint256 metadataId = getMetadataId(_tokenId);
 
         // Use metadata ID to return token metadata.
-        (uint256 batchId, uint256 index) = getBatchId(metadataId);
-        string memory batchUri = getBaseURI(metadataId);
+        (uint256 batchId, uint256 index) = _getBatchId(metadataId);
+        string memory batchUri = _getBaseURI(metadataId);
 
         if (isEncryptedBatch(batchId)) {
             return string(abi.encodePacked(batchUri, "0"));
