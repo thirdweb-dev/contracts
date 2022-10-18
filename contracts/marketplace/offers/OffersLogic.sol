@@ -154,7 +154,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /// @dev Returns all existing offers within the specified range.
     function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _offers) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(_startId < _endId && _endId <= data.totalOffers, "invalid range");
+        require(_startId < _endId && _endId < data.totalOffers, "invalid range");
 
         uint256 _offerCount;
         for (uint256 i = _startId; i <= _endId; i += 1) {
@@ -174,7 +174,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /// @dev Returns offers within the specified range, where offeror has sufficient balance.
     function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _offers) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(_startId < _endId && _endId <= data.totalOffers, "invalid range");
+        require(_startId < _endId && _endId < data.totalOffers, "invalid range");
 
         uint256 _offerCount;
         for (uint256 i = _startId; i <= _endId; i += 1) {

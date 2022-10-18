@@ -304,9 +304,9 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         uint256 total = data.totalListings;
         uint256 nonEmptyListings;
 
-        require(_startId < _endId && _endId <= total, "invalid range");
+        require(_startId < _endId && _endId < total, "invalid range");
 
-        for (uint256 i = _startId; i < _endId; i += 1) {
+        for (uint256 i = _startId; i <= _endId; i += 1) {
             if (data.listings[i].listingCreator != address(0)) {
                 nonEmptyListings += 1;
             }
@@ -324,7 +324,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _listings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        require(_startId < _endId && _endId <= data.totalListings, "invalid range");
+        require(_startId < _endId && _endId < data.totalListings, "invalid range");
 
         uint256 _listingCount;
         for (uint256 i = _startId; i <= _endId; i += 1) {
