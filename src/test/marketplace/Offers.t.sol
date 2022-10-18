@@ -682,9 +682,121 @@ contract MarketplaceOffersTest is BaseTest {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_getOffer() public {}
+    function test_state_getAllOffers() public {
+        uint256[] memory offerIds = new uint256[](5);
+        uint256[] memory tokenIds = new uint256[](5);
 
-    function test_state_getAllOffers() public {}
+        // mint total-price to buyer
+        erc20.mint(buyer, 1000 ether);
 
-    function test_state_getAllValidOffers() public {}
+        // Approve Marketplace to transfer currency tokens. (but not owned)
+        vm.prank(buyer);
+        erc20.approve(marketplace, 1000 ether);
+
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        IOffers.OfferParams memory offerParams;
+
+        for (uint256 i = 0; i < 5; i += 1) {
+            tokenIds[i] = i;
+
+            // make offer
+            offerParams = IOffers.OfferParams(
+                assetContract,
+                tokenIds[i],
+                quantity,
+                currency,
+                totalPrice,
+                expirationTimestamp
+            );
+
+            vm.prank(buyer);
+            offerIds[i] = Offers(marketplace).makeOffer(offerParams);
+        }
+
+        IOffers.Offer[] memory allOffers = Offers(marketplace).getAllOffers(0, 4);
+        assertEq(allOffers.length, 5);
+
+        for (uint256 i = 0; i < 5; i += 1) {
+            assertEq(allOffers[i].offerId, offerIds[i]);
+            assertEq(allOffers[i].offeror, buyer);
+            assertEq(allOffers[i].assetContract, assetContract);
+            assertEq(allOffers[i].tokenId, tokenIds[i]);
+            assertEq(allOffers[i].quantity, quantity);
+            assertEq(allOffers[i].currency, currency);
+            assertEq(allOffers[i].totalPrice, totalPrice);
+            assertEq(allOffers[i].expirationTimestamp, expirationTimestamp);
+            assertEq(uint256(allOffers[i].tokenType), uint256(IOffers.TokenType.ERC721));
+        }
+    }
+
+    function test_state_getAllValidOffers() public {
+        uint256[] memory offerIds = new uint256[](5);
+        uint256[] memory tokenIds = new uint256[](5);
+
+        // mint total-price to buyer
+        erc20.mint(buyer, 5 ether);
+
+        // Approve Marketplace to transfer currency tokens. (but not owned)
+        vm.prank(buyer);
+        erc20.approve(marketplace, 5 ether);
+
+        // Sample offer parameters.
+        address assetContract = address(erc721);
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 expirationTimestamp = 200;
+
+        IOffers.OfferParams memory offerParams;
+
+        for (uint256 i = 0; i < 5; i += 1) {
+            tokenIds[i] = i;
+
+            // make offer, with total-price as i
+            offerParams = IOffers.OfferParams(
+                assetContract,
+                tokenIds[i],
+                quantity,
+                currency,
+                (i + 1) * 1 ether,
+                expirationTimestamp
+            );
+
+            vm.prank(buyer);
+            offerIds[i] = Offers(marketplace).makeOffer(offerParams);
+        }
+
+        vm.prank(buyer);
+        erc20.burn(2 ether); // reduce balance to make some offers invalid
+
+        IOffers.Offer[] memory allOffers = Offers(marketplace).getAllValidOffers(0, 4);
+        assertEq(allOffers.length, 3);
+
+        for (uint256 i = 0; i < 3; i += 1) {
+            assertEq(allOffers[i].offerId, offerIds[i]);
+            assertEq(allOffers[i].offeror, buyer);
+            assertEq(allOffers[i].assetContract, assetContract);
+            assertEq(allOffers[i].tokenId, tokenIds[i]);
+            assertEq(allOffers[i].quantity, quantity);
+            assertEq(allOffers[i].currency, currency);
+            assertEq(allOffers[i].totalPrice, (i + 1) * 1 ether);
+            assertEq(allOffers[i].expirationTimestamp, expirationTimestamp);
+            assertEq(uint256(allOffers[i].tokenType), uint256(IOffers.TokenType.ERC721));
+        }
+
+        // create an offer, and check the offers returned post its expiry
+        offerParams = IOffers.OfferParams(assetContract, 5, quantity, currency, 10, 10);
+
+        vm.prank(buyer);
+        Offers(marketplace).makeOffer(offerParams);
+
+        vm.warp(10);
+        allOffers = Offers(marketplace).getAllValidOffers(0, 5);
+        assertEq(allOffers.length, 3);
+    }
 }
