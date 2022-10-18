@@ -306,13 +306,26 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
             }
         } catch {}
 
-        CurrencyTransferLib.safeTransferERC20(_currencyToUse, _payer, platformFeeRecipient, platformFeeCut);
-        CurrencyTransferLib.safeTransferERC20(_currencyToUse, _payer, royaltyRecipient, royaltyCut);
-        CurrencyTransferLib.safeTransferERC20(
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            _currencyToUse,
+            _payer,
+            platformFeeRecipient,
+            platformFeeCut,
+            address(0)
+        );
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            _currencyToUse,
+            _payer,
+            royaltyRecipient,
+            royaltyCut,
+            address(0)
+        );
+        CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             _payee,
-            _totalPayoutAmount - (platformFeeCut + royaltyCut)
+            _totalPayoutAmount - (platformFeeCut + royaltyCut),
+            address(0)
         );
     }
 }
