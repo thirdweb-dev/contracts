@@ -10,29 +10,6 @@
 
 ## Methods
 
-### claimWithSignature
-
-```solidity
-function claimWithSignature(ISignatureAction.GenericRequest _req, bytes _signature) external payable returns (address signer)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _req | ISignatureAction.GenericRequest | undefined |
-| _signature | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signer | address | undefined |
-
 ### verify
 
 ```solidity

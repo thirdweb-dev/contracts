@@ -15,9 +15,4 @@ interface ISignatureAction {
         external
         view
         returns (bool success, address signer);
-
-    function claimWithSignature(GenericRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        returns (address signer);
 }
