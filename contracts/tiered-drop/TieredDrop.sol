@@ -111,7 +111,7 @@ contract TieredDrop is
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         // Retrieve metadata ID for token.
-        uint256 metadataId = _getMetadataId(_tokenId);
+        uint256 metadataId = getMetadataId(_tokenId);
 
         // Use metadata ID to return token metadata.
         (uint256 batchId, uint256 index) = getBatchId(metadataId);
@@ -327,7 +327,7 @@ contract TieredDrop is
         }
     }
 
-    function _getMetadataId(uint256 _tokenId) private view returns (uint256) {
+    function getMetadataId(uint256 _tokenId) public view returns (uint256) {
         uint256[] memory endIds = endIdsAtMint;
         uint256 len = endIds.length;
 

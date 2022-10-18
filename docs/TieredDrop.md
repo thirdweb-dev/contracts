@@ -280,6 +280,28 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
 
+### getMetadataId
+
+```solidity
+function getMetadataId(uint256 _tokenId) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### getRevealURI
 
 ```solidity
