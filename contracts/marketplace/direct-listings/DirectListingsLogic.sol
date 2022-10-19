@@ -342,7 +342,12 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     }
 
     /// @notice Returns a listing at a particular listing ID.
-    function getListing(uint256 _listingId) external view returns (Listing memory listing) {
+    function getListing(uint256 _listingId)
+        external
+        view
+        onlyExistingListing(_listingId)
+        returns (Listing memory listing)
+    {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         listing = data.listings[_listingId];
