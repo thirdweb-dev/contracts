@@ -17,6 +17,9 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     TWMultichainRegistry internal _registry;
 
     // Test params
+    address internal factoryAdmin_;
+    address internal factory_;
+
     uint256[] internal chainIds;
     address[] internal deploymentAddresses;
     address internal deployer_;
@@ -29,6 +32,8 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
         super.setUp();
 
         deployer_ = getActor(100);
+        factory_ = getActor(101);
+        factoryAdmin_ = getActor(102);
 
         for (uint256 i = 0; i < total; i += 1) {
             chainIds.push(i);
@@ -37,7 +42,12 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
             deploymentAddresses.push(depl);
         }
 
-        _registry = TWMultichainRegistry(registry);
+        vm.startPrank(factoryAdmin_);
+        _registry = new TWMultichainRegistry(address(0));
+
+        _registry.grantRole(keccak256("OPERATOR_ROLE"), factory_);
+
+        vm.stopPrank();
     }
 
     //  =====   Functionality tests   =====
@@ -45,7 +55,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     /// @dev Test `add`
 
     function test_addFromFactory() public {
-        vm.startPrank(factory);
+        vm.startPrank(factory_);
         for (uint256 i = 0; i < total; i += 1) {
             _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
         }
@@ -61,7 +71,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
             assertEq(modules[i].chainId, chainIds[i]);
         }
 
-        vm.prank(factory);
+        vm.prank(factory_);
         _registry.add(deployer_, address(0x43), 111, "");
 
         modules = _registry.getAll(deployer_);
@@ -86,7 +96,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
             assertEq(modules[i].chainId, chainIds[i]);
         }
 
-        vm.prank(factory);
+        vm.prank(factory_);
         _registry.add(deployer_, address(0x43), 111, "");
 
         modules = _registry.getAll(deployer_);
@@ -98,7 +108,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
         vm.expectEmit(true, true, true, true);
         emit Added(deployer_, deploymentAddresses[0], chainIds[0], "uri");
 
-        vm.prank(factory);
+        vm.prank(factory_);
         _registry.add(deployer_, deploymentAddresses[0], chainIds[0], "uri");
 
         string memory uri = _registry.getMetadataUri(chainIds[0], deploymentAddresses[0]);
@@ -108,7 +118,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     // Test `remove`
 
     function setUp_remove() public {
-        vm.startPrank(factory);
+        vm.startPrank(factory_);
         for (uint256 i = 0; i < total; i += 1) {
             _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
         }
@@ -118,7 +128,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     //  =====   Functionality tests   =====
     function test_removeFromFactory() public {
         setUp_remove();
-        vm.prank(factory);
+        vm.prank(factory_);
         _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
         ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
@@ -132,7 +142,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
 
     function test_removeFromSelf() public {
         setUp_remove();
-        vm.prank(factory);
+        vm.prank(factory_);
         _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
         ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
@@ -142,7 +152,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     function test_remove_revert_invalidCaller() public {
         setUp_remove();
         address invalidCaller = address(0x123);
-        assertTrue(invalidCaller != factory || invalidCaller != deployer_);
+        assertTrue(invalidCaller != factory_ || invalidCaller != deployer_);
 
         vm.expectRevert("not operator or deployer.");
 

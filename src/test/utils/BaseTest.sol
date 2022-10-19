@@ -11,7 +11,7 @@ import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
 import "contracts/forwarder/Forwarder.sol";
 import { ForwarderEOAOnly } from "contracts/forwarder/ForwarderEOAOnly.sol";
-import "contracts/TWMultichainRegistry.sol";
+import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
 import { Pack } from "contracts/pack/Pack.sol";
@@ -94,11 +94,11 @@ abstract contract BaseTest is DSTest, Test {
         weth = new WETH9();
         forwarder = address(new Forwarder());
         eoaForwarder = address(new ForwarderEOAOnly());
-        registry = address(new TWMultichainRegistry(forwarder));
+        registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
         contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
-        TWMultichainRegistry(registry).grantRole(TWMultichainRegistry(registry).OPERATOR_ROLE(), factory);
-        TWMultichainRegistry(registry).grantRole(TWMultichainRegistry(registry).OPERATOR_ROLE(), contractPublisher);
+        TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
+        TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
 
         TWFactory(factory).addImplementation(address(new TokenERC20()));
         TWFactory(factory).addImplementation(address(new TokenERC721()));
