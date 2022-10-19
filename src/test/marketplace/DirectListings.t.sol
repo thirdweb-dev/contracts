@@ -281,7 +281,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("Listing zero quantity.");
+        vm.expectRevert("Marketplace: listing zero quantity.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -320,7 +320,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("Listing invalid quantity.");
+        vm.expectRevert("Marketplace: listing invalid quantity.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -362,7 +362,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid timestamps.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -401,7 +401,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid timestamps.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -433,7 +433,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
 
         vm.prank(seller);
-        vm.expectRevert("token must be ERC1155 or ERC721.");
+        vm.expectRevert("Marketplace: listed token must be ERC1155 or ERC721.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -694,7 +694,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.quantity = 0; // Listing zero quantity
 
         vm.prank(seller);
-        vm.expectRevert("Listing zero quantity.");
+        vm.expectRevert("Marketplace: listing zero quantity.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -713,7 +713,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.quantity = 2; // Listing more than `1` of the ERC721 token
 
         vm.prank(seller);
-        vm.expectRevert("Listing invalid quantity.");
+        vm.expectRevert("Marketplace: listing invalid quantity.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -735,7 +735,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
 
         vm.prank(seller);
-        vm.expectRevert("token must be ERC1155 or ERC721.");
+        vm.expectRevert("Marketplace: listed token must be ERC1155 or ERC721.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -754,7 +754,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.startTimestamp = currentStartTimestamp - 1; // Retroactively decreasing startTimestamp.
 
         vm.prank(seller);
-        vm.expectRevert("invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid timestamps.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -773,7 +773,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.endTimestamp = currentStartTimestamp - 1; // End timestamp less than startTimestamp
 
         vm.prank(seller);
-        vm.expectRevert("invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid timestamps.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 

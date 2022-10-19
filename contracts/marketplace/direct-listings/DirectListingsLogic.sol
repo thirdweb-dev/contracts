@@ -90,7 +90,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
 
         require(
             _params.startTimestamp >= (block.timestamp - 60 minutes) && _params.startTimestamp < _params.endTimestamp,
-            "invalid timestamps."
+            "Marketplace: invalid timestamps."
         );
 
         _validateNewListing(_params, tokenType);
@@ -130,7 +130,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
 
         require(
             _params.startTimestamp >= listing.startTimestamp && _params.startTimestamp < _params.endTimestamp,
-            "invalid timestamps."
+            "Marketplace: invalid timestamps."
         );
 
         _validateNewListing(_params, tokenType);
@@ -367,14 +367,14 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
             tokenType = TokenType.ERC721;
         } else {
-            revert("token must be ERC1155 or ERC721.");
+            revert("Marketplace: listed token must be ERC1155 or ERC721.");
         }
     }
 
     /// @dev Checks whether the listing creator owns and has approved marketplace to transfer listed tokens.
     function _validateNewListing(ListingParameters memory _params, TokenType _tokenType) internal view {
-        require(_params.quantity > 0, "Listing zero quantity.");
-        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Listing invalid quantity.");
+        require(_params.quantity > 0, "Marketplace: listing zero quantity.");
+        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: listing invalid quantity.");
 
         require(
             _validateOwnershipAndApproval(
