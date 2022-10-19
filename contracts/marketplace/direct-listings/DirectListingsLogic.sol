@@ -223,7 +223,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                 _quantity,
                 listing.tokenType
             ),
-            "!BALNFT"
+            "Marketplace: not owner or approved tokens."
         );
 
         address targetCurrency = _currency;
@@ -384,7 +384,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                 _params.quantity,
                 _tokenType
             ),
-            "!BALNFT"
+            "Marketplace: not owner or approved tokens."
         );
     }
 
