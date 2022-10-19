@@ -1,4 +1,4 @@
-# TWRegistry
+# TWMultichainRegistry
 
 
 
@@ -47,10 +47,10 @@ function OPERATOR_ROLE() external view returns (bytes32)
 ### add
 
 ```solidity
-function add(address _deployer, address _deployment) external nonpayable
+function add(address _deployer, address _deployment, uint256 _chainId, string metadataUri) external nonpayable
 ```
 
-
+Add a deployment for a deployer.
 
 
 
@@ -60,14 +60,16 @@ function add(address _deployer, address _deployment) external nonpayable
 |---|---|---|
 | _deployer | address | undefined |
 | _deployment | address | undefined |
+| _chainId | uint256 | undefined |
+| metadataUri | string | undefined |
 
 ### count
 
 ```solidity
-function count(address _deployer) external view returns (uint256)
+function count(address _deployer) external view returns (uint256 deploymentCount)
 ```
 
-
+Get the total number of deployments for a deployer.
 
 
 
@@ -81,15 +83,15 @@ function count(address _deployer) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| deploymentCount | uint256 | undefined |
 
 ### getAll
 
 ```solidity
-function getAll(address _deployer) external view returns (address[])
+function getAll(address _deployer) external view returns (struct ITWMultichainRegistry.Deployment[] allDeployments)
 ```
 
-
+Get all deployments for a deployer.
 
 
 
@@ -103,7 +105,30 @@ function getAll(address _deployer) external view returns (address[])
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address[] | undefined |
+| allDeployments | ITWMultichainRegistry.Deployment[] | undefined |
+
+### getMetadataUri
+
+```solidity
+function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string metadataUri)
+```
+
+Returns the metadata IPFS URI for a deployment on a given chain if previously registered via add().
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _chainId | uint256 | undefined |
+| _deployment | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| metadataUri | string | undefined |
 
 ### getRoleAdmin
 
@@ -259,10 +284,10 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ### remove
 
 ```solidity
-function remove(address _deployer, address _deployment) external nonpayable
+function remove(address _deployer, address _deployment, uint256 _chainId) external nonpayable
 ```
 
-
+Remove a deployment for a deployer.
 
 
 
@@ -272,6 +297,7 @@ function remove(address _deployer, address _deployment) external nonpayable
 |---|---|---|
 | _deployer | address | undefined |
 | _deployment | address | undefined |
+| _chainId | uint256 | undefined |
 
 ### renounceRole
 
@@ -336,7 +362,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### Added
 
 ```solidity
-event Added(address indexed deployer, address indexed deployment)
+event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri)
 ```
 
 
@@ -349,11 +375,13 @@ event Added(address indexed deployer, address indexed deployment)
 |---|---|---|
 | deployer `indexed` | address | undefined |
 | deployment `indexed` | address | undefined |
+| chainId `indexed` | uint256 | undefined |
+| metadataUri  | string | undefined |
 
 ### Deleted
 
 ```solidity
-event Deleted(address indexed deployer, address indexed deployment)
+event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId)
 ```
 
 
@@ -366,6 +394,7 @@ event Deleted(address indexed deployer, address indexed deployment)
 |---|---|---|
 | deployer `indexed` | address | undefined |
 | deployment `indexed` | address | undefined |
+| chainId `indexed` | uint256 | undefined |
 
 ### RoleAdminChanged
 
