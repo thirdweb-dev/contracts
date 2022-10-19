@@ -76,6 +76,12 @@ interface IDirectListings {
      */
     function createListing(ListingParameters memory _params) external returns (uint256 listingId);
 
+    /**
+     *  @notice Update parameters of a listing of NFTs.
+     *
+     *  @param _listingId The ID of the listing to update.
+     *  @param _params The parameters of a listing a seller sets when updating a listing.
+     */
     function updateListing(uint256 _listingId, ListingParameters memory _params) external;
 
     function cancelListing(uint256 _listingId) external;
