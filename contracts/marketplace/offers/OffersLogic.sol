@@ -109,7 +109,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
 
         require(
             _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice),
-            "!BAL20"
+            "Marketplace: insufficient currency balance."
         );
 
         _validateOwnershipAndApproval(
@@ -209,18 +209,24 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
             tokenType = TokenType.ERC721;
         } else {
-            revert("token must be ERC1155 or ERC721.");
+            revert("Marketplace: token must be ERC1155 or ERC721.");
         }
     }
 
     /// @dev Checks whether the auction creator owns and has approved marketplace to transfer auctioned tokens.
     function _validateNewOffer(OfferParams memory _params, TokenType _tokenType) internal view {
         require(_params.totalPrice > 0, "zero price.");
-        require(_params.quantity > 0, "zero quantity.");
-        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "invalid quantity.");
-        require(_params.expirationTimestamp > block.timestamp, "invalid expiration.");
+        require(_params.quantity > 0, "Marketplace: wanted zero tokens.");
+        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: wanted invalid quantity.");
+        require(
+            _params.expirationTimestamp > (block.timestamp - 60 minutes),
+            "Marketplace: invalid expiration timestamp."
+        );
 
-        require(_validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice), "!BAL20");
+        require(
+            _validateERC20BalAndAllowance(_msgSender(), _params.currency, _params.totalPrice),
+            "Marketplace: insufficient currency balance."
+        );
     }
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.

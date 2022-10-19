@@ -167,7 +167,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        vm.expectRevert("!BAL20");
+        vm.expectRevert("Marketplace: insufficient currency balance.");
         Offers(marketplace).makeOffer(offerParams);
     }
 
@@ -194,7 +194,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        vm.expectRevert("!BAL20");
+        vm.expectRevert("Marketplace: insufficient currency balance.");
         Offers(marketplace).makeOffer(offerParams);
     }
 
@@ -225,7 +225,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        vm.expectRevert("zero quantity.");
+        vm.expectRevert("Marketplace: wanted zero tokens.");
         Offers(marketplace).makeOffer(offerParams);
     }
 
@@ -256,7 +256,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        vm.expectRevert("invalid quantity.");
+        vm.expectRevert("Marketplace: wanted invalid quantity.");
         Offers(marketplace).makeOffer(offerParams);
     }
 
@@ -287,7 +287,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        vm.expectRevert("invalid expiration.");
+        vm.expectRevert("Marketplace: invalid expiration timestamp.");
         Offers(marketplace).makeOffer(offerParams);
     }
 
@@ -322,7 +322,7 @@ contract MarketplaceOffersTest is BaseTest {
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
 
         vm.prank(buyer);
-        vm.expectRevert("token must be ERC1155 or ERC721.");
+        vm.expectRevert("Marketplace: token must be ERC1155 or ERC721.");
         Offers(marketplace).makeOffer(offerParams);
     }
 
@@ -629,7 +629,7 @@ contract MarketplaceOffersTest is BaseTest {
         // accept offer
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
-        vm.expectRevert("!BAL20");
+        vm.expectRevert("Marketplace: insufficient currency balance.");
         Offers(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
@@ -673,7 +673,7 @@ contract MarketplaceOffersTest is BaseTest {
         // accept offer
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
-        vm.expectRevert("!BAL20");
+        vm.expectRevert("Marketplace: insufficient currency balance.");
         Offers(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
