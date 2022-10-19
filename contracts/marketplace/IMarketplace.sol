@@ -301,14 +301,6 @@ interface IEnglishAuctions {
     function createAuction(AuctionParameters memory _params) external returns (uint256 auctionId);
 
     /**
-     *  @notice Update parameters of an auction.
-     *
-     *  @param _auctionId The ID of the auction to update.
-     *  @param _params The parameters of an auction a seller sets when updating an auction.
-     */
-    function updateAuction(uint256 _auctionId, AuctionParameters memory _params) external;
-
-    /**
      *  @notice Cancel an auction.
      *
      *  @param _auctionId The ID of the auction to cancel.
