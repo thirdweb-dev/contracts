@@ -130,7 +130,7 @@ contract SignatureDrop is
     }
 
     function contractVersion() external pure returns (uint8) {
-        return uint8(4);
+        return uint8(5);
     }
 
     /*///////////////////////////////////////////////////////////////
