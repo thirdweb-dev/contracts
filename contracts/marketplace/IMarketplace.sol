@@ -1,12 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/**
+ *  The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-721 or ERC-1155) for a fixed price.
+ */
 interface IDirectListings {
     enum TokenType {
         ERC721,
         ERC1155
     }
 
+    /**
+     *  @notice The parameters a seller sets when creating or updating a listing.
+     *
+     *  @param assetContract The address of the smart contract of the NFTs being listed.
+     *  @param tokenId The tokenId of the NFTs being listed.
+     *  @param quantity The quantity of NFTs being listed. This must be non-zero, and is expected to
+     *                  be `1` for ERC-721 NFTs.
+     *  @param currency The currency in which the price must be paid when buying the listed NFTs.
+     *  @param pricePerToken The price to pay per unit of NFTs listed.
+     *  @param startTimestamp The UNIX timestamp at and after which NFTs can be bought from the listing.
+     *  @param endTimestamp The UNIX timestamp at and after which NFTs cannot be bought from the listing.
+     *  @param reserved Whether the listing is reserved to be bought from a specific set of buyers.
+     */
     struct ListingParameters {
         address assetContract;
         uint256 tokenId;
@@ -51,6 +67,13 @@ interface IDirectListings {
         uint256 totalPricePaid
     );
 
+    /**
+     *  @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
+     *
+     *  @param _params The parameters of a listing a seller sets when creating a listing.
+     *
+     *  @return listingId The unique integer ID of the listing.
+     */
     function createListing(ListingParameters memory _params) external returns (uint256 listingId);
 
     function updateListing(uint256 _listingId, ListingParameters memory _params) external;

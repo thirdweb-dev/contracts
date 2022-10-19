@@ -203,7 +203,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -242,7 +242,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -653,7 +653,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
 
         vm.prank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -675,7 +675,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
 
         vm.prank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
