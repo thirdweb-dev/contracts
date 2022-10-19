@@ -54,14 +54,14 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-        require(data.listings[_listingId].listingCreator == _msgSender(), "!Creator");
+        require(data.listings[_listingId].listingCreator == _msgSender(), "Marketplace: not listing creator.");
         _;
     }
 
     /// @dev Checks whether a listing exists.
     modifier onlyExistingListing(uint256 _listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-        require(data.listings[_listingId].assetContract != address(0), "DNE");
+        require(data.listings[_listingId].assetContract != address(0), "Marketplace: listing does not exist.");
         _;
     }
 
@@ -170,11 +170,11 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     ) external onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        require(data.listings[_listingId].reserved, "not reserved listing");
+        require(data.listings[_listingId].reserved, "Marketplace: listing not reserved.");
 
         data.isBuyerApprovedForListing[_listingId][_buyer] = _toApprove;
 
-        emit ApprovalForListing(_listingId, _buyer, _toApprove);
+        emit BuyerApprovedForListing(_listingId, _buyer, _toApprove);
     }
 
     /// @notice Approve a currency and its associated price per token, for a listing.
@@ -192,7 +192,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         data.isCurrencyApprovedForListing[_listingId][_currency] = _toApprove;
         data.currencyPriceForListing[_listingId][_currency] = _pricePerTokenInCurrency;
 
-        emit CurrencyPriceForListing(_listingId, _currency, _pricePerTokenInCurrency, _toApprove);
+        emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency, _toApprove);
     }
 
     /// @notice Buy from a listing of ERC721 or ERC1155 NFTs.
@@ -240,7 +240,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
 
         // Check: buyer owns and has approved sufficient currency for sale.
         if (targetCurrency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == targetTotalPrice, "msg.value != price");
+            require(msg.value == targetTotalPrice, "Marketplace: msg.value must exactly be the total price.");
         } else {
             _validateERC20BalAndAllowance(buyer, targetCurrency, targetTotalPrice);
         }

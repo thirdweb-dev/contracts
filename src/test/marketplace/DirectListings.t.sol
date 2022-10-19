@@ -631,7 +631,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         address notSeller = getActor(1000); // Someone other than the seller calls update.
         vm.prank(notSeller);
-        vm.expectRevert("!Creator");
+        vm.expectRevert("Marketplace: not listing creator.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -843,7 +843,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         address notSeller = getActor(1000);
         vm.prank(notSeller);
-        vm.expectRevert("!Creator");
+        vm.expectRevert("Marketplace: not listing creator.");
         DirectListings(marketplace).cancelListing(listingId);
     }
 
@@ -855,7 +855,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(DirectListings(marketplace).getListing(nextListingId).assetContract, address(0));
 
         vm.prank(seller);
-        vm.expectRevert(bytes("DNE"));
+        vm.expectRevert("Marketplace: listing does not exist.");
         DirectListings(marketplace).cancelListing(nextListingId);
     }
 
@@ -889,7 +889,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Someone other than the seller approves buyer for reserved listing.
         address notSeller = getActor(1000);
         vm.prank(notSeller);
-        vm.expectRevert("!Creator");
+        vm.expectRevert("Marketplace: not listing creator.");
         DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
     }
 
@@ -908,7 +908,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        vm.expectRevert("not reserved listing");
+        vm.expectRevert("Marketplace: listing not reserved.");
         DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
     }
 
@@ -951,7 +951,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Someone other than seller approves buyer for reserved listing.
         address notSeller = getActor(1000);
         vm.prank(notSeller);
-        vm.expectRevert("!Creator");
+        vm.expectRevert("Marketplace: not listing creator.");
         DirectListings(marketplace).approveCurrencyForListing(
             listingId,
             currencyToApprove,
@@ -1117,7 +1117,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
-        vm.expectRevert("msg.value != price");
+        vm.expectRevert("Marketplace: msg.value must exactly be the total price.");
         DirectListings(marketplace).buyFromListing{ value: totalPrice - 1 }( // sending insufficient value
             listingId,
             buyFor,
