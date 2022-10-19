@@ -4,8 +4,6 @@ pragma solidity ^0.8.11;
 import "./DirectListingsStorage.sol";
 
 // ====== External imports ======
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,10 +11,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
+import "../extension//PlatformFee.sol";
 import "../extension/ERC2771ContextConsumer.sol";
-
-import "../../extension/interface/IPlatformFee.sol";
-
 import "../extension/ReentrancyGuard.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
@@ -41,11 +37,13 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                             Modifier
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Checks whether the caller has LISTER_ROLE.
     modifier onlyListerRole() {
         require(PermissionsEnumerable(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
+    /// @dev Checks whether the caller has ASSET_ROLE.
     modifier onlyAssetRole(address _asset) {
         require(PermissionsEnumerable(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
@@ -77,7 +75,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice List ERC721 or ERC1155 NFTs for sale at a fixed price.
+    /// @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
     function createListing(ListingParameters calldata _params)
         external
         onlyListerRole
@@ -116,7 +114,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         emit NewListing(listingCreator, listingId, listing);
     }
 
-    /// @notice Update an existing listing of your ERC721 or ERC1155 NFTs.
+    /// @notice Update parameters of a listing of NFTs.
     function updateListing(uint256 _listingId, ListingParameters memory _params)
         external
         onlyAssetRole(_params.assetContract)
@@ -154,7 +152,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         emit UpdatedListing(listingCreator, _listingId, listing);
     }
 
-    /// @notice Cancel an existing listing of your ERC721 or ERC1155 NFTs.
+    /// @notice Cancel a listing.
     function cancelListing(uint256 _listingId) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
@@ -162,7 +160,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         emit CancelledListing(_msgSender(), _listingId);
     }
 
-    /// @notice Approve or disapprove a buyer for a reserved listing.
+    /// @notice Approve a buyer to buy from a reserved listing.
     function approveBuyerForListing(
         uint256 _listingId,
         address _buyer,
@@ -177,7 +175,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         emit BuyerApprovedForListing(_listingId, _buyer, _toApprove);
     }
 
-    /// @notice Approve a currency and its associated price per token, for a listing.
+    /// @notice Approve a currency as a form of payment for the listing.
     function approveCurrencyForListing(
         uint256 _listingId,
         address _currency,
@@ -187,7 +185,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         Listing memory listing = data.listings[_listingId];
-        require(_currency != listing.currency, "Re-approving main listing currency.");
+        require(_currency != listing.currency, "Marketplace: Re-approving main listing currency.");
 
         data.isCurrencyApprovedForListing[_listingId][_currency] = _toApprove;
         data.currencyPriceForListing[_listingId][_currency] = _pricePerTokenInCurrency;
@@ -195,7 +193,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency, _toApprove);
     }
 
-    /// @notice Buy from a listing of ERC721 or ERC1155 NFTs.
+    /// @notice Buy NFTs from a listing.
     function buyFromListing(
         uint256 _listingId,
         address _buyFor,
@@ -268,7 +266,10 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns the total number of listings ever created in the Marketplace.
+    /**
+     *  @notice Returns the total number of listings created.
+     *  @dev At any point, the return value is the ID of the next listing created.
+     */
     function totalListings() external view returns (uint256) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
         return data.totalListings;
@@ -297,7 +298,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         return data.currencyPriceForListing[_listingId][_currency];
     }
 
-    /// @notice Returns all non-cancelled listings.
+    /// @notice Returns all listings between the start and end Id (both inclusive) provided.
     function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory allListings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
@@ -320,7 +321,11 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         }
     }
 
-    /// @dev Returns listings within the specified range, where lister has sufficient balance.
+    /**
+     *  @notice Returns all valid listings between the start and end Id (both inclusive) provided.
+     *          A valid listing is where the listing creator still owns and has approved Marketplace
+     *          to transfer the listed NFTs.
+     */
     function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _listings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
@@ -459,7 +464,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+        (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFee(address(this)).getPlatformFeeInfo();
         uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;

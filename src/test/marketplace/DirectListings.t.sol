@@ -968,7 +968,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        vm.expectRevert("Re-approving main listing currency.");
+        vm.expectRevert("Marketplace: Re-approving main listing currency..");
         DirectListings(marketplace).approveCurrencyForListing(
             listingId,
             currencyToApprove,
