@@ -51,6 +51,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
         map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
         map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getAllValidAuctions.selector, englishAuctions);
         map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
         map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
         map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
@@ -1340,7 +1341,72 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
             auctionIds[i] = EnglishAuctions(marketplace).createAuction(auctionParams);
         }
 
-        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctions(marketplace).getAllAuctions();
+        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctions(marketplace).getAllAuctions(0, 4);
+        assertEq(activeAuctions.length, 5);
+
+        for (uint256 i = 0; i < 5; i += 1) {
+            assertEq(activeAuctions[i].auctionId, auctionIds[i]);
+            assertEq(activeAuctions[i].auctionCreator, seller);
+            assertEq(activeAuctions[i].assetContract, assetContract);
+            assertEq(activeAuctions[i].tokenId, tokenIds[i]);
+            assertEq(activeAuctions[i].quantity, quantity);
+            assertEq(activeAuctions[i].currency, currency);
+            assertEq(activeAuctions[i].minimumBidAmount, minimumBidAmount);
+            assertEq(activeAuctions[i].buyoutBidAmount, buyoutBidAmount);
+            assertEq(activeAuctions[i].timeBufferInSeconds, timeBufferInSeconds);
+            assertEq(activeAuctions[i].bidBufferBps, bidBufferBps);
+            assertEq(activeAuctions[i].startTimestamp, startTimestamp);
+            assertEq(activeAuctions[i].endTimestamp, endTimestamp);
+            assertEq(uint256(activeAuctions[i].tokenType), uint256(IEnglishAuctions.TokenType.ERC721));
+        }
+    }
+
+    function test_state_getAllValidAuctions() public {
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 6);
+
+        uint256[] memory auctionIds = new uint256[](5);
+        uint256[] memory tokenIds = new uint256[](5);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = uint64(block.timestamp);
+        uint64 endTimestamp = startTimestamp + 200;
+
+        IEnglishAuctions.AuctionParameters memory auctionParams;
+
+        for (uint256 i = 0; i < 5; i += 1) {
+            tokenIds[i] = i;
+
+            // Auction tokens.
+            auctionParams = IEnglishAuctions.AuctionParameters(
+                assetContract,
+                tokenIds[i],
+                quantity,
+                currency,
+                minimumBidAmount,
+                buyoutBidAmount,
+                timeBufferInSeconds,
+                bidBufferBps,
+                startTimestamp,
+                endTimestamp
+            );
+
+            vm.prank(seller);
+            auctionIds[i] = EnglishAuctions(marketplace).createAuction(auctionParams);
+        }
+
+        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctions(marketplace).getAllValidAuctions(0, 4);
         assertEq(activeAuctions.length, 5);
 
         for (uint256 i = 0; i < 5; i += 1) {
@@ -1376,7 +1442,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.prank(seller);
         EnglishAuctions(marketplace).createAuction(auctionParams);
 
-        activeAuctions = EnglishAuctions(marketplace).getAllAuctions();
+        activeAuctions = EnglishAuctions(marketplace).getAllValidAuctions(0, 5);
         assertEq(activeAuctions.length, 5);
     }
 

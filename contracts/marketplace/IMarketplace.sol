@@ -157,7 +157,9 @@ interface IEnglishAuctions {
 
     function getAuction(uint256 _auctionId) external view returns (Auction memory auction);
 
-    function getAllAuctions() external view returns (Auction[] memory auctions);
+    function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
+
+    function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
 
     function getWinningBid(uint256 _auctionId)
         external

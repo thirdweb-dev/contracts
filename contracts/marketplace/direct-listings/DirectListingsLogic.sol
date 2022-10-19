@@ -298,45 +298,53 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     }
 
     /// @notice Returns all non-cancelled listings.
-    function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory allListings) {
+    function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _allListings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        uint256 total = data.totalListings;
-        uint256 nonEmptyListings;
+        require(_startId < _endId && _endId < data.totalListings, "invalid range");
 
-        require(_startId < _endId && _endId < total, "invalid range");
+        Listing[] memory _listings = new Listing[](_endId - _startId + 1);
+        uint256 _listingCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
+            _listings[i] = data.listings[i];
             if (data.listings[i].listingCreator != address(0)) {
-                nonEmptyListings += 1;
+                _listingCount += 1;
             }
         }
 
-        allListings = new Listing[](nonEmptyListings);
-        for (uint256 i = 0; i < nonEmptyListings; i += 1) {
-            if (data.listings[i].listingCreator != address(0)) {
-                allListings[i] = data.listings[i];
+        _allListings = new Listing[](_listingCount);
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (_listings[i].listingCreator != address(0)) {
+                _allListings[i] = _listings[i];
             }
         }
     }
 
     /// @dev Returns listings within the specified range, where lister has sufficient balance.
-    function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _listings) {
+    function getAllValidListings(uint256 _startId, uint256 _endId)
+        external
+        view
+        returns (Listing[] memory _validListings)
+    {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         require(_startId < _endId && _endId < data.totalListings, "invalid range");
 
+        Listing[] memory _listings = new Listing[](_endId - _startId + 1);
         uint256 _listingCount;
+
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            if (_validateExistingListing(data.listings[i])) {
+            _listings[i] = data.listings[i];
+            if (_validateExistingListing(_listings[i])) {
                 _listingCount += 1;
             }
         }
 
-        _listings = new Listing[](_listingCount);
-        for (uint256 i = 0; i < _listingCount; i += 1) {
-            if (_validateExistingListing(data.listings[i])) {
-                _listings[i] = data.listings[i];
+        _validListings = new Listing[](_listingCount);
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (_validateExistingListing(_listings[i])) {
+                _validListings[i] = _listings[i];
             }
         }
     }

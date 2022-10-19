@@ -211,23 +211,56 @@ contract EnglishAuctions is IEnglishAuctions, Context, PermissionsEnumerable, Re
         _auction = auctions[_auctionId];
     }
 
-    function getAllAuctions() external view returns (Auction[] memory _activeAuctions) {
-        uint256 _totalAuctions = totalAuctions;
-        uint256 _activeAuctionCount;
-        Auction[] memory _auctions = new Auction[](_totalAuctions);
+    function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory _allAuctions) {
+        require(_startId < _endId && _endId < totalAuctions, "invalid range");
 
-        for (uint256 i = 0; i < _totalAuctions; i += 1) {
+        Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
+        uint256 _auctionCount;
+
+        for (uint256 i = _startId; i <= _endId; i += 1) {
             _auctions[i] = auctions[i];
-            if (_auctions[i].startTimestamp <= block.timestamp && _auctions[i].endTimestamp > block.timestamp) {
-                _activeAuctionCount += 1;
+            if (_auctions[i].assetContract != address(0)) {
+                _auctionCount += 1;
             }
         }
 
-        _activeAuctions = new Auction[](_activeAuctionCount);
+        _allAuctions = new Auction[](_auctionCount);
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (_auctions[i].assetContract != address(0)) {
+                _allAuctions[i] = _auctions[i];
+            }
+        }
+    }
 
-        for (uint256 i = 0; i < _activeAuctionCount; i += 1) {
-            if (_auctions[i].startTimestamp <= block.timestamp && _auctions[i].endTimestamp > block.timestamp) {
-                _activeAuctions[i] = _auctions[i];
+    function getAllValidAuctions(uint256 _startId, uint256 _endId)
+        external
+        view
+        returns (Auction[] memory _validAuctions)
+    {
+        require(_startId < _endId && _endId < totalAuctions, "invalid range");
+
+        Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
+        uint256 _auctionCount;
+
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            _auctions[i] = auctions[i];
+            if (
+                _auctions[i].startTimestamp <= block.timestamp &&
+                _auctions[i].endTimestamp > block.timestamp &&
+                _auctions[i].assetContract != address(0)
+            ) {
+                _auctionCount += 1;
+            }
+        }
+
+        _validAuctions = new Auction[](_auctionCount);
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (
+                _auctions[i].startTimestamp <= block.timestamp &&
+                _auctions[i].endTimestamp > block.timestamp &&
+                _auctions[i].assetContract != address(0)
+            ) {
+                _validAuctions[i] = _auctions[i];
             }
         }
     }
