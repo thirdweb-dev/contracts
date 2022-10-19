@@ -211,7 +211,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved token.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -254,7 +254,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved token.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -297,7 +297,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("zero quantity.");
+        vm.expectRevert("Marketplace: auctioning zero quantity.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -340,7 +340,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("invalid quantity.");
+        vm.expectRevert("Marketplace: auctioning invalid quantity.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -383,7 +383,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("zero time-buffer.");
+        vm.expectRevert("Marketplace: no time-buffer.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
 
         timeBufferInSeconds = 10 seconds;
@@ -403,7 +403,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("zero bid-buffer.");
+        vm.expectRevert("Marketplace: no bid-buffer.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -446,7 +446,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("RESERVE");
+        vm.expectRevert("Marketplace: invalid bid amounts.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -489,7 +489,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid timestamps.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -532,7 +532,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid timestamps.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -568,7 +568,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
 
         vm.prank(seller);
-        vm.expectRevert("token must be ERC1155 or ERC721.");
+        vm.expectRevert("Marketplace: auctioned token must be ERC1155 or ERC721.");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -742,8 +742,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         assertEq(EnglishAuctions(marketplace).totalAuctions(), 1);
 
         // Revert when fetching deleted auction.
-        bytes memory err = "DNE";
-        vm.expectRevert(err);
+        vm.expectRevert("Marketplace: auction does not exist.");
         EnglishAuctions(marketplace).getAuction(auctionId);
     }
 
@@ -767,7 +766,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.stopPrank();
 
         vm.prank(seller);
-        vm.expectRevert("bids already made");
+        vm.expectRevert("Marketplace: bids already made.");
         EnglishAuctions(marketplace).cancelAuction(auctionId);
     }
 
@@ -920,7 +919,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        vm.expectRevert("inactive auction.");
+        vm.expectRevert("Marketplace: inactive auction.");
         EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
@@ -930,7 +929,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        vm.expectRevert("inactive auction.");
+        vm.expectRevert("Marketplace: inactive auction.");
         EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
     }
@@ -991,7 +990,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 0.5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 0.5 ether);
-        vm.expectRevert("not winning bid.");
+        vm.expectRevert("Marketplace: not winning bid.");
         EnglishAuctions(marketplace).bidInAuction(auctionId, 0.5 ether);
         vm.stopPrank();
     }
@@ -1030,7 +1029,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(address(0x345), 1 ether);
         vm.startPrank(address(0x345));
         erc20.approve(marketplace, 1 ether);
-        vm.expectRevert("not winning bid.");
+        vm.expectRevert("Marketplace: not winning bid.");
         EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
     }
@@ -1139,7 +1138,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction payout before auction has ended
         vm.prank(seller);
-        vm.expectRevert("auction still active.");
+        vm.expectRevert("Marketplace: auction still active.");
         EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
     }
 
@@ -1157,7 +1156,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction payout without any bids made
         vm.prank(seller);
-        vm.expectRevert("no bids were made.");
+        vm.expectRevert("Marketplace: no bids were made.");
         EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
     }
 
@@ -1237,7 +1236,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction tokens before auction has ended
         vm.prank(buyer);
-        vm.expectRevert("auction still active.");
+        vm.expectRevert("Marketplace: auction still active.");
         EnglishAuctions(marketplace).collectAuctionTokens(auctionId);
     }
 
@@ -1290,8 +1289,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.stopPrank();
 
         // check winning bid for a non-existent auction
-        bytes memory err = "DNE";
-        vm.expectRevert(err);
+        vm.expectRevert("Marketplace: auction does not exist.");
         EnglishAuctions(marketplace).isNewWinningBid(auctionId + 1, 6 ether);
     }
 
@@ -1391,8 +1389,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     function test_revert_isAuctionExpired() public {
         uint256 auctionId = _setup_newAuction();
 
-        bytes memory err = "DNE";
-        vm.expectRevert(err);
+        vm.expectRevert("Marketplace: auction does not exist.");
         EnglishAuctions(marketplace).isAuctionExpired(auctionId + 1);
     }
 }

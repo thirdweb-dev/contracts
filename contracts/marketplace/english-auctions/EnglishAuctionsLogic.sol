@@ -55,14 +55,14 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
     modifier onlyAuctionCreator(uint256 _auctionId) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
 
-        require(data.auctions[_auctionId].auctionCreator == _msgSender(), "!Creator");
+        require(data.auctions[_auctionId].auctionCreator == _msgSender(), "Marketplace: not auction creator.");
         _;
     }
 
     /// @dev Checks whether an auction exists.
     modifier onlyExistingAuction(uint256 _auctionId) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(data.auctions[_auctionId].assetContract != address(0), "DNE");
+        require(data.auctions[_auctionId].assetContract != address(0), "Marketplace: auction does not exist.");
         _;
     }
 
@@ -110,7 +110,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         data.auctions[auctionId] = auction;
 
-        require(auction.buyoutBidAmount >= auction.minimumBidAmount, "RESERVE");
+        require(auction.buyoutBidAmount >= auction.minimumBidAmount, "Marketplace: invalid bid amounts.");
         _transferAuctionTokens(auctionCreator, address(this), auction);
 
         emit NewAuction(auctionCreator, auctionId, auction);
@@ -127,7 +127,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
 
         require(
             _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp <= block.timestamp,
-            "inactive auction."
+            "Marketplace: inactive auction."
         );
 
         Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
@@ -145,8 +145,8 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Auction memory _targetAuction = data.auctions[_auctionId];
         Bid memory _winningBid = data.winningBid[_auctionId];
 
-        require(_targetAuction.endTimestamp <= block.timestamp, "auction still active.");
-        require(_winningBid.bidder != address(0), "no bids were made.");
+        require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
+        require(_winningBid.bidder != address(0), "Marketplace: no bids were made.");
 
         _closeAuctionForAuctionCreator(_targetAuction, _winningBid);
     }
@@ -156,8 +156,8 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Auction memory _targetAuction = data.auctions[_auctionId];
         Bid memory _winningBid = data.winningBid[_auctionId];
 
-        require(_targetAuction.endTimestamp <= block.timestamp, "auction still active.");
-        require(_msgSender() == _winningBid.bidder, "not bidder");
+        require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
+        require(_msgSender() == _winningBid.bidder, "Marketplace: not winning bidder.");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
     }
@@ -168,7 +168,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Auction memory _targetAuction = data.auctions[_auctionId];
         Bid memory _winningBid = data.winningBid[_auctionId];
 
-        require(_winningBid.bidder == address(0), "bids already made");
+        require(_winningBid.bidder == address(0), "Marketplace: bids already made.");
 
         delete data.auctions[_auctionId];
 
@@ -279,19 +279,19 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         } else if (IERC165(_assetContract).supportsInterface(type(IERC721).interfaceId)) {
             tokenType = TokenType.ERC721;
         } else {
-            revert("token must be ERC1155 or ERC721.");
+            revert("Marketplace: auctioned token must be ERC1155 or ERC721.");
         }
     }
 
     /// @dev Checks whether the auction creator owns and has approved marketplace to transfer auctioned tokens.
     function _validateNewAuction(AuctionParameters memory _params, TokenType _tokenType) internal view {
-        require(_params.quantity > 0, "zero quantity.");
-        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "invalid quantity.");
-        require(_params.timeBufferInSeconds > 0, "zero time-buffer.");
-        require(_params.bidBufferBps > 0, "zero bid-buffer.");
+        require(_params.quantity > 0, "Marketplace: auctioning zero quantity.");
+        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: auctioning invalid quantity.");
+        require(_params.timeBufferInSeconds > 0, "Marketplace: no time-buffer.");
+        require(_params.bidBufferBps > 0, "Marketplace: no bid-buffer.");
         require(
-            _params.startTimestamp >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
-            "invalid timestamps."
+            _params.startTimestamp >= (block.timestamp - 60 minutes) && _params.startTimestamp < _params.endTimestamp,
+            "Marketplace: invalid timestamps."
         );
 
         _validateOwnershipAndApproval(
@@ -325,7 +325,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
                     IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
 
-        require(isValid, "!BALNFT");
+        require(isValid, "Marketplace: not owner or approved token.");
     }
 
     /// @dev Processes an incoming bid in an auction.
@@ -351,7 +351,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
                     incomingBidAmount,
                     _targetAuction.bidBufferBps
                 ),
-                "not winning bid."
+                "Marketplace: not winning bid."
             );
 
             // Update the winning bid and auction's end time before external contract calls.
