@@ -261,13 +261,17 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function test_revert_makeOffer_invalidExpirationTimestamp() public {
+        uint256 blockTimestamp = 100 minutes;
+        // Set block.timestamp
+        vm.warp(blockTimestamp);
+
         // Sample offer parameters.
         address assetContract = address(erc721);
         uint256 tokenId = 0;
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = block.timestamp;
+        uint256 expirationTimestamp = blockTimestamp - 61 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
