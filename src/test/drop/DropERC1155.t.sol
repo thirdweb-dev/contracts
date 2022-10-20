@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC1155, IDelayedReveal, IPermissions, ILazyMint } from "contracts/drop/DropERC1155.sol";
+import { DropERC1155, IPermissions, ILazyMint } from "contracts/drop/DropERC1155.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";
@@ -303,44 +303,11 @@ contract DropERC1155Test is BaseTest {
         vm.stopPrank();
     }
 
-    /*
-     *  note: Testing state changes; lazy mint a batch of tokens with encrypted base URI.
-     */
-    function test_state_lazyMint_withEncryptedURI() public {
-        uint256 amountToLazyMint = 100;
-        string memory baseURI = "ipfs://";
-        bytes memory encryptedBaseURI = "encryptedBaseURI://";
-        bytes32 provenanceHash = bytes32("whatever");
-
-        uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
-
-        vm.startPrank(deployer);
-        uint256 batchId = drop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
-
-        assertEq(nextTokenIdToMintBefore + amountToLazyMint, drop.nextTokenIdToMint());
-        assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
-
-        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
-            string memory uri = drop.uri(i);
-            console.log(uri);
-            assertEq(uri, string(abi.encodePacked(baseURI, "0")));
-        }
-
-        vm.stopPrank();
-    }
-
     /**
      *  note: Testing revert condition; an address without MINTER_ROLE calls lazyMint function.
      */
     function test_revert_lazyMint_MINTER_ROLE() public {
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            Strings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
-
-        vm.expectRevert(errorMessage);
+        vm.expectRevert("Not authorized");
         drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
@@ -407,42 +374,6 @@ contract DropERC1155Test is BaseTest {
     }
 
     /*
-     *  note: Fuzz testing state changes; lazy mint a batch of tokens with encrypted base URI.
-     */
-    function test_fuzz_lazyMint_withEncryptedURI(uint256 x) public {
-        vm.assume(x > 0);
-
-        uint256 amountToLazyMint = x;
-        string memory baseURI = "ipfs://";
-        bytes memory encryptedBaseURI = "encryptedBaseURI://";
-        bytes32 provenanceHash = bytes32("whatever");
-
-        uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
-
-        vm.startPrank(deployer);
-        uint256 batchId = drop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
-
-        assertEq(nextTokenIdToMintBefore + amountToLazyMint, drop.nextTokenIdToMint());
-        assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
-
-        string memory uri = drop.uri(0);
-        assertEq(uri, string(abi.encodePacked(baseURI, "0")));
-
-        uri = drop.uri(x - 1);
-        assertEq(uri, string(abi.encodePacked(baseURI, "0")));
-
-        /**
-         *  note: this loop takes too long to run with fuzz tests.
-         */
-        // for(uint256 i = 0; i < amountToLazyMint; i += 1) {
-        //     string memory uri = drop.uri(1);
-        //     assertEq(uri, string(abi.encodePacked(baseURI, "0")));
-        // }
-
-        vm.stopPrank();
-    }
-
-    /*
      *  note: Fuzz testing; a batch of tokens, and nextTokenIdToMint
      */
     function test_fuzz_lazyMint_batchMintAndNextTokenIdToMint(uint256 x) public {
@@ -459,139 +390,6 @@ contract DropERC1155Test is BaseTest {
         uint256 nextTokenIdToMint = uint256(vm.load(address(drop), loc));
 
         assertEq(nextTokenIdToMint, x);
-        vm.stopPrank();
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Delayed Reveal Tests
-    //////////////////////////////////////////////////////////////*/
-
-    /*
-     *  note: Testing state changes; URI revealed for a batch of tokens.
-     */
-    function test_state_reveal() public {
-        vm.startPrank(deployer);
-
-        bytes memory key = "key";
-        uint256 amountToLazyMint = 100;
-        bytes memory secretURI = "ipfs://";
-        string memory placeholderURI = "abcd://";
-        bytes memory encryptedURI = drop.encryptDecrypt(secretURI, key);
-        bytes32 provenanceHash = keccak256(abi.encodePacked(secretURI, key, block.chainid));
-
-        drop.lazyMint(amountToLazyMint, placeholderURI, abi.encode(encryptedURI, provenanceHash));
-
-        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
-            string memory uri = drop.uri(i);
-            assertEq(uri, string(abi.encodePacked(placeholderURI, "0")));
-        }
-
-        string memory revealedURI = drop.reveal(0, key);
-        assertEq(revealedURI, string(secretURI));
-
-        for (uint256 i = 0; i < amountToLazyMint; i += 1) {
-            string memory uri = drop.uri(i);
-            assertEq(uri, string(abi.encodePacked(secretURI, i.toString())));
-        }
-
-        vm.stopPrank();
-    }
-
-    /**
-     *  note: Testing revert condition; an address without MINTER_ROLE calls reveal function.
-     */
-    function test_revert_reveal_MINTER_ROLE() public {
-        bytes memory key = "key";
-        bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", key);
-        bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
-        vm.prank(deployer);
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-
-        vm.prank(deployer);
-        drop.reveal(0, "key");
-
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            TWStrings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            TWStrings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
-
-        vm.expectRevert(errorMessage);
-        drop.reveal(0, "key");
-    }
-
-    /*
-     *  note: Testing revert condition; trying to reveal URI for non-existent batch.
-     */
-    function test_revert_reveal_revealingNonExistentBatch() public {
-        vm.startPrank(deployer);
-
-        bytes memory key = "key";
-        bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", key);
-        bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-        drop.reveal(0, "key");
-
-        console.log(drop.getBaseURICount());
-
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-        vm.expectRevert("Invalid index");
-        drop.reveal(2, "key");
-
-        vm.stopPrank();
-    }
-
-    /*
-     *  note: Testing revert condition; already revealed URI.
-     */
-    function test_revert_delayedReveal_alreadyRevealed() public {
-        vm.startPrank(deployer);
-
-        bytes memory key = "key";
-        bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", key);
-        bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-        drop.reveal(0, "key");
-
-        vm.expectRevert("Nothing to reveal");
-        drop.reveal(0, "key");
-
-        vm.stopPrank();
-    }
-
-    /*
-     *  note: Testing state changes; revealing URI with an incorrect key.
-     */
-    function testFail_reveal_incorrectKey() public {
-        vm.startPrank(deployer);
-
-        bytes memory key = "key";
-        bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", key);
-        bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-
-        string memory revealedURI = drop.reveal(0, "keyy");
-        assertEq(revealedURI, "ipfs://");
-
-        vm.stopPrank();
-    }
-
-    /**
-     *  note: Testing event emission; TokenURIRevealed.
-     */
-    function test_event_reveal_TokenURIRevealed() public {
-        vm.startPrank(deployer);
-
-        bytes memory key = "key";
-        bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", key);
-        bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-
-        vm.expectEmit(true, false, false, true);
-        emit TokenURIRevealed(0, "ipfs://");
-        drop.reveal(0, "key");
-
         vm.stopPrank();
     }
 
@@ -1114,22 +912,4 @@ contract DropERC1155Test is BaseTest {
     /*///////////////////////////////////////////////////////////////
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
-
-    function test_delayedReveal_withNewLazyMintedEmptyBatch() public {
-        vm.startPrank(deployer);
-
-        bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", "key");
-        bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", "key", block.chainid));
-        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-        drop.reveal(0, "key");
-
-        string memory uri = drop.uri(1);
-        assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
-
-        bytes memory newEncryptedURI = drop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("0 amt");
-        drop.lazyMint(0, "", abi.encode(newEncryptedURI, provenanceHash));
-
-        vm.stopPrank();
-    }
 }

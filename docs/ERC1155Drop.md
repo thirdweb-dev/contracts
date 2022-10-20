@@ -791,7 +791,7 @@ event ApprovalForAll(address indexed _owner, address indexed _operator, bool _ap
 event ClaimConditionUpdated(uint256 indexed tokenId, IClaimCondition.ClaimCondition condition, bool resetEligibility)
 ```
 
-
+Emitted when the contract&#39;s claim conditions are updated.
 
 
 
@@ -911,7 +911,7 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed tokenId, uint256 quantityClaimed)
 ```
 
-
+Emitted when tokens are claimed via `claim`.
 
 
 

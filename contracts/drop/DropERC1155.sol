@@ -21,7 +21,6 @@ import "../extension/PlatformFee.sol";
 import "../extension/Royalty.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/Ownable.sol";
-import "../extension/DelayedReveal.sol";
 import "../extension/LazyMint.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/Drop1155.sol";
@@ -33,7 +32,6 @@ contract DropERC1155 is
     Royalty,
     PrimarySale,
     Ownable,
-    DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
     Drop1155,
@@ -135,14 +133,8 @@ contract DropERC1155 is
 
     /// @dev Returns the uri for a given tokenId.
     function uri(uint256 _tokenId) public view override returns (string memory) {
-        (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
-
-        if (isEncryptedBatch(batchId)) {
-            return string(abi.encodePacked(batchUri, "0"));
-        } else {
-            return string(abi.encodePacked(batchUri, _tokenId.toString()));
-        }
+        return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 
     /// @dev See ERC 165
@@ -166,44 +158,6 @@ contract DropERC1155 is
 
     function contractVersion() external pure returns (uint8) {
         return uint8(4);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                    Lazy minting + delayed-reveal logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
-     *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
-     */
-    function lazyMint(
-        uint256 _amount,
-        string calldata _baseURIForTokens,
-        bytes calldata _data
-    ) public override onlyRole(minterRole) returns (uint256 batchId) {
-        if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
-            if (encryptedURI.length != 0 && provenanceHash != "") {
-                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
-            }
-        }
-
-        return super.lazyMint(_amount, _baseURIForTokens, _data);
-    }
-
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
-        uint256 batchId = getBatchIdAtIndex(_index);
-        revealedURI = getRevealURI(batchId, _key);
-
-        _setEncryptedData(batchId, "");
-        _setBaseURI(batchId, revealedURI);
-
-        emit TokenURIRevealed(_index, revealedURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -314,7 +268,7 @@ contract DropERC1155 is
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return hasRole(minterRole, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

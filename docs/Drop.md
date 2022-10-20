@@ -159,7 +159,7 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
 ```
 
-
+Emitted when the contract&#39;s claim conditions are updated.
 
 
 
@@ -176,7 +176,7 @@ event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, b
 event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
 ```
 
-
+Emitted when tokens are claimed via `claim`.
 
 
 

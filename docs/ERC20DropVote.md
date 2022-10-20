@@ -740,7 +740,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
 ```
 
-
+Emitted when the contract&#39;s claim conditions are updated.
 
 
 
@@ -843,7 +843,7 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
 ```
 
-
+Emitted when tokens are claimed via `claim`.
 
 
 

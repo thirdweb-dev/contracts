@@ -332,14 +332,7 @@ contract DropERC721Test is BaseTest {
      *  note: Testing revert condition; an address without MINTER_ROLE calls lazyMint function.
      */
     function test_revert_lazyMint_MINTER_ROLE() public {
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            Strings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
-
-        vm.expectRevert(errorMessage);
+        vm.expectRevert("Not authorized");
         drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
