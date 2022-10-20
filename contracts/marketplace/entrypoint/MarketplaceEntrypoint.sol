@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 import "./InitStorage.sol";
-import "./IMap.sol";
+import "../IMap.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/PlatformFee.sol";

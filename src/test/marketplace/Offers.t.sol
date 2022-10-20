@@ -6,8 +6,8 @@ import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
 
-import { Map } from "contracts/marketplace/alt/Map.sol";
-import { MarketplaceEntrypoint } from "contracts/marketplace/alt/MarketplaceEntrypoint.sol";
+import { Map } from "contracts/marketplace/Map.sol";
+import { MarketplaceEntrypoint } from "contracts/marketplace/entrypoint/MarketplaceEntrypoint.sol";
 import { Offers } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
