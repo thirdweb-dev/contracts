@@ -182,10 +182,10 @@ Returns the price per token for a listing, in the given currency.
 ### getAllListings
 
 ```solidity
-function getAllListings(uint256 _startId, uint256 _endId) external view returns (struct IDirectListings.Listing[] allListings)
+function getAllListings(uint256 _startId, uint256 _endId) external view returns (struct IDirectListings.Listing[] _allListings)
 ```
 
-Returns all listings between the start and end Id (both inclusive) provided.
+Returns all non-cancelled listings.
 
 
 
@@ -200,12 +200,12 @@ Returns all listings between the start and end Id (both inclusive) provided.
 
 | Name | Type | Description |
 |---|---|---|
-| allListings | IDirectListings.Listing[] | undefined |
+| _allListings | IDirectListings.Listing[] | undefined |
 
 ### getAllValidListings
 
 ```solidity
-function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (struct IDirectListings.Listing[] _listings)
+function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (struct IDirectListings.Listing[] _validListings)
 ```
 
 Returns all valid listings between the start and end Id (both inclusive) provided.          A valid listing is where the listing creator still owns and has approved Marketplace          to transfer the listed NFTs.
@@ -223,7 +223,7 @@ Returns all valid listings between the start and end Id (both inclusive) provide
 
 | Name | Type | Description |
 |---|---|---|
-| _listings | IDirectListings.Listing[] | undefined |
+| _validListings | IDirectListings.Listing[] | undefined |
 
 ### getListing
 

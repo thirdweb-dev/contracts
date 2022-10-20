@@ -151,19 +151,48 @@ function createAuction(IEnglishAuctions.AuctionParameters _params) external nonp
 ### getAllAuctions
 
 ```solidity
-function getAllAuctions() external view returns (struct IEnglishAuctions.Auction[] _activeAuctions)
+function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (struct IEnglishAuctions.Auction[] _allAuctions)
 ```
 
-Returns all auctions that are active.
+Returns all non-cancelled auctions.
 
 
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _startId | uint256 | undefined |
+| _endId | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _activeAuctions | IEnglishAuctions.Auction[] | undefined |
+| _allAuctions | IEnglishAuctions.Auction[] | undefined |
+
+### getAllValidAuctions
+
+```solidity
+function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (struct IEnglishAuctions.Auction[] _validAuctions)
+```
+
+Returns all active auctions.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _startId | uint256 | undefined |
+| _endId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _validAuctions | IEnglishAuctions.Auction[] | undefined |
 
 ### getAuction
 

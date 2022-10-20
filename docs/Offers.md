@@ -96,7 +96,7 @@ Cancel an offer.
 ### getAllOffers
 
 ```solidity
-function getAllOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] _offers)
+function getAllOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] _allOffers)
 ```
 
 
@@ -114,12 +114,12 @@ function getAllOffers(uint256 _startId, uint256 _endId) external view returns (s
 
 | Name | Type | Description |
 |---|---|---|
-| _offers | IOffers.Offer[] | undefined |
+| _allOffers | IOffers.Offer[] | undefined |
 
 ### getAllValidOffers
 
 ```solidity
-function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] _offers)
+function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] _validOffers)
 ```
 
 
@@ -137,7 +137,7 @@ function getAllValidOffers(uint256 _startId, uint256 _endId) external view retur
 
 | Name | Type | Description |
 |---|---|---|
-| _offers | IOffers.Offer[] | undefined |
+| _validOffers | IOffers.Offer[] | undefined |
 
 ### getOffer
 
