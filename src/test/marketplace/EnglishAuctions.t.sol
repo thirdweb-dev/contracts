@@ -451,6 +451,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function test_revert_createAuction_invalidStartTimestamp() public {
+        uint256 blockTimestamp = 100 minutes;
+        // Set block.timestamp
+        vm.warp(blockTimestamp);
+
         // Sample auction parameters.
         address assetContract = address(erc721);
         uint256 tokenId = 0;
@@ -460,7 +464,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         uint256 buyoutBidAmount = 10 ether;
         uint64 timeBufferInSeconds = 10 seconds;
         uint64 bidBufferBps = 1000;
-        uint64 startTimestamp = uint64(block.timestamp - 1); // start time is less than block timestamp.
+        uint64 startTimestamp = uint64(blockTimestamp - 61 minutes); // start time is less than block timestamp.
         uint64 endTimestamp = startTimestamp + 1;
 
         // Mint the ERC721 tokens to seller. These tokens will be auctioned.
