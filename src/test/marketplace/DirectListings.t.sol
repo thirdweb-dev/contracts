@@ -820,20 +820,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.prank(seller);
         DirectListings(marketplace).cancelListing(listingId);
 
-        IDirectListings.Listing memory listing = DirectListings(marketplace).getListing(listingId);
-
-        // Verify listing at `listingId` is empty
-        assertEq(listing.listingId, 0);
-        assertEq(listing.listingCreator, address(0));
-        assertEq(listing.assetContract, address(0));
-        assertEq(listing.tokenId, 0);
-        assertEq(listing.quantity, 0);
-        assertEq(listing.currency, address(0));
-        assertEq(listing.pricePerToken, 0);
-        assertEq(listing.startTimestamp, 0);
-        assertEq(listing.endTimestamp, 0);
-        assertEq(listing.reserved, false);
-        assertEq(uint256(listing.tokenType), 0);
+        // Verify listing at `listingId` doesn't exist
+        vm.expectRevert("Marketplace: listing does not exist.");
+        DirectListings(marketplace).getListing(listingId);
     }
 
     function test_revert_cancelListing_notListingCreator() public {
@@ -853,7 +842,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Verify no listing exists at `nexListingId`
         uint256 nextListingId = DirectListings(marketplace).totalListings();
-        assertEq(DirectListings(marketplace).getListing(nextListingId).assetContract, address(0));
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing does not exist.");
@@ -1030,8 +1018,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         if (quantityToBuy == listing.quantity) {
             // Verify listing data is deleted if listing tokens are all bought.
-            IDirectListings.Listing memory listingPostSale = DirectListings(marketplace).getListing(listingId);
-            assertEq(listingPostSale.assetContract, address(0));
+            vm.expectRevert("Marketplace: listing does not exist.");
+            DirectListings(marketplace).getListing(listingId);
         }
     }
 
@@ -1084,8 +1072,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         if (quantityToBuy == listing.quantity) {
             // Verify listing data is deleted if listing tokens are all bought.
-            IDirectListings.Listing memory listingPostSale = DirectListings(marketplace).getListing(listingId);
-            assertEq(listingPostSale.assetContract, address(0));
+            vm.expectRevert("Marketplace: listing does not exist.");
+            DirectListings(marketplace).getListing(listingId);
         }
     }
 

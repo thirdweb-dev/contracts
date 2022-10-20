@@ -152,41 +152,47 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     }
 
     /// @dev Returns all existing offers within the specified range.
-    function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _offers) {
+    function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _allOffers) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         require(_startId < _endId && _endId < data.totalOffers, "invalid range");
 
+        Offer[] memory _offers = new Offer[](_endId - _startId + 1);
         uint256 _offerCount;
+
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            if (data.offers[i].assetContract != address(0)) {
+            _offers[i] = data.offers[i];
+            if (_offers[i].assetContract != address(0)) {
                 _offerCount += 1;
             }
         }
 
-        _offers = new Offer[](_offerCount);
-        for (uint256 i = 0; i < _offerCount; i += 1) {
-            if (data.offers[i].assetContract != address(0)) {
-                _offers[i] = data.offers[i];
+        _allOffers = new Offer[](_offerCount);
+        for (uint256 i = _startId; i <= _endId; i += 1) {
+            if (_offers[i].assetContract != address(0)) {
+                _allOffers[i] = _offers[i];
             }
         }
     }
 
     /// @dev Returns offers within the specified range, where offeror has sufficient balance.
-    function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _offers) {
+    function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _validOffers) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         require(_startId < _endId && _endId < data.totalOffers, "invalid range");
 
+        Offer[] memory _offers = new Offer[](_endId - _startId + 1);
         uint256 _offerCount;
+
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            if (_validateExistingOffer(data.offers[i])) {
+            _offers[i] = data.offers[i];
+            if (_validateExistingOffer(_offers[i])) {
                 _offerCount += 1;
             }
         }
 
-        _offers = new Offer[](_offerCount);
+        _validOffers = new Offer[](_offerCount);
         for (uint256 i = 0; i < _offerCount; i += 1) {
-            if (_validateExistingOffer(data.offers[i])) {
-                _offers[i] = data.offers[i];
+            if (_validateExistingOffer(_offers[i])) {
+                _validOffers[i] = _offers[i];
             }
         }
     }

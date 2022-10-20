@@ -340,8 +340,11 @@ interface IEnglishAuctions {
     /// @notice Returns the auction of the provided auction ID.
     function getAuction(uint256 _auctionId) external view returns (Auction memory auction);
 
-    /// @notice Returns all auctions that are active.
-    function getAllAuctions() external view returns (Auction[] memory auctions);
+    /// @notice Returns all non-cancelled auctions.
+    function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
+
+    /// @notice Returns all active auctions.
+    function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
 
     /// @notice Returns the winning bid of an active auction.
     function getWinningBid(uint256 _auctionId)
