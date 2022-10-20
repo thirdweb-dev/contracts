@@ -325,8 +325,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function test_revert_createListing_invalidStartTimestamp() public {
+        uint256 blockTimestamp = 100 minutes;
         // Set block.timestamp
-        vm.warp(100);
+        vm.warp(blockTimestamp);
 
         // Sample listing parameters.
         address assetContract = address(erc721);
@@ -334,7 +335,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 pricePerToken = 1 ether;
-        uint128 startTimestamp = uint128(block.timestamp - 1); // start time is less than block timestamp.
+        uint128 startTimestamp = uint128(blockTimestamp - 61 minutes); // start time is less than block timestamp.
         uint128 endTimestamp = uint128(startTimestamp + 1);
         bool reserved = true;
 
@@ -968,7 +969,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        vm.expectRevert("Marketplace: Re-approving main listing currency..");
+        vm.expectRevert("Marketplace: Re-approving main listing currency.");
         DirectListings(marketplace).approveCurrencyForListing(
             listingId,
             currencyToApprove,

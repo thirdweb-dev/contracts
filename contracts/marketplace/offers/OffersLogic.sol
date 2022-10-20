@@ -219,7 +219,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         require(_params.quantity > 0, "Marketplace: wanted zero tokens.");
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: wanted invalid quantity.");
         require(
-            _params.expirationTimestamp > (block.timestamp - 60 minutes),
+            _params.expirationTimestamp + 60 minutes > block.timestamp,
             "Marketplace: invalid expiration timestamp."
         );
 

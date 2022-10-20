@@ -290,7 +290,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         require(_params.timeBufferInSeconds > 0, "Marketplace: no time-buffer.");
         require(_params.bidBufferBps > 0, "Marketplace: no bid-buffer.");
         require(
-            _params.startTimestamp >= (block.timestamp - 60 minutes) && _params.startTimestamp < _params.endTimestamp,
+            _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
             "Marketplace: invalid timestamps."
         );
 

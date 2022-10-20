@@ -87,7 +87,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         require(
-            _params.startTimestamp >= (block.timestamp - 60 minutes) && _params.startTimestamp < _params.endTimestamp,
+            _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
             "Marketplace: invalid timestamps."
         );
 
