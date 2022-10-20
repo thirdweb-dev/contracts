@@ -258,7 +258,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
                     IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
 
-        require(isValid, "!BALNFT");
+        require(isValid, "Marketplace: not owner or approved tokens. ");
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Markeplace to transfer the appropriate amount of currency

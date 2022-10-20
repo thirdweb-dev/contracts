@@ -546,7 +546,7 @@ contract MarketplaceOffersTest is BaseTest {
         // accept offer
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
         Offers(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
@@ -585,7 +585,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         // accept offer, without approving NFT to marketplace
         vm.startPrank(seller);
-        vm.expectRevert("!BALNFT");
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
         Offers(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
