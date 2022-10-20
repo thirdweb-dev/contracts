@@ -3,7 +3,21 @@ pragma solidity ^0.8.0;
 
 import "./IClaimConditionMultiPhase.sol";
 
+/**
+ *  The interface `IDrop` is written for thirdweb's 'Drop' contracts, which are distribution mechanisms for tokens.
+ *
+ *  An authorized wallet can set a series of claim conditions, ordered by their respective `startTimestamp`.
+ *  A claim condition defines criteria under which accounts can mint tokens. Claim conditions can be overwritten
+ *  or added to by the contract admin. At any moment, there is only one active claim condition.
+ */
+
 interface IDrop is IClaimConditionMultiPhase {
+    /**
+     *  @param proof Prood of concerned wallet's inclusion in an allowlist.
+     *  @param quantityLimitPerWallet The total quantity of tokens the allowlisted wallet is eligible to claim over time.
+     *  @param pricePerToken The price per token the allowlisted wallet must pay to claim tokens.
+     *  @param currency The currency in which the allowlisted wallet must pay the price for claiming tokens.
+     */
     struct AllowlistProof {
         bytes32[] proof;
         uint256 quantityLimitPerWallet;
@@ -11,7 +25,7 @@ interface IDrop is IClaimConditionMultiPhase {
         address currency;
     }
 
-    /// @dev Emitted when tokens are claimed via `claim`.
+    /// @notice Emitted when tokens are claimed via `claim`.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
         address indexed claimer,
@@ -20,7 +34,7 @@ interface IDrop is IClaimConditionMultiPhase {
         uint256 quantityClaimed
     );
 
-    /// @dev Emitted when the contract's claim conditions are updated.
+    /// @notice Emitted when the contract's claim conditions are updated.
     event ClaimConditionsUpdated(ClaimCondition[] claimConditions, bool resetEligibility);
 
     /**
@@ -48,8 +62,8 @@ interface IDrop is IClaimConditionMultiPhase {
      *
      *  @param phases                   Claim conditions in ascending order by `startTimestamp`.
      *
-     *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
-     *                                  claim conditions.
+     *  @param resetClaimEligibility    Whether to honor the restrictions applied to wallets who have claimed tokens in the current conditions,
+     *                                  in the new claim conditions being set.
      *
      */
     function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
