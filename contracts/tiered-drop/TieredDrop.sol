@@ -65,7 +65,8 @@ contract TieredDrop is
      *
      *       This array stores each end_tokenId_n for the n number of mints on this contract.
      */
-    uint256[] private endIdsAtMint;
+    uint256 private lengthEndIdsAtMint;
+    mapping(uint256 => uint256) private endIdsAtMint;
 
     /**
      *  @dev Each time NFTs are batch minted on this ERC721A contract, all NFTs in that batch belong to the same tier.
@@ -344,7 +345,9 @@ contract TieredDrop is
 
         uint256 endTokenId = _startIdToMap + _quantity;
 
-        endIdsAtMint.push(endTokenId);
+        endIdsAtMint[lengthEndIdsAtMint] = endTokenId;
+        lengthEndIdsAtMint += 1;
+
         tierAtEndId[endTokenId] = _tier;
         proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
 
@@ -366,7 +369,7 @@ contract TieredDrop is
     }
 
     function getMintInstances() external view returns (uint256) {
-        return endIdsAtMint.length;
+        return lengthEndIdsAtMint;
     }
 
     function getTokensInTier(
@@ -374,35 +377,33 @@ contract TieredDrop is
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (TokenRange[] memory ranges) {
-        uint256 len = endIdsAtMint.length;
+        uint256 len = lengthEndIdsAtMint;
 
         require(startIndex < endIndex && endIndex <= len, "TieredDrop: invalid indices.");
 
-        uint256[] memory endIds = endIdsAtMint;
         uint256 numOfRanges;
 
         for (uint256 i = startIndex; i < endIndex; i += 1) {
-            if (keccak256(bytes(tierAtEndId[endIds[i]])) == keccak256(bytes(_tier))) {
+            if (keccak256(bytes(tierAtEndId[endIdsAtMint[i]])) == keccak256(bytes(_tier))) {
                 numOfRanges += 1;
             }
         }
 
         ranges = new TokenRange[](numOfRanges);
         for (uint256 j = startIndex; j < endIndex; j += 1) {
-            if (keccak256(bytes(tierAtEndId[endIds[j]])) == keccak256(bytes(_tier))) {
-                uint256 start = startIndex == 0 ? 0 : endIds[startIndex - 1];
-                ranges[j] = TokenRange(start, endIds[j]);
+            if (keccak256(bytes(tierAtEndId[endIdsAtMint[j]])) == keccak256(bytes(_tier))) {
+                uint256 start = startIndex == 0 ? 0 : endIdsAtMint[startIndex - 1];
+                ranges[j] = TokenRange(start, endIdsAtMint[j]);
             }
         }
     }
 
     function getMetadataId(uint256 _tokenId) public view returns (uint256) {
-        uint256[] memory endIds = endIdsAtMint;
-        uint256 len = endIds.length;
+        uint256 len = lengthEndIdsAtMint;
 
         for (uint256 i = 0; i < len; i += 1) {
-            if (_tokenId < endIds[i]) {
-                uint256 targetEndId = endIds[i];
+            if (_tokenId < endIdsAtMint[i]) {
+                uint256 targetEndId = endIdsAtMint[i];
                 uint256 diff = targetEndId - _tokenId;
 
                 TokenRange memory range = proxyTokenRange[targetEndId];
