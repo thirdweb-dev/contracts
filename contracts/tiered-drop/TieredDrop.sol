@@ -99,6 +99,9 @@ contract TieredDrop is
     /// @dev Mapping from batchId => tokenId offset for that batchId.
     mapping(uint256 => bytes32) private tokenIdOffset;
 
+    /// @dev Mapping from hash(tier, "minted") -> total minted in tier.
+    mapping(bytes32 => uint256) private totalsForTier;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -318,6 +321,7 @@ contract TieredDrop is
             _mapTokensToTier(tier, startIdToMap, qtyFulfilled);
 
             totalRemainingInTier[tier] -= qtyFulfilled;
+            totalsForTier[keccak256(abi.encodePacked(tier, "minted"))] += qtyFulfilled;
 
             if (qtyUnfulfilled > 0) {
                 startIdToMap += qtyFulfilled;
@@ -478,6 +482,10 @@ contract TieredDrop is
         unchecked {
             return _currentIndex - _startTokenId();
         }
+    }
+
+    function totalMintedInTier(string memory _tier) external view returns (uint256) {
+        return totalsForTier[keccak256(abi.encodePacked(_tier, "minted"))];
     }
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
