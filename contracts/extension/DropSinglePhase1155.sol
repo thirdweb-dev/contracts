@@ -106,9 +106,8 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         address _currency,
         uint256 _pricePerToken,
         AllowlistProof calldata _allowlistProof
-    ) public view {
+    ) public view returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId];
-        bool isOverride;
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
         uint256 claimPrice = currentClaimPhase.pricePerToken;
         address claimCurrency = currentClaimPhase.currency;

@@ -122,9 +122,8 @@ abstract contract Drop is IDrop {
         address _currency,
         uint256 _pricePerToken,
         AllowlistProof calldata _allowlistProof
-    ) public view {
+    ) public view returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = claimCondition.conditions[_conditionId];
-        bool isOverride;
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
         uint256 claimPrice = currentClaimPhase.pricePerToken;
         address claimCurrency = currentClaimPhase.currency;
