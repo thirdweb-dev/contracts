@@ -58,6 +58,7 @@ contract TieredDrop is
     uint256 private constant MAX_BPS = 10_000;
 
     uint256[] private endIdsAtMint;
+    mapping(uint256 => string) private tierAtEndId;
     mapping(uint256 => TokenRange) private proxyTokenRange;
 
     mapping(string => uint256) private nextTokenIdToMapFromTier;
@@ -308,6 +309,7 @@ contract TieredDrop is
         uint256 endTokenId = _startIdToMap + _quantity;
 
         endIdsAtMint.push(endTokenId);
+        tierAtEndId[endTokenId] = _tier;
         proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
 
         nextTokenIdToMapFromTier[_tier] += _quantity;
@@ -324,6 +326,37 @@ contract TieredDrop is
             return (total - _quantity, 0);
         } else {
             return (total, _quantity - total);
+        }
+    }
+
+    function getMintInstances() external view returns (uint256) {
+        return endIdsAtMint.length;
+    }
+
+    function getTokensInTier(
+        string memory _tier,
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (TokenRange[] memory ranges) {
+        uint256 len = endIdsAtMint.length;
+
+        require(startIndex < endIndex && endIndex <= len, "TieredDrop: invalid indices.");
+
+        uint256[] memory endIds = endIdsAtMint;
+        uint256 numOfRanges;
+
+        for (uint256 i = startIndex; i < endIndex; i += 1) {
+            if (keccak256(bytes(tierAtEndId[endIds[i]])) == keccak256(bytes(_tier))) {
+                numOfRanges += 1;
+            }
+        }
+
+        ranges = new TokenRange[](numOfRanges);
+        for (uint256 j = startIndex; j < endIndex; j += 1) {
+            if (keccak256(bytes(tierAtEndId[endIds[j]])) == keccak256(bytes(_tier))) {
+                uint256 start = startIndex == 0 ? 0 : endIds[startIndex - 1];
+                ranges[j] = TokenRange(start, endIds[j]);
+            }
         }
     }
 
