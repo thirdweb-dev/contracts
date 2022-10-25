@@ -57,11 +57,43 @@ contract TieredDrop is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    /**
+     *  @dev Minting of NFTs on an ERC721A contract happens from a start tokenId (inclusive) to an end tokenId (non-inclusive).
+     *
+     *       Additionally, minting of tokenIds occurs in a strictly increasing order from `startTokenId()` (i.e. `0`)
+     *       onwards: 0 < end_tokenId_1 < end_tokenId_2 < ... end_tokenId_n.
+     *
+     *       This array stores each end_tokenId_n for the n number of mints on this contract.
+     */
     uint256[] private endIdsAtMint;
+
+    /**
+     *  @dev Each time NFTs are batch minted on this ERC721A contract, all NFTs in that batch belong to the same tier.
+     *
+     *       This is a mapping from `end_tokenId_n` -> the tier that tokenIds [end_tokenId_n-1, end_tokenId_n) belong to.
+     *       Together with `endIdsAtMint`, this mapping is used to return the tokenIds that belong to a given tier.
+     */
     mapping(uint256 => string) private tierAtEndId;
+
+    /**
+     *  @dev This contract lets an admin lazy mint batches of metadata at once, for a given tier. E.g. an admin may lazy mint
+     *       the metadata of 5000 tokens that will actually be minted in the future.
+     *
+     *       Lazy minting of NFT metafata happens from a start metadata ID (inclusive) to an end metadata ID (non-inclusive),
+     *       where the lazy minted metadata lives at `providedBaseURI/${metadataId}` for each unit metadata.
+     *
+     *       At the time of actual minting, the minter specifies the tier of NFTs they're minting. So, the order in which lazy minted
+     *       metadata for a tier is assigned integer IDs may differ from the actual tokenIds minted for a tier.
+     *
+     *       This is a mapping from an actually minted end tokenId -> the range of lazy minted metadata that now belongs
+     *       to NFTs of [start tokenId, end tokenid).
+     */
     mapping(uint256 => TokenRange) private proxyTokenRange;
 
-    mapping(string => uint256) private nextTokenIdToMapFromTier;
+    /// @dev Mapping from tier -> the metadata ID up till which metadata IDs have been mapped to minted NFTs' tokenIds.
+    mapping(string => uint256) private nextMetadataIdToMapFromTier;
+
+    /// @dev Mapping from tier -> how many units of lazy minted metadata have not yet been mapped to minted NFTs' tokenIds.
     mapping(string => uint256) private totalRemainingInTier;
 
     /// @dev Mapping from batchId => tokenId offset for that batchId.
@@ -170,7 +202,7 @@ contract TieredDrop is
 
         uint256 startId = nextTokenIdToLazyMint;
         if (isTierEmpty(_tier)) {
-            nextTokenIdToMapFromTier[_tier] = startId;
+            nextMetadataIdToMapFromTier[_tier] = startId;
         }
 
         return super.lazyMint(_amount, _baseURIForTokens, _tier, _data);
@@ -303,7 +335,7 @@ contract TieredDrop is
         uint256 _startIdToMap,
         uint256 _quantity
     ) private {
-        uint256 proxyStartId = nextTokenIdToMapFromTier[_tier];
+        uint256 proxyStartId = nextMetadataIdToMapFromTier[_tier];
         uint256 proxyEndId = proxyStartId + _quantity;
 
         uint256 endTokenId = _startIdToMap + _quantity;
@@ -312,7 +344,7 @@ contract TieredDrop is
         tierAtEndId[endTokenId] = _tier;
         proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
 
-        nextTokenIdToMapFromTier[_tier] += _quantity;
+        nextMetadataIdToMapFromTier[_tier] += _quantity;
     }
 
     function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
