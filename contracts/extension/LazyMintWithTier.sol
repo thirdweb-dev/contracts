@@ -63,8 +63,13 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         return batchId;
     }
 
-    function getTokensInTier(string memory _tier) public view returns (TokenRange[] memory tokens) {
+    function getMetadataInTier(string memory _tier)
+        public
+        view
+        returns (TokenRange[] memory tokens, string memory _baseURI)
+    {
         tokens = tokensInTier[_tier];
+        _baseURI = _getBaseURI(tokens[0].startIdInclusive);
     }
 
     function isTierEmpty(string memory _tier) internal view returns (bool) {
