@@ -1065,7 +1065,7 @@ function uri(uint256 _tokenId) external view returns (string)
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop1155.AllowlistProof _allowlistProof) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop1155.AllowlistProof _allowlistProof) external view returns (bool isOverride)
 ```
 
 
@@ -1083,6 +1083,12 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, u
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
 | _allowlistProof | IDrop1155.AllowlistProof | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| isOverride | bool | undefined |
 
 
 

@@ -524,7 +524,7 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 ### verifyClaim
 
 ```solidity
-function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof) external view
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool isOverride)
 ```
 
 
@@ -540,6 +540,12 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
 | _allowlistProof | IDropSinglePhase.AllowlistProof | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| isOverride | bool | undefined |
 
 
 

@@ -745,7 +745,7 @@ Returns the metadata URI for an NFT.
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase1155.AllowlistProof _allowlistProof) external view
+function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase1155.AllowlistProof _allowlistProof) external view returns (bool isOverride)
 ```
 
 
@@ -762,6 +762,12 @@ function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, addr
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
 | _allowlistProof | IDropSinglePhase1155.AllowlistProof | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| isOverride | bool | undefined |
 
 
 
