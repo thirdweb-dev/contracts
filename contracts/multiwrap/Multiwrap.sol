@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -31,7 +31,7 @@ contract Multiwrap is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    ERC721Upgradeable,
+    ERC721EnumerableUpgradeable,
     IMultiwrap
 {
     /*///////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ contract Multiwrap is
         public
         view
         virtual
-        override(ERC1155Receiver, ERC721Upgradeable, IERC165)
+        override(ERC1155Receiver, ERC721EnumerableUpgradeable, IERC165)
         returns (bool)
     {
         return
