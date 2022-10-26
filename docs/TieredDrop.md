@@ -302,6 +302,46 @@ function getMetadataId(uint256 _tokenId) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### getMetadataInTier
+
+```solidity
+function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string _baseURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tier | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| tokens | LazyMintWithTier.TokenRange[] | undefined |
+| _baseURI | string | undefined |
+
+### getMintInstances
+
+```solidity
+function getMintInstances() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### getRevealURI
 
 ```solidity
@@ -418,7 +458,7 @@ View royalty info for a given token.
 ### getTokensInTier
 
 ```solidity
-function getTokensInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens)
+function getTokensInTier(string _tier, uint256 startIndex, uint256 endIndex) external view returns (struct LazyMintWithTier.TokenRange[] ranges)
 ```
 
 
@@ -430,12 +470,14 @@ function getTokensInTier(string _tier) external view returns (struct LazyMintWit
 | Name | Type | Description |
 |---|---|---|
 | _tier | string | undefined |
+| startIndex | uint256 | undefined |
+| endIndex | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tokens | LazyMintWithTier.TokenRange[] | undefined |
+| ranges | LazyMintWithTier.TokenRange[] | undefined |
 
 ### grantRole
 
@@ -1016,6 +1058,28 @@ Returns the total amount of tokens minted in the contract.
 
 
 
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### totalMintedInTier
+
+```solidity
+function totalMintedInTier(string _tier) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tier | string | undefined |
 
 #### Returns
 

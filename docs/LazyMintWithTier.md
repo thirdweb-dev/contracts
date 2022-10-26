@@ -49,10 +49,10 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### getTokensInTier
+### getMetadataInTier
 
 ```solidity
-function getTokensInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens)
+function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string _baseURI)
 ```
 
 
@@ -70,6 +70,7 @@ function getTokensInTier(string _tier) external view returns (struct LazyMintWit
 | Name | Type | Description |
 |---|---|---|
 | tokens | LazyMintWithTier.TokenRange[] | undefined |
+| _baseURI | string | undefined |
 
 ### lazyMint
 
