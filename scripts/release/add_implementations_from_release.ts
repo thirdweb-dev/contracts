@@ -6,7 +6,7 @@ import { chainIdToName } from "./constants";
 ////// To run this script: `npx ts-node scripts/release/add_implementations_from_release.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER CREATING A RELEASE FOR IT /////
 //// THE RELEASE SHOULD HAVE THE IMPLEMENTATIONS ALREADY DEPLOYED AND RECORDED (via dashboard) ////
-const releasedContractName = "SignatureDrop";
+const releasedContractName = "Multiwrap";
 const privateKey: string = process.env.DEPLOYER_KEY as string; // should be the correct deployer key
 
 const polygonSDK = ThirdwebSDK.fromPrivateKey(privateKey, "polygon");
@@ -36,10 +36,16 @@ async function main() {
     console.log("Adding implementations...");
     for (const [chainId, implementation] of Object.entries(implementations)) {
       const chainName = chainIdToName[parseInt(chainId) as SUPPORTED_CHAIN_ID];
+
+      if(!chainName) {
+        console.log("No chainName found for chain: ", chainId);
+        continue;
+      }
+      
       const chainSDK = ThirdwebSDK.fromPrivateKey(privateKey, chainName);
       const factoryAddr = prevReleaseMetadata?.factoryDeploymentData?.factoryAddresses?.[chainId];
       if (implementation && factoryAddr) {
-        const factory = chainSDK.getContractFromAbi(
+        const factory = await chainSDK.getContractFromAbi(
           factoryAddr,
           JSON.parse(readFileSync("artifacts_forge/TWFactory.sol/TWFactory.json", "utf-8")).abi,
         );
