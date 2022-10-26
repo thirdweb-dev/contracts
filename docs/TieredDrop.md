@@ -305,7 +305,7 @@ function getMetadataId(uint256 _tokenId) external view returns (uint256)
 ### getMetadataInTier
 
 ```solidity
-function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string _baseURI)
+function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string[] _baseURIs)
 ```
 
 
@@ -323,7 +323,7 @@ function getMetadataInTier(string _tier) external view returns (struct LazyMintW
 | Name | Type | Description |
 |---|---|---|
 | tokens | LazyMintWithTier.TokenRange[] | undefined |
-| _baseURI | string | undefined |
+| _baseURIs | string[] | undefined |
 
 ### getMintInstances
 

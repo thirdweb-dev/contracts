@@ -52,7 +52,7 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 ### getMetadataInTier
 
 ```solidity
-function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string _baseURI)
+function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string[] _baseURIs)
 ```
 
 
@@ -70,7 +70,7 @@ function getMetadataInTier(string _tier) external view returns (struct LazyMintW
 | Name | Type | Description |
 |---|---|---|
 | tokens | LazyMintWithTier.TokenRange[] | undefined |
-| _baseURI | string | undefined |
+| _baseURIs | string[] | undefined |
 
 ### lazyMint
 
