@@ -8,7 +8,7 @@ The document is written for technical and non-technical readers. To ask further 
 
 The thirdweb `Pack` contract is a lootbox mechanism. An account can bundle up arbitrary ERC20, ERC721 and ERC1155 tokens into a set of packs. A pack can then be opened in return for a selection of the tokens in the pack. The selection of tokens distributed on opening a pack depends on the relative supply of all tokens in the packs.
 
-**IMPORTANT**: _Pack functions, such as opening of packs, can be costly in terms of gas usage due to random selection of rewards. Please check your gas estimates/usage, and do a trial on testnets before any mainnet deployment._
+> **IMPORTANT**: _Pack functions, such as opening of packs, can be costly in terms of gas usage due to random selection of rewards. Please check your gas estimates/usage, and do a trial on testnets before any mainnet deployment._
 
 ## Product: How packs _should_ work (without web3 terminology)
 
