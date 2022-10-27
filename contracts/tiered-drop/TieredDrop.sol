@@ -392,7 +392,7 @@ contract TieredDrop is
         ranges = new TokenRange[](numOfRanges);
         for (uint256 j = startIndex; j < endIndex; j += 1) {
             if (keccak256(bytes(tierAtEndId[endIdsAtMint[j]])) == keccak256(bytes(_tier))) {
-                uint256 start = startIndex == 0 ? 0 : endIdsAtMint[startIndex - 1];
+                uint256 start = startIndex == 0 ? 0 : endIdsAtMint[j - 1];
                 ranges[j] = TokenRange(start, endIdsAtMint[j]);
             }
         }
