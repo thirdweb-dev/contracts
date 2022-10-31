@@ -128,7 +128,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         }
 
         if (isOverride) {
-            claimLimit = _allowlistProof.quantityLimitPerWallet != type(uint256).max
+            claimLimit = _allowlistProof.quantityLimitPerWallet != 0
                 ? _allowlistProof.quantityLimitPerWallet
                 : claimLimit;
             claimPrice = _allowlistProof.pricePerToken != type(uint256).max
