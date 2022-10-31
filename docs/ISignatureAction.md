@@ -4,7 +4,7 @@
 
 
 
-
+thirdweb&#39;s `SignatureAction` extension smart contract can be used with any base smart contract. It provides a generic  payload struct that can be signed by an authorized wallet and verified by the contract. The bytes `data` field provided  in the payload can be abi encoded &lt;-&gt; decoded to use `SignatureContract` for any authorized signature action.
 
 
 
@@ -44,7 +44,7 @@ function verify(ISignatureAction.GenericRequest req, bytes signature) external v
 event RequestExecuted(address indexed user, address indexed signer, ISignatureAction.GenericRequest _req)
 ```
 
-
+Emitted when a payload is verified and executed.
 
 
 

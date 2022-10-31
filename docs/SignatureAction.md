@@ -44,7 +44,7 @@ function verify(ISignatureAction.GenericRequest _req, bytes _signature) external
 event RequestExecuted(address indexed user, address indexed signer, ISignatureAction.GenericRequest _req)
 ```
 
-
+Emitted when a payload is verified and executed.
 
 
 

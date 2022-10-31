@@ -1275,7 +1275,7 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 event RequestExecuted(address indexed user, address indexed signer, ISignatureAction.GenericRequest _req)
 ```
 
-
+Emitted when a payload is verified and executed.
 
 
 

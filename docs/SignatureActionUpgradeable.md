@@ -60,7 +60,7 @@ event Initialized(uint8 version)
 event RequestExecuted(address indexed user, address indexed signer, ISignatureAction.GenericRequest _req)
 ```
 
-
+Emitted when a payload is verified and executed.
 
 
 
