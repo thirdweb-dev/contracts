@@ -288,7 +288,7 @@ function getMetadataId(uint256 _tokenId) external view returns (uint256)
 
 
 
-
+*Returns the metadata ID for the given tokenID.*
 
 #### Parameters
 
@@ -333,7 +333,7 @@ function getMintInstances() external view returns (uint256)
 
 
 
-
+*Returns the number of mint transactions on this contract..*
 
 
 #### Returns
@@ -463,7 +463,7 @@ function getTokensInTier(string _tier, uint256 startIndex, uint256 endIndex) ext
 
 
 
-
+*Returns all tokenIds that belong to the given tier.*
 
 #### Parameters
 
@@ -1054,9 +1054,9 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 function totalMinted() external view returns (uint256)
 ```
 
-Returns the total amount of tokens minted in the contract.
 
 
+*Returns the total amount of tokens minted in the contract.*
 
 
 #### Returns
@@ -1073,7 +1073,7 @@ function totalMintedInTier(string _tier) external view returns (uint256)
 
 
 
-
+*Returns the total number of tokens minted from the given tier.*
 
 #### Parameters
 

@@ -335,6 +335,7 @@ contract TieredDrop is
         _safeMint(_to, _totalQuantityBeingClaimed);
     }
 
+    /// @dev Maps lazy minted metadata to NFT tokenIds.
     function _mapTokensToTier(
         string memory _tier,
         uint256 _startIdToMap,
@@ -354,24 +355,27 @@ contract TieredDrop is
         nextMetadataIdToMapFromTier[_tier] += _quantity;
     }
 
+    /// @dev Returns how much of the total-quantity-to-distribute can come from the given tier.
     function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
         private
         view
-        returns (uint256, uint256)
+        returns (uint256 totalFulfulled, uint256 totalUnfulfilled)
     {
         uint256 total = totalRemainingInTier[_tier];
 
         if (total > _quantity) {
-            return (total - _quantity, 0);
+            (totalFulfulled, totalUnfulfilled) = (total - _quantity, 0);
         } else {
-            return (total, _quantity - total);
+            (totalFulfulled, totalUnfulfilled) = (total, _quantity - total);
         }
     }
 
+    /// @dev Returns the number of mint transactions on this contract..
     function getMintInstances() external view returns (uint256) {
         return lengthEndIdsAtMint;
     }
 
+    /// @dev Returns all tokenIds that belong to the given tier.
     function getTokensInTier(
         string memory _tier,
         uint256 startIndex,
@@ -398,6 +402,7 @@ contract TieredDrop is
         }
     }
 
+    /// @dev Returns the metadata ID for the given tokenID.
     function getMetadataId(uint256 _tokenId) public view returns (uint256) {
         uint256 len = lengthEndIdsAtMint;
 
@@ -477,7 +482,7 @@ contract TieredDrop is
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * Returns the total amount of tokens minted in the contract.
+     * @dev Returns the total amount of tokens minted in the contract.
      */
     function totalMinted() external view returns (uint256) {
         unchecked {
@@ -485,6 +490,7 @@ contract TieredDrop is
         }
     }
 
+    /// @dev Returns the total number of tokens minted from the given tier.
     function totalMintedInTier(string memory _tier) external view returns (uint256) {
         return totalsForTier[keccak256(abi.encodePacked(_tier, "minted"))];
     }
