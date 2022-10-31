@@ -4,7 +4,7 @@
 
 
 
-Thirdweb&#39;s `LazyMint` is a contract extension for any base NFT contract. It lets you &#39;lazy mint&#39; any number of NFTs  at once. Here, &#39;lazy mint&#39; means defining the metadata for particular tokenIds of your NFT contract, without actually  minting a non-zero balance of NFTs of those tokenIds.
+Thirdweb&#39;s `LazyMintWithTier` is a contract extension for any base NFT contract. It lets you &#39;lazy mint&#39; any number of NFTs  at once, for a particular tier. Here, &#39;lazy mint&#39; means defining the metadata for particular tokenIds of your NFT contract,  without actually minting a non-zero balance of NFTs of those tokenIds.
 
 
 
