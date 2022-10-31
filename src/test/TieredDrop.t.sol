@@ -119,6 +119,60 @@ contract TieredDropTest is BaseTest {
         claimSignature = abi.encodePacked(r, s, v);
     }
 
+    ////////////////////////////////////////////////
+    //                                            //
+    //          lazyMintWithTier tests            //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_lazyMintWithTier() public {}
+
+    function test_state_lazyMintWithTier_sameTier() public {}
+
+    function test_revert_lazyMintWithTier_notMinterRole() public {}
+
+    function test_revert_lazyMintWithTier_mintingZeroAmount() public {}
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //        claimWithSignature tests            //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_claimWithSignature() public {}
+
+    function test_revert_claimWithSignature_invalidEncoding() public {}
+
+    function test_revert_claimWithSignature_mintingZeroQuantity() public {}
+
+    function test_revert_claimWithSignature_notEnoughLazyMintedTokens() public {}
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //              reveal tests                  //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_revealWithScrambleOffset() public {}
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //          getMintInstances tests            //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getMintInstances() public {}
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //          getTokensInTier tests             //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getTokensInTier() public {}
+
+    // ==============================================
+
     function test_flow() public {
         // Lazy mint tokens: 3 different tiers
         vm.startPrank(dropAdmin);
