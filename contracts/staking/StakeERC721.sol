@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import "lib/forge-std/src/console.sol";
+
 contract StakeERC721 is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -24,6 +26,7 @@ contract StakeERC721 is Ownable, ReentrancyGuard {
     // Interfaces for ERC20 and ERC721
     RewardToken[] public rewardTokens;
     IERC721 public immutable nftCollection;
+    uint256 public totalRewardTokens;
 
     // Staker info
     struct Staker {
@@ -55,7 +58,11 @@ contract StakeERC721 is Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < rewardTokenCount; i++) {
             require(_rewardTokens[i].assetContract != address(0), "reward address 0");
             require(_rewardTokens[i].rewardAmount != 0, "zero amount");
+
+            rewardTokens.push(_rewardTokens[i]);
         }
+
+        totalRewardTokens = rewardTokenCount;
     }
 
     // If address already has ERC721 Token/s staked, calculate the rewards.
@@ -64,6 +71,7 @@ contract StakeERC721 is Ownable, ReentrancyGuard {
     // Token to later send back on withdrawal. Finally give timeOfLastUpdate the
     // value of now.
     function stake(uint256[] calldata _tokenIds) external nonReentrant {
+        uint256 rewardsLen = rewardTokens.length;
         if (stakers[msg.sender].amountStaked > 0) {
             uint256[] memory rewards = calculateRewards(msg.sender);
             for (uint256 i = 0; i < rewards.length; i++) {
@@ -71,6 +79,9 @@ contract StakeERC721 is Ownable, ReentrancyGuard {
             }
         } else {
             stakersArray.push(msg.sender);
+            for (uint256 i = 0; i < rewardsLen; i++) {
+                stakers[msg.sender].unclaimedRewards.push(0);
+            }
         }
         uint256 len = _tokenIds.length;
         for (uint256 i; i < len; ++i) {
