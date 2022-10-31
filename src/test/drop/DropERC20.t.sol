@@ -493,7 +493,7 @@ contract DropERC20Test is BaseTest {
 
     /**
      *  note: Testing quantity limit restriction
-     *          - allowlist quantity set to type(uint256).max => should default to general limit
+     *          - allowlist quantity set to 0 => should default to general limit
      *          - allowlist price set to some value different than general price
      */
     function test_state_claim_allowlisted_DefaultQuantitySomePrice() public {
@@ -501,7 +501,7 @@ contract DropERC20Test is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(type(uint256).max); // this implies that general limit is applicable
+        inputs[2] = "0"; // this implies that general limit is applicable
         inputs[3] = Strings.toString(5 ether);
         inputs[4] = "0x0000000000000000000000000000000000000000"; // general currency will be applicable
 
@@ -515,7 +515,7 @@ contract DropERC20Test is BaseTest {
 
         DropERC20.AllowlistProof memory alp;
         alp.proof = proofs;
-        alp.quantityLimitPerWallet = type(uint256).max;
+        alp.quantityLimitPerWallet = 0;
         alp.pricePerToken = 5 ether;
         alp.currency = address(0);
 
