@@ -14,7 +14,7 @@ contract StakeERC721 is Ownable, ReentrancyGuard {
      *  @notice Interface to describe reward amounts accumulated or unclaimed for every token for a staker.
      *
      *  @param assetContract The contract address of the asset.
-     *  @param rewardAmount  Reward amount per hour.
+     *  @param rewardAmount  Reward amount per hour (in wei or the smallest unit of asset).
      */
     struct RewardToken {
         address assetContract;
@@ -35,10 +35,6 @@ contract StakeERC721 is Ownable, ReentrancyGuard {
         // calculated each time the user writes to the Smart Contract
         uint256[] unclaimedRewards;
     }
-
-    // Rewards per hour per token deposited in wei.
-    // Rewards are cumulated once every hour.
-    // uint256 private rewardsPerHour = 100000;
 
     // Mapping of User Address to Staker info
     mapping(address => Staker) public stakers;
