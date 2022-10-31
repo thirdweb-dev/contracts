@@ -63,21 +63,33 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         return batchId;
     }
 
+    /**
+     *  @notice Returns all metadata lazy minted for th egiven tier.
+     *
+     *  @param _tier The tier for which to return lazy minted metadata.
+     *  @return tokens The range of IDs lazy minted for the tier.
+     *  @return baseURIs The repsective baseURIs for the IDs lazy minted.
+     */
     function getMetadataInTier(string memory _tier)
         public
         view
-        returns (TokenRange[] memory tokens, string[] memory _baseURIs)
+        returns (TokenRange[] memory tokens, string[] memory baseURIs)
     {
         tokens = tokensInTier[_tier];
 
         uint256 len = tokens.length;
-        _baseURIs = new string[](len);
+        baseURIs = new string[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            _baseURIs[i] = _getBaseURI(tokens[i].startIdInclusive);
+            baseURIs[i] = _getBaseURI(tokens[i].startIdInclusive);
         }
     }
 
+    /**
+     *  @notice Returns whether any metadata is lazy minted for the given tier.
+     *
+     *  @param _tier We check whether this given tier is empty.
+     */
     function isTierEmpty(string memory _tier) internal view returns (bool) {
         return tokensInTier[_tier].length == 0;
     }
