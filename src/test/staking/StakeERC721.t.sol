@@ -76,6 +76,7 @@ contract StakeERC721Test is BaseTest {
         // check balances/ownership of staked tokens
         for (uint256 i = 0; i < _tokenIdsOne.length; i++) {
             assertEq(erc721.ownerOf(_tokenIdsOne[i]), address(stakeContract));
+            assertEq(stakeContract.stakerAddress(_tokenIdsOne[i]), address(stakerOne));
         }
         assertEq(erc721.balanceOf(address(stakerOne)), 2);
         assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsOne.length);
@@ -122,6 +123,7 @@ contract StakeERC721Test is BaseTest {
         // check balances/ownership of staked tokens
         for (uint256 i = 0; i < _tokenIdsTwo.length; i++) {
             assertEq(erc721.ownerOf(_tokenIdsTwo[i]), address(stakeContract));
+            assertEq(stakeContract.stakerAddress(_tokenIdsTwo[i]), address(stakerTwo));
         }
         assertEq(erc721.balanceOf(address(stakerTwo)), 3);
         assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsTwo.length + _tokenIdsOne.length);
@@ -214,4 +216,85 @@ contract StakeERC721Test is BaseTest {
     /*///////////////////////////////////////////////////////////////
                             Unit tests: withdraw
     //////////////////////////////////////////////////////////////*/
+
+    function test_state_withdraw() public {
+        //================ first staker ======================
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](3);
+        _tokenIdsOne[0] = 0;
+        _tokenIdsOne[1] = 1;
+        _tokenIdsOne[2] = 2;
+
+        // stake 3 tokens
+        vm.prank(address(stakerOne));
+        stakeContract.stake(_tokenIdsOne);
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        // check balances/ownership of staked tokens
+        for (uint256 i = 0; i < _tokenIdsOne.length; i++) {
+            assertEq(erc721.ownerOf(_tokenIdsOne[i]), address(stakeContract));
+            assertEq(stakeContract.stakerAddress(_tokenIdsOne[i]), address(stakerOne));
+        }
+        assertEq(erc721.balanceOf(address(stakerOne)), 2);
+        assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsOne.length);
+
+        // check available rewards right after staking
+        (uint256 _amountStaked, StakeERC721.RewardToken[] memory _availableRewards) = stakeContract.userStakeInfo(
+            address(stakerOne)
+        );
+
+        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_availableRewards.length, rewardAssets.length);
+        for (uint256 i = 0; i < _availableRewards.length; i++) {
+            assertEq(_availableRewards[i].assetContract, address(rewardAssets[i]));
+            assertEq(_availableRewards[i].rewardAmount, 0);
+        }
+
+        //========== warp timestamp before withdraw
+        vm.roll(100);
+        vm.warp(1000);
+
+        uint256[] memory _tokensToWithdraw = new uint256[](2);
+        _tokensToWithdraw[0] = 2;
+        _tokensToWithdraw[1] = 0;
+
+        vm.prank(address(stakerOne));
+        stakeContract.withdraw(_tokensToWithdraw);
+
+        // check balances/ownership after withdraw
+        for (uint256 i = 0; i < _tokensToWithdraw.length; i++) {
+            assertEq(erc721.ownerOf(_tokensToWithdraw[i]), address(stakerOne));
+            assertEq(stakeContract.stakerAddress(_tokensToWithdraw[i]), address(0));
+        }
+        assertEq(erc721.balanceOf(address(stakerOne)), 4);
+        assertEq(erc721.balanceOf(address(stakeContract)), 1);
+
+        // check available rewards after withdraw
+        (, _availableRewards) = stakeContract.userStakeInfo(address(stakerOne));
+
+        for (uint256 i = 0; i < _availableRewards.length; i++) {
+            assertEq(_availableRewards[i].assetContract, address(rewardAssets[i]));
+            assertEq(
+                _availableRewards[i].rewardAmount,
+                (((((block.timestamp - timeOfLastUpdate) * 3)) * rewardTokens[i].rewardAmount) / 3600)
+            );
+        }
+
+        uint256 timeOfLastUpdateLatest = block.timestamp;
+
+        // check available rewards some time after withdraw
+        vm.roll(200);
+        vm.warp(2000);
+
+        (, _availableRewards) = stakeContract.userStakeInfo(address(stakerOne));
+
+        for (uint256 i = 0; i < _availableRewards.length; i++) {
+            assertEq(_availableRewards[i].assetContract, address(rewardAssets[i]));
+            assertEq(
+                _availableRewards[i].rewardAmount,
+                (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardTokens[i].rewardAmount) / 3600) +
+                    (((((block.timestamp - timeOfLastUpdateLatest) * 1)) * rewardTokens[i].rewardAmount) / 3600)
+            );
+        }
+    }
 }
