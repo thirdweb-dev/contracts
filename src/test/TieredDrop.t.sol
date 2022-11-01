@@ -89,10 +89,13 @@ contract TieredDropTest is BaseTest {
     TieredDrop.GenericRequest internal claimRequest;
     bytes internal claimSignature;
 
+    uint256 internal nonce;
+
     function _setupClaimSignature(string[] memory _orderedTiers, uint256 _totalQuantity) private {
         claimRequest.validityStartTimestamp = 1000;
         claimRequest.validityEndTimestamp = 2000;
-        claimRequest.uid = bytes32("UID");
+        claimRequest.uid = keccak256(abi.encodePacked(nonce));
+        nonce += 1;
         claimRequest.data = abi.encode(
             _orderedTiers,
             claimer,
@@ -125,13 +128,105 @@ contract TieredDropTest is BaseTest {
     //                                            //
     ////////////////////////////////////////////////
 
-    function test_state_lazyMintWithTier() public {}
+    function test_state_lazyMintWithTier() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
 
-    function test_state_lazyMintWithTier_sameTier() public {}
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
 
-    function test_revert_lazyMintWithTier_notMinterRole() public {}
+        (TieredDrop.TokenRange[] memory tokens_1, string[] memory baseURIs_1) = tieredDrop.getMetadataInTier(tier1);
+        (TieredDrop.TokenRange[] memory tokens_2, string[] memory baseURIs_2) = tieredDrop.getMetadataInTier(tier2);
+        (TieredDrop.TokenRange[] memory tokens_3, string[] memory baseURIs_3) = tieredDrop.getMetadataInTier(tier3);
 
-    function test_revert_lazyMintWithTier_mintingZeroAmount() public {}
+        vm.stopPrank();
+
+        uint256 cumulativeStart = 0;
+
+        TieredDrop.TokenRange memory range = tokens_1[0];
+        string memory baseURI = baseURIs_1[0];
+
+        assertEq(range.startIdInclusive, cumulativeStart);
+        assertEq(range.endIdNonInclusive, cumulativeStart + quantityTier1);
+        assertEq(baseURI, baseURITier1);
+
+        cumulativeStart += quantityTier1;
+
+        range = tokens_2[0];
+        baseURI = baseURIs_2[0];
+
+        assertEq(range.startIdInclusive, cumulativeStart);
+        assertEq(range.endIdNonInclusive, cumulativeStart + quantityTier2);
+        assertEq(baseURI, baseURITier2);
+
+        cumulativeStart += quantityTier2;
+
+        range = tokens_3[0];
+        baseURI = baseURIs_3[0];
+
+        assertEq(range.startIdInclusive, cumulativeStart);
+        assertEq(range.endIdNonInclusive, cumulativeStart + quantityTier3);
+        assertEq(baseURI, baseURITier3);
+    }
+
+    function test_state_lazyMintWithTier_sameTier() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 1 Again: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier1, "");
+
+        (TieredDrop.TokenRange[] memory tokens_1, string[] memory baseURIs_1) = tieredDrop.getMetadataInTier(tier1);
+        (TieredDrop.TokenRange[] memory tokens_2, string[] memory baseURIs_2) = tieredDrop.getMetadataInTier(tier2);
+
+        vm.stopPrank();
+
+        uint256 cumulativeStart = 0;
+
+        TieredDrop.TokenRange memory range = tokens_1[0];
+        string memory baseURI = baseURIs_1[0];
+
+        assertEq(range.startIdInclusive, cumulativeStart);
+        assertEq(range.endIdNonInclusive, cumulativeStart + quantityTier1);
+        assertEq(baseURI, baseURITier1);
+
+        cumulativeStart += quantityTier1;
+
+        range = tokens_2[0];
+        baseURI = baseURIs_2[0];
+
+        assertEq(range.startIdInclusive, cumulativeStart);
+        assertEq(range.endIdNonInclusive, cumulativeStart + quantityTier2);
+        assertEq(baseURI, baseURITier2);
+
+        cumulativeStart += quantityTier2;
+
+        range = tokens_1[1];
+        baseURI = baseURIs_1[1];
+
+        assertEq(range.startIdInclusive, cumulativeStart);
+        assertEq(range.endIdNonInclusive, cumulativeStart + quantityTier3);
+        assertEq(baseURI, baseURITier3);
+    }
+
+    function test_revert_lazyMintWithTier_notMinterRole() public {
+        vm.expectRevert("Not authorized");
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+    }
+
+    function test_revert_lazyMintWithTier_mintingZeroAmount() public {
+        vm.prank(dropAdmin);
+        vm.expectRevert("0 amt");
+        tieredDrop.lazyMint(0, baseURITier1, tier1, "");
+    }
 
     ////////////////////////////////////////////////
     //                                            //
@@ -139,41 +234,7 @@ contract TieredDropTest is BaseTest {
     //                                            //
     ////////////////////////////////////////////////
 
-    function test_state_claimWithSignature() public {}
-
-    function test_revert_claimWithSignature_invalidEncoding() public {}
-
-    function test_revert_claimWithSignature_mintingZeroQuantity() public {}
-
-    function test_revert_claimWithSignature_notEnoughLazyMintedTokens() public {}
-
-    ////////////////////////////////////////////////
-    //                                            //
-    //              reveal tests                  //
-    //                                            //
-    ////////////////////////////////////////////////
-
-    function test_state_revealWithScrambleOffset() public {}
-
-    ////////////////////////////////////////////////
-    //                                            //
-    //          getMintInstances tests            //
-    //                                            //
-    ////////////////////////////////////////////////
-
-    function test_state_getMintInstances() public {}
-
-    ////////////////////////////////////////////////
-    //                                            //
-    //          getTokensInTier tests             //
-    //                                            //
-    ////////////////////////////////////////////////
-
-    function test_state_getTokensInTier() public {}
-
-    // ==============================================
-
-    function test_flow() public {
+    function test_state_claimWithSignature() public {
         // Lazy mint tokens: 3 different tiers
         vm.startPrank(dropAdmin);
 
@@ -216,7 +277,6 @@ contract TieredDropTest is BaseTest {
         uint256 tier1Id = 0;
 
         for (uint256 i = 0; i < claimQuantity; i += 1) {
-            // console.log(i);
             if (i < 20) {
                 assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier2, tier2Id.toString())));
                 tier2Id += 1;
@@ -227,11 +287,161 @@ contract TieredDropTest is BaseTest {
         }
     }
 
+    function test_revert_claimWithSignature_invalidEncoding() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 25;
+
+        // Create data with invalid encoding.
+        claimRequest.data = abi.encode(1, "");
+        _setupClaimSignature(tiers, claimQuantity);
+
+        claimRequest.data = abi.encode(1, "");
+
+        assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        vm.expectRevert();
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+    }
+
+    function test_revert_claimWithSignature_mintingZeroQuantity() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 0;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        vm.expectRevert("0 qty");
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+    }
+
+    function test_revert_claimWithSignature_notEnoughLazyMintedTokens() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = quantityTier1 + quantityTier2 + quantityTier3 + 1;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        vm.expectRevert("!Tokens");
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+    }
+
+    function test_revert_claimWithSignature_insufficientTokensInTiers() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = "non-exsitent tier 1";
+        tiers[1] = "non-exsitent tier 2";
+
+        uint256 claimQuantity = 25;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        vm.expectRevert("Insufficient tokens in tiers.");
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+    }
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //              reveal tests                  //
+    //                                            //
+    ////////////////////////////////////////////////
+
     function _getProvenanceHash(string memory _revealURI, bytes memory _key) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_revealURI, _key, block.chainid));
     }
 
-    function test_flow_randomOnReveal() public {
+    function test_state_revealWithScrambleOffset() public {
         // Lazy mint tokens: 3 different tiers: with delayed reveal
         bytes memory encryptedURITier1 = tieredDrop.encryptDecrypt(bytes(baseURITier1), keyTier1);
         bytes memory encryptedURITier2 = tieredDrop.encryptDecrypt(bytes(baseURITier2), keyTier2);
@@ -309,15 +519,147 @@ contract TieredDropTest is BaseTest {
         tieredDrop.reveal(1, keyTier2);
         tieredDrop.reveal(2, keyTier3);
 
-        // for (uint256 i = 0; i < claimQuantity; i += 1) {
-        //     console.log(i);
-        //     if (i < 20) {
-        //         console.log(i, tieredDrop.tokenURI(i));
-        //         tier2Id += 1;
-        //     } else {
-        //         console.log(i, tieredDrop.tokenURI(i));
-        //         tier1Id += 1;
-        //     }
-        // }
+        uint256 tier2IdStart = 10;
+        uint256 tier2IdEnd = 30;
+
+        uint256 tier1IdStart = 0;
+        uint256 tier1IdEnd = 10;
+
+        for (uint256 i = 0; i < claimQuantity; i += 1) {
+            bytes32 tokenURIHash = keccak256(abi.encodePacked(tieredDrop.tokenURI(i)));
+            bool detected = false;
+
+            if (i < 20) {
+                for (uint256 j = tier2IdStart; j < tier2IdEnd; j += 1) {
+                    bytes32 expectedURIHash = keccak256(abi.encodePacked(baseURITier2, j.toString()));
+
+                    if (tokenURIHash == expectedURIHash) {
+                        detected = true;
+                    }
+
+                    if (detected) {
+                        break;
+                    }
+                }
+            } else {
+                for (uint256 k = tier1IdStart; k < tier1IdEnd; k += 1) {
+                    bytes32 expectedURIHash = keccak256(abi.encodePacked(baseURITier1, k.toString()));
+
+                    if (tokenURIHash == expectedURIHash) {
+                        detected = true;
+                    }
+
+                    if (detected) {
+                        break;
+                    }
+                }
+            }
+
+            assertEq(detected, true);
+        }
+    }
+
+    event URIReveal(uint256 tokenId, string uri);
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //          getTokensInTierLen tests          //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getTokensInTierLen() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 25;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+
+        vm.prank(claimer);
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+
+        assertEq(tieredDrop.getTokensInTierLen(), 2);
+
+        for (uint256 i = 0; i < 5; i += 1) {
+            _setupClaimSignature(tiers, 1);
+
+            vm.warp(claimRequest.validityStartTimestamp);
+
+            vm.prank(claimer);
+            tieredDrop.claimWithSignature(claimRequest, claimSignature);
+        }
+
+        assertEq(tieredDrop.getTokensInTierLen(), 7);
+    }
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //          getTokensInTier tests             //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getTokensInTier() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 25;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+
+        vm.prank(claimer);
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+
+        TieredDrop.TokenRange[] memory rangesTier1 = tieredDrop.getTokensInTier(tier1);
+        assertEq(rangesTier1.length, 1);
+
+        TieredDrop.TokenRange[] memory rangesTier2 = tieredDrop.getTokensInTier(tier2);
+        assertEq(rangesTier2.length, 1);
+
+        assertEq(rangesTier1[0].startIdInclusive, 20);
+        assertEq(rangesTier1[0].endIdNonInclusive, 25);
+        assertEq(rangesTier2[0].startIdInclusive, 0);
+        assertEq(rangesTier2[0].endIdNonInclusive, 20);
     }
 }
