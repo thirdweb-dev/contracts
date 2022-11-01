@@ -113,7 +113,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-
+*Returns the contract type of this contract.*
 
 
 #### Returns
@@ -147,7 +147,7 @@ function contractVersion() external pure returns (uint8)
 
 
 
-
+*Returns the contract version of this contract.*
 
 
 #### Returns
@@ -303,23 +303,6 @@ Returns all metadata lazy minted for th egiven tier.
 | tokens | LazyMintWithTier.TokenRange[] | The range of IDs lazy minted for the tier. |
 | baseURIs | string[] | The repsective baseURIs for the IDs lazy minted. |
 
-### getMintInstances
-
-```solidity
-function getMintInstances() external view returns (uint256)
-```
-
-
-
-*Returns the number of mint transactions on this contract..*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### getRevealURI
 
 ```solidity
@@ -436,7 +419,7 @@ View royalty info for a given token.
 ### getTokensInTier
 
 ```solidity
-function getTokensInTier(string _tier, uint256 startIndex, uint256 endIndex) external view returns (struct LazyMintWithTier.TokenRange[] ranges)
+function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) external view returns (struct LazyMintWithTier.TokenRange[] ranges)
 ```
 
 
@@ -448,14 +431,31 @@ function getTokensInTier(string _tier, uint256 startIndex, uint256 endIndex) ext
 | Name | Type | Description |
 |---|---|---|
 | _tier | string | undefined |
-| startIndex | uint256 | undefined |
-| endIndex | uint256 | undefined |
+| _startIdx | uint256 | undefined |
+| _endIdx | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | ranges | LazyMintWithTier.TokenRange[] | undefined |
+
+### getTokensInTierLen
+
+```solidity
+function getTokensInTierLen() external view returns (uint256)
+```
+
+
+
+*Returns the max `endIndex` that can be used with getTokensInTier.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### grantRole
 

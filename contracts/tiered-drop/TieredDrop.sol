@@ -54,24 +54,20 @@ contract TieredDrop is
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private minterRole;
 
-    /// @dev Max bps in the thirdweb system.
-    uint256 private constant MAX_BPS = 10_000;
-
     /**
-     *  @dev Minting of NFTs on an ERC721A contract happens from a start tokenId (inclusive) to an end tokenId (non-inclusive).
+     *  @dev Conceptually, tokens are minted on this contract one-batch-of-a-tier at a time. Each batch is comprised of
+     *       a given range of tokenIds [startId, endId).
      *
-     *       Additionally, minting of tokenIds occurs in a strictly increasing order from `startTokenId()` (i.e. `0`)
-     *       onwards: 0 < end_tokenId_1 < end_tokenId_2 < ... end_tokenId_n.
-     *
-     *       This array stores each end_tokenId_n for the n number of mints on this contract.
+     *       This array stores each such endId, in chronological order of minting.
      */
     uint256 private lengthEndIdsAtMint;
     mapping(uint256 => uint256) private endIdsAtMint;
 
     /**
-     *  @dev Each time NFTs are batch minted on this ERC721A contract, all NFTs in that batch belong to the same tier.
+     *  @dev Conceptually, tokens are minted on this contract one-batch-of-a-tier at a time. Each batch is comprised of
+     *       a given range of tokenIds [startId, endId).
      *
-     *       This is a mapping from `end_tokenId_n` -> the tier that tokenIds [end_tokenId_n-1, end_tokenId_n) belong to.
+     *       This is a mapping from such an `endId` -> the tier that tokenIds [startId, endId) belong to.
      *       Together with `endIdsAtMint`, this mapping is used to return the tokenIds that belong to a given tier.
      */
     mapping(uint256 => string) private tierAtEndId;
@@ -173,10 +169,12 @@ contract TieredDrop is
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
+    /// @dev Returns the contract type of this contract.
     function contractType() external pure returns (bytes32) {
         return bytes32("TieredDrop");
     }
 
+    /// @dev Returns the contract version of this contract.
     function contractVersion() external pure returns (uint8) {
         return uint8(1);
     }
@@ -317,20 +315,27 @@ contract TieredDrop is
         for (uint256 i = 0; i < _tiers.length; i += 1) {
             string memory tier = _tiers[i];
 
-            (uint256 qtyFulfilled, uint256 qtyUnfulfilled) = _getQuantityFulfilledByTier(tier, remaningToDistribute);
+            uint256 qtyFulfilled = _getQuantityFulfilledByTier(tier, remaningToDistribute);
+
+            if (qtyFulfilled == 0) {
+                continue;
+            }
+
+            remaningToDistribute -= qtyFulfilled;
 
             _mapTokensToTier(tier, startIdToMap, qtyFulfilled);
 
             totalRemainingInTier[tier] -= qtyFulfilled;
             totalsForTier[keccak256(abi.encodePacked(tier, "minted"))] += qtyFulfilled;
 
-            if (qtyUnfulfilled > 0) {
+            if (remaningToDistribute > 0) {
                 startIdToMap += qtyFulfilled;
-                remaningToDistribute = qtyUnfulfilled;
             } else {
                 break;
             }
         }
+
+        require(remaningToDistribute == 0, "Insufficient tokens in tiers.");
 
         _safeMint(_to, _totalQuantityBeingClaimed);
     }
@@ -359,51 +364,66 @@ contract TieredDrop is
     function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
         private
         view
-        returns (uint256 totalFulfulled, uint256 totalUnfulfilled)
+        returns (uint256 fulfilled)
     {
         uint256 total = totalRemainingInTier[_tier];
 
-        if (total > _quantity) {
-            (totalFulfulled, totalUnfulfilled) = (total - _quantity, 0);
+        if (total >= _quantity) {
+            fulfilled = _quantity;
         } else {
-            (totalFulfulled, totalUnfulfilled) = (total, _quantity - total);
+            fulfilled = total;
         }
     }
 
-    /// @dev Returns the number of mint transactions on this contract..
-    function getMintInstances() external view returns (uint256) {
+    /// @dev Returns the max `endIndex` that can be used with getTokensInTier.
+    function getTokensInTierLen() external view returns (uint256) {
         return lengthEndIdsAtMint;
     }
 
     /// @dev Returns all tokenIds that belong to the given tier.
     function getTokensInTier(
         string memory _tier,
-        uint256 startIndex,
-        uint256 endIndex
+        uint256 _startIdx,
+        uint256 _endIdx
     ) external view returns (TokenRange[] memory ranges) {
         uint256 len = lengthEndIdsAtMint;
 
-        require(startIndex < endIndex && endIndex <= len, "TieredDrop: invalid indices.");
+        require(_startIdx < _endIdx && _endIdx <= len, "TieredDrop: invalid indices.");
 
-        uint256 numOfRanges;
+        uint256 numOfRangesForTier = 0;
 
-        for (uint256 i = startIndex; i < endIndex; i += 1) {
-            if (keccak256(bytes(tierAtEndId[endIdsAtMint[i]])) == keccak256(bytes(_tier))) {
-                numOfRanges += 1;
+        for (uint256 i = _startIdx; i < _endIdx; i += 1) {
+            bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
+            bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
+
+            if (hashOfStoredTier == hashOfTier) {
+                numOfRangesForTier += 1;
             }
         }
 
-        ranges = new TokenRange[](numOfRanges);
-        for (uint256 j = startIndex; j < endIndex; j += 1) {
-            if (keccak256(bytes(tierAtEndId[endIdsAtMint[j]])) == keccak256(bytes(_tier))) {
-                uint256 start = startIndex == 0 ? 0 : endIdsAtMint[j - 1];
-                ranges[j] = TokenRange(start, endIdsAtMint[j]);
+        ranges = new TokenRange[](numOfRangesForTier);
+        uint256 idx = 0;
+
+        for (uint256 i = _startIdx; i < _endIdx; i += 1) {
+            bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
+            bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
+
+            if (hashOfStoredTier == hashOfTier) {
+                uint256 end = endIdsAtMint[i];
+
+                uint256 start = 0;
+                if (i > 0) {
+                    start = endIdsAtMint[i - 1];
+                }
+
+                ranges[idx] = TokenRange(start, end);
+                idx += 1;
             }
         }
     }
 
     /// @dev Returns the metadata ID for the given tokenID.
-    function _getMetadataId(uint256 _tokenId) internal view returns (uint256) {
+    function _getMetadataId(uint256 _tokenId) private view returns (uint256) {
         uint256 len = lengthEndIdsAtMint;
 
         for (uint256 i = 0; i < len; i += 1) {

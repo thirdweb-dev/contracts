@@ -651,10 +651,10 @@ contract TieredDropTest is BaseTest {
         vm.prank(claimer);
         tieredDrop.claimWithSignature(claimRequest, claimSignature);
 
-        TieredDrop.TokenRange[] memory rangesTier1 = tieredDrop.getTokensInTier(tier1);
+        TieredDrop.TokenRange[] memory rangesTier1 = tieredDrop.getTokensInTier(tier1, 0, 2);
         assertEq(rangesTier1.length, 1);
 
-        TieredDrop.TokenRange[] memory rangesTier2 = tieredDrop.getTokensInTier(tier2);
+        TieredDrop.TokenRange[] memory rangesTier2 = tieredDrop.getTokensInTier(tier2, 0, 2);
         assertEq(rangesTier2.length, 1);
 
         assertEq(rangesTier1[0].startIdInclusive, 20);
