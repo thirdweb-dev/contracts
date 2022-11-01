@@ -1,4 +1,4 @@
-# Multiwrap
+# TieredDrop
 
 
 
@@ -66,6 +66,45 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### burn
+
+```solidity
+function burn(uint256 tokenId) external nonpayable
+```
+
+
+
+*Burns `tokenId`. See {ERC721-_burn}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+### claimWithSignature
+
+```solidity
+function claimWithSignature(ISignatureAction.GenericRequest _req, bytes _signature) external payable returns (address signer)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | ISignatureAction.GenericRequest | undefined |
+| _signature | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined |
+
 ### contractType
 
 ```solidity
@@ -74,7 +113,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-*Returns the type of the contract.*
+*Returns the contract type of this contract.*
 
 
 #### Returns
@@ -108,7 +147,7 @@ function contractVersion() external pure returns (uint8)
 
 
 
-*Returns the version of the contract.*
+*Returns the contract version of this contract.*
 
 
 #### Returns
@@ -116,6 +155,51 @@ function contractVersion() external pure returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined |
+
+### encryptDecrypt
+
+```solidity
+function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
+```
+
+Encrypt/decrypt data on chain.
+
+*Encrypt/decrypt given `data` with `key`. Uses inline assembly.                  See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes | Bytes of data to encrypt/decrypt. |
+| key | bytes | Secure key used by caller for encryption/decryption. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| result | bytes |  Output after encryption/decryption of given data. |
+
+### encryptedData
+
+```solidity
+function encryptedData(uint256) external view returns (bytes)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
 
 ### getApproved
 
@@ -139,6 +223,45 @@ function getApproved(uint256 tokenId) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### getBaseURICount
+
+```solidity
+function getBaseURICount() external view returns (uint256)
+```
+
+Returns the count of batches of NFTs.
+
+*Each batch of tokens has an in ID and an associated `baseURI`.                  See {batchIds}.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getBatchIdAtIndex
+
+```solidity
+function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
+```
+
+Returns the ID for the batch of tokens the given tokenId belongs to.
+
+*See {getBaseURICount}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _index | uint256 | ID of a token. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### getDefaultRoyaltyInfo
 
 ```solidity
@@ -156,6 +279,52 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getMetadataInTier
+
+```solidity
+function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string[] baseURIs)
+```
+
+Returns all metadata lazy minted for th egiven tier.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tier | string | The tier for which to return lazy minted metadata. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| tokens | LazyMintWithTier.TokenRange[] | The range of IDs lazy minted for the tier. |
+| baseURIs | string[] | The repsective baseURIs for the IDs lazy minted. |
+
+### getRevealURI
+
+```solidity
+function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
+```
+
+Returns revealed URI for a batch of NFTs.
+
+*Reveal encrypted base URI for `_batchId` with caller/admin&#39;s `_key` used for encryption.                      Reverts if there&#39;s no encrypted URI for `_batchId`.                      See {encryptDecrypt}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _batchId | uint256 | ID of the batch for which URI is being revealed. |
+| _key | bytes | Secure key used by caller/admin for encryption of baseURI. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| revealedURI | string | Decrypted base URI. |
 
 ### getRoleAdmin
 
@@ -247,94 +416,46 @@ View royalty info for a given token.
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
 
-### getTokenCountOfBundle
+### getTokensInTier
 
 ```solidity
-function getTokenCountOfBundle(uint256 _bundleId) external view returns (uint256)
+function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) external view returns (struct LazyMintWithTier.TokenRange[] ranges)
 ```
 
 
 
-*Returns the total number of assets in a particular bundle.*
+*Returns all tokenIds that belong to the given tier.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _bundleId | uint256 | undefined |
+| _tier | string | undefined |
+| _startIdx | uint256 | undefined |
+| _endIdx | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| ranges | LazyMintWithTier.TokenRange[] | undefined |
+
+### getTokensInTierLen
+
+```solidity
+function getTokensInTierLen() external view returns (uint256)
+```
+
+
+
+*Returns the max `endIndex` that can be used with getTokensInTier.*
+
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-
-### getTokenOfBundle
-
-```solidity
-function getTokenOfBundle(uint256 _bundleId, uint256 index) external view returns (struct ITokenBundle.Token)
-```
-
-
-
-*Returns an asset contained in a particular bundle, at a particular index.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _bundleId | uint256 | undefined |
-| index | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | ITokenBundle.Token | undefined |
-
-### getUriOfBundle
-
-```solidity
-function getUriOfBundle(uint256 _bundleId) external view returns (string)
-```
-
-
-
-*Returns the uri of a particular bundle.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _bundleId | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined |
-
-### getWrappedContents
-
-```solidity
-function getWrappedContents(uint256 _tokenId) external view returns (struct ITokenBundle.Token[] contents)
-```
-
-
-
-*Returns the underlying contents of a wrapped NFT.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| contents | ITokenBundle.Token[] | undefined |
 
 ### grantRole
 
@@ -402,7 +523,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint16 _royaltyBps) external nonpayable
 ```
 
 
@@ -418,8 +539,9 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _symbol | string | undefined |
 | _contractURI | string | undefined |
 | _trustedForwarders | address[] | undefined |
+| _saleRecipient | address | undefined |
 | _royaltyRecipient | address | undefined |
-| _royaltyBps | uint256 | undefined |
+| _royaltyBps | uint16 | undefined |
 
 ### isApprovedForAll
 
@@ -437,6 +559,28 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | owner | address | undefined |
 | operator | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### isEncryptedBatch
+
+```solidity
+function isEncryptedBatch(uint256 _batchId) external view returns (bool)
+```
+
+Returns whether the relvant batch of NFTs is subject to a delayed reveal.
+
+*Returns `true` if `_batchId`&#39;s base URI is encrypted.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _batchId | uint256 | ID of a batch of NFTs. |
 
 #### Returns
 
@@ -465,6 +609,31 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### lazyMint
+
+```solidity
+function lazyMint(uint256 _amount, string _baseURIForTokens, string _tier, bytes _data) external nonpayable returns (uint256 batchId)
+```
+
+Lets an authorized address lazy mint a given amount of NFTs.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | The number of NFTs to lazy mint. |
+| _baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                           of those NFTs is `${baseURIForTokens}/${tokenId}`. |
+| _tier | string | undefined |
+| _data | bytes | Additional bytes data to be used at the discretion of the consumer of the contract. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
 
 ### multicall
 
@@ -513,7 +682,7 @@ function nextTokenIdToMint() external view returns (uint256)
 
 
 
-*The next token ID of the NFT to mint.*
+*The tokenId of the next NFT that will be minted / lazy minted.*
 
 
 #### Returns
@@ -521,83 +690,6 @@ function nextTokenIdToMint() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-
-### onERC1155BatchReceived
-
-```solidity
-function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | address | undefined |
-| _2 | uint256[] | undefined |
-| _3 | uint256[] | undefined |
-| _4 | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes4 | undefined |
-
-### onERC1155Received
-
-```solidity
-function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | address | undefined |
-| _2 | uint256 | undefined |
-| _3 | uint256 | undefined |
-| _4 | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes4 | undefined |
-
-### onERC721Received
-
-```solidity
-function onERC721Received(address, address, uint256, bytes) external nonpayable returns (bytes4)
-```
-
-
-
-*See {IERC721Receiver-onERC721Received}. Always returns `IERC721Receiver.onERC721Received.selector`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | address | undefined |
-| _2 | uint256 | undefined |
-| _3 | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes4 | undefined |
 
 ### owner
 
@@ -638,6 +730,23 @@ function ownerOf(uint256 tokenId) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### primarySaleRecipient
+
+```solidity
+function primarySaleRecipient() external view returns (address)
+```
+
+
+
+*Returns primary sale recipient address.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### renounceRole
 
 ```solidity
@@ -654,6 +763,29 @@ Revokes role from the account.
 |---|---|---|
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
+
+### reveal
+
+```solidity
+function reveal(uint256 _index, bytes _key) external nonpayable returns (string revealedURI)
+```
+
+
+
+*Lets an account with `MINTER_ROLE` reveal the URI for a batch of &#39;delayed-reveal&#39; NFTs.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _index | uint256 | undefined |
+| _key | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| revealedURI | string | undefined |
 
 ### revokeRole
 
@@ -717,7 +849,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
 ```
 
 
@@ -731,7 +863,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)
 | from | address | undefined |
 | to | address | undefined |
 | tokenId | uint256 | undefined |
-| data | bytes | undefined |
+| _data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -799,6 +931,22 @@ Lets an authorized wallet set a new owner for the contract.
 |---|---|---|
 | _newOwner | address | The address to set as the new owner of the contract. |
 
+### setPrimarySaleRecipient
+
+```solidity
+function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
+```
+
+Updates primary sale recipient.
+
+*Caller should be authorized to set primary sales info.                  See {_canSetPrimarySaleRecipient}.                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _saleRecipient | address | Address to be set as new recipient of primary sales. |
+
 ### setRoyaltyInfoForToken
 
 ```solidity
@@ -856,51 +1004,6 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
-### tokenByIndex
-
-```solidity
-function tokenByIndex(uint256 index) external view returns (uint256)
-```
-
-
-
-*See {IERC721Enumerable-tokenByIndex}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| index | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### tokenOfOwnerByIndex
-
-```solidity
-function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256)
-```
-
-
-
-*See {IERC721Enumerable-tokenOfOwnerByIndex}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| owner | address | undefined |
-| index | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### tokenURI
 
 ```solidity
@@ -923,6 +1026,45 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### totalMinted
+
+```solidity
+function totalMinted() external view returns (uint256)
+```
+
+
+
+*Returns the total amount of tokens minted in the contract.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### totalMintedInTier
+
+```solidity
+function totalMintedInTier(string _tier) external view returns (uint256)
+```
+
+
+
+*Returns the total number of tokens minted from the given tier.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tier | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### totalSupply
 
 ```solidity
@@ -931,7 +1073,7 @@ function totalSupply() external view returns (uint256)
 
 
 
-*See {IERC721Enumerable-totalSupply}.*
+*Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.*
 
 
 #### Returns
@@ -958,27 +1100,10 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined |
 | tokenId | uint256 | undefined |
 
-### unwrap
+### verify
 
 ```solidity
-function unwrap(uint256 _tokenId, address _recipient) external nonpayable
-```
-
-
-
-*Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId | uint256 | undefined |
-| _recipient | address | undefined |
-
-### wrap
-
-```solidity
-function wrap(ITokenBundle.Token[] _tokensToWrap, string _uriForWrappedToken, address _recipient) external payable returns (uint256 tokenId)
+function verify(ISignatureAction.GenericRequest _req, bytes _signature) external view returns (bool success, address signer)
 ```
 
 
@@ -989,15 +1114,15 @@ function wrap(ITokenBundle.Token[] _tokensToWrap, string _uriForWrappedToken, ad
 
 | Name | Type | Description |
 |---|---|---|
-| _tokensToWrap | ITokenBundle.Token[] | undefined |
-| _uriForWrappedToken | string | undefined |
-| _recipient | address | undefined |
+| _req | ISignatureAction.GenericRequest | undefined |
+| _signature | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId | uint256 | undefined |
+| success | bool | undefined |
+| signer | address | undefined |
 
 
 
@@ -1106,6 +1231,40 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
+### PrimarySaleRecipientUpdated
+
+```solidity
+event PrimarySaleRecipientUpdated(address indexed recipient)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| recipient `indexed` | address | undefined |
+
+### RequestExecuted
+
+```solidity
+event RequestExecuted(address indexed user, address indexed signer, ISignatureAction.GenericRequest _req)
+```
+
+Emitted when a payload is verified and executed.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| user `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
+| _req  | ISignatureAction.GenericRequest | undefined |
+
 ### RoleAdminChanged
 
 ```solidity
@@ -1178,10 +1337,10 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
-### TokensUnwrapped
+### TokenURIRevealed
 
 ```solidity
-event TokensUnwrapped(address indexed unwrapper, address indexed recipientOfWrappedContents, uint256 indexed tokenIdOfWrappedToken)
+event TokenURIRevealed(uint256 indexed index, string revealedURI)
 ```
 
 
@@ -1192,14 +1351,13 @@ event TokensUnwrapped(address indexed unwrapper, address indexed recipientOfWrap
 
 | Name | Type | Description |
 |---|---|---|
-| unwrapper `indexed` | address | undefined |
-| recipientOfWrappedContents `indexed` | address | undefined |
-| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
+| index `indexed` | uint256 | undefined |
+| revealedURI  | string | undefined |
 
-### TokensWrapped
+### TokensLazyMinted
 
 ```solidity
-event TokensWrapped(address indexed wrapper, address indexed recipientOfWrappedToken, uint256 indexed tokenIdOfWrappedToken, ITokenBundle.Token[] wrappedContents)
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -1210,10 +1368,10 @@ event TokensWrapped(address indexed wrapper, address indexed recipientOfWrappedT
 
 | Name | Type | Description |
 |---|---|---|
-| wrapper `indexed` | address | undefined |
-| recipientOfWrappedToken `indexed` | address | undefined |
-| tokenIdOfWrappedToken `indexed` | uint256 | undefined |
-| wrappedContents  | ITokenBundle.Token[] | undefined |
+| startTokenId `indexed` | uint256 | undefined |
+| endTokenId  | uint256 | undefined |
+| baseURI  | string | undefined |
+| encryptedBaseURI  | bytes | undefined |
 
 ### Transfer
 
@@ -1232,6 +1390,152 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
+
+
+
+## Errors
+
+### ApprovalCallerNotOwnerNorApproved
+
+```solidity
+error ApprovalCallerNotOwnerNorApproved()
+```
+
+The caller must own the token or be an approved operator.
+
+
+
+
+### ApprovalQueryForNonexistentToken
+
+```solidity
+error ApprovalQueryForNonexistentToken()
+```
+
+The token does not exist.
+
+
+
+
+### ApprovalToCurrentOwner
+
+```solidity
+error ApprovalToCurrentOwner()
+```
+
+The caller cannot approve to the current owner.
+
+
+
+
+### ApproveToCaller
+
+```solidity
+error ApproveToCaller()
+```
+
+The caller cannot approve to their own address.
+
+
+
+
+### BalanceQueryForZeroAddress
+
+```solidity
+error BalanceQueryForZeroAddress()
+```
+
+Cannot query the balance for the zero address.
+
+
+
+
+### MintToZeroAddress
+
+```solidity
+error MintToZeroAddress()
+```
+
+Cannot mint to the zero address.
+
+
+
+
+### MintZeroQuantity
+
+```solidity
+error MintZeroQuantity()
+```
+
+The quantity of tokens minted must be more than zero.
+
+
+
+
+### OwnerQueryForNonexistentToken
+
+```solidity
+error OwnerQueryForNonexistentToken()
+```
+
+The token does not exist.
+
+
+
+
+### TransferCallerNotOwnerNorApproved
+
+```solidity
+error TransferCallerNotOwnerNorApproved()
+```
+
+The caller must own the token or be an approved operator.
+
+
+
+
+### TransferFromIncorrectOwner
+
+```solidity
+error TransferFromIncorrectOwner()
+```
+
+The token must be owned by `from`.
+
+
+
+
+### TransferToNonERC721ReceiverImplementer
+
+```solidity
+error TransferToNonERC721ReceiverImplementer()
+```
+
+Cannot safely transfer to a contract that does not implement the ERC721Receiver interface.
+
+
+
+
+### TransferToZeroAddress
+
+```solidity
+error TransferToZeroAddress()
+```
+
+Cannot transfer to the zero address.
+
+
+
+
+### URIQueryForNonexistentToken
+
+```solidity
+error URIQueryForNonexistentToken()
+```
+
+The token does not exist.
+
+
 
 
 
