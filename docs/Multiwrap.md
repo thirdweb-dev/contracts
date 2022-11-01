@@ -856,6 +856,51 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### tokenByIndex
+
+```solidity
+function tokenByIndex(uint256 index) external view returns (uint256)
+```
+
+
+
+*See {IERC721Enumerable-tokenByIndex}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| index | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### tokenOfOwnerByIndex
+
+```solidity
+function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256)
+```
+
+
+
+*See {IERC721Enumerable-tokenOfOwnerByIndex}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined |
+| index | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### tokenURI
 
 ```solidity
@@ -877,6 +922,23 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
+
+### totalSupply
+
+```solidity
+function totalSupply() external view returns (uint256)
+```
+
+
+
+*See {IERC721Enumerable-totalSupply}.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### transferFrom
 
