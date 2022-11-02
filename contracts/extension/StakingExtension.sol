@@ -4,18 +4,16 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "lib/forge-std/src/console.sol";
 
-abstract contract StakingExtension is Ownable, ReentrancyGuard {
+abstract contract StakingExtension {
     using SafeERC20 for IERC20;
 
     uint256 public timeUnit;
     uint256 public rewardsPerUnitTime;
-    uint256 public compoundingRate;
-    IERC721 public immutable nftCollection;
+    // uint256 public compoundingRate;
+    IERC721 public nftCollection;
 
     // Staker info
     struct Staker {
@@ -37,26 +35,26 @@ abstract contract StakingExtension is Ownable, ReentrancyGuard {
     address[] public stakersArray;
 
     // Constructor function
-    constructor(
-        IERC721 _nftCollection,
-        uint256 _timeUnit,
-        uint256 _rewardsPerUnitTime,
-        uint256 _compoundingRate
-    ) {
-        require(address(_nftCollection) != address(0), "collection address 0");
-        nftCollection = _nftCollection;
+    // constructor(
+    //     IERC721 _nftCollection,
+    //     uint256 _timeUnit,
+    //     uint256 _rewardsPerUnitTime,
+    //     uint256 _compoundingRate
+    // ) {
+    //     require(address(_nftCollection) != address(0), "collection address 0");
+    //     nftCollection = _nftCollection;
 
-        timeUnit = _timeUnit;
-        rewardsPerUnitTime = _rewardsPerUnitTime;
-        compoundingRate = _compoundingRate;
-    }
+    //     timeUnit = _timeUnit;
+    //     rewardsPerUnitTime = _rewardsPerUnitTime;
+    //     // compoundingRate = _compoundingRate;
+    // }
 
     // If address already has ERC721 Token/s staked, calculate the rewards.
     // For every new Token Id in param transferFrom user to this Smart Contract,
     // increment the amountStaked and map msg.sender to the Token Id of the staked
     // Token to later send back on withdrawal. Finally give timeOfLastUpdate the
     // value of now.
-    function stake(uint256[] calldata _tokenIds) external nonReentrant {
+    function stake(uint256[] calldata _tokenIds) external {
         if (stakers[msg.sender].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(msg.sender);
         } else {
@@ -76,7 +74,7 @@ abstract contract StakingExtension is Ownable, ReentrancyGuard {
     // calculate the rewards and store them in the unclaimedRewards and for each
     // ERC721 Token in param: check if msg.sender is the original staker, decrement
     // the amountStaked of the user and transfer the ERC721 token back to them
-    function withdraw(uint256[] calldata _tokenIds) external nonReentrant {
+    function withdraw(uint256[] calldata _tokenIds) external {
         require(stakers[msg.sender].amountStaked > 0, "You have no tokens staked");
 
         _updateUnclaimedRewardsForStaker(msg.sender);
@@ -117,24 +115,28 @@ abstract contract StakingExtension is Ownable, ReentrancyGuard {
     // Because the rewards are calculated passively, the owner has to first update the rewards
     // to all the stakers, witch could result in very heavy load and expensive transactions or
     // even reverting due to reaching the gas limit per block. Redesign incoming to bound loop.
-    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) public onlyOwner {
+    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) public {
+        if (!_canSetStakeConditions()) {
+            revert("Not authorized");
+        }
+
         _updateUnclaimedRewardsForAll();
         rewardsPerUnitTime = _rewardsPerUnitTime;
     }
 
-    function setTimeUnit(uint256 _timeUnit) public onlyOwner {
+    function setTimeUnit(uint256 _timeUnit) public {
+        if (!_canSetStakeConditions()) {
+            revert("Not authorized");
+        }
+
         _updateUnclaimedRewardsForAll();
         timeUnit = _timeUnit;
     }
 
-    function setCompoundingRate(uint256 _compoundingRate) public onlyOwner {
-        _updateUnclaimedRewardsForAll();
-        compoundingRate = _compoundingRate;
-    }
-
-    //////////
-    // View //
-    //////////
+    // function setCompoundingRate(uint256 _compoundingRate) public onlyOwner {
+    //     _updateUnclaimedRewardsForAll();
+    //     compoundingRate = _compoundingRate;
+    // }
 
     function getStakeInfo(address _staker) public view returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
@@ -148,10 +150,6 @@ abstract contract StakingExtension is Ownable, ReentrancyGuard {
             _rewards = stakers[_user].unclaimedRewards + _calculateRewards(_user);
         }
     }
-
-    /////////////
-    // Internal//
-    /////////////
 
     function _updateUnclaimedRewardsForAll() internal {
         address[] memory _stakers = stakersArray;
@@ -181,4 +179,7 @@ abstract contract StakingExtension is Ownable, ReentrancyGuard {
     }
 
     function _mintRewards(address _staker, uint256 _rewards) internal virtual;
+
+    /// @dev Returns whether staking related restrictions can be set in the given execution context.
+    function _canSetStakeConditions() internal view virtual returns (bool);
 }
