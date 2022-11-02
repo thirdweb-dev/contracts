@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "lib/forge-std/src/console.sol";
+import "./interface/IStaking.sol";
 
-abstract contract StakingExtension {
+abstract contract StakingExtension is IStaking {
     using SafeERC20 for IERC20;
 
     uint256 public timeUnit;
@@ -15,21 +16,7 @@ abstract contract StakingExtension {
     // uint256 public compoundingRate;
     IERC721 public nftCollection;
 
-    // Staker info
-    struct Staker {
-        // Amount of ERC721 Tokens staked
-        uint256 amountStaked;
-        // Last time of details update for this User
-        uint256 timeOfLastUpdate;
-        // Calculated, but unclaimed rewards for the User. The rewards are
-        // calculated each time the user writes to the Smart Contract
-        uint256 unclaimedRewards;
-    }
-
-    // Mapping of User Address to Staker info
     mapping(address => Staker) public stakers;
-    // Mapping of Token Id to staker. Made for the SC to remeber
-    // who to send back the ERC721 Token to.
     mapping(uint256 => address) public stakerAddress;
 
     address[] public stakersArray;
@@ -39,11 +26,6 @@ abstract contract StakingExtension {
         nftCollection = _nftCollection;
     }
 
-    // If address already has ERC721 Token/s staked, calculate the rewards.
-    // For every new Token Id in param transferFrom user to this Smart Contract,
-    // increment the amountStaked and map msg.sender to the Token Id of the staked
-    // Token to later send back on withdrawal. Finally give timeOfLastUpdate the
-    // value of now.
     function stake(uint256[] calldata _tokenIds) external {
         if (stakers[msg.sender].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(msg.sender);
@@ -60,10 +42,6 @@ abstract contract StakingExtension {
         stakers[msg.sender].amountStaked += len;
     }
 
-    // Check if user has any ERC721 Tokens Staked and if he tried to withdraw,
-    // calculate the rewards and store them in the unclaimedRewards and for each
-    // ERC721 Token in param: check if msg.sender is the original staker, decrement
-    // the amountStaked of the user and transfer the ERC721 token back to them
     function withdraw(uint256[] calldata _tokenIds) external {
         require(stakers[msg.sender].amountStaked > 0, "You have no tokens staked");
 
@@ -87,9 +65,6 @@ abstract contract StakingExtension {
         }
     }
 
-    // Calculate rewards for the msg.sender, check if there are any rewards
-    // claim, set unclaimedRewards to 0 and transfer the ERC20 Reward token
-    // to the user.
     function claimRewards() external {
         uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
 
@@ -101,10 +76,6 @@ abstract contract StakingExtension {
         _mintRewards(msg.sender, rewards);
     }
 
-    // Set the rewardsPerHour variable
-    // Because the rewards are calculated passively, the owner has to first update the rewards
-    // to all the stakers, witch could result in very heavy load and expensive transactions or
-    // even reverting due to reaching the gas limit per block. Redesign incoming to bound loop.
     function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) public {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
@@ -163,15 +134,6 @@ abstract contract StakingExtension {
         stakers[_staker].timeOfLastUpdate = block.timestamp;
     }
 
-    // Calculate rewards for param _staker by calculating the time passed
-    // since last update in hours and mulitplying it to ERC721 Tokens Staked
-    // and rewardsPerHour.
-    function _calculateRewards(address _staker) internal view returns (uint256 _rewards) {
-        Staker memory staker = stakers[_staker];
-        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked)) * rewardsPerUnitTime) /
-            timeUnit);
-    }
-
     function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal {
         rewardsPerUnitTime = _rewardsPerUnitTime;
     }
@@ -184,6 +146,13 @@ abstract contract StakingExtension {
     //     compoundingRate = _compoundingRate;
     // }
 
+    function _calculateRewards(address _staker) internal view returns (uint256 _rewards) {
+        Staker memory staker = stakers[_staker];
+        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked)) * rewardsPerUnitTime) /
+            timeUnit);
+    }
+
+    /// @dev Mint ERC20 rewards to the staker.
     function _mintRewards(address _staker, uint256 _rewards) internal virtual;
 
     /// @dev Returns whether staking related restrictions can be set in the given execution context.
