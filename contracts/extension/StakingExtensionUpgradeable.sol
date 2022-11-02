@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "lib/forge-std/src/console.sol";
 
-abstract contract StakingExtension {
+abstract contract StakingExtensionUpgradeable is Initializable {
     using SafeERC20 for IERC20;
 
     uint256 public timeUnit;
@@ -34,7 +35,7 @@ abstract contract StakingExtension {
 
     address[] public stakersArray;
 
-    constructor(IERC721 _nftCollection) {
+    function __StakingExtension_init(IERC721 _nftCollection) internal onlyInitializing {
         require(address(_nftCollection) != address(0), "collection address 0");
         nftCollection = _nftCollection;
     }

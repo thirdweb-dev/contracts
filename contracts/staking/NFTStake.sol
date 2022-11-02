@@ -28,13 +28,13 @@ import "../lib/FeeType.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
-import { StakingExtension } from "../extension/StakingExtension.sol";
+import { StakingExtensionUpgradeable } from "../extension/StakingExtensionUpgradeable.sol";
 
 contract NFTStake is
     Initializable,
     ContractMetadata,
     PermissionsEnumerable,
-    StakingExtension,
+    StakingExtensionUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
@@ -62,14 +62,18 @@ contract NFTStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         IERC721 _nftCollection,
-        uint256 _timeUnit,
         uint256 _rewardsPerUnitTime,
-        uint256 _compoundingRate
+        uint256 _timeUnit
     ) external initializer {
         __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
+
+        __StakingExtension_init(_nftCollection);
+        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setTimeUnit(_timeUnit);
+        // _setCompoundingRate(_compoundingRate);
 
         _setupContractURI(_contractURI);
 
@@ -77,13 +81,6 @@ contract NFTStake is
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
-
-        require(address(_nftCollection) != address(0), "collection address 0");
-        nftCollection = _nftCollection;
-
-        timeUnit = _timeUnit;
-        rewardsPerUnitTime = _rewardsPerUnitTime;
-        // compoundingRate = _compoundingRate;
     }
 
     /// @dev Returns the module type of the contract.
