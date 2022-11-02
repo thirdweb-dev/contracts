@@ -42,7 +42,7 @@ contract TieredDropTest is BaseTest {
     string internal placeholderURITier3 = "placeholderURI3/";
     bytes internal keyTier3 = "tier3_key";
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         dropAdmin = getActor(1);
@@ -91,7 +91,7 @@ contract TieredDropTest is BaseTest {
 
     uint256 internal nonce;
 
-    function _setupClaimSignature(string[] memory _orderedTiers, uint256 _totalQuantity) private {
+    function _setupClaimSignature(string[] memory _orderedTiers, uint256 _totalQuantity) internal {
         claimRequest.validityStartTimestamp = 1000;
         claimRequest.validityEndTimestamp = 2000;
         claimRequest.uid = keccak256(abi.encodePacked(nonce));
@@ -661,5 +661,59 @@ contract TieredDropTest is BaseTest {
         assertEq(rangesTier1[0].endIdNonInclusive, 25);
         assertEq(rangesTier2[0].startIdInclusive, 0);
         assertEq(rangesTier2[0].endIdNonInclusive, 20);
+    }
+}
+
+contract TieredDropBechmarkTest is TieredDropTest {
+    // What does it take to exhaust the 550mil RPC view fn gas limit ?
+
+    // 10_000: 67 mil gas (67,536,754)
+    uint256 internal totalQty = 10_000;
+
+    function setUp() public override {
+        super.setUp();
+
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(totalQty, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(totalQty, baseURITier2, tier2, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = totalQty;
+
+        for (uint256 i = 0; i < claimQuantity; i += 1) {
+            _setupClaimSignature(tiers, 1);
+
+            vm.warp(claimRequest.validityStartTimestamp);
+
+            vm.prank(claimer);
+            tieredDrop.claimWithSignature(claimRequest, claimSignature);
+        }
+    }
+
+    function test_banchmark_getTokensInTier() public view {
+        tieredDrop.getTokensInTier(tier1, 0, totalQty);
+    }
+
+    function test_banchmark_getTokensInTier_ten() public view {
+        tieredDrop.getTokensInTier(tier1, 0, 10);
+    }
+
+    function test_banchmark_getTokensInTier_hundred() public view {
+        tieredDrop.getTokensInTier(tier1, 0, 100);
     }
 }
