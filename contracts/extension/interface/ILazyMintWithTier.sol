@@ -9,7 +9,13 @@ pragma solidity ^0.8.0;
 
 interface ILazyMintWithTier {
     /// @dev Emitted when tokens are lazy minted.
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(
+        string indexed tier,
+        uint256 indexed startTokenId,
+        uint256 endTokenId,
+        string baseURI,
+        bytes encryptedBaseURI
+    );
 
     /**
      *  @notice Lazy mints a given amount of NFTs.

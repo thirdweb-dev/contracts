@@ -105,23 +105,6 @@ function claimWithSignature(ISignatureAction.GenericRequest _req, bytes _signatu
 |---|---|---|
 | signer | address | undefined |
 
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-*Returns the contract type of this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### contractURI
 
 ```solidity
@@ -138,23 +121,6 @@ Returns the contract metadata URI.
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the contract version of this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined |
 
 ### encryptDecrypt
 
@@ -280,28 +246,22 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
 
-### getMetadataInTier
+### getMetadataForAllTiers
 
 ```solidity
-function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string[] baseURIs)
+function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
 ```
 
-Returns all metadata lazy minted for th egiven tier.
+Returns all metadata for all tiers created on the contract.
 
 
 
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tier | string | The tier for which to return lazy minted metadata. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tokens | LazyMintWithTier.TokenRange[] | The range of IDs lazy minted for the tier. |
-| baseURIs | string[] | The repsective baseURIs for the IDs lazy minted. |
+| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
 
 ### getRevealURI
 
@@ -415,6 +375,28 @@ View royalty info for a given token.
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getTierForToken
+
+```solidity
+function getTierForToken(uint256 _tokenId) external view returns (string)
+```
+
+
+
+*Returns the tier that the given token is associated with.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
 
 ### getTokensInTier
 
@@ -1357,7 +1339,7 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(string indexed tier, uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -1368,6 +1350,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 
 | Name | Type | Description |
 |---|---|---|
+| tier `indexed` | string | undefined |
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |

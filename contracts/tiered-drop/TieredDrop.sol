@@ -169,16 +169,6 @@ contract TieredDrop is
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
-    /// @dev Returns the contract type of this contract.
-    function contractType() external pure returns (bytes32) {
-        return bytes32("TieredDrop");
-    }
-
-    /// @dev Returns the contract version of this contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(1);
-    }
-
     /*///////////////////////////////////////////////////////////////
                     Lazy minting + delayed-reveal logic
     //////////////////////////////////////////////////////////////*
@@ -244,7 +234,7 @@ contract TieredDrop is
             uint256 royaltyBps,
             address primarySaleRecipient,
             uint256 quantity,
-            uint256 pricePerToken,
+            uint256 totalPrice,
             address currency
         ) = abi.decode(_req.data, (string[], address, address, uint256, address, uint256, uint256, address));
 
@@ -261,7 +251,7 @@ contract TieredDrop is
         signer = _processRequest(_req, _signature);
 
         // Collect price
-        collectPriceOnClaim(primarySaleRecipient, quantity, currency, pricePerToken);
+        collectPriceOnClaim(primarySaleRecipient, currency, totalPrice);
 
         // Set royalties, if applicable.
         if (royaltyRecipient != address(0) && royaltyBps != 0) {
@@ -280,25 +270,22 @@ contract TieredDrop is
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
         address _primarySaleRecipient,
-        uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _totalPrice
     ) internal {
-        if (_pricePerToken == 0) {
+        if (_totalPrice == 0) {
             return;
         }
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
+            if (msg.value != _totalPrice) {
                 revert("!Price");
             }
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, _totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.
@@ -375,6 +362,21 @@ contract TieredDrop is
         }
     }
 
+    /// @dev Returns the tier that the given token is associated with.
+    function getTierForToken(uint256 _tokenId) external view returns (string memory) {
+        uint256 len = lengthEndIdsAtMint;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            uint256 endId = endIdsAtMint[i];
+
+            if (_tokenId < endId) {
+                return tierAtEndId[endId];
+            }
+        }
+
+        revert("!Tier");
+    }
+
     /// @dev Returns the max `endIndex` that can be used with getTokensInTier.
     function getTokensInTierLen() external view returns (uint256) {
         return lengthEndIdsAtMint;
@@ -437,7 +439,7 @@ contract TieredDrop is
             }
         }
 
-        revert("Metadata ID not found for token.");
+        revert("!Metadata-ID");
     }
 
     /// @dev Returns the fair metadata ID for a given tokenId.
@@ -538,7 +540,7 @@ contract TieredDrop is
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
-                revert("!Transfer-Role");
+                revert("!TRANSFER");
             }
         }
     }

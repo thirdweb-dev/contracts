@@ -49,28 +49,22 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### getMetadataInTier
+### getMetadataForAllTiers
 
 ```solidity
-function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string[] baseURIs)
+function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
 ```
 
-Returns all metadata lazy minted for th egiven tier.
+Returns all metadata for all tiers created on the contract.
 
 
 
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tier | string | The tier for which to return lazy minted metadata. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| tokens | LazyMintWithTier.TokenRange[] | The range of IDs lazy minted for the tier. |
-| baseURIs | string[] | The repsective baseURIs for the IDs lazy minted. |
+| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
 
 ### lazyMint
 
@@ -104,7 +98,7 @@ Lets an authorized address lazy mint a given amount of NFTs.
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(string indexed tier, uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -115,6 +109,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 
 | Name | Type | Description |
 |---|---|---|
+| tier `indexed` | string | undefined |
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |

@@ -16,6 +16,12 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         uint256 endIdNonInclusive;
     }
 
+    struct TierMetadata {
+        string tier;
+        TokenRange[] ranges;
+        string[] baseURIs;
+    }
+
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     uint256 internal nextTokenIdToLazyMint;
 
@@ -58,20 +64,14 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         }
         tokensInTier[_tier].push(TokenRange(startId, batchId));
 
-        emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
+        emit TokensLazyMinted(_tier, startId, startId + _amount - 1, _baseURIForTokens, _data);
 
         return batchId;
     }
 
-    /**
-     *  @notice Returns all metadata lazy minted for th egiven tier.
-     *
-     *  @param _tier The tier for which to return lazy minted metadata.
-     *  @return tokens The range of IDs lazy minted for the tier.
-     *  @return baseURIs The repsective baseURIs for the IDs lazy minted.
-     */
-    function getMetadataInTier(string memory _tier)
-        public
+    /// @notice Returns all metadata lazy minted for the given tier.
+    function _getMetadataInTier(string memory _tier)
+        private
         view
         returns (TokenRange[] memory tokens, string[] memory baseURIs)
     {
@@ -82,6 +82,19 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
 
         for (uint256 i = 0; i < len; i += 1) {
             baseURIs[i] = _getBaseURI(tokens[i].startIdInclusive);
+        }
+    }
+
+    /// @notice Returns all metadata for all tiers created on the contract.
+    function getMetadataForAllTiers() external view returns (TierMetadata[] memory metadataForAllTiers) {
+        string[] memory allTiers = tiers;
+        uint256 len = allTiers.length;
+
+        metadataForAllTiers = new TierMetadata[](len);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            (TokenRange[] memory tokens, string[] memory baseURIs) = _getMetadataInTier(allTiers[i]);
+            metadataForAllTiers[i] = TierMetadata(allTiers[i], tokens, baseURIs);
         }
     }
 
