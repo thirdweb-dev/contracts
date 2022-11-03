@@ -372,6 +372,21 @@ contract TieredDrop is
         }
     }
 
+    /// @dev Returns the tier that the given token is associated with.
+    function getTierForToken(uint256 _tokenId) external view returns (string memory) {
+        uint256 len = lengthEndIdsAtMint;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            uint256 endId = endIdsAtMint[i];
+
+            if (_tokenId < endId) {
+                return tierAtEndId[endId];
+            }
+        }
+
+        revert("No tier assigned.");
+    }
+
     /// @dev Returns the max `endIndex` that can be used with getTokensInTier.
     function getTokensInTierLen() external view returns (uint256) {
         return lengthEndIdsAtMint;

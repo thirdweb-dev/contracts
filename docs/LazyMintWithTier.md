@@ -10,6 +10,23 @@ The `LazyMint` is a contract extension for any base NFT contract. It lets you &#
 
 ## Methods
 
+### getAllTiers
+
+```solidity
+function getAllTiers() external view returns (string[])
+```
+
+Returns all tiers created on the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string[] | undefined |
+
 ### getBaseURICount
 
 ```solidity
@@ -48,6 +65,23 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### getMetadataForAllTiers
+
+```solidity
+function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
+```
+
+Returns all metadata for all tiers created on the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
 
 ### getMetadataInTier
 

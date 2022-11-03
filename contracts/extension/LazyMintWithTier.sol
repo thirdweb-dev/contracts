@@ -16,6 +16,12 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         uint256 endIdNonInclusive;
     }
 
+    struct TierMetadata {
+        string tier;
+        TokenRange[] ranges;
+        string[] baseURIs;
+    }
+
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     uint256 internal nextTokenIdToLazyMint;
 
@@ -82,6 +88,24 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
 
         for (uint256 i = 0; i < len; i += 1) {
             baseURIs[i] = _getBaseURI(tokens[i].startIdInclusive);
+        }
+    }
+
+    /// @notice Returns all tiers created on the contract.
+    function getAllTiers() external view returns (string[] memory) {
+        return tiers;
+    }
+
+    /// @notice Returns all metadata for all tiers created on the contract.
+    function getMetadataForAllTiers() external view returns (TierMetadata[] memory metadataForAllTiers) {
+        string[] memory allTiers = tiers;
+        uint256 len = allTiers.length;
+
+        metadataForAllTiers = new TierMetadata[](len);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            (TokenRange[] memory tokens, string[] memory baseURIs) = getMetadataInTier(allTiers[i]);
+            metadataForAllTiers[i] = TierMetadata(allTiers[i], tokens, baseURIs);
         }
     }
 

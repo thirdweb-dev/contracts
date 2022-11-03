@@ -201,6 +201,23 @@ function encryptedData(uint256) external view returns (bytes)
 |---|---|---|
 | _0 | bytes | undefined |
 
+### getAllTiers
+
+```solidity
+function getAllTiers() external view returns (string[])
+```
+
+Returns all tiers created on the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string[] | undefined |
+
 ### getApproved
 
 ```solidity
@@ -279,6 +296,23 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getMetadataForAllTiers
+
+```solidity
+function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
+```
+
+Returns all metadata for all tiers created on the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
 
 ### getMetadataInTier
 
@@ -415,6 +449,28 @@ View royalty info for a given token.
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getTierForToken
+
+```solidity
+function getTierForToken(uint256 _tokenId) external view returns (string)
+```
+
+
+
+*Returns the tier that the given token is associated with.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
 
 ### getTokensInTier
 

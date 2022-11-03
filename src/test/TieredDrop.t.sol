@@ -662,6 +662,159 @@ contract TieredDropTest is BaseTest {
         assertEq(rangesTier2[0].startIdInclusive, 0);
         assertEq(rangesTier2[0].endIdNonInclusive, 20);
     }
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //              getAllTiers tests             //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getAllTiers() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        string[] memory allTiers = tieredDrop.getAllTiers();
+        assertEq(allTiers.length, 3);
+
+        for (uint256 i = 0; i < allTiers.length; i += 1) {
+            if (i == 0) {
+                assertEq(allTiers[i], tier1);
+            } else if (i == 1) {
+                assertEq(allTiers[i], tier2);
+            } else {
+                assertEq(allTiers[i], tier3);
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //            getTierForToken tests           //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getTierForToken() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        /**
+         *  Claim tokens.
+         *      - Order of priority: [tier2, tier1]
+         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+         */
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 25;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+
+        vm.prank(claimer);
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+
+        /**
+         *  Check token URIs for tokens of tiers:
+         *      - Tier 2: token IDs 0 -> 19 mapped one-to-one to metadata IDs 10 -> 29
+         *      - Tier 1: token IDs 20 -> 24 mapped one-to-one to metadata IDs 0 -> 4
+         */
+
+        uint256 tier2Id = 10;
+        uint256 tier1Id = 0;
+
+        for (uint256 i = 0; i < claimQuantity; i += 1) {
+            if (i < 20) {
+                string memory tierForToken = tieredDrop.getTierForToken(i);
+                assertEq(tierForToken, tier2);
+
+                tier2Id += 1;
+            } else {
+                string memory tierForToken = tieredDrop.getTierForToken(i);
+                assertEq(tierForToken, tier1);
+
+                tier1Id += 1;
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //        getMetadataForAllTiers tests        //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_getMetadataForAllTiers() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 30 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        vm.stopPrank();
+
+        TieredDrop.TierMetadata[] memory metadataForAllTiers = tieredDrop.getMetadataForAllTiers();
+
+        // Tier 1
+        assertEq(metadataForAllTiers[0].tier, tier1);
+
+        TieredDrop.TokenRange[] memory ranges1 = metadataForAllTiers[0].ranges;
+        assertEq(ranges1.length, 1);
+        assertEq(ranges1[0].startIdInclusive, 0);
+        assertEq(ranges1[0].endIdNonInclusive, 10);
+
+        string[] memory baseURIs1 = metadataForAllTiers[0].baseURIs;
+        assertEq(baseURIs1.length, 1);
+        assertEq(baseURIs1[0], baseURITier1);
+
+        // Tier 2
+        assertEq(metadataForAllTiers[1].tier, tier2);
+
+        TieredDrop.TokenRange[] memory ranges2 = metadataForAllTiers[1].ranges;
+        assertEq(ranges2.length, 1);
+        assertEq(ranges2[0].startIdInclusive, 10);
+        assertEq(ranges2[0].endIdNonInclusive, 30);
+
+        string[] memory baseURIs2 = metadataForAllTiers[1].baseURIs;
+        assertEq(baseURIs2.length, 1);
+        assertEq(baseURIs2[0], baseURITier2);
+
+        // Tier 3
+        assertEq(metadataForAllTiers[2].tier, tier3);
+
+        TieredDrop.TokenRange[] memory ranges3 = metadataForAllTiers[2].ranges;
+        assertEq(ranges3.length, 1);
+        assertEq(ranges3[0].startIdInclusive, 30);
+        assertEq(ranges3[0].endIdNonInclusive, 60);
+
+        string[] memory baseURIs3 = metadataForAllTiers[2].baseURIs;
+        assertEq(baseURIs3.length, 1);
+        assertEq(baseURIs3[0], baseURITier3);
+    }
 }
 
 contract TieredDropBechmarkTest is BaseTest {
