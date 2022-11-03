@@ -664,14 +664,83 @@ contract TieredDropTest is BaseTest {
     }
 }
 
-contract TieredDropBechmarkTest is TieredDropTest {
-    // What does it take to exhaust the 550mil RPC view fn gas limit ?
+contract TieredDropBechmarkTest is BaseTest {
+    using TWStrings for uint256;
 
-    // 10_000: 67 mil gas (67,536,754)
-    uint256 internal totalQty = 10_000;
+    TieredDrop public tieredDrop;
 
-    function setUp() public override {
+    address internal dropAdmin;
+    address internal claimer;
+
+    // Signature params
+    address internal deployerSigner;
+    bytes32 internal typehashGenericRequest;
+    bytes32 internal nameHash;
+    bytes32 internal versionHash;
+    bytes32 internal typehashEip712;
+    bytes32 internal domainSeparator;
+
+    // Lazy mint variables
+    uint256 internal quantityTier1 = 10;
+    string internal tier1 = "tier1";
+    string internal baseURITier1 = "baseURI1/";
+    string internal placeholderURITier1 = "placeholderURI1/";
+    bytes internal keyTier1 = "tier1_key";
+
+    uint256 internal quantityTier2 = 20;
+    string internal tier2 = "tier2";
+    string internal baseURITier2 = "baseURI2/";
+    string internal placeholderURITier2 = "placeholderURI2/";
+    bytes internal keyTier2 = "tier2_key";
+
+    uint256 internal quantityTier3 = 30;
+    string internal tier3 = "tier3";
+    string internal baseURITier3 = "baseURI3/";
+    string internal placeholderURITier3 = "placeholderURI3/";
+    bytes internal keyTier3 = "tier3_key";
+
+    function setUp() public virtual override {
         super.setUp();
+
+        dropAdmin = getActor(1);
+        claimer = getActor(2);
+
+        // Deploy implementation.
+        address tieredDropImpl = address(new TieredDrop());
+
+        // Deploy proxy pointing to implementaion.
+        vm.prank(dropAdmin);
+        tieredDrop = TieredDrop(
+            address(
+                new TWProxy(
+                    tieredDropImpl,
+                    abi.encodeCall(
+                        TieredDrop.initialize,
+                        (dropAdmin, "Tiered Drop", "TD", "ipfs://", new address[](0), dropAdmin, dropAdmin, 0)
+                    )
+                )
+            )
+        );
+
+        // ====== signature params
+
+        deployerSigner = signer;
+        vm.prank(dropAdmin);
+        tieredDrop.grantRole(keccak256("MINTER_ROLE"), deployerSigner);
+
+        typehashGenericRequest = keccak256(
+            "GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)"
+        );
+        nameHash = keccak256(bytes("SignatureAction"));
+        versionHash = keccak256(bytes("1"));
+        typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(tieredDrop))
+        );
+
+        // ======
 
         // Lazy mint tokens: 3 different tiers
         vm.startPrank(dropAdmin);
@@ -704,6 +773,47 @@ contract TieredDropBechmarkTest is TieredDropTest {
             tieredDrop.claimWithSignature(claimRequest, claimSignature);
         }
     }
+
+    TieredDrop.GenericRequest internal claimRequest;
+    bytes internal claimSignature;
+
+    uint256 internal nonce;
+
+    function _setupClaimSignature(string[] memory _orderedTiers, uint256 _totalQuantity) internal {
+        claimRequest.validityStartTimestamp = 1000;
+        claimRequest.validityEndTimestamp = 2000;
+        claimRequest.uid = keccak256(abi.encodePacked(nonce));
+        nonce += 1;
+        claimRequest.data = abi.encode(
+            _orderedTiers,
+            claimer,
+            address(0),
+            0,
+            dropAdmin,
+            _totalQuantity,
+            0,
+            NATIVE_TOKEN
+        );
+
+        bytes memory encodedRequest = abi.encode(
+            typehashGenericRequest,
+            claimRequest.validityStartTimestamp,
+            claimRequest.validityEndTimestamp,
+            claimRequest.uid,
+            keccak256(bytes(claimRequest.data))
+        );
+
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+        claimSignature = abi.encodePacked(r, s, v);
+    }
+
+    // What does it take to exhaust the 550mil RPC view fn gas limit ?
+
+    // 10_000: 67 mil gas (67,536,754)
+    uint256 internal totalQty = 10_000;
 
     function test_banchmark_getTokensInTier() public view {
         tieredDrop.getTokensInTier(tier1, 0, totalQty);

@@ -244,7 +244,7 @@ contract TieredDrop is
             uint256 royaltyBps,
             address primarySaleRecipient,
             uint256 quantity,
-            uint256 pricePerToken,
+            uint256 totalPrice,
             address currency
         ) = abi.decode(_req.data, (string[], address, address, uint256, address, uint256, uint256, address));
 
@@ -261,7 +261,7 @@ contract TieredDrop is
         signer = _processRequest(_req, _signature);
 
         // Collect price
-        collectPriceOnClaim(primarySaleRecipient, quantity, currency, pricePerToken);
+        collectPriceOnClaim(primarySaleRecipient, currency, totalPrice);
 
         // Set royalties, if applicable.
         if (royaltyRecipient != address(0) && royaltyBps != 0) {
@@ -280,25 +280,22 @@ contract TieredDrop is
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function collectPriceOnClaim(
         address _primarySaleRecipient,
-        uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _totalPrice
     ) internal {
-        if (_pricePerToken == 0) {
+        if (_totalPrice == 0) {
             return;
         }
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
+            if (msg.value != _totalPrice) {
                 revert("!Price");
             }
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, _totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.
