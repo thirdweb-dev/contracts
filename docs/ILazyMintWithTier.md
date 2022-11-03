@@ -42,7 +42,7 @@ Lazy mints a given amount of NFTs.
 ### TokensLazyMinted
 
 ```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+event TokensLazyMinted(string indexed tier, uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
 ```
 
 
@@ -53,6 +53,7 @@ event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string 
 
 | Name | Type | Description |
 |---|---|---|
+| tier `indexed` | string | undefined |
 | startTokenId `indexed` | uint256 | undefined |
 | endTokenId  | uint256 | undefined |
 | baseURI  | string | undefined |
