@@ -169,16 +169,6 @@ contract TieredDrop is
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
-    /// @dev Returns the contract type of this contract.
-    function contractType() external pure returns (bytes32) {
-        return bytes32("TieredDrop");
-    }
-
-    /// @dev Returns the contract version of this contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(1);
-    }
-
     /*///////////////////////////////////////////////////////////////
                     Lazy minting + delayed-reveal logic
     //////////////////////////////////////////////////////////////*

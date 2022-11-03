@@ -105,23 +105,6 @@ function claimWithSignature(ISignatureAction.GenericRequest _req, bytes _signatu
 |---|---|---|
 | signer | address | undefined |
 
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-*Returns the contract type of this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### contractURI
 
 ```solidity
@@ -138,23 +121,6 @@ Returns the contract metadata URI.
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the contract version of this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined |
 
 ### encryptDecrypt
 
