@@ -9,7 +9,6 @@ import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/PrimarySale.sol";
-import "../extension/PermissionsEnumerable.sol";
 import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
@@ -191,7 +190,6 @@ contract ERC721Drop is
         AllowlistProof calldata,
         bytes memory
     ) internal view virtual override {
-        require(msg.sender == tx.origin, "BOT");
         if (_currentIndex + _quantity > nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
         }

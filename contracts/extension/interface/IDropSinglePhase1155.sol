@@ -3,13 +3,29 @@ pragma solidity ^0.8.0;
 
 import "./IClaimCondition.sol";
 
+/**
+ *  The interface `IDropSinglePhase1155` is written for thirdweb's 'DropSinglePhase' contracts, which are distribution mechanisms for tokens.
+ *
+ *  An authorized wallet can set a claim condition for the distribution of the contract's tokens.
+ *  A claim condition defines criteria under which accounts can mint tokens. Claim conditions can be overwritten
+ *  or added to by the contract admin. At any moment, there is only one active claim condition.
+ */
+
 interface IDropSinglePhase1155 is IClaimCondition {
+    /**
+     *  @param proof Prood of concerned wallet's inclusion in an allowlist.
+     *  @param quantityLimitPerWallet The total quantity of tokens the allowlisted wallet is eligible to claim over time.
+     *  @param pricePerToken The price per token the allowlisted wallet must pay to claim tokens.
+     *  @param currency The currency in which the allowlisted wallet must pay the price for claiming tokens.
+     */
     struct AllowlistProof {
         bytes32[] proof;
-        uint256 maxQuantityInAllowlist;
+        uint256 quantityLimitPerWallet;
+        uint256 pricePerToken;
+        address currency;
     }
 
-    /// @dev Emitted when tokens are claimed via `claim`.
+    /// @notice Emitted when tokens are claimed via `claim`.
     event TokensClaimed(
         address indexed claimer,
         address indexed receiver,
@@ -17,14 +33,14 @@ interface IDropSinglePhase1155 is IClaimCondition {
         uint256 quantityClaimed
     );
 
-    /// @dev Emitted when the contract's claim conditions are updated.
+    /// @notice Emitted when the contract's claim conditions are updated.
     event ClaimConditionUpdated(uint256 indexed tokenId, ClaimCondition condition, bool resetEligibility);
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.
      *
-     *  @param tokenId                        The tokenId of the NFT to claim.
      *  @param receiver                       The receiver of the NFT to claim.
+     *  @param tokenId                        The tokenId of the NFT to claim.
      *  @param quantity                       The quantity of the NFT to claim.
      *  @param currency                       The currency in which to pay for the claim.
      *  @param pricePerToken                  The price per token to pay for the claim.
@@ -47,8 +63,8 @@ interface IDropSinglePhase1155 is IClaimCondition {
      *
      *  @param phase                    Claim condition to set.
      *
-     *  @param resetClaimEligibility    Whether to reset `limitLastClaimTimestamp` and `limitMerkleProofClaim` values when setting new
-     *                                  claim conditions.
+     *  @param resetClaimEligibility    Whether to honor the restrictions applied to wallets who have claimed tokens in the current conditions,
+     *                                  in the new claim conditions being set.
      *
      *  @param tokenId                  The tokenId for which to set the relevant claim condition.
      */

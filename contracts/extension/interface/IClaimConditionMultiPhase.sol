@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../../lib/TWBitMaps.sol";
 import "./IClaimCondition.sol";
 
 /**
- *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens.
+ *  The interface `IClaimConditionMultiPhase` is written for thirdweb's 'Drop' contracts, which are distribution mechanisms for tokens.
  *
- *  A contract admin (i.e. a holder of `DEFAULT_ADMIN_ROLE`) can set a series of claim conditions,
- *  ordered by their respective `startTimestamp`. A claim condition defines criteria under which
- *  accounts can mint tokens. Claim conditions can be overwritten or added to by the contract admin.
- *  At any moment, there is only one active claim condition.
+ *  An authorized wallet can set a series of claim conditions, ordered by their respective `startTimestamp`.
+ *  A claim condition defines criteria under which accounts can mint tokens. Claim conditions can be overwritten
+ *  or added to by the contract admin. At any moment, there is only one active claim condition.
  */
 
 interface IClaimConditionMultiPhase is IClaimCondition {
@@ -28,17 +26,12 @@ interface IClaimConditionMultiPhase is IClaimCondition {
      *  @param conditions                   The claim conditions at a given uid. Claim conditions
      *                                  are ordered in an ascending order by their `startTimestamp`.
      *
-     *  @param lastClaimTimestamp       Map from an account and uid for a claim condition, to the last timestamp
-     *                                  at which the account claimed tokens under that claim condition.
-     *
-     *  @param usedAllowlistSpot        Map from a claim condition uid to whether an address in an allowlist
-     *                                  has already claimed tokens i.e. used their place in the allowlist.
+     *  @param supplyClaimedByWallet    Map from a claim condition uid and account to supply claimed by account.
      */
     struct ClaimConditionList {
         uint256 currentStartId;
         uint256 count;
         mapping(uint256 => ClaimCondition) conditions;
-        mapping(uint256 => mapping(address => uint256)) lastClaimTimestamp;
-        mapping(uint256 => TWBitMaps.BitMap) usedAllowlistSpot;
+        mapping(uint256 => mapping(address => uint256)) supplyClaimedByWallet;
     }
 }

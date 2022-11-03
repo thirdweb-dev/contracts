@@ -79,6 +79,19 @@ contract ERC1155Drop is
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            ERC165 Logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns whether this contract supports the given interface.
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
+            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
+            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Overriden metadata logic
     //////////////////////////////////////////////////////////////*/
@@ -155,67 +168,6 @@ contract ERC1155Drop is
         return nextTokenIdToLazyMint;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        Minting/burning logic
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @notice         Lets an owner or approved operator burn NFTs of the given tokenId.
-     *
-     *  @param _owner   The owner of the NFT to burn.
-     *  @param _tokenId The tokenId of the NFT to burn.
-     *  @param _amount  The amount of the NFT to burn.
-     */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
-        address caller = msg.sender;
-
-        require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
-        require(balanceOf[_owner][_tokenId] >= _amount, "Not enough tokens owned");
-
-        _burn(_owner, _tokenId, _amount);
-    }
-
-    /**
-     *  @notice         Lets an owner or approved operator burn NFTs of the given tokenIds.
-     *
-     *  @param _owner    The owner of the NFTs to burn.
-     *  @param _tokenIds The tokenIds of the NFTs to burn.
-     *  @param _amounts  The amounts of the NFTs to burn.
-     */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
-        address caller = msg.sender;
-
-        require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
-        require(_tokenIds.length == _amounts.length, "Length mismatch");
-
-        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
-            require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
-        }
-
-        _burnBatch(_owner, _tokenIds, _amounts);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            ERC165 Logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns whether this contract supports the given interface.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
-        return
-            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
-            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
-            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
-            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -230,7 +182,6 @@ contract ERC1155Drop is
         AllowlistProof calldata,
         bytes memory
     ) internal view virtual override {
-        require(msg.sender == tx.origin, "BOT");
         if (_tokenId >= nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
         }
