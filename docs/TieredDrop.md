@@ -167,23 +167,6 @@ function encryptedData(uint256) external view returns (bytes)
 |---|---|---|
 | _0 | bytes | undefined |
 
-### getAllTiers
-
-```solidity
-function getAllTiers() external view returns (string[])
-```
-
-Returns all tiers created on the contract.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string[] | undefined |
-
 ### getApproved
 
 ```solidity
@@ -279,29 +262,6 @@ Returns all metadata for all tiers created on the contract.
 | Name | Type | Description |
 |---|---|---|
 | metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
-
-### getMetadataInTier
-
-```solidity
-function getMetadataInTier(string _tier) external view returns (struct LazyMintWithTier.TokenRange[] tokens, string[] baseURIs)
-```
-
-Returns all metadata lazy minted for th egiven tier.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tier | string | The tier for which to return lazy minted metadata. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| tokens | LazyMintWithTier.TokenRange[] | The range of IDs lazy minted for the tier. |
-| baseURIs | string[] | The repsective baseURIs for the IDs lazy minted. |
 
 ### getRevealURI
 

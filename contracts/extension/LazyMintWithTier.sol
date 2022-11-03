@@ -69,15 +69,9 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         return batchId;
     }
 
-    /**
-     *  @notice Returns all metadata lazy minted for th egiven tier.
-     *
-     *  @param _tier The tier for which to return lazy minted metadata.
-     *  @return tokens The range of IDs lazy minted for the tier.
-     *  @return baseURIs The repsective baseURIs for the IDs lazy minted.
-     */
-    function getMetadataInTier(string memory _tier)
-        public
+    /// @notice Returns all metadata lazy minted for the given tier.
+    function _getMetadataInTier(string memory _tier)
+        private
         view
         returns (TokenRange[] memory tokens, string[] memory baseURIs)
     {
@@ -91,11 +85,6 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         }
     }
 
-    /// @notice Returns all tiers created on the contract.
-    function getAllTiers() external view returns (string[] memory) {
-        return tiers;
-    }
-
     /// @notice Returns all metadata for all tiers created on the contract.
     function getMetadataForAllTiers() external view returns (TierMetadata[] memory metadataForAllTiers) {
         string[] memory allTiers = tiers;
@@ -104,7 +93,7 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         metadataForAllTiers = new TierMetadata[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            (TokenRange[] memory tokens, string[] memory baseURIs) = getMetadataInTier(allTiers[i]);
+            (TokenRange[] memory tokens, string[] memory baseURIs) = _getMetadataInTier(allTiers[i]);
             metadataForAllTiers[i] = TierMetadata(allTiers[i], tokens, baseURIs);
         }
     }

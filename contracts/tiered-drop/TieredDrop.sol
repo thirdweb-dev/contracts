@@ -374,7 +374,7 @@ contract TieredDrop is
             }
         }
 
-        revert("No tier assigned.");
+        revert("!Tier");
     }
 
     /// @dev Returns the max `endIndex` that can be used with getTokensInTier.
@@ -439,7 +439,7 @@ contract TieredDrop is
             }
         }
 
-        revert("Metadata ID not found for token.");
+        revert("!Metadata-ID");
     }
 
     /// @dev Returns the fair metadata ID for a given tokenId.
@@ -540,7 +540,7 @@ contract TieredDrop is
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
-                revert("!Transfer-Role");
+                revert("!TRANSFER");
             }
         }
     }
