@@ -23,7 +23,6 @@ import "../extension/PrimarySale.sol";
 import "../extension/Ownable.sol";
 import "../extension/DelayedReveal.sol";
 import "../extension/PermissionsEnumerable.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 //  ========== New Features    ==========
 
@@ -42,7 +41,6 @@ contract TieredDrop is
     SignatureActionUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    DefaultOperatorFilterer,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -545,34 +543,6 @@ contract TieredDrop is
                 revert("!TRANSFER");
             }
         }
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override onlyAllowedOperator {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override onlyAllowedOperator {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override onlyAllowedOperator {
-        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function _msgSender()
