@@ -27,6 +27,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
@@ -43,6 +44,7 @@ contract TokenERC1155 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
+    DefaultOperatorFilterer,
     ERC1155Upgradeable,
     ITokenERC1155
 {
@@ -467,6 +469,32 @@ contract TokenERC1155 is
                 totalSupply[ids[i]] -= amounts[i];
             }
         }
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override(ERC1155Upgradeable, IERC1155Upgradeable) onlyAllowedOperator {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override(ERC1155Upgradeable, IERC1155Upgradeable) onlyAllowedOperator {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     function supportsInterface(bytes4 interfaceId)

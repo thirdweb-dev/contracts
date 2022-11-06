@@ -1434,3 +1434,22 @@ event URI(string value, uint256 indexed id)
 
 
 
+## Errors
+
+### OperatorNotAllowed
+
+```solidity
+error OperatorNotAllowed(address operator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
+
+

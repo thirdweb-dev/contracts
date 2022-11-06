@@ -24,6 +24,7 @@ import "../extension/Ownable.sol";
 import "../extension/LazyMint.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/Drop1155.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 contract DropERC1155 is
     Initializable,
@@ -37,6 +38,7 @@ contract DropERC1155 is
     Drop1155,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    DefaultOperatorFilterer,
     ERC1155Upgradeable
 {
     using StringsUpgradeable for uint256;
@@ -323,6 +325,32 @@ contract DropERC1155 is
                 totalSupply[ids[i]] -= amounts[i];
             }
         }
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override onlyAllowedOperator {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override onlyAllowedOperator {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {
