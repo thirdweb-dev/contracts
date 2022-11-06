@@ -19,6 +19,7 @@ import "../extension/ContractMetadata.sol";
 import "../extension/Royalty.sol";
 import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 import { TokenStore, ERC1155Receiver, IERC1155Receiver } from "../extension/TokenStore.sol";
 
 contract Multiwrap is
@@ -31,6 +32,7 @@ contract Multiwrap is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    DefaultOperatorFilterer,
     ERC721EnumerableUpgradeable,
     IMultiwrap
 {
@@ -233,6 +235,34 @@ contract Multiwrap is
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function _msgSender()
