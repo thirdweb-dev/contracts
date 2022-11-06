@@ -632,7 +632,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -650,7 +650,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -909,7 +909,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 
 
-*See {IERC721-transferFrom}.*
+*See {ERC721-_transferFrom}.*
 
 #### Parameters
 
@@ -1193,5 +1193,24 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
 
+
+
+## Errors
+
+### OperatorNotAllowed
+
+```solidity
+error OperatorNotAllowed(address operator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
 
 

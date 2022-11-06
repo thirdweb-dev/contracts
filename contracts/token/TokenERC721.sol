@@ -29,6 +29,7 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
@@ -45,6 +46,7 @@ contract TokenERC721 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
+    DefaultOperatorFilterer,
     ERC721EnumerableUpgradeable,
     ITokenERC721
 {
@@ -393,6 +395,34 @@ contract TokenERC721 is
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function supportsInterface(bytes4 interfaceId)

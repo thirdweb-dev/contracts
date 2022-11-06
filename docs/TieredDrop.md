@@ -818,7 +818,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -831,12 +831,12 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
 ```
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -845,7 +845,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 | from | address | undefined |
 | to | address | undefined |
 | tokenId | uint256 | undefined |
-| _data | bytes | undefined |
+| data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -1072,7 +1072,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 
 
-*See {IERC721-transferFrom}.*
+*See {ERC721-_transferFrom}.*
 
 #### Parameters
 
@@ -1454,6 +1454,22 @@ The quantity of tokens minted must be more than zero.
 
 
 
+
+### OperatorNotAllowed
+
+```solidity
+error OperatorNotAllowed(address operator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
 
 ### OwnerQueryForNonexistentToken
 

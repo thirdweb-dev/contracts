@@ -25,6 +25,7 @@ import "../extension/DelayedReveal.sol";
 import "../extension/LazyMint.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/Drop.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 contract DropERC721 is
     Initializable,
@@ -39,6 +40,7 @@ contract DropERC721 is
     Drop,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    DefaultOperatorFilterer,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -324,6 +326,34 @@ contract DropERC721 is
                 revert("!Transfer-Role");
             }
         }
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override onlyAllowedOperator {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override onlyAllowedOperator {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override onlyAllowedOperator {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {
