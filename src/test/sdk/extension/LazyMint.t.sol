@@ -48,7 +48,7 @@ contract ExtensionLazyMint is DSTest, Test {
 
     function test_state_lazyMint_ZeroAmount() public {
         ext.setCondition(true);
-        vm.expectRevert("Minting 0 tokens");
+        vm.expectRevert("0 amt");
         ext.lazyMint(0, "", "");
     }
 

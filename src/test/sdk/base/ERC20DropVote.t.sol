@@ -67,8 +67,7 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         ERC20DropVote.ClaimCondition[] memory conditions = new ERC20DropVote.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(signer);
         base.setClaimConditions(conditions[0], false);
@@ -96,8 +95,7 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         ERC20DropVote.ClaimCondition[] memory conditions = new ERC20DropVote.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100 ether;
-        conditions[0].quantityLimitPerTransaction = 100 ether;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100 ether;
 
         // set price and currency
         conditions[0].pricePerToken = 1 ether;
@@ -136,8 +134,7 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         ERC20DropVote.ClaimCondition[] memory conditions = new ERC20DropVote.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100 ether;
-        conditions[0].quantityLimitPerTransaction = 100 ether;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100 ether;
 
         // set price and currency
         conditions[0].pricePerToken = 1 ether;
@@ -176,8 +173,7 @@ contract BaseERC20DropVoteTest is BaseUtilTest {
 
         ERC20DropVote.ClaimCondition[] memory conditions = new ERC20DropVote.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100 ether;
-        conditions[0].quantityLimitPerTransaction = 100 ether;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100 ether;
 
         vm.prank(signer);
         base.setClaimConditions(conditions[0], false);

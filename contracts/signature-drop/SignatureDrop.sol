@@ -74,8 +74,8 @@ contract SignatureDrop is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-        transferRole = keccak256("TRANSFER_ROLE");
-        minterRole = keccak256("MINTER_ROLE");
+        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
+        bytes32 _minterRole = keccak256("MINTER_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
@@ -86,13 +86,16 @@ contract SignatureDrop is
         _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(minterRole, _defaultAdmin);
-        _setupRole(transferRole, _defaultAdmin);
-        _setupRole(transferRole, address(0));
+        _setupRole(_minterRole, _defaultAdmin);
+        _setupRole(_transferRole, _defaultAdmin);
+        _setupRole(_transferRole, address(0));
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
+
+        transferRole = _transferRole;
+        minterRole = _minterRole;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -127,7 +130,7 @@ contract SignatureDrop is
     }
 
     function contractVersion() external pure returns (uint8) {
-        return uint8(4);
+        return uint8(5);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -180,7 +183,7 @@ contract SignatureDrop is
     {
         uint256 tokenIdToMint = _currentIndex;
         if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
-            revert("Not enough tokens");
+            revert("!Tokens");
         }
 
         // Verify and process payload.
@@ -215,9 +218,7 @@ contract SignatureDrop is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
-        bool bot = isTrustedForwarder(msg.sender) || _msgSender() == tx.origin;
-        require(bot, "BOT");
-        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough tokens");
+        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "!Tokens");
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -240,7 +241,7 @@ contract SignatureDrop is
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
-                revert("Must send total price");
+                revert("!Price");
             }
         }
 

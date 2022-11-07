@@ -171,12 +171,12 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 ### claim
 
 ```solidity
-function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, bytes32[] _proofs, uint256 _proofMaxQuantityPerTransaction) external payable
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof, bytes _data) external payable
 ```
 
 
 
-*Lets an account claim tokens.*
+
 
 #### Parameters
 
@@ -186,8 +186,8 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityPerTransaction | uint256 | undefined |
+| _allowlistProof | IDrop.AllowlistProof | undefined |
+| _data | bytes | undefined |
 
 ### claimCondition
 
@@ -197,7 +197,7 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 
 
-*The set of all claim conditions, at any given moment.*
+
 
 
 #### Returns
@@ -215,7 +215,7 @@ function contractType() external pure returns (bytes32)
 
 
 
-*Returns the type of the contract.*
+
 
 
 #### Returns
@@ -230,9 +230,9 @@ function contractType() external pure returns (bytes32)
 function contractURI() external view returns (string)
 ```
 
+Returns the contract metadata URI.
 
 
-*Contract level metadata.*
 
 
 #### Returns
@@ -249,7 +249,7 @@ function contractVersion() external pure returns (uint8)
 
 
 
-*Returns the version of the contract.*
+
 
 
 #### Returns
@@ -377,7 +377,7 @@ function getActiveClaimConditionId() external view returns (uint256)
 ### getClaimConditionById
 
 ```solidity
-function getClaimConditionById(uint256 _conditionId) external view returns (struct IDropClaimCondition.ClaimCondition condition)
+function getClaimConditionById(uint256 _conditionId) external view returns (struct IClaimCondition.ClaimCondition condition)
 ```
 
 
@@ -394,31 +394,7 @@ function getClaimConditionById(uint256 _conditionId) external view returns (stru
 
 | Name | Type | Description |
 |---|---|---|
-| condition | IDropClaimCondition.ClaimCondition | undefined |
-
-### getClaimTimestamp
-
-```solidity
-function getClaimTimestamp(uint256 _conditionId, address _claimer) external view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-```
-
-
-
-*Returns the timestamp for when a claimer is eligible for claiming tokens again.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined |
-| _claimer | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| lastClaimTimestamp | uint256 | undefined |
-| nextValidClaimTimestamp | uint256 | undefined |
+| condition | IClaimCondition.ClaimCondition | undefined |
 
 ### getPastTotalSupply
 
@@ -489,15 +465,15 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ```
 
+Returns the admin role that controls the specified role.
 
-
-*Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role&#39;s admin, use {_setRoleAdmin}.*
+*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
@@ -508,47 +484,70 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32)
 ### getRoleMember
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address)
+function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
 ```
 
+Returns the role-member from a list of members for a role,                  at a given index.
 
-
-*Returns one of the accounts that have `role`. `index` must be a value between 0 and {getRoleMemberCount}, non-inclusive. Role bearers are not sorted in any particular way, and their ordering may change at any point. WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure you perform all queries on the same block. See the following https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post] for more information.*
+*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
-| index | uint256 | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| index | uint256 | Index in list of current members for the role. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| member | address |  Address of account that has `role` |
 
 ### getRoleMemberCount
 
 ```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256)
+function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
 ```
 
+Returns total number of accounts that have a role.
 
-
-*Returns the number of accounts that have `role`. Can be used together with {getRoleMember} to enumerate all bearers of a role.*
+*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| count | uint256 |   Total number of accounts that have `role` |
+
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer) external view returns (uint256 supplyClaimedByWallet)
+```
+
+
+
+*Returns the supply claimed by claimer for a given conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedByWallet | uint256 | undefined |
 
 ### getVotes
 
@@ -578,16 +577,16 @@ function getVotes(address account) external view returns (uint256)
 function grantRole(bytes32 role, address account) external nonpayable
 ```
 
+Grants a role to an account, if not previously granted.
 
-
-*Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleGranted} event.*
+*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account to which the role is being granted. |
 
 ### hasRole
 
@@ -595,7 +594,7 @@ function grantRole(bytes32 role, address account) external nonpayable
 function hasRole(bytes32 role, address account) external view returns (bool)
 ```
 
-
+Checks whether an account has a particular role.
 
 *Returns `true` if `account` has been granted `role`.*
 
@@ -603,8 +602,31 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### hasRoleWithSwitch
+
+```solidity
+function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
+```
+
+Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
+
+*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account for which the role is being checked. |
 
 #### Returns
 
@@ -638,7 +660,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _primarySaleRecipient, address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _platformFeeRecipient, uint128 _platformFeeBps) external nonpayable
 ```
 
 
@@ -654,9 +676,9 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _symbol | string | undefined |
 | _contractURI | string | undefined |
 | _trustedForwarders | address[] | undefined |
-| _primarySaleRecipient | address | undefined |
+| _saleRecipient | address | undefined |
 | _platformFeeRecipient | address | undefined |
-| _platformFeeBps | uint256 | undefined |
+| _platformFeeBps | uint128 | undefined |
 
 ### isTrustedForwarder
 
@@ -689,23 +711,6 @@ function maxTotalSupply() external view returns (uint256)
 
 
 *Global max total supply of tokens.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### maxWalletClaimCount
-
-```solidity
-function maxWalletClaimCount() external view returns (uint256)
-```
-
-
-
-*The max number of tokens a wallet can claim.*
 
 
 #### Returns
@@ -827,7 +832,7 @@ function primarySaleRecipient() external view returns (address)
 
 
 
-*The address that receives all primary sales value.*
+*Returns primary sale recipient address.*
 
 
 #### Returns
@@ -842,16 +847,16 @@ function primarySaleRecipient() external view returns (address)
 function renounceRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from the account.
 
-
-*Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function&#39;s purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `account`. May emit a {RoleRevoked} event.*
+*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 ### revokeRole
 
@@ -859,21 +864,21 @@ function renounceRole(bytes32 role, address account) external nonpayable
 function revokeRole(bytes32 role, address account) external nonpayable
 ```
 
+Revokes role from an account.
 
-
-*Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``&#39;s admin role. May emit a {RoleRevoked} event.*
+*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
-| account | address | undefined |
+| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| account | address | Address of the account from which the role is being revoked. |
 
 ### setClaimConditions
 
 ```solidity
-function setClaimConditions(IDropClaimCondition.ClaimCondition[] _phases, bool _resetClaimEligibility) external nonpayable
+function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility) external nonpayable
 ```
 
 
@@ -884,7 +889,7 @@ function setClaimConditions(IDropClaimCondition.ClaimCondition[] _phases, bool _
 
 | Name | Type | Description |
 |---|---|---|
-| _phases | IDropClaimCondition.ClaimCondition[] | undefined |
+| _conditions | IClaimCondition.ClaimCondition[] | undefined |
 | _resetClaimEligibility | bool | undefined |
 
 ### setContractURI
@@ -893,15 +898,15 @@ function setClaimConditions(IDropClaimCondition.ClaimCondition[] _phases, bool _
 function setContractURI(string _uri) external nonpayable
 ```
 
+Lets a contract admin set the URI for contract-level metadata.
 
-
-*Lets a contract admin set the URI for contract-level metadata.*
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _uri | string | undefined |
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 ### setMaxTotalSupply
 
@@ -911,7 +916,7 @@ function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
 
 
 
-*Set global maximum supply. Must be parsed to 18 decimals when setting, by adding 18 zeros after the desired value.*
+*Lets a contract admin set the global maximum supply for collection&#39;s NFTs.*
 
 #### Parameters
 
@@ -919,38 +924,22 @@ function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
 |---|---|---|
 | _maxTotalSupply | uint256 | undefined |
 
-### setMaxWalletClaimCount
-
-```solidity
-function setMaxWalletClaimCount(uint256 _count) external nonpayable
-```
-
-
-
-*Set a maximum number of tokens that can be claimed by any wallet. Must be parsed to 18 decimals when setting, by adding 18 zeros after the desired value.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _count | uint256 | undefined |
-
 ### setPlatformFeeInfo
 
 ```solidity
 function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
 ```
 
+Updates the platform fee recipient and bps.
 
-
-*Lets a contract admin update the platform fee recipient and bps*
+*Caller should be authorized to set platform fee info.                  See {_canSetPlatformFeeInfo}.                  Emits {PlatformFeeInfoUpdated Event}; See {_setupPlatformFeeInfo}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _platformFeeRecipient | address | undefined |
-| _platformFeeBps | uint256 | undefined |
+| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
+| _platformFeeBps | uint256 | Updated platformFeeBps. |
 
 ### setPrimarySaleRecipient
 
@@ -958,54 +947,15 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
 ```
 
+Updates primary sale recipient.
 
-
-*Lets a contract admin set the recipient for all primary sales.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _saleRecipient | address | undefined |
-
-### setWalletClaimCount
-
-```solidity
-function setWalletClaimCount(address _claimer, uint256 _count) external nonpayable
-```
-
-
-
-*Lets a contract admin set a claim count for a wallet.*
+*Caller should be authorized to set primary sales info.                  See {_canSetPrimarySaleRecipient}.                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _claimer | address | undefined |
-| _count | uint256 | undefined |
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-
-
-*See ERC 165*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| _saleRecipient | address | Address to be set as new recipient of primary sales. |
 
 ### symbol
 
@@ -1091,12 +1041,12 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 ### verifyClaim
 
 ```solidity
-function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof) external view returns (bool isOverride)
 ```
 
 
 
-*Checks a request to claim tokens against the active claim condition&#39;s criteria.*
+
 
 #### Parameters
 
@@ -1107,56 +1057,13 @@ function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, 
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| verifyMaxQuantityPerTransaction | bool | undefined |
-
-### verifyClaimMerkleProof
-
-```solidity
-function verifyClaimMerkleProof(uint256 _conditionId, address _claimer, uint256 _quantity, bytes32[] _proofs, uint256 _proofMaxQuantityPerTransaction) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
-```
-
-
-
-*Checks whether a claimer meets the claim condition&#39;s allowlist criteria.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _conditionId | uint256 | undefined |
-| _claimer | address | undefined |
-| _quantity | uint256 | undefined |
-| _proofs | bytes32[] | undefined |
-| _proofMaxQuantityPerTransaction | uint256 | undefined |
+| _allowlistProof | IDrop.AllowlistProof | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| validMerkleProof | bool | undefined |
-| merkleProofIndex | uint256 | undefined |
-
-### walletClaimCount
-
-```solidity
-function walletClaimCount(address) external view returns (uint256)
-```
-
-
-
-*Mapping from address =&gt; number of tokens a wallet has claimed.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
+| isOverride | bool | undefined |
 
 
 
@@ -1183,10 +1090,10 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 ### ClaimConditionsUpdated
 
 ```solidity
-event ClaimConditionsUpdated(IDropClaimCondition.ClaimCondition[] claimConditions)
+event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
 ```
 
-
+Emitted when the contract&#39;s claim conditions are updated.
 
 
 
@@ -1194,7 +1101,8 @@ event ClaimConditionsUpdated(IDropClaimCondition.ClaimCondition[] claimCondition
 
 | Name | Type | Description |
 |---|---|---|
-| claimConditions  | IDropClaimCondition.ClaimCondition[] | undefined |
+| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+| resetEligibility  | bool | undefined |
 
 ### ContractURIUpdated
 
@@ -1273,29 +1181,13 @@ event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
 
 
 
-
+*Emitted when the global max supply of tokens is updated.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | maxTotalSupply  | uint256 | undefined |
-
-### MaxWalletClaimCountUpdated
-
-```solidity
-event MaxWalletClaimCountUpdated(uint256 count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| count  | uint256 | undefined |
 
 ### PlatformFeeInfoUpdated
 
@@ -1387,10 +1279,10 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 ### TokensClaimed
 
 ```solidity
-event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 quantityClaimed)
+event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
 ```
 
-
+Emitted when tokens are claimed via `claim`.
 
 
 
@@ -1401,6 +1293,7 @@ event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer
 | claimConditionIndex `indexed` | uint256 | undefined |
 | claimer `indexed` | address | undefined |
 | receiver `indexed` | address | undefined |
+| startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
 
 ### Transfer
@@ -1420,23 +1313,6 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### WalletClaimCountUpdated
-
-```solidity
-event WalletClaimCountUpdated(address indexed wallet, uint256 count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| wallet `indexed` | address | undefined |
-| count  | uint256 | undefined |
 
 
 

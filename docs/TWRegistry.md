@@ -47,10 +47,10 @@ function OPERATOR_ROLE() external view returns (bytes32)
 ### add
 
 ```solidity
-function add(address _deployer, address _deployment, uint256 _chainId) external nonpayable
+function add(address _deployer, address _deployment) external nonpayable
 ```
 
-Add a deployment for a deployer.
+
 
 
 
@@ -60,15 +60,14 @@ Add a deployment for a deployer.
 |---|---|---|
 | _deployer | address | undefined |
 | _deployment | address | undefined |
-| _chainId | uint256 | undefined |
 
 ### count
 
 ```solidity
-function count(address _deployer) external view returns (uint256 deploymentCount)
+function count(address _deployer) external view returns (uint256)
 ```
 
-Get the total number of deployments for a deployer.
+
 
 
 
@@ -82,15 +81,15 @@ Get the total number of deployments for a deployer.
 
 | Name | Type | Description |
 |---|---|---|
-| deploymentCount | uint256 | undefined |
+| _0 | uint256 | undefined |
 
 ### getAll
 
 ```solidity
-function getAll(address _deployer) external view returns (struct ITWRegistry.Deployment[] allDeployments)
+function getAll(address _deployer) external view returns (address[])
 ```
 
-Get all deployments for a deployer.
+
 
 
 
@@ -104,7 +103,7 @@ Get all deployments for a deployer.
 
 | Name | Type | Description |
 |---|---|---|
-| allDeployments | ITWRegistry.Deployment[] | undefined |
+| _0 | address[] | undefined |
 
 ### getRoleAdmin
 
@@ -260,10 +259,10 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ### remove
 
 ```solidity
-function remove(address _deployer, address _deployment, uint256 _chainId) external nonpayable
+function remove(address _deployer, address _deployment) external nonpayable
 ```
 
-Remove a deployment for a deployer.
+
 
 
 
@@ -273,7 +272,6 @@ Remove a deployment for a deployer.
 |---|---|---|
 | _deployer | address | undefined |
 | _deployment | address | undefined |
-| _chainId | uint256 | undefined |
 
 ### renounceRole
 
@@ -338,7 +336,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### Added
 
 ```solidity
-event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId)
+event Added(address indexed deployer, address indexed deployment)
 ```
 
 
@@ -351,12 +349,11 @@ event Added(address indexed deployer, address indexed deployment, uint256 indexe
 |---|---|---|
 | deployer `indexed` | address | undefined |
 | deployment `indexed` | address | undefined |
-| chainId `indexed` | uint256 | undefined |
 
 ### Deleted
 
 ```solidity
-event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId)
+event Deleted(address indexed deployer, address indexed deployment)
 ```
 
 
@@ -369,7 +366,6 @@ event Deleted(address indexed deployer, address indexed deployment, uint256 inde
 |---|---|---|
 | deployer `indexed` | address | undefined |
 | deployment `indexed` | address | undefined |
-| chainId `indexed` | uint256 | undefined |
 
 ### RoleAdminChanged
 

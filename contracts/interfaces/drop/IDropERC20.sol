@@ -14,6 +14,11 @@ import "./IDropClaimCondition.sol";
  */
 
 interface IDropERC20 is IERC20Upgradeable, IDropClaimCondition {
+    struct AllowlistProof {
+        bytes32[] proof;
+        uint256 maxQuantityInAllowlist;
+    }
+
     /// @dev Emitted when tokens are claimed.
     event TokensClaimed(
         uint256 indexed claimConditionIndex,
@@ -28,35 +33,27 @@ interface IDropERC20 is IERC20Upgradeable, IDropClaimCondition {
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
-    /// @dev Emitted when the wallet claim count for an address is updated.
-    event WalletClaimCountUpdated(address indexed wallet, uint256 count);
-
-    /// @dev Emitted when the global max wallet claim count is updated.
-    event MaxWalletClaimCountUpdated(uint256 count);
-
     /// @dev Emitted when the contract URI is updated.
     event ContractURIUpdated(string prevURI, string newURI);
 
     /**
-     *  @notice Lets an account claim a given quantity of tokens.
+     *  @notice Lets an account claim a given quantity of NFTs.
      *
      *  @param receiver                       The receiver of the tokens to claim.
      *  @param quantity                       The quantity of tokens to claim.
      *  @param currency                       The currency in which to pay for the claim.
-     *  @param pricePerToken                  The price per token (i.e. price per 1 ether unit of the token)
-     *                                         to pay for the claim.
-     *  @param proofs                         The proof of the claimer's inclusion in the merkle root allowlist
+     *  @param pricePerToken                  The price per token to pay for the claim.
+     *  @param allowlistProof                 The proof of the claimer's inclusion in the merkle root allowlist
      *                                        of the claim conditions that apply.
-     *  @param proofMaxQuantityPerTransaction (Optional) The maximum number of tokens an address included in an
-     *                                        allowlist can claim.
+     *  @param data                           Arbitrary bytes data that can be leveraged in the implementation of this interface.
      */
     function claim(
         address receiver,
         uint256 quantity,
         address currency,
         uint256 pricePerToken,
-        bytes32[] calldata proofs,
-        uint256 proofMaxQuantityPerTransaction
+        AllowlistProof calldata allowlistProof,
+        bytes memory data
     ) external payable;
 
     /**

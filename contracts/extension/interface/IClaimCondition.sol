@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../../lib/TWBitMaps.sol";
-
 /**
- *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens.
+ *  The interface `IClaimCondition` is written for thirdweb's 'Drop' contracts, which are distribution mechanisms for tokens.
  *
- *  A contract admin (i.e. a holder of `DEFAULT_ADMIN_ROLE`) can set a series of claim conditions,
- *  ordered by their respective `startTimestamp`. A claim condition defines criteria under which
- *  accounts can mint tokens. Claim conditions can be overwritten or added to by the contract admin.
- *  At any moment, there is only one active claim condition.
+ *  A claim condition defines criteria under which accounts can mint tokens. Claim conditions can be overwritten
+ *  or added to by the contract admin. At any moment, there is only one active claim condition.
  */
 
 interface IClaimCondition {
@@ -26,11 +22,7 @@ interface IClaimCondition {
      *  @param supplyClaimed                  At any given point, the number of tokens that have been claimed
      *                                        under the claim condition.
      *
-     *  @param quantityLimitPerTransaction    The maximum number of tokens that can be claimed in a single
-     *                                        transaction.
-     *
-     *  @param waitTimeInSecondsBetweenClaims The least number of seconds an account must wait after claiming
-     *                                        tokens, to be able to claim tokens again.
+     *  @param quantityLimitPerWallet         The maximum number of tokens that can be claimed by a wallet.
      *
      *  @param merkleRoot                     The allowlist of addresses that can claim tokens under the claim
      *                                        condition.
@@ -38,15 +30,17 @@ interface IClaimCondition {
      *  @param pricePerToken                  The price required to pay per token claimed.
      *
      *  @param currency                       The currency in which the `pricePerToken` must be paid.
+     *
+     *  @param metadata                       Claim condition metadata.
      */
     struct ClaimCondition {
         uint256 startTimestamp;
         uint256 maxClaimableSupply;
         uint256 supplyClaimed;
-        uint256 quantityLimitPerTransaction;
-        uint256 waitTimeInSecondsBetweenClaims;
+        uint256 quantityLimitPerWallet;
         bytes32 merkleRoot;
         uint256 pricePerToken;
         address currency;
+        string metadata;
     }
 }

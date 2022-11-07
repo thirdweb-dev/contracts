@@ -7,7 +7,6 @@
     "code-complexity": ["error", 9],
     "compiler-version": ["error", "^0.8.0"],
     "const-name-snakecase": "error",
-    "contract-name-camelcase": "error",
     "event-name-camelcase": "error",
     "constructor-syntax": "error",
     "func-name-mixedcase": "off",

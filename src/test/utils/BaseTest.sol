@@ -416,10 +416,12 @@ abstract contract BaseTest is DSTest, Test {
     }
 
     function setupAirdropClaimable() public {
-        string[] memory inputs = new string[](3);
+        string[] memory inputs = new string[](5);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = Strings.toString(5);
+        inputs[3] = "0";
+        inputs[4] = "0x0000000000000000000000000000000000000000";
         bytes memory result = vm.ffi(inputs);
         bytes32 root = abi.decode(result, (bytes32));
 
