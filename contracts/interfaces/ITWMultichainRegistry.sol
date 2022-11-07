@@ -2,9 +2,15 @@
 pragma solidity ^0.8.11;
 
 interface ITWMultichainRegistry {
+    enum DeploymentType {
+        Direct,
+        Import
+    }
+
     struct Deployment {
         address deploymentAddress;
         uint256 chainId;
+        DeploymentType deploymentType;
     }
 
     event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri);

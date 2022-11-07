@@ -80,7 +80,13 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
             address[] memory deploymentAddrs = deployments[_deployer][chainId].values();
 
             for (uint256 k = 0; k < len; k += 1) {
-                allDeployments[idx] = Deployment({ deploymentAddress: deploymentAddrs[k], chainId: chainId });
+                allDeployments[idx] = Deployment({
+                    deploymentAddress: deploymentAddrs[k],
+                    chainId: chainId,
+                    deploymentType: bytes(addressToMetadataUri[chainId][deploymentAddrs[k]]).length > 0
+                        ? DeploymentType.Import
+                        : DeploymentType.Direct
+                });
                 idx += 1;
             }
         }
