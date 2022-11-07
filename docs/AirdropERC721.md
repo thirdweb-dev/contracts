@@ -414,10 +414,10 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### setOwner
+### transferOwnership
 
 ```solidity
-function setOwner(address _newOwner) external nonpayable
+function transferOwnership(address _newOwner) external nonpayable
 ```
 
 Lets an authorized wallet set a new owner for the contract.
@@ -467,10 +467,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### OwnerUpdated
+### OwnershipTransferred
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -481,7 +481,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 ### RecipientsAdded

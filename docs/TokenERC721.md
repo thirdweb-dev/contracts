@@ -711,22 +711,6 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint256 | undefined |
 
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-
-
-*Lets a module admin set a new owner for the contract. The new owner must be a module admin.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | undefined |
-
 ### setPlatformFeeInfo
 
 ```solidity
@@ -919,6 +903,22 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined |
 | tokenId | uint256 | undefined |
 
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) external nonpayable
+```
+
+
+
+*Lets a module admin set a new owner for the contract. The new owner must be a module admin.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | undefined |
+
 ### verify
 
 ```solidity
@@ -1016,10 +1016,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### OwnerUpdated
+### OwnershipTransferred
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -1030,7 +1030,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 ### PlatformFeeInfoUpdated

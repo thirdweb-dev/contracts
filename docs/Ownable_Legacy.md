@@ -1,4 +1,4 @@
-# Ownable
+# Ownable_Legacy
 
 
 
@@ -27,10 +27,10 @@ Returns the owner of the contract.
 |---|---|---|
 | _0 | address | undefined |
 
-### transferOwnership
+### setOwner
 
 ```solidity
-function transferOwnership(address _newOwner) external nonpayable
+function setOwner(address _newOwner) external nonpayable
 ```
 
 Lets an authorized wallet set a new owner for the contract.
@@ -47,10 +47,10 @@ Lets an authorized wallet set a new owner for the contract.
 
 ## Events
 
-### OwnershipTransferred
+### OwnerUpdated
 
 ```solidity
-event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 ```
 
 
@@ -61,7 +61,7 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 
 | Name | Type | Description |
 |---|---|---|
-| previousOwner `indexed` | address | undefined |
+| prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 

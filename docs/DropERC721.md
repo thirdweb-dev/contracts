@@ -1015,22 +1015,6 @@ function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
 |---|---|---|
 | _maxTotalSupply | uint256 | undefined |
 
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-Lets an authorized wallet set a new owner for the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
-
 ### setPlatformFeeInfo
 
 ```solidity
@@ -1195,6 +1179,22 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 | to | address | undefined |
 | tokenId | uint256 | undefined |
 
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) external nonpayable
+```
+
+Lets an authorized wallet set a new owner for the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | The address to set as the new owner of the contract. |
+
 ### verifyClaim
 
 ```solidity
@@ -1345,10 +1345,10 @@ event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
 |---|---|---|
 | maxTotalSupply  | uint256 | undefined |
 
-### OwnerUpdated
+### OwnershipTransferred
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -1359,7 +1359,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 ### PlatformFeeInfoUpdated

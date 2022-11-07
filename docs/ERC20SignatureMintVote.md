@@ -535,22 +535,6 @@ Lets a contract admin set the URI for contract-level metadata.
 |---|---|---|
 | _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-Lets an authorized wallet set a new owner for the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
-
 ### setPrimarySaleRecipient
 
 ```solidity
@@ -647,6 +631,22 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) external nonpayable
+```
+
+Lets an authorized wallet set a new owner for the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | The address to set as the new owner of the contract. |
 
 ### verify
 
@@ -747,10 +747,10 @@ event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, ui
 | previousBalance  | uint256 | undefined |
 | newBalance  | uint256 | undefined |
 
-### OwnerUpdated
+### OwnershipTransferred
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -761,7 +761,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 ### PrimarySaleRecipientUpdated

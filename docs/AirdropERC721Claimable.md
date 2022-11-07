@@ -249,22 +249,6 @@ Returns the owner of the contract.
 |---|---|---|
 | _0 | address | undefined |
 
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-Lets an authorized wallet set a new owner for the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
-
 ### supplyClaimedByWallet
 
 ```solidity
@@ -326,6 +310,22 @@ function tokenOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) external nonpayable
+```
+
+Lets an authorized wallet set a new owner for the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | The address to set as the new owner of the contract. |
+
 ### verifyClaim
 
 ```solidity
@@ -365,10 +365,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### OwnerUpdated
+### OwnershipTransferred
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -379,7 +379,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 ### TokensClaimed

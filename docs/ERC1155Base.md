@@ -437,22 +437,6 @@ Updates default royalty recipient and bps.
 | _royaltyRecipient | address | Address to be set as default royalty recipient. |
 | _royaltyBps | uint256 | Updated royalty bps. |
 
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-Lets an authorized wallet set a new owner for the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
-
 ### setRoyaltyInfoForToken
 
 ```solidity
@@ -532,6 +516,22 @@ Returns the total supply of NFTs of a given tokenId
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) external nonpayable
+```
+
+Lets an authorized wallet set a new owner for the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | The address to set as the new owner of the contract. |
+
 ### uri
 
 ```solidity
@@ -610,10 +610,10 @@ event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 | newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
-### OwnerUpdated
+### OwnershipTransferred
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -624,7 +624,7 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
 ### RoyaltyForToken
