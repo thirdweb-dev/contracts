@@ -142,6 +142,10 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         onlyAuctionCreator(_auctionId)
     {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+
+        require(!data.payoutStatus[_auctionId].paidOutBidAmount, "Marketplace: payout already completed.");
+        data.payoutStatus[_auctionId].paidOutBidAmount = true;
+
         Auction memory _targetAuction = data.auctions[_auctionId];
         Bid memory _winningBid = data.winningBid[_auctionId];
 
@@ -457,15 +461,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
 
     /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
     function _closeAuctionForAuctionCreator(Auction memory _targetAuction, Bid memory _winningBid) internal {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         uint256 payoutAmount = _winningBid.bidAmount;
-
-        _targetAuction.quantity = 0;
-        _targetAuction.endTimestamp = uint64(block.timestamp);
-        data.auctions[_targetAuction.auctionId] = _targetAuction;
-
-        data.winningBid[_targetAuction.auctionId] = _winningBid;
-
         _payout(address(this), _targetAuction.auctionCreator, _targetAuction.currency, payoutAmount, _targetAuction);
 
         emit AuctionClosed(

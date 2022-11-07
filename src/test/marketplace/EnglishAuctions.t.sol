@@ -1463,3 +1463,165 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         EnglishAuctions(marketplace).isAuctionExpired(auctionId + 1);
     }
 }
+
+contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
+    // Target contract
+    address public marketplace;
+
+    // Participants
+    address public adminDeployer;
+    address public marketplaceDeployer;
+    address public seller;
+    address public buyer;
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    function setUp() public override {
+        super.setUp();
+
+        adminDeployer = getActor(0);
+        marketplaceDeployer = getActor(1);
+        seller = getActor(2);
+        buyer = getActor(3);
+
+        setupMarketplaceEnglish(adminDeployer, marketplaceDeployer);
+    }
+
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
+    }
+
+    function setupMarketplaceEnglish(address _adminDeployer, address _marketplaceDeployer) private {
+        vm.startPrank(_adminDeployer);
+
+        // [1] Deploy `Map`.
+        Map map = new Map();
+
+        // [2] Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctions(address(weth)));
+
+        // [3] Index `EnglishAuctions` functions in `Map`
+        map.setExtension(EnglishAuctions.createAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+
+        // [4] Deploy `MarketplaceEntrypoint`
+
+        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+
+        vm.stopPrank();
+
+        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        vm.prank(_marketplaceDeployer);
+        marketplace = address(
+            new TWProxy(
+                address(entrypoint),
+                abi.encodeCall(
+                    MarketplaceEntrypoint.initialize,
+                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                )
+            )
+        );
+
+        // [6] Setup roles for seller and assets
+        vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
+
+        vm.stopPrank();
+
+        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(marketplace, "Marketplace");
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+        vm.label(seller, "Seller");
+        vm.label(buyer, "Buyer");
+        vm.label(address(erc721), "ERC721_Token");
+        vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function test_rob_as_creator() public {
+        ///////////////////////////// Setup: dummy NFT  ////////////////////////////
+
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 50 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 0;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        ////////////////////////////// Setup: auction tokens //////////////////////////////////
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+        vm.prank(seller);
+        uint256 auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
+
+        /////////////////////////// Setup: marketplace has currency /////////////
+        uint256 mbalance = 100 ether;
+        erc20.mint(marketplace, mbalance);
+
+        /////////////////////////// Attack: win to drain ///////////////////////////////////////////
+
+        // 1. Buy out the token.
+        assertEq(erc20.balanceOf(seller), 0);
+        erc20.mint(seller, buyoutBidAmount);
+        assertEq(erc20.balanceOf(seller), buyoutBidAmount);
+
+        vm.startPrank(seller);
+
+        erc20.approve(marketplace, buyoutBidAmount);
+        EnglishAuctions(marketplace).bidInAuction(auctionId, buyoutBidAmount);
+
+        // 2. Collect their own bid.
+        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        assertEq(erc20.balanceOf(seller), buyoutBidAmount);
+
+        // 3. Profit. (FIXED)
+
+        vm.expectRevert("Marketplace: payout already completed.");
+        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        // EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        // assertEq(erc20.balanceOf(seller), buyoutBidAmount + mbalance);
+    }
+}

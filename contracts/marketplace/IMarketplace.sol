@@ -276,6 +276,11 @@ interface IEnglishAuctions {
         uint256 bidAmount;
     }
 
+    struct AuctionPayoutStatus {
+        bool paidOutAuctionTokens;
+        bool paidOutBidAmount;
+    }
+
     /// @dev Emitted when a new auction is created.
     event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, Auction auction);
 

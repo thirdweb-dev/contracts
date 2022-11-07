@@ -10,6 +10,7 @@ library EnglishAuctionsStorage {
         uint256 totalAuctions;
         mapping(uint256 => IEnglishAuctions.Auction) auctions;
         mapping(uint256 => IEnglishAuctions.Bid) winningBid;
+        mapping(uint256 => IEnglishAuctions.AuctionPayoutStatus) payoutStatus;
     }
 
     function englishAuctionsStorage() internal pure returns (Data storage englishAuctionsData) {
