@@ -1625,3 +1625,190 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         // assertEq(erc20.balanceOf(seller), buyoutBidAmount + mbalance);
     }
 }
+
+contract BreitwieserTheBidder is BaseTest {
+    // Target contract
+    address public marketplace;
+
+    // Participants
+    address public adminDeployer;
+    address public marketplaceDeployer;
+    address public seller;
+    address public buyer;
+
+    function setUp() public override {
+        super.setUp();
+
+        adminDeployer = getActor(0);
+        marketplaceDeployer = getActor(1);
+        seller = getActor(2);
+        buyer = getActor(3);
+
+        setupMarketplaceEnglish(adminDeployer, marketplaceDeployer);
+    }
+
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
+    }
+
+    function setupMarketplaceEnglish(address _adminDeployer, address _marketplaceDeployer) private {
+        vm.startPrank(_adminDeployer);
+
+        // [1] Deploy `Map`.
+        Map map = new Map();
+
+        // [2] Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctions(address(weth)));
+
+        // [3] Index `EnglishAuctions` functions in `Map`
+        map.setExtension(EnglishAuctions.createAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
+        map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+
+        // [4] Deploy `MarketplaceEntrypoint`
+
+        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+
+        vm.stopPrank();
+
+        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        vm.prank(_marketplaceDeployer);
+        marketplace = address(
+            new TWProxy(
+                address(entrypoint),
+                abi.encodeCall(
+                    MarketplaceEntrypoint.initialize,
+                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                )
+            )
+        );
+
+        // [6] Setup roles for seller and assets
+        vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
+
+        vm.stopPrank();
+
+        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(marketplace, "Marketplace");
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+        vm.label(seller, "Seller");
+        vm.label(buyer, "Buyer");
+        vm.label(address(erc721), "ERC721_Token");
+        vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function test_rob_as_bidder() public {
+        address attacker = address(0xbeef);
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), attacker);
+
+        // Condition: multiple copies in circulation and attacker has at least 1.
+        uint256 tokenId = 999;
+        uint256 quantity = 2;
+        // Victim.
+        erc1155.mint(seller, tokenId, 1);
+        erc1155.mint(attacker, tokenId, 1);
+
+        ////////////////// Setup: auction 1 //////////////////
+
+        IEnglishAuctions.AuctionParameters memory auctionParams1;
+        {
+            address assetContract = address(erc1155);
+            address currency = address(erc20);
+            uint256 minimumBidAmount = 1 ether;
+            uint256 buyoutBidAmount = 10 ether;
+            uint256 quantity = 1;
+            uint64 timeBufferInSeconds = 10 seconds;
+            uint64 bidBufferBps = 1000;
+            uint64 startTimestamp = 0;
+            uint64 endTimestamp = 200;
+            auctionParams1 = IEnglishAuctions.AuctionParameters(
+                assetContract,
+                tokenId,
+                quantity,
+                currency,
+                minimumBidAmount,
+                buyoutBidAmount,
+                timeBufferInSeconds,
+                bidBufferBps,
+                startTimestamp,
+                endTimestamp
+            );
+        }
+
+        vm.startPrank(seller);
+
+        erc1155.setApprovalForAll(marketplace, true);
+        EnglishAuctions(marketplace).createAuction(auctionParams1);
+
+        assertEq(erc1155.balanceOf(marketplace, tokenId), 1, "Marketplace should have the token.");
+
+        vm.stopPrank();
+
+        ////////////////// Attack: auction the 2nd and steal the 1st token //////////////////
+
+        // 1. Set up auction.
+        erc20.mint(attacker, 1);
+
+        vm.startPrank(attacker);
+
+        erc1155.setApprovalForAll(marketplace, true);
+
+        IEnglishAuctions.AuctionParameters memory auctionParams2;
+        {
+            address assetContract = address(erc1155);
+            address currency = address(erc20);
+            uint256 minimumBidAmount = 1;
+            uint256 buyoutBidAmount = 1;
+            uint64 timeBufferInSeconds = 10 seconds;
+            uint64 bidBufferBps = 1000;
+            uint64 startTimestamp = 0;
+            uint64 endTimestamp = 200;
+            auctionParams2 = IEnglishAuctions.AuctionParameters(
+                assetContract,
+                tokenId,
+                1,
+                currency,
+                minimumBidAmount,
+                buyoutBidAmount,
+                timeBufferInSeconds,
+                bidBufferBps,
+                startTimestamp,
+                endTimestamp
+            );
+        }
+        uint256 auctionId2 = EnglishAuctions(marketplace).createAuction(auctionParams2);
+
+        assertEq(erc1155.balanceOf(marketplace, tokenId), 2, "Marketplace should have 2 tokens.");
+
+        // 2. Bid and collect back token.
+        erc20.increaseAllowance(marketplace, 1);
+        // Bid a small amount: 1 wei.
+        EnglishAuctions(marketplace).bidInAuction(auctionId2, 1);
+
+        assertEq(erc1155.balanceOf(attacker, tokenId), 1, "Attack should have collected back their token.");
+
+        // Note: Attacker does not collect payout, it sets auction quantity to 0 and prevent further token collections.
+
+        // 3. Fixed: Profit.
+        assertEq(erc1155.balanceOf(marketplace, tokenId), 1);
+
+        vm.expectRevert("Marketplace: payout already completed.");
+        EnglishAuctions(marketplace).collectAuctionTokens(auctionId2);
+
+        // assertEq(erc1155.balanceOf(attacker, tokenId), 2, "Attacker should have collected the 2nd token for free.");
+
+        vm.stopPrank();
+    }
+}

@@ -161,7 +161,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         Bid memory _winningBid = data.winningBid[_auctionId];
 
         require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
-        require(_msgSender() == _winningBid.bidder, "Marketplace: not winning bidder.");
+        require(_winningBid.bidder != address(0), "Marketplace: no bids were made.");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
     }
@@ -443,6 +443,13 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
     /// @dev Closes an auction for the winning bidder; distributes auction items to the winning bidder.
     function _closeAuctionForBidder(Auction memory _targetAuction, Bid memory _winningBid) internal {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+
+        require(
+            !data.payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens,
+            "Marketplace: payout already completed."
+        );
+        data.payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens = true;
+
         _targetAuction.endTimestamp = uint64(block.timestamp);
 
         data.winningBid[_targetAuction.auctionId] = _winningBid;
