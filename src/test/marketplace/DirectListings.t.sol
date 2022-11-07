@@ -588,7 +588,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         tokenIds[1] = 1;
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+        listingParamsToUpdate.pricePerToken = 2 ether;
 
         vm.prank(seller);
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
@@ -607,7 +607,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(listing.listingId, listingId);
         assertEq(listing.listingCreator, seller);
         assertEq(listing.assetContract, listingParamsToUpdate.assetContract);
-        assertEq(listing.tokenId, 1);
+        assertEq(listing.tokenId, 0);
         assertEq(listing.quantity, listingParamsToUpdate.quantity);
         assertEq(listing.currency, listingParamsToUpdate.currency);
         assertEq(listing.pricePerToken, listingParamsToUpdate.pricePerToken);
@@ -628,8 +628,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
         tokenIds[1] = 1;
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
-
         address notSeller = getActor(1000); // Someone other than the seller calls update.
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
@@ -647,11 +645,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.prank(notSeller);
         erc721.setApprovalForAll(marketplace, true);
 
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = 1;
-        assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
-
-        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
+        // Transfer away owned token.
+        vm.prank(seller);
+        erc721.transferFrom(seller, address(0x1234), 0);
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
@@ -673,8 +669,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.prank(seller);
         erc721.setApprovalForAll(marketplace, false);
 
-        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
-
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
@@ -691,7 +685,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
         tokenIds[1] = 1;
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
         listingParamsToUpdate.quantity = 0; // Listing zero quantity
 
         vm.prank(seller);
@@ -710,7 +703,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
         tokenIds[1] = 1;
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-        listingParamsToUpdate.tokenId = 1; // New tokenId `1` to be listed instead of `0`
         listingParamsToUpdate.quantity = 2; // Listing more than `1` of the ERC721 token
 
         vm.prank(seller);
