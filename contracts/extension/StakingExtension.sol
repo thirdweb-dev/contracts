@@ -82,7 +82,7 @@ abstract contract StakingExtension is IStaking {
         }
 
         _updateUnclaimedRewardsForAll();
-        rewardsPerUnitTime = _rewardsPerUnitTime;
+        _setRewardsPerUnitTime(_rewardsPerUnitTime);
     }
 
     function setTimeUnit(uint256 _timeUnit) public {
@@ -91,7 +91,7 @@ abstract contract StakingExtension is IStaking {
         }
 
         _updateUnclaimedRewardsForAll();
-        timeUnit = _timeUnit;
+        _setTimeUnit(_timeUnit);
     }
 
     // function setCompoundingRate(uint256 _compoundingRate) public {
@@ -148,7 +148,7 @@ abstract contract StakingExtension is IStaking {
 
     function _calculateRewards(address _staker) internal view returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
-        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked)) * rewardsPerUnitTime) /
+        _rewards = ((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardsPerUnitTime) /
             timeUnit);
     }
 
