@@ -162,6 +162,25 @@ contract StakingExtensionTest is DSTest, Test {
         );
     }
 
+    function test_revert_stake_stakingZeroTokens() public {
+        // stake 0 tokens
+        uint256[] memory _tokenIds;
+
+        vm.prank(stakerOne);
+        vm.expectRevert("Staking 0 tokens");
+        ext.stake(_tokenIds);
+    }
+
+    function test_revert_stake_notStaker() public {
+        // stake unowned tokens
+        uint256[] memory _tokenIds = new uint256[](1);
+        _tokenIds[0] = 6;
+
+        vm.prank(stakerOne);
+        vm.expectRevert("Not owner");
+        ext.stake(_tokenIds);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Unit tests: claimRewards
     //////////////////////////////////////////////////////////////*/
@@ -197,6 +216,157 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(_amountStaked, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
+    }
+
+    function test_revert_claimRewards_noRewards() public {
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](3);
+        _tokenIdsOne[0] = 0;
+        _tokenIdsOne[1] = 1;
+        _tokenIdsOne[2] = 2;
+
+        // stake 3 tokens
+        vm.prank(stakerOne);
+        ext.stake(_tokenIdsOne);
+
+        //=================== try to claim rewards in same block
+
+        vm.prank(stakerOne);
+        vm.expectRevert("No rewards");
+        ext.claimRewards();
+
+        //======= withdraw tokens and claim rewards
+        vm.roll(100);
+        vm.warp(1000);
+
+        vm.prank(stakerOne);
+        ext.withdraw(_tokenIdsOne);
+        vm.prank(stakerOne);
+        ext.claimRewards();
+
+        //===== try to claim rewards again
+        vm.roll(200);
+        vm.warp(2000);
+        vm.prank(stakerOne);
+        vm.expectRevert("No rewards");
+        ext.claimRewards();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: stake conditions
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setRewardsPerUnitTime() public {
+        // check current value
+        assertEq(rewardsPerUnitTime, ext.rewardsPerUnitTime());
+
+        // set new value and check
+        uint256 newRewardsPerUnitTime = 50;
+        ext.setRewardsPerUnitTime(newRewardsPerUnitTime);
+        assertEq(newRewardsPerUnitTime, ext.rewardsPerUnitTime());
+
+        //================ stake tokens
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](3);
+        _tokenIdsOne[0] = 0;
+        _tokenIdsOne[1] = 1;
+        _tokenIdsOne[2] = 2;
+
+        // stake 3 tokens
+        vm.prank(stakerOne);
+        ext.stake(_tokenIdsOne);
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        //=================== warp timestamp and again set rewardsPerUnitTime
+        vm.roll(100);
+        vm.warp(1000);
+
+        ext.setRewardsPerUnitTime(200);
+        assertEq(200, ext.rewardsPerUnitTime());
+        uint256 newTimeOfLastUpdate = block.timestamp;
+
+        // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
+        (, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * newRewardsPerUnitTime) / timeUnit)
+        );
+
+        //====== check rewards after some time
+        vm.roll(300);
+        vm.warp(3000);
+
+        (, uint256 _newRewards) = ext.getStakeInfo(stakerOne);
+
+        assertEq(
+            _newRewards,
+            _availableRewards + ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * 200) / timeUnit)
+        );
+    }
+
+    function test_revert_setRewardsPerUnitTime_notAuthorized() public {
+        ext.setCondition(false);
+
+        vm.expectRevert("Not authorized");
+        ext.setRewardsPerUnitTime(1);
+    }
+
+    function test_state_setTimeUnit() public {
+        // check current value
+        assertEq(timeUnit, ext.timeUnit());
+
+        // set new value and check
+        uint256 newTimeUnit = 1 minutes;
+        ext.setTimeUnit(newTimeUnit);
+        assertEq(newTimeUnit, ext.timeUnit());
+
+        //================ stake tokens
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](3);
+        _tokenIdsOne[0] = 0;
+        _tokenIdsOne[1] = 1;
+        _tokenIdsOne[2] = 2;
+
+        // stake 3 tokens
+        vm.prank(stakerOne);
+        ext.stake(_tokenIdsOne);
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        //=================== warp timestamp and again set rewardsPerUnitTime
+        vm.roll(100);
+        vm.warp(1000);
+
+        ext.setTimeUnit(1 seconds);
+        assertEq(1 seconds, ext.timeUnit());
+        uint256 newTimeOfLastUpdate = block.timestamp;
+
+        // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
+        (, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) / newTimeUnit)
+        );
+
+        //====== check rewards after some time
+        vm.roll(300);
+        vm.warp(3000);
+
+        (, uint256 _newRewards) = ext.getStakeInfo(stakerOne);
+
+        assertEq(
+            _newRewards,
+            _availableRewards +
+                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) / (1 seconds))
+        );
+    }
+
+    function test_revert_setTimeUnit_notAuthorized() public {
+        ext.setCondition(false);
+
+        vm.expectRevert("Not authorized");
+        ext.setTimeUnit(1);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -266,5 +436,46 @@ contract StakingExtensionTest is DSTest, Test {
             (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardsPerUnitTime) / timeUnit) +
                 (((((block.timestamp - timeOfLastUpdateLatest) * 1)) * rewardsPerUnitTime) / timeUnit)
         );
+    }
+
+    function test_revert_withdraw_noStakedTokens() public {
+        uint256[] memory _tokensToWithdraw;
+
+        vm.expectRevert("No staked tokens");
+        ext.withdraw(_tokensToWithdraw);
+    }
+
+    function test_revert_withdraw_withdrawingZeroTokens() public {
+        // stake tokens
+        uint256[] memory _tokenIds = new uint256[](1);
+        _tokenIds[0] = 0;
+
+        vm.prank(stakerOne);
+        ext.stake(_tokenIds);
+
+        // trying to withdraw zero tokens
+        uint256[] memory _tokensToWithdraw;
+
+        vm.prank(stakerOne);
+        vm.expectRevert("Withdrawing 0 tokens");
+        ext.withdraw(_tokensToWithdraw);
+    }
+
+    function test_revert_withdraw_notStaker() public {
+        // stake tokens
+        uint256[] memory _tokenIds = new uint256[](1);
+        _tokenIds[0] = 0;
+
+        vm.prank(stakerOne);
+        ext.stake(_tokenIds);
+
+        // trying to withdraw tokens not staked by caller
+        uint256[] memory _tokensToWithdraw = new uint256[](2);
+        _tokensToWithdraw[0] = 0;
+        _tokensToWithdraw[1] = 1;
+
+        vm.prank(stakerOne);
+        vm.expectRevert("Not staker");
+        ext.withdraw(_tokensToWithdraw);
     }
 }

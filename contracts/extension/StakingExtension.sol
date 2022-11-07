@@ -27,15 +27,17 @@ abstract contract StakingExtension is IStaking {
     }
 
     function stake(uint256[] calldata _tokenIds) external {
+        uint256 len = _tokenIds.length;
+        require(len != 0, "Staking 0 tokens");
+
         if (stakers[msg.sender].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(msg.sender);
         } else {
             stakersArray.push(msg.sender);
             stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         }
-        uint256 len = _tokenIds.length;
         for (uint256 i; i < len; ++i) {
-            require(nftCollection.ownerOf(_tokenIds[i]) == msg.sender, "Can't stake tokens you don't own!");
+            require(nftCollection.ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
             nftCollection.transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
         }
@@ -43,13 +45,15 @@ abstract contract StakingExtension is IStaking {
     }
 
     function withdraw(uint256[] calldata _tokenIds) external {
-        require(stakers[msg.sender].amountStaked > 0, "You have no tokens staked");
+        require(stakers[msg.sender].amountStaked > 0, "No staked tokens");
 
         _updateUnclaimedRewardsForStaker(msg.sender);
 
         uint256 len = _tokenIds.length;
+        require(len != 0, "Withdrawing 0 tokens");
+
         for (uint256 i; i < len; ++i) {
-            require(stakerAddress[_tokenIds[i]] == msg.sender);
+            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
             nftCollection.transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
@@ -68,7 +72,7 @@ abstract contract StakingExtension is IStaking {
     function claimRewards() external {
         uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
 
-        require(rewards != 0, "no rewards");
+        require(rewards != 0, "No rewards");
 
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         stakers[msg.sender].unclaimedRewards = 0;
