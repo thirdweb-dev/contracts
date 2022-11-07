@@ -2,18 +2,21 @@
 pragma solidity ^0.8.0;
 
 /**
- *  Thirdweb's `Ownable` is a contract extension to be used with any base contract. It exposes functions for setting and reading
- *  who the 'owner' of the inheriting smart contract is, and lets the inheriting contract perform conditional logic that uses
- *  information about who the contract's owner is.
+ *  Thirdweb's (EIP 173) `Ownable` is a contract extension to be used with any base contract. It exposes functions for setting
+ *  and reading who the 'owner' of the inheriting smart contract is, and lets the inheriting contract perform conditional logic
+ *  that uses information about who the contract's owner is.
  */
 
 interface IOwnable {
-    /// @dev Returns the owner of the contract.
-    function owner() external view returns (address);
+    /// @dev This emits when ownership of a contract changes.
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external;
+    /// @notice Get the address of the owner
+    /// @return ownerAddr address of the owner.
+    function owner() external view returns (address ownerAddr);
 
-    /// @dev Emitted when a new Owner is set.
-    event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
+    /// @notice Set the address of the new owner of the contract
+    /// @dev Set _newOwner to address(0) to renounce any ownership.
+    /// @param _newOwner The address of the new owner of the contract
+    function transferOwnership(address _newOwner) external;
 }

@@ -20,12 +20,12 @@ import "../../extension/ContractMetadata.sol";
 import "../../extension/PlatformFee.sol";
 import "../../extension/Royalty.sol";
 import "../../extension/PrimarySale.sol";
-import "../../extension/Ownable.sol";
 import "../../extension/DelayedReveal.sol";
 import "../../extension/LazyMint.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../extension/DropSinglePhase_V1.sol";
 import "../../extension/SignatureMintERC721Upgradeable.sol";
+import "../extension/Ownable_Legacy.sol";
 
 contract SignatureDrop_V4 is
     Initializable,
@@ -33,7 +33,7 @@ contract SignatureDrop_V4 is
     PlatformFee,
     Royalty,
     PrimarySale,
-    Ownable,
+    Ownable_Legacy,
     DelayedReveal,
     LazyMint,
     PermissionsEnumerable,

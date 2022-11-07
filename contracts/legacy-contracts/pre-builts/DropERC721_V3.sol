@@ -23,7 +23,7 @@ import "../../interfaces/IThirdwebContract.sol";
 import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
-import "../../extension/interface/IOwnable.sol";
+import "../extension/interface/IOwnable_Legacy.sol";
 
 import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
@@ -34,7 +34,7 @@ import "../../lib/MerkleProof.sol";
 contract DropERC721_V3 is
     Initializable,
     IThirdwebContract,
-    IOwnable,
+    IOwnable_Legacy,
     IRoyalty,
     IPrimarySale,
     IPlatformFee,

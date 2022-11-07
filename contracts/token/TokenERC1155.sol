@@ -289,12 +289,12 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
-    function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function transferOwnership(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
         address _prevOwner = _owner;
         _owner = _newOwner;
 
-        emit OwnerUpdated(_prevOwner, _newOwner);
+        emit OwnershipTransferred(_prevOwner, _newOwner);
     }
 
     /// @dev Lets a module admin set the URI for contract-level metadata.

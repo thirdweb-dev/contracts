@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IOwnable.sol";
+import "./interface/IOwnable_Legacy.sol";
 
 /**
  *  @title   Ownable
@@ -10,7 +10,7 @@ import "./interface/IOwnable.sol";
  *           information about who the contract's owner is.
  */
 
-abstract contract Ownable is IOwnable {
+abstract contract Ownable_Legacy is IOwnable_Legacy {
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
 
@@ -33,7 +33,7 @@ abstract contract Ownable is IOwnable {
      *  @notice Lets an authorized wallet set a new owner for the contract.
      *  @param _newOwner The address to set as the new owner of the contract.
      */
-    function transferOwnership(address _newOwner) external override {
+    function setOwner(address _newOwner) external override {
         if (!_canSetOwner()) {
             revert("Not authorized");
         }
@@ -45,7 +45,7 @@ abstract contract Ownable is IOwnable {
         address _prevOwner = _owner;
         _owner = _newOwner;
 
-        emit OwnershipTransferred(_prevOwner, _newOwner);
+        emit OwnerUpdated(_prevOwner, _newOwner);
     }
 
     /// @dev Returns whether owner can be set in the given execution context.

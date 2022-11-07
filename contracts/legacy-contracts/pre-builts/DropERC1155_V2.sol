@@ -23,7 +23,7 @@ import "../../interfaces/IThirdwebContract.sol";
 import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
-import "../../extension/interface/IOwnable.sol";
+import "../extension/interface/IOwnable_Legacy.sol";
 
 import { IDropERC1155_V2 } from "../interfaces/drop/IDropERC1155_V2.sol";
 
@@ -36,7 +36,7 @@ import "../../lib/MerkleProof.sol";
 contract DropERC1155_V2 is
     Initializable,
     IThirdwebContract,
-    IOwnable,
+    IOwnable_Legacy,
     IRoyalty,
     IPrimarySale,
     IPlatformFee,
