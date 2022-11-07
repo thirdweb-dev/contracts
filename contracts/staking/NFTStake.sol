@@ -62,8 +62,8 @@ contract NFTStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         IERC721 _nftCollection,
-        uint256 _rewardsPerUnitTime,
-        uint256 _timeUnit
+        uint256 _timeUnit,
+        uint256 _rewardsPerUnitTime
     ) external initializer {
         __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
@@ -71,8 +71,8 @@ contract NFTStake is
         __ERC20_init_unchained(_name, _symbol);
 
         __StakingExtension_init(_nftCollection);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
         _setTimeUnit(_timeUnit);
+        _setRewardsPerUnitTime(_rewardsPerUnitTime);
         // _setCompoundingRate(_compoundingRate);
 
         _setupContractURI(_contractURI);

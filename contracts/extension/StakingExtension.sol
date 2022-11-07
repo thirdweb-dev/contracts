@@ -76,15 +76,6 @@ abstract contract StakingExtension is IStaking {
         _mintRewards(msg.sender, rewards);
     }
 
-    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) public {
-        if (!_canSetStakeConditions()) {
-            revert("Not authorized");
-        }
-
-        _updateUnclaimedRewardsForAll();
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
-    }
-
     function setTimeUnit(uint256 _timeUnit) public {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
@@ -92,6 +83,15 @@ abstract contract StakingExtension is IStaking {
 
         _updateUnclaimedRewardsForAll();
         _setTimeUnit(_timeUnit);
+    }
+
+    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) public {
+        if (!_canSetStakeConditions()) {
+            revert("Not authorized");
+        }
+
+        _updateUnclaimedRewardsForAll();
+        _setRewardsPerUnitTime(_rewardsPerUnitTime);
     }
 
     // function setCompoundingRate(uint256 _compoundingRate) public {
@@ -134,12 +134,12 @@ abstract contract StakingExtension is IStaking {
         stakers[_staker].timeOfLastUpdate = block.timestamp;
     }
 
-    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal {
-        rewardsPerUnitTime = _rewardsPerUnitTime;
-    }
-
     function _setTimeUnit(uint256 _timeUnit) internal {
         timeUnit = _timeUnit;
+    }
+
+    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal {
+        rewardsPerUnitTime = _rewardsPerUnitTime;
     }
 
     // function _setCompoundingRate(uint256 _compoundingRate) internal {
