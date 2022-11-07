@@ -131,6 +131,11 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
             "Marketplace: invalid timestamps."
         );
 
+        require(
+            listing.assetContract == _params.assetContract && listing.tokenId == _params.tokenId,
+            "Marketplace: cannot update what token is listed."
+        );
+
         _validateNewListing(_params, tokenType);
 
         listing = Listing({

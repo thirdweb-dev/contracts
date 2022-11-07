@@ -1375,3 +1375,205 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingId = DirectListings(marketplace).createListing(listingParams);
     }
 }
+
+contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
+    // Target contract
+    address public marketplace;
+
+    // Participants
+    address public adminDeployer;
+    address public marketplaceDeployer;
+    address public seller;
+    address public buyer;
+
+    function setUp() public override {
+        super.setUp();
+
+        adminDeployer = getActor(0);
+        marketplaceDeployer = getActor(1);
+        seller = getActor(2);
+        buyer = getActor(3);
+
+        setupMarketplace(adminDeployer, marketplaceDeployer);
+    }
+
+    function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
+        vm.startPrank(_adminDeployer);
+
+        // [1] Deploy `Map`.
+        Map map = new Map();
+
+        // [2] Deploy `DirectListings`
+        address directListings = address(new DirectListings(address(weth)));
+
+        // [3] Index `DirectListings` functions in `Map`
+        map.setExtension(DirectListings.totalListings.selector, directListings);
+        map.setExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
+        map.setExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
+        map.setExtension(DirectListings.currencyPriceForListing.selector, directListings);
+        map.setExtension(DirectListings.createListing.selector, directListings);
+        map.setExtension(DirectListings.updateListing.selector, directListings);
+        map.setExtension(DirectListings.cancelListing.selector, directListings);
+        map.setExtension(DirectListings.approveBuyerForListing.selector, directListings);
+        map.setExtension(DirectListings.approveCurrencyForListing.selector, directListings);
+        map.setExtension(DirectListings.buyFromListing.selector, directListings);
+        map.setExtension(DirectListings.getAllListings.selector, directListings);
+        map.setExtension(DirectListings.getAllValidListings.selector, directListings);
+        map.setExtension(DirectListings.getListing.selector, directListings);
+
+        // [4] Deploy `MarketplaceEntrypoint`
+
+        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+
+        vm.stopPrank();
+
+        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        vm.prank(_marketplaceDeployer);
+        marketplace = address(
+            new TWProxy(
+                address(entrypoint),
+                abi.encodeCall(
+                    MarketplaceEntrypoint.initialize,
+                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                )
+            )
+        );
+
+        // [6] Setup roles for seller and assets
+        vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
+
+        vm.stopPrank();
+
+        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(marketplace, "Marketplace");
+        vm.label(directListings, "DirectListings_Extension");
+        vm.label(seller, "Seller");
+        vm.label(buyer, "Buyer");
+        vm.label(address(erc721), "ERC721_Token");
+        vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
+    }
+
+    function _setup_updateListing()
+        private
+        returns (uint256 listingId, IDirectListings.ListingParameters memory listingParams)
+    {
+        // Sample listing parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = true;
+
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // List tokens.
+        listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
+
+        vm.prank(seller);
+        listingId = DirectListings(marketplace).createListing(listingParams);
+    }
+
+    function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
+        (listingId, ) = _setup_updateListing();
+        listing = DirectListings(marketplace).getListing(listingId);
+    }
+
+    function test_state_buyFromListing_after_update() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        // This token (Id = 0) was created in the above _setup_buyFromListing
+        uint256[] memory expectedTokenIds = new uint256[](1);
+        expectedTokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, expectedTokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, expectedTokenIds);
+
+        // Mint a new token. This is token we will "swap out" via updateListing
+        // It should be tokenId of 1
+        _setupERC721BalanceForSeller(seller, 1);
+
+        // Verify that seller is owner of new token, pre-sale.
+        uint256[] memory swappedTokenIds = new uint256[](1);
+        swappedTokenIds[0] = 1;
+        assertIsOwnerERC721(address(erc721), seller, swappedTokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, swappedTokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Create ListingParameters with new tokenId (1) and update
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            address(erc721),
+            1,
+            1,
+            address(erc20),
+            1 ether,
+            100,
+            200,
+            true
+        );
+        vm.prank(seller);
+        vm.expectRevert("Marketplace: cannot update what token is listed.");
+        DirectListings(marketplace).updateListing(listingId, listingParams);
+
+        // Buy listing
+        // vm.warp(listing.startTimestamp);
+        // vm.prank(buyer);
+        // DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+
+        // // Buyer is owner of the swapped out token (tokenId = 1) and not the expected (tokenId = 0)
+        // assertIsOwnerERC721(address(erc721), buyer, swappedTokenIds);
+        // assertIsNotOwnerERC721(address(erc721), buyer, expectedTokenIds);
+
+        // // Verify seller is paid total price.
+        // assertBalERC20Eq(address(erc20), buyer, 0);
+        // assertBalERC20Eq(address(erc20), seller, totalPrice);
+    }
+}
