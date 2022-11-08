@@ -60,15 +60,17 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
     }
 
     function _stake(uint256[] calldata _tokenIds) internal virtual {
+        uint256 len = _tokenIds.length;
+        require(len != 0, "Staking 0 tokens");
+
         if (stakers[msg.sender].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(msg.sender);
         } else {
             stakersArray.push(msg.sender);
             stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         }
-        uint256 len = _tokenIds.length;
         for (uint256 i; i < len; ++i) {
-            require(IERC721(nftCollection).ownerOf(_tokenIds[i]) == msg.sender, "Can't stake tokens you don't own!");
+            require(IERC721(nftCollection).ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
             IERC721(nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
         }
@@ -76,25 +78,27 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
     }
 
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
-        require(stakers[msg.sender].amountStaked > 0, "You have no tokens staked");
+        uint256 _amountStaked = stakers[msg.sender].amountStaked;
+        uint256 len = _tokenIds.length;
+        require(len != 0, "Withdrawing 0 tokens");
+        require(_amountStaked >= len, "Withdrawing more than staked");
 
         _updateUnclaimedRewardsForStaker(msg.sender);
 
-        uint256 len = _tokenIds.length;
-        for (uint256 i; i < len; ++i) {
-            require(stakerAddress[_tokenIds[i]] == msg.sender);
-            stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
-        }
-        stakers[msg.sender].amountStaked -= len;
-
-        if (stakers[msg.sender].amountStaked == 0) {
+        if (_amountStaked == len) {
             for (uint256 i; i < stakersArray.length; ++i) {
                 if (stakersArray[i] == msg.sender) {
                     stakersArray[i] = stakersArray[stakersArray.length - 1];
                     stakersArray.pop();
                 }
             }
+        }
+        stakers[msg.sender].amountStaked -= len;
+
+        for (uint256 i; i < len; ++i) {
+            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
+            stakerAddress[_tokenIds[i]] = address(0);
+            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
     }
 
@@ -135,17 +139,17 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
         stakers[_staker].timeOfLastUpdate = block.timestamp;
     }
 
-    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
-        rewardsPerUnitTime = _rewardsPerUnitTime;
-    }
-
     function _setTimeUnit(uint256 _timeUnit) internal virtual {
         timeUnit = _timeUnit;
     }
 
+    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
+        rewardsPerUnitTime = _rewardsPerUnitTime;
+    }
+
     function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
-        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked)) * rewardsPerUnitTime) /
+        _rewards = ((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardsPerUnitTime) /
             timeUnit);
     }
 

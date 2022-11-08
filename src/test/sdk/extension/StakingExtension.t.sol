@@ -438,30 +438,32 @@ contract StakingExtensionTest is DSTest, Test {
         );
     }
 
-    function test_revert_withdraw_noStakedTokens() public {
-        uint256[] memory _tokensToWithdraw;
-
-        vm.expectRevert("No staked tokens");
-        ext.withdraw(_tokensToWithdraw);
-    }
-
     function test_revert_withdraw_withdrawingZeroTokens() public {
-        // stake tokens
-        uint256[] memory _tokenIds = new uint256[](1);
-        _tokenIds[0] = 0;
-
-        vm.prank(stakerOne);
-        ext.stake(_tokenIds);
-
-        // trying to withdraw zero tokens
         uint256[] memory _tokensToWithdraw;
 
-        vm.prank(stakerOne);
         vm.expectRevert("Withdrawing 0 tokens");
         ext.withdraw(_tokensToWithdraw);
     }
 
     function test_revert_withdraw_notStaker() public {
+        // stake tokens
+        uint256[] memory _tokenIds = new uint256[](2);
+        _tokenIds[0] = 0;
+        _tokenIds[1] = 1;
+
+        vm.prank(stakerOne);
+        ext.stake(_tokenIds);
+
+        // trying to withdraw zero tokens
+        uint256[] memory _tokensToWithdraw = new uint256[](1);
+        _tokensToWithdraw[0] = 2;
+
+        vm.prank(stakerOne);
+        vm.expectRevert("Not staker");
+        ext.withdraw(_tokensToWithdraw);
+    }
+
+    function test_revert_withdraw_withdrawingMoreThanStaked() public {
         // stake tokens
         uint256[] memory _tokenIds = new uint256[](1);
         _tokenIds[0] = 0;
@@ -475,7 +477,7 @@ contract StakingExtensionTest is DSTest, Test {
         _tokensToWithdraw[1] = 1;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not staker");
+        vm.expectRevert("Withdrawing more than staked");
         ext.withdraw(_tokensToWithdraw);
     }
 }

@@ -76,27 +76,27 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
     }
 
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
-        require(stakers[msg.sender].amountStaked > 0, "No staked tokens");
+        uint256 _amountStaked = stakers[msg.sender].amountStaked;
+        uint256 len = _tokenIds.length;
+        require(len != 0, "Withdrawing 0 tokens");
+        require(_amountStaked >= len, "Withdrawing more than staked");
 
         _updateUnclaimedRewardsForStaker(msg.sender);
 
-        uint256 len = _tokenIds.length;
-        require(len != 0, "Withdrawing 0 tokens");
-
-        for (uint256 i; i < len; ++i) {
-            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
-            stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
-        }
-        stakers[msg.sender].amountStaked -= len;
-
-        if (stakers[msg.sender].amountStaked == 0) {
+        if (_amountStaked == len) {
             for (uint256 i; i < stakersArray.length; ++i) {
                 if (stakersArray[i] == msg.sender) {
                     stakersArray[i] = stakersArray[stakersArray.length - 1];
                     stakersArray.pop();
                 }
             }
+        }
+        stakers[msg.sender].amountStaked -= len;
+
+        for (uint256 i; i < len; ++i) {
+            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
+            stakerAddress[_tokenIds[i]] = address(0);
+            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
     }
 
