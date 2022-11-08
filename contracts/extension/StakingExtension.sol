@@ -62,12 +62,12 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
     //     compoundingRate = _compoundingRate;
     // }
 
-    function getStakeInfo(address _staker) public view returns (uint256 _tokensStaked, uint256 _rewards) {
+    function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
         _rewards = _availableRewards(_staker);
     }
 
-    function _stake(uint256[] calldata _tokenIds) internal {
+    function _stake(uint256[] calldata _tokenIds) internal virtual {
         uint256 len = _tokenIds.length;
         require(len != 0, "Staking 0 tokens");
 
@@ -85,7 +85,7 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
         stakers[msg.sender].amountStaked += len;
     }
 
-    function _withdraw(uint256[] calldata _tokenIds) internal {
+    function _withdraw(uint256[] calldata _tokenIds) internal virtual {
         require(stakers[msg.sender].amountStaked > 0, "No staked tokens");
 
         _updateUnclaimedRewardsForStaker(msg.sender);
@@ -110,7 +110,7 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
         }
     }
 
-    function _claimRewards() internal {
+    function _claimRewards() internal virtual {
         uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
 
         require(rewards != 0, "No rewards");
@@ -121,7 +121,7 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
         _mintRewards(msg.sender, rewards);
     }
 
-    function _availableRewards(address _user) internal view returns (uint256 _rewards) {
+    function _availableRewards(address _user) internal view virtual returns (uint256 _rewards) {
         if (stakers[_user].amountStaked == 0) {
             _rewards = stakers[_user].unclaimedRewards;
         } else {
@@ -129,7 +129,7 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
         }
     }
 
-    function _updateUnclaimedRewardsForAll() internal {
+    function _updateUnclaimedRewardsForAll() internal virtual {
         address[] memory _stakers = stakersArray;
         uint256 len = _stakers.length;
         for (uint256 i; i < len; ++i) {
@@ -141,17 +141,17 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
         }
     }
 
-    function _updateUnclaimedRewardsForStaker(address _staker) internal {
+    function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
         stakers[_staker].timeOfLastUpdate = block.timestamp;
     }
 
-    function _setTimeUnit(uint256 _timeUnit) internal {
+    function _setTimeUnit(uint256 _timeUnit) internal virtual {
         timeUnit = _timeUnit;
     }
 
-    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal {
+    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
         rewardsPerUnitTime = _rewardsPerUnitTime;
     }
 
@@ -159,7 +159,7 @@ abstract contract StakingExtension is ReentrancyGuard, IStaking {
     //     compoundingRate = _compoundingRate;
     // }
 
-    function _calculateRewards(address _staker) internal view returns (uint256 _rewards) {
+    function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
         _rewards = ((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardsPerUnitTime) /
             timeUnit);
