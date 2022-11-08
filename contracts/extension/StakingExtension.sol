@@ -1,86 +1,41 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../openzeppelin-presets/security/ReentrancyGuard.sol";
+import "../eip/interface/IERC721.sol";
 
 import "lib/forge-std/src/console.sol";
 import "./interface/IStaking.sol";
 
-abstract contract StakingExtension is IStaking {
-    using SafeERC20 for IERC20;
-
+abstract contract StakingExtension is ReentrancyGuard, IStaking {
     uint256 public timeUnit;
     uint256 public rewardsPerUnitTime;
     // uint256 public compoundingRate;
-    IERC721 public nftCollection;
+    address public nftCollection;
 
     mapping(address => Staker) public stakers;
     mapping(uint256 => address) public stakerAddress;
 
     address[] public stakersArray;
 
-    constructor(IERC721 _nftCollection) {
+    constructor(address _nftCollection) ReentrancyGuard() {
         require(address(_nftCollection) != address(0), "collection address 0");
         nftCollection = _nftCollection;
     }
 
-    function stake(uint256[] calldata _tokenIds) external {
-        uint256 len = _tokenIds.length;
-        require(len != 0, "Staking 0 tokens");
-
-        if (stakers[msg.sender].amountStaked > 0) {
-            _updateUnclaimedRewardsForStaker(msg.sender);
-        } else {
-            stakersArray.push(msg.sender);
-            stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-        }
-        for (uint256 i; i < len; ++i) {
-            require(nftCollection.ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
-            nftCollection.transferFrom(msg.sender, address(this), _tokenIds[i]);
-            stakerAddress[_tokenIds[i]] = msg.sender;
-        }
-        stakers[msg.sender].amountStaked += len;
+    function stake(uint256[] calldata _tokenIds) external nonReentrant {
+        _stake(_tokenIds);
     }
 
-    function withdraw(uint256[] calldata _tokenIds) external {
-        require(stakers[msg.sender].amountStaked > 0, "No staked tokens");
-
-        _updateUnclaimedRewardsForStaker(msg.sender);
-
-        uint256 len = _tokenIds.length;
-        require(len != 0, "Withdrawing 0 tokens");
-
-        for (uint256 i; i < len; ++i) {
-            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
-            stakerAddress[_tokenIds[i]] = address(0);
-            nftCollection.transferFrom(address(this), msg.sender, _tokenIds[i]);
-        }
-        stakers[msg.sender].amountStaked -= len;
-
-        if (stakers[msg.sender].amountStaked == 0) {
-            for (uint256 i; i < stakersArray.length; ++i) {
-                if (stakersArray[i] == msg.sender) {
-                    stakersArray[i] = stakersArray[stakersArray.length - 1];
-                    stakersArray.pop();
-                }
-            }
-        }
+    function withdraw(uint256[] calldata _tokenIds) external nonReentrant {
+        _withdraw(_tokenIds);
     }
 
-    function claimRewards() external {
-        uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
-
-        require(rewards != 0, "No rewards");
-
-        stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-        stakers[msg.sender].unclaimedRewards = 0;
-
-        _mintRewards(msg.sender, rewards);
+    function claimRewards() external nonReentrant {
+        _claimRewards();
     }
 
-    function setTimeUnit(uint256 _timeUnit) public {
+    function setTimeUnit(uint256 _timeUnit) external {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -89,7 +44,7 @@ abstract contract StakingExtension is IStaking {
         _setTimeUnit(_timeUnit);
     }
 
-    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) public {
+    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -110,6 +65,60 @@ abstract contract StakingExtension is IStaking {
     function getStakeInfo(address _staker) public view returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
         _rewards = _availableRewards(_staker);
+    }
+
+    function _stake(uint256[] calldata _tokenIds) internal {
+        uint256 len = _tokenIds.length;
+        require(len != 0, "Staking 0 tokens");
+
+        if (stakers[msg.sender].amountStaked > 0) {
+            _updateUnclaimedRewardsForStaker(msg.sender);
+        } else {
+            stakersArray.push(msg.sender);
+            stakers[msg.sender].timeOfLastUpdate = block.timestamp;
+        }
+        for (uint256 i; i < len; ++i) {
+            require(IERC721(nftCollection).ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
+            IERC721(nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
+            stakerAddress[_tokenIds[i]] = msg.sender;
+        }
+        stakers[msg.sender].amountStaked += len;
+    }
+
+    function _withdraw(uint256[] calldata _tokenIds) internal {
+        require(stakers[msg.sender].amountStaked > 0, "No staked tokens");
+
+        _updateUnclaimedRewardsForStaker(msg.sender);
+
+        uint256 len = _tokenIds.length;
+        require(len != 0, "Withdrawing 0 tokens");
+
+        for (uint256 i; i < len; ++i) {
+            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
+            stakerAddress[_tokenIds[i]] = address(0);
+            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
+        }
+        stakers[msg.sender].amountStaked -= len;
+
+        if (stakers[msg.sender].amountStaked == 0) {
+            for (uint256 i; i < stakersArray.length; ++i) {
+                if (stakersArray[i] == msg.sender) {
+                    stakersArray[i] = stakersArray[stakersArray.length - 1];
+                    stakersArray.pop();
+                }
+            }
+        }
+    }
+
+    function _claimRewards() internal {
+        uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
+
+        require(rewards != 0, "No rewards");
+
+        stakers[msg.sender].timeOfLastUpdate = block.timestamp;
+        stakers[msg.sender].unclaimedRewards = 0;
+
+        _mintRewards(msg.sender, rewards);
     }
 
     function _availableRewards(address _user) internal view returns (uint256 _rewards) {

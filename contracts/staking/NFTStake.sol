@@ -34,12 +34,12 @@ contract NFTStake is
     Initializable,
     ContractMetadata,
     PermissionsEnumerable,
-    StakingExtensionUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC20BurnableUpgradeable,
-    ERC20VotesUpgradeable
+    ERC20VotesUpgradeable,
+    StakingExtensionUpgradeable
 {
     using ECDSAUpgradeable for bytes32;
 
@@ -61,7 +61,7 @@ contract NFTStake is
         string memory _symbol,
         string memory _contractURI,
         address[] memory _trustedForwarders,
-        IERC721 _nftCollection,
+        address _nftCollection,
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) external initializer {

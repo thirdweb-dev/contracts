@@ -16,7 +16,7 @@ contract MyStakingContract is ERC20, StakingExtension {
     constructor(
         string memory _name,
         string memory _symbol,
-        IERC721 _nftCollection,
+        address _nftCollection,
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) ERC20(_name, _symbol) StakingExtension(_nftCollection) {
@@ -62,7 +62,7 @@ contract StakingExtensionTest is DSTest, Test {
         erc721.mint(stakerTwo, 5); // mint token id 5 to 9
 
         vm.prank(deployer);
-        ext = new MyStakingContract("Test Staking Contract", "TSC", erc721, timeUnit, rewardsPerUnitTime);
+        ext = new MyStakingContract("Test Staking Contract", "TSC", address(erc721), timeUnit, rewardsPerUnitTime);
 
         // set approvals
         vm.prank(stakerOne);
