@@ -10,7 +10,6 @@ import "./interface/IStaking.sol";
 abstract contract Staking721 is ReentrancyGuard, IStaking {
     uint256 public timeUnit;
     uint256 public rewardsPerUnitTime;
-    // uint256 public compoundingRate;
     address public nftCollection;
 
     mapping(address => Staker) public stakers;
@@ -52,15 +51,6 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         _updateUnclaimedRewardsForAll();
         _setRewardsPerUnitTime(_rewardsPerUnitTime);
     }
-
-    // function setCompoundingRate(uint256 _compoundingRate) public {
-    //     if (!_canSetStakeConditions()) {
-    //         revert("Not authorized");
-    //     }
-
-    //     _updateUnclaimedRewardsForAll();
-    //     compoundingRate = _compoundingRate;
-    // }
 
     function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
@@ -154,10 +144,6 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
     function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
         rewardsPerUnitTime = _rewardsPerUnitTime;
     }
-
-    // function _setCompoundingRate(uint256 _compoundingRate) internal {
-    //     compoundingRate = _compoundingRate;
-    // }
 
     function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
