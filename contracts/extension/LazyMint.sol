@@ -33,7 +33,7 @@ abstract contract LazyMint is ILazyMint, BatchMintMetadata {
         }
 
         if (_amount == 0) {
-            revert("Minting 0 tokens");
+            revert("0 amt");
         }
 
         uint256 startId = nextTokenIdToLazyMint;

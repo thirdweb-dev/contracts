@@ -52,10 +52,10 @@ function balanceOf(address owner) external view returns (uint256 balance)
 ### claim
 
 ```solidity
-function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, bytes32[] proofs, uint256 proofMaxQuantityPerTransaction) external payable
+function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, IDropERC721.AllowlistProof allowlistProof, bytes data) external payable
 ```
 
-Lets an account claim a given quantity of NFTs.
+
 
 
 
@@ -63,12 +63,12 @@ Lets an account claim a given quantity of NFTs.
 
 | Name | Type | Description |
 |---|---|---|
-| receiver | address | The receiver of the NFTs to claim. |
-| quantity | uint256 | The quantity of NFTs to claim. |
-| currency | address | The currency in which to pay for the claim. |
-| pricePerToken | uint256 | The price per token to pay for the claim. |
-| proofs | bytes32[] | The proof of the claimer&#39;s inclusion in the merkle root allowlist                                        of the claim conditions that apply. |
-| proofMaxQuantityPerTransaction | uint256 | (Optional) The maximum number of NFTs an address included in an                                        allowlist can claim. |
+| receiver | address | undefined |
+| quantity | uint256 | undefined |
+| currency | address | undefined |
+| pricePerToken | uint256 | undefined |
+| allowlistProof | IDropERC721.AllowlistProof | undefined |
+| data | bytes | undefined |
 
 ### getApproved
 
@@ -338,22 +338,6 @@ event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
 |---|---|---|
 | maxTotalSupply  | uint256 | undefined |
 
-### MaxWalletClaimCountUpdated
-
-```solidity
-event MaxWalletClaimCountUpdated(uint256 count)
-```
-
-
-
-*Emitted when the global max wallet claim count is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| count  | uint256 | undefined |
-
 ### NFTRevealed
 
 ```solidity
@@ -427,23 +411,6 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | from `indexed` | address | undefined |
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
-
-### WalletClaimCountUpdated
-
-```solidity
-event WalletClaimCountUpdated(address indexed wallet, uint256 count)
-```
-
-
-
-*Emitted when the wallet claim count for an address is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| wallet `indexed` | address | undefined |
-| count  | uint256 | undefined |
 
 
 

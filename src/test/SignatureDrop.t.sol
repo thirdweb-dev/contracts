@@ -54,8 +54,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
@@ -120,6 +119,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
 
 contract SignatureDropTest is BaseTest {
     using StringsUpgradeable for uint256;
+    using StringsUpgradeable for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
@@ -337,7 +337,7 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
@@ -386,8 +386,7 @@ contract SignatureDropTest is BaseTest {
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].startTimestamp = 100;
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
@@ -968,7 +967,7 @@ contract SignatureDropTest is BaseTest {
 
         bytes memory signature = signMintRequest(mintrequest, privateKey);
         vm.warp(1000);
-        vm.expectRevert("Not enough tokens");
+        vm.expectRevert("!Tokens");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -997,7 +996,7 @@ contract SignatureDropTest is BaseTest {
             bytes memory signature = signMintRequest(mintrequest, privateKey);
             vm.startPrank(address(deployerSigner));
             vm.warp(mintrequest.validityStartTimestamp);
-            vm.expectRevert("Must send total price");
+            vm.expectRevert("!Price");
             sigdrop.mintWithSignature{ value: 2 }(mintrequest, signature);
             vm.stopPrank();
         }
@@ -1105,36 +1104,6 @@ contract SignatureDropTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  note: Testing revert condition; not allowed to claim again before wait time is over.
-     */
-    function test_revert_claimCondition_waitTimeInSecondsBetweenClaims() public {
-        vm.warp(1);
-
-        address receiver = getActor(0);
-        bytes32[] memory proofs = new bytes32[](0);
-
-        SignatureDrop.AllowlistProof memory alp;
-        alp.proof = proofs;
-
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
-
-        vm.prank(deployerSigner);
-        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
-        vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false);
-
-        vm.prank(getActor(5), getActor(5));
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
-
-        vm.expectRevert("cant claim yet");
-        vm.prank(getActor(5), getActor(5));
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
-    }
-
-    /**
      *  note: Testing revert condition; not enough minted tokens.
      */
     function test_revert_claimCondition_notEnoughMintedTokens() public {
@@ -1148,15 +1117,14 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        vm.expectRevert("Not enough tokens");
+        vm.expectRevert("!Tokens");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
@@ -1175,8 +1143,7 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(200, "ipfs://", emptyEncodedBytes);
@@ -1186,7 +1153,7 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("exceeds max supply");
+        vm.expectRevert("!MaxSupply");
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -1203,12 +1170,11 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.AllowlistProof memory alp;
         alp.proof = proofs;
-        alp.maxQuantityInAllowlist = x;
+        alp.quantityLimitPerWallet = x;
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(500, "ipfs://", emptyEncodedBytes);
@@ -1216,67 +1182,84 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
+        bytes memory errorQty = "!Qty";
+
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("Invalid quantity");
+        vm.expectRevert(errorQty);
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], true);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("Invalid quantity");
+        vm.expectRevert(errorQty);
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
 
-    /**
-     *  note: Testing revert condition; can't claim if not in whitelist.
-     */
-    function test_revert_claimCondition_merkleProof() public {
-        string[] memory inputs = new string[](3);
+    function test_fuzz_claim_merkleProof(uint256 x) public {
+        vm.assume(x > 10 && x < 500);
+        string[] memory inputs = new string[](5);
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = "1";
+        inputs[2] = Strings.toString(x);
+        inputs[3] = "0";
+        inputs[4] = "0x0000000000000000000000000000000000000000";
 
         bytes memory result = vm.ffi(inputs);
+        // revert();
         bytes32 root = abi.decode(result, (bytes32));
 
         inputs[1] = "src/test/scripts/getProof.ts";
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
+        SignatureDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.quantityLimitPerWallet = x;
+        alp.pricePerToken = 0;
+        alp.currency = address(0);
+
         vm.warp(1);
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 
-        SignatureDrop.AllowlistProof memory alp;
-        alp.proof = proofs;
-        alp.maxQuantityInAllowlist = 1;
+        // bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].maxClaimableSupply = x;
+        conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
 
         vm.prank(deployerSigner);
-        sigdrop.lazyMint(200, "ipfs://", emptyEncodedBytes);
+        sigdrop.lazyMint(2 * x, "ipfs://", emptyEncodedBytes);
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+        sigdrop.claim(receiver, x - 5, address(0), 0, alp, "");
+        assertEq(sigdrop.getSupplyClaimedByWallet(receiver), x - 5);
 
-        vm.prank(address(4), address(4));
-        vm.expectRevert("not in allowlist");
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+        bytes memory errorQty = "!Qty";
+
+        vm.prank(receiver, receiver);
+        vm.expectRevert(errorQty);
+        sigdrop.claim(receiver, 6, address(0), 0, alp, "");
+
+        vm.prank(receiver, receiver);
+        sigdrop.claim(receiver, 5, address(0), 0, alp, "");
+        assertEq(sigdrop.getSupplyClaimedByWallet(receiver), x);
+
+        vm.prank(receiver, receiver);
+        vm.expectRevert(errorQty);
+        sigdrop.claim(receiver, 5, address(0), 0, alp, "");
     }
 
     /**
      *  note: Testing state changes; reset eligibility of claim conditions and claiming again for same condition id.
      */
-    function test_state_claimCondition_resetEligibility_waitTimeInSecondsBetweenClaims() public {
+    function test_state_claimCondition_resetEligibility() public {
         vm.warp(1);
 
         address receiver = getActor(0);
@@ -1287,8 +1270,7 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
@@ -1322,7 +1304,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("Minting 0 tokens");
+        vm.expectRevert("0 amt");
         sigdrop.lazyMint(0, "", abi.encode(newEncryptedURI, provenanceHash));
 
         vm.stopPrank();
@@ -1375,8 +1357,7 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
@@ -1398,8 +1379,7 @@ contract SignatureDropTest is BaseTest {
 
         SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);

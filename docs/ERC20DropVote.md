@@ -158,7 +158,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerTransaction, uint256 waitTimeInSecondsBetweenClaims, bytes32 merkleRoot, uint256 pricePerToken, address currency)
+function claimCondition() external view returns (uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWallet, bytes32 merkleRoot, uint256 pricePerToken, address currency, string metadata)
 ```
 
 
@@ -173,11 +173,11 @@ function claimCondition() external view returns (uint256 startTimestamp, uint256
 | startTimestamp | uint256 | undefined |
 | maxClaimableSupply | uint256 | undefined |
 | supplyClaimed | uint256 | undefined |
-| quantityLimitPerTransaction | uint256 | undefined |
-| waitTimeInSecondsBetweenClaims | uint256 | undefined |
+| quantityLimitPerWallet | uint256 | undefined |
 | merkleRoot | bytes32 | undefined |
 | pricePerToken | uint256 | undefined |
 | currency | address | undefined |
+| metadata | string | undefined |
 
 ### contractURI
 
@@ -295,29 +295,6 @@ function delegates(address account) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### getClaimTimestamp
-
-```solidity
-function getClaimTimestamp(address _claimer) external view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
-```
-
-
-
-*Returns the timestamp for when a claimer is eligible for claiming NFTs again.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| lastClaimedAt | uint256 | undefined |
-| nextValidClaimTimestamp | uint256 | undefined |
-
 ### getPastTotalSupply
 
 ```solidity
@@ -356,6 +333,28 @@ function getPastVotes(address account, uint256 blockNumber) external view return
 |---|---|---|
 | account | address | undefined |
 | blockNumber | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(address _claimer) external view returns (uint256)
+```
+
+
+
+*Returns the supply claimed by claimer for active conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _claimer | address | undefined |
 
 #### Returns
 
@@ -696,12 +695,12 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 ### verifyClaim
 
 ```solidity
-function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, bool verifyMaxQuantityPerTransaction) external view
+function verifyClaim(address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool isOverride)
 ```
 
 
 
-*Checks a request to claim NFTs against the active claim condition&#39;s criteria.*
+
 
 #### Parameters
 
@@ -711,32 +710,13 @@ function verifyClaim(address _claimer, uint256 _quantity, address _currency, uin
 | _quantity | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerToken | uint256 | undefined |
-| verifyMaxQuantityPerTransaction | bool | undefined |
-
-### verifyClaimMerkleProof
-
-```solidity
-function verifyClaimMerkleProof(address _claimer, uint256 _quantity, IDropSinglePhase.AllowlistProof _allowlistProof) external view returns (bool validMerkleProof, uint256 merkleProofIndex)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _claimer | address | undefined |
-| _quantity | uint256 | undefined |
 | _allowlistProof | IDropSinglePhase.AllowlistProof | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| validMerkleProof | bool | undefined |
-| merkleProofIndex | uint256 | undefined |
+| isOverride | bool | undefined |
 
 
 
@@ -766,7 +746,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 event ClaimConditionUpdated(IClaimCondition.ClaimCondition condition, bool resetEligibility)
 ```
 
-
+Emitted when the contract&#39;s claim conditions are updated.
 
 
 
@@ -869,7 +849,7 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 event TokensClaimed(address indexed claimer, address indexed receiver, uint256 indexed startTokenId, uint256 quantityClaimed)
 ```
 
-
+Emitted when tokens are claimed via `claim`.
 
 
 

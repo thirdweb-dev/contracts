@@ -44,8 +44,7 @@ contract BaseERC721DropTest is BaseUtilTest {
 
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");
@@ -84,8 +83,7 @@ contract BaseERC721DropTest is BaseUtilTest {
 
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         // set price and currency
         conditions[0].pricePerToken = 1;
@@ -133,8 +131,7 @@ contract BaseERC721DropTest is BaseUtilTest {
 
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         // set price and currency
         conditions[0].pricePerToken = 1;
@@ -162,36 +159,6 @@ contract BaseERC721DropTest is BaseUtilTest {
         }
     }
 
-    function test_revert_claim_BOT() public {
-        vm.warp(1);
-
-        address receiver = address(0x123);
-        address claimer = address(0x345);
-        string memory _baseURI = "baseURI/";
-        uint256 _quantity = 10;
-
-        bytes32[] memory proofs = new bytes32[](0);
-
-        ERC721Drop.AllowlistProof memory alp;
-        alp.proof = proofs;
-
-        ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
-
-        vm.prank(signer);
-        base.lazyMint(100, _baseURI, "");
-
-        vm.prank(signer);
-        base.setClaimConditions(conditions[0], false);
-
-        bytes memory revertMsg = "BOT";
-        vm.expectRevert(revertMsg);
-        vm.prank(claimer);
-        base.claim(receiver, _quantity, address(0), 0, alp, "");
-    }
-
     function test_revert_claim_NotEnoughMintedTokens() public {
         vm.warp(1);
 
@@ -207,8 +174,7 @@ contract BaseERC721DropTest is BaseUtilTest {
 
         ERC721Drop.ClaimCondition[] memory conditions = new ERC721Drop.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerTransaction = 100;
-        conditions[0].waitTimeInSecondsBetweenClaims = type(uint256).max;
+        conditions[0].quantityLimitPerWallet = 100;
 
         vm.prank(signer);
         base.lazyMint(100, _baseURI, "");
