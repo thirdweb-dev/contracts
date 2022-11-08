@@ -100,6 +100,19 @@ contract TieredDrop is
     mapping(bytes32 => uint256) private totalsForTier;
 
     /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Emitted when tokens are claimed via `claimWithSignature`.
+    event TokensClaimed(
+        address indexed claimer,
+        address indexed receiver,
+        uint256 startTokenId,
+        uint256 quantityClaimed,
+        string[] tiersInPriority
+    );
+
+    /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
@@ -261,7 +274,9 @@ contract TieredDrop is
         // Mint tokens.
         transferTokensOnClaim(to, quantity, tiersInPriority);
 
-        emit RequestExecuted(_msgSender(), signer, _req);
+        emit TokensClaimed(_msgSender(), to, tokenIdToMint, quantity, tiersInPriority);
+
+        // emit RequestExecuted(_msgSender(), signer, _req);
     }
 
     /*///////////////////////////////////////////////////////////////

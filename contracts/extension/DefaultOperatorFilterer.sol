@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
+// Credits: OpenSea
 pragma solidity ^0.8.0;
 
 import { OperatorFilterer } from "./OperatorFilterer.sol";
