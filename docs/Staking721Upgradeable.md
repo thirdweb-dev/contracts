@@ -18,7 +18,7 @@ function claimRewards() external nonpayable
 
 Claim accumulated rewards.
 
-
+*See {_claimRewards}. Override that to implement custom logic.             See {_calculateRewards} for reward-calculation logic.*
 
 
 ### getStakeInfo
@@ -27,7 +27,7 @@ Claim accumulated rewards.
 function getStakeInfo(address _staker) external view returns (uint256 _tokensStaked, uint256 _rewards)
 ```
 
-
+View amount staked and total rewards for a user.
 
 
 
@@ -35,7 +35,7 @@ function getStakeInfo(address _staker) external view returns (uint256 _tokensSta
 
 | Name | Type | Description |
 |---|---|---|
-| _staker | address | undefined |
+| _staker | address | Address for which to calculated rewards. |
 
 #### Returns
 
@@ -52,7 +52,7 @@ function nftCollection() external view returns (address)
 
 
 
-
+*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
 
 
 #### Returns
@@ -69,7 +69,7 @@ function rewardsPerUnitTime() external view returns (uint256)
 
 
 
-
+*Rewards accumulated per unit of time.*
 
 
 #### Returns
@@ -84,15 +84,15 @@ function rewardsPerUnitTime() external view returns (uint256)
 function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external nonpayable
 ```
 
+Set rewards per unit of time.           Interpreted as x rewards per second/per day/etc based on time-unit.
 
-
-
+*Only admin/authorized-account can call it.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _rewardsPerUnitTime | uint256 | undefined |
+| _rewardsPerUnitTime | uint256 | New rewards per unit time. |
 
 ### setTimeUnit
 
@@ -100,15 +100,15 @@ function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external nonpayable
 function setTimeUnit(uint256 _timeUnit) external nonpayable
 ```
 
+Set time unit. Set as a number of seconds.           Could be specified as -- x * 1 hours, x * 1 days, etc.
 
-
-
+*Only admin/authorized-account can call it.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _timeUnit | uint256 | undefined |
+| _timeUnit | uint256 | New time unit. |
 
 ### stake
 
@@ -116,15 +116,15 @@ function setTimeUnit(uint256 _timeUnit) external nonpayable
 function stake(uint256[] _tokenIds) external nonpayable
 ```
 
+Stake ERC721 Tokens.
 
-
-
+*See {_stake}. Override that to implement custom logic.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenIds | uint256[] | undefined |
+| _tokenIds | uint256[] | List of tokens to stake. |
 
 ### stakerAddress
 
@@ -134,7 +134,7 @@ function stakerAddress(uint256) external view returns (address)
 
 
 
-
+*Mapping from staked token-id to staker address.*
 
 #### Parameters
 
@@ -156,7 +156,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 
 
 
-
+*Mapping from staker address to Staker struct. See {struct IStaking.Staker}.*
 
 #### Parameters
 
@@ -180,7 +180,7 @@ function stakersArray(uint256) external view returns (address)
 
 
 
-
+*List of accounts that have staked their NFTs.*
 
 #### Parameters
 
@@ -202,7 +202,7 @@ function timeUnit() external view returns (uint256)
 
 
 
-
+*Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.*
 
 
 #### Returns
@@ -217,15 +217,15 @@ function timeUnit() external view returns (uint256)
 function withdraw(uint256[] _tokenIds) external nonpayable
 ```
 
+Withdraw staked tokens.
 
-
-
+*See {_withdraw}. Override that to implement custom logic.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenIds | uint256[] | undefined |
+| _tokenIds | uint256[] | List of tokens to withdraw. |
 
 
 
@@ -246,6 +246,91 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### RewardsClaimed
+
+```solidity
+event RewardsClaimed(address indexed staker, uint256 rewardAmount)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| staker `indexed` | address | undefined |
+| rewardAmount  | uint256 | undefined |
+
+### TokensStaked
+
+```solidity
+event TokensStaked(address indexed staker, uint256[] indexed tokenIds)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| staker `indexed` | address | undefined |
+| tokenIds `indexed` | uint256[] | undefined |
+
+### TokensWithdrawn
+
+```solidity
+event TokensWithdrawn(address indexed staker, uint256[] indexed tokenIds)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| staker `indexed` | address | undefined |
+| tokenIds `indexed` | uint256[] | undefined |
+
+### UpdatedRewardsPerUnitTime
+
+```solidity
+event UpdatedRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| oldRewardsPerUnitTime  | uint256 | undefined |
+| newRewardsPerUnitTime  | uint256 | undefined |
+
+### UpdatedTimeUnit
+
+```solidity
+event UpdatedTimeUnit(uint256 oldTimeUnit, uint256 newTimeUnit)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| oldTimeUnit  | uint256 | undefined |
+| newTimeUnit  | uint256 | undefined |
 
 
 

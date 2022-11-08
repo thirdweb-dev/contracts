@@ -1,10 +1,10 @@
-# Staking721
+# Staking721Base
 
 
 
 
 
-
+EXTENSION: Staking721  The `Staking721Base` smart contract implements NFT staking mechanism.  Allows users to stake their ERC-721 NFTs and earn rewards in form of ERC-20 tokens.  Following features and implementation setup must be noted:      - ERC-721 NFTs from only one NFT collection can be staked.      - Contract admin can choose to give out rewards by either transferring or minting the rewardToken,        which is an ERC20 token. See {_mintRewards}.      - To implement custom logic for staking, reward calculation, etc. corresponding functions can be        overridden from the extension `Staking721`.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically.
 
 
 
@@ -20,6 +20,23 @@ Claim accumulated rewards.
 
 *See {_claimRewards}. Override that to implement custom logic.             See {_calculateRewards} for reward-calculation logic.*
 
+
+### contractURI
+
+```solidity
+function contractURI() external view returns (string)
+```
+
+Returns the contract metadata URI.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
 
 ### getStakeInfo
 
@@ -44,6 +61,28 @@ View amount staked and total rewards for a user.
 | _tokensStaked | uint256 | undefined |
 | _rewards | uint256 | undefined |
 
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+Receives and executes a batch of function calls on this contract.
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
+
 ### nftCollection
 
 ```solidity
@@ -52,7 +91,41 @@ function nftCollection() external view returns (address)
 
 
 
-*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+Returns the owner of the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### rewardToken
+
+```solidity
+function rewardToken() external view returns (address)
+```
+
+
+
+*ERC20 Reward Token address. See {_mintRewards} below.*
 
 
 #### Returns
@@ -69,7 +142,7 @@ function rewardsPerUnitTime() external view returns (uint256)
 
 
 
-*Rewards accumulated per unit of time.*
+
 
 
 #### Returns
@@ -77,6 +150,38 @@ function rewardsPerUnitTime() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### setContractURI
+
+```solidity
+function setContractURI(string _uri) external nonpayable
+```
+
+Lets a contract admin set the URI for contract-level metadata.
+
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+### setOwner
+
+```solidity
+function setOwner(address _newOwner) external nonpayable
+```
+
+Lets an authorized wallet set a new owner for the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | The address to set as the new owner of the contract. |
 
 ### setRewardsPerUnitTime
 
@@ -134,7 +239,7 @@ function stakerAddress(uint256) external view returns (address)
 
 
 
-*Mapping from staked token-id to staker address.*
+
 
 #### Parameters
 
@@ -156,7 +261,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 
 
 
-*Mapping from staker address to Staker struct. See {struct IStaking.Staker}.*
+
 
 #### Parameters
 
@@ -180,7 +285,7 @@ function stakersArray(uint256) external view returns (address)
 
 
 
-*List of accounts that have staked their NFTs.*
+
 
 #### Parameters
 
@@ -202,7 +307,7 @@ function timeUnit() external view returns (uint256)
 
 
 
-*Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.*
+
 
 
 #### Returns
@@ -230,6 +335,40 @@ Withdraw staked tokens.
 
 
 ## Events
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
+
+### OwnerUpdated
+
+```solidity
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### RewardsClaimed
 
