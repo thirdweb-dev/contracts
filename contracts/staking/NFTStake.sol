@@ -28,7 +28,7 @@ import "../lib/FeeType.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
-import { StakingExtensionUpgradeable } from "../extension/StakingExtensionUpgradeable.sol";
+import { Staking721Upgradeable } from "../extension/Staking721Upgradeable.sol";
 
 contract NFTStake is
     Initializable,
@@ -39,7 +39,7 @@ contract NFTStake is
     MulticallUpgradeable,
     ERC20BurnableUpgradeable,
     ERC20VotesUpgradeable,
-    StakingExtensionUpgradeable
+    Staking721Upgradeable
 {
     using ECDSAUpgradeable for bytes32;
 
@@ -70,7 +70,7 @@ contract NFTStake is
         __ERC20Permit_init(_name);
         __ERC20_init_unchained(_name, _symbol);
 
-        __StakingExtension_init(_nftCollection);
+        __Staking721_init(_nftCollection);
         _setTimeUnit(_timeUnit);
         _setRewardsPerUnitTime(_rewardsPerUnitTime);
         // _setCompoundingRate(_compoundingRate);

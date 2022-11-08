@@ -7,7 +7,7 @@ import "../eip/interface/IERC721.sol";
 import "lib/forge-std/src/console.sol";
 import "./interface/IStaking.sol";
 
-abstract contract StakingExtension is ReentrancyGuard, IStaking {
+abstract contract Staking721 is ReentrancyGuard, IStaking {
     uint256 public timeUnit;
     uint256 public rewardsPerUnitTime;
     // uint256 public compoundingRate;

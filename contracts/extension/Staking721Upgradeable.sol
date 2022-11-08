@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "lib/forge-std/src/console.sol";
 import "./interface/IStaking.sol";
 
-abstract contract StakingExtensionUpgradeable is ReentrancyGuardUpgradeable, IStaking {
+abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking {
     uint256 public timeUnit;
     uint256 public rewardsPerUnitTime;
     // uint256 public compoundingRate;
@@ -18,7 +18,7 @@ abstract contract StakingExtensionUpgradeable is ReentrancyGuardUpgradeable, ISt
 
     address[] public stakersArray;
 
-    function __StakingExtension_init(address _nftCollection) internal onlyInitializing {
+    function __Staking721_init(address _nftCollection) internal onlyInitializing {
         __ReentrancyGuard_init();
 
         require(address(_nftCollection) != address(0), "collection address 0");

@@ -4,13 +4,13 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 
-import { StakingExtension } from "contracts/extension/StakingExtension.sol";
+import { Staking721 } from "contracts/extension/Staking721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../../mocks/MockERC721.sol";
 
-contract MyStakingContract is ERC20, StakingExtension {
+contract MyStakingContract is ERC20, Staking721 {
     bool condition;
 
     constructor(
@@ -19,7 +19,7 @@ contract MyStakingContract is ERC20, StakingExtension {
         address _nftCollection,
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
-    ) ERC20(_name, _symbol) StakingExtension(_nftCollection) {
+    ) ERC20(_name, _symbol) Staking721(_nftCollection) {
         condition = true;
         _setTimeUnit(_timeUnit);
         _setRewardsPerUnitTime(_rewardsPerUnitTime);
