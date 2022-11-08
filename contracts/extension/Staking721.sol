@@ -4,17 +4,29 @@ pragma solidity ^0.8.11;
 import "../openzeppelin-presets/security/ReentrancyGuard.sol";
 import "../eip/interface/IERC721.sol";
 
-import "lib/forge-std/src/console.sol";
 import "./interface/IStaking.sol";
 
 abstract contract Staking721 is ReentrancyGuard, IStaking {
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
     uint256 public timeUnit;
+
+    ///@dev Rewards accumulated per unit of time.
     uint256 public rewardsPerUnitTime;
+
+    ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
     address public nftCollection;
 
+    ///@dev Mapping from staker address to Staker struct. See {struct IStaking.Staker}.
     mapping(address => Staker) public stakers;
+
+    /// @dev Mapping from staked token-id to staker address.
     mapping(uint256 => address) public stakerAddress;
 
+    /// @dev List of accounts that have staked their NFTs.
     address[] public stakersArray;
 
     constructor(address _nftCollection) ReentrancyGuard() {
@@ -22,18 +34,51 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         nftCollection = _nftCollection;
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        External/Public Functions
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice    Stake ERC721 Tokens.
+     *
+     *  @dev       See {_stake}. Override that to implement custom logic.
+     *
+     *  @param _tokenIds    List of tokens to stake.
+     */
     function stake(uint256[] calldata _tokenIds) external nonReentrant {
         _stake(_tokenIds);
     }
 
+    /**
+     *  @notice    Withdraw staked tokens.
+     *
+     *  @dev       See {_withdraw}. Override that to implement custom logic.
+     *
+     *  @param _tokenIds    List of tokens to withdraw.
+     */
     function withdraw(uint256[] calldata _tokenIds) external nonReentrant {
         _withdraw(_tokenIds);
     }
 
+    /**
+     *  @notice    Claim accumulated rewards.
+     *
+     *  @dev       See {_claimRewards}. Override that to implement custom logic.
+     *             See {_calculateRewards} for reward-calculation logic.
+     */
     function claimRewards() external nonReentrant {
         _claimRewards();
     }
 
+    /**
+     *  @notice  Set time unit. Set as a number of seconds.
+     *           Could be specified as -- x * 1 hours, x * 1 days, etc.
+     *
+     *  @dev     Only admin/authorized-account can call it.
+     *
+     *
+     *  @param _timeUnit    New time unit.
+     */
     function setTimeUnit(uint256 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
@@ -47,6 +92,15 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         emit UpdatedTimeUnit(currentTimeUnit, _timeUnit);
     }
 
+    /**
+     *  @notice  Set rewards per unit of time.
+     *           Interpreted as x rewards per second/per day/etc based on time-unit.
+     *
+     *  @dev     Only admin/authorized-account can call it.
+     *
+     *
+     *  @param _rewardsPerUnitTime    New rewards per unit time.
+     */
     function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
@@ -60,11 +114,21 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         emit UpdatedRewardsPerUnitTime(currentRewardsPerUnitTime, _rewardsPerUnitTime);
     }
 
+    /**
+     *  @notice View amount staked and total rewards for a user.
+     *
+     *  @param _staker    Address for which to calculated rewards.
+     */
     function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
         _rewards = _availableRewards(_staker);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                            Internal Functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256[] calldata _tokenIds) internal virtual {
         uint256 len = _tokenIds.length;
         require(len != 0, "Staking 0 tokens");
@@ -85,6 +149,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         emit TokensStaked(msg.sender, _tokenIds);
     }
 
+    /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
         uint256 _amountStaked = stakers[msg.sender].amountStaked;
         uint256 len = _tokenIds.length;
@@ -112,6 +177,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         emit TokensWithdrawn(msg.sender, _tokenIds);
     }
 
+    /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards() internal virtual {
         uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
 
@@ -125,6 +191,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         emit RewardsClaimed(msg.sender, rewards);
     }
 
+    /// @dev View available rewards for a user.
     function _availableRewards(address _user) internal view virtual returns (uint256 _rewards) {
         if (stakers[_user].amountStaked == 0) {
             _rewards = stakers[_user].unclaimedRewards;
@@ -133,6 +200,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         }
     }
 
+    /// @dev Update unclaimed rewards for all users. Called when setting timeUnit or rewardsPerUnitTime.
     function _updateUnclaimedRewardsForAll() internal virtual {
         address[] memory _stakers = stakersArray;
         uint256 len = _stakers.length;
@@ -145,29 +213,62 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         }
     }
 
+    /// @dev Update unclaimed rewards for a users. Called for every state change for a user.
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
         stakers[_staker].timeOfLastUpdate = block.timestamp;
     }
 
+    /// @dev Set time unit in seconds.
     function _setTimeUnit(uint256 _timeUnit) internal virtual {
         timeUnit = _timeUnit;
     }
 
+    /// @dev Set rewards per unit time.
     function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
         rewardsPerUnitTime = _rewardsPerUnitTime;
     }
 
+    /// @dev Reward calculation logic. Override to implement custom logic.
     function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
         _rewards = ((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardsPerUnitTime) /
             timeUnit);
     }
 
-    /// @dev Mint ERC20 rewards to the staker.
+    /**
+     *  @dev    Mint ERC20 rewards to the staker. Must override.
+     *
+     *  @param _staker    Address for which to calculated rewards.
+     *  @param _rewards   Amount of tokens to be given out as reward.
+     *
+     *  For example, override as below to mint ERC20 rewards:
+     *
+     * ```
+     *  function _mintRewards(address _staker, uint256 _rewards) internal override {
+     *
+     *      IERC20(rewardTokenAddress)._mint(_staker, _rewards);
+     *
+     *  }
+     * ```
+     */
     function _mintRewards(address _staker, uint256 _rewards) internal virtual;
 
-    /// @dev Returns whether staking related restrictions can be set in the given execution context.
+    /**
+     *  @dev    Returns whether staking restrictions can be set in given execution context.
+     *          Must override.
+     *
+     *
+     *  For example, override as below to restrict access to admin:
+     *
+     * ```
+     *  function _canSetStakeConditions() internal override {
+     *
+     *      return msg.sender == adminAddress;
+     *
+     *  }
+     * ```
+     */
     function _canSetStakeConditions() internal view virtual returns (bool);
 }
