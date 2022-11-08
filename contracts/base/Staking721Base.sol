@@ -27,11 +27,11 @@ import "../eip/interface/IERC20.sol";
  *      - Ownership of the contract, with the ability to restrict certain functions to
  *        only be called by the contract's owner.
  *
- *      - Multicall capability to perform multiple actions atomically
+ *      - Multicall capability to perform multiple actions atomically.
  *
  */
 contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
-    // ERC20 Reward Token address. See {_mintRewards} below.
+    /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
     constructor(
