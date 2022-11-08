@@ -34,22 +34,30 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         _claimRewards();
     }
 
-    function setTimeUnit(uint256 _timeUnit) external {
+    function setTimeUnit(uint256 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
 
         _updateUnclaimedRewardsForAll();
+
+        uint256 currentTimeUnit = timeUnit;
         _setTimeUnit(_timeUnit);
+
+        emit UpdatedTimeUnit(currentTimeUnit, _timeUnit);
     }
 
-    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external {
+    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
 
         _updateUnclaimedRewardsForAll();
+
+        uint256 currentRewardsPerUnitTime = rewardsPerUnitTime;
         _setRewardsPerUnitTime(_rewardsPerUnitTime);
+
+        emit UpdatedRewardsPerUnitTime(currentRewardsPerUnitTime, _rewardsPerUnitTime);
     }
 
     function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
@@ -73,6 +81,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
             stakerAddress[_tokenIds[i]] = msg.sender;
         }
         stakers[msg.sender].amountStaked += len;
+
+        emit TokensStaked(msg.sender, _tokenIds);
     }
 
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
@@ -98,6 +108,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
             stakerAddress[_tokenIds[i]] = address(0);
             IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
+
+        emit TokensWithdrawn(msg.sender, _tokenIds);
     }
 
     function _claimRewards() internal virtual {
@@ -109,6 +121,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         stakers[msg.sender].unclaimedRewards = 0;
 
         _mintRewards(msg.sender, rewards);
+
+        emit RewardsClaimed(msg.sender, rewards);
     }
 
     function _availableRewards(address _user) internal view virtual returns (uint256 _rewards) {
