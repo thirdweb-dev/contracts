@@ -23,6 +23,7 @@ import "../extension/ContractMetadata.sol";
 import "../extension/Royalty.sol";
 import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
 contract Pack is
@@ -35,6 +36,7 @@ contract Pack is
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    DefaultOperatorFilterer,
     ERC1155Upgradeable,
     IPack
 {
@@ -450,6 +452,32 @@ contract Pack is
                 totalSupply[ids[i]] -= amounts[i];
             }
         }
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override onlyAllowedOperator {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override onlyAllowedOperator {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     /// @dev See EIP-2771
