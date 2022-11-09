@@ -38,7 +38,7 @@ async function main() {
 
   // get `Added` data
   let eventFilter = twRegistry.filters.Added(null, null);
-  let totalEvents = await getEvents(twRegistry, eventFilter, 7500000, block);
+  let totalEvents = await getEvents(twRegistry, eventFilter, 0, block);
   let addedDeployments = totalEvents.map(item => {
     return {
       deployer: item.args.deployer,
@@ -73,12 +73,18 @@ async function main() {
   console.log();
 
   // filter unique deployments still added on registry
+  let checked: any = {};
   let uniqueDeployers = addedDeployments.filter(item => {
     const deployString = item.deployer.concat(item.deployment);
-    if (countRemoved[deployString]) {
-      return countAdded[deployString] == countRemoved[deployString];
+    if (checked[deployString]) {
+      return false;
+    } else {
+      checked[deployString] = true;
+      if (countRemoved[deployString]) {
+        return countAdded[deployString] > countRemoved[deployString];
+      }
+      return true;
     }
-    return true;
   });
 
   // append to existing migration data
