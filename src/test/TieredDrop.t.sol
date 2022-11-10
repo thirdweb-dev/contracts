@@ -837,9 +837,6 @@ contract TieredDropTest is BaseTest {
         tieredDrop.claimWithSignature(claimRequest, claimSignature);
         assertEq(tieredDrop.balanceOf(claimer), claimQuantity);
 
-        // uint256 tier2Id = 10;
-        // uint256 tier1Id = 0;
-
         for (uint256 i = 0; i < claimQuantity; i += 1) {
             // Outputs:
             //   Checking 0 baseURI2/10
@@ -852,16 +849,16 @@ contract TieredDropTest is BaseTest {
             //   Checking 7 baseURI2/17
             //   Checking 8 baseURI2/18
             //   Checking 9 baseURI2/19
-            //   Checking 10 baseURI3/20
-            //   Checking 11 baseURI3/21
-            //   Checking 12 baseURI3/22
-            //   Checking 13 baseURI3/23
-            //   Checking 14 baseURI3/24
-            //   Checking 15 baseURI3/25
-            //   Checking 16 baseURI3/26
-            //   Checking 17 baseURI3/27
-            //   Checking 18 baseURI3/28
-            //   Checking 19 baseURI3/29
+            //   Checking 10 baseURI3/50
+            //   Checking 11 baseURI3/51
+            //   Checking 12 baseURI3/52
+            //   Checking 13 baseURI3/53
+            //   Checking 14 baseURI3/54
+            //   Checking 15 baseURI3/55
+            //   Checking 16 baseURI3/56
+            //   Checking 17 baseURI3/57
+            //   Checking 18 baseURI3/58
+            //   Checking 19 baseURI3/59
             //   Checking 20 baseURI1/0
             //   Checking 21 baseURI1/1
             //   Checking 22 baseURI1/2

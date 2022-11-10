@@ -206,7 +206,7 @@ contract TieredDrop is
         totalRemainingInTier[_tier] += _amount;
 
         uint256 startId = nextTokenIdToLazyMint;
-        if (isTierEmpty(_tier)) {
+        if (isTierEmpty(_tier) || nextMetadataIdToMapFromTier[_tier] == type(uint256).max) {
             nextMetadataIdToMapFromTier[_tier] = startId;
         }
 
@@ -275,8 +275,6 @@ contract TieredDrop is
         transferTokensOnClaim(to, quantity, tiersInPriority);
 
         emit TokensClaimed(_msgSender(), to, tokenIdToMint, quantity, tiersInPriority);
-
-        // emit RequestExecuted(_msgSender(), signer, _req);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -348,18 +346,56 @@ contract TieredDrop is
         uint256 _startIdToMap,
         uint256 _quantity
     ) private {
-        uint256 proxyStartId = nextMetadataIdToMapFromTier[_tier];
-        uint256 proxyEndId = proxyStartId + _quantity;
+        uint256 nextIdFromTier = nextMetadataIdToMapFromTier[_tier];
+        uint256 startTokenId = _startIdToMap;
 
-        uint256 endTokenId = _startIdToMap + _quantity;
+        TokenRange[] memory tokensInTier = tokensInTier[_tier];
+        uint256 len = tokensInTier.length;
 
-        endIdsAtMint[lengthEndIdsAtMint] = endTokenId;
-        lengthEndIdsAtMint += 1;
+        uint256 qtyRemaining = _quantity; // 20
+        bool firstFulfillmentDone = false;
 
-        tierAtEndId[endTokenId] = _tier;
-        proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
+        for (uint256 i = 0; i < len; i += 1) {
+            TokenRange memory range = tokensInTier[i];
+            uint256 nextId = firstFulfillmentDone ? range.startIdInclusive : nextIdFromTier;
+            uint256 gap = 0;
 
-        nextMetadataIdToMapFromTier[_tier] += _quantity;
+            if (range.startIdInclusive <= nextId && nextId < range.endIdNonInclusive) {
+                uint256 proxyStartId = nextId; // 10
+                uint256 proxyEndId = proxyStartId + qtyRemaining <= range.endIdNonInclusive // 10 + 20 = 30 <= 20
+                    ? proxyStartId + qtyRemaining // 30
+                    : range.endIdNonInclusive; // 20
+
+                gap = proxyEndId - proxyStartId; // 10
+
+                uint256 endTokenId = startTokenId + gap; // 10 + 10 = 20
+
+                endIdsAtMint[lengthEndIdsAtMint] = endTokenId; // 20
+                lengthEndIdsAtMint += 1;
+
+                tierAtEndId[endTokenId] = _tier;
+                proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId); // [10,20)
+
+                startTokenId += gap;
+                qtyRemaining -= gap; // 20 - 10 = 10
+            }
+
+            if (!firstFulfillmentDone) {
+                firstFulfillmentDone = true;
+            }
+
+            if (qtyRemaining == 0) {
+                if (nextId + gap < range.endIdNonInclusive) {
+                    nextMetadataIdToMapFromTier[_tier] = nextId + gap;
+                } else if (i < (len - 1)) {
+                    nextMetadataIdToMapFromTier[_tier] = tokensInTier[i + 1].startIdInclusive;
+                } else {
+                    nextMetadataIdToMapFromTier[_tier] = type(uint256).max;
+                }
+
+                break;
+            }
+        }
     }
 
     /// @dev Returns how much of the total-quantity-to-distribute can come from the given tier.
