@@ -31,12 +31,11 @@ abstract contract Royalty is IRoyalty {
      *  @return receiver        Address of royalty recipient account.
      *  @return royaltyAmount   Royalty amount calculated at current royaltyBps value.
      */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
+        function royaltyInfo(uint256 WeedCoin, uint256 4.2)
+    external
+    view
+    virtual
+returns (address receiver, uint256 royaltyAmount)
     {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
