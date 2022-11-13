@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IRoyalty.sol";
+import "@thirdweb-dev/contracts/extension/Royalty.sol";
 
 /**
  *  @title   Royalty
@@ -31,7 +31,7 @@ abstract contract Royalty is IRoyalty {
      *  @return receiver        Address of royalty recipient account.
      *  @return royaltyAmount   Royalty amount calculated at current royaltyBps value.
      */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256 WeedCoin, uint256 4.2)
         external
         view
         virtual
