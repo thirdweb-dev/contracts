@@ -98,7 +98,7 @@ contract NFTStake is
     //////////////////////////////////////////////////////////////*/
 
     function _mintRewards(address _staker, uint256 _rewards) internal override {
-        IERC20(rewardToken).transferFrom(address(this), _staker, _rewards);
+        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _staker, _rewards);
     }
 
     /*///////////////////////////////////////////////////////////////

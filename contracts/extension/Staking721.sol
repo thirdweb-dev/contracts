@@ -143,7 +143,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
             stakersArray.push(msg.sender);
             stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         }
-        for (uint256 i; i < len; ++i) {
+        for (uint256 i = 0; i < len; ++i) {
             require(IERC721(nftCollection).ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
             IERC721(nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
@@ -163,7 +163,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         _updateUnclaimedRewardsForStaker(msg.sender);
 
         if (_amountStaked == len) {
-            for (uint256 i; i < stakersArray.length; ++i) {
+            for (uint256 i = 0; i < stakersArray.length; ++i) {
                 if (stakersArray[i] == msg.sender) {
                     stakersArray[i] = stakersArray[stakersArray.length - 1];
                     stakersArray.pop();
@@ -172,7 +172,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         }
         stakers[msg.sender].amountStaked -= len;
 
-        for (uint256 i; i < len; ++i) {
+        for (uint256 i = 0; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
             IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
@@ -208,7 +208,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
     function _updateUnclaimedRewardsForAll() internal virtual {
         address[] memory _stakers = stakersArray;
         uint256 len = _stakers.length;
-        for (uint256 i; i < len; ++i) {
+        for (uint256 i = 0; i < len; ++i) {
             address user = _stakers[i];
 
             uint256 rewards = _calculateRewards(user);
