@@ -6,6 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./interface/IStaking.sol";
 
+/**
+ *      note: This is a Beta release.
+ */
+
 abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking {
     /*///////////////////////////////////////////////////////////////
                             State variables

@@ -9,7 +9,9 @@ import "../extension/Staking721.sol";
 import "../eip/interface/IERC20.sol";
 
 /**
- *      EXTENSION: Staking721
+ *      note: This is a Beta release.
+ *
+ *  EXTENSION: Staking721
  *
  *  The `Staking721Base` smart contract implements NFT staking mechanism.
  *  Allows users to stake their ERC-721 NFTs and earn rewards in form of ERC-20 tokens.
