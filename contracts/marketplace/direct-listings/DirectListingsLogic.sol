@@ -86,10 +86,17 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         address listingCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
 
-        require(
-            _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
-            "Marketplace: invalid timestamps."
-        );
+        uint128 startTime = _params.startTimestamp;
+        uint128 endTime = _params.endTimestamp;
+        require(startTime < endTime, "Marketplace: endTimestamp not greater than startTimestamp.");
+        if (startTime < block.timestamp) {
+            require(startTime + 60 minutes >= block.timestamp, "Marketplace: invalid startTimestamp.");
+
+            startTime = uint128(block.timestamp);
+            endTime = endTime == type(uint128).max
+                ? endTime
+                : startTime + (_params.endTimestamp - _params.startTimestamp);
+        }
 
         _validateNewListing(_params, tokenType);
 
@@ -101,8 +108,8 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
             quantity: _params.quantity,
             currency: _params.currency,
             pricePerToken: _params.pricePerToken,
-            startTimestamp: _params.startTimestamp,
-            endTimestamp: _params.endTimestamp,
+            startTimestamp: startTime,
+            endTimestamp: endTime,
             reserved: _params.reserved,
             tokenType: tokenType
         });
@@ -126,15 +133,30 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         Listing memory listing = data.listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
 
-        require(
-            _params.startTimestamp >= listing.startTimestamp && _params.startTimestamp < _params.endTimestamp,
-            "Marketplace: invalid timestamps."
-        );
+        require(listing.endTimestamp > block.timestamp, "Marketplace: listing expired.");
 
         require(
             listing.assetContract == _params.assetContract && listing.tokenId == _params.tokenId,
             "Marketplace: cannot update what token is listed."
         );
+
+        uint128 startTime = _params.startTimestamp;
+        uint128 endTime = _params.endTimestamp;
+        require(startTime < endTime, "Marketplace: endTimestamp not greater than startTimestamp.");
+        require(
+            listing.startTimestamp > block.timestamp ||
+                (startTime == listing.startTimestamp && endTime > block.timestamp),
+            "Marketplace: listing already active."
+        );
+        if (startTime != listing.startTimestamp && startTime < block.timestamp) {
+            require(startTime + 60 minutes >= block.timestamp, "Marketplace: invalid startTimestamp.");
+
+            startTime = uint128(block.timestamp);
+
+            endTime = endTime == listing.endTimestamp || endTime == type(uint128).max
+                ? endTime
+                : startTime + (_params.endTimestamp - _params.startTimestamp);
+        }
 
         _validateNewListing(_params, tokenType);
 
@@ -146,8 +168,8 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
             quantity: _params.quantity,
             currency: _params.currency,
             pricePerToken: _params.pricePerToken,
-            startTimestamp: _params.startTimestamp,
-            endTimestamp: _params.endTimestamp,
+            startTimestamp: startTime,
+            endTimestamp: endTime,
             reserved: _params.reserved,
             tokenType: tokenType
         });

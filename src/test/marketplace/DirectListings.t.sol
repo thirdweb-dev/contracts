@@ -363,7 +363,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("Marketplace: invalid timestamps.");
+        vm.expectRevert("Marketplace: invalid startTimestamp.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -402,7 +402,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("Marketplace: invalid timestamps.");
+        vm.expectRevert("Marketplace: endTimestamp not greater than startTimestamp.");
         DirectListings(marketplace).createListing(listingParams);
     }
 
@@ -746,8 +746,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint128 currentStartTimestamp = listingParamsToUpdate.startTimestamp;
         listingParamsToUpdate.startTimestamp = currentStartTimestamp - 1; // Retroactively decreasing startTimestamp.
 
+        vm.warp(currentStartTimestamp + 50);
         vm.prank(seller);
-        vm.expectRevert("Marketplace: invalid timestamps.");
+        vm.expectRevert("Marketplace: listing already active.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
@@ -766,7 +767,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.endTimestamp = currentStartTimestamp - 1; // End timestamp less than startTimestamp
 
         vm.prank(seller);
-        vm.expectRevert("Marketplace: invalid timestamps.");
+        vm.expectRevert("Marketplace: endTimestamp not greater than startTimestamp.");
         DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
