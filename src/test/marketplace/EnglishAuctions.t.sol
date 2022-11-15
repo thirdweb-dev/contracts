@@ -43,18 +43,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         address englishAuctions = address(new EnglishAuctions(address(weth)));
 
         // [3] Index `EnglishAuctions` functions in `Map`
-        map.setExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAllValidAuctions.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAllValidAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
 
         // [4] Deploy `MarketplaceEntrypoint`
 
@@ -1508,17 +1508,17 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         address englishAuctions = address(new EnglishAuctions(address(weth)));
 
         // [3] Index `EnglishAuctions` functions in `Map`
-        map.setExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
 
         // [4] Deploy `MarketplaceEntrypoint`
 
@@ -1661,17 +1661,17 @@ contract BreitwieserTheBidder is BaseTest {
         address englishAuctions = address(new EnglishAuctions(address(weth)));
 
         // [3] Index `EnglishAuctions` functions in `Map`
-        map.setExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
 
         // [4] Deploy `MarketplaceEntrypoint`
 
@@ -1844,17 +1844,17 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         address englishAuctions = address(new EnglishAuctions(address(weth)));
 
         // [3] Index `EnglishAuctions` functions in `Map`
-        map.setExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.setExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
+        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
 
         // [4] Deploy `MarketplaceEntrypoint`
 

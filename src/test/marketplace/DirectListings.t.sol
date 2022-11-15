@@ -43,19 +43,19 @@ contract MarketplaceDirectListingsTest is BaseTest {
         address directListings = address(new DirectListings(address(weth)));
 
         // [3] Index `DirectListings` functions in `Map`
-        map.setExtension(DirectListings.totalListings.selector, directListings);
-        map.setExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
-        map.setExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
-        map.setExtension(DirectListings.currencyPriceForListing.selector, directListings);
-        map.setExtension(DirectListings.createListing.selector, directListings);
-        map.setExtension(DirectListings.updateListing.selector, directListings);
-        map.setExtension(DirectListings.cancelListing.selector, directListings);
-        map.setExtension(DirectListings.approveBuyerForListing.selector, directListings);
-        map.setExtension(DirectListings.approveCurrencyForListing.selector, directListings);
-        map.setExtension(DirectListings.buyFromListing.selector, directListings);
-        map.setExtension(DirectListings.getAllListings.selector, directListings);
-        map.setExtension(DirectListings.getAllValidListings.selector, directListings);
-        map.setExtension(DirectListings.getListing.selector, directListings);
+        map.addExtension(DirectListings.totalListings.selector, directListings);
+        map.addExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
+        map.addExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
+        map.addExtension(DirectListings.currencyPriceForListing.selector, directListings);
+        map.addExtension(DirectListings.createListing.selector, directListings);
+        map.addExtension(DirectListings.updateListing.selector, directListings);
+        map.addExtension(DirectListings.cancelListing.selector, directListings);
+        map.addExtension(DirectListings.approveBuyerForListing.selector, directListings);
+        map.addExtension(DirectListings.approveCurrencyForListing.selector, directListings);
+        map.addExtension(DirectListings.buyFromListing.selector, directListings);
+        map.addExtension(DirectListings.getAllListings.selector, directListings);
+        map.addExtension(DirectListings.getAllValidListings.selector, directListings);
+        map.addExtension(DirectListings.getListing.selector, directListings);
 
         // [4] Deploy `MarketplaceEntrypoint`
 
@@ -1399,19 +1399,19 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
         address directListings = address(new DirectListings(address(weth)));
 
         // [3] Index `DirectListings` functions in `Map`
-        map.setExtension(DirectListings.totalListings.selector, directListings);
-        map.setExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
-        map.setExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
-        map.setExtension(DirectListings.currencyPriceForListing.selector, directListings);
-        map.setExtension(DirectListings.createListing.selector, directListings);
-        map.setExtension(DirectListings.updateListing.selector, directListings);
-        map.setExtension(DirectListings.cancelListing.selector, directListings);
-        map.setExtension(DirectListings.approveBuyerForListing.selector, directListings);
-        map.setExtension(DirectListings.approveCurrencyForListing.selector, directListings);
-        map.setExtension(DirectListings.buyFromListing.selector, directListings);
-        map.setExtension(DirectListings.getAllListings.selector, directListings);
-        map.setExtension(DirectListings.getAllValidListings.selector, directListings);
-        map.setExtension(DirectListings.getListing.selector, directListings);
+        map.addExtension(DirectListings.totalListings.selector, directListings);
+        map.addExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
+        map.addExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
+        map.addExtension(DirectListings.currencyPriceForListing.selector, directListings);
+        map.addExtension(DirectListings.createListing.selector, directListings);
+        map.addExtension(DirectListings.updateListing.selector, directListings);
+        map.addExtension(DirectListings.cancelListing.selector, directListings);
+        map.addExtension(DirectListings.approveBuyerForListing.selector, directListings);
+        map.addExtension(DirectListings.approveCurrencyForListing.selector, directListings);
+        map.addExtension(DirectListings.buyFromListing.selector, directListings);
+        map.addExtension(DirectListings.getAllListings.selector, directListings);
+        map.addExtension(DirectListings.getAllValidListings.selector, directListings);
+        map.addExtension(DirectListings.getListing.selector, directListings);
 
         // [4] Deploy `MarketplaceEntrypoint`
 

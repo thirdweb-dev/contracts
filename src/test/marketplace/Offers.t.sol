@@ -44,13 +44,13 @@ contract MarketplaceOffersTest is BaseTest {
         address offers = address(new Offers());
 
         // [3] Index `Offers` functions in `Map`
-        map.setExtension(Offers.totalOffers.selector, offers);
-        map.setExtension(Offers.makeOffer.selector, offers);
-        map.setExtension(Offers.cancelOffer.selector, offers);
-        map.setExtension(Offers.acceptOffer.selector, offers);
-        map.setExtension(Offers.getAllValidOffers.selector, offers);
-        map.setExtension(Offers.getAllOffers.selector, offers);
-        map.setExtension(Offers.getOffer.selector, offers);
+        map.addExtension(Offers.totalOffers.selector, offers);
+        map.addExtension(Offers.makeOffer.selector, offers);
+        map.addExtension(Offers.cancelOffer.selector, offers);
+        map.addExtension(Offers.acceptOffer.selector, offers);
+        map.addExtension(Offers.getAllValidOffers.selector, offers);
+        map.addExtension(Offers.getAllOffers.selector, offers);
+        map.addExtension(Offers.getOffer.selector, offers);
 
         // [4] Deploy `MarketplaceEntrypoint`
 

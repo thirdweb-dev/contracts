@@ -21,12 +21,22 @@ contract Map is IMap, Multicall, PermissionsEnumerable {
         _setupRole(OPERATOR_ROLE, msg.sender);
     }
 
-    function setExtension(bytes4 _selector, address _extension) external {
+    function addExtension(bytes4 _selector, address _extension) external {
         require(hasRole(OPERATOR_ROLE, msg.sender), "!OPERATOR_ROLE");
+        require(extension[_selector] == address(0), "Extension already set");
 
         extension[_selector] = _extension;
 
         emit ExtensionRegistered(_selector, _extension);
+    }
+
+    function replaceExtension(bytes4 _selector, address _extension) external {
+        require(hasRole(OPERATOR_ROLE, msg.sender), "!OPERATOR_ROLE");
+        require(extension[_selector] != address(0), "Nothing to replace");
+
+        extension[_selector] = _extension;
+
+        emit ExtensionReplaced(_selector, _extension);
     }
 
     function getExtension(bytes4 _selector) external view returns (address) {
