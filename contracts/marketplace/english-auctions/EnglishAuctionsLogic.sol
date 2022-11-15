@@ -376,6 +376,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
 
         // Close auction and execute sale if there's a buyout price and incoming bid amount is buyout price.
         if (_targetAuction.buyoutBidAmount > 0 && incomingBidAmount >= _targetAuction.buyoutBidAmount) {
+            incomingBidAmount = _targetAuction.buyoutBidAmount;
             _closeAuctionForBidder(_targetAuction, _incomingBid);
         } else {
             /**
