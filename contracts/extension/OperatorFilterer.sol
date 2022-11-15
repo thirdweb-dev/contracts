@@ -7,6 +7,7 @@ import { IOperatorFilterRegistry } from "./interface/IOperatorFilterRegistry.sol
 abstract contract OperatorFilterer {
     error OperatorNotAllowed(address operator);
 
+    // solhint-disable-next-line
     IOperatorFilterRegistry constant operatorFilterRegistry =
         IOperatorFilterRegistry(0x000000000000AAeB6D7670E522A718067333cd4E);
 
