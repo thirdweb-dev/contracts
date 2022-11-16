@@ -57,6 +57,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
         map.addExtension(DirectListings.getAllValidListings.selector, directListings);
         map.addExtension(DirectListings.getListing.selector, directListings);
 
+        assertEq(map.getAllSelectorsRegistered().length, 13);
+
         // [4] Deploy `MarketplaceEntrypoint`
 
         MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));

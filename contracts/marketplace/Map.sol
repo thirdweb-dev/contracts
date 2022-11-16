@@ -26,6 +26,7 @@ contract Map is IMap, Multicall, PermissionsEnumerable {
         require(extension[_selector] == address(0), "Extension already set");
 
         extension[_selector] = _extension;
+        allSelectors.add(_selector);
 
         emit ExtensionRegistered(_selector, _extension);
     }
