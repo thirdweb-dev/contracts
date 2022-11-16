@@ -110,7 +110,6 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         data.auctions[auctionId] = auction;
 
-        require(auction.buyoutBidAmount >= auction.minimumBidAmount, "Marketplace: invalid bid amounts.");
         _transferAuctionTokens(auctionCreator, address(this), auction);
 
         emit NewAuction(auctionCreator, auctionId, auction);
@@ -331,6 +330,7 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
             _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
             "Marketplace: invalid timestamps."
         );
+        require(_params.buyoutBidAmount >= _params.minimumBidAmount, "Marketplace: invalid bid amounts.");
     }
 
     /// @dev Processes an incoming bid in an auction.
