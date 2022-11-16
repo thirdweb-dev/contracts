@@ -331,39 +331,6 @@ contract EnglishAuctions is IEnglishAuctions, ReentrancyGuard, ERC2771ContextCon
             _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
             "Marketplace: invalid timestamps."
         );
-
-        _validateOwnershipAndApproval(
-            _msgSender(),
-            _params.assetContract,
-            _params.tokenId,
-            _params.quantity,
-            _tokenType
-        );
-    }
-
-    /// @dev Validates that `_tokenOwner` owns and has approved Marketplace to transfer NFTs.
-    function _validateOwnershipAndApproval(
-        address _tokenOwner,
-        address _assetContract,
-        uint256 _tokenId,
-        uint256 _quantity,
-        TokenType _tokenType
-    ) internal view {
-        address market = address(this);
-        bool isValid;
-
-        if (_tokenType == TokenType.ERC1155) {
-            isValid =
-                IERC1155(_assetContract).balanceOf(_tokenOwner, _tokenId) >= _quantity &&
-                IERC1155(_assetContract).isApprovedForAll(_tokenOwner, market);
-        } else if (_tokenType == TokenType.ERC721) {
-            isValid =
-                IERC721(_assetContract).ownerOf(_tokenId) == _tokenOwner &&
-                (IERC721(_assetContract).getApproved(_tokenId) == market ||
-                    IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
-        }
-
-        require(isValid, "Marketplace: not owner or approved token.");
     }
 
     /// @dev Processes an incoming bid in an auction.

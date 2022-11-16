@@ -212,7 +212,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("Marketplace: not owner or approved token.");
+        vm.expectRevert("ERC721: transfer from incorrect owner");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
@@ -255,7 +255,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        vm.expectRevert("Marketplace: not owner or approved token.");
+        vm.expectRevert("ERC721: caller is not token owner nor approved");
         EnglishAuctions(marketplace).createAuction(auctionParams);
     }
 
