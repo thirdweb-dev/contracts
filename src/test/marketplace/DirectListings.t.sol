@@ -102,6 +102,50 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_approvedCurrencies() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParams) = _setup_updateListing();
+        address currencyToApprove = address(erc20); // same currency as main listing
+        uint256 pricePerTokenForCurrency = 2 ether;
+        bool toApprove = true;
+
+        // Seller approves buyer for reserved listing.
+        vm.prank(seller);
+        vm.expectRevert("Marketplace: Re-approving main listing currency.");
+        DirectListings(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency,
+            toApprove
+        );
+
+        // change currency
+        currencyToApprove = NATIVE_TOKEN;
+
+        vm.prank(seller);
+        DirectListings(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency,
+            toApprove
+        );
+
+        assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
+        assertEq(
+            DirectListings(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
+            pricePerTokenForCurrency
+        );
+
+        // should revert when updating listing with an approved currency
+        listingParams.currency = NATIVE_TOKEN;
+        vm.prank(seller);
+        vm.expectRevert("Marketplace: can't change to an approved currency");
+        DirectListings(marketplace).updateListing(listingId, listingParams);
+    }
+
+    /*///////////////////////////////////////////////////////////////
                             Create listing
     //////////////////////////////////////////////////////////////*/
 

@@ -158,6 +158,11 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                 : startTime + (_params.endTimestamp - _params.startTimestamp);
         }
 
+        require(
+            data.currencyPriceForListing[_listingId][_params.currency] == 0,
+            "Marketplace: can't change to an approved currency"
+        );
+
         _validateNewListing(_params, tokenType);
 
         listing = Listing({
@@ -213,8 +218,8 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
 
         Listing memory listing = data.listings[_listingId];
         require(_currency != listing.currency, "Marketplace: Re-approving main listing currency.");
+        require(_pricePerTokenInCurrency != 0, "Marketplace: Can't approve with 0 price.");
 
-        data.isCurrencyApprovedForListing[_listingId][_currency] = _toApprove;
         data.currencyPriceForListing[_listingId][_currency] = _pricePerTokenInCurrency;
 
         emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency, _toApprove);
@@ -254,7 +259,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         address targetCurrency = _currency;
         uint256 targetTotalPrice;
 
-        if (data.isCurrencyApprovedForListing[_listingId][targetCurrency]) {
+        if (data.currencyPriceForListing[_listingId][targetCurrency] > 0) {
             targetTotalPrice = _quantity * data.currencyPriceForListing[_listingId][targetCurrency];
         } else {
             require(targetCurrency == listing.currency, "Paying in invalid currency.");
@@ -311,14 +316,14 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     /// @notice Returns whether a currency is approved for a listing.
     function isCurrencyApprovedForListing(uint256 _listingId, address _currency) external view returns (bool) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-        return data.isCurrencyApprovedForListing[_listingId][_currency];
+        return data.currencyPriceForListing[_listingId][_currency] > 0;
     }
 
     /// @notice Returns the price per token for a listing, in the given currency.
     function currencyPriceForListing(uint256 _listingId, address _currency) external view returns (uint256) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        if (!data.isCurrencyApprovedForListing[_listingId][_currency]) {
+        if (data.currencyPriceForListing[_listingId][_currency] == 0) {
             revert("Currency not approved for listing");
         }
 
