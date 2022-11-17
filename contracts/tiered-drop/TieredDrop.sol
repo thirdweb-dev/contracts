@@ -352,47 +352,42 @@ contract TieredDrop is
         TokenRange[] memory tokensInTier = tokensInTier[_tier];
         uint256 len = tokensInTier.length;
 
-        uint256 qtyRemaining = _quantity; // 20
-        bool firstFulfillmentDone = false;
+        uint256 qtyRemaining = _quantity;
 
         for (uint256 i = 0; i < len; i += 1) {
             TokenRange memory range = tokensInTier[i];
-            uint256 nextId = firstFulfillmentDone ? range.startIdInclusive : nextIdFromTier;
             uint256 gap = 0;
 
-            if (range.startIdInclusive <= nextId && nextId < range.endIdNonInclusive) {
-                uint256 proxyStartId = nextId; // 10
-                uint256 proxyEndId = proxyStartId + qtyRemaining <= range.endIdNonInclusive // 10 + 20 = 30 <= 20
-                    ? proxyStartId + qtyRemaining // 30
-                    : range.endIdNonInclusive; // 20
+            if (range.startIdInclusive <= nextIdFromTier && nextIdFromTier < range.endIdNonInclusive) {
+                uint256 proxyStartId = nextIdFromTier;
+                uint256 proxyEndId = proxyStartId + qtyRemaining <= range.endIdNonInclusive
+                    ? proxyStartId + qtyRemaining
+                    : range.endIdNonInclusive;
 
-                gap = proxyEndId - proxyStartId; // 10
+                gap = proxyEndId - proxyStartId;
 
-                uint256 endTokenId = startTokenId + gap; // 10 + 10 = 20
+                uint256 endTokenId = startTokenId + gap;
 
-                endIdsAtMint[lengthEndIdsAtMint] = endTokenId; // 20
+                endIdsAtMint[lengthEndIdsAtMint] = endTokenId;
                 lengthEndIdsAtMint += 1;
 
                 tierAtEndId[endTokenId] = _tier;
-                proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId); // [10,20)
+                proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
 
                 startTokenId += gap;
-                qtyRemaining -= gap; // 20 - 10 = 10
-            }
+                qtyRemaining -= gap;
 
-            if (!firstFulfillmentDone) {
-                firstFulfillmentDone = true;
+                if (nextIdFromTier + gap < range.endIdNonInclusive) {
+                    nextIdFromTier += gap;
+                } else if (i < (len - 1)) {
+                    nextIdFromTier = tokensInTier[i + 1].startIdInclusive;
+                } else {
+                    nextIdFromTier = type(uint256).max;
+                }
             }
 
             if (qtyRemaining == 0) {
-                if (nextId + gap < range.endIdNonInclusive) {
-                    nextMetadataIdToMapFromTier[_tier] = nextId + gap;
-                } else if (i < (len - 1)) {
-                    nextMetadataIdToMapFromTier[_tier] = tokensInTier[i + 1].startIdInclusive;
-                } else {
-                    nextMetadataIdToMapFromTier[_tier] = type(uint256).max;
-                }
-
+                nextMetadataIdToMapFromTier[_tier] = nextIdFromTier;
                 break;
             }
         }
