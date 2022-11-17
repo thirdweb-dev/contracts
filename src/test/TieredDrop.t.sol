@@ -908,31 +908,31 @@ contract TieredDropTest is BaseTest {
 
             for (uint256 i = offset; i < claimQuantity + (offset); i += 1) {
                 // Outputs:
-                // Checking 0 baseURI2/10
-                // Checking 1 baseURI2/11
-                // Checking 2 baseURI2/12
-                // Checking 3 baseURI2/13
-                // Checking 4 baseURI2/11  <-- !
-                // Checking 5 baseURI2/12  <-- !
-                // Checking 6 baseURI2/13  <-- !
-                // Checking 7 baseURI2/14
-                // Checking 8 baseURI2/15
-                // Checking 9 baseURI2/16
-                // Checking 10 baseURI2/17
-                // Checking 11 baseURI2/18
-                // Checking 12 baseURI2/19
-                // Checking 13 baseURI2/50
-                // Checking 14 baseURI2/51
-                // Checking 15 baseURI2/52
-                // Checking 16 baseURI2/53
-                // Checking 17 baseURI2/54
-                // Checking 18 baseURI2/55
-                // Checking 19 baseURI2/56
-                // Checking 20 baseURI1/0
-                // Checking 21 baseURI1/1
-                // Checking 22 baseURI1/2
-                // Checking 23 baseURI1/3
-                // Checking 24 baseURI1/4
+                //   Checking 0 baseURI2/10
+                //   Checking 1 baseURI2/11
+                //   Checking 2 baseURI2/12
+                //   Checking 3 baseURI2/13
+                //   Checking 4 baseURI2/14
+                //   Checking 5 baseURI2/15
+                //   Checking 6 baseURI2/16
+                //   Checking 7 baseURI2/17
+                //   Checking 8 baseURI2/18
+                //   Checking 9 baseURI2/19
+                //   Checking 10 baseURI3/50
+                //   Checking 11 baseURI3/51
+                //   Checking 12 baseURI3/52
+                //   Checking 13 baseURI3/53
+                //   Checking 14 baseURI3/54
+                //   Checking 15 baseURI3/55
+                //   Checking 16 baseURI3/56
+                //   Checking 17 baseURI3/57
+                //   Checking 18 baseURI3/58
+                //   Checking 19 baseURI3/59
+                //   Checking 20 baseURI1/0
+                //   Checking 21 baseURI1/1
+                //   Checking 22 baseURI1/2
+                //   Checking 23 baseURI1/3
+                //   Checking 24 baseURI1/4
                 console.log("Checking", i, tieredDrop.tokenURI(i));
             }
         }
