@@ -96,9 +96,9 @@ contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
     constructor(address _controller, address _signer) EIP712("thirdwebWallet", "1") {
         _setupRole(CONTROLLER_ROLE, address(this));
         _setupRole(CONTROLLER_ROLE, _controller);
-        _setRoleAdmin(CONTROLLER_ROLE, CONTROLLER_ROLE);
 
         _setupRole(SIGNER_ROLE, _signer);
+        _setRoleAdmin(SIGNER_ROLE, CONTROLLER_ROLE);
     }
 
     /*///////////////////////////////////////////////////////////////
