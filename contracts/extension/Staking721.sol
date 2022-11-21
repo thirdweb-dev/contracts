@@ -137,6 +137,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         uint256 len = _tokenIds.length;
         require(len != 0, "Staking 0 tokens");
 
+        address _nftCollection = nftCollection;
+
         if (stakers[msg.sender].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(msg.sender);
         } else {
@@ -144,8 +146,13 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
             stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         }
         for (uint256 i = 0; i < len; ++i) {
-            require(IERC721(nftCollection).ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
-            IERC721(nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
+            require(
+                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == msg.sender &&
+                    (IERC721(_nftCollection).getApproved(_tokenIds[i]) == address(this) ||
+                        IERC721(_nftCollection).isApprovedForAll(msg.sender, address(this))),
+                "Not owned or approved"
+            );
+            IERC721(_nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
         }
         stakers[msg.sender].amountStaked += len;
@@ -159,6 +166,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         uint256 len = _tokenIds.length;
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
+
+        address _nftCollection = nftCollection;
 
         _updateUnclaimedRewardsForStaker(msg.sender);
 
@@ -175,7 +184,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         for (uint256 i = 0; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
+            IERC721(_nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
 
         emit TokensWithdrawn(msg.sender, _tokenIds);

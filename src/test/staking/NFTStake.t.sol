@@ -147,7 +147,7 @@ contract NFTStakeTest is BaseTest {
         _tokenIds[0] = 6;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not owner");
+        vm.expectRevert("Not owned or approved");
         stakeContract.stake(_tokenIds);
     }
 

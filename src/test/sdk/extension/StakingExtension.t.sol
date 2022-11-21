@@ -177,7 +177,7 @@ contract StakingExtensionTest is DSTest, Test {
         _tokenIds[0] = 6;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not owner");
+        vm.expectRevert("Not owned or approved");
         ext.stake(_tokenIds);
     }
 
