@@ -439,10 +439,10 @@ contract TieredDrop is
         require(_startIdx < _endIdx && _endIdx <= len, "TieredDrop: invalid indices.");
 
         uint256 numOfRangesForTier = 0;
+        bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
         for (uint256 i = _startIdx; i < _endIdx; i += 1) {
             bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
-            bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
             if (hashOfStoredTier == hashOfTier) {
                 numOfRangesForTier += 1;
@@ -454,7 +454,6 @@ contract TieredDrop is
 
         for (uint256 i = _startIdx; i < _endIdx; i += 1) {
             bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
-            bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
             if (hashOfStoredTier == hashOfTier) {
                 uint256 end = endIdsAtMint[i];
