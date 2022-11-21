@@ -5,6 +5,7 @@ interface ITWMultichainRegistry {
     struct Deployment {
         address deploymentAddress;
         uint256 chainId;
+        string metadataURI;
     }
 
     event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri);
