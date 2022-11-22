@@ -723,4 +723,235 @@ contract EditionStakeTest is BaseTest {
             _availableRewards + ((((block.timestamp - newTimeOfLastUpdate) * 20) * defaultRewardsPerUnitTime) / 300)
         );
     }
+
+    function test_revert_setRewardsPerUnitTime_notAuthorized() public {
+        vm.expectRevert("Not authorized");
+        stakeContract.setRewardsPerUnitTime(0, 1);
+    }
+
+    function test_revert_setTimeUnit_notAuthorized() public {
+        vm.expectRevert("Not authorized");
+        stakeContract.setTimeUnit(0, 1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+            Unit tests: withdraw
+            - different token-ids staked by stakers
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_withdraw_differentTokens() public {
+        //================ stake different tokens ======================
+        vm.warp(1);
+
+        vm.prank(stakerOne);
+        stakeContract.stake(0, 50);
+
+        vm.prank(stakerTwo);
+        stakeContract.stake(1, 20);
+
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        //========== warp timestamp before withdraw
+        vm.roll(100);
+        vm.warp(1000);
+
+        // withdraw partially for stakerOne
+        vm.prank(stakerOne);
+        stakeContract.withdraw(0, 40);
+        uint256 timeOfLastUpdateLatest = block.timestamp;
+
+        // check balances/ownership after withdraw
+        assertEq(erc1155.balanceOf(stakerOne, 0), 90);
+        assertEq(erc1155.balanceOf(address(stakeContract), 0), 10);
+        assertEq(erc1155.balanceOf(stakerTwo, 1), 80);
+        assertEq(erc1155.balanceOf(address(stakeContract), 1), 20);
+
+        // check available rewards after withdraw
+        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * 50) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * 20) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        // check available rewards some time after withdraw
+        vm.roll(200);
+        vm.warp(2000);
+
+        // check rewards for stakerOne
+        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+
+        assertEq(
+            _availableRewards,
+            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 50)) * defaultRewardsPerUnitTime) / defaultTimeUnit) +
+                (((((block.timestamp - timeOfLastUpdateLatest) * 10)) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        // withdraw partially for stakerTwo
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(1, 10);
+        timeOfLastUpdateLatest = block.timestamp;
+
+        // check balances/ownership after withdraw
+        assertEq(erc1155.balanceOf(stakerOne, 0), 90);
+        assertEq(erc1155.balanceOf(address(stakeContract), 0), 10);
+        assertEq(erc1155.balanceOf(stakerTwo, 1), 90);
+        assertEq(erc1155.balanceOf(address(stakeContract), 1), 10);
+
+        // check rewards for stakerTwo
+        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+
+        assertEq(
+            _availableRewards,
+            (((((block.timestamp - timeOfLastUpdate) * 20)) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        // check rewards for stakerTwo after some time
+        vm.roll(300);
+        vm.warp(3000);
+        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+
+        assertEq(
+            _availableRewards,
+            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 20)) * defaultRewardsPerUnitTime) / defaultTimeUnit) +
+                (((((block.timestamp - timeOfLastUpdateLatest) * 10)) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+    }
+
+    /*///////////////////////////////////////////////////////////////
+            Unit tests: withdraw
+            - same token-ids staked by stakers
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_withdraw_sameToken() public {
+        //================ stake different tokens ======================
+        vm.warp(1);
+
+        vm.prank(stakerOne);
+        stakeContract.stake(0, 50);
+
+        vm.prank(stakerTwo);
+        stakeContract.stake(0, 20);
+
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        //========== warp timestamp before withdraw
+        vm.roll(100);
+        vm.warp(1000);
+
+        // withdraw partially for stakerOne
+        vm.prank(stakerOne);
+        stakeContract.withdraw(0, 40);
+        uint256 timeOfLastUpdateLatest = block.timestamp;
+
+        // check balances/ownership after withdraw
+        assertEq(erc1155.balanceOf(stakerOne, 0), 90);
+        assertEq(erc1155.balanceOf(stakerTwo, 0), 80);
+        assertEq(erc1155.balanceOf(address(stakeContract), 0), 10 + 20);
+
+        // check available rewards after withdraw
+        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * 50) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * 20) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        // check available rewards some time after withdraw
+        vm.roll(200);
+        vm.warp(2000);
+
+        // check rewards for stakerOne
+        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+
+        assertEq(
+            _availableRewards,
+            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 50)) * defaultRewardsPerUnitTime) / defaultTimeUnit) +
+                (((((block.timestamp - timeOfLastUpdateLatest) * 10)) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        // withdraw partially for stakerTwo
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(0, 10);
+        timeOfLastUpdateLatest = block.timestamp;
+
+        // check balances/ownership after withdraw
+        assertEq(erc1155.balanceOf(stakerOne, 0), 90);
+        assertEq(erc1155.balanceOf(stakerTwo, 0), 90);
+        assertEq(erc1155.balanceOf(address(stakeContract), 0), 10 + 10);
+
+        // check rewards for stakerTwo
+        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+
+        assertEq(
+            _availableRewards,
+            (((((block.timestamp - timeOfLastUpdate) * 20)) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+
+        // check rewards for stakerTwo after some time
+        vm.roll(300);
+        vm.warp(3000);
+        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+
+        assertEq(
+            _availableRewards,
+            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 20)) * defaultRewardsPerUnitTime) / defaultTimeUnit) +
+                (((((block.timestamp - timeOfLastUpdateLatest) * 10)) * defaultRewardsPerUnitTime) / defaultTimeUnit)
+        );
+    }
+
+    function test_revert_withdraw_withdrawingZeroTokens() public {
+        vm.expectRevert("Withdrawing 0 tokens");
+        stakeContract.withdraw(0, 0);
+    }
+
+    function test_revert_withdraw_withdrawingMoreThanStaked() public {
+        // stake tokens
+        vm.prank(stakerOne);
+        stakeContract.stake(0, 50);
+
+        vm.prank(stakerTwo);
+        stakeContract.stake(1, 20);
+
+        vm.prank(stakerTwo);
+        stakeContract.stake(0, 20);
+
+        // trying to withdraw more than staked
+        vm.prank(stakerOne);
+        vm.expectRevert("Withdrawing more than staked");
+        stakeContract.withdraw(0, 60);
+
+        // withdraw partially
+        vm.prank(stakerOne);
+        stakeContract.withdraw(0, 30);
+
+        // trying to withdraw more than staked
+        vm.prank(stakerOne);
+        vm.expectRevert("Withdrawing more than staked");
+        stakeContract.withdraw(0, 60);
+
+        // re-stake
+        vm.prank(stakerOne);
+        stakeContract.stake(0, 30);
+
+        // trying to withdraw more than staked
+        vm.prank(stakerOne);
+        vm.expectRevert("Withdrawing more than staked");
+        stakeContract.withdraw(0, 60);
+
+        // trying to withdraw different tokens
+        vm.prank(stakerOne);
+        vm.expectRevert("Withdrawing more than staked");
+        stakeContract.withdraw(1, 20);
+    }
 }
