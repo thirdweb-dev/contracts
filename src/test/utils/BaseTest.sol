@@ -34,6 +34,7 @@ import "contracts/airdrop/AirdropERC20Claimable.sol";
 import "contracts/airdrop/AirdropERC1155.sol";
 import "contracts/airdrop/AirdropERC1155Claimable.sol";
 import { NFTStake } from "contracts/staking/NFTStake.sol";
+import { EditionStake } from "contracts/staking/EditionStake.sol";
 import "contracts/mock/Mock.sol";
 import "contracts/mock/MockContractPublisher.sol";
 
@@ -132,6 +133,8 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("NFTStake"), 1)));
         TWFactory(factory).addImplementation(address(new NFTStake()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("EditionStake"), 1)));
+        TWFactory(factory).addImplementation(address(new EditionStake()));
         vm.stopPrank();
 
         // setup airdrop logic
@@ -329,6 +332,13 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(
                 NFTStake.initialize,
                 (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc721), 60, 1)
+            )
+        );
+        deployContractProxy(
+            "EditionStake",
+            abi.encodeCall(
+                EditionStake.initialize,
+                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc1155), 60, 1)
             )
         );
     }

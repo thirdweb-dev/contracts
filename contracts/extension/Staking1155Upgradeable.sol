@@ -104,7 +104,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         _updateUnclaimedRewardsForAll(_tokenId);
 
         uint256 currentTimeUnit = timeUnit[_tokenId];
-        _setTimeUnit(_timeUnit, _tokenId);
+        _setTimeUnit(_tokenId, _timeUnit);
 
         emit UpdatedTimeUnit(_tokenId, currentTimeUnit, _timeUnit);
     }
