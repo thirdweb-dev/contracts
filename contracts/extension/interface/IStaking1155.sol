@@ -64,11 +64,25 @@ interface IStaking1155 {
     /**
      *  @notice View amount staked and total rewards for a user.
      *
-     *  @param staker    Address for which to calculated rewards.
      *  @param tokenId   Staked token Id.
+     *  @param staker    Address for which to calculated rewards.
      */
-    function getStakeInfo(uint256 tokenId, address staker)
+    function getStakeInfoForToken(uint256 tokenId, address staker)
         external
         view
         returns (uint256 _tokensStaked, uint256 _rewards);
+
+    /**
+     *  @notice View amount staked and total rewards for a user.
+     *
+     *  @param staker    Address for which to calculated rewards.
+     */
+    function getStakeInfo(address staker)
+        external
+        view
+        returns (
+            uint256[] memory _tokensStaked,
+            uint256[] memory _tokenAmounts,
+            uint256 _totalRewards
+        );
 }

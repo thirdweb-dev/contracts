@@ -66,7 +66,7 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakerOne), 0), 50);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(_amountStaked, 50);
         assertEq(_availableRewards, 0);
@@ -76,7 +76,7 @@ contract EditionStakeTest is BaseTest {
         vm.warp(1000);
 
         // check available rewards after warp
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -97,7 +97,7 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakerTwo), 1), 80);
 
         // check available rewards right after staking
-        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerTwo);
 
         assertEq(_amountStaked, 20);
         assertEq(_availableRewards, 0);
@@ -107,7 +107,7 @@ contract EditionStakeTest is BaseTest {
         vm.warp(3000);
 
         // check available rewards for stakerOne
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -115,7 +115,7 @@ contract EditionStakeTest is BaseTest {
         );
 
         // check available rewards for stakerTwo
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerTwo);
 
         assertEq(
             _availableRewards,
@@ -158,7 +158,7 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakerOne), 0), 50);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(_amountStaked, 50);
         assertEq(_availableRewards, 0);
@@ -168,7 +168,7 @@ contract EditionStakeTest is BaseTest {
         vm.warp(1000);
 
         // check available rewards after warp
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -189,7 +189,7 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakerTwo), 0), 80);
 
         // check available rewards right after staking
-        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerTwo);
 
         assertEq(_amountStaked, 20);
         assertEq(_availableRewards, 0);
@@ -199,7 +199,7 @@ contract EditionStakeTest is BaseTest {
         vm.warp(3000);
 
         // check available rewards for stakerOne
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -207,7 +207,7 @@ contract EditionStakeTest is BaseTest {
         );
 
         // check available rewards for stakerTwo
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerTwo);
 
         assertEq(
             _availableRewards,
@@ -244,7 +244,7 @@ contract EditionStakeTest is BaseTest {
         );
 
         // check available rewards after claiming
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(_amountStaked, 50);
         assertEq(_availableRewards, 0);
@@ -270,12 +270,12 @@ contract EditionStakeTest is BaseTest {
         );
 
         // check available rewards after claiming -- stakerTwo
-        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerTwo);
         assertEq(_amountStaked, 20);
         assertEq(_availableRewards, 0);
 
         // check available rewards -- stakerOne
-        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
         assertEq(_amountStaked, 50);
         assertEq(
             _availableRewards,
@@ -347,7 +347,7 @@ contract EditionStakeTest is BaseTest {
         );
 
         // check available rewards after claiming
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(_amountStaked, 50);
         assertEq(_availableRewards, 0);
@@ -373,12 +373,12 @@ contract EditionStakeTest is BaseTest {
         );
 
         // check available rewards after claiming -- stakerTwo
-        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerTwo);
         assertEq(_amountStaked, 20);
         assertEq(_availableRewards, 0);
 
         // check available rewards -- stakerOne
-        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
         assertEq(_amountStaked, 50);
         assertEq(
             _availableRewards,
@@ -416,7 +416,7 @@ contract EditionStakeTest is BaseTest {
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
-        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -427,7 +427,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(300);
         vm.warp(3000);
 
-        (, uint256 _newRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _newRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _newRewards,
@@ -451,7 +451,7 @@ contract EditionStakeTest is BaseTest {
         newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards for token-1 -- should use defaultRewardsPerUnitTime for calculation
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -462,7 +462,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(500);
         vm.warp(5000);
 
-        (, _newRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _newRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         assertEq(
             _newRewards,
@@ -500,7 +500,7 @@ contract EditionStakeTest is BaseTest {
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
-        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -511,7 +511,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(300);
         vm.warp(3000);
 
-        (, uint256 _newRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _newRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _newRewards,
@@ -535,7 +535,7 @@ contract EditionStakeTest is BaseTest {
         newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards for token-1 -- should use defaultRewardsPerUnitTime for calculation
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -546,7 +546,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(500);
         vm.warp(5000);
 
-        (, _newRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _newRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         // should calculate based on newTimeOfLastUpdate and rewardsPerUnitTime (not default)
         assertEq(
@@ -585,7 +585,7 @@ contract EditionStakeTest is BaseTest {
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for timeUnit for calculation
-        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -596,7 +596,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(300);
         vm.warp(3000);
 
-        (, uint256 _newRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _newRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _newRewards,
@@ -620,7 +620,7 @@ contract EditionStakeTest is BaseTest {
         newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards for token-1 -- should use defaultTimeUnit for calculation
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -631,7 +631,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(500);
         vm.warp(5000);
 
-        (, _newRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _newRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         assertEq(
             _newRewards,
@@ -669,7 +669,7 @@ contract EditionStakeTest is BaseTest {
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for timeUnit for calculation
-        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -680,7 +680,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(300);
         vm.warp(3000);
 
-        (, uint256 _newRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _newRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _newRewards,
@@ -704,7 +704,7 @@ contract EditionStakeTest is BaseTest {
         newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards for token-1 -- should use defaultTimeUnit for calculation
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -715,7 +715,7 @@ contract EditionStakeTest is BaseTest {
         vm.roll(500);
         vm.warp(5000);
 
-        (, _newRewards) = stakeContract.getStakeInfo(1, stakerOne);
+        (, _newRewards) = stakeContract.getStakeInfoForToken(1, stakerOne);
 
         // should calculate based on newTimeOfLastUpdate and new time unit (not default)
         assertEq(
@@ -767,13 +767,13 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakeContract), 1), 20);
 
         // check available rewards after withdraw
-        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
         assertEq(
             _availableRewards,
             ((((block.timestamp - timeOfLastUpdate) * 50) * defaultRewardsPerUnitTime) / defaultTimeUnit)
         );
 
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerTwo);
         assertEq(
             _availableRewards,
             ((((block.timestamp - timeOfLastUpdate) * 20) * defaultRewardsPerUnitTime) / defaultTimeUnit)
@@ -784,7 +784,7 @@ contract EditionStakeTest is BaseTest {
         vm.warp(2000);
 
         // check rewards for stakerOne
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -804,7 +804,7 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakeContract), 1), 10);
 
         // check rewards for stakerTwo
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerTwo);
 
         assertEq(
             _availableRewards,
@@ -814,7 +814,7 @@ contract EditionStakeTest is BaseTest {
         // check rewards for stakerTwo after some time
         vm.roll(300);
         vm.warp(3000);
-        (, _availableRewards) = stakeContract.getStakeInfo(1, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(1, stakerTwo);
 
         assertEq(
             _availableRewards,
@@ -855,13 +855,13 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakeContract), 0), 10 + 20);
 
         // check available rewards after withdraw
-        (, uint256 _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, uint256 _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
         assertEq(
             _availableRewards,
             ((((block.timestamp - timeOfLastUpdate) * 50) * defaultRewardsPerUnitTime) / defaultTimeUnit)
         );
 
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerTwo);
         assertEq(
             _availableRewards,
             ((((block.timestamp - timeOfLastUpdate) * 20) * defaultRewardsPerUnitTime) / defaultTimeUnit)
@@ -872,7 +872,7 @@ contract EditionStakeTest is BaseTest {
         vm.warp(2000);
 
         // check rewards for stakerOne
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerOne);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerOne);
 
         assertEq(
             _availableRewards,
@@ -891,7 +891,7 @@ contract EditionStakeTest is BaseTest {
         assertEq(erc1155.balanceOf(address(stakeContract), 0), 10 + 10);
 
         // check rewards for stakerTwo
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerTwo);
 
         assertEq(
             _availableRewards,
@@ -901,7 +901,7 @@ contract EditionStakeTest is BaseTest {
         // check rewards for stakerTwo after some time
         vm.roll(300);
         vm.warp(3000);
-        (, _availableRewards) = stakeContract.getStakeInfo(0, stakerTwo);
+        (, _availableRewards) = stakeContract.getStakeInfoForToken(0, stakerTwo);
 
         assertEq(
             _availableRewards,
@@ -925,6 +925,24 @@ contract EditionStakeTest is BaseTest {
 
         vm.prank(stakerTwo);
         stakeContract.stake(0, 20);
+
+        // view staked tokens
+        vm.roll(200);
+        vm.warp(2000);
+        (uint256[] memory _tokensStaked, uint256[] memory _tokenAmounts, uint256 _totalRewards) = stakeContract
+            .getStakeInfo(stakerOne);
+
+        console.log("==== staker one ====");
+        for (uint256 i = 0; i < _tokensStaked.length; i++) {
+            console.log(_tokensStaked[i], _tokenAmounts[i]);
+        }
+
+        (_tokensStaked, _tokenAmounts, _totalRewards) = stakeContract.getStakeInfo(stakerTwo);
+
+        console.log("==== staker two ====");
+        for (uint256 i = 0; i < _tokensStaked.length; i++) {
+            console.log(_tokensStaked[i], _tokenAmounts[i]);
+        }
 
         // trying to withdraw more than staked
         vm.prank(stakerOne);

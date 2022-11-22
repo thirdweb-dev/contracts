@@ -98,9 +98,9 @@ contract StakingExtensionTest is DSTest, Test {
         assertEq(erc721.balanceOf(address(ext)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
 
         //=================== warp timestamp to calculate rewards
@@ -138,7 +138,7 @@ contract StakingExtensionTest is DSTest, Test {
         // check available rewards right after staking
         (_amountStaked, _availableRewards) = ext.getStakeInfo(stakerTwo);
 
-        assertEq(_amountStaked, _tokenIdsTwo.length);
+        assertEq(_amountStaked.length, _tokenIdsTwo.length);
         assertEq(_availableRewards, 0);
 
         //=================== warp timestamp to calculate rewards
@@ -212,9 +212,9 @@ contract StakingExtensionTest is DSTest, Test {
         );
 
         // check available rewards after claiming
-        (uint256 _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
     }
 
@@ -395,9 +395,9 @@ contract StakingExtensionTest is DSTest, Test {
         assertEq(erc721.balanceOf(address(ext)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
 
         //========== warp timestamp before withdraw

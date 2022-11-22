@@ -33,6 +33,9 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
     /// @dev List of accounts that have staked their NFTs.
     address[] public stakersArray;
 
+    uint256[] public indexedTokens;
+    mapping(uint256 => bool) public isIndexed;
+
     function __Staking721_init(address _nftCollection) internal onlyInitializing {
         __ReentrancyGuard_init();
 
@@ -125,8 +128,31 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
      *
      *  @param _staker    Address for which to calculated rewards.
      */
-    function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
-        _tokensStaked = stakers[_staker].amountStaked;
+    function getStakeInfo(address _staker)
+        public
+        view
+        virtual
+        returns (uint256[] memory _tokensStaked, uint256 _rewards)
+    {
+        uint256[] memory _indexedTokens = indexedTokens;
+        bool[] memory _isStakerToken = new bool[](_indexedTokens.length);
+        uint256 indexedTokenCount = _indexedTokens.length;
+        uint256 stakerTokenCount = 0;
+
+        for (uint256 i = 0; i < indexedTokenCount; i++) {
+            _isStakerToken[i] = stakerAddress[_indexedTokens[i]] == _staker;
+            if (_isStakerToken[i]) stakerTokenCount += 1;
+        }
+
+        _tokensStaked = new uint256[](stakerTokenCount);
+        uint256 count = 0;
+        for (uint256 i = 0; i < indexedTokenCount; i++) {
+            if (_isStakerToken[i]) {
+                _tokensStaked[count] = _indexedTokens[i];
+                count += 1;
+            }
+        }
+
         _rewards = _availableRewards(_staker);
     }
 
@@ -156,6 +182,11 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
             );
             IERC721(_nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
+
+            if (!isIndexed[_tokenIds[i]]) {
+                isIndexed[_tokenIds[i]] = true;
+                indexedTokens.push(_tokenIds[i]);
+            }
         }
         stakers[msg.sender].amountStaked += len;
 

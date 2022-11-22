@@ -187,7 +187,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
      *
      *  @param _staker    Address for which to calculated rewards.
      */
-    function getStakeInfo(uint256 _tokenId, address _staker)
+    function getStakeInfoForToken(uint256 _tokenId, address _staker)
         public
         view
         virtual
@@ -195,6 +195,44 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
     {
         _tokensStaked = stakers[_tokenId][_staker].amountStaked;
         _rewards = _availableRewards(_tokenId, _staker);
+    }
+
+    /**
+     *  @notice View amount staked and total rewards for a user.
+     *
+     *  @param _staker    Address for which to calculated rewards.
+     */
+    function getStakeInfo(address _staker)
+        public
+        view
+        virtual
+        returns (
+            uint256[] memory _tokensStaked,
+            uint256[] memory _tokenAmounts,
+            uint256 _totalRewards
+        )
+    {
+        uint256[] memory _indexedTokens = indexedTokens;
+        uint256[] memory _stakedAmounts = new uint256[](_indexedTokens.length);
+        uint256 indexedTokenCount = _indexedTokens.length;
+        uint256 stakerTokenCount = 0;
+
+        for (uint256 i = 0; i < indexedTokenCount; i++) {
+            _stakedAmounts[i] = stakers[_indexedTokens[i]][_staker].amountStaked;
+            if (_stakedAmounts[i] > 0) stakerTokenCount += 1;
+        }
+
+        _tokensStaked = new uint256[](stakerTokenCount);
+        _tokenAmounts = new uint256[](stakerTokenCount);
+        uint256 count = 0;
+        for (uint256 i = 0; i < indexedTokenCount; i++) {
+            if (_stakedAmounts[i] > 0) {
+                _tokensStaked[count] = _indexedTokens[i];
+                _tokenAmounts[count] = _stakedAmounts[i];
+                _totalRewards += _availableRewards(_indexedTokens[i], _staker);
+                count += 1;
+            }
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
