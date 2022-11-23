@@ -12,8 +12,11 @@ import "./interface/IStaking.sol";
 
 abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking {
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            State variables / Mappings
     //////////////////////////////////////////////////////////////*/
+
+    ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
+    address public nftCollection;
 
     /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
     uint256 public timeUnit;
@@ -21,10 +24,13 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
     ///@dev Rewards accumulated per unit of time.
     uint256 public rewardsPerUnitTime;
 
-    ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
-    address public nftCollection;
+    ///@dev List of token-ids ever staked.
+    uint256[] public indexedTokens;
 
-    ///@dev Mapping from staker address to Staker struct. See {struct IStaking.Staker}.
+    ///@dev Mapping from token-id to whether it is indexed or not.
+    mapping(uint256 => bool) public isIndexed;
+
+    ///@dev Mapping from staker address to Staker struct. See {struct IStaking721.Staker}.
     mapping(address => Staker) public stakers;
 
     /// @dev Mapping from staked token-id to staker address.
@@ -32,9 +38,6 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
 
     /// @dev List of accounts that have staked their NFTs.
     address[] public stakersArray;
-
-    uint256[] public indexedTokens;
-    mapping(uint256 => bool) public isIndexed;
 
     function __Staking721_init(address _nftCollection) internal onlyInitializing {
         __ReentrancyGuard_init();
@@ -126,7 +129,9 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
     /**
      *  @notice View amount staked and total rewards for a user.
      *
-     *  @param _staker    Address for which to calculated rewards.
+     *  @param _staker          Address for which to calculated rewards.
+     *  @return _tokensStaked   List of token-ids staked by staker.
+     *  @return _rewards        Available reward amount.
      */
     function getStakeInfo(address _staker)
         public
@@ -284,7 +289,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
     }
 
     /**
-     *  @dev    Mint ERC20 rewards to the staker. Must override.
+     *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.
      *
      *  @param _staker    Address for which to calculated rewards.
      *  @param _rewards   Amount of tokens to be given out as reward.
@@ -294,7 +299,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking 
      * ```
      *  function _mintRewards(address _staker, uint256 _rewards) internal override {
      *
-     *      IERC20(rewardTokenAddress)._mint(_staker, _rewards);
+     *      TokenERC20(rewardTokenAddress).mintTo(_staker, _rewards);
      *
      *  }
      * ```

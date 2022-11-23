@@ -29,7 +29,31 @@ Claim accumulated rewards.
 ### getStakeInfo
 
 ```solidity
-function getStakeInfo(uint256 tokenId, address staker) external view returns (uint256 _tokensStaked, uint256 _rewards)
+function getStakeInfo(address staker) external view returns (uint256[] _tokensStaked, uint256[] _tokenAmounts, uint256 _totalRewards)
+```
+
+View amount staked and total rewards for a user.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| staker | address | Address for which to calculated rewards. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _tokensStaked | uint256[] | undefined |
+| _tokenAmounts | uint256[] | undefined |
+| _totalRewards | uint256 | undefined |
+
+### getStakeInfoForToken
+
+```solidity
+function getStakeInfoForToken(uint256 tokenId, address staker) external view returns (uint256 _tokensStaked, uint256 _rewards)
 ```
 
 View amount staked and total rewards for a user.
@@ -140,6 +164,40 @@ event TokensWithdrawn(address indexed staker, uint256 indexed tokenId, uint256 a
 | staker `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
 | amount  | uint256 | undefined |
+
+### UpdatedDefaultRewardsPerUnitTime
+
+```solidity
+event UpdatedDefaultRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime)
+```
+
+
+
+*Emitted when contract admin updates rewardsPerUnitTime.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| oldRewardsPerUnitTime  | uint256 | undefined |
+| newRewardsPerUnitTime  | uint256 | undefined |
+
+### UpdatedDefaultTimeUnit
+
+```solidity
+event UpdatedDefaultTimeUnit(uint256 oldTimeUnit, uint256 newTimeUnit)
+```
+
+
+
+*Emitted when contract admin updates timeUnit.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| oldTimeUnit  | uint256 | undefined |
+| newTimeUnit  | uint256 | undefined |
 
 ### UpdatedRewardsPerUnitTime
 

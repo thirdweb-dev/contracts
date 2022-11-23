@@ -12,32 +12,35 @@ import "./interface/IStaking1155.sol";
 
 abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            State variables / Mappings
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
-    mapping(uint256 => uint256) public timeUnit;
-
-    ///@dev Rewards accumulated per unit of time.
-    mapping(uint256 => uint256) public rewardsPerUnitTime;
 
     ///@dev Address of ERC1155 contract -- staked tokens belong to this contract.
     address public edition;
 
-    /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
+    /// @dev Default unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
     uint256 public defaultTimeUnit;
 
-    ///@dev Rewards accumulated per unit of time.
+    ///@dev Default rewards accumulated per unit of time.
     uint256 public defaultRewardsPerUnitTime;
 
-    ///@dev Mapping from staker address to Staker struct. See {struct IStaking.Staker}.
+    ///@dev List of token-ids ever staked.
+    uint256[] public indexedTokens;
+
+    ///@dev Mapping from token-id to whether it is indexed or not.
+    mapping(uint256 => bool) public isIndexed;
+
+    /// @dev Mapping from token-id to unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
+    mapping(uint256 => uint256) public timeUnit;
+
+    ///@dev Mapping from token-id to rewards accumulated per unit of time.
+    mapping(uint256 => uint256) public rewardsPerUnitTime;
+
+    ///@dev Mapping from token-id and staker address to Staker struct. See {struct IStaking1155.Staker}.
     mapping(uint256 => mapping(address => Staker)) public stakers;
 
-    /// @dev List of accounts that have staked their NFTs.
+    /// @dev Mapping from token-id to list of accounts that have staked that token-id.
     mapping(uint256 => address[]) public stakersArray;
-
-    uint256[] public indexedTokens;
-    mapping(uint256 => bool) public isIndexed;
 
     constructor(address _edition) ReentrancyGuard() {
         require(address(_edition) != address(0), "address 0");
@@ -181,9 +184,11 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     }
 
     /**
-     *  @notice View amount staked and total rewards for a user.
+     *  @notice View amount staked and rewards for a user, for a given token-id.
      *
-     *  @param _staker    Address for which to calculated rewards.
+     *  @param _staker          Address for which to calculated rewards.
+     *  @return _tokensStaked   Amount of tokens staked for given token-id.
+     *  @return _rewards        Available reward amount.
      */
     function getStakeInfoForToken(uint256 _tokenId, address _staker)
         public
@@ -196,9 +201,12 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     }
 
     /**
-     *  @notice View amount staked and total rewards for a user.
+     *  @notice View all tokens staked and total rewards for a user.
      *
-     *  @param _staker    Address for which to calculated rewards.
+     *  @param _staker          Address for which to calculated rewards.
+     *  @return _tokensStaked   List of token-ids staked.
+     *  @return _tokenAmounts   Amount of each token-id staked.
+     *  @return _totalRewards   Total rewards available.
      */
     function getStakeInfo(address _staker)
         public
@@ -368,7 +376,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     }
 
     /**
-     *  @dev    Mint ERC20 rewards to the staker. Must override.
+     *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.
      *
      *  @param _staker    Address for which to calculated rewards.
      *  @param _rewards   Amount of tokens to be given out as reward.
@@ -378,7 +386,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      * ```
      *  function _mintRewards(address _staker, uint256 _rewards) internal override {
      *
-     *      IERC20(rewardTokenAddress)._mint(_staker, _rewards);
+     *      TokenERC20(rewardTokenAddress).mintTo(_staker, _rewards);
      *
      *  }
      * ```

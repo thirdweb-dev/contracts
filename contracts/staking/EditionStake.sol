@@ -5,9 +5,6 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 
-// Security
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
@@ -62,7 +59,6 @@ contract EditionStake is
         _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
-
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
@@ -106,6 +102,7 @@ contract EditionStake is
                         Transfer Staking Rewards
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Mint/Transfer ERC20 rewards to the staker.
     function _mintRewards(address _staker, uint256 _rewards) internal override {
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _staker, _rewards);
     }

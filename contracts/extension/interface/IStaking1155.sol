@@ -12,10 +12,14 @@ interface IStaking1155 {
     event RewardsClaimed(address indexed staker, uint256 rewardAmount);
 
     /// @dev Emitted when contract admin updates timeUnit.
-    event UpdatedTimeUnit(uint256 _tokenId, uint256 oldTimeUnit, uint256 newTimeUnit);
+    event UpdatedTimeUnit(uint256 indexed _tokenId, uint256 oldTimeUnit, uint256 newTimeUnit);
 
     /// @dev Emitted when contract admin updates rewardsPerUnitTime.
-    event UpdatedRewardsPerUnitTime(uint256 _tokenId, uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime);
+    event UpdatedRewardsPerUnitTime(
+        uint256 indexed _tokenId,
+        uint256 oldRewardsPerUnitTime,
+        uint256 newRewardsPerUnitTime
+    );
 
     /// @dev Emitted when contract admin updates timeUnit.
     event UpdatedDefaultTimeUnit(uint256 oldTimeUnit, uint256 newTimeUnit);

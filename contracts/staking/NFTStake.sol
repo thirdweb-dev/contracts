@@ -5,9 +5,6 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
-// Security
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
@@ -62,7 +59,6 @@ contract NFTStake is
         _setRewardsPerUnitTime(_rewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
-
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
@@ -97,6 +93,7 @@ contract NFTStake is
                         Transfer Staking Rewards
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Mint/Transfer ERC20 rewards to the staker.
     function _mintRewards(address _staker, uint256 _rewards) internal override {
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _staker, _rewards);
     }

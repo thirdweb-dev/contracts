@@ -1,4 +1,4 @@
-# Staking1155
+# Staking1155Upgradeable
 
 
 
@@ -364,6 +364,22 @@ Withdraw staked tokens.
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### RewardsClaimed
 
