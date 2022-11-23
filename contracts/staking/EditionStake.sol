@@ -2,8 +2,8 @@
 pragma solidity ^0.8.11;
 
 // Token
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
@@ -21,18 +21,18 @@ import "../lib/FeeType.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
-import { Staking721Upgradeable } from "../extension/Staking721Upgradeable.sol";
+import { Staking1155Upgradeable } from "../extension/Staking1155Upgradeable.sol";
 
-contract NFTStake is
+contract EditionStake is
     Initializable,
     ContractMetadata,
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    IERC721ReceiverUpgradeable,
-    Staking721Upgradeable
+    IERC1155ReceiverUpgradeable,
+    Staking1155Upgradeable
 {
-    bytes32 private constant MODULE_TYPE = bytes32("NFTStake");
+    bytes32 private constant MODULE_TYPE = bytes32("EditionStake");
     uint256 private constant VERSION = 1;
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
@@ -46,17 +46,17 @@ contract NFTStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _rewardToken,
-        address _nftCollection,
-        uint256 _timeUnit,
-        uint256 _rewardsPerUnitTime
+        address _edition,
+        uint256 _defaultTimeUnit,
+        uint256 _defaultRewardsPerUnitTime
     ) external initializer {
         __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
-        __Staking721_init(_nftCollection);
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        __Staking1155_init(_edition);
+        _setDefaultTimeUnit(_defaultTimeUnit);
+        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -76,17 +76,26 @@ contract NFTStake is
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC721Received(
+    function onERC1155Received(
         address,
         address,
         uint256,
+        uint256,
         bytes calldata
-    ) external pure override returns (bytes4) {
-        return this.onERC721Received.selector;
+    ) external returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external returns (bytes4) {}
+
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId;
+        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////

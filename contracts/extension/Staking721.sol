@@ -12,8 +12,11 @@ import "./interface/IStaking.sol";
 
 abstract contract Staking721 is ReentrancyGuard, IStaking {
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            State variables / Mappings
     //////////////////////////////////////////////////////////////*/
+
+    ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
+    address public nftCollection;
 
     /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
     uint256 public timeUnit;
@@ -21,10 +24,13 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
     ///@dev Rewards accumulated per unit of time.
     uint256 public rewardsPerUnitTime;
 
-    ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
-    address public nftCollection;
+    ///@dev List of token-ids ever staked.
+    uint256[] public indexedTokens;
 
-    ///@dev Mapping from staker address to Staker struct. See {struct IStaking.Staker}.
+    ///@dev Mapping from token-id to whether it is indexed or not.
+    mapping(uint256 => bool) public isIndexed;
+
+    ///@dev Mapping from staker address to Staker struct. See {struct IStaking721.Staker}.
     mapping(address => Staker) public stakers;
 
     /// @dev Mapping from staked token-id to staker address.
@@ -121,10 +127,35 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
     /**
      *  @notice View amount staked and total rewards for a user.
      *
-     *  @param _staker    Address for which to calculated rewards.
+     *  @param _staker          Address for which to calculated rewards.
+     *  @return _tokensStaked   List of token-ids staked by staker.
+     *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
-        _tokensStaked = stakers[_staker].amountStaked;
+    function getStakeInfo(address _staker)
+        public
+        view
+        virtual
+        returns (uint256[] memory _tokensStaked, uint256 _rewards)
+    {
+        uint256[] memory _indexedTokens = indexedTokens;
+        bool[] memory _isStakerToken = new bool[](_indexedTokens.length);
+        uint256 indexedTokenCount = _indexedTokens.length;
+        uint256 stakerTokenCount = 0;
+
+        for (uint256 i = 0; i < indexedTokenCount; i++) {
+            _isStakerToken[i] = stakerAddress[_indexedTokens[i]] == _staker;
+            if (_isStakerToken[i]) stakerTokenCount += 1;
+        }
+
+        _tokensStaked = new uint256[](stakerTokenCount);
+        uint256 count = 0;
+        for (uint256 i = 0; i < indexedTokenCount; i++) {
+            if (_isStakerToken[i]) {
+                _tokensStaked[count] = _indexedTokens[i];
+                count += 1;
+            }
+        }
+
         _rewards = _availableRewards(_staker);
     }
 
@@ -137,6 +168,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         uint256 len = _tokenIds.length;
         require(len != 0, "Staking 0 tokens");
 
+        address _nftCollection = nftCollection;
+
         if (stakers[msg.sender].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(msg.sender);
         } else {
@@ -144,9 +177,19 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
             stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         }
         for (uint256 i = 0; i < len; ++i) {
-            require(IERC721(nftCollection).ownerOf(_tokenIds[i]) == msg.sender, "Not owner");
-            IERC721(nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
+            require(
+                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == msg.sender &&
+                    (IERC721(_nftCollection).getApproved(_tokenIds[i]) == address(this) ||
+                        IERC721(_nftCollection).isApprovedForAll(msg.sender, address(this))),
+                "Not owned or approved"
+            );
+            IERC721(_nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
+
+            if (!isIndexed[_tokenIds[i]]) {
+                isIndexed[_tokenIds[i]] = true;
+                indexedTokens.push(_tokenIds[i]);
+            }
         }
         stakers[msg.sender].amountStaked += len;
 
@@ -159,6 +202,8 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         uint256 len = _tokenIds.length;
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
+
+        address _nftCollection = nftCollection;
 
         _updateUnclaimedRewardsForStaker(msg.sender);
 
@@ -175,7 +220,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
         for (uint256 i = 0; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
+            IERC721(_nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
 
         emit TokensWithdrawn(msg.sender, _tokenIds);
@@ -242,7 +287,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
     }
 
     /**
-     *  @dev    Mint ERC20 rewards to the staker. Must override.
+     *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.
      *
      *  @param _staker    Address for which to calculated rewards.
      *  @param _rewards   Amount of tokens to be given out as reward.
@@ -252,7 +297,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking {
      * ```
      *  function _mintRewards(address _staker, uint256 _rewards) internal override {
      *
-     *      IERC20(rewardTokenAddress)._mint(_staker, _rewards);
+     *      TokenERC20(rewardTokenAddress).mintTo(_staker, _rewards);
      *
      *  }
      * ```

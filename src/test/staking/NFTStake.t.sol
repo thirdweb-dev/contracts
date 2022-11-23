@@ -68,9 +68,9 @@ contract NFTStakeTest is BaseTest {
         assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
 
         //=================== warp timestamp to calculate rewards
@@ -108,7 +108,7 @@ contract NFTStakeTest is BaseTest {
         // check available rewards right after staking
         (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(stakerTwo);
 
-        assertEq(_amountStaked, _tokenIdsTwo.length);
+        assertEq(_amountStaked.length, _tokenIdsTwo.length);
         assertEq(_availableRewards, 0);
 
         //=================== warp timestamp to calculate rewards
@@ -147,7 +147,7 @@ contract NFTStakeTest is BaseTest {
         _tokenIds[0] = 6;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not owner");
+        vm.expectRevert("Not owned or approved");
         stakeContract.stake(_tokenIds);
     }
 
@@ -182,9 +182,9 @@ contract NFTStakeTest is BaseTest {
         );
 
         // check available rewards after claiming
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
     }
 
@@ -365,18 +365,22 @@ contract NFTStakeTest is BaseTest {
         assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
+
+        console.log("==== staked tokens before withdraw ====");
+        for (uint256 i = 0; i < _amountStaked.length; i++) {
+            console.log(_amountStaked[i]);
+        }
 
         //========== warp timestamp before withdraw
         vm.roll(100);
         vm.warp(1000);
 
-        uint256[] memory _tokensToWithdraw = new uint256[](2);
-        _tokensToWithdraw[0] = 2;
-        _tokensToWithdraw[1] = 0;
+        uint256[] memory _tokensToWithdraw = new uint256[](1);
+        _tokensToWithdraw[0] = 1;
 
         vm.prank(stakerOne);
         stakeContract.withdraw(_tokensToWithdraw);
@@ -386,12 +390,17 @@ contract NFTStakeTest is BaseTest {
             assertEq(erc721.ownerOf(_tokensToWithdraw[i]), stakerOne);
             assertEq(stakeContract.stakerAddress(_tokensToWithdraw[i]), address(0));
         }
-        assertEq(erc721.balanceOf(stakerOne), 4);
-        assertEq(erc721.balanceOf(address(stakeContract)), 1);
+        assertEq(erc721.balanceOf(stakerOne), 3);
+        assertEq(erc721.balanceOf(address(stakeContract)), 2);
 
         // check available rewards after withdraw
-        (, _availableRewards) = stakeContract.getStakeInfo(stakerOne);
+        (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(stakerOne);
         assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 3) * rewardsPerUnitTime) / timeUnit));
+
+        console.log("==== staked tokens after withdraw ====");
+        for (uint256 i = 0; i < _amountStaked.length; i++) {
+            console.log(_amountStaked[i]);
+        }
 
         uint256 timeOfLastUpdateLatest = block.timestamp;
 
@@ -404,8 +413,23 @@ contract NFTStakeTest is BaseTest {
         assertEq(
             _availableRewards,
             (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardsPerUnitTime) / timeUnit) +
-                (((((block.timestamp - timeOfLastUpdateLatest) * 1)) * rewardsPerUnitTime) / timeUnit)
+                (((((block.timestamp - timeOfLastUpdateLatest) * 2)) * rewardsPerUnitTime) / timeUnit)
         );
+
+        // stake again
+        vm.prank(stakerOne);
+        stakeContract.stake(_tokensToWithdraw);
+
+        _tokensToWithdraw[0] = 5;
+        vm.prank(stakerTwo);
+        stakeContract.stake(_tokensToWithdraw);
+        // check available rewards after re-staking
+        (_amountStaked, ) = stakeContract.getStakeInfo(stakerOne);
+
+        console.log("==== staked tokens after re-staking ====");
+        for (uint256 i = 0; i < _amountStaked.length; i++) {
+            console.log(_amountStaked[i]);
+        }
     }
 
     function test_revert_withdraw_withdrawingZeroTokens() public {

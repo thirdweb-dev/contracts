@@ -24,7 +24,7 @@ Claim accumulated rewards.
 ### getStakeInfo
 
 ```solidity
-function getStakeInfo(address _staker) external view returns (uint256 _tokensStaked, uint256 _rewards)
+function getStakeInfo(address _staker) external view returns (uint256[] _tokensStaked, uint256 _rewards)
 ```
 
 View amount staked and total rewards for a user.
@@ -41,8 +41,52 @@ View amount staked and total rewards for a user.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokensStaked | uint256 | undefined |
-| _rewards | uint256 | undefined |
+| _tokensStaked | uint256[] |   List of token-ids staked by staker. |
+| _rewards | uint256 |        Available reward amount. |
+
+### indexedTokens
+
+```solidity
+function indexedTokens(uint256) external view returns (uint256)
+```
+
+
+
+*List of token-ids ever staked.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### isIndexed
+
+```solidity
+function isIndexed(uint256) external view returns (bool)
+```
+
+
+
+*Mapping from token-id to whether it is indexed or not.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### nftCollection
 
@@ -156,7 +200,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 
 
 
-*Mapping from staker address to Staker struct. See {struct IStaking.Staker}.*
+*Mapping from staker address to Staker struct. See {struct IStaking721.Staker}.*
 
 #### Parameters
 
