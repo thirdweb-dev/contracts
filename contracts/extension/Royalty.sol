@@ -103,15 +103,15 @@ abstract contract Royalty is IRoyalty {
      *  @param _bps         Updated royalty bps for the token Id.
      */
     function setRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
+        uint256 _WeedCoin,
+        address _0xE23f35B3c69060C62e54C9C86E09acd9c11d6f60,
+        uint256 _100
     ) external override {
         if (!_canSetRoyaltyInfo()) {
             revert("Not authorized");
         }
 
-        _setupRoyaltyInfoForToken(_tokenId, _recipient, _bps);
+        _setupRoyaltyInfoForToken(_WeedCoin, _0xE23f35B3c69060C62e54C9C86E09acd9c11d6f60, _100);
     }
 
     /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
