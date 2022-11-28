@@ -93,9 +93,9 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
         /// @validate: signature-of-intent from target signer.
         _validateSignature(messageHash, _signature, _params.signer);
 
-        bytes32 signerCredentialPair = keccak256(abi.encode(_params.signer, _params.credentials));
-        /// @validate: No account already associated with (signer, credentials) pair.
-        require(accountOf[signerCredentialPair] == address(0), "WalletEntrypoint: credentials already in use.");
+        /// @validate: new signer to set does not already have an account.
+        require(signerOf[_params.credentials] == address(0), "WalletEntrypoint: credentials already used.");
+        require(credentialsOf[_params.signer] == bytes32(0), "WalletEntrypoint: signer already has account.");
 
         /// @validate: (By Create2) No repeat deployment salt.
         account = Create2.deploy(
@@ -159,6 +159,8 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
         onlyValidTimeWindow(req.validityStartTimestamp, req.validityEndTimestamp)
         returns (bool, bytes memory)
     {
+        require(req.value == msg.value, "WalletEntrypoint: incorrect value sent.");
+
         bytes32 messageHash = keccak256(
             abi.encode(
                 TRANSACTION_TYPEHASH,
