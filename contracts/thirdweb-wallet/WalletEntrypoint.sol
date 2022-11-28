@@ -116,6 +116,8 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     {
         /// @validate: no empty new credentials.
         require(_params.newCredentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
+        /// @validate: no credentials re-use.
+        require(signerOf[_params.newCredentials] == address(0), "WalletEntrypoint: credentials already used.");
         /// @validate: new signer to set does not already have an account.
         require(credentialsOf[_params.newSigner] == bytes32(0), "WalletEntrypoint: signer already has account.");
 

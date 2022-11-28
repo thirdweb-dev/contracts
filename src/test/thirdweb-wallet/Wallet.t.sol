@@ -556,19 +556,253 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      *      - signature of intent by incumbent signer.
      *      - validity start and end timestamps
      */
-    function test_state_changeSignerForAccount() external {}
+    function test_state_changeSignerForAccount() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    function test_revert_changeSignerForAccount_newSignerAlreadyHasAccount() external {}
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
 
-    function test_revert_changeSignerForAccount_signatureNotFromIncumbentSigner() external {}
+        assertEq(Wallet(payable(account)).signer(), signer1);
 
-    function test_revert_changeSignerForAccount_changingForIncorrectAccount() external {}
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: keccak256("2"),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    function test_revert_changeSignerForAccount_emptyCredentials() external {}
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
 
-    function test_revert_changeSignerForAccount_requestBeforeValidityStart() external {}
+        assertEq(Wallet(payable(account)).signer(), signer2);
+    }
 
-    function test_revert_changeSignerForAccount_requestAfterValidityEnd() external {}
+    function test_revert_changeSignerForAccount_newSignerAlreadyHasAccount() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer1,
+            newCredentials: keccak256("2"),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+
+        vm.expectRevert("WalletEntrypoint: signer already has account.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
+
+    function test_revert_changeSignerForAccount_signatureNotFromIncumbentSigner() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: keccak256("2"),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey2, address(admin));
+
+        vm.expectRevert("WalletEntrypoint: invalid signer.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
+
+    function test_revert_changeSignerForAccount_changingForIncorrectAccount() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: address(0x123),
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: keccak256("2"),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+
+        vm.expectRevert("WalletEntrypoint: incorrect account provided.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
+
+    function test_revert_changeSignerForAccount_emptyCredentials() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: bytes32(0),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+
+        vm.expectRevert("WalletEntrypoint: invalid credentials.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
+
+    function test_revert_changeSignerForAccount_credentialsAlreadyUsed() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: keccak256("1"),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+
+        vm.expectRevert("WalletEntrypoint: credentials already used.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
+
+    function test_revert_changeSignerForAccount_requestBeforeValidityStart() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        uint128 validityStart = 50;
+        uint128 validityEnd = 100;
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: keccak256("2"),
+            validityStartTimestamp: validityStart,
+            validityEndTimestamp: validityEnd
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+
+        vm.warp(validityStart - 1);
+        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
+
+    function test_revert_changeSignerForAccount_requestAfterValidityEnd() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address account = admin.createAccount(params, signature);
+
+        assertEq(Wallet(payable(account)).signer(), signer1);
+
+        uint128 validityStart = 50;
+        uint128 validityEnd = 100;
+
+        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+            account: account,
+            currentSigner: signer1,
+            newSigner: signer2,
+            newCredentials: keccak256("2"),
+            validityStartTimestamp: validityStart,
+            validityEndTimestamp: validityEnd
+        });
+
+        bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
+
+        vm.warp(validityEnd);
+        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
+    }
 
     /*///////////////////////////////////////////////////////////////
                 Test action: Deploying a smart contract.
