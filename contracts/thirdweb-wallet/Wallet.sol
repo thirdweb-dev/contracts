@@ -19,20 +19,36 @@ contract Wallet is IWallet, EIP712 {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            Constants
     //////////////////////////////////////////////////////////////*/
 
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
     bytes32 private constant EXECUTE_TYPEHASH =
-        keccak256("Execute(address target,bytes data,uint256 nonce,uint256 txGas,uint256 value)");
+        keccak256(
+            "TransactionParams(address target,bytes data,uint256 nonce,uint256 txGas,uint256 value,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
 
+    bytes32 private constant DEPLOY_TYPEHASH =
+        keccak256(
+            "DeployParams(bytes bytecode,bytes32 salt,uint256 value,uint256 nonce,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
+
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice The admin of the wallet; the only address that is a valid `msg.sender` in this contract.
     address public controller;
+
+    /// @notice The signer of the wallet; a signature from this signer must be provided to execute with the wallet.
     address public signer;
+
+    /// @notice The nonce of the wallet.
     uint256 public nonce;
 
     /*///////////////////////////////////////////////////////////////
-                            Constructor
+                        Constructor & Modifiers
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _controller, address _signer) payable EIP712("thirdwebWallet", "1") {
@@ -40,12 +56,27 @@ contract Wallet is IWallet, EIP712 {
         signer = _signer;
     }
 
-    /*///////////////////////////////////////////////////////////////
-                            Modifiers
-    //////////////////////////////////////////////////////////////*/
-
+    /// @dev Checks whether the caller is `controller`.
     modifier onlyController() {
-        require(controller == msg.sender, "!Controller");
+        require(controller == msg.sender, "Wallet: caller not controller.");
+        _;
+    }
+
+    /// @dev Checks whether a valid nonce is provided with the action request.
+    modifier onlyValidNonce(uint256 _nonce) {
+        require(_nonce == nonce, "Wallet: incorrect nonce.");
+        nonce += 1;
+        _;
+    }
+
+    /// @dev Checks whether a request is processed within its respective valid time window.
+    modifier onlyValidTimeWindow(uint128 validityStartTimestamp, uint128 validityEndTimestamp) {
+        /// @validate: request to create account not pre-mature or expired.
+        require(
+            validityStartTimestamp <= block.timestamp && block.timestamp < validityEndTimestamp,
+            "Wallet: request premature or expired."
+        );
+
         _;
     }
 
@@ -53,37 +84,69 @@ contract Wallet is IWallet, EIP712 {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Lets this contract receive native tokens.
     receive() external payable {}
 
-    function execute(TxParams calldata txParams, bytes memory signature)
+    /// @notice Perform transactions; send native tokens or call a smart contract.
+    function execute(TransactionParams calldata _params, bytes memory _signature)
         external
         onlyController
+        onlyValidNonce(_params.nonce)
+        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (bool success)
     {
-        require(txParams.nonce == nonce, "Wallet: invalid nonce.");
-        nonce += 1;
-
-        address signer_ = _verifySignature(txParams, signature);
-        success = _call(txParams);
-
-        emit TransactionExecuted(
-            signer_,
-            txParams.target,
-            txParams.data,
-            txParams.nonce,
-            txParams.value,
-            txParams.txGas
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                EXECUTE_TYPEHASH,
+                _params.target,
+                keccak256(bytes(_params.data)),
+                _params.nonce,
+                _params.value,
+                _params.gas,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            )
         );
+        _validateSignature(messageHash, _signature);
+        success = _call(_params);
+
+        emit TransactionExecuted(signer, _params.target, _params.data, _params.nonce, _params.value, _params.gas);
     }
 
-    function deploy(DeployParams calldata deployParams) external onlyController returns (address deployment) {
-        require(deployParams.nonce == nonce, "Wallet: invalid nonce.");
-        nonce += 1;
-
-        deployment = Create2.deploy(deployParams.value, deployParams.salt, deployParams.bytecode);
+    /// @notice Deploys a smart contract.
+    function deploy(DeployParams calldata _params, bytes memory _signature)
+        external
+        onlyController
+        onlyValidNonce(_params.nonce)
+        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
+        returns (address deployment)
+    {
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                DEPLOY_TYPEHASH,
+                keccak256(bytes(_params.bytecode)),
+                _params.salt,
+                _params.value,
+                _params.nonce,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            )
+        );
+        _validateSignature(messageHash, _signature);
+        deployment = Create2.deploy(_params.value, _params.salt, _params.bytecode);
         emit ContractDeployed(deployment);
     }
 
+    /// @notice Updates the signer of this contract.
+    function updateSigner(address _newSigner) external onlyController returns (bool success) {
+        address prevSigner = signer;
+        signer = _newSigner;
+        success = true;
+
+        emit SignerUpdated(prevSigner, _newSigner);
+    }
+
+    /// @notice See EIP-1271. Returns whether a signature is a valid signature made on behalf of this contract.
     function isValidSignature(bytes32 _hash, bytes calldata _signature) external view override returns (bytes4) {
         address signer_ = _hash.recover(_signature);
 
@@ -93,14 +156,6 @@ contract Wallet is IWallet, EIP712 {
         } else {
             return 0xffffffff;
         }
-    }
-
-    function updateSigner(address _newSigner) external onlyController returns (bool success) {
-        address prevSigner = signer;
-        signer = _newSigner;
-        success = true;
-
-        emit SignerUpdated(prevSigner, _newSigner);
     }
 
     function onERC721Received(
@@ -136,29 +191,24 @@ contract Wallet is IWallet, EIP712 {
                             Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    function _verifySignature(TxParams calldata _txParams, bytes memory _signature)
-        internal
-        view
-        returns (address signer_)
-    {
-        signer_ = _hashTypedDataV4(keccak256(_encodeRequest(_txParams))).recover(_signature);
-        require(signer == signer_, "Wallet: invalid signer.");
+    /// @dev Validates a signature.
+    function _validateSignature(bytes32 _messageHash, bytes memory _signature) internal view {
+        bool validSignature = false;
+        address signer_ = signer;
+
+        if (signer_.code.length > 0) {
+            validSignature = MAGICVALUE == IERC1271(signer_).isValidSignature(_messageHash, _signature);
+        } else {
+            address recoveredSigner = _hashTypedDataV4(_messageHash).recover(_signature);
+            validSignature = signer_ == recoveredSigner;
+        }
+
+        require(validSignature, "Wallet: invalid signer.");
     }
 
-    function _encodeRequest(TxParams calldata _txParams) internal pure returns (bytes memory) {
-        return
-            abi.encode(
-                EXECUTE_TYPEHASH,
-                _txParams.target,
-                keccak256(bytes(_txParams.data)),
-                _txParams.nonce,
-                _txParams.value,
-                _txParams.txGas
-            );
-    }
-
-    function _call(TxParams memory txParams) internal returns (bool) {
-        (bool success, bytes memory result) = txParams.target.call{ value: txParams.value, gas: txParams.txGas }(
+    /// @dev Performs a call; sends native tokens or calls a smart contract.
+    function _call(TransactionParams memory txParams) internal returns (bool) {
+        (bool success, bytes memory result) = txParams.target.call{ value: txParams.value, gas: txParams.gas }(
             txParams.data
         );
         if (!success) {

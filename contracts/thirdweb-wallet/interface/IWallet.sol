@@ -19,27 +19,57 @@ interface IWallet is IERC1271 {
                                 Structs
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Parameters to pass to make the wallet deploy a smart contract.
+     *
+     *  @param bytecode The smart contract bytcode to deploy.
+     *  @param salt The create2 salt for smart contract deployment.
+     *  @param value The amount of native tokens to pass to the contract on creation.
+     *  @param nonce The nonce of the smart contract wallet at the time of deploying the contract.
+     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
+     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
+     */
     struct DeployParams {
         bytes bytecode;
         bytes32 salt;
         uint256 value;
         uint256 nonce;
+        uint128 validityStartTimestamp;
+        uint128 validityEndTimestamp;
     }
 
-    struct TxParams {
+    /**
+     *  @notice Parameters to pass to make the wallet perform a call.
+     *
+     *  @param target The call's target address.
+     *  @param data The call data.
+     *  @param nonce The nonce of the smart contract wallet at the time of making the call.
+     *  @param value The value to send in the call.
+     *  @param gas The gas to send in the call.
+     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
+     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
+     */
+    struct TransactionParams {
         address target;
         bytes data;
         uint256 nonce;
         uint256 value;
-        uint256 txGas;
+        uint256 gas;
+        uint128 validityStartTimestamp;
+        uint128 validityEndTimestamp;
     }
 
     /*///////////////////////////////////////////////////////////////
                                 Events
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Emitted when the signer of the wallet is updated.
     event SignerUpdated(address prevSigner, address newSigner);
+
+    /// @notice Emitted when the wallet deploys a smart contract.
     event ContractDeployed(address indexed deployment);
+
+    /// @notice Emitted when a wallet performs a call.
     event TransactionExecuted(
         address indexed signer,
         address indexed target,
@@ -53,9 +83,26 @@ interface IWallet is IERC1271 {
                                 Functions
     //////////////////////////////////////////////////////////////*/
 
-    function execute(TxParams calldata txParams, bytes memory signature) external returns (bool success);
+    /**
+     *  @notice Performs a call; sends native tokens or calls a smart contract.
+     *
+     *  @param params Parameters to pass to make the wallet perform a call.
+     *  @param signature A signature of intent from the wallet's signer, produced on signing the function parameters.
+     */
+    function execute(TransactionParams calldata params, bytes memory signature) external returns (bool success);
 
-    function deploy(DeployParams calldata deployParams) external returns (address deployment);
+    /**
+     *  @notice Deploys a smart contract.
+     *
+     *  @param params Parameters to pass to make the wallet deploy a smart contract.
+     *  @param signature A signature of intent from the wallet's signer, produced on signing the function parameters.
+     */
+    function deploy(DeployParams calldata params, bytes memory signature) external returns (address deployment);
 
-    function updateSigner(address _newSigner) external returns (bool success);
+    /**
+     *  @notice Updates the signer of a smart contract.
+     *
+     *  @param newSigner The address to set as the signer of the smart contract.
+     */
+    function updateSigner(address newSigner) external returns (bool success);
 }
