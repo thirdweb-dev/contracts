@@ -4,13 +4,13 @@ pragma solidity ^0.8.11;
 import "../openzeppelin-presets/security/ReentrancyGuard.sol";
 import "../eip/interface/IERC721.sol";
 
-import "./interface/IStaking.sol";
+import "./interface/IStaking721.sol";
 
 /**
  *      note: This is a Beta release.
  */
 
-abstract contract Staking721 is ReentrancyGuard, IStaking {
+abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     /*///////////////////////////////////////////////////////////////
                             State variables / Mappings
     //////////////////////////////////////////////////////////////*/
