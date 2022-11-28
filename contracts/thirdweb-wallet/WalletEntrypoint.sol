@@ -2,9 +2,10 @@
 pragma solidity ^0.8.11;
 
 import "./Wallet.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "./interface/IWalletEntrypoint.sol";
 
-// import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts/utils/Create2.sol";
 
 /**
  *  Basic actions:
@@ -13,55 +14,28 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Relay transaction to contract wallet. ✅
  */
 
-interface IWalletEntrypoint {
-    /*///////////////////////////////////////////////////////////////
-                                Structs
-    //////////////////////////////////////////////////////////////*/
-
-    struct TransactionRequest {
-        address signer;
-        bytes32 credentials;
-        uint256 value;
-        uint256 gas;
-        bytes data;
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    event AccountCreated(address indexed signer);
-    event CallResult(bool success, bytes result);
-
-    /*///////////////////////////////////////////////////////////////
-                                Functions
-    //////////////////////////////////////////////////////////////*/
-
-    function createAccount(
-        bytes32 credentials,
-        address signer,
-        bytes calldata signature
-    ) external returns (address account);
-
-    function changeSignerForAccount(
-        address newSigner,
-        bytes32 messageHash,
-        bytes memory signature
-    ) external;
-
-    function execute(TransactionRequest calldata req, bytes memory signature)
-        external
-        payable
-        returns (bool, bytes memory);
-}
-
 contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     using ECDSA for bytes32;
 
+    /*///////////////////////////////////////////////////////////////
+                            Constants
+    //////////////////////////////////////////////////////////////*/
+
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
-    bytes32 private constant CREDENTIALS_TYPEHASH = keccak256("Create(bytes32 credentials)");
+    bytes32 private constant CREATE_TYPEHASH =
+        keccak256(
+            "CreateAccountParams(address signer,bytes32 credentials,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
+    bytes32 private constant SIGNER_UPDATE_TYPEHASH =
+        keccak256(
+            "SignerUpdateParams(address account,address newSigner,address currentSigner,bytes32 newCredentials,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
     bytes32 private constant TRANSACTION_TYPEHASH =
         keccak256("TransactionRequest(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data)");
+
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Mapping from credentials => signer.
     mapping(bytes32 => address) private signerOf;
@@ -72,59 +46,134 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     /// @dev Mapping from hash(signer, credentials) => account.
     mapping(bytes32 => address) private accountOf;
 
+    /*///////////////////////////////////////////////////////////////
+                        Constructor & Modifier
+    //////////////////////////////////////////////////////////////*/
+
     constructor() EIP712("thirdwebWallet_Admin", "1") {}
 
-    function createAccount(
-        bytes32 credentials,
-        address signer,
-        bytes calldata signature
-    ) external returns (address account) {
-        require(credentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
-        require(signerOf[credentials] == address(0), "WalletEntrypoint: credentials already in use.");
-
-        address recoveredSigner = _hashTypedDataV4(keccak256(abi.encode(CREDENTIALS_TYPEHASH, credentials))).recover(
-            signature
+    /// @dev Checks whether a request is processed within its respective valid time window.
+    modifier onlyValidTimeWindow(uint128 validityStartTimestamp, uint128 validityEndTimestamp) {
+        /// @validate: request to create account not pre-mature or expired.
+        require(
+            validityStartTimestamp <= block.timestamp && block.timestamp < validityEndTimestamp,
+            "WalletEntrypoint: request premature or expired."
         );
-        require(signer == recoveredSigner, "WalletEntrypoint: invalid signer.");
 
-        account = address(new Wallet(address(this), signer));
-
-        signerOf[credentials] = signer;
-        credentialsOf[signer] = credentials;
-        accountOf[keccak256(abi.encode(signer, credentials))] = account;
+        _;
     }
 
-    function changeSignerForAccount(
-        address newSigner,
-        bytes32 messageHash,
-        bytes memory signature
-    ) external {
-        address account = msg.sender;
+    /*///////////////////////////////////////////////////////////////
+                            External functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Creates an account for a (signer, credential) pair.
+    function createAccount(CreateAccountParams calldata _params, bytes calldata _signature)
+        external
+        payable
+        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
+        returns (address account)
+    {
+        /// @validate: credentials not empty.
+        require(_params.credentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
+        /// @validate: sent initial account balance.
+        require(_params.initialAccountBalance == msg.value, "WalletEntrypoint: incorrect value sent.");
+
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                CREATE_TYPEHASH,
+                _params.signer,
+                _params.credentials,
+                _params.deploymentSalt,
+                _params.initialAccountBalance,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            )
+        );
+        /// @validate: signature-of-intent from target signer.
+        _validateSignature(messageHash, _signature, _params.signer);
+
+        bytes32 signerCredentialPair = keccak256(abi.encode(_params.signer, _params.credentials));
+        /// @validate: No account already associated with (signer, credentials) pair.
+        require(accountOf[signerCredentialPair] == address(0), "WalletEntrypoint: credentials already in use.");
+
+        /// @validate: (By Create2) No repeat deployment salt.
+        account = Create2.deploy(
+            _params.initialAccountBalance,
+            _params.deploymentSalt,
+            abi.encodePacked(type(Wallet).creationCode, abi.encode(address(this), _params.signer))
+        );
+
+        _setSignerForAccount(account, _params.signer, _params.credentials);
+
+        emit AccountCreated(account, _params.signer, msg.sender);
+    }
+
+    /// @notice Updates the (signer, credential) pair for an account.
+    function changeSignerForAccount(SignerUpdateParams calldata _params, bytes memory _signature)
+        external
+        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
+    {
+        /// @validate: no empty new credentials.
+        require(_params.newCredentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
+        /// @validate: new signer to set does not already have an account.
+        require(credentialsOf[_params.newSigner] == bytes32(0), "WalletEntrypoint: signer already has account.");
+
+        /// @validate: is valid EIP 1271 signature.
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                SIGNER_UPDATE_TYPEHASH,
+                _params.account,
+                _params.newSigner,
+                _params.currentSigner,
+                _params.newCredentials,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            )
+        );
+        /// @validate: signature-of-intent from target signer.
+        _validateSignature(messageHash, _signature, _params.currentSigner);
+
+        bytes32 currentCredentials = credentialsOf[_params.currentSigner];
+        bytes32 currentPair = keccak256(abi.encode(_params.currentSigner, currentCredentials));
+
+        /// @validate: Caller is account for (signer, credentials) pair.
+        require(accountOf[currentPair] == _params.account, "WalletEntrypoint: non existent account.");
+
+        delete signerOf[currentCredentials];
+        delete credentialsOf[_params.currentSigner];
+        delete accountOf[currentPair];
+
+        _setSignerForAccount(_params.account, _params.newSigner, _params.newCredentials);
 
         require(
-            MAGICVALUE == Wallet(account).isValidSignature(messageHash, signature),
-            "WalletEntrypoint: invalid signer."
+            Wallet(payable(_params.account)).updateSigner(_params.newSigner),
+            "WalletEntrypoint: failed to update signer."
         );
-
-        address signer = _hashTypedDataV4(messageHash).recover(signature);
-        bytes32 credentials = credentialsOf[signer];
-        require(credentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
-
-        signerOf[credentials] = newSigner;
-        credentialsOf[newSigner] = credentials;
-
-        delete credentialsOf[signer];
     }
 
+    /// @notice Calls an account with transaction data.
     function execute(TransactionRequest calldata req, bytes memory signature)
         public
         payable
+        onlyValidTimeWindow(req.validityStartTimestamp, req.validityEndTimestamp)
         returns (bool, bytes memory)
     {
-        address recoveredSigner = _hashTypedDataV4(
-            keccak256(abi.encode(TRANSACTION_TYPEHASH, req.signer, req.credentials, req.value, req.gas, req.data))
-        ).recover(signature);
-        require(req.signer == recoveredSigner, "WalletEntrypoint: signer mismatch.");
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                TRANSACTION_TYPEHASH,
+                req.signer,
+                req.credentials,
+                req.value,
+                req.gas,
+                req.data,
+                req.validityStartTimestamp,
+                req.validityEndTimestamp
+            )
+        );
+        /// @validate: signature-of-intent from target signer.
+        _validateSignature(messageHash, signature, req.signer);
+
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory result) = accountOf[keccak256(abi.encode(req.signer, req.credentials))].call{
             gas: req.gas,
@@ -145,5 +194,40 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
         emit CallResult(success, result);
 
         return (success, result);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Internal functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Associates a (signer, credential) pair with an account.
+    function _setSignerForAccount(
+        address _account,
+        address _signer,
+        bytes32 _credentials
+    ) internal {
+        signerOf[_credentials] = _signer;
+        credentialsOf[_signer] = _credentials;
+        accountOf[keccak256(abi.encode(_signer, _credentials))] = _account;
+
+        emit SignerUpdated(_account, _signer);
+    }
+
+    /// @dev Validates a signature.
+    function _validateSignature(
+        bytes32 _messageHash,
+        bytes memory _signature,
+        address _intendedSigner
+    ) internal view {
+        bool validSignature = false;
+
+        if (_intendedSigner.code.length > 0) {
+            validSignature = MAGICVALUE == Wallet(payable(_intendedSigner)).isValidSignature(_messageHash, _signature);
+        } else {
+            address recoveredSigner = _hashTypedDataV4(_messageHash).recover(_signature);
+            validSignature = _intendedSigner == recoveredSigner;
+        }
+
+        require(validSignature, "WalletEntrypoint: invalid signer.");
     }
 }
