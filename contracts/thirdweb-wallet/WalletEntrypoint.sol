@@ -47,7 +47,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     mapping(bytes32 => address) private accountOf;
 
     /*///////////////////////////////////////////////////////////////
-                        Constructor & Modifier
+                        Constructor & Modifiers
     //////////////////////////////////////////////////////////////*/
 
     constructor() EIP712("thirdwebWallet_Admin", "1") {}
