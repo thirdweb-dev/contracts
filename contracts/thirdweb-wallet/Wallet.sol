@@ -62,21 +62,20 @@ contract Wallet is IWallet, EIP712 {
         _;
     }
 
-    /// @dev Checks whether a valid nonce is provided with the action request.
-    modifier onlyValidNonce(uint256 _nonce) {
-        require(_nonce == nonce, "Wallet: incorrect nonce.");
-        nonce += 1;
-        _;
-    }
-
-    /// @dev Checks whether a request is processed within its respective valid time window.
-    modifier onlyValidTimeWindow(uint128 validityStartTimestamp, uint128 validityEndTimestamp) {
-        /// @validate: request to create account not pre-mature or expired.
+    /// @dev Ensures conditions for a valid wallet action: a call or deployment.
+    modifier onlyValidWalletCall(
+        uint256 _nonce,
+        uint256 _value,
+        uint128 _validityStartTimestamp,
+        uint128 _validityEndTimestamp
+    ) {
+        require(msg.value == _value, "Wallet: incorrect value sent.");
         require(
-            validityStartTimestamp <= block.timestamp && block.timestamp < validityEndTimestamp,
+            _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
             "Wallet: request premature or expired."
         );
-
+        require(_nonce == nonce, "Wallet: incorrect nonce.");
+        nonce += 1;
         _;
     }
 
@@ -90,9 +89,9 @@ contract Wallet is IWallet, EIP712 {
     /// @notice Perform transactions; send native tokens or call a smart contract.
     function execute(TransactionParams calldata _params, bytes memory _signature)
         external
+        payable
         onlyController
-        onlyValidNonce(_params.nonce)
-        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
+        onlyValidWalletCall(_params.nonce, _params.value, _params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (bool success)
     {
         bytes32 messageHash = keccak256(
@@ -116,9 +115,9 @@ contract Wallet is IWallet, EIP712 {
     /// @notice Deploys a smart contract.
     function deploy(DeployParams calldata _params, bytes memory _signature)
         external
+        payable
         onlyController
-        onlyValidNonce(_params.nonce)
-        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
+        onlyValidWalletCall(_params.nonce, _params.value, _params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (address deployment)
     {
         bytes32 messageHash = keccak256(

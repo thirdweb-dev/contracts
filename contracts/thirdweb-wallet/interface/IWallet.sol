@@ -89,7 +89,7 @@ interface IWallet is IERC1271 {
      *  @param params Parameters to pass to make the wallet perform a call.
      *  @param signature A signature of intent from the wallet's signer, produced on signing the function parameters.
      */
-    function execute(TransactionParams calldata params, bytes memory signature) external returns (bool success);
+    function execute(TransactionParams calldata params, bytes memory signature) external payable returns (bool success);
 
     /**
      *  @notice Deploys a smart contract.
@@ -97,7 +97,7 @@ interface IWallet is IERC1271 {
      *  @param params Parameters to pass to make the wallet deploy a smart contract.
      *  @param signature A signature of intent from the wallet's signer, produced on signing the function parameters.
      */
-    function deploy(DeployParams calldata params, bytes memory signature) external returns (address deployment);
+    function deploy(DeployParams calldata params, bytes memory signature) external payable returns (address deployment);
 
     /**
      *  @notice Updates the signer of a smart contract.

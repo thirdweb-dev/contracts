@@ -138,7 +138,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
         bytes32 currentPair = keccak256(abi.encode(_params.currentSigner, currentCredentials));
 
         /// @validate: Caller is account for (signer, credentials) pair.
-        require(accountOf[currentPair] == _params.account, "WalletEntrypoint: non existent account.");
+        require(accountOf[currentPair] == _params.account, "WalletEntrypoint: incorrect account provided.");
 
         delete signerOf[currentCredentials];
         delete credentialsOf[_params.currentSigner];
