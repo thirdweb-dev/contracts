@@ -1,30 +1,61 @@
-// SPDX-License-Identifier: Apache 2.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./UserOperation.sol";
-
-interface IWallet {
+interface IERC1271 {
     /**
-     * Validate user's signature and nonce
-     * the entryPoint will make the call to the recipient only if this validation call returns successfully.
+     * @dev Should return whether the signature provided is valid for the provided hash
+     * @param _hash      Hash of the data to be signed
+     * @param _signature Signature byte array associated with _hash
      *
-     * @dev Must validate caller is the entryPoint.
-     *      Must validate the signature and nonce
-     * @param userOp the operation that is about to be executed.
-     * @param requestId hash of the user's request data. can be used as the basis for signature.
-     * @param aggregator the aggregator used to validate the signature. NULL for non-aggregated signature wallets.
-     * @param missingWalletFunds missing funds on the wallet's deposit in the entrypoint.
-     *      This is the minimum amount to transfer to the sender(entryPoint) to be able to make the call.
-     *      The excess is left as a deposit in the entrypoint, for future calls.
-     *      can be withdrawn anytime using "entryPoint.withdrawTo()"
-     *      In case there is a paymaster in the request (or the current deposit is high enough), this value will be zero.
-     * @return deadline the last block timestamp this operation is valid, or zero if it is valid indefinitely.
-     *      Note that the validation code cannot use block.timestamp (or block.number) directly.
+     * MUST return the bytes4 magic value 0x1626ba7e when function passes.
+     * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
+     * MUST allow external calls
      */
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 requestId,
-        address aggregator,
-        uint256 missingWalletFunds
-    ) external returns (uint256 deadline);
+    function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4);
+}
+
+interface IWallet is IERC1271 {
+    /*///////////////////////////////////////////////////////////////
+                                Structs
+    //////////////////////////////////////////////////////////////*/
+
+    struct DeployParams {
+        bytes bytecode;
+        bytes32 salt;
+        uint256 value;
+        uint256 nonce;
+    }
+
+    struct TxParams {
+        address target;
+        bytes data;
+        uint256 nonce;
+        uint256 value;
+        uint256 txGas;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event SignerUpdated(address prevSigner, address newSigner);
+    event ContractDeployed(address indexed deployment);
+    event TransactionExecuted(
+        address indexed signer,
+        address indexed target,
+        bytes data,
+        uint256 indexed nonce,
+        uint256 value,
+        uint256 txGas
+    );
+
+    /*///////////////////////////////////////////////////////////////
+                                Functions
+    //////////////////////////////////////////////////////////////*/
+
+    function execute(TxParams calldata txParams, bytes memory signature) external returns (bool success);
+
+    function deploy(DeployParams calldata deployParams) external returns (address deployment);
+
+    function updateSigner(address _newSigner) external returns (bool success);
 }

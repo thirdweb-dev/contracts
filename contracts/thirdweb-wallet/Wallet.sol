@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-// ========== Extension ==========
-import "../extension/PermissionsEnumerable.sol";
+// ========== Interface ==========
+import "./interface/IWallet.sol";
 
 // ========== Utils ==========
 import "@openzeppelin/contracts/utils/Create2.sol";
@@ -15,64 +15,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Sign messages ✅
  *      - Own assets ✅
  */
-
-interface IERC1271 {
-    /**
-     * @dev Should return whether the signature provided is valid for the provided hash
-     * @param _hash      Hash of the data to be signed
-     * @param _signature Signature byte array associated with _hash
-     *
-     * MUST return the bytes4 magic value 0x1626ba7e when function passes.
-     * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
-     * MUST allow external calls
-     */
-    function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4);
-}
-
-interface IWallet is IERC1271 {
-    /*///////////////////////////////////////////////////////////////
-                                Structs
-    //////////////////////////////////////////////////////////////*/
-
-    struct DeployParams {
-        bytes bytecode;
-        bytes32 salt;
-        uint256 value;
-        uint256 nonce;
-    }
-
-    struct TxParams {
-        address target;
-        bytes data;
-        uint256 nonce;
-        uint256 value;
-        uint256 txGas;
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    event ContractDeployed(address indexed deployment);
-    event TransactionExecuted(
-        address indexed signer,
-        address indexed target,
-        bytes data,
-        uint256 indexed nonce,
-        uint256 value,
-        uint256 txGas
-    );
-
-    /*///////////////////////////////////////////////////////////////
-                                Functions
-    //////////////////////////////////////////////////////////////*/
-
-    function execute(TxParams calldata txParams, bytes memory signature) external returns (bool success);
-
-    function deploy(DeployParams calldata deployParams) external returns (address deployment);
-}
-
-contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
+contract Wallet is IWallet, EIP712 {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -81,24 +24,20 @@ contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
 
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
-    bytes32 public constant CONTROLLER_ROLE = keccak256("CONTROLLER_ROLE");
-    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
-
     bytes32 private constant EXECUTE_TYPEHASH =
         keccak256("Execute(address target,bytes data,uint256 nonce,uint256 txGas,uint256 value)");
 
+    address public controller;
+    address public signer;
     uint256 public nonce;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _controller, address _signer) EIP712("thirdwebWallet", "1") {
-        _setupRole(CONTROLLER_ROLE, address(this));
-        _setupRole(CONTROLLER_ROLE, _controller);
-
-        _setupRole(SIGNER_ROLE, _signer);
-        _setRoleAdmin(SIGNER_ROLE, CONTROLLER_ROLE);
+    constructor(address _controller, address _signer) payable EIP712("thirdwebWallet", "1") {
+        controller = _controller;
+        signer = _signer;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -106,13 +45,15 @@ contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyController() {
-        require(hasRole(CONTROLLER_ROLE, msg.sender), "!Controller");
+        require(controller == msg.sender, "!Controller");
         _;
     }
 
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
+
+    receive() external payable {}
 
     function execute(TxParams calldata txParams, bytes memory signature)
         external
@@ -122,11 +63,11 @@ contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
         require(txParams.nonce == nonce, "Wallet: invalid nonce.");
         nonce += 1;
 
-        address signer = _verifySignature(txParams, signature);
+        address signer_ = _verifySignature(txParams, signature);
         success = _call(txParams);
 
         emit TransactionExecuted(
-            signer,
+            signer_,
             txParams.target,
             txParams.data,
             txParams.nonce,
@@ -144,14 +85,22 @@ contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
     }
 
     function isValidSignature(bytes32 _hash, bytes calldata _signature) external view override returns (bytes4) {
-        address signer = _hash.recover(_signature);
+        address signer_ = _hash.recover(_signature);
 
         // Validate signatures
-        if (hasRole(SIGNER_ROLE, signer)) {
+        if (signer == signer_) {
             return MAGICVALUE;
         } else {
             return 0xffffffff;
         }
+    }
+
+    function updateSigner(address _newSigner) external onlyController returns (bool success) {
+        address prevSigner = signer;
+        signer = _newSigner;
+        success = true;
+
+        emit SignerUpdated(prevSigner, _newSigner);
     }
 
     function onERC721Received(
@@ -190,10 +139,10 @@ contract Wallet is IWallet, PermissionsEnumerable, EIP712 {
     function _verifySignature(TxParams calldata _txParams, bytes memory _signature)
         internal
         view
-        returns (address signer)
+        returns (address signer_)
     {
-        signer = _hashTypedDataV4(keccak256(_encodeRequest(_txParams))).recover(_signature);
-        require(hasRole(SIGNER_ROLE, signer), "Wallet: invalid signer.");
+        signer_ = _hashTypedDataV4(keccak256(_encodeRequest(_txParams))).recover(_signature);
+        require(signer == signer_, "Wallet: invalid signer.");
     }
 
     function _encodeRequest(TxParams calldata _txParams) internal pure returns (bytes memory) {
