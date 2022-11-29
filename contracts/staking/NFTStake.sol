@@ -67,6 +67,13 @@ contract NFTStake is
         return uint8(VERSION);
     }
 
+    /// @dev Admin can withdraw excess reward tokens.
+    function withdrawRewardTokens(uint256 _amount) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
+
+        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
