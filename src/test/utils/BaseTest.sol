@@ -350,7 +350,7 @@ abstract contract BaseTest is DSTest, Test {
             "TokenStake",
             abi.encodeCall(
                 TokenStake.initialize,
-                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc20Aux), 60, 1)
+                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc20Aux), 60, 100)
             )
         );
     }

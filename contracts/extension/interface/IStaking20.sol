@@ -15,13 +15,10 @@ interface IStaking20 {
     event UpdatedTimeUnit(uint256 oldTimeUnit, uint256 newTimeUnit);
 
     /// @dev Emitted when contract admin updates rewardsPerUnitTime.
-    event UpdatedRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime);
+    event UpdatedRewardBpsPerUnitTime(uint256 oldRewardBpsPerUnitTime, uint256 newRewardBpsPerUnitTime);
 
-    /// @dev Emitted when contract admin updates timeUnit.
-    event UpdatedDefaultTimeUnit(uint256 oldTimeUnit, uint256 newTimeUnit);
-
-    /// @dev Emitted when contract admin updates rewardsPerUnitTime.
-    event UpdatedDefaultRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime);
+    /// @dev Emitted when contract admin updates minimum staking amount.
+    event UpdatedMinStakeAmount(uint256 oldAmount, uint256 newAmount);
 
     /**
      *  @notice Staker Info.

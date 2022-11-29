@@ -14,13 +14,13 @@ contract TokenStakeTest is BaseTest {
     address internal stakerTwo;
 
     uint256 internal timeUnit;
-    uint256 internal rewardsPerUnitTime;
+    uint256 internal rewardBpsPerUnitTime;
 
     function setUp() public override {
         super.setUp();
 
         timeUnit = 60;
-        rewardsPerUnitTime = 1;
+        rewardBpsPerUnitTime = 100;
 
         stakerOne = address(0x345);
         stakerTwo = address(0x567);
@@ -75,7 +75,7 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardsPerUnitTime) / timeUnit)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
 
         //================ second staker ======================
@@ -106,7 +106,7 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardsPerUnitTime) / timeUnit)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
 
         // check available rewards for stakerTwo
@@ -114,7 +114,7 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardsPerUnitTime) / timeUnit)
+            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
     }
 
@@ -149,7 +149,7 @@ contract TokenStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerOne),
-            ((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardsPerUnitTime) / timeUnit)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
 
         // check available rewards after claiming
@@ -175,7 +175,7 @@ contract TokenStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerTwo),
-            ((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardsPerUnitTime) / timeUnit)
+            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
 
         // check available rewards after claiming -- stakerTwo
@@ -188,7 +188,7 @@ contract TokenStakeTest is BaseTest {
         assertEq(_amountStaked, 400);
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_two) * 400) * rewardsPerUnitTime) / timeUnit)
+            (((((block.timestamp - timeOfLastUpdate_two) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
     }
 
@@ -225,12 +225,12 @@ contract TokenStakeTest is BaseTest {
                     Unit tests: stake conditions
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_setRewardsPerUnitTime() public {
+    function test_state_setRewardBpsPerUnitTime() public {
         // set value and check
-        uint256 rewardsPerUnitTime = 50;
+        uint256 rewardBpsPerUnitTime = 50;
         vm.prank(deployer);
-        stakeContract.setRewardsPerUnitTime(rewardsPerUnitTime);
-        assertEq(rewardsPerUnitTime, stakeContract.rewardsPerUnitTime());
+        stakeContract.setRewardBpsPerUnitTime(rewardBpsPerUnitTime);
+        assertEq(rewardBpsPerUnitTime, stakeContract.rewardBpsPerUnitTime());
 
         //================ stake tokens
         vm.warp(1);
@@ -244,14 +244,17 @@ contract TokenStakeTest is BaseTest {
         vm.warp(1000);
 
         vm.prank(deployer);
-        stakeContract.setRewardsPerUnitTime(200);
-        assertEq(200, stakeContract.rewardsPerUnitTime());
+        stakeContract.setRewardBpsPerUnitTime(200);
+        assertEq(200, stakeContract.rewardBpsPerUnitTime());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
         (, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 400) * rewardsPerUnitTime) / timeUnit));
+        assertEq(
+            _availableRewards,
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+        );
 
         //====== check rewards after some time
         vm.roll(300);
@@ -259,7 +262,10 @@ contract TokenStakeTest is BaseTest {
 
         (, uint256 _newRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(_newRewards, _availableRewards + ((((block.timestamp - newTimeOfLastUpdate) * 400) * 200) / timeUnit));
+        assertEq(
+            _newRewards,
+            _availableRewards + (((((block.timestamp - newTimeOfLastUpdate) * 400) * 200) / timeUnit) / 10_000)
+        );
     }
 
     function test_state_setTimeUnit() public {
@@ -288,7 +294,10 @@ contract TokenStakeTest is BaseTest {
         // check available rewards -- should use previous value for timeUnit for calculation
         (, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 400) * rewardsPerUnitTime) / timeUnit));
+        assertEq(
+            _availableRewards,
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+        );
 
         //====== check rewards after some time
         vm.roll(300);
@@ -298,13 +307,14 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _newRewards,
-            _availableRewards + ((((block.timestamp - newTimeOfLastUpdate) * 400) * rewardsPerUnitTime) / 200)
+            _availableRewards +
+                (((((block.timestamp - newTimeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / 200) / 10_000)
         );
     }
 
-    function test_revert_setRewardsPerUnitTime_notAuthorized() public {
+    function test_revert_setRewardBpsPerUnitTime_notAuthorized() public {
         vm.expectRevert("Not authorized");
-        stakeContract.setRewardsPerUnitTime(1);
+        stakeContract.setRewardBpsPerUnitTime(1);
     }
 
     function test_revert_setTimeUnit_notAuthorized() public {
@@ -344,10 +354,16 @@ contract TokenStakeTest is BaseTest {
 
         // check available rewards after withdraw
         (, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
-        assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 400) * rewardsPerUnitTime) / timeUnit));
+        assertEq(
+            _availableRewards,
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+        );
 
         (, _availableRewards) = stakeContract.getStakeInfo(stakerTwo);
-        assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 200) * rewardsPerUnitTime) / timeUnit));
+        assertEq(
+            _availableRewards,
+            (((((block.timestamp - timeOfLastUpdate) * 200) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+        );
 
         // check available rewards some time after withdraw
         vm.roll(200);
@@ -358,8 +374,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 400)) * rewardsPerUnitTime) / timeUnit) +
-                (((((block.timestamp - timeOfLastUpdateLatest) * 300)) * rewardsPerUnitTime) / timeUnit)
+            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 400)) * rewardBpsPerUnitTime) / timeUnit) / 10_000) +
+                ((((((block.timestamp - timeOfLastUpdateLatest) * 300)) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
 
         // withdraw partially for stakerTwo
@@ -375,7 +391,10 @@ contract TokenStakeTest is BaseTest {
         // check rewards for stakerTwo
         (, _availableRewards) = stakeContract.getStakeInfo(stakerTwo);
 
-        assertEq(_availableRewards, (((((block.timestamp - timeOfLastUpdate) * 200)) * rewardsPerUnitTime) / timeUnit));
+        assertEq(
+            _availableRewards,
+            ((((((block.timestamp - timeOfLastUpdate) * 200)) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+        );
 
         // check rewards for stakerTwo after some time
         vm.roll(300);
@@ -384,8 +403,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 200)) * rewardsPerUnitTime) / timeUnit) +
-                (((((block.timestamp - timeOfLastUpdateLatest) * 100)) * rewardsPerUnitTime) / timeUnit)
+            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 200)) * rewardBpsPerUnitTime) / timeUnit) / 10_000) +
+                ((((((block.timestamp - timeOfLastUpdateLatest) * 100)) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
         );
     }
 

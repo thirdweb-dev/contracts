@@ -41,7 +41,7 @@ contract TokenStake is
         address _rewardToken,
         address _stakingToken,
         uint256 _timeUnit,
-        uint256 _rewardsPerUnitTime
+        uint256 _rewardBpsPerUnitTime
     ) external initializer {
         __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
@@ -50,7 +50,7 @@ contract TokenStake is
         rewardToken = _rewardToken;
         __Staking20_init(_stakingToken);
         _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setRewardBpsPerUnitTime(_rewardBpsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);

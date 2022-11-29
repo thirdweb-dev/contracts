@@ -22,8 +22,8 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
     uint256 public timeUnit;
 
-    ///@dev Rewards accumulated per unit of time.
-    uint256 public rewardsPerUnitTime;
+    ///@dev Rewards (in BPS) accumulated per unit of time. Calculated as percentage of staked tokens. MAX BPS = 10_000.
+    uint256 public rewardBpsPerUnitTime;
 
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
@@ -99,19 +99,19 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
      *
      *  @dev     Only admin/authorized-account can call it.
      *
-     *  @param _rewardsPerUnitTime    New rewards per unit time.
+     *  @param _rewardBpsPerUnitTime    New reward Bps per unit time.
      */
-    function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external virtual {
+    function setRewardBpsPerUnitTime(uint256 _rewardBpsPerUnitTime) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
 
         _updateUnclaimedRewardsForAll();
 
-        uint256 currentRewardsPerUnitTime = rewardsPerUnitTime;
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        uint256 currentRewardBpsPerUnitTime = rewardBpsPerUnitTime;
+        _setRewardBpsPerUnitTime(_rewardBpsPerUnitTime);
 
-        emit UpdatedRewardsPerUnitTime(currentRewardsPerUnitTime, _rewardsPerUnitTime);
+        emit UpdatedRewardBpsPerUnitTime(currentRewardBpsPerUnitTime, _rewardBpsPerUnitTime);
     }
 
     /**
@@ -223,16 +223,16 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     }
 
     /// @dev Set rewards per unit time.
-    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
-        rewardsPerUnitTime = _rewardsPerUnitTime;
+    function _setRewardBpsPerUnitTime(uint256 _rewardBpsPerUnitTime) internal virtual {
+        rewardBpsPerUnitTime = _rewardBpsPerUnitTime;
     }
 
     /// @dev Reward calculation logic. Override to implement custom logic.
     function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
 
-        _rewards = ((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardsPerUnitTime) /
-            timeUnit);
+        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardBpsPerUnitTime) /
+            timeUnit) / 10_000);
     }
 
     /**
