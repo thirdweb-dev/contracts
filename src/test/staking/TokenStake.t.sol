@@ -14,13 +14,15 @@ contract TokenStakeTest is BaseTest {
     address internal stakerTwo;
 
     uint256 internal timeUnit;
-    uint256 internal rewardBpsPerUnitTime;
+    uint256 internal rewardRatioNumerator;
+    uint256 internal rewardRatioDenominator;
 
     function setUp() public override {
         super.setUp();
 
         timeUnit = 60;
-        rewardBpsPerUnitTime = 100;
+        rewardRatioNumerator = 3;
+        rewardRatioDenominator = 50;
 
         stakerOne = address(0x345);
         stakerTwo = address(0x567);
@@ -75,7 +77,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         //================ second staker ======================
@@ -106,7 +109,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         // check available rewards for stakerTwo
@@ -114,7 +118,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
     }
 
@@ -149,7 +154,8 @@ contract TokenStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerOne),
-            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         // check available rewards after claiming
@@ -175,7 +181,8 @@ contract TokenStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerTwo),
-            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         // check available rewards after claiming -- stakerTwo
@@ -188,7 +195,8 @@ contract TokenStakeTest is BaseTest {
         assertEq(_amountStaked, 400);
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_two) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate_two) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
     }
 
@@ -225,12 +233,12 @@ contract TokenStakeTest is BaseTest {
                     Unit tests: stake conditions
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_setRewardBpsPerUnitTime() public {
+    function test_state_setRewardRatio() public {
         // set value and check
-        uint256 rewardBpsPerUnitTime = 50;
         vm.prank(deployer);
-        stakeContract.setRewardBpsPerUnitTime(rewardBpsPerUnitTime);
-        assertEq(rewardBpsPerUnitTime, stakeContract.rewardBpsPerUnitTime());
+        stakeContract.setRewardRatio(3, 70);
+        assertEq(3, stakeContract.rewardRatioNumerator());
+        assertEq(70, stakeContract.rewardRatioDenominator());
 
         //================ stake tokens
         vm.warp(1);
@@ -244,17 +252,15 @@ contract TokenStakeTest is BaseTest {
         vm.warp(1000);
 
         vm.prank(deployer);
-        stakeContract.setRewardBpsPerUnitTime(200);
-        assertEq(200, stakeContract.rewardBpsPerUnitTime());
+        stakeContract.setRewardRatio(3, 80);
+        assertEq(3, stakeContract.rewardRatioNumerator());
+        assertEq(80, stakeContract.rewardRatioDenominator());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
         (, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(
-            _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
-        );
+        assertEq(_availableRewards, (((((block.timestamp - timeOfLastUpdate) * 400) * 3) / timeUnit) / 70));
 
         //====== check rewards after some time
         vm.roll(300);
@@ -264,7 +270,7 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _newRewards,
-            _availableRewards + (((((block.timestamp - newTimeOfLastUpdate) * 400) * 200) / timeUnit) / 10_000)
+            _availableRewards + (((((block.timestamp - newTimeOfLastUpdate) * 400) * 3) / timeUnit) / 80)
         );
     }
 
@@ -296,7 +302,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         //====== check rewards after some time
@@ -308,13 +315,20 @@ contract TokenStakeTest is BaseTest {
         assertEq(
             _newRewards,
             _availableRewards +
-                (((((block.timestamp - newTimeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / 200) / 10_000)
+                (((((block.timestamp - newTimeOfLastUpdate) * 400) * rewardRatioNumerator) / 200) /
+                    rewardRatioDenominator)
         );
     }
 
-    function test_revert_setRewardBpsPerUnitTime_notAuthorized() public {
+    function test_revert_setRewardRatio_notAuthorized() public {
         vm.expectRevert("Not authorized");
-        stakeContract.setRewardBpsPerUnitTime(1);
+        stakeContract.setRewardRatio(1, 2);
+    }
+
+    function test_revert_setRewardRatio_divideByZero() public {
+        vm.prank(deployer);
+        vm.expectRevert("divide by 0");
+        stakeContract.setRewardRatio(1, 0);
     }
 
     function test_revert_setTimeUnit_notAuthorized() public {
@@ -356,13 +370,15 @@ contract TokenStakeTest is BaseTest {
         (, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         (, _availableRewards) = stakeContract.getStakeInfo(stakerTwo);
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 200) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            (((((block.timestamp - timeOfLastUpdate) * 200) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         // check available rewards some time after withdraw
@@ -374,8 +390,10 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 400)) * rewardBpsPerUnitTime) / timeUnit) / 10_000) +
-                ((((((block.timestamp - timeOfLastUpdateLatest) * 300)) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 400)) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator) +
+                ((((((block.timestamp - timeOfLastUpdateLatest) * 300)) * rewardRatioNumerator) / timeUnit) /
+                    rewardRatioDenominator)
         );
 
         // withdraw partially for stakerTwo
@@ -393,7 +411,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((((block.timestamp - timeOfLastUpdate) * 200)) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            ((((((block.timestamp - timeOfLastUpdate) * 200)) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         // check rewards for stakerTwo after some time
@@ -403,8 +422,10 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 200)) * rewardBpsPerUnitTime) / timeUnit) / 10_000) +
-                ((((((block.timestamp - timeOfLastUpdateLatest) * 100)) * rewardBpsPerUnitTime) / timeUnit) / 10_000)
+            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 200)) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator) +
+                ((((((block.timestamp - timeOfLastUpdateLatest) * 100)) * rewardRatioNumerator) / timeUnit) /
+                    rewardRatioDenominator)
         );
     }
 

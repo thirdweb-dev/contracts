@@ -22,8 +22,11 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
     uint256 public timeUnit;
 
-    ///@dev Rewards (in BPS) accumulated per unit of time. Calculated as percentage of staked tokens. MAX BPS = 10_000.
-    uint256 public rewardBpsPerUnitTime;
+    ///@dev Rewards ratio is the number of reward tokens for a number of staked tokens, per unit of time.
+    uint256 public rewardRatioNumerator;
+
+    ///@dev Rewards ratio is the number of reward tokens for a number of staked tokens, per unit of time.
+    uint256 public rewardRatioDenominator;
 
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
@@ -95,23 +98,27 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
 
     /**
      *  @notice  Set rewards per unit of time.
-     *           Interpreted as x rewards per second/per day/etc based on time-unit.
+     *           Interpreted as (numerator/denominator) rewards per second/per day/etc based on time-unit.
+     *
+     *           For e.g., ratio of 1/20 would mean 1 reward token for every 20 tokens staked.
      *
      *  @dev     Only admin/authorized-account can call it.
      *
-     *  @param _rewardBpsPerUnitTime    New reward Bps per unit time.
+     *  @param _numerator    Reward ratio numerator.
+     *  @param _denominator  Reward ratio denominator.
      */
-    function setRewardBpsPerUnitTime(uint256 _rewardBpsPerUnitTime) external virtual {
+    function setRewardRatio(uint256 _numerator, uint256 _denominator) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
 
         _updateUnclaimedRewardsForAll();
 
-        uint256 currentRewardBpsPerUnitTime = rewardBpsPerUnitTime;
-        _setRewardBpsPerUnitTime(_rewardBpsPerUnitTime);
+        uint256 currentNumerator = rewardRatioNumerator;
+        uint256 currentDenominator = rewardRatioDenominator;
+        _setRewardRatio(_numerator, _denominator);
 
-        emit UpdatedRewardBpsPerUnitTime(currentRewardBpsPerUnitTime, _rewardBpsPerUnitTime);
+        emit UpdatedRewardRatio(currentNumerator, _numerator, currentDenominator, _denominator);
     }
 
     /**
@@ -222,17 +229,19 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
         timeUnit = _timeUnit;
     }
 
-    /// @dev Set rewards per unit time.
-    function _setRewardBpsPerUnitTime(uint256 _rewardBpsPerUnitTime) internal virtual {
-        rewardBpsPerUnitTime = _rewardBpsPerUnitTime;
+    /// @dev Set reward ratio per unit time.
+    function _setRewardRatio(uint256 _numerator, uint256 _denominator) internal virtual {
+        require(_denominator != 0, "divide by 0");
+        rewardRatioNumerator = _numerator;
+        rewardRatioDenominator = _denominator;
     }
 
     /// @dev Reward calculation logic. Override to implement custom logic.
     function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
 
-        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardBpsPerUnitTime) /
-            timeUnit) / 10_000);
+        _rewards = (((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardRatioNumerator) /
+            timeUnit) / rewardRatioDenominator);
     }
 
     /**
