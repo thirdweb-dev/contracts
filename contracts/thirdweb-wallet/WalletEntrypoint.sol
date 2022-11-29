@@ -38,13 +38,13 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Mapping from credentials => signer.
-    mapping(bytes32 => address) private signerOf;
+    mapping(bytes32 => address) public signerOf;
 
     /// @dev Mapping from signer => credentials.
-    mapping(address => bytes32) private credentialsOf;
+    mapping(address => bytes32) public credentialsOf;
 
     /// @dev Mapping from hash(signer, credentials) => account.
-    mapping(bytes32 => address) private accountOf;
+    mapping(bytes32 => address) public accountOf;
 
     /*///////////////////////////////////////////////////////////////
                         Constructor & Modifiers

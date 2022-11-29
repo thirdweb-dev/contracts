@@ -6,7 +6,7 @@ import { WalletEntrypoint, IWalletEntrypoint } from "contracts/thirdweb-wallet/W
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 
-import { BaseTest } from "../utils/BaseTest.sol";
+import { BaseTest, ERC20, ERC721, ERC1155 } from "../utils/BaseTest.sol";
 
 /**
  *  Basic actions [WALLET]:
@@ -25,6 +25,31 @@ import { BaseTest } from "../utils/BaseTest.sol";
  */
 
 // TODO: All signature verification must account for both contract and EOA signers.
+
+contract DummyContract {
+    uint256 public val;
+    address public deployer;
+
+    constructor() payable {
+        val = msg.value;
+        deployer = msg.sender;
+    }
+
+    receive() external payable {
+        val += msg.value;
+    }
+
+    function revert() external {
+        revert("Execution reverted.");
+    }
+
+    function withdraw() external {
+        require(msg.sender == deployer);
+        (msg.sender).call{ value: val }("");
+
+        val = 0;
+    }
+}
 
 contract WalletUtil is BaseTest {
     bytes32 private constant EXECUTE_TYPEHASH =
@@ -817,21 +842,331 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      *      - signature of intent from sigenr
      *      - validity start and end timestamps
      */
-    function test_state_deploy() external {}
+    function test_state_deploy() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    function test_state_deploy_deterministicAddress() external {}
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
 
-    function test_balances_deploy_withInitialBalance() external {}
+        Wallet account = Wallet(payable(accountAddress));
 
-    function test_revert_deploy_incorrectValueSentForInitialBalance() external {}
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 0,
+            nonce: account.nonce(),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-    function test_revert_deploy_repeatingDeploymentSaltForSameContract() external {}
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
 
-    function test_revert_deploy_signatureNotFromIncumbentSigner() external {}
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+        (bool success, ) = admin.execute(txRequest, signatureForTx);
 
-    function test_revert_deploy_requestBeforeValidityStart() external {}
+        assertEq(success, true);
 
-    function test_revert_deploy_requestAfterValidityEnd() external {}
+        address predictedAddress = Create2.computeAddress(
+            deployParams.salt,
+            keccak256(abi.encodePacked(deployParams.bytecode)),
+            accountAddress
+        );
+
+        assertEq(DummyContract(payable(predictedAddress)).deployer(), accountAddress);
+    }
+
+    function test_balances_deploy_withInitialBalance() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 1 ether,
+            nonce: account.nonce(),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 1 ether,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+        (bool success, ) = admin.execute{ value: txRequest.value }(txRequest, signatureForTx);
+
+        assertEq(success, true);
+
+        address predictedAddress = Create2.computeAddress(
+            deployParams.salt,
+            keccak256(abi.encodePacked(deployParams.bytecode)),
+            accountAddress
+        );
+
+        assertEq(DummyContract(payable(predictedAddress)).deployer(), accountAddress);
+        assertEq(predictedAddress.balance, txRequest.value);
+    }
+
+    function test_revert_deploy_incorrectValueSentForInitialBalance() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 0,
+            nonce: account.nonce(),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 1 ether,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+        vm.expectRevert("WalletEntrypoint: incorrect value sent.");
+        admin.execute{ value: txRequest.value - 1 }(txRequest, signatureForTx);
+    }
+
+    function test_revert_deploy_repeatingDeploymentSaltForSameContract() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 0,
+            nonce: account.nonce(),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+        admin.execute(txRequest, signatureForTx);
+
+        // Deploy another contract with same salt.
+        bytes memory signatureForTx2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+        vm.expectRevert();
+        admin.execute(txRequest, signatureForTx2);
+    }
+
+    function test_revert_deploy_signatureNotFromIncumbentSigner() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 0,
+            nonce: account.nonce(),
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey2, address(admin));
+        vm.expectRevert("WalletEntrypoint: invalid signer.");
+        admin.execute(txRequest, signatureForTx);
+    }
+
+    function test_revert_deploy_requestBeforeValidityStart() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 0,
+            nonce: account.nonce(),
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey2, address(admin));
+        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.warp(txRequest.validityStartTimestamp - 1);
+        admin.execute(txRequest, signatureForTx);
+    }
+
+    function test_revert_deploy_requestAfterValidityEnd() external {
+        // Create account.
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Deploy contract with account.
+        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            bytecode: type(DummyContract).creationCode,
+            salt: keccak256("deploy"),
+            value: 0,
+            nonce: account.nonce(),
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+
+        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 1_000_000,
+            data: transactionData,
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey2, address(admin));
+        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.warp(txRequest.validityEndTimestamp);
+        admin.execute(txRequest, signatureForTx);
+    }
 
     /*///////////////////////////////////////////////////////////////
                 Test action: Calling a smart contract.
@@ -845,33 +1180,529 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      *      - signature of intent from sigenr
      *      - validity start and end timestamps
      */
-    function test_state_execute() external {}
 
-    function test_revert_execute_executionRevertedInCalledContract() external {}
+    Wallet internal account;
+    address internal accountAddress;
 
-    function test_revert_execute_signatureNotFromIncumbentSigner() external {}
+    IWalletEntrypoint.TransactionRequest internal txRequest;
+    bytes internal signatureForTx;
 
-    function test_revert_execute_requestBeforeValidityStart() external {}
+    address internal deployedContractAddr;
 
-    function test_revert_execute_requestAfterValidityEnd() external {}
+    function _setUp_execute() internal {
+        {
+            // Create account.
+            IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+                signer: signer1,
+                credentials: keccak256("1"),
+                deploymentSalt: keccak256("1"),
+                initialAccountBalance: 0,
+                validityStartTimestamp: 0,
+                validityEndTimestamp: 100
+            });
+
+            bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+            accountAddress = admin.createAccount(params, signature);
+
+            account = Wallet(payable(accountAddress));
+        }
+
+        // Deploy contract with account.
+
+        {
+            Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+                bytecode: type(DummyContract).creationCode,
+                salt: keccak256("deploy"),
+                value: 0,
+                nonce: account.nonce(),
+                validityStartTimestamp: 0,
+                validityEndTimestamp: 100
+            });
+            bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
+
+            bytes memory transactionData = abi.encodeWithSelector(
+                Wallet.deploy.selector,
+                deployParams,
+                signatureForDeploy
+            );
+
+            txRequest = IWalletEntrypoint.TransactionRequest({
+                signer: signer1,
+                credentials: admin.credentialsOf(signer1),
+                value: 0,
+                gas: 1_000_000,
+                data: transactionData,
+                validityStartTimestamp: 0,
+                validityEndTimestamp: 100
+            });
+            signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+            admin.execute(txRequest, signatureForTx);
+
+            deployedContractAddr = Create2.computeAddress(
+                deployParams.salt,
+                keccak256(abi.encodePacked(deployParams.bytecode)),
+                accountAddress
+            );
+
+            assertEq(DummyContract(payable(deployedContractAddr)).deployer(), accountAddress);
+        }
+    }
+
+    function test_state_execute() external {
+        _setUp_execute();
+
+        // Interact with deployed contract using account
+        {
+            // 1. Sending native tokens.
+            vm.deal(signer1, 100 ether);
+            assertEq(deployedContractAddr.balance, 0);
+
+            Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+                target: deployedContractAddr,
+                data: "",
+                nonce: account.nonce(),
+                value: 1 ether,
+                gas: 21000,
+                validityStartTimestamp: 0,
+                validityEndTimestamp: 100
+            });
+            bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
+            bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+
+            txRequest.data = transactionData1;
+            txRequest.value = 1 ether;
+
+            signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+            vm.prank(signer1);
+            admin.execute{ value: 1 ether }(txRequest, signatureForTx);
+            assertEq(deployedContractAddr.balance, 1 ether);
+        }
+
+        // 2. Interacting with contract.
+
+        uint256 contractBalBefore = deployedContractAddr.balance;
+        assertEq(contractBalBefore, 1 ether);
+        assertEq(accountAddress.balance, 0);
+
+        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+            target: deployedContractAddr,
+            data: abi.encodeWithSelector(DummyContract.withdraw.selector),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 100_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
+        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+
+        txRequest.data = transactionData2;
+        txRequest.value = 0;
+
+        bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        admin.execute(txRequest, sigForEntrypoint2);
+
+        uint256 contractBalAfter = deployedContractAddr.balance;
+
+        assertEq(accountAddress.balance, 1 ether);
+        assertEq(contractBalAfter, 0);
+    }
+
+    function test_revert_execute_executionRevertedInCalledContract() external {
+        _setUp_execute();
+
+        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+            target: deployedContractAddr,
+            data: abi.encodeWithSelector(DummyContract.revert.selector),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 100_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
+        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+
+        txRequest.data = transactionData2;
+        txRequest.value = 0;
+
+        bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        vm.expectRevert("Execution reverted.");
+        admin.execute(txRequest, sigForEntrypoint2);
+    }
+
+    function test_revert_execute_signatureNotFromIncumbentSigner() external {
+        _setUp_execute();
+
+        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+            target: deployedContractAddr,
+            data: abi.encodeWithSelector(DummyContract.revert.selector),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 100_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet2 = signExecute(txParams2, privateKey2, accountAddress);
+        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+
+        txRequest.data = transactionData2;
+        txRequest.value = 0;
+
+        bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        vm.expectRevert("Wallet: invalid signer.");
+        admin.execute(txRequest, sigForEntrypoint2);
+    }
+
+    function test_revert_execute_requestBeforeValidityStart() external {
+        _setUp_execute();
+        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+            target: deployedContractAddr,
+            data: abi.encodeWithSelector(DummyContract.withdraw.selector),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 100_000,
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
+        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+
+        txRequest.data = transactionData2;
+        txRequest.value = 0;
+
+        bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        vm.expectRevert("Wallet: request premature or expired.");
+        vm.warp(txParams2.validityStartTimestamp - 1);
+        admin.execute(txRequest, sigForEntrypoint2);
+    }
+
+    function test_revert_execute_requestAfterValidityEnd() external {
+        _setUp_execute();
+        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+            target: deployedContractAddr,
+            data: abi.encodeWithSelector(DummyContract.withdraw.selector),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 100_000,
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 75
+        });
+        bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
+        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+
+        txRequest.data = transactionData2;
+        txRequest.value = 0;
+
+        bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        vm.expectRevert("Wallet: request premature or expired.");
+        vm.warp(txParams2.validityEndTimestamp);
+        admin.execute(txRequest, sigForEntrypoint2);
+    }
 
     /*///////////////////////////////////////////////////////////////
                 Test action: Storing and transferring tokens.
     //////////////////////////////////////////////////////////////*/
 
-    function test_balances_receiveToken_nativeToken() external {}
+    function test_balances_receiveToken_nativeToken() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    function test_balances_transferToken_nativeToken() external {}
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
 
-    function test_balances_receiveToken_ERC20() external {}
+        Wallet account = Wallet(payable(accountAddress));
 
-    function test_balances_transferToken_ERC20() external {}
+        vm.deal(signer1, 100 ether);
 
-    function test_balances_receiveToken_ERC721() external {}
+        assertEq(address(account).balance, 0);
 
-    function test_balances_transferToken_ERC721() external {}
+        vm.prank(signer1);
+        address(account).call{ value: 1 ether }("");
 
-    function test_balances_receiveToken_ERC1155() external {}
+        assertEq(address(account).balance, 1 ether);
+    }
 
-    function test_balances_transferToken_ERC1155() external {}
+    function test_balances_transferToken_nativeToken() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        vm.deal(signer1, 100 ether);
+        vm.prank(signer1);
+        address(account).call{ value: 1 ether }("");
+
+        // Sending native tokens.
+        address receiver = address(0x123);
+        assertEq(receiver.balance, 0);
+
+        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+            target: receiver,
+            data: "",
+            nonce: account.nonce(),
+            value: 1 ether,
+            gas: 21000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
+        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+
+        txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 1 ether,
+            gas: 100_000,
+            data: transactionData1,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        admin.execute{ value: 1 ether }(txRequest, signatureForTx);
+        assertEq(receiver.balance, 1 ether);
+    }
+
+    function test_balances_receiveToken_ERC20() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        // Send ERC20 tokens to account.
+        assertEq(erc20.balanceOf(accountAddress), 0);
+
+        erc20.mint(accountAddress, 20 ether);
+
+        assertEq(erc20.balanceOf(accountAddress), 20 ether);
+    }
+
+    function test_balances_transferToken_ERC20() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Send ERC20 tokens to account.
+        erc20.mint(accountAddress, 20 ether);
+
+        // Account transfers ERC20 tokens
+        address receiver = address(0x123);
+        assertEq(receiver.balance, 0);
+
+        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+            target: address(erc20),
+            data: abi.encodeWithSelector(ERC20.transfer.selector, receiver, 10 ether),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 50_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
+        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+
+        WalletEntrypoint.TransactionRequest memory transactionRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 100_000,
+            data: transactionData1,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        signatureForTx = signTransactionRequest(transactionRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        admin.execute(transactionRequest, signatureForTx);
+        assertEq(erc20.balanceOf(receiver), 10 ether);
+        assertEq(erc20.balanceOf(accountAddress), 10 ether);
+    }
+
+    function test_balances_receiveToken_ERC721() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        // Send E721 tokens to account.
+        erc721.mint(accountAddress, 1);
+        assertEq(erc721.ownerOf(0), accountAddress);
+    }
+
+    function test_balances_transferToken_ERC721() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Send E721 tokens to account.
+        erc721.mint(accountAddress, 1);
+        assertEq(erc721.ownerOf(0), accountAddress);
+
+        // Transfer ERC721 token
+        address receiver = address(0x123);
+
+        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+            target: address(erc721),
+            data: abi.encodeWithSelector(ERC721.transferFrom.selector, accountAddress, receiver, 0),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 50_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
+        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+
+        txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 100_000,
+            data: transactionData1,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        admin.execute(txRequest, signatureForTx);
+
+        assertEq(erc721.ownerOf(0), receiver);
+    }
+
+    function test_balances_receiveToken_ERC1155() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        // Send ERC1155 tokens to account.
+        erc1155.mint(accountAddress, 0, 100);
+        assertEq(erc1155.balanceOf(accountAddress, 0), 100);
+    }
+
+    function test_balances_transferToken_ERC1155() external {
+        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            signer: signer1,
+            credentials: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        address accountAddress = admin.createAccount(params, signature);
+
+        Wallet account = Wallet(payable(accountAddress));
+
+        // Send ERC1155 tokens to account.
+        erc1155.mint(accountAddress, 0, 100);
+        assertEq(erc1155.balanceOf(accountAddress, 0), 100);
+
+        // Transfer ERC1155 token
+        address receiver = address(0x123);
+
+        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+            target: address(erc1155),
+            data: abi.encodeWithSelector(ERC1155.safeTransferFrom.selector, accountAddress, receiver, 0, 50, ""),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 50_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
+        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+
+        txRequest = IWalletEntrypoint.TransactionRequest({
+            signer: signer1,
+            credentials: admin.credentialsOf(signer1),
+            value: 0,
+            gas: 100_000,
+            data: transactionData1,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        admin.execute(txRequest, signatureForTx);
+
+        assertEq(erc1155.balanceOf(accountAddress, 0), 50);
+        assertEq(erc1155.balanceOf(receiver, 0), 50);
+    }
 }
