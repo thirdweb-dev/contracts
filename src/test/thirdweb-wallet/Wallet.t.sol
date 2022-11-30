@@ -54,7 +54,7 @@ contract DummyContract {
 contract WalletUtil is BaseTest {
     bytes32 private constant EXECUTE_TYPEHASH =
         keccak256(
-            "TransactionParams(address target,bytes data,uint256 nonce,uint256 txGas,uint256 value,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "TransactionParams(address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
     bytes32 private constant DEPLOY_TYPEHASH =
@@ -211,7 +211,7 @@ contract WalletEntrypointUtil is BaseTest {
                 _params.credentials,
                 _params.value,
                 _params.gas,
-                _params.data,
+                keccak256(_params.data),
                 _params.validityStartTimestamp,
                 _params.validityEndTimestamp
             )
