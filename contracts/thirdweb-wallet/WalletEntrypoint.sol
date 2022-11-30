@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 
 /**
  *  Basic actions:
- *      - Create accounts. ✅
- *      - Change signer of account. ✅
- *      - Relay transaction to contract wallet. ✅
+ *      - Create accounts.
+ *      - Change signer of account.
+ *      - Relay transaction to contract wallet.
  */
 
 contract WalletEntrypoint is IWalletEntrypoint, EIP712 {

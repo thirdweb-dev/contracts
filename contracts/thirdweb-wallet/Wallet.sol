@@ -10,10 +10,10 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 /**
  *  Basic actions:
- *      - Deploy smart contracts ✅
- *      - Make transactions on contracts ✅
- *      - Sign messages ✅
- *      - Own assets ✅
+ *      - Deploy smart contracts
+ *      - Make transactions on contracts
+ *      - Sign messages
+ *      - Own assets
  */
 contract Wallet is IWallet, EIP712 {
     using ECDSA for bytes32;
