@@ -8,7 +8,7 @@ import "../../mocks/WETH9.sol";
 import "../../mocks/MockERC20.sol";
 import "../../mocks/MockERC721.sol";
 import "../../mocks/MockERC1155.sol";
-import "../../utils/Wallet.sol";
+import "../../utils/TestWallet.sol";
 
 import { TokenStore, TokenBundle, ITokenBundle, CurrencyTransferLib } from "contracts/extension/TokenStore.sol";
 
@@ -41,7 +41,7 @@ contract ExtensionTokenStore is DSTest, Test {
 
     ITokenBundle.Token[] internal bundleContent;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
 
     function setUp() public {
         ext = new MyTokenStore(CurrencyTransferLib.NATIVE_TOKEN);
@@ -51,7 +51,7 @@ contract ExtensionTokenStore is DSTest, Test {
         erc1155 = new MockERC1155();
         weth = new WETH9();
 
-        tokenOwner = new Wallet();
+        tokenOwner = new TestWallet();
 
         bundleContent.push(
             ITokenBundle.Token({

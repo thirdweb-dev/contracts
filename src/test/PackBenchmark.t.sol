@@ -7,13 +7,13 @@ import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
 import { MockERC20 } from "./mocks/MockERC20.sol";
-import { Wallet } from "./utils/Wallet.sol";
+import { TestWallet } from "./utils/TestWallet.sol";
 import "./utils/BaseTest.sol";
 
 contract CreatePackBenchmarkTest is BaseTest {
     Pack internal pack;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
     string internal packUri;
     ITokenBundle.Token[] internal packContents;
     uint256[] internal numOfRewardUnits;
@@ -135,7 +135,7 @@ contract CreatePackBenchmarkTest is BaseTest {
 contract OpenPackBenchmarkTest is BaseTest {
     Pack internal pack;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
     string internal packUri;
     ITokenBundle.Token[] internal packContents;
     uint256[] internal numOfRewardUnits;
@@ -260,7 +260,7 @@ contract OpenPackBenchmarkTest is BaseTest {
 contract OpenPackLargeInputsTest is BaseTest {
     Pack internal pack;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
     address recipient = address(0x123);
     string internal packUri;
 

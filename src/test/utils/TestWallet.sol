@@ -8,7 +8,7 @@ import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
 
-contract Wallet is ERC721Holder, ERC1155Holder {
+contract TestWallet is ERC721Holder, ERC1155Holder {
     function transferERC20(
         address token,
         address to,

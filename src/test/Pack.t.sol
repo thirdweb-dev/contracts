@@ -7,7 +7,7 @@ import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
 import { MockERC20 } from "./mocks/MockERC20.sol";
-import { Wallet } from "./utils/Wallet.sol";
+import { TestWallet } from "./utils/TestWallet.sol";
 import "./utils/BaseTest.sol";
 
 contract PackTest is BaseTest {
@@ -24,7 +24,7 @@ contract PackTest is BaseTest {
 
     Pack internal pack;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
     string internal packUri;
     ITokenBundle.Token[] internal packContents;
     ITokenBundle.Token[] internal additionalContents;

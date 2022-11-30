@@ -7,7 +7,7 @@ import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 // Test imports
 import "contracts/lib/TWStrings.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
-import { Wallet } from "./utils/Wallet.sol";
+import { TestWallet } from "./utils/TestWallet.sol";
 import "./utils/BaseTest.sol";
 
 contract MultiwrapReentrant is MockERC20, ITokenBundle {
@@ -50,7 +50,7 @@ contract MultiwrapTest is BaseTest {
 
     Multiwrap internal multiwrap;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
     string internal uriForWrappedToken;
     ITokenBundle.Token[] internal wrappedContent;
 

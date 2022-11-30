@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@std/Test.sol";
 import "@ds-test/test.sol";
-import "../../utils/Wallet.sol";
+import "../../utils/TestWallet.sol";
 import "../../mocks/WETH9.sol";
 import "../../mocks/MockERC20.sol";
 import "../../mocks/MockERC721.sol";
@@ -53,8 +53,8 @@ abstract contract BaseUtilTest is DSTest, Test {
         return address(uint160(0x50000 + _index));
     }
 
-    function getWallet() public returns (Wallet wallet) {
-        wallet = new Wallet();
+    function getWallet() public returns (TestWallet wallet) {
+        wallet = new TestWallet();
     }
 
     function assertIsOwnerERC721(

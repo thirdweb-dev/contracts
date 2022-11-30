@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // import "contracts/airdrop/AirdropERC1155Claimable.sol";
 
 // // Test imports
-// import { Wallet } from "../utils/Wallet.sol";
+// import { TestWallet } from "../utils/TestWallet.sol";
 // import "../utils/BaseTest.sol";
 
 // contract AirdropERC1155ClaimableTest is BaseTest {

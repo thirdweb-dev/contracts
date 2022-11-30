@@ -112,7 +112,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     }
 
     /// @notice Updates the (signer, credential) pair for an account.
-    function changeSignerForAccount(SignerUpdateParams calldata _params, bytes memory _signature)
+    function changeSignerForAccount(SignerUpdateParams calldata _params, bytes calldata _signature)
         external
         onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
     {
@@ -157,8 +157,8 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     }
 
     /// @notice Calls an account with transaction data.
-    function execute(TransactionRequest calldata req, bytes memory signature)
-        public
+    function execute(TransactionRequest calldata req, bytes calldata signature)
+        external
         payable
         onlyValidTimeWindow(req.validityStartTimestamp, req.validityEndTimestamp)
         returns (bool, bytes memory)
@@ -172,7 +172,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
                 req.credentials,
                 req.value,
                 req.gas,
-                req.data,
+                keccak256(req.data),
                 req.validityStartTimestamp,
                 req.validityEndTimestamp
             )
@@ -222,7 +222,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
     /// @dev Validates a signature.
     function _validateSignature(
         bytes32 _messageHash,
-        bytes memory _signature,
+        bytes calldata _signature,
         address _intendedSigner
     ) internal view {
         bool validSignature = false;

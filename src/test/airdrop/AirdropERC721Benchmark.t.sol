@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 import "contracts/airdrop/AirdropERC721.sol";
 
 // Test imports
-import { Wallet } from "../utils/Wallet.sol";
+import { TestWallet } from "../utils/TestWallet.sol";
 import "../utils/BaseTest.sol";
 
 contract AirdropERC721BenchmarkTest is BaseTest {
     AirdropERC721 internal drop;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
 
     IAirdropERC721.AirdropContent[] internal _contents;
 

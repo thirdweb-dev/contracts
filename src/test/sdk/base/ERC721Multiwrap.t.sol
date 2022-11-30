@@ -13,7 +13,7 @@ contract BaseERC721MultiwrapTest is BaseUtilTest {
     ERC721Multiwrap internal base;
     using TWStrings for uint256;
 
-    Wallet internal tokenOwner;
+    TestWallet internal tokenOwner;
     string internal uriForWrappedToken;
     ITokenBundle.Token[] internal wrappedContent;
 

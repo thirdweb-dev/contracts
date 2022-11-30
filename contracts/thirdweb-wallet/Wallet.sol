@@ -26,7 +26,7 @@ contract Wallet is IWallet, EIP712 {
 
     bytes32 private constant EXECUTE_TYPEHASH =
         keccak256(
-            "TransactionParams(address target,bytes data,uint256 nonce,uint256 txGas,uint256 value,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "TransactionParams(address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
     bytes32 private constant DEPLOY_TYPEHASH =
@@ -87,7 +87,7 @@ contract Wallet is IWallet, EIP712 {
     receive() external payable {}
 
     /// @notice Perform transactions; send native tokens or call a smart contract.
-    function execute(TransactionParams calldata _params, bytes memory _signature)
+    function execute(TransactionParams calldata _params, bytes calldata _signature)
         external
         payable
         onlyController
@@ -98,7 +98,7 @@ contract Wallet is IWallet, EIP712 {
             abi.encode(
                 EXECUTE_TYPEHASH,
                 _params.target,
-                keccak256(bytes(_params.data)),
+                keccak256(_params.data),
                 _params.nonce,
                 _params.value,
                 _params.gas,
@@ -113,7 +113,7 @@ contract Wallet is IWallet, EIP712 {
     }
 
     /// @notice Deploys a smart contract.
-    function deploy(DeployParams calldata _params, bytes memory _signature)
+    function deploy(DeployParams calldata _params, bytes calldata _signature)
         external
         payable
         onlyController
@@ -191,7 +191,7 @@ contract Wallet is IWallet, EIP712 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Validates a signature.
-    function _validateSignature(bytes32 _messageHash, bytes memory _signature) internal view {
+    function _validateSignature(bytes32 _messageHash, bytes calldata _signature) internal view {
         bool validSignature = false;
         address signer_ = signer;
 

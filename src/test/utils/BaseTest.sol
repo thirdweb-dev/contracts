@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 // import "./Console.sol";
-import "./Wallet.sol";
+import "./TestWallet.sol";
 import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
@@ -77,7 +77,7 @@ abstract contract BaseTest is DSTest, Test {
 
     bytes32 internal _airdropMerkleRootERC20;
 
-    Wallet internal airdropTokenOwner;
+    TestWallet internal airdropTokenOwner;
     // airdrop-claimable inputs -- over
 
     mapping(bytes32 => address) public contracts;
@@ -341,8 +341,8 @@ abstract contract BaseTest is DSTest, Test {
         return address(uint160(0x50000 + _index));
     }
 
-    function getWallet() public returns (Wallet wallet) {
-        wallet = new Wallet();
+    function getWallet() public returns (TestWallet wallet) {
+        wallet = new TestWallet();
     }
 
     function assertIsOwnerERC721(
