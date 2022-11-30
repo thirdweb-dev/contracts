@@ -31,7 +31,9 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
             "SignerUpdateParams(address account,address newSigner,address currentSigner,bytes32 newCredentials,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
     bytes32 private constant TRANSACTION_TYPEHASH =
-        keccak256("TransactionRequest(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data)");
+        keccak256(
+            "TransactionRequest(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
 
     /*///////////////////////////////////////////////////////////////
                             State variables

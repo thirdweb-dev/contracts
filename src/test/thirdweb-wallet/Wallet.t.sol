@@ -134,7 +134,9 @@ contract WalletEntrypointUtil is BaseTest {
             "SignerUpdateParams(address account,address newSigner,address currentSigner,bytes32 newCredentials,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
     bytes32 private constant TRANSACTION_TYPEHASH =
-        keccak256("TransactionRequest(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data)");
+        keccak256(
+            "TransactionRequest(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
 
     bytes32 internal nameHash = keccak256(bytes("thirdwebWallet_Admin"));
     bytes32 internal versionHash = keccak256(bytes("1"));
