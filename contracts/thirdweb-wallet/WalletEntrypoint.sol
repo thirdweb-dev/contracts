@@ -4,6 +4,8 @@ pragma solidity ^0.8.11;
 import "./Wallet.sol";
 import "./interface/IWalletEntrypoint.sol";
 
+import "../extension/Multicall.sol";
+
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
@@ -14,7 +16,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
  *      - Relay transaction to contract wallet.
  */
 
-contract WalletEntrypoint is IWalletEntrypoint, EIP712 {
+contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////

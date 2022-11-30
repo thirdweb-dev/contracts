@@ -4,7 +4,7 @@
 
 
 
-Basic actions:      - Deploy smart contracts ✅      - Make transactions on contracts ✅      - Sign messages ✅      - Own assets ✅
+Basic actions:      - Deploy smart contracts      - Make transactions on contracts      - Sign messages      - Own assets
 
 
 
@@ -95,6 +95,28 @@ See EIP-1271. Returns whether a signature is a valid signature made on behalf of
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes4 | undefined |
+
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+Receives and executes a batch of function calls on this contract.
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### nonce
 

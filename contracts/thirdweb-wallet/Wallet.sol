@@ -5,6 +5,8 @@ pragma solidity ^0.8.11;
 import "./interface/IWallet.sol";
 
 // ========== Utils ==========
+import "../extension/Multicall.sol";
+
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
@@ -15,7 +17,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Sign messages
  *      - Own assets
  */
-contract Wallet is IWallet, EIP712 {
+contract Wallet is IWallet, EIP712, Multicall {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////

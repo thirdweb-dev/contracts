@@ -153,7 +153,7 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS ? true : false,
   },
   dodoc: {
-    runOnCompile: false,
+    runOnCompile: true,
     exclude: ["**/node_modules/**"],
     keepFileStructure: false,
   },

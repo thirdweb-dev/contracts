@@ -4,7 +4,7 @@
 
 
 
-Basic actions:      - Create accounts. ✅      - Change signer of account. ✅      - Relay transaction to contract wallet. ✅
+Basic actions:      - Create accounts.      - Change signer of account.      - Relay transaction to contract wallet.
 
 
 
@@ -117,6 +117,28 @@ function execute(IWalletEntrypoint.TransactionRequest req, bytes signature) exte
 |---|---|---|
 | _0 | bool | undefined |
 | _1 | bytes | undefined |
+
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+Receives and executes a batch of function calls on this contract.
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### signerOf
 
