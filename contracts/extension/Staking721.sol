@@ -12,6 +12,61 @@ import "./interface/IStaking721.sol";
 
 abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     /*///////////////////////////////////////////////////////////////
+                        Efficient state
+    //////////////////////////////////////////////////////////////*/
+
+    uint256 public totalStakingConditions;
+
+    struct StakingCondition {
+        uint256 rewardsPerTimeUnit;
+        uint128 timeUnit;
+        uint128 timestamp;
+    }
+
+    mapping(uint256 => StakingCondition) public stakingConditions;
+
+    /// @dev Need to update `timeOfLastUpdate`, `conditionIdOflastUpdate` and `unclaimedRewards` whenever a staker:
+    ///     [1] stakes a more tokens
+    ///     [2] unstakes tokens
+    ///     [3] claiming rewards (without unstaking)
+    struct StakerInfo {
+        uint256 amountStaked;
+        uint256 timeOfLastUpdate;
+        uint256 conditionIdOflastUpdate;
+        uint256 unclaimedRewards;
+    }
+
+    mapping(address => StakerInfo) public stakerInfo;
+
+    /// @dev Calculate rewards for a staker.
+    function _calculate(address _staker) internal view returns (uint256 totalRewards) {
+        StakerInfo memory info = stakerInfo[_staker];
+
+        uint256 conditionId = info.conditionIdOflastUpdate;
+        uint256 currentConditionId = totalStakingConditions;
+
+        uint256 lastIndexedTimestamp = info.timeOfLastUpdate;
+
+        uint256 amountStaked = info.amountStaked;
+
+        for (uint256 j = conditionId; j < currentConditionId; j += 1) {
+            StakingCondition memory condition = stakingConditions[j];
+
+            uint256 duration;
+            uint256 conditionStartTimestamp = condition.timestamp;
+
+            if (conditionStartTimestamp < lastIndexedTimestamp) {
+                duration += lastIndexedTimestamp - conditionStartTimestamp;
+            } else {
+                duration += conditionStartTimestamp - lastIndexedTimestamp;
+            }
+
+            totalRewards += (condition.rewardsPerTimeUnit * duration * amountStaked) / condition.timeUnit;
+            lastIndexedTimestamp = conditionStartTimestamp;
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
                             State variables / Mappings
     //////////////////////////////////////////////////////////////*/
 
