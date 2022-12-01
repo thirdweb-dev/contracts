@@ -44,6 +44,23 @@ function OPERATOR_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### addExtension
+
+```solidity
+function addExtension(bytes4 _selector, address _extension) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
+| _extension | address | undefined |
+
 ### getAllSelectorsRegistered
 
 ```solidity
@@ -252,6 +269,23 @@ Revokes role from the account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
+### replaceExtension
+
+```solidity
+function replaceExtension(bytes4 _selector, address _extension) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
+| _extension | address | undefined |
+
 ### revokeRole
 
 ```solidity
@@ -269,10 +303,14 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### setExtension
+
+
+## Events
+
+### ExtensionRegistered
 
 ```solidity
-function setExtension(bytes4 _selector, address _extension) external nonpayable
+event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
 ```
 
 
@@ -283,17 +321,13 @@ function setExtension(bytes4 _selector, address _extension) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
-| _extension | address | undefined |
+| selector `indexed` | bytes4 | undefined |
+| extension `indexed` | address | undefined |
 
-
-
-## Events
-
-### ExtensionRegistered
+### ExtensionReplaced
 
 ```solidity
-event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
+event ExtensionReplaced(bytes4 indexed selector, address indexed extension)
 ```
 
 
