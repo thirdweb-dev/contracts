@@ -1,4 +1,4 @@
-# Staking721
+# Staking20Upgradeable
 
 
 
@@ -24,10 +24,10 @@ Claim accumulated rewards.
 ### getStakeInfo
 
 ```solidity
-function getStakeInfo(address _staker) external view returns (uint256[] _tokensStaked, uint256 _rewards)
+function getStakeInfo(address _staker) external view returns (uint256 _tokensStaked, uint256 _rewards)
 ```
 
-View amount staked and total rewards for a user.
+View amount staked and rewards for a user.
 
 
 
@@ -41,79 +41,18 @@ View amount staked and total rewards for a user.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokensStaked | uint256[] |   List of token-ids staked by staker. |
+| _tokensStaked | uint256 |   Amount of tokens staked. |
 | _rewards | uint256 |        Available reward amount. |
 
-### indexedTokens
+### rewardRatioDenominator
 
 ```solidity
-function indexedTokens(uint256) external view returns (uint256)
+function rewardRatioDenominator() external view returns (uint256)
 ```
 
 
 
-*List of token-ids ever staked.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### isIndexed
-
-```solidity
-function isIndexed(uint256) external view returns (bool)
-```
-
-
-
-*Mapping from token-id to whether it is indexed or not.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
-### nftCollection
-
-```solidity
-function nftCollection() external view returns (address)
-```
-
-
-
-*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### rewardsPerUnitTime
-
-```solidity
-function rewardsPerUnitTime() external view returns (uint256)
-```
-
-
-
-*Rewards accumulated per unit of time.*
+*Rewards ratio is the number of reward tokens for a number of staked tokens, per unit of time.*
 
 
 #### Returns
@@ -122,13 +61,30 @@ function rewardsPerUnitTime() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### setRewardsPerUnitTime
+### rewardRatioNumerator
 
 ```solidity
-function setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) external nonpayable
+function rewardRatioNumerator() external view returns (uint256)
 ```
 
-Set rewards per unit of time.           Interpreted as x rewards per second/per day/etc based on time-unit.
+
+
+*Rewards ratio is the number of reward tokens for a number of staked tokens, per unit of time.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### setRewardRatio
+
+```solidity
+function setRewardRatio(uint256 _numerator, uint256 _denominator) external nonpayable
+```
+
+Set rewards per unit of time.           Interpreted as (numerator/denominator) rewards per second/per day/etc based on time-unit.           For e.g., ratio of 1/20 would mean 1 reward token for every 20 tokens staked.
 
 *Only admin/authorized-account can call it.*
 
@@ -136,7 +92,8 @@ Set rewards per unit of time.           Interpreted as x rewards per second/per 
 
 | Name | Type | Description |
 |---|---|---|
-| _rewardsPerUnitTime | uint256 | New rewards per unit time. |
+| _numerator | uint256 | Reward ratio numerator. |
+| _denominator | uint256 | Reward ratio denominator. |
 
 ### setTimeUnit
 
@@ -157,10 +114,10 @@ Set time unit. Set as a number of seconds.           Could be specified as -- x 
 ### stake
 
 ```solidity
-function stake(uint256[] _tokenIds) external nonpayable
+function stake(uint256 _amount) external nonpayable
 ```
 
-Stake ERC721 Tokens.
+Stake ERC20 Tokens.
 
 *See {_stake}. Override that to implement custom logic.*
 
@@ -168,29 +125,7 @@ Stake ERC721 Tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenIds | uint256[] | List of tokens to stake. |
-
-### stakerAddress
-
-```solidity
-function stakerAddress(uint256) external view returns (address)
-```
-
-
-
-*Mapping from staked token-id to staker address.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| _amount | uint256 | Amount to stake. |
 
 ### stakers
 
@@ -200,7 +135,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 
 
 
-*Mapping from staker address to Staker struct. See {struct IStaking721.Staker}.*
+*Mapping staker address to Staker struct. See {struct IStaking20.Staker}.*
 
 #### Parameters
 
@@ -224,7 +159,7 @@ function stakersArray(uint256) external view returns (address)
 
 
 
-*List of accounts that have staked their NFTs.*
+*List of accounts that have staked that token-id.*
 
 #### Parameters
 
@@ -255,13 +190,30 @@ function timeUnit() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### token
+
+```solidity
+function token() external view returns (address)
+```
+
+
+
+*Address of ERC20 contract -- staked tokens belong to this contract.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### withdraw
 
 ```solidity
-function withdraw(uint256[] _tokenIds) external nonpayable
+function withdraw(uint256 _amount) external nonpayable
 ```
 
-Withdraw staked tokens.
+Withdraw staked ERC20 tokens.
 
 *See {_withdraw}. Override that to implement custom logic.*
 
@@ -269,11 +221,27 @@ Withdraw staked tokens.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokenIds | uint256[] | List of tokens to withdraw. |
+| _amount | uint256 | Amount to withdraw. |
 
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### RewardsClaimed
 
@@ -295,7 +263,7 @@ event RewardsClaimed(address indexed staker, uint256 rewardAmount)
 ### TokensStaked
 
 ```solidity
-event TokensStaked(address indexed staker, uint256[] indexed tokenIds)
+event TokensStaked(address indexed staker, uint256 amount)
 ```
 
 
@@ -307,12 +275,12 @@ event TokensStaked(address indexed staker, uint256[] indexed tokenIds)
 | Name | Type | Description |
 |---|---|---|
 | staker `indexed` | address | undefined |
-| tokenIds `indexed` | uint256[] | undefined |
+| amount  | uint256 | undefined |
 
 ### TokensWithdrawn
 
 ```solidity
-event TokensWithdrawn(address indexed staker, uint256[] indexed tokenIds)
+event TokensWithdrawn(address indexed staker, uint256 amount)
 ```
 
 
@@ -324,12 +292,12 @@ event TokensWithdrawn(address indexed staker, uint256[] indexed tokenIds)
 | Name | Type | Description |
 |---|---|---|
 | staker `indexed` | address | undefined |
-| tokenIds `indexed` | uint256[] | undefined |
+| amount  | uint256 | undefined |
 
-### UpdatedRewardsPerUnitTime
+### UpdatedMinStakeAmount
 
 ```solidity
-event UpdatedRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime)
+event UpdatedMinStakeAmount(uint256 oldAmount, uint256 newAmount)
 ```
 
 
@@ -340,8 +308,27 @@ event UpdatedRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newReward
 
 | Name | Type | Description |
 |---|---|---|
-| oldRewardsPerUnitTime  | uint256 | undefined |
-| newRewardsPerUnitTime  | uint256 | undefined |
+| oldAmount  | uint256 | undefined |
+| newAmount  | uint256 | undefined |
+
+### UpdatedRewardRatio
+
+```solidity
+event UpdatedRewardRatio(uint256 oldNumerator, uint256 newNumerator, uint256 oldDenominator, uint256 newDenominator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| oldNumerator  | uint256 | undefined |
+| newNumerator  | uint256 | undefined |
+| oldDenominator  | uint256 | undefined |
+| newDenominator  | uint256 | undefined |
 
 ### UpdatedTimeUnit
 
