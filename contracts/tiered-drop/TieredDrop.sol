@@ -100,6 +100,19 @@ contract TieredDrop is
     mapping(bytes32 => uint256) private totalsForTier;
 
     /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Emitted when tokens are claimed via `claimWithSignature`.
+    event TokensClaimed(
+        address indexed claimer,
+        address indexed receiver,
+        uint256 startTokenId,
+        uint256 quantityClaimed,
+        string[] tiersInPriority
+    );
+
+    /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
@@ -193,7 +206,7 @@ contract TieredDrop is
         totalRemainingInTier[_tier] += _amount;
 
         uint256 startId = nextTokenIdToLazyMint;
-        if (isTierEmpty(_tier)) {
+        if (isTierEmpty(_tier) || nextMetadataIdToMapFromTier[_tier] == type(uint256).max) {
             nextMetadataIdToMapFromTier[_tier] = startId;
         }
 
@@ -261,7 +274,7 @@ contract TieredDrop is
         // Mint tokens.
         transferTokensOnClaim(to, quantity, tiersInPriority);
 
-        emit RequestExecuted(_msgSender(), signer, _req);
+        emit TokensClaimed(_msgSender(), to, tokenIdToMint, quantity, tiersInPriority);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -333,18 +346,51 @@ contract TieredDrop is
         uint256 _startIdToMap,
         uint256 _quantity
     ) private {
-        uint256 proxyStartId = nextMetadataIdToMapFromTier[_tier];
-        uint256 proxyEndId = proxyStartId + _quantity;
+        uint256 nextIdFromTier = nextMetadataIdToMapFromTier[_tier];
+        uint256 startTokenId = _startIdToMap;
 
-        uint256 endTokenId = _startIdToMap + _quantity;
+        TokenRange[] memory tokensInTier = tokensInTier[_tier];
+        uint256 len = tokensInTier.length;
 
-        endIdsAtMint[lengthEndIdsAtMint] = endTokenId;
-        lengthEndIdsAtMint += 1;
+        uint256 qtyRemaining = _quantity;
 
-        tierAtEndId[endTokenId] = _tier;
-        proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
+        for (uint256 i = 0; i < len; i += 1) {
+            TokenRange memory range = tokensInTier[i];
+            uint256 gap = 0;
 
-        nextMetadataIdToMapFromTier[_tier] += _quantity;
+            if (range.startIdInclusive <= nextIdFromTier && nextIdFromTier < range.endIdNonInclusive) {
+                uint256 proxyStartId = nextIdFromTier;
+                uint256 proxyEndId = proxyStartId + qtyRemaining <= range.endIdNonInclusive
+                    ? proxyStartId + qtyRemaining
+                    : range.endIdNonInclusive;
+
+                gap = proxyEndId - proxyStartId;
+
+                uint256 endTokenId = startTokenId + gap;
+
+                endIdsAtMint[lengthEndIdsAtMint] = endTokenId;
+                lengthEndIdsAtMint += 1;
+
+                tierAtEndId[endTokenId] = _tier;
+                proxyTokenRange[endTokenId] = TokenRange(proxyStartId, proxyEndId);
+
+                startTokenId += gap;
+                qtyRemaining -= gap;
+
+                if (nextIdFromTier + gap < range.endIdNonInclusive) {
+                    nextIdFromTier += gap;
+                } else if (i < (len - 1)) {
+                    nextIdFromTier = tokensInTier[i + 1].startIdInclusive;
+                } else {
+                    nextIdFromTier = type(uint256).max;
+                }
+            }
+
+            if (qtyRemaining == 0) {
+                nextMetadataIdToMapFromTier[_tier] = nextIdFromTier;
+                break;
+            }
+        }
     }
 
     /// @dev Returns how much of the total-quantity-to-distribute can come from the given tier.
@@ -393,10 +439,10 @@ contract TieredDrop is
         require(_startIdx < _endIdx && _endIdx <= len, "TieredDrop: invalid indices.");
 
         uint256 numOfRangesForTier = 0;
+        bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
         for (uint256 i = _startIdx; i < _endIdx; i += 1) {
             bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
-            bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
             if (hashOfStoredTier == hashOfTier) {
                 numOfRangesForTier += 1;
@@ -408,7 +454,6 @@ contract TieredDrop is
 
         for (uint256 i = _startIdx; i < _endIdx; i += 1) {
             bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
-            bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
             if (hashOfStoredTier == hashOfTier) {
                 uint256 end = endIdsAtMint[i];
