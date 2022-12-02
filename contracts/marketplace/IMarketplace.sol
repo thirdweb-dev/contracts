@@ -77,12 +77,7 @@ interface IDirectListings {
     event BuyerApprovedForListing(uint256 indexed listingId, address indexed buyer, bool approved);
 
     /// @notice Emitted when a currency is approved as a form of payment for the listing.
-    event CurrencyApprovedForListing(
-        uint256 indexed listingId,
-        address indexed currency,
-        uint256 pricePerToken,
-        bool approved
-    );
+    event CurrencyApprovedForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken);
 
     /// @notice Emitted when NFTs are bought from a listing.
     event NewSale(
@@ -137,13 +132,11 @@ interface IDirectListings {
      *  @param _listingId The ID of the listing to update.
      *  @param _currency The address of the currency to approve as a form of payment for the listing.
      *  @param _pricePerTokenInCurrency The price per token for the currency to approve.
-     *  @param _toApprove Whether to approve the currency for the listing.
      */
     function approveCurrencyForListing(
         uint256 _listingId,
         address _currency,
-        uint256 _pricePerTokenInCurrency,
-        bool _toApprove
+        uint256 _pricePerTokenInCurrency
     ) external;
 
     /**

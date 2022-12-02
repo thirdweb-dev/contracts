@@ -111,28 +111,17 @@ contract MarketplaceDirectListingsTest is BaseTest {
         (uint256 listingId, IDirectListings.ListingParameters memory listingParams) = _setup_updateListing();
         address currencyToApprove = address(erc20); // same currency as main listing
         uint256 pricePerTokenForCurrency = 2 ether;
-        bool toApprove = true;
 
-        // Seller approves buyer for reserved listing.
+        // Seller approves currency for listing.
         vm.prank(seller);
-        vm.expectRevert("Marketplace: Re-approving main listing currency.");
-        DirectListings(marketplace).approveCurrencyForListing(
-            listingId,
-            currencyToApprove,
-            pricePerTokenForCurrency,
-            toApprove
-        );
+        vm.expectRevert("Marketplace: approving listing currency with different price.");
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
 
         // change currency
         currencyToApprove = NATIVE_TOKEN;
 
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(
-            listingId,
-            currencyToApprove,
-            pricePerTokenForCurrency,
-            toApprove
-        );
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
 
         assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
         assertEq(
@@ -140,10 +129,15 @@ contract MarketplaceDirectListingsTest is BaseTest {
             pricePerTokenForCurrency
         );
 
-        // should revert when updating listing with an approved currency
+        // should revert when updating listing with an approved currency but different price
         listingParams.currency = NATIVE_TOKEN;
         vm.prank(seller);
-        vm.expectRevert("Marketplace: can't change to an approved currency");
+        vm.expectRevert("Marketplace: price different from approved price");
+        DirectListings(marketplace).updateListing(listingId, listingParams);
+
+        // change listingParams.pricePerToken to approved price
+        listingParams.pricePerToken = pricePerTokenForCurrency;
+        vm.prank(seller);
         DirectListings(marketplace).updateListing(listingId, listingParams);
     }
 
@@ -952,16 +946,10 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint256 listingId = _setup_approveCurrencyForListing();
         address currencyToApprove = NATIVE_TOKEN;
         uint256 pricePerTokenForCurrency = 2 ether;
-        bool toApprove = true;
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(
-            listingId,
-            currencyToApprove,
-            pricePerTokenForCurrency,
-            toApprove
-        );
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
 
         assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
         assertEq(
@@ -974,35 +962,23 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint256 listingId = _setup_approveCurrencyForListing();
         address currencyToApprove = NATIVE_TOKEN;
         uint256 pricePerTokenForCurrency = 2 ether;
-        bool toApprove = true;
 
         // Someone other than seller approves buyer for reserved listing.
         address notSeller = getActor(1000);
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
-        DirectListings(marketplace).approveCurrencyForListing(
-            listingId,
-            currencyToApprove,
-            pricePerTokenForCurrency,
-            toApprove
-        );
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
     }
 
     function test_revert_approveCurrencyForListing_reApprovingMainCurrency() public {
         uint256 listingId = _setup_approveCurrencyForListing();
         address currencyToApprove = DirectListings(marketplace).getListing(listingId).currency;
         uint256 pricePerTokenForCurrency = 2 ether;
-        bool toApprove = true;
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        vm.expectRevert("Marketplace: Re-approving main listing currency.");
-        DirectListings(marketplace).approveCurrencyForListing(
-            listingId,
-            currencyToApprove,
-            pricePerTokenForCurrency,
-            toApprove
-        );
+        vm.expectRevert("Marketplace: approving listing currency with different price.");
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1073,7 +1049,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken, true);
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
 
         // Seller approves buyer for listing
         vm.prank(seller);
@@ -1127,7 +1103,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken, true);
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
 
         // Seller approves buyer for listing
         vm.prank(seller);
@@ -1166,7 +1142,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken, true);
+        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
 
         // Seller approves buyer for listing
         vm.prank(seller);

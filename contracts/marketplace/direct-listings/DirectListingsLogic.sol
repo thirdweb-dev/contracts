@@ -158,9 +158,10 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
                 : startTime + (_params.endTimestamp - _params.startTimestamp);
         }
 
+        uint256 _approvedCurrencyPrice = data.currencyPriceForListing[_listingId][_params.currency];
         require(
-            data.currencyPriceForListing[_listingId][_params.currency] == 0,
-            "Marketplace: can't change to an approved currency"
+            _approvedCurrencyPrice == 0 || _params.pricePerToken == _approvedCurrencyPrice,
+            "Marketplace: price different from approved price"
         );
 
         _validateNewListing(_params, tokenType);
@@ -211,18 +212,23 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
     function approveCurrencyForListing(
         uint256 _listingId,
         address _currency,
-        uint256 _pricePerTokenInCurrency,
-        bool _toApprove
+        uint256 _pricePerTokenInCurrency
     ) external onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         Listing memory listing = data.listings[_listingId];
-        require(_currency != listing.currency, "Marketplace: Re-approving main listing currency.");
-        require(_pricePerTokenInCurrency != 0, "Marketplace: Can't approve with 0 price.");
+        require(
+            _currency != listing.currency || _pricePerTokenInCurrency == listing.pricePerToken,
+            "Marketplace: approving listing currency with different price."
+        );
+        require(
+            data.currencyPriceForListing[_listingId][_currency] != _pricePerTokenInCurrency,
+            "Marketplace: price unchanged."
+        );
 
         data.currencyPriceForListing[_listingId][_currency] = _pricePerTokenInCurrency;
 
-        emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency, _toApprove);
+        emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency);
     }
 
     /// @notice Buy NFTs from a listing.
