@@ -141,6 +141,21 @@ contract MarketplaceDirectListingsTest is BaseTest {
         DirectListings(marketplace).updateListing(listingId, listingParams);
     }
 
+    function test_state_map_replaceExtension() public {
+        Map map = Map(MarketplaceEntrypoint(payable(marketplace)).functionMap());
+
+        // revert when adding an already set selector
+        vm.prank(adminDeployer);
+        vm.expectRevert("Extension already set");
+        map.addExtension(DirectListings.createListing.selector, address(0x1234));
+
+        // replace an already set selector
+        vm.prank(adminDeployer);
+        map.replaceExtension(DirectListings.createListing.selector, address(0x1234));
+
+        assertEq(map.getExtension(DirectListings.createListing.selector), address(0x1234));
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Create listing
     //////////////////////////////////////////////////////////////*/
