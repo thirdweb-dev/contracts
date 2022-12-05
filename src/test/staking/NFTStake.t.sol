@@ -508,4 +508,23 @@ contract NFTStakeTest is BaseTest {
         vm.prank(stakerTwo);
         stakeContract.withdraw(_tokenIdsTwo);
     }
+
+    function test_Macro_NFTDirectSafeTransferLocksToken() public {
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+
+        // stakerOne mistakenly safe-transfers direct to the staking contract
+        vm.prank(stakerOne);
+        vm.expectRevert("Direct transfer");
+        erc721.safeTransferFrom(stakerOne, address(stakeContract), tokenIds[0]);
+
+        // show that the transferred token was not properly staked
+        // (uint256[] memory tokensStaked, uint256 rewards) = stakeContract.getStakeInfo(stakerOne);
+        // assertEq(0, tokensStaked.length);
+
+        // // show that stakerOne cannot recover the token
+        // vm.expectRevert();
+        // vm.prank(stakerOne);
+        // stakeContract.withdraw(tokenIds);
+    }
 }

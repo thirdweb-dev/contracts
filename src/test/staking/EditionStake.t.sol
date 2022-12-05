@@ -1001,4 +1001,22 @@ contract EditionStakeTest is BaseTest {
         vm.prank(stakerOne);
         stakeContract.withdraw(0, 50);
     }
+
+    function test_Macro_EditionDirectSafeTransferLocksToken() public {
+        uint256 tokenId = 0;
+
+        // stakerOne mistakenly safe-transfers direct to the staking contract
+        vm.prank(stakerOne);
+        vm.expectRevert("Direct transfer");
+        erc1155.safeTransferFrom(stakerOne, address(stakeContract), tokenId, 100, "");
+
+        // show that the transferred tokens were not properly staked
+        // (uint256 tokensStaked, uint256 rewards) = stakeContract.getStakeInfoForToken(tokenId, stakerOne);
+        // assertEq(0, tokensStaked);
+
+        // // show that stakerOne cannot recover the tokens
+        // vm.expectRevert();
+        // vm.prank(stakerOne);
+        // stakeContract.withdraw(tokenId, 100);
+    }
 }

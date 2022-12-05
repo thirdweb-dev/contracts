@@ -82,7 +82,8 @@ contract NFTStake is
         address,
         uint256,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external view override returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
         return this.onERC721Received.selector;
     }
 

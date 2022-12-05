@@ -24,6 +24,9 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     /// @dev List of accounts that have staked their NFTs.
     address[] public stakersArray;
 
+    /// @dev Flag to check direct transfers of staking tokens.
+    uint8 internal isStaking = 1;
+
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
     uint256 private nextConditionId;
 
@@ -188,7 +191,11 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
                         IERC721(_nftCollection).isApprovedForAll(msg.sender, address(this))),
                 "Not owned or approved"
             );
-            IERC721(_nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
+
+            isStaking = 2;
+            IERC721(_nftCollection).safeTransferFrom(msg.sender, address(this), _tokenIds[i]);
+            isStaking = 1;
+
             stakerAddress[_tokenIds[i]] = msg.sender;
 
             if (!isIndexed[_tokenIds[i]]) {
@@ -225,7 +232,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         for (uint256 i = 0; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(_nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
+            IERC721(_nftCollection).safeTransferFrom(address(this), msg.sender, _tokenIds[i]);
         }
 
         emit TokensWithdrawn(msg.sender, _tokenIds);

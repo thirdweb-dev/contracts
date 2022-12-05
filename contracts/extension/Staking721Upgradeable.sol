@@ -24,6 +24,9 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     /// @dev List of accounts that have staked their NFTs.
     address[] public stakersArray;
 
+    /// @dev Flag to check direct transfers of staking tokens.
+    uint8 internal isStaking = 1;
+
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
     uint256 private nextConditionId;
 

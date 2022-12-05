@@ -18,6 +18,9 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
     ///@dev Address of ERC1155 contract -- staked tokens belong to this contract.
     address public edition;
 
+    /// @dev Flag to check direct transfers of staking tokens.
+    uint8 internal isStaking = 1;
+
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
     uint256 private nextDefaultConditionId;
 
@@ -279,7 +282,9 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                 IERC1155(_edition).isApprovedForAll(msg.sender, address(this)),
             "Not balance or approved"
         );
+        isStaking = 2;
         IERC1155(_edition).safeTransferFrom(msg.sender, address(this), _tokenId, _amount, "");
+        isStaking = 1;
         // stakerAddress[_tokenIds[i]] = msg.sender;
         stakers[_tokenId][msg.sender].amountStaked += _amount;
 

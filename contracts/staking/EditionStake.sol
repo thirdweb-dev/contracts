@@ -84,6 +84,7 @@ contract EditionStake is
         uint256,
         bytes calldata
     ) external returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
 
