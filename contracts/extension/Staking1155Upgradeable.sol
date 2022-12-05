@@ -30,9 +30,6 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
     ///@dev Mapping from default condition-id to default condition.
     mapping(uint256 => StakingCondition) private defaultCondition;
 
-    ///@dev Mapping from token-id to its last default condition Id.
-    mapping(uint256 => uint256) private lastDefaultConditionIdOfToken;
-
     ///@dev Mapping from token-id to next staking condition Id for the token. Tracks number of conditon updates so far.
     mapping(uint256 => uint256) private nextConditionId;
 
@@ -110,7 +107,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         uint256 _nextConditionId = nextConditionId[_tokenId];
         StakingCondition memory condition = _nextConditionId == 0
             ? defaultCondition[nextDefaultConditionId - 1]
-            : stakingConditions[_tokenId][nextConditionId[_tokenId] - 1];
+            : stakingConditions[_tokenId][_nextConditionId - 1];
         _setStakingCondition(_tokenId, _timeUnit, condition.rewardsPerUnitTime);
 
         emit UpdatedTimeUnit(_tokenId, condition.timeUnit, _timeUnit);
@@ -134,7 +131,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         uint256 _nextConditionId = nextConditionId[_tokenId];
         StakingCondition memory condition = _nextConditionId == 0
             ? defaultCondition[nextDefaultConditionId - 1]
-            : stakingConditions[_tokenId][nextConditionId[_tokenId] - 1];
+            : stakingConditions[_tokenId][_nextConditionId - 1];
         _setStakingCondition(_tokenId, condition.timeUnit, _rewardsPerUnitTime);
 
         emit UpdatedRewardsPerUnitTime(_tokenId, condition.rewardsPerUnitTime, _rewardsPerUnitTime);
@@ -237,11 +234,15 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
     }
 
     function getTimeUnit(uint256 _tokenId) public view returns (uint128 _timeUnit) {
-        _timeUnit = stakingConditions[_tokenId][nextConditionId[_tokenId] - 1].timeUnit;
+        uint256 _nextConditionId = nextConditionId[_tokenId];
+        require(_nextConditionId != 0, "Time unit not set. Check default time unit.");
+        _timeUnit = stakingConditions[_tokenId][_nextConditionId - 1].timeUnit;
     }
 
     function getRewardsPerUnitTime(uint256 _tokenId) public view returns (uint128 _rewardsPerUnitTime) {
-        _rewardsPerUnitTime = stakingConditions[_tokenId][nextConditionId[_tokenId] - 1].rewardsPerUnitTime;
+        uint256 _nextConditionId = nextConditionId[_tokenId];
+        require(_nextConditionId != 0, "Rewards not set. Check default rewards.");
+        _rewardsPerUnitTime = stakingConditions[_tokenId][_nextConditionId - 1].rewardsPerUnitTime;
     }
 
     function getDefaultTimeUnit() public view returns (uint128 _timeUnit) {
@@ -271,8 +272,6 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
             stakers[_tokenId][msg.sender].conditionIdOflastUpdate = _conditionId == 0
                 ? nextDefaultConditionId - 1
                 : _conditionId - 1;
-
-            stakers[_tokenId][msg.sender].defaultCondition = _conditionId == 0;
         }
 
         require(
@@ -331,8 +330,6 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
             ? nextDefaultConditionId - 1
             : _conditionId - 1;
 
-        stakers[_tokenId][msg.sender].defaultCondition = _conditionId == 0;
-
         _mintRewards(msg.sender, rewards);
 
         emit RewardsClaimed(msg.sender, rewards);
@@ -357,8 +354,6 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         stakers[_tokenId][_staker].conditionIdOflastUpdate = _conditionId == 0
             ? nextDefaultConditionId - 1
             : _conditionId - 1;
-
-        stakers[_tokenId][_staker].defaultCondition = _conditionId == 0;
     }
 
     /// @dev Set staking conditions, for a token-Id.
@@ -369,24 +364,22 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
     ) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId[_tokenId];
-        nextConditionId[_tokenId] += 1;
 
         if (conditionId == 0) {
-            StakingCondition memory _defaultCondition = defaultCondition[nextDefaultConditionId - 1];
-            lastDefaultConditionIdOfToken[_tokenId] = nextDefaultConditionId;
+            uint256 _nextDefaultConditionId = nextDefaultConditionId;
+            for (; conditionId < _nextDefaultConditionId; conditionId += 1) {
+                StakingCondition memory _defaultCondition = defaultCondition[conditionId];
 
-            conditionId = nextDefaultConditionId - 1;
-
-            stakingConditions[_tokenId][conditionId] = StakingCondition({
-                timeUnit: _defaultCondition.timeUnit,
-                rewardsPerUnitTime: _defaultCondition.rewardsPerUnitTime,
-                startTimestamp: _defaultCondition.startTimestamp,
-                endTimestamp: uint128(block.timestamp)
-            });
-
-            conditionId += 1;
-            nextConditionId[_tokenId] = conditionId + 1;
+                stakingConditions[_tokenId][conditionId] = StakingCondition({
+                    timeUnit: _defaultCondition.timeUnit,
+                    rewardsPerUnitTime: _defaultCondition.rewardsPerUnitTime,
+                    startTimestamp: _defaultCondition.startTimestamp,
+                    endTimestamp: _defaultCondition.endTimestamp
+                });
+            }
         }
+
+        stakingConditions[_tokenId][conditionId - 1].endTimestamp = uint128(block.timestamp);
 
         stakingConditions[_tokenId][conditionId] = StakingCondition({
             timeUnit: uint128(_timeUnit),
@@ -395,9 +388,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
             endTimestamp: 0
         });
 
-        if (conditionId > 1) {
-            stakingConditions[_tokenId][conditionId - 1].endTimestamp = uint128(block.timestamp);
-        }
+        nextConditionId[_tokenId] = conditionId + 1;
     }
 
     /// @dev Set default staking conditions.
@@ -424,9 +415,8 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         uint256 _stakerConditionId = staker.conditionIdOflastUpdate;
         uint256 _nextConditionId = nextConditionId[_tokenId];
 
-        if (staker.defaultCondition) {
-            uint256 _lastDefaultCondition = lastDefaultConditionIdOfToken[_tokenId];
-            _nextConditionId = _lastDefaultCondition == 0 ? nextDefaultConditionId : _lastDefaultCondition - 1;
+        if (_nextConditionId == 0) {
+            _nextConditionId = nextDefaultConditionId;
 
             for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
                 StakingCondition memory condition = defaultCondition[i];
@@ -438,20 +428,17 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                     ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
                     condition.timeUnit;
             }
+        } else {
+            for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+                StakingCondition memory condition = stakingConditions[_tokenId][i];
 
-            _stakerConditionId = _nextConditionId;
-            _nextConditionId = nextConditionId[_tokenId];
-        }
+                uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
+                uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-        for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
-            StakingCondition memory condition = stakingConditions[_tokenId][i];
-
-            uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
-            uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
-
-            _rewards +=
-                ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
-                condition.timeUnit;
+                _rewards +=
+                    ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
+                    condition.timeUnit;
+            }
         }
     }
 

@@ -37,15 +37,12 @@ interface IStaking1155 {
      *  @param unclaimedRewards         Rewards accumulated but not claimed by user yet.
      *
      *  @param conditionIdOflastUpdate  Condition-Id when rewards were last updated for user.
-     *
-     *  @param defaultCondition         Indicates if condition of last-update was default or token-specific.
      */
     struct Staker {
         uint256 amountStaked;
         uint256 timeOfLastUpdate;
         uint256 unclaimedRewards;
         uint256 conditionIdOflastUpdate;
-        bool defaultCondition;
     }
 
     /**
