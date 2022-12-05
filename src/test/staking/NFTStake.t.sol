@@ -474,4 +474,38 @@ contract NFTStakeTest is BaseTest {
         vm.expectRevert("Withdrawing more than staked");
         stakeContract.withdraw(_tokensToWithdraw);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_revert_zeroTimeUnit_adminLockTokens() public {
+        //================ stake tokens
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](1);
+        uint256[] memory _tokenIdsTwo = new uint256[](1);
+        _tokenIdsOne[0] = 0;
+        _tokenIdsTwo[0] = 5;
+
+        // Two different users stake 1 tokens each
+        vm.prank(stakerOne);
+        stakeContract.stake(_tokenIdsOne);
+        vm.prank(stakerTwo);
+        stakeContract.stake(_tokenIdsTwo);
+
+        // set timeUnit to zero
+        uint256 newTimeUnit = 0;
+        vm.prank(deployer);
+        vm.expectRevert("time-unit can't be 0");
+        stakeContract.setTimeUnit(newTimeUnit);
+
+        // stakerOne and stakerTwo can withdraw their tokens
+        // vm.expectRevert(stdError.divisionError);
+        vm.prank(stakerOne);
+        stakeContract.withdraw(_tokenIdsOne);
+
+        // vm.expectRevert(stdError.divisionError);
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(_tokenIdsTwo);
+    }
 }

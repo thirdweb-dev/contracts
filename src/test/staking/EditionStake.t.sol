@@ -972,4 +972,33 @@ contract EditionStakeTest is BaseTest {
         vm.expectRevert("Withdrawing more than staked");
         stakeContract.withdraw(1, 20);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_revert_zeroTimeUnit_adminLockTokens() public {
+        //================ stake tokens
+        vm.warp(1);
+
+        // User stakes tokens
+        vm.prank(stakerOne);
+        stakeContract.stake(0, 50);
+
+        // set default timeUnit to zero
+        uint256 newTimeUnit = 0;
+        vm.prank(deployer);
+        vm.expectRevert("time-unit can't be 0");
+        stakeContract.setDefaultTimeUnit(newTimeUnit);
+
+        // set timeUnit to zero
+        vm.prank(deployer);
+        vm.expectRevert("time-unit can't be 0");
+        stakeContract.setTimeUnit(0, newTimeUnit);
+
+        // stakerOne and stakerTwo can withdraw their tokens
+        // vm.expectRevert(stdError.divisionError);
+        vm.prank(stakerOne);
+        stakeContract.withdraw(0, 50);
+    }
 }

@@ -267,6 +267,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
     /// @dev Set staking conditions.
     function _setStakingCondition(uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
+        require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
         nextConditionId += 1;
 

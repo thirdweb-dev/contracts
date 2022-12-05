@@ -229,6 +229,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         uint256 _denominator
     ) internal virtual {
         require(_denominator != 0, "divide by 0");
+        require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
         nextConditionId += 1;
 

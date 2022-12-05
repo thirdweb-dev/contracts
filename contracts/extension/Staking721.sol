@@ -265,6 +265,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
 
     /// @dev Set staking conditions.
     function _setStakingCondition(uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
+        require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
         nextConditionId += 1;
 

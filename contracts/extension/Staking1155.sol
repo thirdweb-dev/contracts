@@ -365,6 +365,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) internal virtual {
+        require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId[_tokenId];
         nextConditionId[_tokenId] += 1;
 
@@ -399,6 +400,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
 
     /// @dev Set default staking conditions.
     function _setDefaultStakingCondition(uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
+        require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextDefaultConditionId;
         nextDefaultConditionId += 1;
 
