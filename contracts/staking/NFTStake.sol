@@ -50,8 +50,7 @@ contract NFTStake is
 
         rewardToken = _rewardToken;
         __Staking721_init(_nftCollection);
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);

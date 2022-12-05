@@ -43,8 +43,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155 {
         address _rewardToken
     ) Staking1155(_edition) {
         _setupOwner(msg.sender);
-        _setDefaultTimeUnit(_defaultTimeUnit);
-        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
+        _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 
         rewardToken = _rewardToken;
     }

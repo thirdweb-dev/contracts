@@ -21,8 +21,7 @@ contract MyStakingContract is ERC20, Staking721 {
         uint256 _rewardsPerUnitTime
     ) ERC20(_name, _symbol) Staking721(_nftCollection) {
         condition = true;
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
     }
 
     function setCondition(bool _condition) external {
@@ -258,12 +257,12 @@ contract StakingExtensionTest is DSTest, Test {
 
     function test_state_setRewardsPerUnitTime() public {
         // check current value
-        assertEq(rewardsPerUnitTime, ext.rewardsPerUnitTime());
+        assertEq(rewardsPerUnitTime, ext.getRewardsPerUnitTime());
 
         // set new value and check
         uint256 newRewardsPerUnitTime = 50;
         ext.setRewardsPerUnitTime(newRewardsPerUnitTime);
-        assertEq(newRewardsPerUnitTime, ext.rewardsPerUnitTime());
+        assertEq(newRewardsPerUnitTime, ext.getRewardsPerUnitTime());
 
         //================ stake tokens
         vm.warp(1);
@@ -282,7 +281,7 @@ contract StakingExtensionTest is DSTest, Test {
         vm.warp(1000);
 
         ext.setRewardsPerUnitTime(200);
-        assertEq(200, ext.rewardsPerUnitTime());
+        assertEq(200, ext.getRewardsPerUnitTime());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -314,12 +313,12 @@ contract StakingExtensionTest is DSTest, Test {
 
     function test_state_setTimeUnit() public {
         // check current value
-        assertEq(timeUnit, ext.timeUnit());
+        assertEq(timeUnit, ext.getTimeUnit());
 
         // set new value and check
         uint256 newTimeUnit = 1 minutes;
         ext.setTimeUnit(newTimeUnit);
-        assertEq(newTimeUnit, ext.timeUnit());
+        assertEq(newTimeUnit, ext.getTimeUnit());
 
         //================ stake tokens
         vm.warp(1);
@@ -338,7 +337,7 @@ contract StakingExtensionTest is DSTest, Test {
         vm.warp(1000);
 
         ext.setTimeUnit(1 seconds);
-        assertEq(1 seconds, ext.timeUnit());
+        assertEq(1 seconds, ext.getTimeUnit());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation

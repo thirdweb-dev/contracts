@@ -30,16 +30,40 @@ interface IStaking1155 {
     /**
      *  @notice Staker Info.
      *
-     *  @param amountStaked         Total number of tokens staked by the staker.
+     *  @param amountStaked             Total number of tokens staked by the staker.
      *
-     *  @param timeOfLastUpdate     Last reward-update timestamp.
+     *  @param timeOfLastUpdate         Last reward-update timestamp.
      *
-     *  @param unclaimedRewards     Rewards accumulated but not claimed by user yet.
+     *  @param unclaimedRewards         Rewards accumulated but not claimed by user yet.
+     *
+     *  @param conditionIdOflastUpdate  Condition-Id when rewards were last updated for user.
+     *
+     *  @param defaultCondition         Indicates if condition of last-update was default or token-specific.
      */
     struct Staker {
         uint256 amountStaked;
         uint256 timeOfLastUpdate;
         uint256 unclaimedRewards;
+        uint256 conditionIdOflastUpdate;
+        bool defaultCondition;
+    }
+
+    /**
+     *  @notice Staking Condition.
+     *
+     *  @param timeUnit           Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
+     *
+     *  @param rewardsPerUnitTime Rewards accumulated per unit of time.
+     *
+     *  @param startTimestamp     Condition start timestamp.
+     *
+     *  @param endTimestamp       Condition end timestamp.
+     */
+    struct StakingCondition {
+        uint128 timeUnit;
+        uint128 rewardsPerUnitTime;
+        uint128 startTimestamp;
+        uint128 endTimestamp;
     }
 
     /**

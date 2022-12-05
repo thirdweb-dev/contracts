@@ -237,8 +237,9 @@ contract TokenStakeTest is BaseTest {
         // set value and check
         vm.prank(deployer);
         stakeContract.setRewardRatio(3, 70);
-        assertEq(3, stakeContract.rewardRatioNumerator());
-        assertEq(70, stakeContract.rewardRatioDenominator());
+        (uint256 numerator, uint256 denominator) = stakeContract.getRewardRatio();
+        assertEq(3, numerator);
+        assertEq(70, denominator);
 
         //================ stake tokens
         vm.warp(1);
@@ -253,8 +254,9 @@ contract TokenStakeTest is BaseTest {
 
         vm.prank(deployer);
         stakeContract.setRewardRatio(3, 80);
-        assertEq(3, stakeContract.rewardRatioNumerator());
-        assertEq(80, stakeContract.rewardRatioDenominator());
+        (numerator, denominator) = stakeContract.getRewardRatio();
+        assertEq(3, numerator);
+        assertEq(80, denominator);
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -279,7 +281,7 @@ contract TokenStakeTest is BaseTest {
         uint256 timeUnit = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(timeUnit);
-        assertEq(timeUnit, stakeContract.timeUnit());
+        assertEq(timeUnit, stakeContract.getTimeUnit());
 
         //================ stake tokens
         vm.warp(1);
@@ -294,7 +296,7 @@ contract TokenStakeTest is BaseTest {
 
         vm.prank(deployer);
         stakeContract.setTimeUnit(200);
-        assertEq(200, stakeContract.timeUnit());
+        assertEq(200, stakeContract.getTimeUnit());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for timeUnit for calculation

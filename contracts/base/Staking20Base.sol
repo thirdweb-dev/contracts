@@ -44,8 +44,7 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
         address _rewardToken
     ) Staking20(_stakingToken) {
         _setupOwner(msg.sender);
-        _setTimeUnit(_timeUnit);
-        _setRewardRatio(_rewardRatioNumerator, _rewardRatioDenominator);
+        _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;

@@ -50,8 +50,7 @@ contract EditionStake is
 
         rewardToken = _rewardToken;
         __Staking1155_init(_edition);
-        _setDefaultTimeUnit(_defaultTimeUnit);
-        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
+        _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);

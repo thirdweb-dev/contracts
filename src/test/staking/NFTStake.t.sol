@@ -228,13 +228,13 @@ contract NFTStakeTest is BaseTest {
 
     function test_state_setRewardsPerUnitTime() public {
         // check current value
-        assertEq(rewardsPerUnitTime, stakeContract.rewardsPerUnitTime());
+        assertEq(rewardsPerUnitTime, stakeContract.getRewardsPerUnitTime());
 
         // set new value and check
         uint256 newRewardsPerUnitTime = 50;
         vm.prank(deployer);
         stakeContract.setRewardsPerUnitTime(newRewardsPerUnitTime);
-        assertEq(newRewardsPerUnitTime, stakeContract.rewardsPerUnitTime());
+        assertEq(newRewardsPerUnitTime, stakeContract.getRewardsPerUnitTime());
 
         //================ stake tokens
         vm.warp(1);
@@ -254,7 +254,7 @@ contract NFTStakeTest is BaseTest {
 
         vm.prank(deployer);
         stakeContract.setRewardsPerUnitTime(200);
-        assertEq(200, stakeContract.rewardsPerUnitTime());
+        assertEq(200, stakeContract.getRewardsPerUnitTime());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -284,13 +284,13 @@ contract NFTStakeTest is BaseTest {
 
     function test_state_setTimeUnit() public {
         // check current value
-        assertEq(timeUnit, stakeContract.timeUnit());
+        assertEq(timeUnit, stakeContract.getTimeUnit());
 
         // set new value and check
         uint256 newTimeUnit = 1 minutes;
         vm.prank(deployer);
         stakeContract.setTimeUnit(newTimeUnit);
-        assertEq(newTimeUnit, stakeContract.timeUnit());
+        assertEq(newTimeUnit, stakeContract.getTimeUnit());
 
         //================ stake tokens
         vm.warp(1);
@@ -310,7 +310,7 @@ contract NFTStakeTest is BaseTest {
 
         vm.prank(deployer);
         stakeContract.setTimeUnit(1 seconds);
-        assertEq(1 seconds, stakeContract.timeUnit());
+        assertEq(1 seconds, stakeContract.getTimeUnit());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation

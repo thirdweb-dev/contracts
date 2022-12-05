@@ -50,8 +50,7 @@ contract TokenStake is
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;
         __Staking20_init(_stakingToken);
-        _setTimeUnit(_timeUnit);
-        _setRewardRatio(_rewardRatioNumerator, _rewardRatioDenominator);
+        _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);

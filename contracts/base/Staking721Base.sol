@@ -37,14 +37,13 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     address public rewardToken;
 
     constructor(
-        uint256 _timeUnit,
-        uint256 _rewardsPerUnitTime,
+        uint128 _timeUnit,
+        uint128 _rewardsPerUnitTime,
         address _nftCollection,
         address _rewardToken
     ) Staking721(_nftCollection) {
         _setupOwner(msg.sender);
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
         rewardToken = _rewardToken;
     }
