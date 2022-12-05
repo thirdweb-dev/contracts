@@ -10,6 +10,7 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+import "../eip/interface/IERC20Metadata.sol";
 
 //  ==========  Features    ==========
 
@@ -49,7 +50,11 @@ contract TokenStake is
 
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;
-        __Staking20_init(_stakingToken);
+        __Staking20_init(
+            _stakingToken,
+            IERC20Metadata(_stakingToken).decimals(),
+            IERC20Metadata(_rewardToken).decimals()
+        );
         _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
         _setupContractURI(_contractURI);

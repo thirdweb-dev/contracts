@@ -19,6 +19,12 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
     address public token;
 
+    /// @dev Decimals of staking token.
+    uint256 public stakingTokenDecimals;
+
+    /// @dev Decimals of reward token.
+    uint256 public rewardTokenDecimals;
+
     /// @dev List of accounts that have staked that token-id.
     address[] public stakersArray;
 
@@ -31,9 +37,17 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     ///@dev Mapping from condition Id to staking condition. See {struct IStaking721.StakingCondition}
     mapping(uint256 => StakingCondition) private stakingConditions;
 
-    constructor(address _token) ReentrancyGuard() {
+    constructor(
+        address _token,
+        uint256 _stakingTokenDecimals,
+        uint256 _rewardTokenDecimals
+    ) ReentrancyGuard() {
         require(address(_token) != address(0), "address 0");
+        require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
+
         token = _token;
+        stakingTokenDecimals = _stakingTokenDecimals;
+        rewardTokenDecimals = _rewardTokenDecimals;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -260,6 +274,8 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             _rewards += ((((endTime - startTime) * staker.amountStaked * condition.rewardRatioNumerator) /
                 condition.timeUnit) / condition.rewardRatioDenominator);
         }
+
+        _rewards = (_rewards * (10**rewardTokenDecimals)) / (10**stakingTokenDecimals);
     }
 
     /**

@@ -19,6 +19,12 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
     address public token;
 
+    /// @dev Decimals of staking token.
+    uint256 public stakingTokenDecimals;
+
+    /// @dev Decimals of reward token.
+    uint256 public rewardTokenDecimals;
+
     /// @dev List of accounts that have staked that token-id.
     address[] public stakersArray;
 
@@ -31,11 +37,19 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     ///@dev Mapping from condition Id to staking condition. See {struct IStaking721.StakingCondition}
     mapping(uint256 => StakingCondition) private stakingConditions;
 
-    function __Staking20_init(address _token) internal onlyInitializing {
+    function __Staking20_init(
+        address _token,
+        uint256 _stakingTokenDecimals,
+        uint256 _rewardTokenDecimals
+    ) internal onlyInitializing {
         __ReentrancyGuard_init();
 
         require(address(_token) != address(0), "token address 0");
+        require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
+
         token = _token;
+        stakingTokenDecimals = _stakingTokenDecimals;
+        rewardTokenDecimals = _rewardTokenDecimals;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -262,6 +276,8 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             _rewards += ((((endTime - startTime) * staker.amountStaked * condition.rewardRatioNumerator) /
                 condition.timeUnit) / condition.rewardRatioDenominator);
         }
+
+        _rewards = (_rewards * (10**rewardTokenDecimals)) / (10**stakingTokenDecimals);
     }
 
     /**

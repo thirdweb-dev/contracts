@@ -495,3 +495,197 @@ contract TokenStakeTest is BaseTest {
         stakeContract.withdraw(400);
     }
 }
+
+contract MockERC20Decimals is MockERC20 {
+    uint8 private immutable DECIMALS;
+
+    constructor(uint8 _decimals) MockERC20() {
+        DECIMALS = _decimals;
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return DECIMALS;
+    }
+}
+
+// Test scenario where reward token has 6 decimals and staking token has 18
+contract Macro_TokenStake_Rewards6_Staking18_Test is BaseTest {
+    MockERC20Decimals public erc20_reward6;
+    MockERC20Decimals public erc20_staking18;
+
+    TokenStake internal stakeContract_reward6_staking18;
+
+    address internal stakerOne;
+
+    uint256 internal timeUnit;
+    uint256 internal rewardRatioNumerator;
+    uint256 internal rewardRatioDenominator;
+
+    function setUp() public override {
+        super.setUp();
+
+        erc20_reward6 = new MockERC20Decimals(6);
+        erc20_staking18 = new MockERC20Decimals(18);
+
+        // every 60s earns 1 reward token per 2 tokens staked
+        timeUnit = 60;
+        rewardRatioNumerator = 1;
+        rewardRatioDenominator = 2;
+
+        deployContractProxy(
+            "TokenStake",
+            abi.encodeCall(
+                TokenStake.initialize,
+                (
+                    deployer,
+                    CONTRACT_URI,
+                    forwarders(),
+                    address(erc20_reward6),
+                    address(erc20_staking18),
+                    timeUnit,
+                    rewardRatioNumerator,
+                    rewardRatioDenominator
+                )
+            )
+        );
+
+        stakeContract_reward6_staking18 = TokenStake(getContract("TokenStake"));
+
+        stakerOne = address(0x345);
+
+        // mint 1000 tokens to stakerOne
+        erc20_staking18.mint(stakerOne, 1000e18);
+
+        // mint 1000 reward tokens to contract admin
+        erc20_reward6.mint(deployer, 1000e6);
+
+        // set approvals
+        vm.prank(stakerOne);
+        erc20_staking18.approve(address(stakeContract_reward6_staking18), type(uint256).max);
+
+        // transfer 100 reward tokens
+        vm.prank(deployer);
+        erc20_reward6.transfer(address(stakeContract_reward6_staking18), 100e6);
+    }
+
+    //===== Reward Token 6 Decimals, Staking Token 18 Decimals =====//
+    function test_Macro_reward6_staking18() public {
+        vm.warp(1);
+
+        // stake 400 tokens
+        vm.prank(stakerOne);
+        stakeContract_reward6_staking18.stake(400e18);
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        // check balances/ownership of staked tokens
+        assertEq(erc20_staking18.balanceOf(address(stakeContract_reward6_staking18)), 400e18);
+        assertEq(erc20_staking18.balanceOf(address(stakerOne)), 600e18);
+
+        // check available rewards right after staking
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract_reward6_staking18.getStakeInfo(stakerOne);
+
+        assertEq(_amountStaked, 400e18);
+        assertEq(_availableRewards, 0);
+
+        //=================== warp ahead exactly 1 timeUnit: 60s
+        vm.roll(4);
+        vm.warp(61);
+        assertEq(timeUnit, block.timestamp - timeOfLastUpdate);
+
+        // With 400 tokens staked, we expect 200 reward tokens earned
+        (, _availableRewards) = stakeContract_reward6_staking18.getStakeInfo(stakerOne);
+        console2.log("Expect 200 reward tokens. Amount earned: ", _availableRewards / 1e6);
+        assertEq(_availableRewards, 200e6);
+    }
+}
+
+// Test scenario where reward token has 18 decimals and staking token has 6
+contract Macro_TokenStake_Rewards18_Staking6_Test is BaseTest {
+    MockERC20Decimals public erc20_reward18;
+    MockERC20Decimals public erc20_staking6;
+
+    TokenStake internal stakeContract_reward18_staking6;
+
+    address internal stakerOne;
+
+    uint256 internal timeUnit;
+    uint256 internal rewardRatioNumerator;
+    uint256 internal rewardRatioDenominator;
+
+    function setUp() public override {
+        super.setUp();
+
+        erc20_reward18 = new MockERC20Decimals(18);
+        erc20_staking6 = new MockERC20Decimals(6);
+
+        // every 60s earns 1 reward token per 2 tokens staked
+        timeUnit = 60;
+        rewardRatioNumerator = 1;
+        rewardRatioDenominator = 2;
+
+        deployContractProxy(
+            "TokenStake",
+            abi.encodeCall(
+                TokenStake.initialize,
+                (
+                    deployer,
+                    CONTRACT_URI,
+                    forwarders(),
+                    address(erc20_reward18),
+                    address(erc20_staking6),
+                    timeUnit,
+                    rewardRatioNumerator,
+                    rewardRatioDenominator
+                )
+            )
+        );
+
+        stakeContract_reward18_staking6 = TokenStake(getContract("TokenStake"));
+
+        stakerOne = address(0x345);
+
+        // mint 1000 tokens to stakerOne
+        erc20_staking6.mint(stakerOne, 1000e6);
+
+        // mint 1000 reward tokens to contract admin
+        erc20_reward18.mint(deployer, 1000e18);
+
+        // set approvals
+        vm.prank(stakerOne);
+        erc20_staking6.approve(address(stakeContract_reward18_staking6), type(uint256).max);
+
+        // transfer 100 reward tokens
+        vm.prank(deployer);
+        erc20_reward18.transfer(address(stakeContract_reward18_staking6), 100e18);
+    }
+
+    //===== Reward Token 18 Decimals, Staking Token 6 Decimals =====//
+    function test_Macro_reward18_staking6() public {
+        vm.warp(1);
+
+        // stake 400 tokens
+        vm.prank(stakerOne);
+        stakeContract_reward18_staking6.stake(400e6);
+        uint256 timeOfLastUpdate = block.timestamp;
+
+        // check balances/ownership of staked tokens
+        assertEq(erc20_staking6.balanceOf(address(stakeContract_reward18_staking6)), 400e6);
+        assertEq(erc20_staking6.balanceOf(address(stakerOne)), 600e6);
+
+        // check available rewards right after staking
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract_reward18_staking6.getStakeInfo(stakerOne);
+
+        assertEq(_amountStaked, 400e6);
+        assertEq(_availableRewards, 0);
+
+        //=================== warp ahead exactly 1 timeUnit: 60s
+        vm.roll(4);
+        vm.warp(61);
+        assertEq(timeUnit, block.timestamp - timeOfLastUpdate);
+
+        // With 400 tokens staked, we expect 200 reward tokens earned
+        (, _availableRewards) = stakeContract_reward18_staking6.getStakeInfo(stakerOne);
+        console2.log("Expect 200 reward tokens. Amount earned: ", _availableRewards / 1e18);
+        assertEq(_availableRewards, 200e18);
+    }
+}
