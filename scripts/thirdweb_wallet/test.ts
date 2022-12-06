@@ -116,19 +116,12 @@ async function main() {
 
   console.log("Account nonce: ", nonce);
 
-  const gasForAccountTransaction = await tokenContract.estimator.gasLimitOf("mintTo", [
-    accountAddress,
-    ethers.utils.parseEther("1"),
-  ]);
-
-  console.log("Mint Gas Limit: ", gasForAccountTransaction.toString());
-
   const accountTransactionParams = {
     target: TOKEN_ADDRESS,
     data: tokenContract.encoder.encode("mintTo", [accountAddress, ethers.utils.parseEther("1")]),
     nonce: nonce,
     value: 0,
-    gas: gasForAccountTransaction.add(50_000),
+    gas: 0,
     validityStartTimestamp: 0,
     validityEndTimestamp: Math.floor(Date.now() / 1000) + 10_000,
   };
@@ -161,7 +154,7 @@ async function main() {
     signer: createParams.signer,
     credentials: createParams.credentials,
     value: 0,
-    gas: 200_000,
+    gas: 0,
     data: accountTransactionData,
     validityStartTimestamp: 0,
     validityEndTimestamp: Math.floor(Date.now() / 1000) + 10_000,
@@ -182,9 +175,6 @@ async function main() {
   console.log("Signature for Wallet Admin calling execute: ", signaturForTransactionRequest);
   console.log("signaturForTransactionRequest", adminTransactionParams);
 
-  entrypoint.interceptor.overrideNextTransaction(() => {
-    return { gasLimit: 600_000 };
-  });
   const tx = await entrypoint.call("execute", adminTransactionParams, signaturForTransactionRequest);
 
   console.log(tx);
