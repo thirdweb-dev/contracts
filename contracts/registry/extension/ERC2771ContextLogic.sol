@@ -6,7 +6,7 @@ import "./ERC2771ContextStorage.sol";
 /**
  * @dev Context variant with ERC2771 support.
  */
-abstract contract ERC2771Context {
+abstract contract ERC2771ContextLogic {
     constructor(address[] memory trustedForwarder) {
         ERC2771ContextStorage.Data storage data = ERC2771ContextStorage.erc2771ContextStorage();
 

@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import "./IMap.sol";
 
 import "../extension/Multicall.sol";
-import "./extension/PermissionsEnumerable.sol";
+import "./extension/PermissionsEnumerableLogic.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-contract Map is IMap, Multicall, PermissionsEnumerable {
+contract Map is IMap, Multicall, PermissionsEnumerableLogic {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");

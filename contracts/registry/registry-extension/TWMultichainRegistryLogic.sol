@@ -4,12 +4,12 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "../extension/ERC2771ContextConsumer.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../extension/PermissionsEnumerableLogic.sol";
 
 import "../ITWMultichainRegistry.sol";
 import "./TWMultichainRegistryStorage.sol";
 
-contract TWMultichainRegistry is ITWMultichainRegistry, ERC2771ContextConsumer {
+contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsumer {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -23,7 +23,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, ERC2771ContextConsumer {
         string memory metadataUri
     ) external {
         require(
-            PermissionsEnumerable(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
+            PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."
         );
 
@@ -48,7 +48,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, ERC2771ContextConsumer {
         uint256 _chainId
     ) external {
         require(
-            PermissionsEnumerable(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
+            PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."
         );
 

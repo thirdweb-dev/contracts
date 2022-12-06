@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 //  ==========  Internal imports    ==========
 import "../IMap.sol";
 
-import "../extension/PermissionsEnumerable.sol";
-import "../extension/ERC2771Context.sol";
+import "../extension/PermissionsEnumerableLogic.sol";
+import "../extension/ERC2771ContextLogic.sol";
 import "../../extension/Multicall.sol";
 
 /**
@@ -19,7 +19,7 @@ import "../../extension/Multicall.sol";
  *      - TWMultichainRegistry
  */
 
-contract TWMultichainRegistryEntrypoint is PermissionsEnumerable, ERC2771Context, Multicall {
+contract TWMultichainRegistryEntrypoint is PermissionsEnumerableLogic, ERC2771ContextLogic, Multicall {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -33,7 +33,7 @@ contract TWMultichainRegistryEntrypoint is PermissionsEnumerable, ERC2771Context
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _functionMap, address[] memory _trustedForwarders) ERC2771Context(_trustedForwarders) {
+    constructor(address _functionMap, address[] memory _trustedForwarders) ERC2771ContextLogic(_trustedForwarders) {
         functionMap = _functionMap;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -90,7 +90,7 @@ contract TWMultichainRegistryEntrypoint is PermissionsEnumerable, ERC2771Context
                         Overridable Permissions
     //////////////////////////////////////////////////////////////*/
 
-    function _msgSender() internal view override(ERC2771Context, Permissions) returns (address sender) {
+    function _msgSender() internal view override(ERC2771ContextLogic, PermissionsLogic) returns (address sender) {
         if (isTrustedForwarder(msg.sender)) {
             // The assembly code is more direct than the Solidity version using `abi.decode`.
             assembly {
@@ -101,7 +101,7 @@ contract TWMultichainRegistryEntrypoint is PermissionsEnumerable, ERC2771Context
         }
     }
 
-    function _msgData() internal view override(ERC2771Context, Permissions) returns (bytes calldata) {
+    function _msgData() internal view override(ERC2771ContextLogic, PermissionsLogic) returns (bytes calldata) {
         if (isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
         } else {
