@@ -39,7 +39,7 @@ async function main() {
                     Connect to WalletEntrypoint
     //////////////////////////////////////////////////////////////*/
 
-  const WALLET_ADMIN: string = "0x37Dd33131535B09d5FA5F504Af8830473cbA3653";
+  const WALLET_ADMIN: string = "0x879C0B8388591F542C509d58e3fa061040EB08b4";
 
   const sdk = ThirdwebSDK.fromPrivateKey(process.env.THIRDWEB_WALLET_TEST_PKEY as string, "optimism-goerli");
   const entrypoint = await sdk.getContract(WALLET_ADMIN);
