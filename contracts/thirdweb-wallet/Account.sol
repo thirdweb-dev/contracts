@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // ========== Interface ==========
-import "./interface/IWallet.sol";
+import "./interface/IAccount.sol";
 
 // ========== Utils ==========
 import "../extension/Multicall.sol";
@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Sign messages
  *      - Own assets
  */
-contract Wallet is IWallet, EIP712, Multicall {
+contract Account is IAccount, EIP712, Multicall {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ contract Wallet is IWallet, EIP712, Multicall {
 
     /// @dev Checks whether the caller is `controller`.
     modifier onlyController() {
-        require(controller == msg.sender, "Wallet: caller not controller.");
+        require(controller == msg.sender, "Account: caller not controller.");
         _;
     }
 
@@ -71,12 +71,12 @@ contract Wallet is IWallet, EIP712, Multicall {
         uint128 _validityStartTimestamp,
         uint128 _validityEndTimestamp
     ) {
-        require(msg.value == _value, "Wallet: incorrect value sent.");
+        require(msg.value == _value, "Account: incorrect value sent.");
         require(
             _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
-            "Wallet: request premature or expired."
+            "Account: request premature or expired."
         );
-        require(_nonce == nonce, "Wallet: incorrect nonce.");
+        require(_nonce == nonce, "Account: incorrect nonce.");
         nonce += 1;
         _;
     }
@@ -204,7 +204,7 @@ contract Wallet is IWallet, EIP712, Multicall {
             validSignature = signer_ == recoveredSigner;
         }
 
-        require(validSignature, "Wallet: invalid signer.");
+        require(validSignature, "Account: invalid signer.");
     }
 
     /// @dev Performs a call; sends native tokens or calls a smart contract.

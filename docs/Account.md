@@ -1,4 +1,4 @@
-# Wallet
+# Account
 
 
 
@@ -30,7 +30,7 @@ The admin of the wallet; the only address that is a valid `msg.sender` in this c
 ### deploy
 
 ```solidity
-function deploy(IWallet.DeployParams _params, bytes _signature) external payable returns (address deployment)
+function deploy(IAccount.DeployParams _params, bytes _signature) external payable returns (address deployment)
 ```
 
 
@@ -41,7 +41,7 @@ function deploy(IWallet.DeployParams _params, bytes _signature) external payable
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IWallet.DeployParams | undefined |
+| _params | IAccount.DeployParams | undefined |
 | _signature | bytes | undefined |
 
 #### Returns
@@ -53,7 +53,7 @@ function deploy(IWallet.DeployParams _params, bytes _signature) external payable
 ### execute
 
 ```solidity
-function execute(IWallet.TransactionParams _params, bytes _signature) external payable returns (bool success)
+function execute(IAccount.TransactionParams _params, bytes _signature) external payable returns (bool success)
 ```
 
 
@@ -64,7 +64,7 @@ function execute(IWallet.TransactionParams _params, bytes _signature) external p
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IWallet.TransactionParams | undefined |
+| _params | IAccount.TransactionParams | undefined |
 | _signature | bytes | undefined |
 
 #### Returns

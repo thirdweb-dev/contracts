@@ -1,4 +1,4 @@
-# WalletEntrypoint
+# AccountAdmin
 
 
 
@@ -35,7 +35,7 @@ function accountOf(bytes32) external view returns (address)
 ### changeSignerForAccount
 
 ```solidity
-function changeSignerForAccount(IWalletEntrypoint.SignerUpdateParams _params, bytes _signature) external nonpayable
+function changeSignerForAccount(IAccountAdmin.SignerUpdateParams _params, bytes _signature) external nonpayable
 ```
 
 
@@ -46,13 +46,13 @@ function changeSignerForAccount(IWalletEntrypoint.SignerUpdateParams _params, by
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IWalletEntrypoint.SignerUpdateParams | undefined |
+| _params | IAccountAdmin.SignerUpdateParams | undefined |
 | _signature | bytes | undefined |
 
 ### createAccount
 
 ```solidity
-function createAccount(IWalletEntrypoint.CreateAccountParams _params, bytes _signature) external payable returns (address account)
+function createAccount(IAccountAdmin.CreateAccountParams _params, bytes _signature) external payable returns (address account)
 ```
 
 
@@ -63,7 +63,7 @@ function createAccount(IWalletEntrypoint.CreateAccountParams _params, bytes _sig
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IWalletEntrypoint.CreateAccountParams | undefined |
+| _params | IAccountAdmin.CreateAccountParams | undefined |
 | _signature | bytes | undefined |
 
 #### Returns
@@ -97,7 +97,7 @@ function credentialsOf(address) external view returns (bytes32)
 ### execute
 
 ```solidity
-function execute(IWalletEntrypoint.TransactionRequest req, bytes signature) external payable returns (bool, bytes)
+function execute(IAccountAdmin.TransactionRequest req, bytes signature) external payable returns (bool, bytes)
 ```
 
 
@@ -108,7 +108,7 @@ function execute(IWalletEntrypoint.TransactionRequest req, bytes signature) exte
 
 | Name | Type | Description |
 |---|---|---|
-| req | IWalletEntrypoint.TransactionRequest | undefined |
+| req | IAccountAdmin.TransactionRequest | undefined |
 | signature | bytes | undefined |
 
 #### Returns

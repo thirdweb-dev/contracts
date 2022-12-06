@@ -14,7 +14,7 @@ interface IERC1271 {
     function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4);
 }
 
-interface IWallet is IERC1271 {
+interface IAccount is IERC1271 {
     /*///////////////////////////////////////////////////////////////
                                 Structs
     //////////////////////////////////////////////////////////////*/

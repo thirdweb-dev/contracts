@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Wallet, IWallet } from "contracts/thirdweb-wallet/Wallet.sol";
-import { WalletEntrypoint, IWalletEntrypoint } from "contracts/thirdweb-wallet/WalletEntrypoint.sol";
+import { Account, IAccount } from "contracts/thirdweb-wallet/Account.sol";
+import { AccountAdmin, IAccountAdmin } from "contracts/thirdweb-wallet/AccountAdmin.sol";
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 import { BaseTest, ERC20, ERC721, ERC1155 } from "../utils/BaseTest.sol";
 
 /**
- *  Basic actions [WALLET]:
+ *  Basic actions [ACCOUNT]:
  *      - Deploy smart contracts
  *      - Make transactions on contracts
  *      - Sign messages
  *      - Own assets
  *
- *  Basic actions [WALLET_ENTRYPOINT]:
+ *  Basic actions [ACCOUNT_ADMIN]:
  *      - Create accounts.
  *      - Change signer of account.
  *      - Relay transaction to contract wallet.
@@ -51,7 +51,7 @@ contract DummyContract {
     }
 }
 
-contract WalletUtil is BaseTest {
+contract AccountUtil is BaseTest {
     bytes32 private constant EXECUTE_TYPEHASH =
         keccak256(
             "TransactionParams(address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
@@ -67,7 +67,7 @@ contract WalletUtil is BaseTest {
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     function signExecute(
-        Wallet.TransactionParams memory _params,
+        Account.TransactionParams memory _params,
         uint256 _privateKey,
         address targetContract
     ) internal returns (bytes memory) {
@@ -96,7 +96,7 @@ contract WalletUtil is BaseTest {
     }
 
     function signDeploy(
-        Wallet.DeployParams memory _params,
+        Account.DeployParams memory _params,
         uint256 _privateKey,
         address targetContract
     ) internal returns (bytes memory) {
@@ -124,7 +124,7 @@ contract WalletUtil is BaseTest {
     }
 }
 
-contract WalletEntrypointUtil is BaseTest {
+contract AccountAdminUtil is BaseTest {
     bytes32 private constant CREATE_TYPEHASH =
         keccak256(
             "CreateAccountParams(address signer,bytes32 credentials,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
@@ -144,7 +144,7 @@ contract WalletEntrypointUtil is BaseTest {
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     function signCreateAccount(
-        IWalletEntrypoint.CreateAccountParams memory _params,
+        IAccountAdmin.CreateAccountParams memory _params,
         uint256 _privateKey,
         address targetContract
     ) internal returns (bytes memory) {
@@ -172,7 +172,7 @@ contract WalletEntrypointUtil is BaseTest {
     }
 
     function signSignerUpdate(
-        WalletEntrypoint.SignerUpdateParams memory _params,
+        AccountAdmin.SignerUpdateParams memory _params,
         uint256 _privateKey,
         address targetContract
     ) internal returns (bytes memory) {
@@ -200,7 +200,7 @@ contract WalletEntrypointUtil is BaseTest {
     }
 
     function signTransactionRequest(
-        WalletEntrypoint.TransactionRequest memory _params,
+        AccountAdmin.TransactionRequest memory _params,
         uint256 _privateKey,
         address targetContract
     ) internal returns (bytes memory) {
@@ -229,7 +229,7 @@ contract WalletEntrypointUtil is BaseTest {
     }
 }
 
-contract WalletEntrypointData {
+contract AccountAdminData {
     /// @notice Emitted when an account is created.
     event AccountCreated(address indexed account, address indexed signerOfAccount, address indexed creator);
 
@@ -240,9 +240,9 @@ contract WalletEntrypointData {
     event CallResult(bool success, bytes result);
 }
 
-contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypointData {
-    WalletEntrypoint private admin;
-    Wallet private wallet;
+contract ThirdwebWalletTest is AccountUtil, AccountAdminUtil, AccountAdminData {
+    AccountAdmin private admin;
+    Account private wallet;
 
     uint256 public privateKey1 = 1234;
     uint256 public privateKey2 = 6789;
@@ -254,14 +254,14 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         super.setUp();
 
         // Deploy Architecture:Admin i.e. the entrypoint for a client.
-        admin = new WalletEntrypoint();
+        admin = new AccountAdmin();
 
         signer1 = vm.addr(privateKey1);
         signer2 = vm.addr(privateKey2);
     }
 
     /**
-     *    REQUIREMENTS FOR TXS TO WALLET_ENTRYPOINT.
+     *    REQUIREMENTS FOR TXS TO ACCOUNT_ADMIN.
      *
      *  - Signature from Architecture:BurnerWallet (BW).
      *  - Payload signed by (BW) must contain a validity start and end timestamp.
@@ -269,25 +269,25 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      */
 
     /**
-     *    REQUIREMENTS FOR TXS FROM WALLET_ENTRYPOINT -> WALLET.
+     *    REQUIREMENTS FOR TXS FROM ACCOUNT_ADMIN -> ACCOUNT.
      *
      *  - Signature from Architecture:BurnerWallet (BW).
-     *  - Signing (BW) must an approved signer of WALLET.
+     *  - Signing (BW) must an approved signer of ACCOUNT.
      *  - Payload signed by (BW) must contain a validity start and end timestamp.
      *  - Payload signed by (BW) must contain all argument values passed to the function other than the signature.
      */
 
     /**
-     *    INVARIABLES FOR WALLET_ENTRYPOINT
+     *    INVARIABLES FOR ACCOUNT_ADMIN
      *
      *  - One and the same account associated with a signer, credentials and a (signer, credentials) pair.
      */
 
     /**
-     *    INVARIABLES FOR WALLET
+     *    INVARIABLES FOR ACCOUNT
      *
-     *  - One and only one WALLET_ENTRYPOINT approved to call into WALLET.
-     *  - One and only one signer approved to control WALLET.
+     *  - One and only one ACCOUNT_ADMIN approved to call into ACCOUNT.
+     *  - One and only one signer approved to control ACCOUNT.
      */
 
     /*///////////////////////////////////////////////////////////////
@@ -304,7 +304,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      *      - validity start and end timestamps
      */
     function test_state_createAccount() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -316,20 +316,20 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
-        assertEq(Wallet(payable(account)).nonce(), 0);
-        assertEq(Wallet(payable(account)).controller(), address(admin));
+        assertEq(Account(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).nonce(), 0);
+        assertEq(Account(payable(account)).controller(), address(admin));
     }
 
     /// @dev Creates an account for a (signer, credentials) pair with a pre-determined address.
     function test_state_createAccount_deterministicAddress() external {
         bytes32 salt = keccak256("1");
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(address(admin), signer1));
+        bytes memory bytecode = abi.encodePacked(type(Account).creationCode, abi.encode(address(admin), signer1));
         bytes32 bytecodeHash = keccak256(bytecode);
 
         address predictedAddress = Create2.computeAddress(salt, bytecodeHash, address(admin));
 
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -349,7 +349,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         uint256 initialBalance = 1 ether;
         vm.deal(signer1, initialBalance);
 
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -367,12 +367,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     /// @dev On creation of an account, event `AccountCreated` is emitted with: account, signer-of-account and creator (i.e. caller) address.
     function test_events_createAccount_AccountCreated() external {
         bytes32 salt = keccak256("1");
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(address(admin), signer1));
+        bytes memory bytecode = abi.encodePacked(type(Account).creationCode, abi.encode(address(admin), signer1));
         bytes32 bytecodeHash = keccak256(bytecode);
 
         address predictedAddress = Create2.computeAddress(salt, bytecodeHash, address(admin));
 
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -391,7 +391,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
     /// @dev Cannot create an account with empty credentials (bytes32(0)).
     function test_revert_createAccount_emptyCredentials() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: bytes32(0), // empty credentials
             deploymentSalt: keccak256("1"),
@@ -402,7 +402,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: invalid credentials.");
+        vm.expectRevert("AccountAdmin: invalid credentials.");
         admin.createAccount(params, signature);
     }
 
@@ -410,7 +410,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     function test_revert_createAccount_incorrectValueSentForInitialBalance() external {
         uint256 initialBalance = 1 ether;
 
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -421,13 +421,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: incorrect value sent.");
+        vm.expectRevert("AccountAdmin: incorrect value sent.");
         admin.createAccount{ value: initialBalance - 1 }(params, signature); // Incorrect value sent.
     }
 
     /// @dev Must not repeat deployment salt.
     function test_revert_createAccount_repeatingDeploymentSalt() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -439,7 +439,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         admin.createAccount(params, signature);
 
-        IWalletEntrypoint.CreateAccountParams memory params2 = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
             signer: signer2,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -455,7 +455,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
     /// @dev Signature of intent must be from the target signer for whom the account is created.
     function test_revert_createAccount_signatureNotFromTargetSigner() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer2, // Signer2 is intended signer for account.
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -466,13 +466,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin)); // Signature from Signer1 not Signer2
 
-        vm.expectRevert("WalletEntrypoint: invalid signer.");
+        vm.expectRevert("AccountAdmin: invalid signer.");
         admin.createAccount(params, signature);
     }
 
     /// @dev The signer must not already have an associated account.
     function test_revert_createAccount_signerAlreadyHasAccount() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -484,7 +484,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         admin.createAccount(params, signature);
 
-        IWalletEntrypoint.CreateAccountParams memory params2 = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
             signer: signer1, // Same signer
             credentials: keccak256("2"),
             deploymentSalt: keccak256("2"),
@@ -494,13 +494,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
 
         bytes memory signature2 = signCreateAccount(params2, privateKey1, address(admin));
-        vm.expectRevert("WalletEntrypoint: signer already has account.");
+        vm.expectRevert("AccountAdmin: signer already has account.");
         admin.createAccount(params2, signature2);
     }
 
     /// @dev The signer must not already have an associated account.
     function test_revert_createAccount_credentialsAlreadyUsed() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -512,7 +512,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         admin.createAccount(params, signature);
 
-        IWalletEntrypoint.CreateAccountParams memory params2 = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"), // Already used credentials
             deploymentSalt: keccak256("2"),
@@ -522,7 +522,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
 
         bytes memory signature2 = signCreateAccount(params2, privateKey1, address(admin));
-        vm.expectRevert("WalletEntrypoint: credentials already used.");
+        vm.expectRevert("AccountAdmin: credentials already used.");
         admin.createAccount(params2, signature2);
     }
 
@@ -531,7 +531,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         uint128 validityStart = 50;
         uint128 validityEnd = 100;
 
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -543,7 +543,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
 
         vm.warp(validityEnd);
-        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.expectRevert("AccountAdmin: request premature or expired.");
         admin.createAccount(params, signature);
     }
 
@@ -552,7 +552,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         uint128 validityStart = 50;
         uint128 validityEnd = 100;
 
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -564,7 +564,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
 
         vm.warp(validityStart - 1);
-        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.expectRevert("AccountAdmin: request premature or expired.");
         admin.createAccount(params, signature);
     }
 
@@ -584,7 +584,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      *      - validity start and end timestamps
      */
     function test_state_changeSignerForAccount() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -596,9 +596,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer2,
@@ -610,11 +610,11 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
 
-        assertEq(Wallet(payable(account)).signer(), signer2);
+        assertEq(Account(payable(account)).signer(), signer2);
     }
 
     function test_revert_changeSignerForAccount_newSignerAlreadyHasAccount() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -626,9 +626,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer1,
@@ -639,12 +639,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: signer already has account.");
+        vm.expectRevert("AccountAdmin: signer already has account.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
     function test_revert_changeSignerForAccount_signatureNotFromIncumbentSigner() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -656,9 +656,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer2,
@@ -669,12 +669,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey2, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: invalid signer.");
+        vm.expectRevert("AccountAdmin: invalid signer.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
     function test_revert_changeSignerForAccount_changingForIncorrectAccount() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -686,9 +686,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: address(0x123),
             currentSigner: signer1,
             newSigner: signer2,
@@ -699,12 +699,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: incorrect account provided.");
+        vm.expectRevert("AccountAdmin: incorrect account provided.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
     function test_revert_changeSignerForAccount_emptyCredentials() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -716,9 +716,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer2,
@@ -729,12 +729,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: invalid credentials.");
+        vm.expectRevert("AccountAdmin: invalid credentials.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
     function test_revert_changeSignerForAccount_credentialsAlreadyUsed() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -746,9 +746,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer2,
@@ -759,12 +759,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
 
-        vm.expectRevert("WalletEntrypoint: credentials already used.");
+        vm.expectRevert("AccountAdmin: credentials already used.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
     function test_revert_changeSignerForAccount_requestBeforeValidityStart() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -776,12 +776,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
         uint128 validityStart = 50;
         uint128 validityEnd = 100;
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer2,
@@ -793,12 +793,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
 
         vm.warp(validityStart - 1);
-        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.expectRevert("AccountAdmin: request premature or expired.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
     function test_revert_changeSignerForAccount_requestAfterValidityEnd() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -810,12 +810,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address account = admin.createAccount(params, signature);
 
-        assertEq(Wallet(payable(account)).signer(), signer1);
+        assertEq(Account(payable(account)).signer(), signer1);
 
         uint128 validityStart = 50;
         uint128 validityEnd = 100;
 
-        IWalletEntrypoint.SignerUpdateParams memory signerUpdateParams = IWalletEntrypoint.SignerUpdateParams({
+        IAccountAdmin.SignerUpdateParams memory signerUpdateParams = IAccountAdmin.SignerUpdateParams({
             account: account,
             currentSigner: signer1,
             newSigner: signer2,
@@ -827,7 +827,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signatureForSignerUpdate = signSignerUpdate(signerUpdateParams, privateKey1, address(admin));
 
         vm.warp(validityEnd);
-        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.expectRevert("AccountAdmin: request premature or expired.");
         admin.changeSignerForAccount(signerUpdateParams, signatureForSignerUpdate);
     }
 
@@ -846,7 +846,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      */
     function test_state_deploy() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -858,10 +858,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 0,
@@ -871,9 +871,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -898,7 +902,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
     function test_balances_deploy_withInitialBalance() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -910,10 +914,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 1 ether,
@@ -923,9 +927,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 1 ether,
@@ -951,7 +959,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
     function test_revert_deploy_incorrectValueSentForInitialBalance() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -963,10 +971,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 0,
@@ -976,9 +984,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 1 ether,
@@ -988,13 +1000,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
-        vm.expectRevert("WalletEntrypoint: incorrect value sent.");
+        vm.expectRevert("AccountAdmin: incorrect value sent.");
         admin.execute{ value: txRequest.value - 1 }(txRequest, signatureForTx);
     }
 
     function test_revert_deploy_repeatingDeploymentSaltForSameContract() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1006,10 +1018,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 0,
@@ -1019,9 +1031,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -1041,7 +1057,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
 
     function test_revert_deploy_signatureNotFromIncumbentSigner() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1053,10 +1069,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 0,
@@ -1066,9 +1082,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -1078,13 +1098,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey2, address(admin));
-        vm.expectRevert("WalletEntrypoint: invalid signer.");
+        vm.expectRevert("AccountAdmin: invalid signer.");
         admin.execute(txRequest, signatureForTx);
     }
 
     function test_revert_deploy_requestBeforeValidityStart() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1096,10 +1116,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 0,
@@ -1109,9 +1129,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -1121,14 +1145,14 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey2, address(admin));
-        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.expectRevert("AccountAdmin: request premature or expired.");
         vm.warp(txRequest.validityStartTimestamp - 1);
         admin.execute(txRequest, signatureForTx);
     }
 
     function test_revert_deploy_requestAfterValidityEnd() external {
         // Create account.
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1140,10 +1164,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Deploy contract with account.
-        Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+        Account.DeployParams memory deployParams = IAccount.DeployParams({
             bytecode: type(DummyContract).creationCode,
             salt: keccak256("deploy"),
             value: 0,
@@ -1153,9 +1177,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         });
         bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
-        bytes memory transactionData = abi.encodeWithSelector(Wallet.deploy.selector, deployParams, signatureForDeploy);
+        bytes memory transactionData = abi.encodeWithSelector(
+            Account.deploy.selector,
+            deployParams,
+            signatureForDeploy
+        );
 
-        IWalletEntrypoint.TransactionRequest memory txRequest = IWalletEntrypoint.TransactionRequest({
+        IAccountAdmin.TransactionRequest memory txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -1165,7 +1193,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory signatureForTx = signTransactionRequest(txRequest, privateKey2, address(admin));
-        vm.expectRevert("WalletEntrypoint: request premature or expired.");
+        vm.expectRevert("AccountAdmin: request premature or expired.");
         vm.warp(txRequest.validityEndTimestamp);
         admin.execute(txRequest, signatureForTx);
     }
@@ -1183,10 +1211,10 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
      *      - validity start and end timestamps
      */
 
-    Wallet internal account;
+    Account internal account;
     address internal accountAddress;
 
-    IWalletEntrypoint.TransactionRequest internal txRequest;
+    IAccountAdmin.TransactionRequest internal txRequest;
     bytes internal signatureForTx;
 
     address internal deployedContractAddr;
@@ -1194,7 +1222,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     function _setUp_execute() internal {
         {
             // Create account.
-            IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+            IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
                 signer: signer1,
                 credentials: keccak256("1"),
                 deploymentSalt: keccak256("1"),
@@ -1206,13 +1234,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
             accountAddress = admin.createAccount(params, signature);
 
-            account = Wallet(payable(accountAddress));
+            account = Account(payable(accountAddress));
         }
 
         // Deploy contract with account.
 
         {
-            Wallet.DeployParams memory deployParams = IWallet.DeployParams({
+            Account.DeployParams memory deployParams = IAccount.DeployParams({
                 bytecode: type(DummyContract).creationCode,
                 salt: keccak256("deploy"),
                 value: 0,
@@ -1223,12 +1251,12 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             bytes memory signatureForDeploy = signDeploy(deployParams, privateKey1, accountAddress);
 
             bytes memory transactionData = abi.encodeWithSelector(
-                Wallet.deploy.selector,
+                Account.deploy.selector,
                 deployParams,
                 signatureForDeploy
             );
 
-            txRequest = IWalletEntrypoint.TransactionRequest({
+            txRequest = IAccountAdmin.TransactionRequest({
                 signer: signer1,
                 credentials: admin.credentialsOf(signer1),
                 value: 0,
@@ -1259,7 +1287,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             vm.deal(signer1, 100 ether);
             assertEq(deployedContractAddr.balance, 0);
 
-            Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+            Account.TransactionParams memory txParams1 = IAccount.TransactionParams({
                 target: deployedContractAddr,
                 data: "",
                 nonce: account.nonce(),
@@ -1269,7 +1297,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
                 validityEndTimestamp: 100
             });
             bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
-            bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+            bytes memory transactionData1 = abi.encodeWithSelector(Account.execute.selector, txParams1, sigForWallet1);
 
             txRequest.data = transactionData1;
             txRequest.value = 1 ether;
@@ -1287,7 +1315,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         assertEq(contractBalBefore, 1 ether);
         assertEq(accountAddress.balance, 0);
 
-        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams2 = IAccount.TransactionParams({
             target: deployedContractAddr,
             data: abi.encodeWithSelector(DummyContract.withdraw.selector),
             nonce: account.nonce(),
@@ -1297,7 +1325,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
-        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+        bytes memory transactionData2 = abi.encodeWithSelector(Account.execute.selector, txParams2, sigForWallet2);
 
         txRequest.data = transactionData2;
         txRequest.value = 0;
@@ -1316,7 +1344,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     function test_revert_execute_executionRevertedInCalledContract() external {
         _setUp_execute();
 
-        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams2 = IAccount.TransactionParams({
             target: deployedContractAddr,
             data: abi.encodeWithSelector(DummyContract.revert.selector),
             nonce: account.nonce(),
@@ -1326,7 +1354,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
-        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+        bytes memory transactionData2 = abi.encodeWithSelector(Account.execute.selector, txParams2, sigForWallet2);
 
         txRequest.data = transactionData2;
         txRequest.value = 0;
@@ -1341,7 +1369,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     function test_revert_execute_signatureNotFromIncumbentSigner() external {
         _setUp_execute();
 
-        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams2 = IAccount.TransactionParams({
             target: deployedContractAddr,
             data: abi.encodeWithSelector(DummyContract.revert.selector),
             nonce: account.nonce(),
@@ -1351,7 +1379,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet2 = signExecute(txParams2, privateKey2, accountAddress);
-        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+        bytes memory transactionData2 = abi.encodeWithSelector(Account.execute.selector, txParams2, sigForWallet2);
 
         txRequest.data = transactionData2;
         txRequest.value = 0;
@@ -1359,13 +1387,13 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
 
         vm.prank(signer1);
-        vm.expectRevert("Wallet: invalid signer.");
+        vm.expectRevert("Account: invalid signer.");
         admin.execute(txRequest, sigForEntrypoint2);
     }
 
     function test_revert_execute_requestBeforeValidityStart() external {
         _setUp_execute();
-        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams2 = IAccount.TransactionParams({
             target: deployedContractAddr,
             data: abi.encodeWithSelector(DummyContract.withdraw.selector),
             nonce: account.nonce(),
@@ -1375,7 +1403,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
-        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+        bytes memory transactionData2 = abi.encodeWithSelector(Account.execute.selector, txParams2, sigForWallet2);
 
         txRequest.data = transactionData2;
         txRequest.value = 0;
@@ -1383,14 +1411,14 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
 
         vm.prank(signer1);
-        vm.expectRevert("Wallet: request premature or expired.");
+        vm.expectRevert("Account: request premature or expired.");
         vm.warp(txParams2.validityStartTimestamp - 1);
         admin.execute(txRequest, sigForEntrypoint2);
     }
 
     function test_revert_execute_requestAfterValidityEnd() external {
         _setUp_execute();
-        Wallet.TransactionParams memory txParams2 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams2 = IAccount.TransactionParams({
             target: deployedContractAddr,
             data: abi.encodeWithSelector(DummyContract.withdraw.selector),
             nonce: account.nonce(),
@@ -1400,7 +1428,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 75
         });
         bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
-        bytes memory transactionData2 = abi.encodeWithSelector(Wallet.execute.selector, txParams2, sigForWallet2);
+        bytes memory transactionData2 = abi.encodeWithSelector(Account.execute.selector, txParams2, sigForWallet2);
 
         txRequest.data = transactionData2;
         txRequest.value = 0;
@@ -1408,7 +1436,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
 
         vm.prank(signer1);
-        vm.expectRevert("Wallet: request premature or expired.");
+        vm.expectRevert("Account: request premature or expired.");
         vm.warp(txParams2.validityEndTimestamp);
         admin.execute(txRequest, sigForEntrypoint2);
     }
@@ -1418,7 +1446,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     //////////////////////////////////////////////////////////////*/
 
     function test_balances_receiveToken_nativeToken() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1430,7 +1458,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         vm.deal(signer1, 100 ether);
 
@@ -1443,7 +1471,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_transferToken_nativeToken() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1455,7 +1483,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         vm.deal(signer1, 100 ether);
         vm.prank(signer1);
@@ -1465,7 +1493,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         address receiver = address(0x123);
         assertEq(receiver.balance, 0);
 
-        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams1 = IAccount.TransactionParams({
             target: receiver,
             data: "",
             nonce: account.nonce(),
@@ -1475,9 +1503,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
-        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+        bytes memory transactionData1 = abi.encodeWithSelector(Account.execute.selector, txParams1, sigForWallet1);
 
-        txRequest = IWalletEntrypoint.TransactionRequest({
+        txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 1 ether,
@@ -1495,7 +1523,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_receiveToken_ERC20() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1516,7 +1544,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_transferToken_ERC20() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1528,7 +1556,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Send ERC20 tokens to account.
         erc20.mint(accountAddress, 20 ether);
@@ -1537,7 +1565,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         address receiver = address(0x123);
         assertEq(receiver.balance, 0);
 
-        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams1 = IAccount.TransactionParams({
             target: address(erc20),
             data: abi.encodeWithSelector(ERC20.transfer.selector, receiver, 10 ether),
             nonce: account.nonce(),
@@ -1547,9 +1575,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
-        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+        bytes memory transactionData1 = abi.encodeWithSelector(Account.execute.selector, txParams1, sigForWallet1);
 
-        WalletEntrypoint.TransactionRequest memory transactionRequest = IWalletEntrypoint.TransactionRequest({
+        AccountAdmin.TransactionRequest memory transactionRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -1568,7 +1596,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_receiveToken_ERC721() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1586,7 +1614,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_transferToken_ERC721() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1598,7 +1626,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Send E721 tokens to account.
         erc721.mint(accountAddress, 1);
@@ -1607,7 +1635,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         // Transfer ERC721 token
         address receiver = address(0x123);
 
-        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams1 = IAccount.TransactionParams({
             target: address(erc721),
             data: abi.encodeWithSelector(ERC721.transferFrom.selector, accountAddress, receiver, 0),
             nonce: account.nonce(),
@@ -1617,9 +1645,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
-        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+        bytes memory transactionData1 = abi.encodeWithSelector(Account.execute.selector, txParams1, sigForWallet1);
 
-        txRequest = IWalletEntrypoint.TransactionRequest({
+        txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,
@@ -1638,7 +1666,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_receiveToken_ERC1155() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1656,7 +1684,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
     }
 
     function test_balances_transferToken_ERC1155() external {
-        IWalletEntrypoint.CreateAccountParams memory params = IWalletEntrypoint.CreateAccountParams({
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
             credentials: keccak256("1"),
             deploymentSalt: keccak256("1"),
@@ -1668,7 +1696,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
         address accountAddress = admin.createAccount(params, signature);
 
-        Wallet account = Wallet(payable(accountAddress));
+        Account account = Account(payable(accountAddress));
 
         // Send ERC1155 tokens to account.
         erc1155.mint(accountAddress, 0, 100);
@@ -1677,7 +1705,7 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
         // Transfer ERC1155 token
         address receiver = address(0x123);
 
-        Wallet.TransactionParams memory txParams1 = IWallet.TransactionParams({
+        Account.TransactionParams memory txParams1 = IAccount.TransactionParams({
             target: address(erc1155),
             data: abi.encodeWithSelector(ERC1155.safeTransferFrom.selector, accountAddress, receiver, 0, 50, ""),
             nonce: account.nonce(),
@@ -1687,9 +1715,9 @@ contract ThirdwebWalletTest is WalletUtil, WalletEntrypointUtil, WalletEntrypoin
             validityEndTimestamp: 100
         });
         bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
-        bytes memory transactionData1 = abi.encodeWithSelector(Wallet.execute.selector, txParams1, sigForWallet1);
+        bytes memory transactionData1 = abi.encodeWithSelector(Account.execute.selector, txParams1, sigForWallet1);
 
-        txRequest = IWalletEntrypoint.TransactionRequest({
+        txRequest = IAccountAdmin.TransactionRequest({
             signer: signer1,
             credentials: admin.credentialsOf(signer1),
             value: 0,

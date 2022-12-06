@@ -1,4 +1,4 @@
-# IWallet
+# IAccount
 
 
 
@@ -13,7 +13,7 @@
 ### deploy
 
 ```solidity
-function deploy(IWallet.DeployParams params, bytes signature) external payable returns (address deployment)
+function deploy(IAccount.DeployParams params, bytes signature) external payable returns (address deployment)
 ```
 
 
@@ -24,7 +24,7 @@ function deploy(IWallet.DeployParams params, bytes signature) external payable r
 
 | Name | Type | Description |
 |---|---|---|
-| params | IWallet.DeployParams | undefined |
+| params | IAccount.DeployParams | undefined |
 | signature | bytes | undefined |
 
 #### Returns
@@ -36,7 +36,7 @@ function deploy(IWallet.DeployParams params, bytes signature) external payable r
 ### execute
 
 ```solidity
-function execute(IWallet.TransactionParams params, bytes signature) external payable returns (bool success)
+function execute(IAccount.TransactionParams params, bytes signature) external payable returns (bool success)
 ```
 
 
@@ -47,7 +47,7 @@ function execute(IWallet.TransactionParams params, bytes signature) external pay
 
 | Name | Type | Description |
 |---|---|---|
-| params | IWallet.TransactionParams | undefined |
+| params | IAccount.TransactionParams | undefined |
 | signature | bytes | undefined |
 
 #### Returns

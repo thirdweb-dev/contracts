@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./Wallet.sol";
-import "./interface/IWalletEntrypoint.sol";
+import "./Account.sol";
+import "./interface/IAccountAdmin.sol";
 
 import "../extension/Multicall.sol";
 
@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
  *      - Relay transaction to contract wallet.
  */
 
-contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
+contract AccountAdmin is IAccountAdmin, EIP712, Multicall {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         /// @validate: request to create account not pre-mature or expired.
         require(
             validityStartTimestamp <= block.timestamp && block.timestamp < validityEndTimestamp,
-            "WalletEntrypoint: request premature or expired."
+            "AccountAdmin: request premature or expired."
         );
 
         _;
@@ -79,9 +79,9 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         returns (address account)
     {
         /// @validate: credentials not empty.
-        require(_params.credentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
+        require(_params.credentials != bytes32(0), "AccountAdmin: invalid credentials.");
         /// @validate: sent initial account balance.
-        require(_params.initialAccountBalance == msg.value, "WalletEntrypoint: incorrect value sent.");
+        require(_params.initialAccountBalance == msg.value, "AccountAdmin: incorrect value sent.");
 
         bytes32 messageHash = keccak256(
             abi.encode(
@@ -98,14 +98,14 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         _validateSignature(messageHash, _signature, _params.signer);
 
         /// @validate: new signer to set does not already have an account.
-        require(signerOf[_params.credentials] == address(0), "WalletEntrypoint: credentials already used.");
-        require(credentialsOf[_params.signer] == bytes32(0), "WalletEntrypoint: signer already has account.");
+        require(signerOf[_params.credentials] == address(0), "AccountAdmin: credentials already used.");
+        require(credentialsOf[_params.signer] == bytes32(0), "AccountAdmin: signer already has account.");
 
         /// @validate: (By Create2) No repeat deployment salt.
         account = Create2.deploy(
             _params.initialAccountBalance,
             _params.deploymentSalt,
-            abi.encodePacked(type(Wallet).creationCode, abi.encode(address(this), _params.signer))
+            abi.encodePacked(type(Account).creationCode, abi.encode(address(this), _params.signer))
         );
 
         _setSignerForAccount(account, _params.signer, _params.credentials);
@@ -119,11 +119,11 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
     {
         /// @validate: no empty new credentials.
-        require(_params.newCredentials != bytes32(0), "WalletEntrypoint: invalid credentials.");
+        require(_params.newCredentials != bytes32(0), "AccountAdmin: invalid credentials.");
         /// @validate: no credentials re-use.
-        require(signerOf[_params.newCredentials] == address(0), "WalletEntrypoint: credentials already used.");
+        require(signerOf[_params.newCredentials] == address(0), "AccountAdmin: credentials already used.");
         /// @validate: new signer to set does not already have an account.
-        require(credentialsOf[_params.newSigner] == bytes32(0), "WalletEntrypoint: signer already has account.");
+        require(credentialsOf[_params.newSigner] == bytes32(0), "AccountAdmin: signer already has account.");
 
         /// @validate: is valid EIP 1271 signature.
         bytes32 messageHash = keccak256(
@@ -144,7 +144,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         bytes32 currentPair = keccak256(abi.encode(_params.currentSigner, currentCredentials));
 
         /// @validate: Caller is account for (signer, credentials) pair.
-        require(accountOf[currentPair] == _params.account, "WalletEntrypoint: incorrect account provided.");
+        require(accountOf[currentPair] == _params.account, "AccountAdmin: incorrect account provided.");
 
         delete signerOf[currentCredentials];
         delete credentialsOf[_params.currentSigner];
@@ -153,8 +153,8 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         _setSignerForAccount(_params.account, _params.newSigner, _params.newCredentials);
 
         require(
-            Wallet(payable(_params.account)).updateSigner(_params.newSigner),
-            "WalletEntrypoint: failed to update signer."
+            Account(payable(_params.account)).updateSigner(_params.newSigner),
+            "AccountAdmin: failed to update signer."
         );
     }
 
@@ -165,7 +165,7 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         onlyValidTimeWindow(req.validityStartTimestamp, req.validityEndTimestamp)
         returns (bool, bytes memory)
     {
-        require(req.value == msg.value, "WalletEntrypoint: incorrect value sent.");
+        require(req.value == msg.value, "AccountAdmin: incorrect value sent.");
 
         bytes32 messageHash = keccak256(
             abi.encode(
@@ -230,12 +230,12 @@ contract WalletEntrypoint is IWalletEntrypoint, EIP712, Multicall {
         bool validSignature = false;
 
         if (_intendedSigner.code.length > 0) {
-            validSignature = MAGICVALUE == Wallet(payable(_intendedSigner)).isValidSignature(_messageHash, _signature);
+            validSignature = MAGICVALUE == Account(payable(_intendedSigner)).isValidSignature(_messageHash, _signature);
         } else {
             address recoveredSigner = _hashTypedDataV4(_messageHash).recover(_signature);
             validSignature = _intendedSigner == recoveredSigner;
         }
 
-        require(validSignature, "WalletEntrypoint: invalid signer.");
+        require(validSignature, "AccountAdmin: invalid signer.");
     }
 }
