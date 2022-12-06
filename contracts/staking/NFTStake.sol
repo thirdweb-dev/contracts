@@ -5,17 +5,12 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
-// Signature utils
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
-
 // Meta transactions
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeType.sol";
 
 //  ==========  Features    ==========
 
@@ -70,6 +65,13 @@ contract NFTStake is
     /// @dev Returns the version of the contract.
     function contractVersion() external pure virtual returns (uint8) {
         return uint8(VERSION);
+    }
+
+    /// @dev Admin can withdraw excess reward tokens.
+    function withdrawRewardTokens(uint256 _amount) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
+
+        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
     }
 
     /*///////////////////////////////////////////////////////////////

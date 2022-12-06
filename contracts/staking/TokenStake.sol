@@ -2,32 +2,30 @@
 pragma solidity ^0.8.11;
 
 // Token
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Meta transactions
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
-import { Staking1155Upgradeable } from "../extension/Staking1155Upgradeable.sol";
+import { Staking20Upgradeable } from "../extension/Staking20Upgradeable.sol";
 
-contract EditionStake is
+contract TokenStake is
     Initializable,
     ContractMetadata,
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    IERC1155ReceiverUpgradeable,
-    Staking1155Upgradeable
+    Staking20Upgradeable
 {
-    bytes32 private constant MODULE_TYPE = bytes32("EditionStake");
+    bytes32 private constant MODULE_TYPE = bytes32("TokenStake");
     uint256 private constant VERSION = 1;
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
@@ -41,17 +39,19 @@ contract EditionStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _rewardToken,
-        address _edition,
-        uint256 _defaultTimeUnit,
-        uint256 _defaultRewardsPerUnitTime
+        address _stakingToken,
+        uint256 _timeUnit,
+        uint256 _rewardRatioNumerator,
+        uint256 _rewardRatioDenominator
     ) external initializer {
         __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
+        require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;
-        __Staking1155_init(_edition);
-        _setDefaultTimeUnit(_defaultTimeUnit);
-        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
+        __Staking20_init(_stakingToken);
+        _setTimeUnit(_timeUnit);
+        _setRewardRatio(_rewardRatioNumerator, _rewardRatioDenominator);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -72,32 +72,6 @@ contract EditionStake is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 logic
-    //////////////////////////////////////////////////////////////*/
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external returns (bytes4) {}
-
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////

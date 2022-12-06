@@ -766,6 +766,22 @@ Withdraw staked tokens.
 | _tokenId | uint256 | ERC1155 token-id to withdraw. |
 | _amount | uint256 | Amount to withdraw. |
 
+### withdrawRewardTokens
+
+```solidity
+function withdrawRewardTokens(uint256 _amount) external nonpayable
+```
+
+
+
+*Admin can withdraw excess reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | undefined |
+
 
 
 ## Events

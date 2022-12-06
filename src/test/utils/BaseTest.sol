@@ -35,6 +35,7 @@ import "contracts/airdrop/AirdropERC1155.sol";
 import "contracts/airdrop/AirdropERC1155Claimable.sol";
 import { NFTStake } from "contracts/staking/NFTStake.sol";
 import { EditionStake } from "contracts/staking/EditionStake.sol";
+import { TokenStake } from "contracts/staking/TokenStake.sol";
 import "contracts/mock/Mock.sol";
 import "contracts/mock/MockContractPublisher.sol";
 
@@ -45,6 +46,7 @@ abstract contract BaseTest is DSTest, Test {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     MockERC20 public erc20;
+    MockERC20 public erc20Aux;
     MockERC721 public erc721;
     MockERC1155 public erc1155;
     WETH9 public weth;
@@ -91,6 +93,7 @@ abstract contract BaseTest is DSTest, Test {
         signer = vm.addr(privateKey);
 
         erc20 = new MockERC20();
+        erc20Aux = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
         weth = new WETH9();
@@ -135,6 +138,8 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new NFTStake()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("EditionStake"), 1)));
         TWFactory(factory).addImplementation(address(new EditionStake()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("TokenStake"), 1)));
+        TWFactory(factory).addImplementation(address(new TokenStake()));
         vm.stopPrank();
 
         // setup airdrop logic
@@ -339,6 +344,13 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(
                 EditionStake.initialize,
                 (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc1155), 60, 1)
+            )
+        );
+        deployContractProxy(
+            "TokenStake",
+            abi.encodeCall(
+                TokenStake.initialize,
+                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc20Aux), 60, 3, 50)
             )
         );
     }
