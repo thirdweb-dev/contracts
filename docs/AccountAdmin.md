@@ -118,6 +118,28 @@ function execute(IAccountAdmin.TransactionRequest req, bytes signature) external
 | _0 | bool | undefined |
 | _1 | bytes | undefined |
 
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### multicall
 
 ```solidity

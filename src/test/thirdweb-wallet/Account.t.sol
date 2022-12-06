@@ -254,7 +254,7 @@ contract ThirdwebWalletTest is AccountUtil, AccountAdminUtil, AccountAdminData {
         super.setUp();
 
         // Deploy Architecture:Admin i.e. the entrypoint for a client.
-        admin = new AccountAdmin();
+        admin = new AccountAdmin(new address[](0));
 
         signer1 = vm.addr(privateKey1);
         signer2 = vm.addr(privateKey2);

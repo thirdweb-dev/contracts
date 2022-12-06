@@ -6,6 +6,8 @@ import "./interface/IAccountAdmin.sol";
 
 import "../extension/Multicall.sol";
 
+import "../openzeppelin-presets/metatx/ERC2771Context.sol";
+
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
@@ -16,7 +18,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
  *      - Relay transaction to contract wallet.
  */
 
-contract AccountAdmin is IAccountAdmin, EIP712, Multicall {
+contract AccountAdmin is IAccountAdmin, EIP712, Multicall, ERC2771Context {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -54,7 +56,10 @@ contract AccountAdmin is IAccountAdmin, EIP712, Multicall {
                         Constructor & Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor() EIP712("thirdwebWallet_Admin", "1") {}
+    constructor(address[] memory _trustedForwarder)
+        EIP712("thirdwebWallet_Admin", "1")
+        ERC2771Context(_trustedForwarder)
+    {}
 
     /// @dev Checks whether a request is processed within its respective valid time window.
     modifier onlyValidTimeWindow(uint128 validityStartTimestamp, uint128 validityEndTimestamp) {
@@ -110,7 +115,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, Multicall {
 
         _setSignerForAccount(account, _params.signer, _params.credentials);
 
-        emit AccountCreated(account, _params.signer, msg.sender);
+        emit AccountCreated(account, _params.signer, _msgSender());
     }
 
     /// @notice Updates the (signer, credential) pair for an account.
