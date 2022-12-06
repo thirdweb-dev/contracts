@@ -1341,6 +1341,71 @@ contract ThirdwebWalletTest is AccountUtil, AccountAdminUtil, AccountAdminData {
         assertEq(contractBalAfter, 0);
     }
 
+    function test_state_execute_noGasSpecified() external {
+        _setUp_execute();
+
+        // Interact with deployed contract using account
+        {
+            // 1. Sending native tokens.
+            vm.deal(signer1, 100 ether);
+            assertEq(deployedContractAddr.balance, 0);
+
+            Account.TransactionParams memory txParams1 = IAccount.TransactionParams({
+                target: deployedContractAddr,
+                data: "",
+                nonce: account.nonce(),
+                value: 1 ether,
+                gas: 21000,
+                validityStartTimestamp: 0,
+                validityEndTimestamp: 100
+            });
+            bytes memory sigForWallet1 = signExecute(txParams1, privateKey1, accountAddress);
+            bytes memory transactionData1 = abi.encodeWithSelector(Account.execute.selector, txParams1, sigForWallet1);
+
+            txRequest.data = transactionData1;
+            txRequest.value = 1 ether;
+            txRequest.gas = 0;
+
+            signatureForTx = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+            vm.prank(signer1);
+            admin.execute{ value: 1 ether }(txRequest, signatureForTx);
+            assertEq(deployedContractAddr.balance, 1 ether);
+        }
+
+        // 2. Interacting with contract.
+
+        uint256 contractBalBefore = deployedContractAddr.balance;
+        assertEq(contractBalBefore, 1 ether);
+        assertEq(accountAddress.balance, 0);
+
+        Account.TransactionParams memory txParams2 = IAccount.TransactionParams({
+            target: deployedContractAddr,
+            data: abi.encodeWithSelector(DummyContract.withdraw.selector),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 100_000,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory sigForWallet2 = signExecute(txParams2, privateKey1, accountAddress);
+        bytes memory transactionData2 = abi.encodeWithSelector(Account.execute.selector, txParams2, sigForWallet2);
+
+        txRequest.data = transactionData2;
+        txRequest.value = 0;
+        txRequest.gas = 0;
+
+        bytes memory sigForEntrypoint2 = signTransactionRequest(txRequest, privateKey1, address(admin));
+
+        vm.prank(signer1);
+        admin.execute(txRequest, sigForEntrypoint2);
+
+        uint256 contractBalAfter = deployedContractAddr.balance;
+
+        assertEq(accountAddress.balance, 1 ether);
+        assertEq(contractBalAfter, 0);
+    }
+
     function test_revert_execute_executionRevertedInCalledContract() external {
         _setUp_execute();
 

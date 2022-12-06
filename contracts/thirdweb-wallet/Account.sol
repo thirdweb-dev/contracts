@@ -209,9 +209,17 @@ contract Account is IAccount, EIP712, Multicall {
 
     /// @dev Performs a call; sends native tokens or calls a smart contract.
     function _call(TransactionParams memory txParams) internal returns (bool) {
-        (bool success, bytes memory result) = txParams.target.call{ value: txParams.value, gas: txParams.gas }(
-            txParams.data
-        );
+        address target = txParams.target;
+
+        bool success;
+        bytes memory result;
+        if (txParams.gas > 0) {
+            // solhint-disable-next-line avoid-low-level-calls
+            (success, result) = target.call{ gas: txParams.gas, value: txParams.value }(txParams.data);
+        } else {
+            // solhint-disable-next-line avoid-low-level-calls
+            (success, result) = target.call{ value: txParams.value }(txParams.data);
+        }
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))

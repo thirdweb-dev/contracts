@@ -182,11 +182,17 @@ contract AccountAdmin is IAccountAdmin, EIP712, Multicall {
         /// @validate: signature-of-intent from target signer.
         _validateSignature(messageHash, signature, req.signer);
 
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory result) = accountOf[keccak256(abi.encode(req.signer, req.credentials))].call{
-            gas: req.gas,
-            value: req.value
-        }(req.data);
+        address target = accountOf[keccak256(abi.encode(req.signer, req.credentials))];
+
+        bool success;
+        bytes memory result;
+        if (req.gas > 0) {
+            // solhint-disable-next-line avoid-low-level-calls
+            (success, result) = target.call{ gas: req.gas, value: req.value }(req.data);
+        } else {
+            // solhint-disable-next-line avoid-low-level-calls
+            (success, result) = target.call{ value: req.value }(req.data);
+        }
 
         if (!success) {
             // Next 5 lines from https://ethereum.stackexchange.com/a/83577
