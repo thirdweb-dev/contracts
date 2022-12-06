@@ -34,6 +34,8 @@ const TransactionRequest = [
   { name: "validityEndTimestamp", type: "uint128" },
 ];
 
+////// To run this script: `npx ts-node scripts/thirdweb_wallet/test.ts` //////
+
 async function main() {
   /*///////////////////////////////////////////////////////////////
                     Connect to WalletEntrypoint
@@ -43,7 +45,7 @@ async function main() {
 
   const sdk = ThirdwebSDK.fromPrivateKey(
     process.env.THIRDWEB_WALLET_TEST_PKEY as string,
-    "optimism-goerli",
+    "goerli",
     {
       gasless: {
         openzeppelin: {
@@ -97,18 +99,18 @@ async function main() {
   );
   const accountAddress: string = await entrypoint.call("accountOf", signerCredentialPair);
 
-  console.log("Your account is: ", accountAddress);
+  console.log("Your account is: ", accountAddress); // 0x3e948d0dEEc5272a589d1da873C39f33c562B4D0
 
   /*///////////////////////////////////////////////////////////////
                 Perforfming a smart contract interaction
-    //////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////*/
 
-  const TOKEN_ADDRESS = "0x88aa7d12Abe7b64E843A3F9a12A57cD40BF68DD8";
+  const TOKEN_ADDRESS = "0xD5B9182069AAA1572A1EDCA9aFB00326E634651B";
   const tokenContract = await sdk.getContract(TOKEN_ADDRESS);
 
   const accountContract = await sdk.getContract(
     accountAddress,
-    JSON.parse(readFileSync("artifacts_forge/Wallet.sol/Wallet.json", "utf-8")).abi,
+    JSON.parse(readFileSync("artifacts_forge/Account.sol/Account.json", "utf-8")).abi,
   );
   const nonce = await accountContract.call("nonce");
 
