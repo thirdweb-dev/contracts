@@ -41,7 +41,18 @@ async function main() {
 
   const WALLET_ADMIN: string = "0x879C0B8388591F542C509d58e3fa061040EB08b4";
 
-  const sdk = ThirdwebSDK.fromPrivateKey(process.env.THIRDWEB_WALLET_TEST_PKEY as string, "optimism-goerli");
+  const sdk = ThirdwebSDK.fromPrivateKey(
+    process.env.THIRDWEB_WALLET_TEST_PKEY as string,
+    "optimism-goerli",
+    {
+      gasless: {
+        openzeppelin: {
+          relayerUrl: "https://api.defender.openzeppelin.com/autotasks/23a23d0f-886a-4858-a14d-ab08ed487c4a/runs/webhook/74b0e036-fd2e-418b-97d7-69ac094edf7b/8RTrzhrMW56WEcNYXd54Bg",
+          relayerForwarderAddress: "0x5001A14CA6163143316a7C614e30e6041033Ac20"
+        }
+      }
+    }
+  );
   const entrypoint = await sdk.getContract(WALLET_ADMIN);
 
   /*///////////////////////////////////////////////////////////////
