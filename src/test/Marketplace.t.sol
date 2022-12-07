@@ -148,53 +148,53 @@ contract MarketplaceTest is BaseTest {
         assertEq(winningBid.pricePerToken, 2 ether);
     }
 
-    function test_closeAuctionForCreator_afterBuyout() public {
-        vm.deal(getActor(0), 100 ether);
-        vm.deal(getActor(1), 100 ether);
+    // function test_closeAuctionForCreator_afterBuyout() public {
+    //     vm.deal(getActor(0), 100 ether);
+    //     vm.deal(getActor(1), 100 ether);
 
-        // Actor-0 creates an auction listing.
-        vm.prank(getActor(0));
-        vm.warp(0);
-        (uint256 listingId, ) = createERC721Listing(
-            getActor(0),
-            NATIVE_TOKEN,
-            5 ether,
-            IMarketplace.ListingType.Auction
-        );
+    //     // Actor-0 creates an auction listing.
+    //     vm.prank(getActor(0));
+    //     vm.warp(0);
+    //     (uint256 listingId, ) = createERC721Listing(
+    //         getActor(0),
+    //         NATIVE_TOKEN,
+    //         5 ether,
+    //         IMarketplace.ListingType.Auction
+    //     );
 
-        Marketplace.Listing memory listing = getListing(listingId);
-        assertEq(erc721.ownerOf(listing.tokenId), address(marketplace));
-        assertEq(weth.balanceOf(address(marketplace)), 0);
+    //     Marketplace.Listing memory listing = getListing(listingId);
+    //     assertEq(erc721.ownerOf(listing.tokenId), address(marketplace));
+    //     assertEq(weth.balanceOf(address(marketplace)), 0);
 
-        /**
-         *  Actor-1 bids with buyout price. Outcome:
-         *      - Actor-1 receives auctioned items escrowed in Marketplace.
-         *      - Winning bid amount is escrowed in the contract.
-         */
-        vm.prank(getActor(1));
-        vm.warp(1);
-        marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
+    //     /**
+    //      *  Actor-1 bids with buyout price. Outcome:
+    //      *      - Actor-1 receives auctioned items escrowed in Marketplace.
+    //      *      - Winning bid amount is escrowed in the contract.
+    //      */
+    //     vm.prank(getActor(1));
+    //     vm.warp(1);
+    //     marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
 
-        assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
-        assertEq(weth.balanceOf(address(marketplace)), 5 ether);
+    //     assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
+    //     assertEq(weth.balanceOf(address(marketplace)), 5 ether);
 
-        /**
-         *  Auction is closed for the auction creator i.e. Actor-0. Outcome:
-         *      - Actor-0 receives the escrowed buyout amount.
-         */
+    //     /**
+    //      *  Auction is closed for the auction creator i.e. Actor-0. Outcome:
+    //      *      - Actor-0 receives the escrowed buyout amount.
+    //      */
 
-        uint256 listerBalBefore = getActor(0).balance;
+    //     uint256 listerBalBefore = getActor(0).balance;
 
-        vm.warp(2);
-        vm.prank(getActor(2));
-        marketplace.closeAuction(listingId, getActor(0));
+    //     vm.warp(2);
+    //     vm.prank(getActor(2));
+    //     marketplace.closeAuction(listingId, getActor(0));
 
-        uint256 listerBalAfter = getActor(0).balance;
-        uint256 winningBidPostFee = (5 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
+    //     uint256 listerBalAfter = getActor(0).balance;
+    //     uint256 winningBidPostFee = (5 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
 
-        assertEq(listerBalAfter - listerBalBefore, winningBidPostFee);
-        assertEq(weth.balanceOf(address(marketplace)), 0);
-    }
+    //     assertEq(listerBalAfter - listerBalBefore, winningBidPostFee);
+    //     assertEq(weth.balanceOf(address(marketplace)), 0);
+    // }
 
     function test_acceptOffer_whenListingAcceptsNativeToken() public {
         vm.deal(getActor(0), 100 ether);
