@@ -5,6 +5,7 @@ import "contracts/TWMinimalFactory.sol";
 import "contracts/TWProxy.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../utils/BaseTest.sol";
 
@@ -38,14 +39,14 @@ contract MinimalFactoryTest is BaseTest {
     address internal implementation;
     bytes32 internal salt;
     bytes internal data;
+    address admin;
 
     TWNotMinimalFactory notMinimal;
 
     function setUp() public override {
         super.setUp();
-
-        address admin = getActor(5000);
-
+        admin = getActor(5000);
+        vm.startPrank(admin);
         implementation = getContract("TokenERC20");
         salt = keccak256("yooo");
         data = abi.encodeWithSelector(
@@ -76,5 +77,13 @@ contract MinimalFactoryTest is BaseTest {
     // gas: Baseline
     function test_gas_minimal() public {
         new TWMinimalFactory(implementation, data, salt);
+    }
+
+    function test_verify_deployedProxy() public {
+        address minimalFactory = address(new TWMinimalFactory(implementation, data, salt));
+        address deployedProxy = Clones.predictDeterministicAddress(implementation, salt, minimalFactory);
+
+        bytes32 contractType = TokenERC20(deployedProxy).contractType();
+        assertEq(contractType, bytes32("TokenERC20"));
     }
 }
