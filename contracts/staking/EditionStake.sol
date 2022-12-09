@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 // Token
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 
 // Meta transactions
@@ -24,8 +25,9 @@ contract EditionStake is
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    IERC1155ReceiverUpgradeable,
-    Staking1155Upgradeable
+    Staking1155Upgradeable,
+    ERC165Upgradeable,
+    IERC1155ReceiverUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("EditionStake");
     uint256 private constant VERSION = 1;
@@ -96,8 +98,13 @@ contract EditionStake is
         bytes calldata data
     ) external returns (bytes4) {}
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId;
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC165Upgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
+        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////

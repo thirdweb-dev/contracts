@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 // Token
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 // Meta transactions
@@ -24,8 +25,9 @@ contract NFTStake is
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    IERC721ReceiverUpgradeable,
-    Staking721Upgradeable
+    Staking721Upgradeable,
+    ERC165Upgradeable,
+    IERC721ReceiverUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("NFTStake");
     uint256 private constant VERSION = 1;
@@ -87,8 +89,8 @@ contract NFTStake is
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////
