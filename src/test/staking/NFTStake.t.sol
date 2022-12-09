@@ -287,7 +287,7 @@ contract NFTStakeTest is BaseTest {
         assertEq(timeUnit, stakeContract.getTimeUnit());
 
         // set new value and check
-        uint256 newTimeUnit = 1 minutes;
+        uint256 newTimeUnit = 2 minutes;
         vm.prank(deployer);
         stakeContract.setTimeUnit(newTimeUnit);
         assertEq(newTimeUnit, stakeContract.getTimeUnit());

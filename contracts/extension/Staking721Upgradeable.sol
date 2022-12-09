@@ -101,6 +101,8 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         }
 
         StakingCondition memory condition = stakingConditions[nextConditionId - 1];
+        require(_timeUnit != condition.timeUnit, "Time-unit unchanged.");
+
         _setStakingCondition(_timeUnit, condition.rewardsPerUnitTime);
 
         emit UpdatedTimeUnit(condition.timeUnit, _timeUnit);
@@ -121,6 +123,8 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         }
 
         StakingCondition memory condition = stakingConditions[nextConditionId - 1];
+        require(_rewardsPerUnitTime != condition.rewardsPerUnitTime, "Reward unchanged.");
+
         _setStakingCondition(condition.timeUnit, _rewardsPerUnitTime);
 
         emit UpdatedRewardsPerUnitTime(condition.rewardsPerUnitTime, _rewardsPerUnitTime);

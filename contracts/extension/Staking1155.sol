@@ -110,6 +110,8 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         StakingCondition memory condition = _nextConditionId == 0
             ? defaultCondition[nextDefaultConditionId - 1]
             : stakingConditions[_tokenId][_nextConditionId - 1];
+        require(_timeUnit != condition.timeUnit, "Time-unit unchanged.");
+
         _setStakingCondition(_tokenId, _timeUnit, condition.rewardsPerUnitTime);
 
         emit UpdatedTimeUnit(_tokenId, condition.timeUnit, _timeUnit);
@@ -134,6 +136,8 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         StakingCondition memory condition = _nextConditionId == 0
             ? defaultCondition[nextDefaultConditionId - 1]
             : stakingConditions[_tokenId][_nextConditionId - 1];
+        require(_rewardsPerUnitTime != condition.rewardsPerUnitTime, "Reward unchanged.");
+
         _setStakingCondition(_tokenId, condition.timeUnit, _rewardsPerUnitTime);
 
         emit UpdatedRewardsPerUnitTime(_tokenId, condition.rewardsPerUnitTime, _rewardsPerUnitTime);
@@ -153,6 +157,8 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         }
 
         StakingCondition memory _defaultCondition = defaultCondition[nextDefaultConditionId - 1];
+        require(_defaultTimeUnit != _defaultCondition.timeUnit, "Default time-unit unchanged.");
+
         _setDefaultStakingCondition(_defaultTimeUnit, _defaultCondition.rewardsPerUnitTime);
 
         emit UpdatedDefaultTimeUnit(_defaultCondition.timeUnit, _defaultTimeUnit);
@@ -172,6 +178,8 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         }
 
         StakingCondition memory _defaultCondition = defaultCondition[nextDefaultConditionId - 1];
+        require(_defaultRewardsPerUnitTime != _defaultCondition.rewardsPerUnitTime, "Default reward unchanged.");
+
         _setDefaultStakingCondition(_defaultCondition.timeUnit, _defaultRewardsPerUnitTime);
 
         emit UpdatedDefaultRewardsPerUnitTime(_defaultCondition.rewardsPerUnitTime, _defaultRewardsPerUnitTime);

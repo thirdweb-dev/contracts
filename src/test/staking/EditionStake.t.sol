@@ -1079,7 +1079,7 @@ contract Macro_EditionStakeTest is BaseTest {
         stakeContract.withdraw(2, tokenAmount);
 
         // timeUnit can't be changed back to a nonzero value
-        newTimeUnit = 60;
+        newTimeUnit = 40;
         // vm.expectRevert(stdError.divisionError);
         vm.prank(deployer);
         stakeContract.setDefaultTimeUnit(newTimeUnit);
