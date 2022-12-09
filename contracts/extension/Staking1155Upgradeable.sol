@@ -266,79 +266,80 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         require(_amount != 0, "Staking 0 tokens");
         address _edition = edition;
 
-        if (stakers[_tokenId][msg.sender].amountStaked > 0) {
-            _updateUnclaimedRewardsForStaker(_tokenId, msg.sender);
+        if (stakers[_tokenId][_stakeMsgSender()].amountStaked > 0) {
+            _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
         } else {
-            stakersArray[_tokenId].push(msg.sender);
-            stakers[_tokenId][msg.sender].timeOfLastUpdate = block.timestamp;
+            stakersArray[_tokenId].push(_stakeMsgSender());
+            stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
 
             uint256 _conditionId = nextConditionId[_tokenId];
-            stakers[_tokenId][msg.sender].conditionIdOflastUpdate = _conditionId == 0
+            stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
                 ? nextDefaultConditionId - 1
                 : _conditionId - 1;
         }
 
         require(
-            IERC1155(_edition).balanceOf(msg.sender, _tokenId) >= _amount &&
-                IERC1155(_edition).isApprovedForAll(msg.sender, address(this)),
+            IERC1155(_edition).balanceOf(_stakeMsgSender(), _tokenId) >= _amount &&
+                IERC1155(_edition).isApprovedForAll(_stakeMsgSender(), address(this)),
             "Not balance or approved"
         );
         isStaking = 2;
-        IERC1155(_edition).safeTransferFrom(msg.sender, address(this), _tokenId, _amount, "");
+        IERC1155(_edition).safeTransferFrom(_stakeMsgSender(), address(this), _tokenId, _amount, "");
         isStaking = 1;
-        // stakerAddress[_tokenIds[i]] = msg.sender;
-        stakers[_tokenId][msg.sender].amountStaked += _amount;
+        // stakerAddress[_tokenIds[i]] = _stakeMsgSender();
+        stakers[_tokenId][_stakeMsgSender()].amountStaked += _amount;
 
         if (!isIndexed[_tokenId]) {
             isIndexed[_tokenId] = true;
             indexedTokens.push(_tokenId);
         }
 
-        emit TokensStaked(msg.sender, _tokenId, _amount);
+        emit TokensStaked(_stakeMsgSender(), _tokenId, _amount);
     }
 
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256 _tokenId, uint256 _amount) internal virtual {
-        uint256 _amountStaked = stakers[_tokenId][msg.sender].amountStaked;
+        uint256 _amountStaked = stakers[_tokenId][_stakeMsgSender()].amountStaked;
         require(_amount != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= _amount, "Withdrawing more than staked");
 
-        _updateUnclaimedRewardsForStaker(_tokenId, msg.sender);
+        _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
 
         if (_amountStaked == _amount) {
             address[] memory _stakersArray = stakersArray[_tokenId];
             for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == msg.sender) {
+                if (_stakersArray[i] == _stakeMsgSender()) {
                     stakersArray[_tokenId][i] = stakersArray[_tokenId][_stakersArray.length - 1];
                     stakersArray[_tokenId].pop();
                     break;
                 }
             }
         }
-        stakers[_tokenId][msg.sender].amountStaked -= _amount;
+        stakers[_tokenId][_stakeMsgSender()].amountStaked -= _amount;
 
-        IERC1155(edition).safeTransferFrom(address(this), msg.sender, _tokenId, _amount, "");
+        IERC1155(edition).safeTransferFrom(address(this), _stakeMsgSender(), _tokenId, _amount, "");
 
-        emit TokensWithdrawn(msg.sender, _tokenId, _amount);
+        emit TokensWithdrawn(_stakeMsgSender(), _tokenId, _amount);
     }
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards(uint256 _tokenId) internal virtual {
-        uint256 rewards = stakers[_tokenId][msg.sender].unclaimedRewards + _calculateRewards(_tokenId, msg.sender);
+        uint256 rewards = stakers[_tokenId][_stakeMsgSender()].unclaimedRewards +
+            _calculateRewards(_tokenId, _stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
-        stakers[_tokenId][msg.sender].timeOfLastUpdate = block.timestamp;
-        stakers[_tokenId][msg.sender].unclaimedRewards = 0;
+        stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_tokenId][_stakeMsgSender()].unclaimedRewards = 0;
 
         uint256 _conditionId = nextConditionId[_tokenId];
-        stakers[_tokenId][msg.sender].conditionIdOflastUpdate = _conditionId == 0
+        stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
             ? nextDefaultConditionId - 1
             : _conditionId - 1;
 
-        _mintRewards(msg.sender, rewards);
+        _mintRewards(_stakeMsgSender(), rewards);
 
-        emit RewardsClaimed(msg.sender, rewards);
+        emit RewardsClaimed(_stakeMsgSender(), rewards);
     }
 
     /// @dev View available rewards for a user.
@@ -461,6 +462,19 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
             }
         }
     }
+
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender -- support ERC2771.
+    function _stakeMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Virtual functions: to be implemented in derived contract
+    //////////////////////////////////////////////////////////////*/
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.

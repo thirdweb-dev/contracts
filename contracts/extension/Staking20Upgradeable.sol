@@ -165,59 +165,59 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         require(_amount != 0, "Staking 0 tokens");
         address _token = token;
 
-        if (stakers[msg.sender].amountStaked > 0) {
-            _updateUnclaimedRewardsForStaker(msg.sender);
+        if (stakers[_stakeMsgSender()].amountStaked > 0) {
+            _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
-            stakersArray.push(msg.sender);
-            stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-            stakers[msg.sender].conditionIdOflastUpdate = nextConditionId - 1;
+            stakersArray.push(_stakeMsgSender());
+            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
-        CurrencyTransferLib.transferCurrency(_token, msg.sender, address(this), _amount);
+        CurrencyTransferLib.transferCurrency(_token, _stakeMsgSender(), address(this), _amount);
 
-        stakers[msg.sender].amountStaked += _amount;
+        stakers[_stakeMsgSender()].amountStaked += _amount;
 
-        emit TokensStaked(msg.sender, _amount);
+        emit TokensStaked(_stakeMsgSender(), _amount);
     }
 
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256 _amount) internal virtual {
-        uint256 _amountStaked = stakers[msg.sender].amountStaked;
+        uint256 _amountStaked = stakers[_stakeMsgSender()].amountStaked;
         require(_amount != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= _amount, "Withdrawing more than staked");
 
-        _updateUnclaimedRewardsForStaker(msg.sender);
+        _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
         if (_amountStaked == _amount) {
             address[] memory _stakersArray = stakersArray;
             for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == msg.sender) {
+                if (_stakersArray[i] == _stakeMsgSender()) {
                     stakersArray[i] = stakersArray[_stakersArray.length - 1];
                     stakersArray.pop();
                     break;
                 }
             }
         }
-        stakers[msg.sender].amountStaked -= _amount;
+        stakers[_stakeMsgSender()].amountStaked -= _amount;
 
-        CurrencyTransferLib.transferCurrency(token, address(this), msg.sender, _amount);
+        CurrencyTransferLib.transferCurrency(token, address(this), _stakeMsgSender(), _amount);
 
-        emit TokensWithdrawn(msg.sender, _amount);
+        emit TokensWithdrawn(_stakeMsgSender(), _amount);
     }
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards() internal virtual {
-        uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
+        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
-        stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-        stakers[msg.sender].unclaimedRewards = 0;
-        stakers[msg.sender].conditionIdOflastUpdate = nextConditionId - 1;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].unclaimedRewards = 0;
+        stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
-        _mintRewards(msg.sender, rewards);
+        _mintRewards(_stakeMsgSender(), rewards);
 
-        emit RewardsClaimed(msg.sender, rewards);
+        emit RewardsClaimed(_stakeMsgSender(), rewards);
     }
 
     /// @dev View available rewards for a user.
@@ -290,6 +290,19 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
         _rewards /= (10**stakingTokenDecimals);
     }
+
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender -- support ERC2771.
+    function _stakeMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Virtual functions: to be implemented in derived contract
+    //////////////////////////////////////////////////////////////*/
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.

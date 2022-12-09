@@ -134,6 +134,10 @@ contract EditionStake is
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
+    function _stakeMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
+    }
+
     function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }

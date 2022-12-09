@@ -180,80 +180,80 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
         address _nftCollection = nftCollection;
 
-        if (stakers[msg.sender].amountStaked > 0) {
-            _updateUnclaimedRewardsForStaker(msg.sender);
+        if (stakers[_stakeMsgSender()].amountStaked > 0) {
+            _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
-            stakersArray.push(msg.sender);
-            stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-            stakers[msg.sender].conditionIdOflastUpdate = nextConditionId - 1;
+            stakersArray.push(_stakeMsgSender());
+            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
         for (uint256 i = 0; i < len; ++i) {
             require(
-                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == msg.sender &&
+                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == _stakeMsgSender() &&
                     (IERC721(_nftCollection).getApproved(_tokenIds[i]) == address(this) ||
-                        IERC721(_nftCollection).isApprovedForAll(msg.sender, address(this))),
+                        IERC721(_nftCollection).isApprovedForAll(_stakeMsgSender(), address(this))),
                 "Not owned or approved"
             );
 
             isStaking = 2;
-            IERC721(_nftCollection).safeTransferFrom(msg.sender, address(this), _tokenIds[i]);
+            IERC721(_nftCollection).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
             isStaking = 1;
 
-            stakerAddress[_tokenIds[i]] = msg.sender;
+            stakerAddress[_tokenIds[i]] = _stakeMsgSender();
 
             if (!isIndexed[_tokenIds[i]]) {
                 isIndexed[_tokenIds[i]] = true;
                 indexedTokens.push(_tokenIds[i]);
             }
         }
-        stakers[msg.sender].amountStaked += len;
+        stakers[_stakeMsgSender()].amountStaked += len;
 
-        emit TokensStaked(msg.sender, _tokenIds);
+        emit TokensStaked(_stakeMsgSender(), _tokenIds);
     }
 
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
-        uint256 _amountStaked = stakers[msg.sender].amountStaked;
+        uint256 _amountStaked = stakers[_stakeMsgSender()].amountStaked;
         uint256 len = _tokenIds.length;
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
 
         address _nftCollection = nftCollection;
 
-        _updateUnclaimedRewardsForStaker(msg.sender);
+        _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
         if (_amountStaked == len) {
             for (uint256 i = 0; i < stakersArray.length; ++i) {
-                if (stakersArray[i] == msg.sender) {
+                if (stakersArray[i] == _stakeMsgSender()) {
                     stakersArray[i] = stakersArray[stakersArray.length - 1];
                     stakersArray.pop();
                 }
             }
         }
-        stakers[msg.sender].amountStaked -= len;
+        stakers[_stakeMsgSender()].amountStaked -= len;
 
         for (uint256 i = 0; i < len; ++i) {
-            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
+            require(stakerAddress[_tokenIds[i]] == _stakeMsgSender(), "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(_nftCollection).safeTransferFrom(address(this), msg.sender, _tokenIds[i]);
+            IERC721(_nftCollection).safeTransferFrom(address(this), _stakeMsgSender(), _tokenIds[i]);
         }
 
-        emit TokensWithdrawn(msg.sender, _tokenIds);
+        emit TokensWithdrawn(_stakeMsgSender(), _tokenIds);
     }
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards() internal virtual {
-        uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
+        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
-        stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-        stakers[msg.sender].unclaimedRewards = 0;
-        stakers[msg.sender].conditionIdOflastUpdate = nextConditionId - 1;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].unclaimedRewards = 0;
+        stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
-        _mintRewards(msg.sender, rewards);
+        _mintRewards(_stakeMsgSender(), rewards);
 
-        emit RewardsClaimed(msg.sender, rewards);
+        emit RewardsClaimed(_stakeMsgSender(), rewards);
     }
 
     /// @dev View available rewards for a user.
@@ -313,6 +313,19 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
     }
+
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender -- support ERC2771.
+    function _stakeMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Virtual functions: to be implemented in derived contract
+    //////////////////////////////////////////////////////////////*/
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.
